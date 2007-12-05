@@ -194,10 +194,10 @@
 						<xsl:text>Ringgadebiblioteket, AU</xsl:text>
 						</xsl:when>
                             <xsl:when test="substring(.,1)='DJFF'">
-						<xsl:text>Det Jordbrugsfaglige Fakultet, Foulum, AU</xsl:text>
+						<xsl:text>Det Jordbrugsvidenskabelige Fakultet, Foulum, AU</xsl:text>
 						</xsl:when>
                              <xsl:when test="substring(.,1)='DJFL'">
-						<xsl:text>Det Jordbrugsfaglige Fakultet, Flakkebjerg, AU</xsl:text>
+						<xsl:text>Det Jordbrugsvidenskabelige Fakultet, Flakkebjerg, AU</xsl:text>
 						</xsl:when>
                         <xsl:when test="substring(.,1)='DJM'">
 						<xsl:text>Det Jyske Musikkonservatorium</xsl:text>
