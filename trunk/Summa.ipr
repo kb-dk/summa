@@ -381,8 +381,6 @@
       <module fileurl="file://$PROJECT_DIR$/MetadataStorage/MetadataStorage.iml" filepath="$PROJECT_DIR$/MetadataStorage/MetadataStorage.iml" />
       <module fileurl="file://$PROJECT_DIR$/Score/Score.iml" filepath="$PROJECT_DIR$/Score/Score.iml" />
       <module fileurl="file://$PROJECT_DIR$/Search/Search.iml" filepath="$PROJECT_DIR$/Search/Search.iml" />
-      <module fileurl="file://$PROJECT_DIR$/Spellchecker/Spellchecker.iml" filepath="$PROJECT_DIR$/Spellchecker/Spellchecker.iml" />
-      <module fileurl="file://$PROJECT_DIR$/Suggest/Suggest.iml" filepath="$PROJECT_DIR$/Suggest/Suggest.iml" />
       <module fileurl="file://$PROJECT_DIR$/Summa.iml" filepath="$PROJECT_DIR$/Summa.iml" />
     </modules>
   </component>
