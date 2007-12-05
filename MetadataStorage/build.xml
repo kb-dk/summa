@@ -86,7 +86,6 @@
                 <available file="${summa.lib.lucene}"/>
                 <available file="${summa.lib.derby}"/>
                 <available file="${summa.lib.sbutil}"/>
-                <available file="${lib.postgres}"/>
             </and>
         </condition>
         <antcall target="${newTask}"/>
@@ -133,8 +132,6 @@
         <copy file="${basedir}/../${summa.lib.lucene}" tofile="${summa.lib.lucene}"/>
         <copy file="${basedir}/../${summa.lib.derby}" tofile="${summa.lib.derby}"/>
         <copy file="${basedir}/../${summa.lib.sbutil}" tofile="${summa.lib.sbutil}"/>
-
-        <get src="${summa.3part.server}/postgres-jdbc3/${postgres.file}" dest="${lib.postgres}"/>
     </target>
 
 

@@ -467,10 +467,10 @@
     </library>
     <library name="sbutil">
       <CLASSES>
-        <root url="jar://$PROJECT_DIR$/lib/sbutil-0.2.0.jar!/" />
+        <root url="jar://$PROJECT_DIR$/lib/sbutil-0.2.1.jar!/" />
       </CLASSES>
       <JAVADOC>
-        <root url="jar://$PROJECT_DIR$/lib/apidocs/sbutil-0.2.0-apidocs.zip!/" />
+        <root url="jar://$PROJECT_DIR$/lib/apidocs/sbutil-0.2.1-apidocs.zip!/" />
       </JAVADOC>
       <SOURCES />
     </library>
