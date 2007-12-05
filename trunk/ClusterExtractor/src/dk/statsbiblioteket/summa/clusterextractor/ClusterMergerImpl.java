@@ -92,6 +92,11 @@ public class ClusterMergerImpl extends UnicastRemoteObject implements ClusterMer
         saveCentroids(centroidSet, directoryPath);
     }
 
+    /**
+     * Save given centroid set in given path.
+     * @param centroids centroid set to save
+     * @param centroidSetPath path to save in
+     */
     private void saveCentroids(CentroidSet centroids, String centroidSetPath) {
         File localCentroidSetDirectory = new File(centroidSetPath);
         if (!localCentroidSetDirectory.exists()) {
