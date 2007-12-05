@@ -1,0 +1,16 @@
+all
+checkDepends
+clean
+compile
+compileCluster
+compileMetadataStorage
+doc
+getLibs
+init
+make_indexService
+phony
+prepare
+test_classPath
+wec
+wec-indexer
+wec-test

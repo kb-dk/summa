@@ -1,0 +1,183 @@
+<?xml version="1.0"?>
+<project default="all" name="Dice" basedir=".">
+
+    <!--
+       PROPERTIES
+    -->
+
+    <property file="${basedir}/../build.properties"/>
+
+    <!-- Project properties -->
+    <property name="project.name" value="summa-dice"/>
+    <property name="project.version" value="${summa.version}"/>
+    <property name="release" value="${project.name}-${project.version}"/>
+    <property name="release.jar" value="${release}.jar"/>
+
+    <!-- Persistent directories -->
+    <property name="src.dir" value="${basedir}/src"/>
+    <property name="test.src.dir" value="${basedir}/test"/>
+
+    <!-- Temporary files and directories -->
+    <property name="build.dir" value="${basedir}/${summa.classes.dir}"/>
+    <property name="test.build.dir" value="${basedir}/${summa.test.classes.dir}"/>
+    <property name="dist.dir" value="${basedir}/${summa.dist.dir}"/>
+    <property name="doc.dir" value="${basedir}/doc"/>
+    <property name="lib.dir" value="${basedir}/lib"/>
+    <property name="tmp.dir" value="${basedir}/tmp"/>
+
+    <!-- Compilation properties -->
+    <property name="compiler" value="${summa.compiler}"/>
+    <property name="compiler.optimize" value="${summa.compiler.optimize}"/>
+    <property name="compiler.debug" value="${summa.compiler.debug}"/>
+    
+    <tstamp>
+        <format property="build.time" pattern="MM/dd/yyyy HH:mm"/>
+    </tstamp>
+
+    <!-- Path definitions -->
+    <path id="lib.path">
+        <fileset dir="${lib.dir}">
+            <include name="**/*.jar"/>
+            <exclude name="junit*"/>
+        </fileset>
+    </path>
+
+    <path id="test.lib.path">
+        <path refid="lib.path" />
+        <pathelement location="${build.dir}" />
+        <pathelement location="${test.build.dir}" />
+        <pathelement location="${ant.home}/lib/ant-junit.jar"/>
+        <pathelement location="${test.src.dir}"/>
+    </path>
+
+    <!-- lib.files : set by the .checkDepends target -->
+
+
+    <!--
+       TARGETS
+    -->
+
+    <target name=".phony"><!-- Dummy target --></target>
+
+    <target name="depends">
+        <!-- Check global dependencies -->
+        <ant inheritall="false" dir=".." target="depends"/>
+
+        <!-- If libs/ does not exist, call getLibs target -->
+        <echo message="Checking for libs/"/>
+        <condition property="newTask" value=".phony" else=".getLibs">
+            <and>
+                <available file="${summa.lib.log4j}"/>
+                <available file="${summa.lib.commons-logging}"/>
+                <available file="${summa.lib.junit}"/>
+                <available file="${summa.lib.sbutil}"/>
+            </and>
+        </condition>
+        <antcall target="${newTask}"/>
+
+        <!-- Store space-separated list of lib-filenames in lib.files -->
+        <pathconvert refid="lib.path" property="lib.files" pathsep=" ">
+            <map from="${lib.dir}/" to=""/>
+        </pathconvert>
+
+    </target>
+
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+        <delete dir="${test.build.dir}"/>
+        <delete dir="${tmp.dir}"/>
+        <delete file="${release.jar}"/>
+    </target>
+    
+    <target name="distclean" depends="clean">
+        <delete dir="${dist.dir}"/>
+        <delete dir="${lib.dir}"/>
+    </target>
+    
+    <target name=".getLibs">        
+        <mkdir dir="${lib.dir}"/>
+        <copy file="${basedir}/../${summa.lib.log4j}" tofile="${summa.lib.log4j}"/>
+        <copy file="${basedir}/../${summa.lib.commons-logging}" tofile="${summa.lib.commons-logging}"/>
+        <copy file="${basedir}/../${summa.lib.junit}" tofile="${summa.lib.junit}"/>
+        <copy file="${basedir}/../${summa.lib.sbutil}" tofile="${summa.lib.sbutil}"/>
+    </target>
+
+
+    <target name="compile" depends="depends">
+        <mkdir dir="${build.dir}"/>
+        <javac srcdir="${src.dir}" destdir="${build.dir}" encoding="UTF-8"
+               compiler="${compiler}" optimize="${compiler.optimize}"
+               debug="${compiler.debug}">
+            <classpath refid="lib.path"/>
+        </javac>
+    </target>
+
+
+    <target name="doc" depends="compile">
+        <javadoc
+                packagenames="dk.statsbiblioteket.summa.*"
+                destdir="${doc.dir}"
+                author="true"
+                version="true"
+                access="private"
+                windowtitle="Summa Distributed Computing Environment (Dice)"
+                additionalparam="-breakiterator">
+
+            <classpath refid="lib.path"/>
+
+            <packageset dir="${src.dir}">
+                <include name="dk/statsbiblioteket/summa/**"/>
+            </packageset>
+        </javadoc>
+
+    </target>
+
+    <target name=".jar" depends="compile">
+        <jar basedir="${build.dir}" compress="true" jarfile="${release.jar}"/>
+    </target>
+
+    <target name="release" depends="distclean, depends, .jar, doc">
+
+        <mkdir dir="${dist.dir}"/>
+        
+        <property name="prefix" value="${release}"/>
+
+        <replaceregexp match="\$Id[^\$]*\$" replace="${project.name}-${project.version} - build date ${build.time}">
+            <fileset dir="${doc.dir}" includes="**/*"/>
+         </replaceregexp>
+
+        <zip destfile="${dist.dir}/${release}.zip">
+
+            <zipfileset prefix="${prefix}" file="${release.jar}"/>
+            
+            <zipfileset prefix="${prefix}" file="${basedir}/../${summa.license}"/>
+            
+            <zipfileset prefix="${prefix}/lib"  dir="${lib.dir}" includes="${lib.files}"/>
+
+            <zipfileset prefix="${prefix}/config" file="${basedir}/config/log4j.xml"/>
+            <zipfileset prefix="${prefix}/config" file="${basedir}/config/dice.config.xml"/>
+
+            <zipfileset dir="${basedir}/config/jmx" prefix="${prefix}/config/jmx" filemode="600">
+                <include name="jmx.password"/>
+                <include name="jmxremote.access"/>
+            </zipfileset>
+
+            <zipfileset dir="${basedir}/scripts" prefix="${prefix}/bin" filemode="755">
+                <include name="*"/>
+            </zipfileset>
+
+            <zipfileset dir="${doc.dir}" prefix="${prefix}/doc">
+                <include name="**/*"/>
+            </zipfileset>
+
+        </zip>
+
+        <unzip src="${dist.dir}/${release}.zip" dest="${dist.dir}"/>
+
+    </target>
+
+
+
+    <target name="all" depends="release"/>
+
+</project>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+
+    <entry key="searchRetries">2</entry>
+
+    <entry key="indexPath">/home/hal/testIndex</entry>
+    <entry key="indexPath1">/tmp/cluster_index</entry>
+    <entry key="io_service">//atria:19000/summa_io_postgres</entry>
+    <entry key="descriptor_xslt">searchDescriptor.xslt</entry>
+    <entry key="defaultFields">au author_normalized su lsubj ti freetext</entry>
+
+</properties>
