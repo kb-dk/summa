@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+
+    <!-- clusterextractor test properties -->
+
+    <!-- This index property should only be in the index properties -->
+    <entry key="search.index.main">/tmp/index/</entry>
+
+    <!-- Parallel cluster index location; should match search.properties.xml: -->
+    <!-- /home/summa/persistentFiles/index/parallel_cluster -->
+    <entry key="search.index.parallel.1">/tmp/parallel_cluster_index/</entry>
+
+    <!-- Location of temporary cluster map used by ClusterAndParallelIndexCreator -->
+    <entry key="creator.tmpCCmap">/tmp/tmpCCmaps/</entry>
+
+    <!-- Which cluster creation algorithm should be used?
+         Currently the choices are 'FG' (First Generation), 'DB'
+         (Distance Based) and 'simple'. The default is 'simple'.-->
+    <entry key="creator.CCalgorithm">simple</entry>
+
+    <!-- Should parallel index building be resumed?
+         If false, ClusterAndParallelIndexCreator is run from the beginning. -->
+    <entry key="creator.CCresume">false</entry>
+
+    <!-- Fields to use in the init phase of cluster creation -->
+    <entry key="CCFields">su_pe|su_corp|su_lc|mesh|su_dk|lsu_oai</entry>
+    <!-- Fields not to in the init phase -->
+    <entry key="CCNegativeFields"></entry>
+
+    <!-- Terms to use in the vocabulary in cluster creation -->
+    <entry key="CCTerms"></entry>
+    <!-- Terms not to use in the vocabulary -->
+    <!-- qzwq is a delimiter -->
+    <!-- No one-letter words (such as danish i or english a) are allowed -->
+    <entry key="CCNegativeTerms">[0-9]+[.]?-? ?[0-9]+|[0-9]|og|den|til|med|om|af|på|det|er|ud|al|man|se|st|na|etc|ii|von|qzwq|.|view|and|of|the|new|with|on|to|for|in|as|no|is|it|that|was|he</entry>
+
+    <!-- The minimum number of times that the terms have to occur in the
+         index for a given field, in order to be considered candidates
+         for cluster algorithm initialisation -->
+    <entry key="CCMinTermSum">15</entry>
+    <!-- The minimum number of times that the terms has to occur in the
+         index for a single field_X, in order to be considered candidates -->
+    <entry key="CCMinTermLocalSum">15</entry>
+    <!-- The maximum number of times that the terms must occur in the
+         index, in order to be considered tag candidates -->
+    <entry key="CCMaxTermSum">99999</entry>
+
+    <!-- Fields used for document vectors (inclusive list) -->
+    <!-- This property is also used as the 'fieldsUsedInQueries' property,
+         i.e. these are also the fields used in search-based algorithms -->
+    <entry key="FieldsUsedInVectors">su_pe|su_corp|su_lc|mesh|su_dk|lsu_oai|title|main_titel|subject_controlled|subject_dk5</entry>
+    <!-- Fields NOT used for document vectors (exclusive list) -->
+    <entry key="VectorNegativeFields"></entry>
+
+
+    <!-- PROPERTIES FOR SEARCH BASED ALGORITHMS-->
+
+    <!-- The maximum cluster size is used to simply 'cut' clusters,
+         that seem to become too large.
+         This should probably be a very large number in production. -->
+    <entry key="CCMaxClusterSize">80000</entry>
+    <!-- When clusters are created based on searches, we assume that
+         only the highest ranking results truly belong in the cluster.
+         This property is the maximum cluster size as a fraction
+         of the search result. -->
+    <entry key="CCMaxClusterSizeFractionOfSearchResult">.6</entry>
+    <!-- Documents need to have at least this score, to be considered part of
+         a search-based cluster -->
+    <entry key="CCScoreCutoffForClusterMembers">1.0</entry>
+    <!-- Documents need to have at least this score given as a fraction of
+         the top score in the search result, to be considered part of
+         a search-based cluster -->
+    <entry key="CCScoreCutoffForClusterMembersFractionOfTopScore">.2</entry>
+
+    <!-- CENTROID PROPERTIES -->
+
+    <!-- TODO look at centroid settings-->
+    <!-- The maximum number of documents, that are used for calculating a
+         centroid for a given cluster candidate -->
+    <!-- This should probably be a fairly large number in production -->
+    <!-- Note: currently not used in distance based creation -->
+    <!-- Still used in 'first generation' cluster creation-->
+    <entry key="CCMaxPointsInCentroid">67</entry><!-- TODO used to be 6700... -->
+
+    <!-- The maximum size (number of terms) that a centroid can have after
+         a reduce has been performed. This is a performance tweak. Lower
+         values = better performance and worse approximation to the ideal
+         result. -->
+    <entry key="CCMaximumCentroidReduceSize">300</entry>
+    <!-- The maximum size (number of terms) that a centroid can have after it
+         has been build -->
+    <entry key="CCMaximumCentroidFinalSize">50</entry>
+
+    <!-- The normalize average number of usages for a given term needs to be
+         above this number (tricky: We probably need to experiment a lot to
+         get the right value here; OR since CCMaximumCentroidFinalSize is set
+         low we can simply ignore this value (set it to zero) -->
+    <entry key="CCMinimumCentroidEntrySize">0.01</entry>
+
+    <entry key="CCOptimizeCentroidEveryXPoints">500</entry>
+
+    <!-- NEW PARAMETERS USED IN DISTANCE BASED CLUSTERING -->
+
+    <!-- Should the points (corresponding to the documents) be normalised when
+         added to the incremental centroid? -->
+    <entry key="NormalisePointsWhenAddingToCentroid">true</entry>
+
+    <!-- How many (fraction) of the original cluster members (search based cluster)
+         should be inside the defined cluster diameter? -->
+    <entry key="ClusterDiameterCut">.6</entry>
+
+    <!-- How distant should the (normalised) centroids of two different clusters be?
+         If two centroids are closer than this distance,
+         the two corresponding clusters are joined. -->
+    <entry key="MinimumDistanceBetweenCentroids">.01</entry>
+
+    <!-- How distant should the centroids of two different clusters
+         with the same name be? -->
+    <entry key="MinimumDistanceBetweenCentroidsWithTheSameName">1</entry>
+
+    <!-- Should the original cluster members be kept in the cluster though,
+         though they are not within the defined cluster diameter?
+         TODO: test KeepInitialClusterMembers false -->
+    <entry key="KeepInitialClusterMembers">false</entry>
+
+</properties>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+
+    <!-- Don't change these values, their are validated in ConfigTest.
+         Feel free to add new values. -->
+
+    <entry key="hello.world">String with spaces</entry>
+    <entry key="hello.number">31415</entry>
+    <entry key="hello.class">dk.statsbiblioteket.summa.dice.TestWorker</entry>
+
+
+    <!-- Values you may change -->
+    <!-- none yet -->
+</properties>

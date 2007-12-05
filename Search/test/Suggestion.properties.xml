@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+
+    <entry key="searchRetries">2</entry>
+
+    <entry key="SuggestIndexPath">/home/mikkel/tmp/suggest/</entry>
+    <entry key="UseRAMIndex">false</entry>    
+    <entry key="mergefactor">2</entry>
+    <entry key="bufferedDocs">10</entry>
+    <entry key="maxPermutationClauses">2</entry> 
+
+</properties>

@@ -1,0 +1,4 @@
+Main-Class: dk.statsbiblioteket.summa.score.server.deploy.FakeThinClient
+
+
+
