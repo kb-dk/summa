@@ -25,7 +25,8 @@ package dk.statsbiblioteket.summa.ingest.postingest.MultiVolume;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.postgresql.jdbc3.Jdbc3PoolingDataSource;
+// Postgres dep is obsolete
+//import org.postgresql.jdbc3.Jdbc3PoolingDataSource;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -77,8 +78,8 @@ public class IOMultiVolumeSQL implements IOMultiVolume {
     public static final String DB_POSITION_COLUMN = "position";
     public static final String DB_FOUND_COLUMN = "isfound";
 
-    //private Connection conn;
-    private static Jdbc3PoolingDataSource source;
+    //Postgres dep obsolete
+    //private static Jdbc3PoolingDataSource source;
 
     private static final String propertyName = "flerbind.properties.xml";
 
@@ -134,7 +135,8 @@ public class IOMultiVolumeSQL implements IOMultiVolume {
         log.info("ALLMainRecords " + ALLMainRecords);
         log.info("ALLChildRecords " + ALLChildRecords);
 
-        source = new Jdbc3PoolingDataSource();
+        //Postgres dep obsolete
+        /*source = new Jdbc3PoolingDataSource();
         log.info("datasource name: " + datasourcename);
         source.setDataSourceName(datasourcename);
 
@@ -151,8 +153,8 @@ public class IOMultiVolumeSQL implements IOMultiVolume {
         source.setPassword(database_password);
 
         log.info("database_pool_size: " + database_pool_size);
-        source.setMaxConnections(database_pool_size);
-
+        source.setMaxConnections(database_pool_size);*/
+        throw new UnsupportedOperationException("The Summa Ingester is not implemented yet!");
 
     }
 
@@ -162,16 +164,18 @@ public class IOMultiVolumeSQL implements IOMultiVolume {
      * @return connection
      */
     private Connection getConnection() {
-        try {
+        /**try {
             log.info("getting connection");
             Connection c = source.getConnection();
             log.info("got connection");
             return c;
+            return null;
         } catch (SQLException e) {
             log.error(e);
         }
 
-        return null;
+        return null;*/
+        throw new UnsupportedOperationException("The Summa Ingester is not implemented yet!");
     }
 
     /**
