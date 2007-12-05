@@ -6,7 +6,6 @@
     -->
 
     <property file="${basedir}/../build.properties"/>
-    <property file="${basedir}/compile-ingest.properties"/>
 
     <!-- Project properties -->
     <property name="project.name" value="summa-ingest"/>
@@ -93,7 +92,6 @@
                 <available file="${summa.lib.commons-logging}"/>
                 <available file="${summa.lib.junit}"/>
                 <available file="${summa.lib.sbutil}"/>
-                <available file="${lib.postgres}"/>
             </and>
         </condition>
         <antcall target="${newTask}"/>
@@ -151,9 +149,6 @@
         <copy file="${basedir}/../${summa.lib.commons-logging}" tofile="${summa.lib.commons-logging}"/>
         <copy file="${basedir}/../${summa.lib.junit}" tofile="${summa.lib.junit}"/>
         <copy file="${basedir}/../${summa.lib.sbutil}" tofile="${summa.lib.sbutil}"/>
-
-        <get src="${summa.3part.server}/postgres-jdbc3/${postgres.file}"
-           dest="lib/${postgres.file}"/>
     </target>
 
 
