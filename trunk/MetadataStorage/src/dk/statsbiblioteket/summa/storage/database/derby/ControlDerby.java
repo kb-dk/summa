@@ -102,7 +102,7 @@ public class ControlDerby extends DatabaseControl implements ControlDerbyMBean {
                       + "' exists. Deleting '" + location + "'");
             try {
                 Files.delete(location);
-            } catch (FileNotFoundException e) {
+            } catch (IOException e) {
                 throw new RemoteException("Could not delete old database at '"
                                           + location + "'", e);
             }
