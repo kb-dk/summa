@@ -25,13 +25,6 @@
       <maximumHeapSize value="128" />
       <properties />
     </buildFile>
-    <buildFile url="file://$PROJECT_DIR$/Website/build.xml">
-      <additionalClassPath />
-      <antReference projectDefault="true" />
-      <customJdkName value="" />
-      <maximumHeapSize value="128" />
-      <properties />
-    </buildFile>
     <buildFile url="file://$PROJECT_DIR$/Common/build.xml">
       <additionalClassPath />
       <antReference projectDefault="true" />
@@ -40,20 +33,6 @@
       <properties />
     </buildFile>
     <buildFile url="file://$PROJECT_DIR$/Search/build.xml">
-      <additionalClassPath />
-      <antReference projectDefault="true" />
-      <customJdkName value="" />
-      <maximumHeapSize value="128" />
-      <properties />
-    </buildFile>
-    <buildFile url="file://$PROJECT_DIR$/DidYouMean/build.xml">
-      <additionalClassPath />
-      <antReference projectDefault="true" />
-      <customJdkName value="" />
-      <maximumHeapSize value="128" />
-      <properties />
-    </buildFile>
-    <buildFile url="file://$PROJECT_DIR$/Spellchecker/build.xml">
       <additionalClassPath />
       <antReference projectDefault="true" />
       <customJdkName value="" />
@@ -91,13 +70,6 @@
       <properties />
     </buildFile>
     <buildFile url="file://$PROJECT_DIR$/ClusterExtractor/build.xml">
-      <additionalClassPath />
-      <antReference projectDefault="true" />
-      <customJdkName value="" />
-      <maximumHeapSize value="128" />
-      <properties />
-    </buildFile>
-    <buildFile url="file://$PROJECT_DIR$/Suggest/build.xml">
       <additionalClassPath />
       <antReference projectDefault="true" />
       <customJdkName value="" />
@@ -403,16 +375,12 @@
       <module fileurl="file://$PROJECT_DIR$/ClusterExtractor/ClusterExtractor.iml" filepath="$PROJECT_DIR$/ClusterExtractor/ClusterExtractor.iml" />
       <module fileurl="file://$PROJECT_DIR$/Common/Common.iml" filepath="$PROJECT_DIR$/Common/Common.iml" />
       <module fileurl="file://$PROJECT_DIR$/Dice/Dice.iml" filepath="$PROJECT_DIR$/Dice/Dice.iml" />
-      <module fileurl="file://$PROJECT_DIR$/DidYouMean/DidYouMean.iml" filepath="$PROJECT_DIR$/DidYouMean/DidYouMean.iml" />
       <module fileurl="file://$PROJECT_DIR$/FacetBrowser/FacetBrowser.iml" filepath="$PROJECT_DIR$/FacetBrowser/FacetBrowser.iml" />
       <module fileurl="file://$PROJECT_DIR$/Index/Index.iml" filepath="$PROJECT_DIR$/Index/Index.iml" />
       <module fileurl="file://$PROJECT_DIR$/Ingest/Ingest.iml" filepath="$PROJECT_DIR$/Ingest/Ingest.iml" />
       <module fileurl="file://$PROJECT_DIR$/MetadataStorage/MetadataStorage.iml" filepath="$PROJECT_DIR$/MetadataStorage/MetadataStorage.iml" />
       <module fileurl="file://$PROJECT_DIR$/Score/Score.iml" filepath="$PROJECT_DIR$/Score/Score.iml" />
       <module fileurl="file://$PROJECT_DIR$/Search/Search.iml" filepath="$PROJECT_DIR$/Search/Search.iml" />
-      <module fileurl="file://$PROJECT_DIR$/SearchAggregator/SearchAggregator.iml" filepath="$PROJECT_DIR$/SearchAggregator/SearchAggregator.iml" />
-      <module fileurl="file://$PROJECT_DIR$/SearchNode/SearchNode.iml" filepath="$PROJECT_DIR$/SearchNode/SearchNode.iml" />
-      <module fileurl="file://$PROJECT_DIR$/SearchService/SearchService.iml" filepath="$PROJECT_DIR$/SearchService/SearchService.iml" />
       <module fileurl="file://$PROJECT_DIR$/Spellchecker/Spellchecker.iml" filepath="$PROJECT_DIR$/Spellchecker/Spellchecker.iml" />
       <module fileurl="file://$PROJECT_DIR$/Suggest/Suggest.iml" filepath="$PROJECT_DIR$/Suggest/Suggest.iml" />
       <module fileurl="file://$PROJECT_DIR$/Summa.iml" filepath="$PROJECT_DIR$/Summa.iml" />
@@ -442,7 +410,7 @@
     <option name="ADDITIONAL_OPTIONS_STRING" value="" />
   </component>
   <component name="VcsDirectoryMappings">
-    <mapping directory="" vcs="CVS" />
+    <mapping directory="" vcs="svn" />
   </component>
   <component name="WebServicesPlugin" addRequiredLibraries="true" />
   <component name="com.intellij.jsf.UserDefinedFacesConfigs">
@@ -479,11 +447,9 @@
         <root url="jar://$PROJECT_DIR$/lib/lucene-core-2.1.0.jar!/" />
       </CLASSES>
       <JAVADOC>
-        <root url="http://lucene.apache.org/java/2_1_0/api/" />
+        <root url="jar://$PROJECT_DIR$/lib/apidocs/lucene-2.1.0-apidocs.zip!/" />
       </JAVADOC>
-      <SOURCES>
-        <root url="file://$PROJECT_DIR$/lib/lucene-2.1.0/src/java" />
-      </SOURCES>
+      <SOURCES />
     </library>
     <library name="derby-10.3.1.4">
       <CLASSES>
@@ -499,16 +465,14 @@
       <JAVADOC />
       <SOURCES />
     </library>
-    <library name="sbutil-0.1.9">
+    <library name="sbutil">
       <CLASSES>
-        <root url="jar://$PROJECT_DIR$/lib/sbutil-0.1.9.jar!/" />
+        <root url="jar://$PROJECT_DIR$/lib/sbutil-0.2.0.jar!/" />
       </CLASSES>
       <JAVADOC>
-        <root url="jar://$PROJECT_DIR$/lib/sbutil-0.1.9-apidocs.zip!/" />
+        <root url="jar://$PROJECT_DIR$/lib/apidocs/sbutil-0.2.0-apidocs.zip!/" />
       </JAVADOC>
-      <SOURCES>
-        <root url="jar://$PROJECT_DIR$/lib/sbutil-0.1.9-src.zip!/" />
-      </SOURCES>
+      <SOURCES />
     </library>
   </component>
 </project>

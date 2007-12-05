@@ -113,7 +113,6 @@
         <ant dir="Search" inheritall="false" target="clean"/>        
         <delete dir="${dist.dir}" />
         <delete dir="${doc.dir}" />
-        <!-- <delete dir="Webcommons15"/> -->
     </target>
     
     <!-- Wrap up a tarball ready for distribution -->

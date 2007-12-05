@@ -9,26 +9,14 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/lib/postgresql-8.1-404.jdbc3.jar!/" />
-        </CLASSES>
-        <JAVADOC>
-          <root url="http://jdbc.postgresql.org/documentation/publicapi/" />
-        </JAVADOC>
-        <SOURCES />
-      </library>
-    </orderEntry>
     <orderEntry type="module" module-name="Common" />
     <orderEntry type="library" name="commons-logging-1.1" level="project" />
     <orderEntry type="library" name="junit-3.8.1" level="project" />
     <orderEntry type="library" name="log4j-1.2.14" level="project" />
     <orderEntry type="library" name="lucene-core-2.1.0" level="project" />
-    <orderEntry type="module" module-name="Index" />
     <orderEntry type="library" name="derby-10.3.1.4" level="project" />
     <orderEntry type="library" name="commons-cli-1.1" level="project" />
-    <orderEntry type="library" name="sbutil-0.1.9" level="project" />
+    <orderEntry type="library" name="sbutil" level="project" />
     <orderEntryProperties />
   </component>
   <component name="org.mevenide.idea.module.ModuleSettings">
