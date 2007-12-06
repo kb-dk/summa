@@ -43,12 +43,14 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * ClusterProviderImpl.
+ * ClusterProviderImpl can enrich a given Document with known clusters.
+ * The ClusterProviderImpl loads a {@link Vocabulary} and a {@link Dendrogram},
+ * and provides an enrich method based on these. The enrich method takes a
+ * Lucene @{link Document}, enriches and returns it.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "bam",
-        comment = "Class and most methods needs Javadoc")
+        author = "bam")
 public class ClusterProviderImpl extends UnicastRemoteObject implements ClusterProvider {
     protected static final Log log = LogFactory.getLog(ClusterProviderImpl.class);
     /** Configurations. */
@@ -70,6 +72,11 @@ public class ClusterProviderImpl extends UnicastRemoteObject implements ClusterP
     /** Negative Terms Pattern. */
     protected Pattern pNTerms;
 
+    /**
+     * Construct ClusterProviderImpl with given configuration.
+     * @param conf configuration
+     * @throws RemoteException if failed to export object
+     */
     public ClusterProviderImpl(Configuration conf) throws RemoteException {
         super();
         this.conf = conf;
@@ -95,6 +102,13 @@ public class ClusterProviderImpl extends UnicastRemoteObject implements ClusterP
         return document;
     }
 
+    /**
+     * Traverse dendrogram and find the clusters that given vector belong to.
+     * @param node current node of dendrogram
+     * @param vector vector to compare to centroids in dendrogram
+     * @param document document to enrich with found clusters
+     * @return enriched document
+     */
     private Document traverseDendrogram(DendrogramNode node, SparseVector vector, Document document) {
         double similarity = vector.similarity(node.getCentroid());
         if (log.isTraceEnabled()) {
@@ -114,7 +128,6 @@ public class ClusterProviderImpl extends UnicastRemoteObject implements ClusterP
         }
         return document;
     }
-
 
     /**
      * Get the vector for the given document.
@@ -148,6 +161,13 @@ public class ClusterProviderImpl extends UnicastRemoteObject implements ClusterP
         return new SparseVectorMapImpl(coordinates);
     }
 
+    /**
+     * Is the given term-text/dimension ok?.
+     * I.e. is it in the known vocabulary or if no vocabulary is known,
+     * is it in agreement with the configuration patterns.
+     * @param dim text to test
+     * @return true if dim is accepted as term-text/dimension; false otherwise
+     */
     private boolean termTextOk(String dim) {
         if (vocabulary!=null) {
             return vocabulary.contains(dim);
@@ -157,11 +177,20 @@ public class ClusterProviderImpl extends UnicastRemoteObject implements ClusterP
         }
     }
 
+    /**
+     * Is the given field accepted by the configuration patterns?.
+     * @param field field to test
+     * @return true if field is accepted by the configuration patterns;
+     *         false otherwise
+     */
     private boolean fieldOk(Field field) {
         return ((pFields==null || pFields.matcher(field.name()).matches()) &&
                 (pNFields==null || !pNFields.matcher(field.name()).matches()));
     }
 
+    /**
+     * Load field patterns from configurations.
+     */
     private void loadFieldPatterns() {
         String fields = conf.getString(ClusterBuilder.FIELDS_IN_VECTORS_KEY);
         pFields = fields == null || fields.equals("") ? null : Pattern.compile(fields);
@@ -175,6 +204,9 @@ public class ClusterProviderImpl extends UnicastRemoteObject implements ClusterP
         }
     }
 
+    /**
+     * Load Vocabulary from path provided in configuration.
+     */
     private void loadVocabulary() {
         String directoryPath = conf.getString(VOCAB_PATH_KEY);
         File dir = new File(directoryPath);
@@ -200,30 +232,7 @@ public class ClusterProviderImpl extends UnicastRemoteObject implements ClusterP
                         ". Vocabulary NOT loaded.");
                 return;
             }
-            try {
-                FileInputStream fis = new FileInputStream(vocabFile);
-                ObjectInputStream ois = new ObjectInputStream(fis);
-                Object fileContent = ois.readObject();
-                if (fileContent instanceof Vocabulary) {
-                    this.vocabulary = (Vocabulary) fileContent;
-                }
-                ois.close();
-            } catch (FileNotFoundException e) {
-                log.warn("ClusterProviderImpl.loadVocabulary " +
-                        "FileNotFoundException; path = " + vocabFile +
-                        ". Vocabulary NOT loaded.", e);
-                return;
-            } catch (IOException e) {
-                log.warn("ClusterProviderImpl.loadVocabulary " +
-                        "IOException; path = " + vocabFile +
-                        ". Vocabulary NOT loaded.", e);
-                return;
-            } catch (ClassNotFoundException e) {
-                log.warn("ClusterProviderImpl.loadVocabulary " +
-                        "ClassNotFoundException; path = " + vocabFile +
-                        ". Vocabulary NOT loaded.", e);
-                return;
-            }
+            this.vocabulary = Vocabulary.load(vocabFile);
         } else {
             log.warn("ClusterProviderImpl.loadVocabulary; vocabulary directory path" +
                     "not a directory; directoryPath = " + directoryPath +
@@ -235,6 +244,9 @@ public class ClusterProviderImpl extends UnicastRemoteObject implements ClusterP
         }
     }
 
+    /**
+     * Load Dendrogram from path provided in configuration.
+     */
     private void loadDendrogram() {
         String directoryPath = conf.getString(DENDROGRAM_PATH_KEY);
         File dir = new File(directoryPath);
@@ -260,30 +272,7 @@ public class ClusterProviderImpl extends UnicastRemoteObject implements ClusterP
                         ". Dendrogram NOT loaded.");
                 return;
             }
-            try {
-                FileInputStream fis = new FileInputStream(dendrogramFile);
-                ObjectInputStream ois = new ObjectInputStream(fis);
-                Object fileContent = ois.readObject();
-                if (fileContent instanceof Dendrogram) {
-                    this.dendrogram = (Dendrogram) fileContent;
-                }
-                ois.close();
-            } catch (FileNotFoundException e) {
-                log.warn("ClusterProviderImpl.loadDendrogram " +
-                        "FileNotFoundException; path = " + dendrogramFile +
-                        ". Dendrogram NOT loaded.", e);
-                return;
-            } catch (IOException e) {
-                log.warn("ClusterProviderImpl.loadDendrogram " +
-                        "IOException; path = " + dendrogramFile +
-                        ". Dendrogram NOT loaded.", e);
-                return;
-            } catch (ClassNotFoundException e) {
-                log.warn("ClusterProviderImpl.loadDendrogram " +
-                        "ClassNotFoundException; path = " + dendrogramFile +
-                        ". Dendrogram NOT loaded.", e);
-                return;
-            }
+            this.dendrogram = Dendrogram.load(dendrogramFile);
         } else {
             log.warn("ClusterProviderImpl.loadDendrogram; dendrogram directory path" +
                     "not a directory; directoryPath = " + directoryPath +
