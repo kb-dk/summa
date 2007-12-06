@@ -25,7 +25,11 @@ package dk.statsbiblioteket.summa.clusterextractor.data;
 import dk.statsbiblioteket.summa.clusterextractor.math.CentroidVector;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
+import java.io.*;
 import java.util.HashSet;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * CentroidSet is an unordered set of CentroidVectors.
@@ -36,6 +40,7 @@ import java.util.HashSet;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "bam")
 public class CentroidSet extends HashSet<CentroidVector> {
+    protected static final Log log = LogFactory.getLog(CentroidSet.class);
     private int builderId;
 
     /**
@@ -61,6 +66,54 @@ public class CentroidSet extends HashSet<CentroidVector> {
         return builderId;
     }
 
+    /**
+     * Save this CentroidSet in the given {@link File}.
+     * @param file file to save in
+     */
+    public void save(File file) {
+        try {
+            FileOutputStream fos = new FileOutputStream(file);
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(this);
+            oos.close();
+        } catch (FileNotFoundException e) {
+            log.error("FileNotFoundException in CentroidSet.save. " +
+                    "The centroids cannot be saved.", e);
+        } catch (IOException e) {
+            log.error("IOException in CentroidSet.save. " +
+                    "The centroids cannot be saved.", e);
+        }
+    }
+
+    /**
+     * Load CentroidSet from file.
+     * @param file file to load from
+     * @return loaded CentroidSet
+     */
+    public static CentroidSet load(File file) {
+        try {
+            FileInputStream fis = new FileInputStream(file);
+            ObjectInputStream ois = new ObjectInputStream(fis);
+            Object fileContent = ois.readObject();
+            ois.close();
+            if (fileContent instanceof CentroidSet) {
+                return (CentroidSet) fileContent;
+            } else {
+                log.error("CentroidSet.load; content of file = " + file +
+                        " is not a CentroidSet.");
+            }
+        } catch (FileNotFoundException e) {
+            log.error("CentroidSet.load " +
+                    "FileNotFoundException; file = " + file, e);
+        } catch (IOException e) {
+            log.error("CentroidSet.load " +
+                    "IOException; file = " + file, e);
+        } catch (ClassNotFoundException e) {
+            log.error("CentroidSet.load " +
+                    "ClassNotFoundException; file = " + file, e);
+        }
+        return null;
+    }
     /**
      * Returns a textual representation of this centroid set.
      * @return a string representation of this centroid set

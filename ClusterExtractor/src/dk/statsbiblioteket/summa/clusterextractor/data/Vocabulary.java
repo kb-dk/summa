@@ -24,8 +24,14 @@ package dk.statsbiblioteket.summa.clusterextractor.data;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 
-import java.io.Serializable;
-import java.util.*;
+import java.io.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * The vocabulary data structure contains all words in the vocabulary.
@@ -37,6 +43,7 @@ import java.util.*;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "bam")
 public class Vocabulary implements Serializable {
+    protected static final Log log = LogFactory.getLog(Vocabulary.class);
     /** Primary vocabulary map from String to Word. */
     private Map<String, Word> primaryVocab;
 
@@ -102,6 +109,54 @@ public class Vocabulary implements Serializable {
         return primaryVocab.size();
     }
 
+    /**
+     * Save this Vocabulary in given file.
+     * @param file file to save in
+     */
+    public void save(File file) {
+        try {
+            FileOutputStream fos = new FileOutputStream(file);
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(this);
+            oos.close();
+        } catch (FileNotFoundException e) {
+            log.error("FileNotFoundException in Vocabulary.save(). " +
+                    "Vocabulary cannot be saved.", e);
+        } catch (IOException e) {
+            log.error("IOException in Vocabulary.save(). " +
+                    "Vocabulary cannot be saved.", e);
+        }
+    }
+
+    /**
+     * Load Vocabulary from given file.
+     * @param file file to load from
+     * @return loaded Vocabulary
+     */
+    public static Vocabulary load(File file) {
+        try {
+            FileInputStream fis = new FileInputStream(file);
+            ObjectInputStream ois = new ObjectInputStream(fis);
+            Object fileContent = ois.readObject();
+            ois.close();
+            if (fileContent instanceof Vocabulary) {
+                return (Vocabulary) fileContent;
+            } else {
+                log.error("Vocabulary.load(); content of file = " + file +
+                        " not a Vocabulary.");
+            }
+        } catch (FileNotFoundException e) {
+            log.error("Vocabulary.load() " +
+                    "FileNotFoundException; file = " + file, e);
+        } catch (IOException e) {
+            log.error("Vocabulary.load() " +
+                    "IOException; file = " + file, e);
+        } catch (ClassNotFoundException e) {
+            log.error("Vocabulary.load() " +
+                    "ClassNotFoundException; file = " + file, e);
+        }
+        return null;
+    }
     /**
      * Returns a textual representation of this Vocabulary.
      * The textual representation will not be the full vocabulary, as this

@@ -50,8 +50,7 @@ import java.rmi.RemoteException;
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "bam",
-        comment = "Methods needs Javadoc")
+        author = "bam")
 public class ClusterMergerImpl extends UnicastRemoteObject implements ClusterMerger {
     protected static final Log log = LogFactory.getLog(ClusterMergerImpl.class);
     /** Configurations. */
@@ -89,33 +88,13 @@ public class ClusterMergerImpl extends UnicastRemoteObject implements ClusterMer
 
     public void uploadCentroidSet(String machineId, long handle, CentroidSet centroidSet) {
         String directoryPath = conf.getString(CENTROID_SETS_PATH_KEY);
-        saveCentroids(centroidSet, directoryPath);
-    }
-
-    /**
-     * Save given centroid set in given path.
-     * @param centroids centroid set to save
-     * @param centroidSetPath path to save in
-     */
-    private void saveCentroids(CentroidSet centroids, String centroidSetPath) {
-        File localCentroidSetDirectory = new File(centroidSetPath);
+        File localCentroidSetDirectory = new File(directoryPath);
         if (!localCentroidSetDirectory.exists()) {
             localCentroidSetDirectory.mkdir();
         }
         long timeStamp = System.currentTimeMillis();
-        File file = new File(centroidSetPath+timeStamp+"centroids.set");
-        try {
-            FileOutputStream fos = new FileOutputStream(file);
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
-            oos.writeObject(centroids);
-            oos.close();
-        } catch (FileNotFoundException e) {
-            log.error("FileNotFoundException in ClusterBuilderImpl.saveCentroids. " +
-                    "The centroids cannot be saved.", e);
-        } catch (IOException e) {
-            log.error("IOException in ClusterBuilderImpl.saveCentroids. " +
-                    "The centroids cannot be saved.", e);
-        }
+        File file = new File(directoryPath+timeStamp+"centroids.set");
+        centroidSet.save(file);
     }
 
     /**
@@ -131,23 +110,14 @@ public class ClusterMergerImpl extends UnicastRemoteObject implements ClusterMer
         }
         long timeStamp = System.currentTimeMillis();
         File file = new File(directoryPath+timeStamp+"vocabulary.obj");
-        try {
-            FileOutputStream fos = new FileOutputStream(file);
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
-            oos.writeObject(vocabulary);
-            oos.close();
-        } catch (FileNotFoundException e) {
-            log.error("FileNotFoundException in ClusterMergerImpl.saveMergedVocabularies. " +
-                    "The vocabulary cannot be saved.", e);
-            return null;
-        } catch (IOException e) {
-            log.error("IOException in ClusterMergerImpl.saveMergedVocabularies. " +
-                    "The vocabulary cannot be saved.", e);
-            return null;
-        }
+        vocabulary.save(file);
         return file;
     }
 
+    /**
+     * Load and merge all vocabularies in the directory specified in configurations.
+     * @return merged Vocabulary
+     */
     private Vocabulary loadAndMergeVocabularies() {
         String directoryPath = conf.getString(IN_VOCAB_PATH_KEY);
         File dir = new File(directoryPath);
@@ -155,25 +125,7 @@ public class ClusterMergerImpl extends UnicastRemoteObject implements ClusterMer
             File[] fileList = dir.listFiles();
             Vocabulary resultVocabulary = new Vocabulary();
             for (File file: fileList) {
-                Vocabulary current = null;
-                try {
-                    FileInputStream fis = new FileInputStream(file);
-                    ObjectInputStream ois = new ObjectInputStream(fis);
-                    Object fileContent = ois.readObject();
-                    if (fileContent instanceof Vocabulary) {
-                        current = (Vocabulary) fileContent;
-                    }
-                    ois.close();
-                } catch (FileNotFoundException e) {
-                    log.warn("ClusterMergerImpl.loadVocabulary " +
-                            "FileNotFoundException; file = " + file, e);
-                } catch (IOException e) {
-                    log.warn("ClusterMergerImpl.loadVocabulary " +
-                            "IOException; file = " + file, e);
-                } catch (ClassNotFoundException e) {
-                    log.warn("ClusterMergerImpl.loadVocabulary " +
-                            "ClassNotFoundException; file = " + file, e);
-                }
+                Vocabulary current = Vocabulary.load(file);
                 if (current != null) {
                     resultVocabulary.putAll(current);
                 }
@@ -198,6 +150,10 @@ public class ClusterMergerImpl extends UnicastRemoteObject implements ClusterMer
         return this.dendrogram;
     }
 
+    /**
+     * Save given dendrogram in directory specified in properties.
+     * @param dendrogram dendrogram to save
+     */
     private void saveDendrogram(Dendrogram dendrogram) {
         String localDendrogramPath = conf.getString(DENDROGRAM_PATH_KEY);
         File localCentroidSetDirectory = new File(localDendrogramPath);
@@ -205,30 +161,33 @@ public class ClusterMergerImpl extends UnicastRemoteObject implements ClusterMer
             localCentroidSetDirectory.mkdir();
         }
         long timeStamp = System.currentTimeMillis();
-        String fileName = localDendrogramPath+timeStamp+"dendrogram.obj";
-        try {
-            FileOutputStream fos = new FileOutputStream(fileName);
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
-            oos.writeObject(dendrogram);
-            oos.close();
-        } catch (FileNotFoundException e) {
-            log.error("FileNotFoundException in ClusterMergerImpl.saveDendrogram. " +
-                    "The dendrogram cannot be saved.", e);
-        } catch (IOException e) {
-            log.error("IOException in ClusterMergerImpl.saveDendrogram. " +
-                    "The dendrogram cannot be saved.", e);
-        }
+        File file = new File(localDendrogramPath+timeStamp+"dendrogram.obj");
+        dendrogram.save(file);
     }
 
-    private Dendrogram buildDendrogram(Set<CentroidVector> centroids) {
+    /**
+     * Build {@link Dendrogram} from given centroid set.
+     * @param centroids centroid set
+     * @return dendrogram
+     */
+    private Dendrogram buildDendrogram(CentroidSet centroids) {
         if (centroids==null || centroids.isEmpty()) {
             log.warn("ClusterMergerImpl buildDendrogram centroid set empty.");
             return null;
         }
 
         //get join similarity threshold
+        double value;
+        try {
+            value = Double.parseDouble(conf.getString(JOIN_SIMILARITY_THRESHOLD_KEY));
+        } catch (NumberFormatException e) {
+            log.warn("ClusterMergerImpl.buildDendrogram: The " +
+                    "double property with key " + JOIN_SIMILARITY_THRESHOLD_KEY +
+                    "could not be parsed.", e);
+            value = .9;
+        }
         double joinSimThreshold =
-                getDoubleProperty(JOIN_SIMILARITY_THRESHOLD_KEY, .9);
+                value;
 
         //initialise work array; note that as we are building a binary tree
         //bottom up, the total number of nodes is twice the starting number
@@ -295,8 +254,6 @@ public class ClusterMergerImpl extends UnicastRemoteObject implements ClusterMer
         }
 
         return new Dendrogram(parent);
-        //TODO: test buildDendrogram
-        //special case: centroid set empty
     }
 
     /**
@@ -306,7 +263,6 @@ public class ClusterMergerImpl extends UnicastRemoteObject implements ClusterMer
      * @return a new name for the combined cluster
      */
     private String combineName(CentroidVector first, CentroidVector second) {
-        //TODO: check combineName
         String name;
         if (first.getClusterName().toLowerCase().equals(
                 second.getClusterName().toLowerCase())) {
@@ -339,13 +295,28 @@ public class ClusterMergerImpl extends UnicastRemoteObject implements ClusterMer
         return name;
     }
 
+    /**
+     * Join close clusters with same name; rename distant clusters with same name.
+     * I.e. make sure that all centroids (or clusters) have different names.
+     * @param centroids centroidset
+     * @return centroidset without name conflicts
+     */
     private CentroidSet resolveNameConflicts(CentroidSet centroids) {
         //todo update resolve name conflicts
         if (centroids==null) {return null;}
 
         //get join same name similarity threshold
+        double value;
+        try {
+            value = Double.parseDouble(conf.getString(JOIN_SIMILARITY_THRESHOLD_SAME_NAME_KEY));
+        } catch (NumberFormatException e) {
+            log.warn("ClusterMergerImpl.resolveNameConflicts The " +
+                    "double property with key " + JOIN_SIMILARITY_THRESHOLD_SAME_NAME_KEY +
+                    "could not be parsed.", e);
+            value = .8;
+        }
         double joinSimThresholdSameName =
-                getDoubleProperty(JOIN_SIMILARITY_THRESHOLD_SAME_NAME_KEY, .8);
+                value;
 
         //centroid array used for the following loops
         CentroidVector[] centroidArray =
@@ -427,6 +398,19 @@ public class ClusterMergerImpl extends UnicastRemoteObject implements ClusterMer
         return newCentroidsSet;
     }
 
+    /**
+     * Join the two centroids under the given name.
+     * Or more accurately: Create centroid representing a cluster joined of the
+     * two clusters represented by the given centroids (under the given name).
+     * A new similarity threshold is calculated such that any document vector
+     * that belongs to either of the clusters represented by the given
+     * centroids will also belong to the cluster represented by the new
+     * centroid.
+     * @param first first centroid
+     * @param second second centroid
+     * @param name name for joined cluster
+     * @return centroid representing joined cluster
+     */
     public CentroidVector join(CentroidVector first, CentroidVector second, String name) {
         IncrementalCentroid newIncCentroid = new IncrementalCentroid(name);
         //TODO: should the centroids be weighted with expected size?
@@ -462,19 +446,6 @@ public class ClusterMergerImpl extends UnicastRemoteObject implements ClusterMer
         return newCentroidVec;
     }
 
-    private double getDoubleProperty(String key, double defaultValue) {
-        double value;
-        try {
-            value = Double.parseDouble(conf.getString(key));
-        } catch (NumberFormatException e) {
-            log.warn("ClusterMergerImpl.getDoubleProperty: The " +
-                    "double property with key " + key +
-                    "could not be parsed.", e);
-            value = defaultValue;
-        }
-        return value;
-    }
-
     /**
      * Load and join centroid sets from all the local centroid builders.
      * @return set of all centroids from all local builders
@@ -486,27 +457,9 @@ public class ClusterMergerImpl extends UnicastRemoteObject implements ClusterMer
             File[] centroidSetsFileList = dir.listFiles();
             CentroidSet resultCentroidSet = new CentroidSet();
             for (File file: centroidSetsFileList) {
-                Set<CentroidVector> centroidSet = null;
-                try {
-                    FileInputStream fis = new FileInputStream(file);
-                    ObjectInputStream ois = new ObjectInputStream(fis);
-                    Object fileContent = ois.readObject();
-                    if (fileContent instanceof CentroidSet) {
-                        centroidSet = (CentroidSet) fileContent;
-                    }
-                    ois.close();
-                } catch (FileNotFoundException e) {
-                    log.warn("ClusterMergerImpl.loadCentroids " +
-                            "FileNotFoundException; file = " + file, e);
-                } catch (IOException e) {
-                    log.warn("ClusterMergerImpl.loadCentroids " +
-                            "IOException; file = " + file, e);
-                } catch (ClassNotFoundException e) {
-                    log.warn("ClusterMergerImpl.loadCentroids " +
-                            "ClassNotFoundException; file = " + file, e);
-                }
-                if (centroidSet != null) {
-                    resultCentroidSet.addAll(centroidSet);
+                CentroidSet set = CentroidSet.load(file);
+                if (set != null) {
+                    resultCentroidSet.addAll(set);
                 }
             }
             return resultCentroidSet;

@@ -185,22 +185,8 @@ public class ClusterBuilderImpl extends UnicastRemoteObject implements ClusterBu
             localVocabularyDirectory.mkdir();
         }
         long timeStamp = System.currentTimeMillis();
-        //String fileName = localVocabularyPath+timeStamp+"vocab.obj";
         File file = new File(localVocabularyPath+timeStamp+"vocab.obj");
-        try {
-            FileOutputStream fos = new FileOutputStream(file);
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
-            oos.writeObject(vocabulary);
-            oos.close();
-        } catch (FileNotFoundException e) {
-            log.error("FileNotFoundException in ClusterBuilderImpl.saveVocabulary. " +
-                    "Vocabulary cannot be saved.", e);
-            return null;
-        } catch (IOException e) {
-            log.error("IOException in ClusterBuilderImpl.saveVocabulary. " +
-                    "Vocabulary cannot be saved.", e);
-            return null;
-        }
+        vocabulary.save(file);
         return file;
     }
 
@@ -241,20 +227,7 @@ public class ClusterBuilderImpl extends UnicastRemoteObject implements ClusterBu
         }
         long timeStamp = System.currentTimeMillis();
         File file = new File(localCentroidSetPath+timeStamp+"centroids.set");
-        try {
-            FileOutputStream fos = new FileOutputStream(file);
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
-            oos.writeObject(centroids);
-            oos.close();
-        } catch (FileNotFoundException e) {
-            log.error("FileNotFoundException in ClusterBuilderImpl.saveCentroids. " +
-                    "The centroids cannot be saved.", e);
-            return null;
-        } catch (IOException e) {
-            log.error("IOException in ClusterBuilderImpl.saveCentroids. " +
-                    "The centroids cannot be saved.", e);
-            return null;
-        }
+        centroids.save(file);
         return file;
     }
 

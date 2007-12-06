@@ -24,9 +24,12 @@ package dk.statsbiblioteket.summa.clusterextractor.data;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 
-import java.io.Serializable;
+import java.io.*;
 import java.util.HashSet;
 import java.util.Set;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * The Dendrogram is a tree (or forest) of centroids or cluster representations.
@@ -40,6 +43,7 @@ import java.util.Set;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "bam")
 public class Dendrogram implements Serializable {
+    protected static final Log log = LogFactory.getLog(Dendrogram.class);
     /** {@link Set} of root DendrogramNodes of this Dendrogram. */
     private HashSet<DendrogramNode> roots;
 
@@ -76,6 +80,58 @@ public class Dendrogram implements Serializable {
         return roots.add(root);
     }
 
+    /**
+     * Save this Dendrogram in given file.
+     * @param file file to save in
+     */
+    public void save(File file) {
+        try {
+            FileOutputStream fos = new FileOutputStream(file);
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(this);
+            oos.close();
+        } catch (FileNotFoundException e) {
+            log.error("FileNotFoundException in Dendrogram.save(). " +
+                    "The dendrogram cannot be saved.", e);
+        } catch (IOException e) {
+            log.error("IOException in Dendrogram.save(). " +
+                    "The dendrogram cannot be saved.", e);
+        }
+    }
+
+    /**
+     * Load Dendrogram from given file.
+     * @param file file to load from
+     * @return loaded Dendrogram
+     */
+    public static Dendrogram load(File file) {
+        try {
+            FileInputStream fis = new FileInputStream(file);
+            ObjectInputStream ois = new ObjectInputStream(fis);
+            Object fileContent = ois.readObject();
+            ois.close();
+            if (fileContent instanceof Dendrogram) {
+                return (Dendrogram) fileContent;
+            } else {
+                log.warn("Dendrogram.load() content of file = " + file +
+                        "NOT instanceof Dendrogram.");
+            }
+        } catch (FileNotFoundException e) {
+            log.warn("Dendrogram.load() " +
+                    "FileNotFoundException; file = " + file +
+                    ". Dendrogram NOT loaded.", e);
+        } catch (IOException e) {
+            log.warn("Dendrogram.load() " +
+                    "IOException; file = " + file +
+                    ". Dendrogram NOT loaded.", e);
+        } catch (ClassNotFoundException e) {
+            log.warn("Dendrogram.load() " +
+                    "ClassNotFoundException; file = " + file +
+                    ". Dendrogram NOT loaded.", e);
+        }
+        return null;
+    }
+    
     /**
      * Returns a textual representation of the roots of this Dendrogram.
      * @return a string representation of this Dendrogram
