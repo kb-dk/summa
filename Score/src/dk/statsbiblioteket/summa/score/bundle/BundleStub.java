@@ -38,8 +38,7 @@ import java.util.List;
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "mke",
-        comment="some methods needs Javadoc")
+        author = "mke")
 public class BundleStub {
 
     /**
@@ -77,6 +76,8 @@ public class BundleStub {
      *   <li>{@code summa.configuration}</li>
      *   <li>{@code summa.score.client.persistent.dir}</li>
      * </ul>
+     *
+     * @param bundleDir
      */
     BundleStub (File bundleDir, String bundleId, String instanceId,
                 File mainJar, String mainClass,
@@ -93,7 +94,9 @@ public class BundleStub {
     }
 
     /**
-     * Set a system property for the JVM that will be spawned by this stub.
+     * Set a system property for the command line that will be created
+     * by {@link #buildCommandLine()}. This will be used when running
+     * {@link #start()}.
      * @param name the name of the property to set
      * @param value the value of the property to set
      */
@@ -102,7 +105,12 @@ public class BundleStub {
     }
 
     /**
-     * Launch the bundle in a separate JVM
+     * <p>Launch the bundle in a separate JVM. The working directory of the
+     * child JVM will be that specified in the {@code bundleDir} passed
+     * to the constructor.</p>
+     * <p>The command used to launch the new JVM is constructed by
+     * the {@link #buildCommandLine()} method of this class.</p>
+     *
      * @throws IOException if there is an error launching the command
      * @return A process handle to the spawned JVM
      */
@@ -115,6 +123,30 @@ public class BundleStub {
         return pb.start();
     }
 
+    /**
+     * <p>Create a command line suitable for passing to
+     * {@link ProcessBuilder#command}.</p>
+     * <p>The command line will automatically pick up any jmx or RMI policy
+     * files found in the {@code bundleDir} passed to the constructor.
+     * Specifically it will update the following system properties
+     * given that the relevant files are found</p>
+     * <ul>
+     * <li>{@code java.security.policy} if
+     *     {@code <bundleDir>/config/policy} is found</li>
+     * <li>{@code com.sun.management.jmxremote.password.file} if
+     *     {@code <bundleDir>/config/jmx.password} is found</li>
+     * <li>{@code com.sun.management.jmxremote.access.file} if
+     *     {@code <bundleDir>/config/jmx.access} is found</li>
+     * </ul>
+     * <p>The classpath will contain {@code .:config:data} plus the
+     * {@code mainJar} and {@code libs} passed to the constructor.</p>
+     *
+     * <p>Any properties specified by {@link #addSystemProperty(String, String)}
+     * will also be added to the command line.</p>
+     *
+     * @return A list of command line arguments, the first one being the
+     *         {@code java} executable of the current JVMs {@code java.home}.
+     */
     public List<String> buildCommandLine () {
         String javaExecutable;
         List<String> cl = new ArrayList<String>();
