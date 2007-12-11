@@ -12,6 +12,9 @@ import org.apache.commons.logging.LogFactory;
  * <p>The service class to instantiate will be read from the
  * system configuration's {@code score.launcher.service.class} property</p>
  *
+ * <p>The typical usage is to specify this class as the main class
+ * in the bundle specs.</p>
+ * 
  * @see Configuration#getSystemConfiguration()
  */
 public class Launcher {
