@@ -39,8 +39,6 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 public interface ClusterProvider {
     /** The String key to the dendogram path property. */
     public static final String DENDROGRAM_PATH_KEY = "clusterprovider.dendrogrampath";
-    /** The String key to the vocabulary path property. */
-    public static final String VOCAB_PATH_KEY = "clusterprovider.vocabularypath";
 
     /** Cluster field name. */
     public static final String CLUSTER_FIELD_NAME = "cluster";
@@ -63,7 +61,7 @@ public interface ClusterProvider {
      */
     public void reload();
     /**
-     * Register the merger to get vocabulary and dendrogram from.
+     * Register the merger to get dendrogram from.
      * TODO: register merger with provider or?
      * @param merger ClusterMerger to get data from
      */

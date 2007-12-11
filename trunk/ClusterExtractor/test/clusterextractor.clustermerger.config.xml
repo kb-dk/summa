@@ -5,12 +5,6 @@
     <!-- ******** clusterextractor clusterbuilder test properties ********* -->
     <!-- ****************************************************************** -->
 
-    <!-- incoming vocabularies path property -->
-    <entry key="clustermerger.invocabpath">/tmp/vocabularies/</entry>
-
-    <!-- output vocabulary path property -->
-    <entry key="clustermerger.outvocabpath">/tmp/vocabulary/</entry>
-
     <!-- centroid sets path property -->
     <entry key="clustermerger.centroidsetspath">/tmp/centroidsets/</entry>
 

@@ -23,7 +23,6 @@
 package dk.statsbiblioteket.summa.clusterextractor;
 
 import dk.statsbiblioteket.summa.clusterextractor.data.Dendrogram;
-import dk.statsbiblioteket.summa.clusterextractor.data.Vocabulary;
 import dk.statsbiblioteket.summa.clusterextractor.math.CentroidVector;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.storage.FileStorage;
@@ -68,28 +67,6 @@ public class ClusterMergerImplTest extends TestCase {
 
     public void tearDown() throws Exception {
         super.tearDown();
-    }
-
-    public void testMergeVocabularies() throws Exception {
-        //assume clusters build
-        //construct cluster merger and call merge method
-        ClusterMerger merger = new ClusterMergerImpl(conf);
-        merger.mergeVocabularies();
-
-        //find and check result
-        String localVocabularyPath = conf.getString(ClusterMerger.OUT_VOCAB_PATH_KEY);
-        File dir = new File(localVocabularyPath);
-        File[] fileList = dir.listFiles();
-        Arrays.sort(fileList);
-        File result = fileList[fileList.length-1];
-        FileInputStream fis = new FileInputStream(result);
-        ObjectInputStream ois = new ObjectInputStream(fis);
-
-        Vocabulary vocabulary = (Vocabulary) ois.readObject();
-
-        ois.close();
-
-        System.out.println("vocabulary = " + vocabulary);
     }
 
     public void testMergeCentroidSets() throws Exception {

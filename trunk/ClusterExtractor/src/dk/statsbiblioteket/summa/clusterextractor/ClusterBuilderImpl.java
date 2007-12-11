@@ -23,8 +23,6 @@
 package dk.statsbiblioteket.summa.clusterextractor;
 
 import dk.statsbiblioteket.summa.clusterextractor.data.CentroidSet;
-import dk.statsbiblioteket.summa.clusterextractor.data.Vocabulary;
-import dk.statsbiblioteket.summa.clusterextractor.data.Word;
 import dk.statsbiblioteket.summa.clusterextractor.math.CentroidVector;
 import dk.statsbiblioteket.summa.clusterextractor.math.IncrementalCentroid;
 import dk.statsbiblioteket.summa.clusterextractor.math.SparseVector;
@@ -37,14 +35,15 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.*;
 import org.apache.lucene.search.*;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 import java.util.regex.Pattern;
 
 /**
- * ClusterBuilderImpl builds local vocabulary and centroids.
+ * ClusterBuilderImpl builds local centroid sets.
  * ClusterBuilderImpl implements ClusterBuilder and Remote.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -60,9 +59,6 @@ public class ClusterBuilderImpl extends UnicastRemoteObject implements ClusterBu
     protected String id;
     /** The merger to upload data to. */
     private ClusterMerger merger;
-
-    /** The vocabulary build and used by this cluster builder. */
-    protected Vocabulary vocab = null;
 
     /** Fields in which to look for candidate terms initially. */
     protected List<String> fieldsUsedInInit;
@@ -121,83 +117,10 @@ public class ClusterBuilderImpl extends UnicastRemoteObject implements ClusterBu
         return true;
     }
 
-    public void buildVocabulary() {
-        if (log.isTraceEnabled()) {
-            log.trace("ClusterBuilderImpl.buildVocabulary start.");
-        }
-
-        if (ir==null && !openIndexReader()) {
-            log.error("Vocabulary cannot be build without access to an index.");
-            return;
-        }
-        Vocabulary vocabulary = new Vocabulary();
-        Word word;
-        TermEnum allTerms;
-        try {
-            allTerms = ir.terms();
-        } catch (IOException e) {
-            log.error("IndexReader/TermEnum IOException in " +
-                    "ClusterBuilderImpl.buildVocabulary. No vocabulary is built.", e);
-            return;
-        }
-        try {
-            // look at all terms (in all fields) in index
-            while (allTerms.next()) {
-                Term term = allTerms.term();
-                int docFreq = allTerms.docFreq();
-
-                // if the term text is 'allowed' and not unique,
-                // save word in vocabulary
-                if (termTextOk(term.text()) && docFreq>1) {
-                    word = new Word(term.text(), docFreq, 1);
-                    //TODO: boost factor
-                    vocabulary.put(word);
-                }
-            }
-        } catch (IOException e) {
-            log.warn("IndexReader/TermEnum IOException in " +
-                    "ClusterBuilderImpl.buildVocabulary. Skipping term.", e);
-            return;
-        }
-
-        File file = saveVocabulary(vocabulary);
-        //TODO: look up merger, get handle and move new vocabulary to merger?
-        if (file != null && this.merger!=null) {
-            this.merger.uploadVocabulary(this.id, -1, vocabulary);
-        }
-
-        if (log.isTraceEnabled()) {
-            log.trace("ClusterBuilderImpl.buildVocabulay end. " +
-                    "Size of voacabulary: " + vocabulary.size());
-        }
-
-    }
-
-    /**
-     * Save given {@link Vocabulary} in directory specified in {@link Configuration}.
-     * @param vocabulary Vocabulary to save
-     * @return the file the vocabulary was saved in
-     */
-    private File saveVocabulary(Vocabulary vocabulary) {
-        String localVocabularyPath = conf.getString(LOCAL_VOCAB_PATH_KEY);
-        File localVocabularyDirectory = new File(localVocabularyPath);
-        if (!localVocabularyDirectory.exists()) {
-            localVocabularyDirectory.mkdir();
-        }
-        long timeStamp = System.currentTimeMillis();
-        File file = new File(localVocabularyPath+timeStamp+"vocab.obj");
-        vocabulary.save(file);
-        return file;
-    }
-
     public void buildCentroids() {
         if (ir==null && !openIndexReader()) {
             log.error("Centroids cannot be build without access to an index.");
             return;
-        }
-        //TODO: if ??? get new vocab from merger
-        if (this.merger!=null) {
-            this.vocab = this.merger.getNewVocabulary();
         }
 
         Set<String> candidateTerms = getCandidateTerms();
@@ -572,12 +495,8 @@ public class ClusterBuilderImpl extends UnicastRemoteObject implements ClusterBu
      * @return true if text acceptable as a term, false otherwise
      */
     private boolean termTextOk(String text) {
-        if (vocab!=null) {
-            return vocab.contains(text);
-        } else {
-            return (pTerms == null || pTerms.matcher(text).matches()) &&
-                    (pNTerms == null || !pNTerms.matcher(text).matches());
-        }
+        return (pTerms == null || pTerms.matcher(text).matches()) &&
+                (pNTerms == null || !pNTerms.matcher(text).matches());
     }
 
     /**

@@ -24,7 +24,6 @@ package dk.statsbiblioteket.summa.clusterextractor;
 
 import dk.statsbiblioteket.summa.clusterextractor.data.Dendrogram;
 import dk.statsbiblioteket.summa.clusterextractor.data.DendrogramNode;
-import dk.statsbiblioteket.summa.clusterextractor.data.Vocabulary;
 import dk.statsbiblioteket.summa.clusterextractor.math.SparseVector;
 import dk.statsbiblioteket.summa.clusterextractor.math.SparseVectorMapImpl;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -34,7 +33,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
-import java.io.*;
+import java.io.File;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Arrays;
@@ -44,8 +43,8 @@ import java.util.regex.Pattern;
 
 /**
  * ClusterProviderImpl can enrich a given Document with known clusters.
- * The ClusterProviderImpl loads a {@link Vocabulary} and a {@link Dendrogram},
- * and provides an enrich method based on these. The enrich method takes a
+ * The ClusterProviderImpl loads a {@link Dendrogram},
+ * and provides an enrich method based on this. The enrich method takes a
  * Lucene @{link Document}, enriches and returns it.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -55,8 +54,6 @@ public class ClusterProviderImpl extends UnicastRemoteObject implements ClusterP
     protected static final Log log = LogFactory.getLog(ClusterProviderImpl.class);
     /** Configurations. */
     protected Configuration conf;
-    /** Vocabulary. */
-    protected Vocabulary vocabulary;
     /** Dendrogram. */
     protected Dendrogram dendrogram;
     /** Merger to get data from*/
@@ -169,12 +166,8 @@ public class ClusterProviderImpl extends UnicastRemoteObject implements ClusterP
      * @return true if dim is accepted as term-text/dimension; false otherwise
      */
     private boolean termTextOk(String dim) {
-        if (vocabulary!=null) {
-            return vocabulary.contains(dim);
-        } else {
         return ((pTerms==null || pTerms.matcher(dim).matches()) &&
                 (pNTerms==null || !pNTerms.matcher(dim).matches()));
-        }
     }
 
     /**
@@ -201,46 +194,6 @@ public class ClusterProviderImpl extends UnicastRemoteObject implements ClusterP
         pNFields = nFields == null || nFields.equals("") ? null : Pattern.compile(nFields);
         if (log.isTraceEnabled()) {
             log.trace("pNFields = " + pNFields);
-        }
-    }
-
-    /**
-     * Load Vocabulary from path provided in configuration.
-     */
-    private void loadVocabulary() {
-        String directoryPath = conf.getString(VOCAB_PATH_KEY);
-        File dir = new File(directoryPath);
-        if (dir.isDirectory()) {
-            File[] vocabFileList = dir.listFiles();
-            if (vocabFileList.length==0) {
-                log.warn("ClusterProviderImpl.loadVocabulary; no vocabulary file " +
-                        "found; directoryPath = " + directoryPath +
-                        ". Vocabulary NOT loaded.");
-                return;
-            }
-            Arrays.sort(vocabFileList);
-            File vocabFile;
-            int index = vocabFileList.length-1;
-            do {
-                vocabFile = vocabFileList[index];
-                index--;
-            }
-            while (!vocabFile.isFile() && index>=0);
-            if (!vocabFile.isFile()) {
-                log.warn("ClusterProviderImpl.loadVocabulary; no vocabulary file " +
-                        "found; directoryPath = " + directoryPath +
-                        ". Vocabulary NOT loaded.");
-                return;
-            }
-            this.vocabulary = Vocabulary.load(vocabFile);
-        } else {
-            log.warn("ClusterProviderImpl.loadVocabulary; vocabulary directory path" +
-                    "not a directory; directoryPath = " + directoryPath +
-                    ". Vocabulary NOT loaded.");
-            return;
-        }
-        if (log.isTraceEnabled()) {
-            log.trace("ClusterProviderImpl.loadVocabulary: Vocabulary loaded.");
         }
     }
 
@@ -287,10 +240,8 @@ public class ClusterProviderImpl extends UnicastRemoteObject implements ClusterP
     public void reload() {
         //TODO make reload make sense again !!!
         if (this.merger==null) {
-            loadVocabulary();
             loadDendrogram();
         } else {
-            this.vocabulary = this.merger.getNewVocabulary();
             this.dendrogram = this.merger.getNewDendrogram();
         }
     }

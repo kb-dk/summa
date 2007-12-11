@@ -25,7 +25,7 @@ package dk.statsbiblioteket.summa.clusterextractor;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
- * ClusterBuilder is responsible for building local vocabulary and centroids.
+ * ClusterBuilder is responsible for building local centroid sets.
  *
  * This interface defines two methods that should be implemented to be a
  * ClusterBuilder, and a number of names (keys) to useful configuration
@@ -41,8 +41,6 @@ public interface ClusterBuilder {
     /** The String key to the id for this machine property. */
     public static final String LOCAL_MACHINE_ID_KEY = "clusterbuilder.machineid";
 
-    /** The String key to the local builder vocabulary path property. */
-    public static final String LOCAL_VOCAB_PATH_KEY = "clusterbuilder.localvocabpath";
     /** The String key to the local builder centroid sets path property. */
     public static final String LOCAL_CENTROID_SET_PATH_KEY = "clusterbuilder.localcentroidsetpath";
 
@@ -82,12 +80,6 @@ public interface ClusterBuilder {
     public static final String SIMILARITY_THRESHOLD_KEY =
             "clusterbuilder.SimilarityThresholdFraction";
 
-    /**
-     * Build vocabulary based on index specified in configuration.
-     * The vocabulary is build and saved using the properties set in the known
-     * configuration.
-     */
-    public void buildVocabulary();
     /**
      * Build centroids based on index specified in configuration.
      * A centroid set is build and saved using the properties set in the known

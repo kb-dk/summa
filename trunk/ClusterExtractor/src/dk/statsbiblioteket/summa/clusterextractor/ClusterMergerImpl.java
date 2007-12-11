@@ -22,11 +22,10 @@
  */
 package dk.statsbiblioteket.summa.clusterextractor;
 
+import dk.statsbiblioteket.summa.clusterextractor.data.CentroidSet;
 import dk.statsbiblioteket.summa.clusterextractor.data.Dendrogram;
 import dk.statsbiblioteket.summa.clusterextractor.data.DendrogramNode;
-import dk.statsbiblioteket.summa.clusterextractor.data.*;
 import dk.statsbiblioteket.summa.clusterextractor.data.PQueueSimilarity;
-import dk.statsbiblioteket.summa.clusterextractor.data.Vocabulary;
 import dk.statsbiblioteket.summa.clusterextractor.math.CentroidVector;
 import dk.statsbiblioteket.summa.clusterextractor.math.CoordinateComparator;
 import dk.statsbiblioteket.summa.clusterextractor.math.IncrementalCentroid;
@@ -35,17 +34,16 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.*;
-import java.util.*;
-import java.rmi.server.UnicastRemoteObject;
+import java.io.File;
 import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.*;
 
 /**
- * ClusterMergerImpl merges vocabularies and centroid sets.
- * The local builders push newly build vocabularies and centroid sets to the
- * merger. The merger merges the different local vocabularies into one
- * vocabulary and the different local centroid sets into one centroid set
- * and then into a dendrogram. The merged vocabulary and dendrogram is then
+ * ClusterMergerImpl merges centroid sets into a dendrogram.
+ * The local builders push newly build centroid sets to the
+ * merger. The merger merges the local centroid sets into one centroid set
+ * and then into a dendrogram. The merged dendrogram is then
  * pushed to the known providers.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -55,8 +53,6 @@ public class ClusterMergerImpl extends UnicastRemoteObject implements ClusterMer
     protected static final Log log = LogFactory.getLog(ClusterMergerImpl.class);
     /** Configurations. */
     protected Configuration conf;
-    /** Merged Vocabulary. */
-    private Vocabulary vocabulary;
     /** Merged Dendrogram. */
     private Dendrogram dendrogram;
 
@@ -71,21 +67,6 @@ public class ClusterMergerImpl extends UnicastRemoteObject implements ClusterMer
         exportRemoteInterfaces();
     }
 
-    public void uploadVocabulary(String machineId, long handle, Vocabulary vocab) {
-        String directoryPath = conf.getString(IN_VOCAB_PATH_KEY);
-        saveVocabulary(vocab, directoryPath);
-    }
-
-    public void mergeVocabularies() {
-        this.vocabulary = loadAndMergeVocabularies();
-        String directoryPath = conf.getString(OUT_VOCAB_PATH_KEY);
-        saveVocabulary(vocabulary, directoryPath);
-    }
-
-    public Vocabulary getNewVocabulary() {
-        return this.vocabulary;
-    }
-
     public void uploadCentroidSet(String machineId, long handle, CentroidSet centroidSet) {
         String directoryPath = conf.getString(CENTROID_SETS_PATH_KEY);
         File localCentroidSetDirectory = new File(directoryPath);
@@ -95,48 +76,6 @@ public class ClusterMergerImpl extends UnicastRemoteObject implements ClusterMer
         long timeStamp = System.currentTimeMillis();
         File file = new File(directoryPath+timeStamp+"centroids.set");
         centroidSet.save(file);
-    }
-
-    /**
-     * Save given {@link Vocabulary} in given directory.
-     * @param vocabulary Vocabulary to save
-     * @param directoryPath path to directory to save in
-     * @return the file the vocabulary was saved in
-     */
-    private File saveVocabulary(Vocabulary vocabulary, String directoryPath) {
-        File directory = new File(directoryPath);
-        if (!directory.exists()) {
-            directory.mkdir();
-        }
-        long timeStamp = System.currentTimeMillis();
-        File file = new File(directoryPath+timeStamp+"vocabulary.obj");
-        vocabulary.save(file);
-        return file;
-    }
-
-    /**
-     * Load and merge all vocabularies in the directory specified in configurations.
-     * @return merged Vocabulary
-     */
-    private Vocabulary loadAndMergeVocabularies() {
-        String directoryPath = conf.getString(IN_VOCAB_PATH_KEY);
-        File dir = new File(directoryPath);
-        if (dir.isDirectory()) {
-            File[] fileList = dir.listFiles();
-            Vocabulary resultVocabulary = new Vocabulary();
-            for (File file: fileList) {
-                Vocabulary current = Vocabulary.load(file);
-                if (current != null) {
-                    resultVocabulary.putAll(current);
-                }
-            }
-            return resultVocabulary;
-        } else {
-            log.error("ClusterMergerImpl.loadVocabulary not able to load " +
-                    "centroids; directoryPath = " + directoryPath +
-                    " not a directory; null is returned.");
-            return null;
-        }
     }
 
     public void mergeCentroidSets() {
