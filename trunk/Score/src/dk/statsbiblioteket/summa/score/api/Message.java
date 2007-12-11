@@ -53,7 +53,7 @@ public class Message {
 
     private int messageType;
     private String message;
-    private String response = null;
+    private Object response = null;
 
     /**
      * Construct a Message object with the given type and message.
@@ -70,11 +70,30 @@ public class Message {
     public int getMessageType() {
         return messageType;
     }
+
     public String getMessage() {
         return message;
     }
+
     public String getResponse() {
-        return response;
+        return response.toString();
+    }
+
+    /**
+     * Used mainly to retrieve the response value from sensitive questions
+     * so as password prompts. A byte array is used here to avoid having
+     * a copy of passwords or other secrets in the string pool.
+     * @return
+     */
+    public char[] getRawResponse () {
+        if (response instanceof char[]) {
+            return (char[]) response;
+        }
+        // response is a string, extract a char array
+        String respString = response.toString();
+        char[] chars = new char[respString.length()];
+        response.toString().getChars(0, chars.length, chars, 0);
+        return chars;
     }
 
     /**
@@ -84,6 +103,17 @@ public class Message {
      *                 case of errors.
      */
     public void setResponse(String response) {
+        this.response = response;
+    }
+
+    /**
+     * Used mainly to set the response for sensitive informations such as
+     * password prompts. Using raw byte arrays makes sure we don't end up with
+     * a copy of the password in the string pool.
+     * @param response the response to the message, if requested. Null in
+     *                 case of errors.
+     */
+    public void setRawResponse (char[] response) {
         this.response = response;
     }
 }
