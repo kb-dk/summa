@@ -97,7 +97,7 @@ public interface ClientConnection extends Remote {
      * Stop the client specified in the base configuration for the
      * ClientDeployer.
      *
-     * This call should stop the JVM of the client. Ie, call {@link System"exit}
+     * This call should stop the JVM of the client. Ie, call {@link System#exit}
      * 
      * @throws java.rmi.RemoteException in case of communication errors.
      */

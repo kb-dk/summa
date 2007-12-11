@@ -25,10 +25,11 @@ package dk.statsbiblioteket.summa.score.client.shell;
 import dk.statsbiblioteket.summa.common.shell.Command;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.score.api.ClientConnection;
+import dk.statsbiblioteket.summa.score.api.Service;
 import dk.statsbiblioteket.util.Strings;
 
 /**
- * 
+ * A {@link Command} for deploying a {@link Service} via a {@link ClientShell}.
  */
 public class DeployCommand extends Command {
 
