@@ -22,17 +22,18 @@
  */
 package dk.statsbiblioteket.summa.score.api;
 
-import java.io.Serializable;
-
 import dk.statsbiblioteket.util.qa.QAInfo;
+
+import java.io.Serializable;
 
 /**
  * Generic object to represent the status of a Score service or client.
+ * @see Service
+ * @see dk.statsbiblioteket.summa.score.client.Client
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "mke",
-        comment="The class and some methods needs better Javadoc")
+        author = "mke")
 public class Status implements Serializable {
     public static enum CODE {
         /**
@@ -74,6 +75,11 @@ public class Status implements Serializable {
     private CODE code;
     private String message;
 
+    /**
+     * Create a new Status object.
+     * @param code Status code for status object
+     * @param message Message with explanatory text
+     */
     public Status(CODE code, String message) {
         this.code = code;
         this.message = message;

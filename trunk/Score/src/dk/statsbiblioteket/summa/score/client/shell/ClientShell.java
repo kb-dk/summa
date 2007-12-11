@@ -24,11 +24,18 @@ package dk.statsbiblioteket.summa.score.client.shell;
 
 import dk.statsbiblioteket.summa.common.shell.Core;
 import dk.statsbiblioteket.summa.score.api.ClientConnection;
+import dk.statsbiblioteket.summa.score.client.Client;
 
 import java.rmi.Naming;
 
 /**
+ * <p>A simple shell for communicating with a {@link Client}.</p>
  *
+ * <p>The shell is built using a generic shell {@link Core} from the
+ * {@link dk.statsbiblioteket.summa.common.shell} package.</p>
+ *
+ * <p>It can be run from the command line and can communicate with
+ * any Client local or remotely via RMI.</p>
  */
 public class ClientShell {
 

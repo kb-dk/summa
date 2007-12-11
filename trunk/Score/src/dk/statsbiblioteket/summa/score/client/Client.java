@@ -56,6 +56,12 @@ import org.apache.commons.logging.LogFactory;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
+/**
+ * <p>Core class for running Score clients.</p>
+ *
+ * <p>The client talks to the Score server via a {@link ScoreConnection}.
+ * Itself exposes a {@link ClientConnection} over RMI.</p>
+ */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke",
