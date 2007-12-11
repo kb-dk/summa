@@ -128,7 +128,7 @@
     </target>
 
 
-    <target name="compile">
+    <target name="compile" depends="depends">
         <mkdir dir="${build.dir}"/>
         <javac srcdir="${src.dir}" destdir="${build.dir}" encoding="UTF-8"
                compiler="${summa.compiler}" optimize="${summa.compiler.optimize}"
