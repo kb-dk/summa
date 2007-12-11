@@ -26,10 +26,9 @@ import dk.statsbiblioteket.summa.score.api.Feedback;
 import dk.statsbiblioteket.summa.score.api.Message;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
+import java.io.Console;
+import java.io.PrintWriter;
 import java.util.List;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.IOException;
 
 /**
  * Simple implementation of Feedback, that writes and reads from the
@@ -40,8 +39,14 @@ import java.io.IOException;
         author = "mke",
         comment="Some methods neeeds Javadoc")
 public class ConsoleFeedback implements Feedback {
-    private static BufferedReader in =
-            new BufferedReader(new InputStreamReader(System.in));
+
+    private Console in;
+    private PrintWriter out;
+
+    public ConsoleFeedback () {
+        in = System.console();
+        out = System.console().writer();
+    }
 
     /**
      * Output all the messages sequentially to the console and collect
@@ -57,42 +62,24 @@ public class ConsoleFeedback implements Feedback {
     public void putMessage(Message message) {
         switch (message.getMessageType()) {
             case Message.MESSAGE_PLAIN:
-                System.out.println(message);
-                System.out.println("");
+                out.println(message);
+                out.println("");
                 break;
             case Message.MESSAGE_ALERT:
-                System.err.print("[ALERT] ");
-                System.err.println(message);
-                System.err.println("");
+                out.print("[ALERT] ");
+                out.println(message);
+                out.println("");
                 break;
             case Message.MESSAGE_REQUEST:
-                System.out.println(message);
-                try {
-                    message.setResponse(in.readLine());
-                } catch (IOException e) {
-                    System.err.println("Exception reading input: "
-                            + e.getMessage());
-                    System.err.println("Defaulting to null response");
-                    message.setResponse(null);
-                }
+                out.println(message);
+                message.setResponse(in.readLine());
                 break;
             case Message.MESSAGE_SECRET_REQUEST:
-                System.out.println(message);
-                System.out.println("*** Warning ***");
-                System.out.println("This implementation does not hide the "
-                        + "input characters!");
-                System.out.println("*** Warning end ***");
-                try {
-                    message.setResponse(in.readLine());
-                } catch (IOException e) {
-                    System.err.println("Exception reading input: "
-                            + e.getMessage());
-                    System.err.println("Defaulting to null response");
-                    message.setResponse(null);
-                }
+                out.println(message);
+                message.setRawResponse(in.readPassword());
                 break;
             default:
-                System.err.println("Error: Unknown message type: "
+                out.println("Error: Unknown message type: "
                         + message.getMessageType());
         }
     }
