@@ -31,14 +31,6 @@ import dk.statsbiblioteket.util.qa.QAInfo;
  * <ul>
  * <li> For each index machine:
  *      <ul>
- *      <li> run the ClusterBuilder.buildVocabulary method;
- *      <li> move the created vocabulary data structure to a central location
- *           (defined in the properties).
- *      </ul>
- * <li> Central: Call the ClusterMerger.mergeVocabularies method.
- * <li> For each index machine:
- *      <ul>
- *      <li> copy the new full vocabulary to this machine;
  *      <li> run the ClusterBuilder.buildCentroids method;
  *      <li> copy the new local centroid data structure to a central location.
  *      </ul>

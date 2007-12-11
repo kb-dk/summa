@@ -13,8 +13,6 @@
 
     <!-- local centroid set path property -->
     <entry key="clusterbuilder.localcentroidsetpath">/tmp/localbuildercentroidset/</entry>
-    <!-- vocabularies path property -->
-    <entry key="clusterbuilder.localvocabpath">/tmp/localbuildervocabulary/</entry>
 
     <!-- ****************************************************************** -->
     <!-- **************** INITIAL CANDIDATE PROPERTIES ******************** -->
@@ -23,10 +21,10 @@
     <!-- Fields to use in the init phase of vocabulary and cluster creation -->
     <entry key="clusterbuilder.FieldsUsedInInit">su_pe|su_corp|su_lc|mesh|su_dk|lsu_oai</entry>
     <!-- Fields not to in the init phase -->
-    <entry key="clusterbuilder.NegativeFieldsInInit"></entry>
+    <entry key="clusterbuilder.NegativeFieldsInInit"/>
 
     <!-- Terms to use in the vocabulary in cluster creation -->
-    <entry key="clusterbuilder.Terms"></entry>
+    <entry key="clusterbuilder.Terms"/>
     <!-- Terms not to use in the vocabulary (qzwq is a delimiter) -->
     <entry key="clusterbuilder.NegativeTerms">[0-9]+[.]?-? ?[0-9]+|[0-9]|og|view|and|of|the|.|new|with|on|to|etc|den|for|in|von|qzwq|til|med|om|af|på|det|er|as|ii|ud|no|st|se|na|al|is|man|it</entry>
 
@@ -46,7 +44,7 @@
          i.e. these are also the fields used in search-based algorithms -->
     <entry key="clusterbuilder.FieldsUsedInVectors">su_pe|su_corp|su_lc|mesh|su_dk|lsu_oai|title|main_titel|subject_controlled|subject_dk5|no|shortformat|sort_title|subject_other|commercials_subject</entry>
     <!-- Fields NOT used for document vectors (exclusive list) -->
-    <entry key="clusterbuilder.NegativeFieldsInVectors"></entry>
+    <entry key="clusterbuilder.NegativeFieldsInVectors"/>
 
     <!-- The minimum number of fields that the term text has to occur in to be
          considered a candidate for cluster algorithm initialisation. Only the

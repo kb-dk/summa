@@ -7,7 +7,5 @@
 
     <!-- dendrogram path property -->
     <entry key="clusterprovider.dendrogrampath">/tmp/providerdendrogram/</entry>
-    <!-- vocabulary path property -->
-    <entry key="clusterprovider.vocabularypath">/tmp/providervocabulary/</entry>
 
 </properties>

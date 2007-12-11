@@ -106,13 +106,6 @@ public class WorkFlowTest extends TestCase {
     }
 
     public void testWorkFlow() {
-        builder1.buildVocabulary();
-        builder2.buildVocabulary();
-        //TODO: move vocab
-        
-        merger.mergeVocabularies();
-        //TODO: move vocab
-
         builder1.buildCentroids();
         builder2.buildCentroids();
         //TODO: move
