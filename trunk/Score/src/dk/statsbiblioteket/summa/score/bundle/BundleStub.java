@@ -23,6 +23,7 @@
 package dk.statsbiblioteket.summa.score.bundle;
 
 import dk.statsbiblioteket.summa.score.client.Client;
+import dk.statsbiblioteket.summa.score.api.Service;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -77,7 +78,16 @@ public class BundleStub {
      *   <li>{@code summa.score.client.persistent.dir}</li>
      * </ul>
      *
-     * @param bundleDir
+     * @param bundleDir Root directory of the bundle
+     * @param bundleId Bundle specific id
+     * @param instanceId id to use for the {@link Service or {@link Client}
+     *                   spawned by {@link #start}
+     * @param mainJar The jar containing the main file of the bundle
+     * @param mainClass The qualified class name of the main class
+     * @param libs List of jar files, relative to {@code bundleDir}, to include
+     *             in the class path when launching the bundle.
+     * @param jvmArgs Extra arguments to pass to the JVM when spawning the
+     *                JVM of the {@link Service or {@link Client} 
      */
     BundleStub (File bundleDir, String bundleId, String instanceId,
                 File mainJar, String mainClass,
