@@ -33,7 +33,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * {@lin ClientDeployer} that uses ssh to copy and start Clients.
+ * <p>{@link ClientDeployer} that uses ssh to copy and start Clients.</p>
+ * 
  * $Id: SSHDeployer.java,v 1.8 2007/10/04 13:28:20 te Exp $
  */
 public class SSHDeployer implements ClientDeployer {
