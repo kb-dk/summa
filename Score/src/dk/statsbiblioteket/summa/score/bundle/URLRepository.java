@@ -32,10 +32,15 @@ import java.net.URL;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+/**
+ * <p>A {@link BundleRepository} fetching bundles via Java {@link URL}s.</p>
+ *
+ * <p>Given a bundle id it is mapped to a URL as specified by the
+ * {@link #BASE_URL} property in the {@link Configuration}.</p>
+ */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "mke",
-        comment="The class and some methods needs Javadoc")
+        author = "mke")
 public class URLRepository implements BundleRepository {
 
     /** <p>Property defining where the repository is located.
