@@ -22,7 +22,7 @@
  */
 package dk.statsbiblioteket.summa.clusterextractor;
 
-import dk.statsbiblioteket.summa.clusterextractor.data.CentroidSet;
+import dk.statsbiblioteket.summa.clusterextractor.data.ClusterSet;
 import dk.statsbiblioteket.summa.clusterextractor.data.Dendrogram;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
@@ -46,7 +46,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "bam")
 public interface ClusterMerger {
-    public static final String CENTROID_SETS_PATH_KEY = "clustermerger.centroidsetspath";
+    public static final String CLUSTER_SETS_PATH_KEY = "clustermerger.clustersetspath";
     /** The String key to the dendogram path property. */
     public static final String DENDROGRAM_PATH_KEY = "clustermerger.dendrogrampath";
 
@@ -59,9 +59,9 @@ public interface ClusterMerger {
      * Upload new locally build centroid set from given machine, handle, file info.
      * @param machineId the Id of the machine, which has build this vocabulary
      * @param handle the handle to upload the file
-     * @param centroidSet the centroid set TODO remove centroid set parameter
+     * @param clusterSet the centroid set TODO remove centroid set parameter
      */
-    public void uploadCentroidSet(String machineId, long handle, CentroidSet centroidSet);
+    public void uploadCentroidSet(String machineId, long handle, ClusterSet clusterSet);
 
     /**
      * Merge all known centroid sets to one dendrogram and push to local providers.

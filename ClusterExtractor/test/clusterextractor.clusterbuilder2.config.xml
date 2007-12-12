@@ -11,8 +11,8 @@
     <!-- local machine id -->
     <entry key="clusterbuilder.machineid">2</entry>
 
-    <!-- local centroid set path property -->
-    <entry key="clusterbuilder.localcentroidsetpath">/tmp/localbuildercentroidset2/</entry>
+    <!-- local cluster set path property -->
+    <entry key="clusterbuilder.localclustersetpath">/tmp/localbuilderclusterset2/</entry>
 
     <!-- ****************************************************************** -->
     <!-- **************** INITIAL CANDIDATE PROPERTIES ******************** -->

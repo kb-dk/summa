@@ -5,8 +5,8 @@
     <!-- ******** clusterextractor clusterbuilder test properties ********* -->
     <!-- ****************************************************************** -->
 
-    <!-- centroid sets path property -->
-    <entry key="clustermerger.centroidsetspath">/tmp/centroidsets/</entry>
+    <!-- cluster sets path property -->
+    <entry key="clustermerger.clustersetspath">/tmp/clustersets/</entry>
 
     <!-- dendrogram path property -->
     <entry key="clustermerger.dendrogrampath">/tmp/dendrogram/</entry>

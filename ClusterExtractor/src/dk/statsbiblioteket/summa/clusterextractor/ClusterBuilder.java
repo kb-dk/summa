@@ -41,8 +41,8 @@ public interface ClusterBuilder {
     /** The String key to the id for this machine property. */
     public static final String LOCAL_MACHINE_ID_KEY = "clusterbuilder.machineid";
 
-    /** The String key to the local builder centroid sets path property. */
-    public static final String LOCAL_CENTROID_SET_PATH_KEY = "clusterbuilder.localcentroidsetpath";
+    /** The String key to the local builder cluster set path property. */
+    public static final String LOCAL_CLUSTER_SET_PATH_KEY = "clusterbuilder.localclustersetpath";
 
     // String keys to properties used when finding candidate terms
     public static final String FIELDS_IN_INIT_KEY =

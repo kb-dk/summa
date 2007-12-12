@@ -22,8 +22,8 @@
  */
 package dk.statsbiblioteket.summa.clusterextractor;
 
-import dk.statsbiblioteket.summa.clusterextractor.data.CentroidSet;
-import dk.statsbiblioteket.summa.clusterextractor.math.CentroidVector;
+import dk.statsbiblioteket.summa.clusterextractor.data.ClusterSet;
+import dk.statsbiblioteket.summa.clusterextractor.data.Cluster;
 import dk.statsbiblioteket.summa.clusterextractor.math.IncrementalCentroid;
 import dk.statsbiblioteket.summa.clusterextractor.math.SparseVector;
 import dk.statsbiblioteket.summa.clusterextractor.math.SparseVectorMapImpl;
@@ -70,9 +70,8 @@ public class ClusterBuilderImpl extends UnicastRemoteObject implements ClusterBu
     /** Negative pattern used for filtering the text of the terms. */
     protected Pattern pNTerms;
 
-    /** The zero centroid vector. */
-    public static final CentroidVector zero =
-            new CentroidVector("zero-vec", 0, null);
+    /** The zero vector. */
+    public static final SparseVector zero = new SparseVectorMapImpl(null);
 
     /**
      * Construct cluster builder using given configurations.
@@ -128,7 +127,7 @@ public class ClusterBuilderImpl extends UnicastRemoteObject implements ClusterBu
                 candidateTermsToQueries
                         (candidateTerms, fieldsUsedInInit);
 
-        CentroidSet centroids = queriesToCentroids(queries);
+        ClusterSet centroids = queriesToCentroids(queries);
 
         File file = saveCentroids(centroids);
         //TODO: look up merger, get handle and move new centroid set to merger?
@@ -138,12 +137,12 @@ public class ClusterBuilderImpl extends UnicastRemoteObject implements ClusterBu
     }
 
     /**
-     * Save given {@link CentroidSet} in directory specified in {@link Configuration}.
-     * @param centroids CentroidSet to save
+     * Save given {@link dk.statsbiblioteket.summa.clusterextractor.data.ClusterSet} in directory specified in {@link Configuration}.
+     * @param centroids ClusterSet to save
      * @return the file the centroid set was saved in
      */
-    private File saveCentroids(CentroidSet centroids) {
-        String localCentroidSetPath = conf.getString(LOCAL_CENTROID_SET_PATH_KEY);
+    private File saveCentroids(ClusterSet centroids) {
+        String localCentroidSetPath = conf.getString(LOCAL_CLUSTER_SET_PATH_KEY);
         File localCentroidSetDirectory = new File(localCentroidSetPath);
         if (!localCentroidSetDirectory.exists()) {
             localCentroidSetDirectory.mkdir();
@@ -157,9 +156,9 @@ public class ClusterBuilderImpl extends UnicastRemoteObject implements ClusterBu
     /**
      * Given initial queries, get initial search based clusters and calculate centroid.
      * @param namesToQueries map from cluster names to 'cluster queries'
-     * @return set of centroids calculated from initial search based clusters
+     * @return set of clusters calculated from initial search based clusters
      */
-    private CentroidSet queriesToCentroids(Map<String, Query> namesToQueries) {
+    private ClusterSet queriesToCentroids(Map<String, Query> namesToQueries) {
         if (log.isTraceEnabled()) {
             log.trace("ClusterBuilderImpl.queriesToCentroids start.");
         }
@@ -178,9 +177,9 @@ public class ClusterBuilderImpl extends UnicastRemoteObject implements ClusterBu
         int maxPointsToBuild = conf.getInt(MAX_POINTS_TO_BUILD_KEY);
         int maxFinalSize = conf.getInt(MAX_FINAL_SIZE_KEY);
 
-        //create centroid set
+        //create cluster set
         int size = namesToQueries.size();
-        CentroidSet centroids = new CentroidSet();
+        ClusterSet clusters = new ClusterSet();
 
         //Array used for statistics on number of non-zero dimensions in doc vectors
         int[] numberOfVectorsWithThisNumberOfDiffTerms = new int[100];
@@ -240,23 +239,24 @@ public class ClusterBuilderImpl extends UnicastRemoteObject implements ClusterBu
                 }
             }
             //cut and normalise centroid vector, set properties
-            CentroidVector centroid = incCentroid.getCutCentroidVector(maxFinalSize);
-            centroid.normalise();
-            centroid.setExpectedSize(hitsIndex-1);
-            centroid = calculateSimilarityThreshold(centroid, initialCluster);
+            Cluster cluster = incCentroid.getCutCentroidCluster(maxFinalSize);
+            cluster.getCentroid().normalise();
+            cluster.setExpectedSize(hitsIndex-1);
+            cluster.setSimilarityThreshold(
+                    calculateSimilarityThreshold(cluster.getCentroid(), initialCluster));
             if (log.isTraceEnabled()) {
-                log.trace("Similarity threshold: " + centroid.getSimilarityThreshold());
+                log.trace("Similarity threshold: " + cluster.getSimilarityThreshold());
             }
 
-            //put new centroid in centroid set
-            centroids.add(centroid);
+            //put new cluster in cluster set
+            clusters.add(cluster);
         }
         if (log.isTraceEnabled()) {
             log.trace("ClusterBuilderImpl.queriesToCentroids end. Statistics: " +
                     "numberOfVectorsWithThisNumberOfDiffTerms = " +
                     Arrays.toString(numberOfVectorsWithThisNumberOfDiffTerms));
         }
-        return centroids;
+        return clusters;
     }
 
     /**
@@ -267,7 +267,7 @@ public class ClusterBuilderImpl extends UnicastRemoteObject implements ClusterBu
      * @param initialCluster the initial cluster is the document vectors used
      *                       to build the centroid
      */
-    private CentroidVector calculateSimilarityThreshold(CentroidVector centroid,
+    private double calculateSimilarityThreshold(SparseVector centroid,
                                                         Set<SparseVector> initialCluster) {
         //calculate all similarities and sort (ascending)
         SparseVector[] points = new SparseVector[initialCluster.size()];
@@ -299,9 +299,9 @@ public class ClusterBuilderImpl extends UnicastRemoteObject implements ClusterBu
         //set cluster similarity threshold on this centroid
         int index = (int) ((1.0-similarityThresholdFraction)*similarities.length);
         if (index>=0 && index<similarities.length) {
-            centroid.setSimilarityThreshold(similarities[index]);
+            return similarities[index];
         }
-        return centroid;
+        return 0;
     }
 
     /**

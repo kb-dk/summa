@@ -22,8 +22,8 @@
  */
 package dk.statsbiblioteket.summa.clusterextractor;
 
-import dk.statsbiblioteket.summa.clusterextractor.data.CentroidSet;
-import dk.statsbiblioteket.summa.clusterextractor.math.CentroidVector;
+import dk.statsbiblioteket.summa.clusterextractor.data.Cluster;
+import dk.statsbiblioteket.summa.clusterextractor.data.ClusterSet;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.storage.FileStorage;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -68,18 +68,18 @@ public class ClusterBuilderImplTest extends TestCase {
         builder.buildCentroids();
 
         //find and check result
-        String localCentroidSetPath = conf.getString(ClusterMerger.CENTROID_SETS_PATH_KEY);
+        String localCentroidSetPath = conf.getString(ClusterMerger.CLUSTER_SETS_PATH_KEY);
         File dir = new File(localCentroidSetPath);
         File result = dir.listFiles()[0];
         FileInputStream fis = new FileInputStream(result);
         ObjectInputStream ois = new ObjectInputStream(fis);
 
-        CentroidSet centroidSet = (CentroidSet) ois.readObject();
+        ClusterSet clusterSet = (ClusterSet) ois.readObject();
 
         ois.close();
 
-        for (CentroidVector vec: centroidSet) {
-            System.out.println(vec);
+        for (Cluster cluster: clusterSet) {
+            System.out.println(cluster);
         }
     }
 

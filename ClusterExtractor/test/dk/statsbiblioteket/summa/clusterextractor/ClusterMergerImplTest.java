@@ -22,8 +22,9 @@
  */
 package dk.statsbiblioteket.summa.clusterextractor;
 
+import dk.statsbiblioteket.summa.clusterextractor.data.Cluster;
 import dk.statsbiblioteket.summa.clusterextractor.data.Dendrogram;
-import dk.statsbiblioteket.summa.clusterextractor.math.CentroidVector;
+import dk.statsbiblioteket.summa.clusterextractor.math.SparseVectorMapImpl;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.storage.FileStorage;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -97,16 +98,16 @@ public class ClusterMergerImplTest extends TestCase {
         HashMap<String, Number> coords1 = new HashMap<String, Number>();
         coords1.put(X, 1);
         coords1.put(Y, 1);
-        CentroidVector vec1 = new CentroidVector("name1", 50, coords1);
-        vec1.setSimilarityThreshold(Math.cos(Math.PI / 16));
+        Cluster cls1 = new Cluster("name1", new SparseVectorMapImpl(coords1), 50);
+        cls1.setSimilarityThreshold(Math.cos(Math.PI / 16));
         HashMap<String, Number> coords2 = new HashMap<String, Number>();
         coords2.put(X, 1);
         coords2.put(Y, .5);
-        CentroidVector vec2 = new CentroidVector("name2", 50, coords2);
-        vec2.setSimilarityThreshold(Math.cos(Math.PI / 16));
+        Cluster cls2 = new Cluster("name2", new SparseVectorMapImpl(coords2), 50);
+        cls2.setSimilarityThreshold(Math.cos(Math.PI / 16));
 
         ClusterMergerImpl merger = new ClusterMergerImpl(conf);
-        CentroidVector joined = merger.join(vec1, vec2, "newName");
+        Cluster joined = merger.join(cls1, cls2, "newName");
         double newSimilarityThreshold = joined.getSimilarityThreshold();
         double expectedThreshold = Math.cos(Math.PI / 8);
         assertEquals("The similarity is somewhere in the vicinity of cos(PI/8)...",

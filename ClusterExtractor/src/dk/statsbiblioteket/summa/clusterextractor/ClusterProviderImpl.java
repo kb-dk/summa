@@ -110,11 +110,11 @@ public class ClusterProviderImpl extends UnicastRemoteObject implements ClusterP
         double similarity = vector.similarity(node.getCentroid());
         if (log.isTraceEnabled()) {
             log.trace("node.getCentroid() = " + node.getCentroid());
-            log.trace("node.getCentroid().getSimilarityThreshold() = " + node.getCentroid().getSimilarityThreshold());
+            log.trace("node.getSimilarityThreshold() = " + node.getSimilarityThreshold());
             log.trace("vector = " + vector);
             log.trace("similarity = " + similarity);
         }
-        if (similarity>node.getCentroid().getSimilarityThreshold()) {
+        if (similarity>node.getSimilarityThreshold()) {
             if (node.getChildren().isEmpty()) {//this is a leaf node
                 document.add(node.getClusterField());
             } else {//call method recursively
