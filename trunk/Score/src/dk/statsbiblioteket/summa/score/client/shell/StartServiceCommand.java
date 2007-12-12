@@ -25,14 +25,79 @@ package dk.statsbiblioteket.summa.score.client.shell;
 import dk.statsbiblioteket.summa.common.shell.Command;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.score.api.ClientConnection;
-import dk.statsbiblioteket.util.Strings;
-import dk.statsbiblioteket.summa.score.client.Client;
 import dk.statsbiblioteket.summa.score.api.Service;
+import dk.statsbiblioteket.summa.score.api.Status;
+import dk.statsbiblioteket.summa.score.client.Client;
+import dk.statsbiblioteket.util.Strings;
+
+import java.net.MalformedURLException;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 
 /**
  * A shell command to launch a {@link Service} deployed in a {@link Client}.
  */
 public class StartServiceCommand extends Command {
+
+    private class ServiceMonitor implements Runnable {
+
+        private ClientConnection client;
+        private String serviceId;
+        private int timeout;
+        private ShellContext ctx;
+
+        /**
+         * Print an error to the {@link ShellContext} if the specified
+         * RMI server does not respond within {@code timeout} seconds.
+         *
+         * @param client The client controlling service to monitor
+         * @param serviceId id of the service to monitor
+         * @param timeout Number of seconds before the connection times out
+         * @param ctx ShellContext to print to in case of errors
+         */
+        public ServiceMonitor (ClientConnection client,
+                               String serviceId,
+                               int timeout,
+                               ShellContext ctx) {
+            this.client = client;
+            this.serviceId = serviceId;
+            this.timeout = timeout;
+            this.ctx = ctx;
+        }
+
+        public void run() {
+            for (int tick = 0; tick < timeout; tick++) {
+
+                try {
+                    Thread.sleep (1000);
+                } catch (InterruptedException e) {
+                    // We should probably die if somebody interrupts us
+                    return;
+                }
+
+                try {
+                    Status s = client.getServiceStatus(serviceId);
+
+                    if (Status.CODE.not_instantiated == s.getCode()) {
+                        // Wait another interation
+                        continue;
+                    }
+
+                    // If we reach this point we are good,
+                    // and the monitor should die
+                    ctx.debug ("Connection to service '" + serviceId
+                             + "' up. Status: " + s);
+                    return;
+                } catch (Exception e) {
+                    ctx.error ("Failed to ping service '" + serviceId
+                             + "'. Error was:\n " + Strings.getStackTrace(e));
+                }
+            }
+            ctx.error ("Service '" + serviceId + "' did not respond after "
+                       + timeout + "s. It has probably crashed.");
+        }
+    }
 
     private ClientConnection client;
 
@@ -64,6 +129,7 @@ public class StartServiceCommand extends Command {
 
         try {
             client.startService(pkgId, confLocation);
+            new Thread (new ServiceMonitor(client, pkgId, 5, ctx)).start();
         } catch (Exception e) {
             ctx.info ("FAILED");
             ctx.error ("Start of service failed: " + Strings.getStackTrace(e));

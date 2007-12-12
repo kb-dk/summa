@@ -22,39 +22,36 @@
  */
 package dk.statsbiblioteket.summa.score.client;
 
-import dk.statsbiblioteket.summa.score.api.*;
-import dk.statsbiblioteket.summa.score.bundle.BundleLoader;
-import dk.statsbiblioteket.summa.score.bundle.BundleRepository;
-import dk.statsbiblioteket.summa.score.bundle.BundleLoadingException;
-import dk.statsbiblioteket.summa.score.bundle.BundleStub;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configurable.ConfigurationException;
-import dk.statsbiblioteket.summa.common.Logging;
-import dk.statsbiblioteket.util.Streams;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.score.api.*;
+import dk.statsbiblioteket.summa.score.bundle.BundleLoader;
+import dk.statsbiblioteket.summa.score.bundle.BundleLoadingException;
+import dk.statsbiblioteket.summa.score.bundle.BundleRepository;
+import dk.statsbiblioteket.summa.score.bundle.BundleStub;
 import dk.statsbiblioteket.util.Files;
-import dk.statsbiblioteket.util.Zips;
 import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.util.Streams;
+import dk.statsbiblioteket.util.Zips;
 import dk.statsbiblioteket.util.qa.QAInfo;
-
-import java.rmi.RemoteException;
-import java.rmi.registry.Registry;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.server.UnicastRemoteObject;
-import java.net.URL;
-import java.net.MalformedURLException;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.ArrayList;
-import java.lang.management.ManagementFactory;
-import java.io.*;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
+import java.io.File;
+import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.rmi.Naming;
+import java.rmi.RemoteException;
+import java.rmi.NotBoundException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.*;
+import java.net.MalformedURLException;
 
 /**
  * <p>Core class for running Score clients.</p>
@@ -73,6 +70,11 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
      * Package ids are not allowed to end with this reserved string. */
     public static final String OLD_PKG_EXTENSION = ".old";
 
+    /** Integer property defining the timeout when waiting for services
+     * to come up. The value is in seconds.
+     */
+    public static final String SERVICE_TIMEOUT = "summa.score.client.serviceTimeout";
+
     private Map<String, Service> services = new HashMap<String, Service>(10);
     private Status status;
     private BundleRepository repository;
@@ -84,6 +86,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
     private String servicePath;
     private String artifactPath; // Removed service packages
     private String persistentPath;
+    private int serviceTimeout;
 
 
     // RMI-related data
@@ -120,6 +123,9 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         setupServiceLoader(configuration);
 
         validateConfiguration ();
+
+
+        serviceTimeout = configuration.getInt(SERVICE_TIMEOUT, 5);
 
         // Find client hostname
         try {
@@ -223,10 +229,6 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
     }
 
     private File getServiceFile (String id) {
-        return new File (servicePath, id);
-    }
-
-    public File getServicePath (String id) {
         return new File (servicePath, id);
     }
 
@@ -466,7 +468,9 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
             }).start();
             
             // FIXME: Should care about the returned Process?
-            // FIXME: Connect to the Service interface of the process
+
+            registerService (id, configLocation);
+
         } catch (IOException e) {
             log.error ("Failed to start service '" + id
                        + "' with command line:\n"
@@ -476,16 +480,74 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         setStatusIdle();
     }
 
+    private void registerService(String id, String configLocation) {
+        log.debug ("Registering service '" + id + "'");
+        // If this is a relative path, expand it to the absolute path
+        if (!configLocation.startsWith("/") &&
+            !configLocation.contains("://")) {
+            configLocation = new File(getServiceFile(id),
+                                      configLocation).getAbsolutePath();
+        }
+
+        log.trace ("Absolute service config location: " + configLocation);
+
+        Configuration serviceConf = Configuration.load(configLocation);
+        int registryPort = serviceConf.getInt(Service.REGISTRY_PORT);
+        String serviceName = serviceConf.getString(Service.SERVICE_ID);
+        String serviceUrl = "//localhost:" + registryPort + "/" + serviceName;
+
+        log.trace ("Pinging service '" + id +"' at '" + serviceUrl + "'");
+        Service service = null;
+        Status status = null;
+        for (int tick = 0; tick < serviceTimeout; tick++) {
+            try {
+                service = (Service) Naming.lookup (serviceUrl);
+                status = service.getStatus();
+            } catch (NotBoundException e) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e1) {
+                    log.warn ("Interrupted while waiting for service '" + id
+                              + "' to come up.");
+                    break;
+                }
+                // keep waiting on interface
+                continue;
+            } catch (MalformedURLException e) {
+                log.error ("Malformed URL for service '" + id
+                           + "'. Not registering", e);
+            } catch (RemoteException e) {
+                log.error ("Error connecting to '" + id
+                           + "'. Not registering", e);
+            }
+        }
+        if (service == null){
+            log.error ("Service '" + id + "' on '" + serviceUrl
+                    + "' never came up. It probably crashed.");
+        } else {
+            log.info ("Service '" + id + "' registered. Status was " + status);
+            services.put(id, service);
+        }
+
+    }
+
     public void stopService(String id) throws RemoteException {
         setStatusRunning ("Stopping service " + id);
 
         Service s = services.get (id);
 
-        if (id == null) {
-            log.error ("Cannot stop service. No such service '" + id + "'");
-            throw new NoSuchServiceException(this, id, "stopService");
+        if (s == null) {
+            if (getServiceFile(id).exists()) {
+                log.error ("Cannot stop service. Service '" + id + "' not running");
+                throw new InvalidServiceStateException(this, id, "stopService",
+                        "Not running");
+            } else {
+                log.error ("Request to stop unknown service '" + id + "'");
+                throw new NoSuchServiceException(this, id, "stopService");
+            }
         } else {
             s.stop();
+            services.remove(id);
         }
 
         setStatusIdle ();
@@ -496,8 +558,19 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         Service s = services.get (id);
 
         if (id == null) {
-            log.error ("Cannot get status for service '" + id + "'. No such service");
-            throw new NoSuchServiceException(this, id, "getServiceStatus");
+            throw new NullPointerException("id is null");
+        }
+
+        if (s == null) {
+            if (getServiceFile(id).exists()) {
+                log.debug ("Got status request for non-running service '"
+                           + id + "'");
+                return new Status(Status.CODE.not_instantiated,
+                                  "Service '" + id + "' not running");
+            } else {
+                log.info("Got status request for unknown service '" + id + "'");
+                throw new NoSuchServiceException(this, id, "getServiceStatus");
+            }
         } else {
             return s.getStatus();
         }
@@ -505,7 +578,14 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
 
     public List<String> getServices() {
         log.trace("Getting list of services");
-        List<String> serviceList = new ArrayList<String>(services.keySet());
+
+        String[] serviceFiles = new File (servicePath).list();
+        List<String> serviceList =
+                            new ArrayList<String>(Arrays.asList(serviceFiles));
+
+        log.trace("Found services: "
+                  + Logs.expand(serviceList, serviceList.size())); 
+
         return serviceList;
     }
 
@@ -548,7 +628,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         }
         if (old == null) {
             throw new NullPointerException("Old service is null even though "
-                                         + "package file " + getServicePath(id)
+                                         + "package file " + getServiceFile(id)
                                          + " exists");
         }
 
@@ -577,7 +657,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
      */
     private void removeService(String id) throws RemoteException {
         Service service = services.get (id);
-        File pkgFile = getServicePath(id);
+        File pkgFile = getServiceFile(id);
         String artifactPkgPath;
 
         if (!pkgFile.exists() && pkgFile.isDirectory()) {
@@ -609,7 +689,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
      * @param id the id of the service to set permissions for
      */
     private void checkPermissions(String id) {
-        File bundleDir = getServicePath(id);
+        File bundleDir = getServiceFile(id);
         File policy = new File(bundleDir, BundleStub.POLICY_FILE);
         File password = new File(bundleDir, BundleStub.JMX_PASSWORD_FILE);
         File access = new File(bundleDir, BundleStub.JMX_ACCESS_FILE);
