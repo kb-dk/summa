@@ -257,6 +257,23 @@ public class Configuration implements Serializable,
     }
 
     /**
+     * Look up an integer property. If it is not defined or does not parse
+     * as an integer, return {@code defaultValue}.
+     * @param key
+     * @param defaultValue
+     * @return
+     */
+    public int getInt (String key, int defaultValue) {
+        try {
+            return getInt(key);
+        } catch (NullPointerException e) {
+            return defaultValue;
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
+    /**
      * Look up a boolean property
      * @param key the name of the property to look up
      * @return value as a boolean
@@ -573,10 +590,8 @@ public class Configuration implements Serializable,
      * Use of URL means that the configuration is loaded only once and this
      * is static. Use of RMI means that every lookup in the configuration will
      * result in a RMI call.
-     * <b>Examples:</b><br/>
-     * &nbsp;{@code summa.score.configuration=http://example.com/myConfig.xml}<br/>
-     * &nbsp;{@code summa.score.configuration=//registryhost:port/servicename}
-     * @return
+     *
+     * @return a newly instantiated configuration
      */
     public static Configuration getSystemConfiguration (String configPropName) {
         ConfigurationStorage storage;
@@ -585,6 +600,39 @@ public class Configuration implements Serializable,
         if (confLocation == null) {
             throw new ConfigurationException ("System resource " + configPropName + " not set");
         }
+
+        return load (configPropName);
+    }
+
+    /**
+     * Get the default system configuration as specified in the system
+     * property {@link #CONFIGURATION_PROPERTY}
+     * @return a newly instantiated configuration
+     */
+    public static Configuration getSystemConfiguration () {
+        return getSystemConfiguration(CONFIGURATION_PROPERTY);
+    }
+
+    /**
+     * <p>Create a configuration given a location to load from.
+     * The location can be one of:</p>
+     * <b>Examples:</b>
+     * <ul>
+     *   <li>{@code http://example.com/myConfig.xml}, a URL</li>
+     *   <li>{@code //registryhost:port/servicename}, an RMI address</li>
+     *   <li>{@code /home/summa/config/foo.xml}, an absolute path</li>
+     *   <li>{@code config/foo.xml}, a path relative to the current work dir</li>
+     * </ul>
+     * @param confLocation Location of configuration as specified above
+     * @return a newly instantiated configuration object
+     */
+    public static Configuration load (String confLocation) {
+        ConfigurationStorage storage;
+
+        if (confLocation == null) {
+            throw new NullPointerException("confLocation is null");
+        }
+
         if (confLocation.startsWith("//")) {
             // This is an rmi path
             log.debug ("Fetching system config from url " + confLocation);
@@ -612,10 +660,6 @@ public class Configuration implements Serializable,
             }
         }
         return new Configuration(storage);
-    }
-
-    public static Configuration getSystemConfiguration () {
-        return getSystemConfiguration(CONFIGURATION_PROPERTY);
     }
 
     /**
