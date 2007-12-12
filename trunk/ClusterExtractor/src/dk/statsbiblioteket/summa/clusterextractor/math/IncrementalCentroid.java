@@ -23,6 +23,7 @@
 package dk.statsbiblioteket.summa.clusterextractor.math;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.clusterextractor.data.Cluster;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -159,12 +160,12 @@ public class IncrementalCentroid {
      * Get this centroid as a SparseVector.
      * @return CentroidVector
      */
-    public CentroidVector getCentroidVector() {
+    public Cluster getCluster() {
         for (Map.Entry<String, Number> entry : coordinates.entrySet()) {
             double sum = entry.getValue().doubleValue();
             entry.setValue(sum / numberOfPoints);
         }
-        return new CentroidVector(name, numberOfPoints, coordinates);
+        return new Cluster(name, new SparseVectorMapImpl(coordinates), numberOfPoints);
     }
 
     /**
@@ -181,7 +182,7 @@ public class IncrementalCentroid {
      * @param normalise normalise if true
      * @return CentroidVector
      */
-    public CentroidVector getCutCentroidVector(int maxSize, double minValue,
+    public Cluster getCutCentroidCluster(int maxSize, double minValue,
                                              boolean normalise) {
         int denominator = numberOfPoints;
         if (normaliseWhenAdding) {denominator = 1;}
@@ -213,7 +214,7 @@ public class IncrementalCentroid {
                 keeperCoordinates.put(entry.getKey(), entry.getValue().doubleValue()/norm);
             }
         }
-        return new CentroidVector(name, numberOfPoints, keeperCoordinates);
+        return new Cluster(name, new SparseVectorMapImpl(keeperCoordinates), numberOfPoints);
     }
 
     /**
@@ -224,7 +225,7 @@ public class IncrementalCentroid {
      * @return this incremental centroid as a centroid vector cut to at
      *         most maxSize non-zero entries
      */
-    public CentroidVector getCutCentroidVector(int maxSize) {
+    public Cluster getCutCentroidCluster(int maxSize) {
 
         Map<String, Number> keeperCoordinates =
                 new HashMap<String, Number>(maxSize);
@@ -240,7 +241,7 @@ public class IncrementalCentroid {
             keeperCoordinates.put(entry.getKey(), entry.getValue());
         }
 
-        return new CentroidVector(name, numberOfPoints, keeperCoordinates);
+        return new Cluster(name, new SparseVectorMapImpl(keeperCoordinates), numberOfPoints);
     }
 
 }

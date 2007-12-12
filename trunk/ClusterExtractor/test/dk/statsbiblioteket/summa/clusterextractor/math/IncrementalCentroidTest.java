@@ -22,14 +22,14 @@
  */
 package dk.statsbiblioteket.summa.clusterextractor.math;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
-
-import java.util.Map;
-import java.util.HashMap;
-
+import dk.statsbiblioteket.summa.clusterextractor.data.Cluster;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * IncrementalCentroid Tester.
@@ -75,10 +75,11 @@ public class IncrementalCentroidTest extends TestCase {
         vec = new SparseVectorMapImpl(entries);
         incCenStd.addPoint(vec);
 
-        SparseVector cenVecStd = incCenStd.getCentroidVector();
-        System.out.println("cenVecStd = " + cenVecStd);
+        Cluster cls = incCenStd.getCluster();
+        System.out.println("cls = " + cls);
 
-        System.out.println("cenVecStd.getCoordinates() = " + cenVecStd.getCoordinates());
+        System.out.println("cls.getCentroid().getCoordinates() = "
+                + cls.getCentroid().getCoordinates());
     }
 
     public static Test suite() {

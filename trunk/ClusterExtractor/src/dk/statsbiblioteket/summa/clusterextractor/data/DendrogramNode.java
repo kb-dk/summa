@@ -23,16 +23,15 @@
 package dk.statsbiblioteket.summa.clusterextractor.data;
 
 import dk.statsbiblioteket.summa.clusterextractor.ClusterProvider;
-import dk.statsbiblioteket.summa.clusterextractor.math.CentroidVector;
+import dk.statsbiblioteket.summa.clusterextractor.math.SparseVector;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.lucene.document.Field;
 
-import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
 /**
- * A representation of a dendogram node containing a {@link CentroidVector}.
+ * A representation of a dendogram node; extends {@link Cluster}.
  * A {@link Dendrogram} is a tree (or forest) of centroids or cluster
  * representations. The dendogram node contains a CentroidVector and a
  * set of children. The node has no knowledge of its parent.
@@ -40,11 +39,10 @@ import java.util.Set;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "bam")
-public class DendrogramNode implements Serializable {
+public class DendrogramNode extends Cluster {
     /** {@link Set} of DendrogramNode children of this DendrogramNode. */
     private HashSet<DendrogramNode> children;
-    /** CentroidVector of this DendrogramNode. */
-    private CentroidVector centroid;
+
     /**
      * A {@link Field} for the cluster of this DendrogramNode.
      * The field has value 'cluster name of the cluster of this DendrogramNode'.
@@ -55,11 +53,24 @@ public class DendrogramNode implements Serializable {
     private transient Field clusterField = null;
 
     /**
-     * Construct DendrogramNode with given centroid and no children.
-     * @param centroid CentroidVector of this DendroramNode
+     * Construct DendrogramNode from the given cluster (no children).
+     * @param cluster Cluster of this DendrogramNode
      */
-    public DendrogramNode(CentroidVector centroid) {
-        this.centroid = centroid;
+    public DendrogramNode(Cluster cluster) {
+        this(cluster.getName(), cluster.getCentroid(), cluster.getNumberOfPointsInBuild());
+
+    }
+
+    /**
+     * Construct DendrogramNode from the given cluster (no children).
+     * The cluster is represented by name, centroid and # points in build.
+     *
+     * @param name           name of cluster
+     * @param centroidVector centroid of cluster
+     * @param numberOfPoints number of points used to calculate the centroid
+     */
+    public DendrogramNode(String name, SparseVector centroidVector, int numberOfPoints) {
+        super(name, centroidVector, numberOfPoints);
         this.children = new HashSet<DendrogramNode>();
     }
 
@@ -81,14 +92,6 @@ public class DendrogramNode implements Serializable {
     }
 
     /**
-     * Get CentroidVector of the cluster of this DendrogramNode.
-     * @return CentroidVector of this DendrogramNode
-     */
-    public CentroidVector getCentroid() {
-        return centroid;
-    }
-
-    /**
      * Get a {@link Field} for the cluster of this DendrogramNode.
      * The field has value 'cluster name of the cluster of this DendrogramNode'.
      * The name and properties is specified by the {@link ClusterProvider}
@@ -100,7 +103,7 @@ public class DendrogramNode implements Serializable {
         if (clusterField==null && children.isEmpty()) {//this is a leaf node
             clusterField =
                     new Field(ClusterProvider.CLUSTER_FIELD_NAME,
-                            centroid.getClusterName(),
+                            this.getName(),
                             ClusterProvider.CLUSTER_FIELD_TYPE.getStore(),
                             ClusterProvider.CLUSTER_FIELD_TYPE.getIndex(),
                             ClusterProvider.CLUSTER_FIELD_TYPE.getVector());
@@ -116,13 +119,13 @@ public class DendrogramNode implements Serializable {
      */
     @Override
     public String toString() {
-        String result = "DendrogramNode: " + getCentroid().toString();
+        String result = "DendrogramNode: " + super.toString();
         if (children.isEmpty()) {
             result = result + "\n(Leaf node.)";
         } else {
             result = result + "\nChildren:";
             for (DendrogramNode child: getChildren()) {
-                result += " " + child.getCentroid().getClusterName();
+                result += " " + child.getName();
             }
         }
         return result;
