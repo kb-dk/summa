@@ -37,6 +37,13 @@ import java.io.Serializable;
 public class Status implements Serializable {
     public static enum CODE {
         /**
+         * The object does not exist, but can be instantiated. This state
+         * is typically returned by some service proxying the object.
+         * For example a Score Client managing a service returns this
+         * state if the service is deployed, but not running.  
+         */
+        not_instantiated,
+        /**
          * This object has been constructed and is ready for start.
          */
         constructed,

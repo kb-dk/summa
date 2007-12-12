@@ -79,7 +79,7 @@ public class ConsoleFeedback implements Feedback {
                 message.setRawResponse(in.readPassword());
                 break;
             default:
-                out.println("Error: Unknown message type: "
+                out.println("[ERROR] Unknown message type: "
                         + message.getMessageType());
         }
     }

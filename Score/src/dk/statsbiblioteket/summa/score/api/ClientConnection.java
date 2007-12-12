@@ -144,8 +144,10 @@ public interface ClientConnection extends Remote {
     public void stopService(String id) throws RemoteException;
 
     /**
-     * Get the status for a specific service. If the service is not deployed,
-     * an error is thrown.
+     * <p>Get the status for a specific service. If the service is not deployed,
+     * an error is thrown.</p>
+     * <p>If the service is deployed, but not running the returned status code
+     * will be {@link Status.CODE#not_instantiated}</p>.
      * @param id the id for the service.
      * @return   the status for the service.
      * @throws java.rmi.RemoteException in case of communication errors.

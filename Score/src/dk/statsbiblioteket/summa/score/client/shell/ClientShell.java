@@ -52,6 +52,8 @@ public class ClientShell {
         shell.installCommand(new GetStatusCommand(client));
         shell.installCommand(new DeployCommand(client));
         shell.installCommand(new StartServiceCommand(client));
+        shell.installCommand(new StopServiceCommand(client));
+        shell.installCommand(new GetServicesCommand(client));
     }
 
     public void run () {
