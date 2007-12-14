@@ -39,13 +39,32 @@ import java.util.HashSet;
         author = "bam")
 public class ClusterSet extends HashSet<Cluster> {
     protected static final Log log = LogFactory.getLog(ClusterSet.class);
-    private int builderId;
+    private String builderId;
+
+    /**
+     * Construct an empty centroid set with specified initial capacity.
+     * @param builderId id of the builder building this centroid set
+     * @param initialCapacity the initial capacity of the hash table
+     */
+    public ClusterSet(String builderId, int initialCapacity) {
+        super(initialCapacity);
+        this.builderId = builderId;
+    }
+
+    /**
+     * Construct an empty centroid set with specified initial capacity.
+     * @param initialCapacity the initial capacity of the hash table
+     */
+    public ClusterSet(int initialCapacity) {
+        this("NO_ID", initialCapacity);
+    }
 
     /**
      * Construct an empty centroid set.
      * @param builderId id of the builder building this centroid set
      */
-    public ClusterSet(int builderId) {
+    public ClusterSet(String builderId) {
+        super();
         this.builderId = builderId;
     }
 
@@ -53,14 +72,14 @@ public class ClusterSet extends HashSet<Cluster> {
      * Construct an empty centroid set.
      */
     public ClusterSet() {
-        this(0);
+        this("NO_ID");
     }
 
     /**
      * Get the id of the builder building this centroid set.
      * @return builder id
      */
-    public int getBuilderId() {
+    public String getBuilderId() {
         return builderId;
     }
 

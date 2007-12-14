@@ -79,5 +79,12 @@
          should be inside the defined cluster similarity threshold? -->
     <entry key="clusterbuilder.SimilarityThresholdFraction">.6</entry>
 
+    <!-- ****************************************************************** -->
+    <!-- ************** CLUSTER PROPERTIES ******************* -->
+    <!-- ****************************************************************** -->
+
+    <!-- The recommended maximum size of a cluster TODO: max cluster size 100000 ? -->
+    <entry key="clusterbuilder.MaxClusterSize">1000</entry>
+
 </properties>
         

@@ -80,6 +80,10 @@ public interface ClusterBuilder {
     public static final String SIMILARITY_THRESHOLD_KEY =
             "clusterbuilder.SimilarityThresholdFraction";
 
+    // String keys to properties used when creating clusters
+    public static final String MAX_CLUSTER_SIZE_KEY =
+            "clusterbuilder.MaxClusterSize";
+
     /**
      * Build centroids based on index specified in configuration.
      * A centroid set is build and saved using the properties set in the known
