@@ -22,11 +22,12 @@
  */
 package dk.statsbiblioteket.summa.clusterextractor;
 
-import dk.statsbiblioteket.summa.clusterextractor.data.ClusterSet;
 import dk.statsbiblioteket.summa.clusterextractor.data.Cluster;
+import dk.statsbiblioteket.summa.clusterextractor.data.ClusterSet;
 import dk.statsbiblioteket.summa.clusterextractor.math.IncrementalCentroid;
 import dk.statsbiblioteket.summa.clusterextractor.math.SparseVector;
 import dk.statsbiblioteket.summa.clusterextractor.math.SparseVectorMapImpl;
+import dk.statsbiblioteket.summa.clusterextractor.math.CoordinateComparator;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -127,17 +128,167 @@ public class ClusterBuilderImpl extends UnicastRemoteObject implements ClusterBu
                 candidateTermsToQueries
                         (candidateTerms, fieldsUsedInInit);
 
-        ClusterSet centroids = queriesToCentroids(queries);
+        ClusterSet clusterSet = queriesToCentroids(queries);
+        //TODO: loose the search
+        //ClusterSet tobe = buildCentroidsFromStorage(candidateTerms);
 
-        File file = saveCentroids(centroids);
+        File file = saveCentroids(clusterSet);
         //TODO: look up merger, get handle and move new centroid set to merger?
         if (file != null && this.merger!=null) {
-            this.merger.uploadCentroidSet(this.id, -1, centroids);
+            this.merger.uploadCentroidSet(this.id, -1, clusterSet);
         }
     }
 
     /**
-     * Save given {@link dk.statsbiblioteket.summa.clusterextractor.data.ClusterSet} in directory specified in {@link Configuration}.
+     * Build Centroids by looping through all records from storage.
+     * If a candidateterm is in the record, the record is used in a
+     * corresponding centroid. I think a split method will be necessary.
+     * @param candidateTerms terms occurring often, but not too often in index
+     * @return ClusterSet
+     */
+    public ClusterSet buildCentroidsFromStorage(Set<String> candidateTerms) {
+        long startTime = System.currentTimeMillis();
+        Map<String, IncrementalCentroid> centroids =
+                new HashMap<String, IncrementalCentroid>(candidateTerms.size());
+        Map<String, List<Integer>> idSets =
+                new HashMap<String, List<Integer>>(candidateTerms.size());
+        //Note this Map to id sets is potentially huge...
+
+        int maxClusterSize = conf.getInt(MAX_CLUSTER_SIZE_KEY);
+
+        ClusterSet resultSet = new ClusterSet(this.id, candidateTerms.size());
+
+        //20071212: We loop through index for now (we want storage access based on the indexer)
+        int maxDoc = ir.maxDoc();
+        if (log.isTraceEnabled()) {
+            log.trace("ClusterBuilderImpl.buildCentroidsFromStorage: maxDoc = " + maxDoc);
+        }
+        Profiler feedback = new Profiler();
+        feedback.setExpectedTotal(maxDoc);
+
+        SparseVector vec;
+        IncrementalCentroid incCen;
+        List<Integer> idSet;
+        for (int index=0; index<maxDoc; index++) {
+            vec = getVec(index);
+
+            feedback.beat();
+            if (log.isTraceEnabled() && index%10000==0) {
+                log.trace("ClusterBuilderImpl.buildCentroidsFromStorage ("
+                        + index + "/" + maxDoc + "); ETA: " 
+                        + feedback.getETAAsString(false) + "; vec = "
+                        + vec.toString());
+            }
+
+            for (String dim: vec.getCoordinates().keySet()) {
+                if (centroids.containsKey(dim)) {
+                    incCen = centroids.get(dim);
+                    incCen.addPoint(vec);
+                    idSet = idSets.get(dim);
+                    idSet.add(index);
+                } else {
+                    if (candidateTerms.contains(dim)) {
+                        incCen = new IncrementalCentroid(dim);
+                        incCen.addPoint(vec);
+                        centroids.put(dim, incCen);
+                        idSet = new ArrayList<Integer>();
+                        idSet.add(index);
+                        idSets.put(dim, idSet);
+                    }
+                }
+                //maybe we should normalise the vectors and only look at
+                //dimensions over a certain threshold
+            }
+        }
+
+        for (Map.Entry<String, IncrementalCentroid> entry: centroids.entrySet()) {
+            incCen = entry.getValue();
+            if (incCen.getNumberOfPoints()>maxClusterSize) {
+                ClusterSet splitCentroids =
+                        split(incCen, idSets.get(entry.getKey()), maxClusterSize);
+                    resultSet.addAll(splitCentroids);
+            } else {
+                resultSet.add(incCen.getCluster());
+            }
+        }
+        if (log.isTraceEnabled()) {
+            log.trace("ClusterBuilderImpl.buildCentroidsFromStorage: time = "
+                    + (System.currentTimeMillis()-startTime)/1000/60 + " min");
+        }
+        return resultSet;
+    }
+
+    /**
+     * Split the cluster given as an id list into smaller clusters.
+     * Note this is a very expensive method!
+     *
+     * @param bigCen centroid of the cluster given as an id list
+     * @param idList list of ids of documents in a cluster
+     * @param maxClusterSize maximum size of clusters after split
+     * @return set of clusters generated from the given id list
+     */
+    private ClusterSet split(IncrementalCentroid bigCen,List<Integer> idList, int maxClusterSize) {
+        if (log.isTraceEnabled()) {
+            log.trace("ClusterBuilderImpl.split: split " + bigCen.getName() + " centroid.");
+        }
+        //first pick random seeds
+        int numberOfSeeds = idList.size()/maxClusterSize + 1;
+        int seedId;
+        SparseVector vec;
+        IncrementalCentroid seedCentroid;
+        IncrementalCentroid[] centroidArray = new IncrementalCentroid[numberOfSeeds];
+        for (int count = 0; count < numberOfSeeds; count++) {
+            seedId = idList.remove((int) Math.random()*idList.size());
+            vec = getVec(seedId);
+            seedCentroid = new IncrementalCentroid(Integer.toString(seedId));
+            seedCentroid.addPoint(vec);
+            centroidArray[count] = seedCentroid;
+        }
+
+        //next apply cluster subroutine
+        SparseVector centroidVec;
+
+        double similarity;
+        double maxSim;
+        int maxSimIndex;
+        for (Integer id : idList) {
+            vec = getVec(id);
+            maxSim = 0;
+            maxSimIndex = 0;
+            for (int centroidArrayIndex = 0; centroidArrayIndex < numberOfSeeds; centroidArrayIndex++) {
+                centroidVec = centroidArray[centroidArrayIndex].getVector();
+                similarity = vec.similarity(centroidVec);
+                if (similarity > maxSim) {
+                    maxSim = similarity;
+                    maxSimIndex = centroidArrayIndex;
+                }
+            }
+            centroidArray[maxSimIndex].addPoint(vec);
+        }
+
+        //and create reasonable names
+        ClusterSet resultSet = new ClusterSet(numberOfSeeds);
+        Cluster cluster;
+        List<Map.Entry<String, Number>> coordsEntryList;
+        for (IncrementalCentroid incCen: centroidArray) {
+            cluster = incCen.getCluster();
+            //sort the coordinates descending
+            coordsEntryList = new ArrayList<Map.Entry<String, Number>>
+                    (incCen.getVector().getCoordinates().entrySet());
+            Collections.sort(coordsEntryList, Collections.reverseOrder(new CoordinateComparator()));
+
+            cluster.setName(bigCen.getName() + "; " + coordsEntryList.get(0).getKey());
+            if (log.isTraceEnabled()) {
+                log.trace("ClusterBuilderImpl.split: created " + cluster.getName() + " centroid.");
+            }
+            resultSet.add(cluster);
+        }
+
+        return resultSet;
+    }
+
+    /**
+     * Save given {@link ClusterSet} in directory specified in {@link Configuration}.
      * @param centroids ClusterSet to save
      * @return the file the centroid set was saved in
      */

@@ -34,6 +34,7 @@ import junit.framework.TestSuite;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.ObjectInputStream;
+import java.util.Set;
 
 /**
  * ClusterBuilderImpl Tester.
@@ -81,6 +82,14 @@ public class ClusterBuilderImplTest extends TestCase {
         for (Cluster cluster: clusterSet) {
             System.out.println(cluster);
         }
+    }
+
+    public void testBuildCentroidsFromStorage() throws Exception {
+        //construct cluster builder and build clusters
+        ClusterBuilderImpl builder = new ClusterBuilderImpl(conf);
+        Set<String> candidateTerms = builder.getCandidateTerms();
+        ClusterSet clusters = builder.buildCentroidsFromStorage(candidateTerms);
+        System.out.println("clusters.size() = " + clusters.size());
     }
 
     public void testPattern() {

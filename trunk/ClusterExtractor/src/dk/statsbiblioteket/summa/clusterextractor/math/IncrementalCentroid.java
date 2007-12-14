@@ -74,6 +74,14 @@ public class IncrementalCentroid {
     }
 
     /**
+     * Get number of points used to build this IncrementalCentroid so far.
+     * @return number of points so far
+     */
+    public int getNumberOfPoints() {
+        return numberOfPoints;
+    }
+
+    /**
      * Set the number of dimensions, which the centroid will be cut down to by optimise.
      * @param maxNonZeroDimensionsDuringReduce number of dimensions to cut down to
      */
@@ -158,9 +166,23 @@ public class IncrementalCentroid {
 
     /**
      * Get this centroid as a SparseVector.
-     * @return CentroidVector
+     * @return centroid vector
+     */
+    public SparseVector getVector() {
+        for (Map.Entry<String, Number> entry : coordinates.entrySet()) {
+            double sum = entry.getValue().doubleValue();
+            entry.setValue(sum / numberOfPoints);
+            //TODO: check for null entries in getVector
+        }
+        return new SparseVectorMapImpl(coordinates);
+    }
+
+    /**
+     * Get this centroid as a Cluster.
+     * @return Cluster
      */
     public Cluster getCluster() {
+        //TODO: use getVector in getCluster
         for (Map.Entry<String, Number> entry : coordinates.entrySet()) {
             double sum = entry.getValue().doubleValue();
             entry.setValue(sum / numberOfPoints);
@@ -181,6 +203,7 @@ public class IncrementalCentroid {
      * @param minValue min value of entry
      * @param normalise normalise if true
      * @return CentroidVector
+     * TODO: loose getCutCentroidCluster method (not used)
      */
     public Cluster getCutCentroidCluster(int maxSize, double minValue,
                                              boolean normalise) {
@@ -224,6 +247,7 @@ public class IncrementalCentroid {
      * @param maxSize maximum number of non-zero entries
      * @return this incremental centroid as a centroid vector cut to at
      *         most maxSize non-zero entries
+     * TODO: update getCutCentroidCluster method
      */
     public Cluster getCutCentroidCluster(int maxSize) {
 
