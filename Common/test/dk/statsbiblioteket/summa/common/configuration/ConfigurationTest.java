@@ -25,8 +25,6 @@ package dk.statsbiblioteket.summa.common.configuration;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.io.File;
 import java.io.Serializable;
 
 import junit.framework.Test;
@@ -60,12 +58,37 @@ public class ConfigurationTest extends TestCase {
         //TODO: Test goes here...
     }
 
-    public void testSetGetStrings() throws Exception {
-        //TODO: Test goes here...
+    public void testGetStringsSingle() throws Exception {
+        Configuration conf = new Configuration(
+                                        new FileStorage("configuration.xml"));
+        List<String> l = conf.getStrings ("this.service.port");
+        assertEquals("getStrings on a value without ,s should have size 1",
+                     1, l.size());
+        assertEquals("getStrings on a value without ,s should return the expected",
+                     "2768", l.get(0));
+    }
+
+    public void testGetStringsMany() throws Exception {
+        Configuration conf = new Configuration(new MemoryStorage());
+        conf.set ("foobar", "foo, bar,baz"); // Intentially no space before baz
+        List<String> l = conf.getStrings ("foobar");
+        assertEquals("getStrings should tokenize correctly", 3, l.size());
+        assertEquals("getStrings should give expected values", "foo", l.get(0));
+        assertEquals("getStrings should give expected values", "bar", l.get(1));
+        assertEquals("getStrings should give expected values", "baz", l.get(2));
+
     }
 
     public void testGetString() throws Exception {
-        //TODO: Test goes here...
+        Configuration conf = new Configuration(new FileStorage("configuration.xml"));
+        String s = conf.getString ("this.service.port");
+        assertEquals("getString should return expected value", "2768", s);
+    }
+
+    public void testGetStringWithDefault () throws Exception {
+        Configuration conf = new Configuration(new MemoryStorage());
+        String s = conf.getString ("foobar", "baz");
+        assertEquals("Should return default value", "baz", s);
     }
 
     public void testToString () throws Exception {
@@ -125,6 +148,12 @@ public class ConfigurationTest extends TestCase {
                      "a(3a)", elements.get(0).getFirst());
         assertEquals("The first element should be named b(",
                      "b(", elements.get(1).getFirst());
+    }
+
+    public void testGetIntWithDefault () throws Exception {
+        Configuration configuration = new Configuration(new MemoryStorage());
+        int i = configuration.getInt("foobar", 27);
+        assertEquals("Integer should be default value", 27, i);
     }
 
     public void testGetSystemConfigLocal () throws Exception {
