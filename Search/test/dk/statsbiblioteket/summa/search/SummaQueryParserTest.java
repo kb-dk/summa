@@ -72,10 +72,6 @@ public class SummaQueryParserTest extends TestCase {
                 "single",
                 "au:Andersen -ti:\"Den grimme Ælling\""};
 
-
-
-
-
         SearchDescriptor d = new SearchDescriptor("/home/findex/persistentFiles/summa_full_index");
         d.loadDescription("/home/findex/persistentFiles/summa_full_index");
 
