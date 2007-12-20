@@ -86,13 +86,24 @@ public class FileStorage implements ConfigurationStorage {
 
     /**
      * Read and write to a resource
-     * @param filename name of <i>resource</i> to use as hard storage
+     * @param resource name of <i>resource</i> to use as hard storage
      * @throws IOException
      */
-    public FileStorage (String filename) throws IOException {
-        this (new File(Thread.currentThread().getContextClassLoader().getResource(filename).getFile()));
+    public FileStorage (String resource) throws IOException {
+        this (getResourceFile(resource));
         
         reloadConfig();
+    }
+
+    private static File getResourceFile(String resource) {
+        URL url = Thread.currentThread().getContextClassLoader().getResource(resource);
+
+        if (url == null) {
+            throw new ConfigurationStorageException("Unable to find resource '"
+                                                  + resource + "'"); 
+        }
+
+        return new File(url.getFile());
     }
 
     /**

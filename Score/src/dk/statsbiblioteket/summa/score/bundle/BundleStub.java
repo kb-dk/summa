@@ -25,6 +25,7 @@ package dk.statsbiblioteket.summa.score.bundle;
 import dk.statsbiblioteket.summa.score.client.Client;
 import dk.statsbiblioteket.summa.score.api.Service;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.Strings;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -69,6 +70,7 @@ public class BundleStub {
     private List<String> libs;
     private List<String> jvmArgs;
     private Log log;
+    private List<String> classPath;
 
     /**
      * It is the responsibilty of the {@link Client} building the
@@ -193,18 +195,52 @@ public class BundleStub {
 
         cl.addAll(jvmArgs);
 
-        // Build class path
-        String classPath = ".:config:data:"+ mainJar.toString().trim();
-        for (String lib : libs) {
-            classPath += ":" + lib;
-        }
-
         cl.add ("-cp");
-        cl.add (classPath);
-
+        cl.add (Strings.join (getClassPath(), ":"));
         cl.add (mainClass);
 
         return cl;
     }
 
+    public List<String> getClassPath() {
+        List<String> cp = new ArrayList(4+libs.size());
+        cp.add (".");
+        cp.add ("config");
+        cp.add ("data");
+        cp.add (mainJar.toString().trim());
+        cp.addAll(libs);
+
+        return cp;
+    }
+
+    public String getInstanceId () {
+        return instanceId;
+    }
+
+    public String getBundleId () {
+        return bundleId;
+    }
+
+    /**
+     * Locate a named resource within the classpath of this bundle.
+     * If the resource is not found, return null.
+     * @param name name of resource to find. May include subdirectories.
+     * @return A file pointing at the resource or null if it is not found
+     */
+    public File findResource (String name) {
+        for (String path : getClassPath()) {
+            String testPath = bundleDir.getAbsolutePath() + File.separator
+                              + path + File.separator + name;
+            File testFile = new File (testPath);
+            log.trace ("Testing " + testFile);
+            if (testFile.exists()) {
+                return testFile;
+            }
+        }
+        return null;
+    }
+
+    public String getBundleDir() {
+        return bundleDir.getAbsolutePath();
+    }
 }

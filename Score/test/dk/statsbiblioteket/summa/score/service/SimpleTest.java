@@ -97,7 +97,7 @@ public class SimpleTest extends ServiceBase {
 
         service.stopped = true;
 
-        setStatus(Status.CODE.stopped, "SimpleTest service " +this + " down.",
+        setStatus(Status.CODE.stopped, "SimpleTest service " + this + " down.",
                 Logging.LogLevel.INFO);
     }
 }

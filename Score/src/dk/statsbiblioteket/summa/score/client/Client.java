@@ -31,10 +31,7 @@ import dk.statsbiblioteket.summa.score.bundle.BundleLoader;
 import dk.statsbiblioteket.summa.score.bundle.BundleLoadingException;
 import dk.statsbiblioteket.summa.score.bundle.BundleRepository;
 import dk.statsbiblioteket.summa.score.bundle.BundleStub;
-import dk.statsbiblioteket.util.Files;
-import dk.statsbiblioteket.util.Logs;
-import dk.statsbiblioteket.util.Streams;
-import dk.statsbiblioteket.util.Zips;
+import dk.statsbiblioteket.util.*;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -70,8 +67,11 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
      * Package ids are not allowed to end with this reserved string. */
     public static final String OLD_PKG_EXTENSION = ".old";
 
-    /** Integer property defining the timeout when waiting for services
-     * to come up. The value is in seconds.
+    /** <p>Integer property defining the timeout when waiting for services
+     * to come up. The value is in seconds.</p>
+     * <p><b>Important:</b> The service will be monitored synchronously
+     * so don't set this value to high. 5-10 ought to do it. 30 should be
+     * absolute max.</p>
      */
     public static final String SERVICE_TIMEOUT = "summa.score.client.serviceTimeout";
 
@@ -346,14 +346,14 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
      * <p>If this call completes it is guaranteed that
      * {@link #getServiceFile} returns an existing bundle file.</p>
      *
-     * <p>The local file is unpacked to {@code servicePath/id}</p>
+     * <p>The local file is unpacked to {@code servicePath/bundleId}</p>
      *
-     * @param id the id under which to deploy the file
+     * @param bundleId the bundleId under which to deploy the file
      * @param localFile the file to deploy
      * @param configLocation location for configuration, either an URL,
      *                       rmi address, or file path
      */
-    public void deployServiceFromLocalFile (String id, File localFile,
+    public void deployServiceFromLocalFile (String bundleId, File localFile,
                                             String configLocation) {
 
         if (servicePath.equals(localFile.getParent())) {
@@ -367,45 +367,69 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
             return;
         }
 
-        setStatusRunning ("Deploying '" + id + "' from " + localFile);
+        setStatusRunning ("Deploying '" + bundleId + "' from " + localFile);
 
-        File pkgFile = getServiceFile(id);
+        File tmpPkg = new File(tmpPath, bundleId);
 
-        // Check if the service is already deployed
-        if (services.get(id) != null || pkgFile.exists()) {
-            reDeployService(id, localFile);
-            return;
+        // Assert that we don't have collisions in the tmp dir
+        if (tmpPkg.exists()) {
+            try {
+                log.debug ("Deleting temporary file '" + tmpPkg + "' to avoid"
+                         + " collisions");
+                Files.delete (tmpPkg);
+            } catch (IOException e) {
+                log.error("Failed to delete temporary file '" + tmpPkg
+                        + "' blocking the way. Bailing out on deploy.", e);
+                return;
+            }
         }
 
-        // make sure parent dir for service exists
-        pkgFile.mkdirs();
-
-        if (!pkgFile.isDirectory()) {
-            throw new BundleLoadingException("Failed to create directory "
-                                           + pkgFile + " for deployment of "
-                                           + id);
-        }
-
-        // Unzip the file into the service directory
+        // Unzip the file into the tmp directory
         try {
-            Zips.unzip (localFile.toString(), pkgFile.toString(), false);
+            Zips.unzip (localFile.toString(), tmpPkg.toString(), false);
         } catch (IOException e) {
             log.error ("Error deploying " + localFile + ". "
-                       + "Purging " + pkgFile + " from service dir", e);
+                       + "Purging " + tmpPkg + " from tmp dir", e);
             try {
-                Files.delete(pkgFile);
+                Files.delete(tmpPkg);
             } catch (IOException ee) {
-                log.error ("Error deleting file " + pkgFile
+                log.error ("Error deleting file " + tmpPkg
                            + " when cleaning up buggy deploy", e);
             }
         }
 
+        // Extract the instance id
+        BundleStub stub;
+        try {
+            log.trace ("Reading bundle spec for " + tmpPkg);
+             stub = loader.load (tmpPkg);
+        } catch (IOException e) {
+            log.error ("Failed to load bundle stub. Cannot extract instance bundleId."
+                      + " Aborting deploy of '" + tmpPkg + "'", e);
+            return;
+        }
+        String instanceId = stub.getInstanceId();
+        log.debug ("Found instance id '" + instanceId + "' for bundle '"
+                 + bundleId + "' in " + tmpPkg);
+
+        // Check if the service is already deployed, ie if there already
+        // is a service with the same instance bundleId
+        File pkgFile = getServiceFile(instanceId);
+        if (services.get(instanceId) != null || pkgFile.exists()) {
+            reDeployService(instanceId, localFile);
+            return;
+        }
+
+        // Move service bundle in place in services/<instanceid>
+        log.trace("Moving '" + tmpPkg + "' to '" + pkgFile + "'");
+        tmpPkg.renameTo(pkgFile);
+
         // FIXME: There is a race condition here, where the JMX files are
         //        readable after unpacking, but before we set read-only
         //        permissions
-        log.debug ("Setting file permissions for service " + id);
-        checkPermissions(id);
-
+        log.debug ("Setting file permissions for service " + instanceId);
+        checkPermissions(instanceId);
+        
         setStatusIdle();
     }
 
@@ -469,7 +493,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
             
             // FIXME: Should care about the returned Process?
 
-            registerService (id, configLocation);
+            registerService (stub, configLocation);
 
         } catch (IOException e) {
             log.error ("Failed to start service '" + id
@@ -480,13 +504,31 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         setStatusIdle();
     }
 
-    private void registerService(String id, String configLocation) {
-        log.debug ("Registering service '" + id + "'");
+    private void registerService(BundleStub stub, String configLocation) {
+        log.debug ("Registering service '" + stub.getInstanceId() + "'");
+
+        if (services.get(stub.getInstanceId()) != null) {
+            log.warn ("Trying to register service '" + id + "', but it" +
+                      " is already registered. Ignoring request.");
+            return;
+        }
+
         // If this is a relative path, expand it to the absolute path
+        // so we can load it as a file
         if (!configLocation.startsWith("/") &&
             !configLocation.contains("://")) {
-            configLocation = new File(getServiceFile(id),
-                                      configLocation).getAbsolutePath();
+
+            File configFile = stub.findResource(configLocation);
+            if (configFile == null) {
+                log.error ("Failed to find config file '" + configLocation
+                           + "' in service '" + stub.getInstanceId() + "'s"
+                           + " classpath. Failed registration.\n"
+                           + "Bundle dir was: " + stub.getBundleDir() + "\n"
+                           + "Bundle classpath was: "
+                           + Strings.join(stub.getClassPath(), ":"));
+                return;
+            }
+            configLocation = configFile.getAbsolutePath();
         }
 
         log.trace ("Absolute service config location: " + configLocation);
