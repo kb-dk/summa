@@ -22,40 +22,48 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser;
 
-import java.util.HashSet;
-import java.util.Vector;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Collections;
-import java.util.Collection;
-import java.util.Set;
-import java.util.List;
-import java.util.ArrayList;
-import java.io.FileOutputStream;
-import java.io.StringWriter;
-import java.io.PrintWriter;
-import java.io.IOException;
-import java.io.FileNotFoundException;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Vector;
 
-import junit.framework.TestCase;
-import dk.statsbiblioteket.summa.facetbrowser.util.ClusterCommon;
-import dk.statsbiblioteket.summa.facetbrowser.util.Pair;
-import dk.statsbiblioteket.summa.facetbrowser.util.FlexiblePair;
-import dk.statsbiblioteket.summa.facetbrowser.util.ReversePair;
+import dk.statsbiblioteket.summa.common.lucene.index.SearchDescriptor;
+import dk.statsbiblioteket.summa.common.lucene.search.BinaryCollector;
+import dk.statsbiblioteket.summa.common.lucene.search.DiscardingCollector;
+import dk.statsbiblioteket.summa.common.lucene.search.SlimCollector;
+import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
+import dk.statsbiblioteket.summa.common.lucene.search.TopCollector;
 import dk.statsbiblioteket.summa.facetbrowser.connection.IndexConnection;
 import dk.statsbiblioteket.summa.facetbrowser.connection.IndexConnectionFactory;
-import dk.statsbiblioteket.util.Profiler;
+import dk.statsbiblioteket.summa.facetbrowser.util.ClusterCommon;
+import dk.statsbiblioteket.summa.facetbrowser.util.FlexiblePair;
+import dk.statsbiblioteket.summa.facetbrowser.util.Pair;
+import dk.statsbiblioteket.summa.facetbrowser.util.ReversePair;
 import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import junit.framework.TestCase;
+import org.apache.lucene.analysis.SimpleAnalyzer;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.TermFreqVector;
-import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
-import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.index.TermEnum;
+import org.apache.lucene.index.TermFreqVector;
 import org.apache.lucene.search.Hits;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -302,6 +310,89 @@ public class IndexStatisticsTest extends TestCase {
                                " tags in " + dest);
             Files.saveString(sw.toString(), dest);
         }
+    }
+    /* Tests the speed of various topdoc extraction methods */
+    public void testTopDocPerformance() throws Exception {
+        int WARM = 2;
+        int RUNS = 5;
+        int[] MAXS = new int[] {10, 100, 1000, 10000};
+
+        String indexLocation = ClusterCommon.getProperties().
+                getProperty(ClusterCommon.INDEXLOCATION);
+        IndexSearcher is = new IndexSearcher(indexLocation);
+        SearchDescriptor d = new SearchDescriptor(indexLocation);
+        d.loadDescription(indexLocation);
+        SummaQueryParser p = new SummaQueryParser(new String[]{"freetext"},
+                                                  new SimpleAnalyzer(), d);
+        Query query = p.parse("freetext:bog");
+        assertTrue("The number of hits for the search should be > 0",
+                   is.search(query).length() > 0);
+        System.out.println("The number of hits for '" + query + "' was "
+                           + is.search(query).length());
+
+        SlimCollector slim = new SlimCollector(is.search(query).length());
+        Profiler profiler = new Profiler();
+        profiler.setExpectedTotal(RUNS);
+
+        for (int i = 0 ; i < WARM ; i++) {
+            is.search(query, null, 1000);
+        }
+
+        for (int max: MAXS) {
+            System.gc();
+            profiler.reset();
+            for (int i = 0 ; i < RUNS ; i++) {
+                is.search(query, null, max);
+                profiler.beat();
+            }
+            System.out.println(RUNS + " plain runs with " + max + " maxhits at "
+                               + profiler.getBps() + " runs/second");
+
+/*            System.gc();
+            profiler.reset();
+            for (int i = 0 ; i < RUNS ; i++) {
+                slim.clean();
+                is.search(query, slim);
+                profiler.beat();
+            }
+            System.out.println(RUNS + " slimc runs with " + max + " maxhits at "
+                               + profiler.getBps() + " runs/second");
+  */
+            System.gc();
+            profiler.reset();
+            DiscardingCollector disc = new DiscardingCollector();
+            for (int i = 0 ; i < RUNS ; i++) {
+                is.search(query, disc);
+                profiler.beat();
+            }
+            System.out.println(RUNS + " disc  runs with " + max + " maxhits at "
+                               + profiler.getBps() + " runs/second");
+
+            System.gc();
+            profiler.reset();
+            TopCollector topc = new TopCollector(max);
+            for (int i = 0 ; i < RUNS ; i++) {
+                topc.reset();
+                is.search(query, topc);
+                profiler.beat();
+            }
+            System.out.println(RUNS + " topc  runs with " + max + " maxhits at "
+                               + profiler.getBps() + " runs/second");
+
+            System.gc();
+            profiler.reset();
+            BinaryCollector bin = new BinaryCollector(max);
+            for (int i = 0 ; i < RUNS ; i++) {
+                bin.reset();
+                is.search(query, bin);
+                profiler.beat();
+            }
+            System.out.println(RUNS + " binc  runs with " + max + " maxhits at "
+                               + profiler.getBps() + " runs/second");
+
+            System.out.println("");
+        }
+
     }
 
     public List<FlexiblePair<String, Integer>> getTags(IndexReader ir,
