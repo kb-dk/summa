@@ -30,6 +30,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import java.io.Serializable;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.io.File;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
@@ -601,7 +602,7 @@ public class Configuration implements Serializable,
             throw new ConfigurationException ("System resource " + configPropName + " not set");
         }
 
-        return load (configPropName);
+        return load (confLocation);
     }
 
     /**
@@ -621,7 +622,7 @@ public class Configuration implements Serializable,
      *   <li>{@code http://example.com/myConfig.xml}, a URL</li>
      *   <li>{@code //registryhost:port/servicename}, an RMI address</li>
      *   <li>{@code /home/summa/config/foo.xml}, an absolute path</li>
-     *   <li>{@code config/foo.xml}, a path relative to the current work dir</li>
+     *   <li>{@code config/foo.xml}, loaded as a resource from the classpath</li>
      * </ul>
      * @param confLocation Location of configuration as specified above
      * @return a newly instantiated configuration object
@@ -635,7 +636,7 @@ public class Configuration implements Serializable,
 
         if (confLocation.startsWith("//")) {
             // This is an rmi path
-            log.debug ("Fetching system config from url " + confLocation);
+            log.debug ("Loading configuration from RMI " + confLocation);
             try {
                 storage = RemoteStorage.getRemote(confLocation);
             } catch (Exception e) {
@@ -643,16 +644,24 @@ public class Configuration implements Serializable,
             }
         } else if (confLocation.contains("://")) {
             // This is an URL
-            log.debug ("Fetching system config from rmi " + confLocation);
+            log.debug ("Loading configuration from URL " + confLocation);
             try {
                 URL storageUrl = new URL (confLocation);
                 storage = new MemoryStorage(storageUrl);
             } catch (Exception e) {
                 throw new ConfigurationException("Unable retrieve configuration from " + confLocation, e);
             }
-        } else {
+        } else if (confLocation.startsWith("/")) {
             // Assume this is a regular file
-            log.debug ("Fetching system config from resource " + confLocation);
+            log.debug ("Loading configuration from file " + confLocation);
+            try {
+                storage = new FileStorage (new File(confLocation));
+            } catch (IOException e) {
+                throw new ConfigurationException("Error reading configuration file " + confLocation, e);
+            }
+        } else {
+            // Assume this is a resource
+            log.debug ("Loading configuration from resource " + confLocation);
             try {
                 storage = new FileStorage (confLocation);
             } catch (IOException e) {
