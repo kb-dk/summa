@@ -75,8 +75,18 @@ public interface Service extends Configurable, Remote {
 // TODO: JUnit-test changes to configuration between stop and start
 // FIXME : Do we need a way to tell the service's JVM to exit
     /**
-     * Stop the service. After the service has stopped, calling {@link #start()}
-     * should reinitialise the service, based on the configuration.
+     * <p>Stop the service. After the service has stopped, calling {@link #start()}
+     * should reinitialise the service, based on the configuration.<p>
+     *
+     * <p>Calling stop on a service should result in it closing all connections
+     * and file handles. The RMI connection exposing this interface may be
+     * dropped too in which case the service must close its JVM.</p>
+     *
+     * <p>Generally stand alone services should close the JVM all together
+     * to make sure the service can release all resources to the system.
+     * Services running in application containers should naturally not
+     * close the JVM and should enter the {@link Status.CODE#stopped} state
+     * instead.</p>
      *
      * @throws RemoteException if there is an error communicating with the
      *                         service.

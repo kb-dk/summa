@@ -325,7 +325,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         return status;
     }
 
-    public void deployService(String id, String configLocation) {
+    public String deployService(String id, String configLocation) {
         setStatusRunning("Deploying service '" + id + "' with config "
                         + configLocation);
         File tmpBundleFile;
@@ -337,9 +337,11 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                                             + "from repository", e);
         }
 
-        deployServiceFromLocalFile(id, tmpBundleFile, configLocation);
+        String instanceId =
+                deployServiceFromLocalFile(id, tmpBundleFile, configLocation);
         
         setStatusIdle();
+        return instanceId;
     }
 
     /**
@@ -352,19 +354,20 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
      * @param localFile the file to deploy
      * @param configLocation location for configuration, either an URL,
      *                       rmi address, or file path
+     * @return the instance id of the deployed service or null on error
      */
-    public void deployServiceFromLocalFile (String bundleId, File localFile,
+    public String deployServiceFromLocalFile (String bundleId, File localFile,
                                             String configLocation) {
 
         if (servicePath.equals(localFile.getParent())) {
             log.error ("Trying to deploy " + localFile + " which is already"
                        + " in the service directory " + servicePath +"."
                        + " Aborting deploy.");
-            return;
+            return null;
         } else if (!localFile.exists()) {
             log.error ("Trying to deploy non-existing file " + localFile +
                        ", aborting deploy.");
-            return;
+            return null;
         }
 
         setStatusRunning ("Deploying '" + bundleId + "' from " + localFile);
@@ -380,7 +383,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
             } catch (IOException e) {
                 log.error("Failed to delete temporary file '" + tmpPkg
                         + "' blocking the way. Bailing out on deploy.", e);
-                return;
+                return null;
             }
         }
 
@@ -406,7 +409,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         } catch (IOException e) {
             log.error ("Failed to load bundle stub. Cannot extract instance bundleId."
                       + " Aborting deploy of '" + tmpPkg + "'", e);
-            return;
+            return null;
         }
         String instanceId = stub.getInstanceId();
         log.debug ("Found instance id '" + instanceId + "' for bundle '"
@@ -417,7 +420,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         File pkgFile = getServiceFile(instanceId);
         if (services.get(instanceId) != null || pkgFile.exists()) {
             reDeployService(instanceId, localFile);
-            return;
+            return null;
         }
 
         // Move service bundle in place in services/<instanceid>
@@ -431,6 +434,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         checkPermissions(instanceId);
         
         setStatusIdle();
+        return instanceId;
     }
 
     public void startService(String id, String configLocation)
@@ -441,22 +445,32 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         BundleStub stub;
 
         if (service != null) {
-            log.warn("Trying to start service '" + id
-                     + "', but it is already running. Ignoring request.");
+            if (service.getStatus().getCode() == Status.CODE.stopped) {
+                log.debug("Found cached connection to '" + id + "'"); 
+                log.debug("Calling start() on service '" + id +"'");
+                service.start();
+            } else {
+                log.warn("Trying to start service '" + id
+                        + "', but it is already running. Ignoring request.");
+
+                throw new InvalidServiceStateException(this, id, "start",
+                                                        "Already running");
+            }
             setStatusIdle();
             return;
         } else if (!serviceFile.exists()) {
             log.error ("Trying to start service " + serviceFile + "; no such"
                      + " file or directory. Ignoring request.");
+            throw new NoSuchServiceException(this, id, "start");
         }
 
         try {
             stub = loader.load (serviceFile);
         } catch (IOException e) {
             setStatusIdle();
-            throw new ClientException (this,
-                                       "Error loading service '" + id + "',"
-                                      + " from file " + serviceFile, e);
+            throw new ServicePackageException (this, id,
+                                              "Error loading service '" + id
+                                            + "', from file " + serviceFile, e);
         }
 
         stub.addSystemProperty(CLIENT_PERSISTENT_DIR, persistentPath);
@@ -495,6 +509,10 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
 
             registerService (stub, configLocation);
 
+            log.debug("Calling start() on service '" + id +"'");
+            service = services.get (id);
+            service.start();
+
         } catch (IOException e) {
             log.error ("Failed to start service '" + id
                        + "' with command line:\n"
@@ -507,9 +525,11 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
     private void registerService(BundleStub stub, String configLocation) {
         log.debug ("Registering service '" + stub.getInstanceId() + "'");
 
-        if (services.get(stub.getInstanceId()) != null) {
-            log.warn ("Trying to register service '" + id + "', but it" +
-                      " is already registered. Ignoring request.");
+        String instanceId = stub.getInstanceId();
+
+        if (services.get(instanceId) != null) {
+            log.warn ("Trying to register service '" + instanceId + "', but it"
+                    + " is already registered. Ignoring request.");
             return;
         }
 
@@ -521,7 +541,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
             File configFile = stub.findResource(configLocation);
             if (configFile == null) {
                 log.error ("Failed to find config file '" + configLocation
-                           + "' in service '" + stub.getInstanceId() + "'s"
+                           + "' in service '" + instanceId + "'s"
                            + " classpath. Failed registration.\n"
                            + "Bundle dir was: " + stub.getBundleDir() + "\n"
                            + "Bundle classpath was: "
@@ -538,7 +558,14 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         String serviceName = serviceConf.getString(Service.SERVICE_ID);
         String serviceUrl = "//localhost:" + registryPort + "/" + serviceName;
 
-        log.trace ("Pinging service '" + id +"' at '" + serviceUrl + "'");
+        if (!instanceId.equals(serviceName)) {
+            throw new BadConfigurationException("Instance id mismatch. "
+                                              + "Configuration says " + serviceName
+                                              + ", and stub says " + instanceId);
+        }
+
+        log.trace ("Pinging service '" + instanceId +"' at '"
+                   + serviceUrl + "'");
         Service service = null;
         Status status = null;
         for (int tick = 0; tick < serviceTimeout; tick++) {
@@ -549,26 +576,27 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e1) {
-                    log.warn ("Interrupted while waiting for service '" + id
-                              + "' to come up.");
+                    log.warn ("Interrupted while waiting for service '"
+                              + stub.getInstanceId() + "' to come up.");
                     break;
                 }
                 // keep waiting on interface
                 continue;
             } catch (MalformedURLException e) {
-                log.error ("Malformed URL for service '" + id
+                log.error ("Malformed URL for service '" + instanceId
                            + "'. Not registering", e);
             } catch (RemoteException e) {
-                log.error ("Error connecting to '" + id
+                log.error ("Error connecting to '" + instanceId
                            + "'. Not registering", e);
             }
         }
         if (service == null){
-            log.error ("Service '" + id + "' on '" + serviceUrl
+            log.error ("Service '" + instanceId + "' on '" + serviceUrl
                     + "' never came up. It probably crashed.");
         } else {
-            log.info ("Service '" + id + "' registered. Status was " + status);
-            services.put(id, service);
+            log.info ("Service '" + instanceId
+                      + "' registered. Status was " + status);
+            services.put(instanceId, service);
         }
 
     }
@@ -588,8 +616,44 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                 throw new NoSuchServiceException(this, id, "stopService");
             }
         } else {
+            log.trace ("Calling stop() method on service '" + id + "'");
             s.stop();
+
+            // Wait for service to die
+            boolean serviceIsDead = false;
+            for (int tick = 0; tick < serviceTimeout; tick++) {
+                try {
+                    Thread.sleep(1000);
+                    Status status = s.getStatus();
+                    log.debug("Waiting for '" + id + "' to die. Service"
+                            + " status " + status);
+                    if (Status.CODE.stopped == status.getCode()) {
+                        // The service is stopped, but the RMI
+                        // connection is still alive. Keep the
+                        // connection around
+                        setStatusIdle ();
+                        return;
+                    }
+                } catch (InterruptedException e) {
+                    // Stop waiting for service to die
+                    break;
+                } catch (RemoteException e) {
+                    log.info("Service ping to '" + id + "'failed. It is"
+                            + " probably down.");
+                    serviceIsDead = true;
+                }
+            }
+            if (!serviceIsDead) {
+                throw new InvalidServiceStateException(this, id, "stop",
+                                                       "Service should be dead,"
+                                                   + " but is still responding");
+            }
+
+            // If we get here, the service has stopped responding
+            // and we can remove it from the list of running services
+            log.trace ("Removing '" + id + "' from list of running services");
             services.remove(id);
+
         }
 
         setStatusIdle ();
