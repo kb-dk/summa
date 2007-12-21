@@ -24,6 +24,7 @@ package dk.statsbiblioteket.summa.score.api;
 
 import dk.statsbiblioteket.summa.score.client.Client;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.score.bundle.BundleRepository;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.rmi.Remote;
@@ -112,23 +113,25 @@ public interface ClientConnection extends Remote {
     public Status getStatus() throws RemoteException;
 
     /**
-     * Fetches the service from packageLocation and deploys it according to the
-     * configuration and with the given id.
-     * @param id               the id for the service (should be unique).
+     * Fetches the service bundle with a given bundle id from the configured
+     * {@link BundleRepository} and deploys it according to the bundle's
+     * configuration and instance id.
+     * @param id               the <i>bundle id</i> for the service
      * @param configLocation    deploy-specific properties. This should not be
      *                         confused with the properties for
      *                         {@link #startService}, although it is probably
      *                         easiest just to merge the two configurations to
      *                         one.
+     * @return the instance id of the deployed service or null on errors
      * @throws java.rmi.RemoteException in case of communication errors.
      */
-    public void deployService(String id, String configLocation)
+    public String deployService(String id, String configLocation)
                               throws RemoteException;
 
     /**
      * Start the given service with the given configuration. If the service
      * is not deployed an error is thrown.
-     * @param id               the id for the service.
+     * @param id               the <i>instance id</i> for the service.
      * @param configLocation    service-specific properties.
      * @throws java.rmi.RemoteException in case of communication errors.
      */
@@ -136,9 +139,13 @@ public interface ClientConnection extends Remote {
                              throws RemoteException;
 
     /**
-     * Stop the given service. If the service is not deployed, an error is
-     * thrown. If the service is already stopped, nothing happens.
-     * @param id               the id for the service.
+     * <p>Stop the given service. If the service is not deployed, an error is
+     * thrown. If the service is already stopped, nothing happens.</p>
+     *
+     * <p>A service is allowed to either exit its JVM or enter the state
+     * {@link Status.CODE#stopped} in which all of its connections and
+     * pipes should be flushed and closed.</p>
+     * @param id               the <i>instance id</i> for the service.
      * @throws java.rmi.RemoteException in case of communication errors.
      */
     public void stopService(String id) throws RemoteException;
@@ -148,7 +155,7 @@ public interface ClientConnection extends Remote {
      * an error is thrown.</p>
      * <p>If the service is deployed, but not running the returned status code
      * will be {@link Status.CODE#not_instantiated}</p>.
-     * @param id the id for the service.
+     * @param id the <i>instance id</i> for the service.
      * @return   the status for the service.
      * @throws java.rmi.RemoteException in case of communication errors.
      */

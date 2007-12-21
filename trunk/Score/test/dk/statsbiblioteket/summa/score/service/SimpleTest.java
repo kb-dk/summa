@@ -86,7 +86,7 @@ public class SimpleTest extends ServiceBase {
     }
 
     public void stop() throws RemoteException {
-        System.out.println ("STOP");
+        log.trace ("Receieved request to stop.");
         if (service.stopped) {
             log.warn ("Trying to stop service but it is already stopped");
             return;

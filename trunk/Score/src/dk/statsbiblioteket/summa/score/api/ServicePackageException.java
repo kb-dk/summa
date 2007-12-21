@@ -33,10 +33,15 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke",
         comment="The method needs Javadoc")
-public class ServicePackageException extends RuntimeException {
+public class ServicePackageException extends ClientException {
 
     public ServicePackageException (Client client, String id, String msg) {
-        super (msg + ", for client " + client + ", service '" + id + "'");
+        super (client, msg + ", for , service '" + id + "'");
+    }
+
+    public ServicePackageException (Client client, String id, String msg,
+                                    Throwable cause) {
+        super (client, msg + ", for , service '" + id + "'", cause);
     }
 
 }
