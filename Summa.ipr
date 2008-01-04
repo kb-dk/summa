@@ -107,6 +107,7 @@
       <entry name="?*.tld" />
     </wildcardResourcePatterns>
   </component>
+  <component name="CppTools.Loader" reportImplicitCastToBool="false" version="1" />
   <component name="DependenciesAnalyzeManager">
     <option name="myForwardDirection" value="false" />
   </component>
@@ -478,10 +479,10 @@
     </library>
     <library name="sbutil">
       <CLASSES>
-        <root url="jar://$PROJECT_DIR$/lib/sbutil-0.2.1.jar!/" />
+        <root url="jar://$PROJECT_DIR$/lib/sbutil-0.2.3.jar!/" />
       </CLASSES>
       <JAVADOC>
-        <root url="jar://$PROJECT_DIR$/lib/apidocs/sbutil-0.2.1-apidocs.zip!/" />
+        <root url="jar://$PROJECT_DIR$/lib/apidocs/sbutil-0.2.3-apidocs.zip!/sbutil-0.2.3/doc" />
       </JAVADOC>
       <SOURCES />
     </library>
