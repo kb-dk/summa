@@ -411,6 +411,26 @@ public class Configuration implements Serializable,
     }
 
     /**
+     * Get a class value resorting to a default class if it is not found
+     * in the configuration.
+     * @param key the name of the property to look up.
+     * @param classType the class of which the return type should be.
+     * @param defaultValue default class to return of the requested key is not found
+     * @return the {@link Class} associated with {@code key} or the defaultValue
+     *         if {@code key} is not found
+     */
+    public <T> Class<? extends T> getClass (String key,
+                                  Class<T> classType,
+                                  Class<? extends T> defaultValue) {
+        try {
+            return getClass(key, classType);
+        } catch (NullPointerException e) {
+            log.warn ("Unable to find class '" + key + "'. Using default"
+                      + defaultValue.getName(), e);
+            return defaultValue;
+        }
+    }
+    /**
      * Queries the underlying storage for the value corresponding to the given
      * key. If a value exists, true is returned.
      * @param key the key for the value.
