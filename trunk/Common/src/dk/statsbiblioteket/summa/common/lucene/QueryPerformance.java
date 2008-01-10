@@ -26,26 +26,29 @@
  */
 package dk.statsbiblioteket.summa.common.lucene;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
+import dk.statsbiblioteket.summa.common.lucene.index.IndexConnector;
+import dk.statsbiblioteket.summa.common.lucene.index.SearchDescriptor;
+import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.lucene.index.SearchDescriptor;
-import dk.statsbiblioteket.summa.common.lucene.index.IndexConnector;
-import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
-import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import org.apache.lucene.analysis.SimpleAnalyzer;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Hits;
-import org.apache.lucene.search.Hit;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.TokenMgrError;
+import org.apache.lucene.search.Hit;
+import org.apache.lucene.search.Hits;
+import org.apache.lucene.search.IndexSearcher;
 
 /**
  * Connects to an index and a list of queries. Steps through all the queries
@@ -58,7 +61,6 @@ import org.apache.lucene.queryParser.TokenMgrError;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class QueryPerformance {
-    private File indexLocation;
     private SearchDescriptor descriptor;
     private SummaQueryParser queryParser;
     private Configuration configuration;
@@ -69,7 +71,6 @@ public class QueryPerformance {
 
     public QueryPerformance(File indexLocation, boolean useRAMIndex) {
         try {
-            this.indexLocation = indexLocation;
             descriptor = new SearchDescriptor(indexLocation.toString());
             descriptor.loadDescription(indexLocation.toString());
 
@@ -100,47 +101,13 @@ public class QueryPerformance {
         }
         }
 
-    private String round(double v) {
+    public static String round(double v) {
         return Double.toString(Math.round(v * 10) / 10.0);
     }
 
-    public void test(String[] queries) throws IOException {
-        Profiler profiler = new Profiler();
-        profiler.setBpsSpan(500);
-        profiler.setExpectedTotal(queries.length);
-        int feedback = Math.min(Math.max(10, queries.length / 100), 100);
-        int counter = 0;
-        long totalhits = 0;
-        long startTime = System.currentTimeMillis();
-        for (String query: queries) {
-            try {
-                totalhits += test(query);
-                profiler.beat();
-                if (counter++ % feedback == 0) {
-                    System.out.println((System.currentTimeMillis() - startTime)
-                                       / 1000 + " sec. " + counter + "/"
-                                       + queries.length
-                                       + ". Hits: " + totalhits
-                                       + ". Q/sec: "
-                                       + round(profiler.getBps(true))
-                                       + " ("
-                                       + round(profiler.getBps(false))
-                                       + " total). ETA: "
-                                       + profiler.getETAAsString(true));
-                }
-            } catch(Exception e) {
-                System.err.println("Exception doing query");
-                e.printStackTrace();
-                System.err.println("Continuing...");
-            }
-        }
-        System.out.println("Tested " + queries.length
-                           + " queries (" + totalhits + " hits). In "
-                           + (System.currentTimeMillis() - startTime) 
-                           / 1000 + " seconds. "
-                           + "Average queries/second: "
-                           + round(profiler.getBps(false))
-                           + ". Total time used: " + profiler.getSpendTime());
+    public void test(String[] queries, int threadCount) throws IOException {
+        QueryPerformanceThread.test(threadCount, queries,  
+                                    connector, descriptor);
     }
 
     public int test(String query) {
@@ -183,27 +150,51 @@ public class QueryPerformance {
      * Note that this requires as much memory as the index requires disk space.
      */
     public static void main(String[] args) throws IOException {
-        if (!(args.length >= 1 && args.length <= 3)) {
-            System.err.println("Usage: QueryPerformance [-r] indexlocation "
-                               + "[queryfile]");
+        if (!(args.length >= 1 && args.length <= 5)) {
+            System.err.println("Usage: QueryPerformance [-r] [-t threadcount] "
+                               + "indexlocation [queryfile]");
+            System.err.println("-r\tLoad index into RAM");
+            System.err.println("-t threadcount\tUse threadcount threads");
             System.exit(-1);
         }
-        QueryPerformance tester;
-        if ("-r".equals(args[0])) {
-            tester = new QueryPerformance(new File(args[1]), true);
-        } else {
-            tester = new QueryPerformance(new File(args[0]), false);
-        }
-        if (args.length == 3 || args.length == 2 && !"-r".equals(args[0])) {
-            String[] queries;
-            if ("-r".equals(args[0])) {
-                queries = Files.loadString(new File(args[2])).split("\n");
+        int threadCount = 1;
+        boolean useRAM = false;
+        String indexLocation = null;
+        String queryfile = null;
+        List<String> arguments = new LinkedList<String>(Arrays.asList(args));
+        while (arguments.size() > 0) {
+            if ("-r".equals(arguments.get(0))) {
+                useRAM = true;
+                arguments.remove(0);
+            } else if ("-t".equals(arguments.get(0))) {
+                arguments.remove(0);
+                try {
+                    threadCount = Integer.parseInt(arguments.get(0));
+                } catch (NumberFormatException e) {
+                    System.err.println("Expected threadCount. Got '"
+                                       + arguments.get(0) + "'. Exiting");
+                    System.exit(-1);
+                }
+                arguments.remove(0);
+            } else if (indexLocation == null) {
+                indexLocation = arguments.remove(0);
+            } else if (queryfile == null) {
+                queryfile = arguments.remove(0);
             } else {
-                queries = Files.loadString(new File(args[1])).split("\n");
+                System.err.println("Unexpected token: '" + arguments.get(0)
+                                   + "'. Exiting");
+                System.exit(-1);
             }
-            tester.test(queries);
-        } else {
+        }
+
+        QueryPerformance tester
+                = new QueryPerformance(new File(indexLocation), useRAM);
+        if (queryfile == null) {
             tester.interactive();
+        } else {
+            String[] queries
+                    = Files.loadString(new File(queryfile)).split("\n");
+            tester.test(queries, threadCount);
         }
     }
 
