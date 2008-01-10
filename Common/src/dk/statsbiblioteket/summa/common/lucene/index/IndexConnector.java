@@ -135,11 +135,23 @@ public class IndexConnector {
         return reader;
     }
 
+    public IndexReader getNewReader() throws IOException {
+        log.debug("Attempting to construct a guaranteed new reader");
+        reader = getReader(INDEXROOT);
+        return reader;
+    }
+
     public IndexSearcher getSearcher() throws IOException {
         if (searcher == null) {
             log.debug("Attempting to construct a searcher");
             searcher = new IndexSearcher(getReader());
         }
+        return searcher;
+    }
+
+    public IndexSearcher getNewSearcher() throws IOException {
+        log.debug("Attempting to construct a guaranteed new searcher");
+        searcher = new IndexSearcher(getNewReader());
         return searcher;
     }
 
