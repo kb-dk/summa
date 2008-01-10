@@ -40,6 +40,7 @@ import org.apache.lucene.queryParser.TokenMgrError;
 import org.apache.lucene.search.Hit;
 import org.apache.lucene.search.Hits;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -51,7 +52,7 @@ public class QueryPerformanceThread extends Thread {
     private IndexSearcher searcher;
     private SummaQueryParser queryParser;
 
-
+    private static boolean simulateSearch;
     private static Profiler profiler;
     private static int feedback;
     private static AtomicLong hitCount = new AtomicLong();
@@ -60,11 +61,14 @@ public class QueryPerformanceThread extends Thread {
 
     public static void test(int threadCount, String[] queries,
                             IndexConnector connector,
-                            SearchDescriptor descriptor) throws IOException {
+                            SearchDescriptor descriptor,
+                            boolean simulate,
+                            boolean uniqueSearchers) throws IOException {
         List<QueryPerformanceThread> performanceThreads =
                 new ArrayList<QueryPerformanceThread>(threadCount);
         hitCount.set(0);
         docCount.set(0);
+        simulateSearch = simulate;
 
         int sliceSize = queries.length / threadCount;
         for (int i = 0 ; i < threadCount ; i++) {
@@ -72,8 +76,12 @@ public class QueryPerformanceThread extends Thread {
                                               new SimpleAnalyzer(), descriptor);
             queryParser.setDefaultFields(("au author_normalized su lsubj ti "
                                           + "freetext sort_title").split(" "));
-            IndexSearcher searcher = connector.getSearcher();
-
+            IndexSearcher searcher;
+            if (uniqueSearchers) {
+                searcher = connector.getSearcher();
+            } else {
+                searcher = connector.getSearcher();
+            }
             QueryPerformanceThread performanceThread =
                     new QueryPerformanceThread(queries, i * sliceSize,
                                                (i+1) * sliceSize,
@@ -170,7 +178,11 @@ public class QueryPerformanceThread extends Thread {
             return 0;
         }
         try {
-            Hits hits = searcher.search(queryParser.parse(query));
+            Query parsedQuery = queryParser.parse(query);
+            if (simulateSearch) {
+                return 0;
+            }
+            Hits hits = searcher.search(parsedQuery);
             Iterator iterator = hits.iterator();
             int counter = 0;
             while (counter++ < 20 && iterator.hasNext()) {
@@ -181,19 +193,19 @@ public class QueryPerformanceThread extends Thread {
             return hits.length();
         } catch(ParseException e) {
             System.err.println("Error parsing '" + query + "'");
-            return -1;
+            return 0;
         } catch (IOException e) {
             System.err.println("IOException handling '" + query + "': "
                                + e.getMessage());
-            return -1;
+            return 0;
         } catch (TokenMgrError e) {
             System.err.println("Query parser error for '" + query + "': "
                                + e.getMessage());
-            return -1;
+            return 0;
         } catch (Exception e) {
             System.err.println("Error parsing '" + query + "': "
                                + e.getMessage());
-            return -1;
+            return 0;
         }
     }
 

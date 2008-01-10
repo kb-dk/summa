@@ -105,9 +105,11 @@ public class QueryPerformance {
         return Double.toString(Math.round(v * 10) / 10.0);
     }
 
-    public void test(String[] queries, int threadCount) throws IOException {
+    public void test(String[] queries, int threadCount, boolean simulate,
+                     boolean uniqueSearchers) throws IOException {
         QueryPerformanceThread.test(threadCount, queries,  
-                                    connector, descriptor);
+                                    connector, descriptor,
+                                    simulate, uniqueSearchers);
     }
 
     public int test(String query) {
@@ -150,22 +152,35 @@ public class QueryPerformance {
      * Note that this requires as much memory as the index requires disk space.
      */
     public static void main(String[] args) throws IOException {
-        if (!(args.length >= 1 && args.length <= 5)) {
-            System.err.println("Usage: QueryPerformance [-r] [-t threadcount] "
+        if (!(args.length >= 1)) {
+            System.err.println("Usage: QueryPerformance [-s] [-r]"
+                               + " [-t threadcount] "
                                + "indexlocation [queryfile]");
+            System.err.println("-s\tSimulate (parses queries, but skips "
+                               + "searching)");
             System.err.println("-r\tLoad index into RAM");
             System.err.println("-t threadcount\tUse threadcount threads");
+            System.err.println("-u\tUse unique searchers for each thread");
             System.exit(-1);
         }
         int threadCount = 1;
+        boolean simulate = false;
         boolean useRAM = false;
+        boolean uniqueSearchers = false;
         String indexLocation = null;
         String queryfile = null;
+
         List<String> arguments = new LinkedList<String>(Arrays.asList(args));
         while (arguments.size() > 0) {
             if ("-r".equals(arguments.get(0))) {
                 useRAM = true;
                 arguments.remove(0);
+            } else if ("-s".equals(arguments.get(0))) {
+                arguments.remove(0);
+                simulate = true;
+            } else if ("-u".equals(arguments.get(0))) {
+                arguments.remove(0);
+                uniqueSearchers = true;
             } else if ("-t".equals(arguments.get(0))) {
                 arguments.remove(0);
                 try {
@@ -194,7 +209,7 @@ public class QueryPerformance {
         } else {
             String[] queries
                     = Files.loadString(new File(queryfile)).split("\n");
-            tester.test(queries, threadCount);
+            tester.test(queries, threadCount, simulate, uniqueSearchers);
         }
     }
 
