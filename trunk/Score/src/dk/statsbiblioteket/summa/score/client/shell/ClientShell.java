@@ -23,8 +23,12 @@
 package dk.statsbiblioteket.summa.score.client.shell;
 
 import dk.statsbiblioteket.summa.common.shell.Core;
+import dk.statsbiblioteket.summa.common.rpc.SummaRMIConnectionFactory;
 import dk.statsbiblioteket.summa.score.api.ClientConnection;
 import dk.statsbiblioteket.summa.score.client.Client;
+import dk.statsbiblioteket.summa.score.client.ClientRMIConnection;
+import dk.statsbiblioteket.util.rpc.ConnectionManager;
+import dk.statsbiblioteket.util.rpc.ConnectionContext;
 
 import java.rmi.Naming;
 
@@ -39,6 +43,7 @@ import java.rmi.Naming;
  */
 public class ClientShell {
 
+    private ConnectionManager<ClientConnection> connManager;
     private ClientConnection client;
     private Core shell;
 
@@ -46,8 +51,18 @@ public class ClientShell {
         shell = new Core ();
         shell.setPrompt ("score-client> ");
 
+        connManager = new ConnectionManager<ClientConnection> (
+                                    new SummaRMIConnectionFactory<ClientRMIConnection>(null));
+
+        // Although the client shell use a connection manager
+        // it does not currently use stateless connections. That would
+        // require the individual commands to manage their connections
+        // which is easy with a ConnectionManager instance , but requires
+        // a bit of work
         shell.getShellContext().info ("Looking up client on " + rmiAddress);
-        client = (ClientConnection) Naming.lookup (rmiAddress);
+        ConnectionContext<ClientConnection> ctx = connManager.get(rmiAddress);
+        client = ctx.getConnection();
+        connManager.release (ctx);
 
         shell.installCommand(new GetStatusCommand(client));
         shell.installCommand(new DeployCommand(client));
@@ -59,6 +74,7 @@ public class ClientShell {
     public void run () {
         // FIXME pass command line args to shell core
         shell.run(new String[0]);
+        connManager.close();
     }
 
     public static void printUsage () {
