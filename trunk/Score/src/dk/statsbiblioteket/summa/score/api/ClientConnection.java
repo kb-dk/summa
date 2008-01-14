@@ -41,7 +41,8 @@ import java.net.URL;
 public interface ClientConnection extends Remote {
 
     /** <p>Property defining the id under which the client should report itself
-     * via {@link #getId}. </p>
+     * via {@link #getId}. This is also known as the client's <i>instance
+     * id.</i></p>
      *
      * <p>The client will install itself under
      * <{@code summa.score.client.basepath}>/<{@code summa.score.client.id}></p>
