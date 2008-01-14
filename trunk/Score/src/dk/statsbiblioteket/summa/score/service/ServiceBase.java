@@ -41,7 +41,7 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 
 /**
- * <p>Helper class to ease implementation of Summa Score {@link Service}s.
+ * <p>Helper class to ease implementation of Summa ClientManager {@link Service}s.
  * Deals with the basic RMI setup.</p>
  *
  * <p>All that is needed to implement a {@link Service} is to subclass

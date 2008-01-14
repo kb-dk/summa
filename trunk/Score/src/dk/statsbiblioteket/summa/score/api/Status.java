@@ -27,7 +27,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import java.io.Serializable;
 
 /**
- * Generic object to represent the status of a Score service or client.
+ * Generic object to represent the status of a ClientManager service or client.
  * @see Service
  * @see dk.statsbiblioteket.summa.score.client.Client
  */
@@ -39,7 +39,7 @@ public class Status implements Serializable {
         /**
          * The object does not exist, but can be instantiated. This state
          * is typically returned by some service proxying the object.
-         * For example a Score Client managing a service returns this
+         * For example a ClientManager Client managing a service returns this
          * state if the service is deployed, but not running.  
          */
         not_instantiated,
