@@ -31,6 +31,7 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.List;
 import java.net.URL;
+import java.io.IOException;
 
 /**
  * A connection to a running {@link Client} used to deploy 
@@ -38,7 +39,7 @@ import java.net.URL;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
-public interface ClientConnection extends Remote {
+public interface ClientConnection {
 
     /** <p>Property defining the id under which the client should report itself
      * via {@link #getId}. This is also known as the client's <i>instance
@@ -101,17 +102,17 @@ public interface ClientConnection extends Remote {
      *
      * This call should stop the JVM of the client. Ie, call {@link System#exit}
      * 
-     * @throws java.rmi.RemoteException in case of communication errors.
+     * @throws IOException in case of communication errors.
      */
-    public void stop() throws RemoteException;
+    public void stop() throws IOException;
 
     /**
      * Get the status for the client.
      * @return null if the client could not be contacted, else a client-specific
      * string.
-     * @throws java.rmi.RemoteException in case of communication errors.
+     * @throws IOException in case of communication errors.
      */
-    public Status getStatus() throws RemoteException;
+    public Status getStatus() throws IOException;
 
     /**
      * Fetches the service bundle with a given bundle id from the configured
@@ -124,20 +125,20 @@ public interface ClientConnection extends Remote {
      *                         easiest just to merge the two configurations to
      *                         one.
      * @return the instance id of the deployed service or null on errors
-     * @throws java.rmi.RemoteException in case of communication errors.
+     * @throws IOException in case of communication errors.
      */
     public String deployService(String id, String configLocation)
-                              throws RemoteException;
+                              throws IOException;
 
     /**
      * Start the given service with the given configuration. If the service
      * is not deployed an error is thrown.
      * @param id               the <i>instance id</i> for the service.
      * @param configLocation    service-specific properties.
-     * @throws java.rmi.RemoteException in case of communication errors.
+     * @throws IOException in case of communication errors.
      */
     public void startService(String id, String configLocation)
-                             throws RemoteException;
+                             throws IOException;
 
     /**
      * <p>Stop the given service. If the service is not deployed, an error is
@@ -147,9 +148,9 @@ public interface ClientConnection extends Remote {
      * {@link Status.CODE#stopped} in which all of its connections and
      * pipes should be flushed and closed.</p>
      * @param id               the <i>instance id</i> for the service.
-     * @throws java.rmi.RemoteException in case of communication errors.
+     * @throws IOException in case of communication errors.
      */
-    public void stopService(String id) throws RemoteException;
+    public void stopService(String id) throws IOException;
 
     /**
      * <p>Get the status for a specific service. If the service is not deployed,
@@ -158,24 +159,24 @@ public interface ClientConnection extends Remote {
      * will be {@link Status.CODE#not_instantiated}</p>.
      * @param id the <i>instance id</i> for the service.
      * @return   the status for the service.
-     * @throws java.rmi.RemoteException in case of communication errors.
+     * @throws IOException in case of communication errors.
      */
-    public Status getServiceStatus(String id) throws RemoteException;
+    public Status getServiceStatus(String id) throws IOException;
 
     /**
      * Iterate through the deployed services and collect a list of the ids
      * for said services.
      * @return a list of all the deployed services.
-     * @throws java.rmi.RemoteException in case of communication errors.
+     * @throws IOException in case of communication errors.
      */
-    public List<String> getServices() throws RemoteException;
+    public List<String> getServices() throws IOException;
 
     /**
      * Return the id of the client as set through the configuration property
      * {@link #CLIENT_ID}
      * @return the id
-     * @throws java.rmi.RemoteException in case of communication errors.
+     * @throws IOException in case of communication errors.
      */
-    public String getId() throws RemoteException;
+    public String getId() throws IOException;
 
 }

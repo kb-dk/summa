@@ -22,15 +22,13 @@
  */
 package dk.statsbiblioteket.summa.score.api;
 
-import java.rmi.Remote;
-
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke",
         comment="Unfinished")
-public interface ScoreConnection extends Remote {
+public interface ScoreConnection {
 
     public void fillMeIn();
 
