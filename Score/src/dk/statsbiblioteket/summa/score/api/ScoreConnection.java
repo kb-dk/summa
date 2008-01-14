@@ -30,6 +30,6 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         comment="Unfinished")
 public interface ScoreConnection {
 
-    public void fillMeIn();
+    //public void fillMeIn();
 
 }

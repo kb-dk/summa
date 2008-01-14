@@ -51,9 +51,9 @@ import java.util.*;
 import java.net.MalformedURLException;
 
 /**
- * <p>Core class for running Score clients.</p>
+ * <p>Core class for running ClientManager clients.</p>
  *
- * <p>The client talks to the Score server via a {@link ScoreConnection}.
+ * <p>The client talks to the ClientManager server via a {@link ScoreConnection}.
  * Itself exposes a {@link ClientConnection} over RMI.</p>
  */
 @QAInfo(level = QAInfo.Level.NORMAL,

@@ -30,7 +30,7 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 /**
- * Management interface exposed by Score services. A {@code Service} is managed
+ * Management interface exposed by ClientManager services. A {@code Service} is managed
  * by a {@link Client}. 
  */
 @QAInfo(level = QAInfo.Level.NORMAL,

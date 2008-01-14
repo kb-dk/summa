@@ -28,6 +28,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,

@@ -23,12 +23,11 @@
 package dk.statsbiblioteket.summa.score.server;
 
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
-import dk.statsbiblioteket.summa.score.api.Status;
 import dk.statsbiblioteket.summa.score.api.Feedback;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
- * Abstract representation of a way of deploying and controlling Score Clients.
+ * Abstract representation of a way of deploying and controlling ClientManager Clients.
  * Example {@code ClientDeployer}s could include <i>ssh</i>,
  * <i>local deployment</i>, <i>rmi</i>, etc.
  * </p><p>
