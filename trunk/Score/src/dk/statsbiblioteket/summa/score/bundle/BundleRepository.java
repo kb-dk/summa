@@ -34,7 +34,7 @@ import java.io.Serializable;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke",
         comment="Class needs Javadoc")
-public interface BundleRepository extends Configurable {
+public interface BundleRepository extends Configurable, Serializable {
 
     /**
      * <p>The {@link Configuration} property pointing at the place to store

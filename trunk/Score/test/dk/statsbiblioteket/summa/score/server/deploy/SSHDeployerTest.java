@@ -31,7 +31,6 @@ import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
 import dk.statsbiblioteket.summa.score.feedback.ConsoleFeedback;
-import dk.statsbiblioteket.summa.score.api.Feedback;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
@@ -48,7 +47,7 @@ public class SSHDeployerTest extends TestCase {
             "te@pc990.sb";
 
     public static final String PROPERTY_SOURCE =
-            "Score/test/dk/statsbiblioteket/summa/score/server/deploy/FakeZIP.zip";
+            "ClientManager/test/dk/statsbiblioteket/summa/score/server/deploy/FakeZIP.zip";
     public static final String PROPERTY_DESTINATION =
             "/tmp/fakeClient";
     public static final String PROPERTY_START_CONFSERVER =
@@ -103,10 +102,10 @@ public class SSHDeployerTest extends TestCase {
 
     private Configuration makeConfiguration() {
         MemoryStorage storage = new MemoryStorage();
-        storage.put(SSHDeployer.PROPERTY_SOURCE, PROPERTY_SOURCE);
-        storage.put(SSHDeployer.PROPERTY_DESTINATION, PROPERTY_DESTINATION);
-        storage.put(SSHDeployer.PROPERTY_LOGIN, PROPERTY_LOGIN);
-        storage.put(SSHDeployer.PROPERTY_START_CONFSERVER, PROPERTY_START_CONFSERVER);
+        storage.put(SSHDeployer.DEPLOYER_BUNDLE_PROPERTY, PROPERTY_SOURCE);
+        storage.put(SSHDeployer.BASEPATH_PROPERTY, PROPERTY_DESTINATION);
+        storage.put(SSHDeployer.DEPLOYER_TARGET_PROPERTY, PROPERTY_LOGIN);
+        storage.put(SSHDeployer.CLIENT_CONF_PROPERTY, PROPERTY_START_CONFSERVER);
         new FakeThinClient();
         return new Configuration(storage);
     }

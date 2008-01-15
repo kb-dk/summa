@@ -23,6 +23,17 @@
 package dk.statsbiblioteket.summa.score.api;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.score.server.ClientManager;
+import dk.statsbiblioteket.summa.score.bundle.BundleRepository;
+import dk.statsbiblioteket.summa.score.client.Client;
+import dk.statsbiblioteket.summa.score.server.ClientDeployer;
+import dk.statsbiblioteket.summa.score.api.NoSuchServiceException;
+
+import java.io.IOException;
+import java.util.List;
+
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -30,6 +41,56 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         comment="Unfinished")
 public interface ScoreConnection {
 
-    //public void fillMeIn();
+    public ConfigurationStorage getConfigurationStorage () throws IOException;
+
+    public BundleRepository getRepository () throws IOException;
+
+    /**
+     * <p>Create a connection to a {@link Client}. If the client is deployed
+     * but not running, this method will return {@code null}.</p>
+     *
+     * <p>If the client is not deployed a {@link NoSuchServiceException} will
+     * be thrown.</p>
+     *
+     * @param instanceId unique id of the client to connect to
+     * @return A connection to the client or {@code null} if the client is
+     *         known, but not running
+     * @throws NoSuchServiceException if the no client with {@code instanceId}
+     *                                is known
+     */
+    public ClientConnection getClient (String instanceId) throws IOException;
+
+    /**
+     * <p>Copy a client bundle to a remote machine. The configuration should
+     * contain the properties described in {@link ClientDeployer}.</p>
+     *
+     * <p>What the score server does is to instantiate a {@link ClientDeployer}
+     * as described by the configuration's
+     * {@link ClientDeployer#DEPLOYER_CLASS_PROPERTY} property.</p>
+     *
+     * <p>When the client deployer is passed the same configuration to
+     * its constrcutor as the one passed in this method.</p>
+     * @param conf configuration used to instantiate deployer
+     * @throws IOException if there is a problem communicating with the deployer
+     *                     or if there is a problem deploying the bundle specified
+     *                     by the configuration
+     */
+    public void deployClient (Configuration conf) throws IOException;
+
+    /**
+     * <p>Start a client by name with a configuration at a given place.</p>
+     *
+     * <p>The passed {@link Configuration} {@code conf} will be used
+     * to instantiate and configure a {@link ClientDeployer} as in
+     * {@link #deployClient}.</p>
+     *
+     * @param conf configuration objecct passed to the client deployer
+     * @throws IOException if there is an error starting the client
+     * @throws NoSuchServiceException if no client with the given client id is
+     *                                deployed
+     */
+    public void startClient (Configuration conf) throws IOException;
+
+    public List<String> getClients () throws IOException;
 
 }
