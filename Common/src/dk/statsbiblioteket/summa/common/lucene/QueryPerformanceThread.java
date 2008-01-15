@@ -46,17 +46,15 @@ import org.apache.lucene.search.Query;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class QueryPerformanceThread extends Thread {
-    private String[] queries;
-    private int startPos;
-    private int endPos;
     private IndexSearcher searcher;
     private SummaQueryParser queryParser;
 
+    private static String[] queries;
     private static boolean simulateSearch;
     private static Profiler profiler;
     private static int feedback;
     private static AtomicLong hitCount = new AtomicLong();
-    private static AtomicInteger docCount = new AtomicInteger();
+    private static AtomicInteger queryCount = new AtomicInteger();
     private static long startTime;
 
     public static void test(int threadCount, String[] queries,
@@ -64,13 +62,13 @@ public class QueryPerformanceThread extends Thread {
                             SearchDescriptor descriptor,
                             boolean simulate,
                             boolean uniqueSearchers) throws IOException {
+        QueryPerformanceThread.queries = queries;
         List<QueryPerformanceThread> performanceThreads =
                 new ArrayList<QueryPerformanceThread>(threadCount);
         hitCount.set(0);
-        docCount.set(0);
+        queryCount.set(0);
         simulateSearch = simulate;
 
-        int sliceSize = queries.length / threadCount;
         for (int i = 0 ; i < threadCount ; i++) {
             SummaQueryParser queryParser = new SummaQueryParser(new String[]{},
                                               new SimpleAnalyzer(), descriptor);
@@ -83,10 +81,7 @@ public class QueryPerformanceThread extends Thread {
                 searcher = connector.getSearcher();
             }
             QueryPerformanceThread performanceThread =
-                    new QueryPerformanceThread(queries, i * sliceSize,
-                                               (i+1) * sliceSize,
-                                               searcher,
-                                               queryParser);
+                    new QueryPerformanceThread(searcher, queryParser);
             performanceThreads.add(performanceThread);
         }
 
@@ -116,15 +111,12 @@ public class QueryPerformanceThread extends Thread {
                            + "Average queries/second: "
                            + QueryPerformance.round(profiler.getBps(false))
                            + ". Total time used: " + profiler.getSpendTime()
-                           + ". Threads: " + threadCount);
+                           + ". Threads: " + threadCount
+                           + ". Total hits: " + hitCount.get());
     }
 
-    private QueryPerformanceThread(String[] queries, int startPos, int endPos,
-                                  IndexSearcher searcher,
+    private QueryPerformanceThread(IndexSearcher searcher,
                                   SummaQueryParser queryParser) {
-        this.queries = queries;
-        this.startPos = startPos;
-        this.endPos = endPos;
         this.searcher = searcher;
         this.queryParser = queryParser;
     }
@@ -137,8 +129,7 @@ public class QueryPerformanceThread extends Thread {
         try {
             test();
         } catch (Exception e) {
-            System.err.println("Exception running performance thread for query "
-                               + "slice " + startPos + " to " + endPos);
+            System.err.println("Exception running performance thread");
             e.printStackTrace();
         }
     }
@@ -146,9 +137,9 @@ public class QueryPerformanceThread extends Thread {
     private static void ping(long hitCount) {
         QueryPerformanceThread.hitCount.addAndGet(hitCount);
         profiler.beat();
-        if (docCount.incrementAndGet() % feedback == 0) {
+        if (queryCount.incrementAndGet() % feedback == 0) {
             feedback((System.currentTimeMillis() - startTime)
-                               / 1000 + " sec. " + docCount.get() + "/"
+                               / 1000 + " sec. " + queryCount.get() + "/"
                                + profiler.getExpectedTotal()
                                + ". Hits: "
                                + QueryPerformanceThread.hitCount.get()
@@ -162,8 +153,9 @@ public class QueryPerformanceThread extends Thread {
     }
 
     public void test() throws IOException {
-        for (int i = startPos ; i < endPos ; i++) {
-            String query = queries[i];
+        int queryPos;
+        while ((queryPos = queryCount.getAndAdd(1)) < queries.length) {
+            String query = queries[queryPos];
             try {
                 ping(test(query));
             } catch(Exception e) {
