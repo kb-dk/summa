@@ -479,10 +479,10 @@
     </library>
     <library name="sbutil">
       <CLASSES>
-        <root url="jar://$PROJECT_DIR$/lib/sbutil-0.2.3.jar!/" />
+        <root url="jar://$PROJECT_DIR$/lib/sbutil-0.2.4.jar!/" />
       </CLASSES>
       <JAVADOC>
-        <root url="jar://$PROJECT_DIR$/lib/apidocs/sbutil-0.2.3-apidocs.zip!/sbutil-0.2.3/doc" />
+        <root url="jar://$PROJECT_DIR$/lib/apidocs/sbutil-0.2.4-apidocs.zip!/sbutil-0.2.4/doc" />
       </JAVADOC>
       <SOURCES />
     </library>
