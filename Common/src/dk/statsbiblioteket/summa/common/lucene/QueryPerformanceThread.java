@@ -78,7 +78,7 @@ public class QueryPerformanceThread extends Thread {
                                           + "freetext sort_title").split(" "));
             IndexSearcher searcher;
             if (uniqueSearchers) {
-                searcher = connector.getSearcher();
+                searcher = connector.getNewSearcher();
             } else {
                 searcher = connector.getSearcher();
             }
@@ -115,7 +115,8 @@ public class QueryPerformanceThread extends Thread {
                            / 1000 + " seconds. "
                            + "Average queries/second: "
                            + QueryPerformance.round(profiler.getBps(false))
-                           + ". Total time used: " + profiler.getSpendTime());
+                           + ". Total time used: " + profiler.getSpendTime()
+                           + ". Threads: " + threadCount);
     }
 
     private QueryPerformanceThread(String[] queries, int startPos, int endPos,

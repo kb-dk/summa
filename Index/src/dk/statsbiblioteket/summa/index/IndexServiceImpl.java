@@ -464,7 +464,9 @@ public class IndexServiceImpl implements IndexService {
 
             if (value != null && !"".equals(value.trim())) {
 
-                docIndex.add(newField(f.getName(), value, f.getType(), f.isRepeat()));
+                Field newField = newField(f.getName(), value, f.getType(), f.isRepeat());
+                newField.setBoost(f.getBoost());
+                docIndex.add(newField);
 
                 if (f.getGroup() != null && !"".equals(f.getGroup())){
                     descriptor.addFieldToGroup(f, f.getGroup());
