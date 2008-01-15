@@ -23,7 +23,6 @@
 package dk.statsbiblioteket.summa.common.configuration;
 
 import junit.framework.TestCase;
-import dk.statsbiblioteket.summa.common.configuration.storage.FileStorage;
 import dk.statsbiblioteket.summa.common.configuration.storage.RemoteStorageMBean;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
@@ -43,15 +42,15 @@ public class ConfigurationStorageTestCase extends TestCase {
 
     public void testGet () throws Exception {
         System.out.println (testName + ": Testing get()");
-        Object val = storage.get (RemoteStorageMBean.THIS_NAME);
-        assertNotNull("Should be able to retrieve " + RemoteStorageMBean.THIS_NAME + " from test configuration", val);
+        Object val = storage.get (RemoteStorageMBean.PROP_NAME);
+        assertNotNull("Should be able to retrieve " + RemoteStorageMBean.PROP_NAME + " from test configuration", val);
     }
 
     public void testSet () throws Exception {
         System.out.println (testName + ": Testing set()");
         String resultValue, testValue = "MyTestValue";
-        storage.put (RemoteStorageMBean.THIS_NAME, testValue);
-        resultValue = (String) storage.get (RemoteStorageMBean.THIS_NAME);
+        storage.put (RemoteStorageMBean.PROP_NAME, testValue);
+        resultValue = (String) storage.get (RemoteStorageMBean.PROP_NAME);
 
         assertTrue ("Setting and getting a property should leave it unchanged", testValue.equals(resultValue));
     }
