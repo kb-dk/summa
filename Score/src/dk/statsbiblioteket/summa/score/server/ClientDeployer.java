@@ -24,6 +24,7 @@ package dk.statsbiblioteket.summa.score.server;
 
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.score.api.Feedback;
+import dk.statsbiblioteket.summa.score.api.ClientConnection;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
@@ -44,8 +45,7 @@ public interface ClientDeployer extends Configurable {
      * installation. This should be set as a system property.<br />
      * Example: -Dsumma.score.instance_id=mySearchInstallation-3.
      */
-    public static final String INSTANCE_ID_PROPERTY =
-            "summa.score.instance_id";
+    public static final String INSTANCE_ID_PROPERTY =  ClientConnection.CLIENT_ID;
 
     /**
      * Deploy the client, as specified in the base configuration for the

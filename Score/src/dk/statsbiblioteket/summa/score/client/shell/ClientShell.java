@@ -49,7 +49,7 @@ public class ClientShell {
 
     public ClientShell (String rmiAddress) throws Exception {
         shell = new Core ();
-        shell.setPrompt ("score-client> ");
+        shell.setPrompt ("client-shell> ");
 
         connManager = new ConnectionManager<ClientConnection> (
                                     new SummaRMIConnectionFactory<ClientRMIConnection>(null));
