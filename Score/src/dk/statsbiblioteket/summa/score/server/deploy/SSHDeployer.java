@@ -41,51 +41,26 @@ import org.apache.commons.logging.LogFactory;
 public class SSHDeployer implements ClientDeployer {
     private static final Log log = LogFactory.getLog(SSHDeployer.class);
 
-    /**
-     * The login and the destination machine. In the current version of the
-     * deployer, interactive login is not supported explicitly.<br />
-     * Example: summa@example.org.
-     */
-    public static final String PROPERTY_LOGIN =
-            "summa.score.SSHDeployer.login";
-    /**
-     * The path to the package to deploy. This must be a ZIP-file, as
-     * specified in the package description.<br />
-     * Example: /home/te/projects/summa/score/deploy/client.zip.
-     */
-    public static final String PROPERTY_SOURCE =
-            "summa.score.SSHDeployer.source";
-    /**
-     * The destination on the remote machine. If the destination does not
-     * exist, an attempt will be made to create it.<br />
-     * Example: /home/summa/client.
-     */
-    public static final String PROPERTY_DESTINATION =
-            "summa.score.SSHDeployer.destination";
-    /**
-     * The RMI-address for the configuration-server for the client.<br />
-     * Example: //example.org/score-server:12345.
-     */
-    public static final String PROPERTY_START_CONFSERVER =
-            "summa.score.SSHDeployer.startConfserver";
-
-    /**
-     * The instanceID for the client. This must be unique for the Summa
-     * installation.
-     */
-    public static final String PROPERTY_CLIENT_INSTANCEID = ClientConnection.CLIENT_ID;
+    private String login;
+    private String destination;
+    private String source;
+    private String clientId;
+    private String confLocation;
 
     protected Configuration configuration;
 
-    public SSHDeployer(Configuration configuration) {
-        this.configuration = configuration;
+    public SSHDeployer(Configuration conf) {
+        login = conf.getString(DEPLOYER_TARGET_PROPERTY);
+        destination = conf.getString(BASEPATH_PROPERTY, "summa-score");
+        source = conf.getString(DEPLOYER_BUNDLE_PROPERTY);
+        clientId = conf.getString (INSTANCE_ID_PROPERTY);
+        confLocation = conf.getString (CLIENT_CONF_PROPERTY,
+                                       "configuration.xml");
     }
 
     public void deploy(Feedback feedback) throws Exception {
         log.info("Deploying client");
-        String login = getProperty(PROPERTY_LOGIN);
-        String source = getProperty(PROPERTY_SOURCE);
-        String destination = getProperty(PROPERTY_DESTINATION);
+
         makeDestination(login, destination);
 
         log.debug("Deploying from " + source + " to " + destination);
@@ -182,23 +157,19 @@ public class SSHDeployer implements ClientDeployer {
 
     public void start(Feedback feedback) throws Exception {
         log.info("Starting service");
-        String login = getProperty(PROPERTY_LOGIN);
-        String confServer = getProperty(PROPERTY_START_CONFSERVER);
-        String destination = getProperty(PROPERTY_DESTINATION);
-        String clientID = getProperty(PROPERTY_CLIENT_INSTANCEID);
 
         String jar = "Main.jar"; //getProperty(PROPERTY_START_JAR);
 
         log.debug("Running " + jar + " with login " + login
-                  + " and configuration server " + confServer);
+                  + " and configuration server " + confLocation);
         NativeRunner runner =
                 new NativeRunner(new String[]{
                         "ssh", login,
                         "cd", destination,
                         ";", "java",
                         "-cp lib/*.jar;config;.",
-                        "-D" + Configuration.CONFIGURATION_PROPERTY + "=" + confServer,
-                        "-D" + INSTANCE_ID_PROPERTY + "=" + clientID,
+                        "-D" + Configuration.CONFIGURATION_PROPERTY + "=" + confLocation,
+                        "-D" + INSTANCE_ID_PROPERTY + "=" + clientId,
                         "-jar", jar});
         String error = null;
         try {
@@ -206,13 +177,13 @@ public class SSHDeployer implements ClientDeployer {
             if (returnValue != 0) {
                 error = "Could not run " + jar + " with login "
                         + login + " and configuration server "
-                        + confServer + ". Got return value "
+                        + confLocation + ". Got return value "
                         + returnValue + " and message "
                         + runner.getProcessErrorAsString();
             }
         } catch(Exception e) {
             error = "Could not run" + jar + " with login "
-                    + login + " and configuration server " + confServer
+                    + login + " and configuration server " + confLocation
                     + ": " + runner.getProcessErrorAsString();
             log.error("Exception in start: " + e.getMessage(), e);
         }
@@ -223,7 +194,7 @@ public class SSHDeployer implements ClientDeployer {
 
         }
         log.info("Finished start of " + jar + " with login "
-                           + login + " and configuration server " + confServer
+                           + login + " and configuration server " + confLocation
                            + ": " + runner.getProcessErrorAsString());
         /**
          ssh bar@zoo java -Dsumma.score.configuration=//example.com/myConfServer -jar /path/to/somewhere/runClient.jar

@@ -23,6 +23,7 @@
 package dk.statsbiblioteket.summa.score.server;
 
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.score.api.Feedback;
 import dk.statsbiblioteket.summa.score.api.ClientConnection;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -41,15 +42,77 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 public interface ClientDeployer extends Configurable {
     
     /**
-     * An id for a client or a service, that is unique within the given Summa
-     * installation. This should be set as a system property.<br />
-     * Example: -Dsumma.score.instance_id=mySearchInstallation-3.
+     * <p>Configuration property containing the instance id for the client to
+     * deploy.</p>
+     *
+     * <p>This property <i>must</i> be provided by the configuration.</p>
+     *
+     * @see ClientConnection#CLIENT_ID 
      */
-    public static final String INSTANCE_ID_PROPERTY =  ClientConnection.CLIENT_ID;
+    public static final String INSTANCE_ID_PROPERTY =
+                                                     ClientConnection.CLIENT_ID;
 
     /**
-     * Deploy the client, as specified in the base configuration for the
-     * ClientDeployer.
+     * <p>Configuration property defining a path relative to the system
+     * property {@code user.home} (of the client side JVM) where to install
+     * the client bundle.</p>
+     *
+     * <p>Default is {@code summa-score}.</p>
+     *
+     * @see ClientConnection#CLIENT_BASEPATH
+     */
+    public static final String BASEPATH_PROPERTY =
+                                               ClientConnection.CLIENT_BASEPATH;
+
+    /**
+     * <p>Configuration property defining the class name of the
+     * {@link ClientDeployer} implementation to use when deploying the
+     * client.</p>
+     *
+     * <p>This property <i>must</i> be provided by the configuration.</p>
+     */
+    public static final String DEPLOYER_CLASS_PROPERTY =
+                                                  "summa.score.deployer.class";
+
+    /**
+     * <p>Configuration property containing a freeform string describing the
+     * target to deploy to.</p>
+     *
+     * <p>For example the
+     * {@link dk.statsbiblioteket.summa.score.server.deploy.SSHDeployer} this
+     * should be {@code user@hostname}.</p>
+     *
+     * <p>This property <i>must</i> be provided by the configuration.</p>
+     */
+    public static final String DEPLOYER_TARGET_PROPERTY =
+                                                  "summa.score.deployer.target";
+
+    /**
+     * <p>Configuration property defining the system property where the client is
+     * to look up a {@link Configuration} with.</p>
+     *
+     * <p>Default value is {@code configuration.xml}. This will make the
+     * client look for a configuration file in its classpath.</p>
+     *
+     * {@link Configuration#getSystemConfiguration()}. 
+     */
+    public static final String CLIENT_CONF_PROPERTY =
+                                                  Configuration.CONFIGURATION_PROPERTY;
+
+    /**
+     * <p>Configuration property defining the file path where
+     * the client bundle to deploy can be found. This should not be URL,
+     * but a plain file path such as {@code /tmp/myClient.bundle} or
+     * {@code C:\myClient.bundle}</p>
+     *
+     * <p>This property <i>must</i> be provided by the configuration.</p>
+     */
+    public static final String DEPLOYER_BUNDLE_PROPERTY =
+                                                  "summa.score.deployer.bundle";
+
+    /**
+     * Deploy the client, as specified in the {@link Configuration} supplied
+     * in the ClientDeployer's constructor.
      * @param feedback callback for communication with the user.
      * @throws Exception if something goes wrong during deploy.
      */
