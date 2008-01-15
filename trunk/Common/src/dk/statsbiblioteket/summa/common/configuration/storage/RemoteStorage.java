@@ -96,6 +96,14 @@ public class RemoteStorage extends UnicastRemoteObject implements
     }
 
     /**
+     * Change the underlying storage provider.
+     * @param storage new {@link ConfigurationStorage} to use
+     */
+    public void setStorage (ConfigurationStorage storage) {
+        this.storage = storage;
+    }
+
+    /**
      * Convenience method to create a connection to a remote configuration
      * storage
      * @param rmiPath Path to remote service, fx {@code //host:port/servicename}
