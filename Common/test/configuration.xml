@@ -4,9 +4,9 @@
 <!-- This is an EXAMPLE Dice configuration -->
 <properties>
 
-    <entry key="this.service.port">2768</entry>
-    <entry key="this.service.name">ConfigurationStorage</entry>
-    <entry key="this.registry.port">2767</entry>
-    <entry key="this.registry.host">localhost</entry>
+    <entry key="summa.configuration.service.port">2768</entry>
+    <entry key="summa.configuration.service.name">ConfigurationStorage</entry>
+    <entry key="summa.configuration.registry.port">2767</entry>
+    <entry key="summa.configuration.registry.host">localhost</entry>
 
 </properties>

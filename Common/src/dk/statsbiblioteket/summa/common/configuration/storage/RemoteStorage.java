@@ -84,13 +84,13 @@ public class RemoteStorage extends UnicastRemoteObject implements
      * @throws RemoteException if there is an error exporting the interface
      */
     public RemoteStorage (Configuration conf) throws RemoteException {
-        super (conf.getInt(THIS_PORT));
+        super (conf.getInt(PROP_PORT));
         this.conf = conf;
         storage = conf.getStorage();
-        serviceName = conf.getString(THIS_NAME);
-        servicePort = conf.getInt (THIS_PORT);
-        registryPort = conf.getInt (THIS_REGISTRY_PORT);
-        registryHost = conf.getString (THIS_REGISTRY_HOST);
+        serviceName = conf.getString(PROP_NAME, "configurationStorage");
+        servicePort = conf.getInt (PROP_PORT, 27007);
+        registryPort = conf.getInt (PROP_REGISTRY_PORT, 27000);
+        registryHost = conf.getString (PROP_REGISTRY_HOST, "localhost");
 
         exportRMIInterface();
     }
@@ -253,7 +253,7 @@ public class RemoteStorage extends UnicastRemoteObject implements
             RemoteStorage remote = new RemoteStorage(conf);
             System.out.println ("Configuration server running on "
                                 + remote.getServiceUrl() + ", with service"
-                                + " on port " + conf.getString(THIS_PORT));
+                                + " on port " + conf.getString(PROP_PORT));
         } catch (Throwable t) {
             System.err.println ("Configuration server  encountered an error."
                                + " Bailing out.");

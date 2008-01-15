@@ -49,15 +49,15 @@ public class RemoteStorageTest extends ConfigurationStorageTestCase {
         direct_storage = (RemoteStorage) conf.create(RemoteStorage.class);
 
         System.out.println (testName + ": Connecting to registry on " +
-                                                  conf.getString(RemoteStorage.THIS_REGISTRY_HOST) +
+                                                  conf.getString(RemoteStorage.PROP_REGISTRY_HOST) +
                                                   ":" +
-                                                  conf.getInt(RemoteStorage.THIS_REGISTRY_PORT));
+                                                  conf.getInt(RemoteStorage.PROP_REGISTRY_PORT));
 
-        Registry reg = LocateRegistry.getRegistry(conf.getString(RemoteStorage.THIS_REGISTRY_HOST),
-                                                  conf.getInt(RemoteStorage.THIS_REGISTRY_PORT));
+        Registry reg = LocateRegistry.getRegistry(conf.getString(RemoteStorage.PROP_REGISTRY_HOST),
+                                                  conf.getInt(RemoteStorage.PROP_REGISTRY_PORT));
 
 
-        storage = (ConfigurationStorage) reg.lookup(conf.getString(RemoteStorage.THIS_NAME));
+        storage = (ConfigurationStorage) reg.lookup(conf.getString(RemoteStorage.PROP_NAME));
 
         System.out.println (testName + ": Remote storage prepared");
     }
