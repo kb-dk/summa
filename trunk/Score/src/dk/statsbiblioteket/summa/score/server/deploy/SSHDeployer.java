@@ -27,6 +27,7 @@ import java.io.File;
 import dk.statsbiblioteket.summa.score.server.ClientDeployer;
 import dk.statsbiblioteket.summa.score.api.Feedback;
 import dk.statsbiblioteket.summa.score.api.Message;
+import dk.statsbiblioteket.summa.score.api.ClientConnection;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.NativeRunner;
 import org.apache.commons.logging.Log;
@@ -66,14 +67,13 @@ public class SSHDeployer implements ClientDeployer {
      * Example: //example.org/score-server:12345.
      */
     public static final String PROPERTY_START_CONFSERVER =
-            "summa.score.SSHDeployer.start_confserver";
+            "summa.score.SSHDeployer.startConfserver";
 
     /**
      * The instanceID for the client. This must be unique for the Summa
      * installation.
      */
-    public static final String PROPERTY_CLIENT_INSTANCEID =
-            "summa.score.SSHDeployer.client_instance_id";
+    public static final String PROPERTY_CLIENT_INSTANCEID = ClientConnection.CLIENT_ID;
 
     protected Configuration configuration;
 
