@@ -6,10 +6,15 @@ import dk.statsbiblioteket.summa.score.api.ScoreConnection;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
 import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * Simple command to test the connection to the score server
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.IN_DEVELOPMENT,
+        author = "mke",
+        comment="Unfinished")
 public class PingCommand extends Command {
 
     private ConnectionManager<ScoreConnection> cm;
