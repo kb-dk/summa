@@ -1,11 +1,13 @@
 package dk.statsbiblioteket.summa.score.server;
 
+import dk.statsbiblioteket.util.qa.QAInfo;
+
 /**
- * Created by IntelliJ IDEA.
- * User: mikkel
- * Date: Jan 14, 2008
- * Time: 2:49:56 PM
- * To change this template use File | Settings | File Templates.
+ *
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.IN_DEVELOPMENT,
+        author = "mke",
+        comment="Unfinished")
 public class RepositoryManager {
 }

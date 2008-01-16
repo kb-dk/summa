@@ -9,10 +9,15 @@ import dk.statsbiblioteket.summa.common.shell.Core;
 import dk.statsbiblioteket.summa.common.rpc.SummaRMIConnectionFactory;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
+import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * Command line UI for managing the Score server.
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.IN_DEVELOPMENT,
+        author = "mke",
+        comment="Unfinished")
 public class ScoreShell {
 
     private ConnectionManager<ScoreConnection> connManager;

@@ -30,6 +30,7 @@ import dk.statsbiblioteket.summa.score.api.Message;
 import dk.statsbiblioteket.summa.score.api.ClientConnection;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.NativeRunner;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -38,6 +39,10 @@ import org.apache.commons.logging.LogFactory;
  * 
  * $Id: SSHDeployer.java,v 1.8 2007/10/04 13:28:20 te Exp $
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.QA_NEEDED,
+        author = "te, mke",
+        comment="mke made substantial changes over te's original impl")
 public class SSHDeployer implements ClientDeployer {
     private static final Log log = LogFactory.getLog(SSHDeployer.class);
 

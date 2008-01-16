@@ -29,8 +29,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
  * Empty interface extending {@link ClientConnection} allowing
  * a {@link Client} to expose itself as an MBean.
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+@QAInfo(level = QAInfo.Level.NOT_NEEDED,
         author = "mke")
 public interface ClientMBean extends ClientRMIConnection {
 }

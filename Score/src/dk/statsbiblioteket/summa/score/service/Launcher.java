@@ -3,6 +3,7 @@ package dk.statsbiblioteket.summa.score.service;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.LoggingExceptionHandler;
 import dk.statsbiblioteket.summa.score.api.Service;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -17,6 +18,10 @@ import org.apache.commons.logging.LogFactory;
  * 
  * @see Configuration#getSystemConfiguration()
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.IN_DEVELOPMENT,
+        author = "mke",
+        comment="Unfinished")
 public class Launcher {
 
     public static final String SERVICE_CLASS = "score.launcher.service.class";
