@@ -39,7 +39,7 @@ import java.util.List;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke",
         comment="Unfinished")
-public interface ScoreConnection {
+public interface ScoreConnection {    
 
     public ConfigurationStorage getConfigurationStorage () throws IOException;
 
@@ -68,6 +68,16 @@ public interface ScoreConnection {
      * as described by the configuration's
      * {@link ClientDeployer#DEPLOYER_CLASS_PROPERTY} property.</p>
      *
+     * <p>If the {@link ClientDeployer#CLIENT_CONF_PROPERTY} is not set in the
+     * configuration the Score server will set it to point at the Score server's
+     * configuration server before passing the configuration to the deployer
+     * class.</p>
+     *
+     * <p>The {@link ClientDeployer#DEPLOYER_BUNDLE_PROPERTY} should contain the
+     * <i>bundle id</i> of the bundle to deploy. Before passing the configuration
+     * to the ClientDeployer's constructor the Score server will replace it
+     * with the full path to the bundle file to deploy.</p>
+     *
      * <p>When the client deployer is passed the same configuration to
      * its constrcutor as the one passed in this method.</p>
      * @param conf configuration used to instantiate deployer
@@ -81,7 +91,7 @@ public interface ScoreConnection {
      * <p>Start a client by name with a configuration at a given place.</p>
      *
      * <p>The passed {@link Configuration} {@code conf} will be used
-     * to instantiate and configure a {@link ClientDeployer} as in
+     * to instantiate and configure a {@link ClientDeployer} as described in
      * {@link #deployClient}.</p>
      *
      * @param conf configuration objecct passed to the client deployer

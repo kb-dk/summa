@@ -26,6 +26,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.score.api.Feedback;
 import dk.statsbiblioteket.summa.score.api.ClientConnection;
+import dk.statsbiblioteket.summa.score.api.ScoreConnection;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
@@ -91,8 +92,9 @@ public interface ClientDeployer extends Configurable {
      * <p>Configuration property defining the system property where the client is
      * to look up a {@link Configuration} with.</p>
      *
-     * <p>Default value is {@code configuration.xml}. This will make the
-     * client look for a configuration file in its classpath.</p>
+     * <p>If this property is not set the {@link ScoreCore} will set it to
+     * point at the Score's configuration server ebfore passing the configuration
+     * to {@link ClientDeployer}'s constructor.</p>
      *
      * {@link Configuration#getSystemConfiguration()}. 
      */
@@ -100,10 +102,14 @@ public interface ClientDeployer extends Configurable {
                                                   Configuration.CONFIGURATION_PROPERTY;
 
     /**
-     * <p>Configuration property defining the file path where
-     * the client bundle to deploy can be found. This should not be URL,
-     * but a plain file path such as {@code /tmp/myClient.bundle} or
-     * {@code C:\myClient.bundle}</p>
+     * <p>Configuration property defining the bundle to deploy. The
+     * {@link Configuration} passed to {@link ScoreConnection#deployClient}
+     * or {@link ScoreConnection#startClient} should contain the
+     * <i>bundle id</i> to use.</p>
+     *
+     * <p>The Score server will replace the bundle id with the full path
+     * to the local bundle file before passing the {@link Configuration} to the
+     * {@link ClientDeployer}s constructor.</p>
      *
      * <p>This property <i>must</i> be provided by the configuration.</p>
      */
