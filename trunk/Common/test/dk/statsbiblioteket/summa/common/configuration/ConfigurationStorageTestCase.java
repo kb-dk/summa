@@ -32,21 +32,18 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 public class ConfigurationStorageTestCase extends TestCase {
 
     static final String configFilename = "configuration.xml";
-    ConfigurationStorage storage;
-    String testName;
+    public ConfigurationStorage storage;
+    public String testName;
 
     public ConfigurationStorageTestCase (ConfigurationStorage storage) {
         this.storage = storage;
         testName = storage.getClass().getSimpleName();
     }
 
-    public void testGet () throws Exception {
-        System.out.println (testName + ": Testing get()");
-        Object val = storage.get (RemoteStorageMBean.PROP_NAME);
-        assertNotNull("Should be able to retrieve " + RemoteStorageMBean.PROP_NAME + " from test configuration", val);
-    }
-
     public void testSet () throws Exception {
+        System.out.println ("Sleeping 1s");
+        Thread.sleep(1000);
+
         System.out.println (testName + ": Testing set()");
         String resultValue, testValue = "MyTestValue";
         storage.put (RemoteStorageMBean.PROP_NAME, testValue);
@@ -64,6 +61,15 @@ public class ConfigurationStorageTestCase extends TestCase {
         storage.purge (testPurgeKey);
 
         assertNull("Purging a key should remove it from storage", storage.get (testPurgeKey));
+    }
+
+    public void testConfigurationInstantiation () throws Exception {
+        System.out.println (testName + ": Testing instantiation with Configuration");
+
+        Configuration conf = Configuration.newMemoryBased("key", "value");
+
+        ConfigurationStorage testStorage = conf.create (storage.getClass());
+        assertEquals("value", testStorage.get("key"));
     }
 
     
