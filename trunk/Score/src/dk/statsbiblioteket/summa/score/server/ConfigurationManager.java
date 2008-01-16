@@ -28,11 +28,13 @@ public class ConfigurationManager implements Runnable, Configurable {
 
     private Log log;
     private ConfigurationStorage storage;
+    private RemoteStorage remote;
 
     public ConfigurationManager (Configuration conf) {
         log = LogFactory.getLog (ConfigurationManager.class);
 
         setupStorage(conf);
+        exportRemoteStorage(conf);
     }
 
     private void setupStorage (Configuration conf) {
@@ -47,9 +49,13 @@ public class ConfigurationManager implements Runnable, Configurable {
 
     private void exportRemoteStorage (Configuration conf) {
         log.debug("Setting up remote interface");
-        RemoteStorage remote = conf.create (RemoteStorage.class);
+        remote = conf.create (RemoteStorage.class);
         log.trace("Overriding default storage for RemoteStorage");
         remote.setStorage(storage);
+    }
+
+    public ConfigurationStorage getExportedStorage () {
+        return remote;
     }
 
     public void run() {

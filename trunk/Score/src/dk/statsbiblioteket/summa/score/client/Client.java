@@ -23,6 +23,7 @@
 package dk.statsbiblioteket.summa.score.client;
 
 import dk.statsbiblioteket.summa.common.Logging;
+import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configurable.ConfigurationException;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -100,7 +101,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
      * @param configuration the configuration from which to extract rmi  properties
      * @throws RemoteException if there is an error exposing the rmi service
      */
-    public Client(Configuration configuration) throws RemoteException {
+    public Client(Configuration configuration) throws IOException {
         super (getServicePort (configuration));
         log.debug("Constructing client");
 
