@@ -29,7 +29,9 @@ import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorageTestCase;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.Files;
 
 /**
  * XStorage Tester.
@@ -37,13 +39,13 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class XStorageTest extends TestCase {
+public class XStorageTest extends ConfigurationStorageTestCase {
     File subLocation = new File("Common/test/dk/statsbiblioteket/summa/"
                                 + "common/configuration/storage/"
                                 + "substorage.xml").getAbsoluteFile();
 
-    public XStorageTest(String name) {
-        super(name);
+    public XStorageTest() throws Exception {
+        super(new XStorage());        
     }
 
     public void setUp() throws Exception {
@@ -54,15 +56,23 @@ public class XStorageTest extends TestCase {
 
     public void tearDown() throws Exception {
         super.tearDown();
+        String storageFile = ((XStorage)super.storage).getFilename();
+        if (new File(storageFile).exists()) {
+            Files.delete (storageFile);
+        }
+    }
+
+    public void testInstantiation () throws Exception {
+        // pass
     }
 
     public void testGetSubStorage() throws Exception {
         XStorage xs = new XStorage(subLocation);
         assertEquals("The storage should contain the number 7",
-                     7, xs.getInteger("seven"));
+                     new Integer(7), (Integer)xs.get("seven"));
         ConfigurationStorage sub = xs.getSubStorage("submarine");
         assertNotNull("There should be a sub storage named submarine", sub);
-        assertEquals("The sub storage should contain 8", 8, sub.get("eight"));
+        assertEquals("The sub storage should contain 8", new Integer(8), (Integer)sub.get("eight"));
     }
 
     public void testConfigurationWrap() throws Exception {

@@ -425,8 +425,8 @@ public class Configuration implements Serializable,
         try {
             return getClass(key, classType);
         } catch (NullPointerException e) {
-            log.warn ("Unable to find class '" + key + "'. Using default"
-                      + defaultValue.getName(), e);
+            log.warn ("Unable to find class for property '" + key
+                      + "'. Using default '" + defaultValue.getName() + "'", e);
             return defaultValue;
         }
     }

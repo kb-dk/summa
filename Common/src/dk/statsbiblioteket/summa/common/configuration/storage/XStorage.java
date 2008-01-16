@@ -29,6 +29,8 @@ package dk.statsbiblioteket.summa.common.configuration.storage;
 import java.io.Serializable;
 import java.io.IOException;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.BufferedOutputStream;
 import java.util.Map;
 import java.util.Iterator;
 import java.util.HashMap;
@@ -37,46 +39,70 @@ import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.XProperties;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te",
         comment = "Class and some methods needs Javadoc")
-public class XStorage extends XProperties implements ConfigurationStorage {
+public class XStorage implements ConfigurationStorage {
     public static final String DEFAULT_RESOURCE = "xconfiguration.xml";
+
+    private File storageFile;
+    private XProperties xprops;
+    private Log log;
 
     /**
      * Creates a XStorage around a XProperties.
      * @param properties the properties to wrap around.
      */
-    protected XStorage(XProperties properties) {
+    /*protected XStorage(XProperties properties) throws IOException {
+        this (nextAvailableConfigurationFile());
         assignFrom(properties);
-    }
+        syncStorageFile();
+    }*/
 
     public XStorage() throws IOException {
         this(nextAvailableConfigurationFile());
     }
 
     public XStorage(Configuration configuration) throws IOException {
-        this();
+        xprops = new XProperties();
+        storageFile = nextAvailableConfigurationFile();
         new Configuration(this).importConfiguration(configuration);
+        syncStorageFile();
     }
 
     public XStorage(File configurationFile) throws IOException {
-        if (! configurationFile.exists()) {
-            new XProperties().store(configurationFile.getAbsolutePath());
+        storageFile = configurationFile;
+        xprops = new XProperties();
+        if (!configurationFile.exists()) {
+            syncStorageFile();
         } else {
-            load(configurationFile.getAbsoluteFile().toString(),
+            xprops.load(configurationFile.getAbsoluteFile().toString(),
                  false, false);
         }
     }
 
-    public void put(String key, Serializable value) {
-        super.put(key, value);
+    /**
+     * Return the absolute path of the file backing this storage.
+     * @return absolute file path
+     */
+    public String getFilename () {
+        return storageFile.getAbsolutePath();
+    }
+
+    public void put(String key, Serializable value) throws IOException {
+        xprops.put(key, value);
+        syncStorageFile();
     }
 
     public Serializable get(String key) {
-        return (Serializable)getObject(key);
+        try {
+            return (Serializable)xprops.getObject(key);
+        } catch (NullPointerException e) {
+            return null;
+        }
     }
 
     public Iterator<Map.Entry<String, Serializable>> iterator() throws
@@ -85,7 +111,7 @@ public class XStorage extends XProperties implements ConfigurationStorage {
                  + "This won't work well with nesting");
         Map<String, Serializable> tempMap =
                 new HashMap<String, Serializable>(size());
-            for (Map.Entry<Object, Object> entry: entrySet()) {
+            for (Map.Entry<Object, Object> entry: xprops.entrySet()) {
                 tempMap.put((String)entry.getKey(),
                             (Serializable)entry.getValue());
             }
@@ -94,12 +120,13 @@ public class XStorage extends XProperties implements ConfigurationStorage {
         return tempMap.entrySet().iterator();
     }
 
-    public void purge(String key) {
-        remove(key);
+    public void purge(String key) throws IOException {
+        xprops.remove(key);
+        syncStorageFile();
     }
 
     public int size() {
-        return super.size();
+        return xprops.size();
     }
 
     public boolean supportsSubStorage() {
@@ -112,8 +139,10 @@ public class XStorage extends XProperties implements ConfigurationStorage {
             throw new IOException("The value for '" + key + "' was of class '"
                                   + sub.getClass() + "'. Expected XStorage");
         }
-        
-        return new XStorage((XProperties)sub);
+
+        throw new UnsupportedOperationException(
+           "See https://gforge.statsbiblioteket.dk/tracker/index.php?aid=1186");
+        //return new XStorage((XProperties)sub);
     }
 
     public ConfigurationStorage createSubStorage(
@@ -131,5 +160,10 @@ public class XStorage extends XProperties implements ConfigurationStorage {
             f = new File (XCONFIGURATION + count +".xml");
         }
         return f;
+    }
+
+    private void syncStorageFile () throws IOException {
+        xprops.store (new BufferedOutputStream(
+                              new FileOutputStream (storageFile)), null);
     }
 }
