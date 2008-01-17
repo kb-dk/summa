@@ -106,10 +106,10 @@ public class QueryPerformance {
     }
 
     public void test(String[] queries, int threadCount, boolean simulate,
-                     boolean uniqueSearchers) throws IOException {
-        QueryPerformanceThread.test(threadCount, queries,  
+                     boolean uniqueSearchers, int maxHits) throws IOException {
+        QueryPerformanceThread.test(threadCount, queries,
                                     connector, descriptor,
-                                    simulate, uniqueSearchers);
+                                    simulate, uniqueSearchers, maxHits);
     }
 
     public int test(String query) {
@@ -154,13 +154,15 @@ public class QueryPerformance {
     public static void main(String[] args) throws IOException {
         if (!(args.length >= 1)) {
             System.err.println("Usage: QueryPerformance [-s] [-r]"
-                               + " [-t threadcount] "
+                               + " [-t threadcount] [-h maxHits] "
                                + "indexlocation [queryfile]");
             System.err.println("-s\tSimulate (parses queries, but skips "
                                + "searching)");
             System.err.println("-r\tLoad index into RAM");
             System.err.println("-t threadcount\tUse threadcount threads");
             System.err.println("-u\tUse unique searchers for each thread");
+            System.err.println("-h maxHits\tThe number of hits to extract "
+                               + "shortformat for");
             System.exit(-1);
         }
         int threadCount = 1;
@@ -169,6 +171,7 @@ public class QueryPerformance {
         boolean uniqueSearchers = false;
         String indexLocation = null;
         String queryfile = null;
+        int maxHits = 20;
 
         List<String> arguments = new LinkedList<String>(Arrays.asList(args));
         while (arguments.size() > 0) {
@@ -186,7 +189,18 @@ public class QueryPerformance {
                 try {
                     threadCount = Integer.parseInt(arguments.get(0));
                 } catch (NumberFormatException e) {
-                    System.err.println("Expected threadCount. Got '"
+                    System.err.println("Expected threadCount (an integer)."
+                                       + " Got '"
+                                       + arguments.get(0) + "'. Exiting");
+                    System.exit(-1);
+                }
+                arguments.remove(0);
+            } else if ("-h".equals(arguments.get(0))) {
+                arguments.remove(0);
+                try {
+                    maxHits = Integer.parseInt(arguments.get(0));
+                } catch (NumberFormatException e) {
+                    System.err.println("Expected maxHits (an integer). Got '"
                                        + arguments.get(0) + "'. Exiting");
                     System.exit(-1);
                 }
@@ -209,7 +223,8 @@ public class QueryPerformance {
         } else {
             String[] queries
                     = Files.loadString(new File(queryfile)).split("\n");
-            tester.test(queries, threadCount, simulate, uniqueSearchers);
+            tester.test(queries, threadCount, simulate, uniqueSearchers,
+                        maxHits);
         }
     }
 
