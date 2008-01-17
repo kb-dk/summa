@@ -38,7 +38,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
-public interface ConfigurationStorage extends Configurable {
+public interface ConfigurationStorage extends Configurable, Serializable {
 
     /**
      * Store a key-value pair.
