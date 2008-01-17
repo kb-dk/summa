@@ -23,7 +23,7 @@ import org.apache.commons.logging.LogFactory;
         author = "mke",
         comment="Unfinished")
 public class ScoreCore extends UnicastRemoteObject
-                                   implements ScoreRMIConnection, Configurable {
+                  implements ScoreRMIConnection, ScoreCoreMBean, Configurable {
 
     /**
      * Configuration property defining which port the
