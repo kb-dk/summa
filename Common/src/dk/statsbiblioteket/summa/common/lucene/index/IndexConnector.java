@@ -130,18 +130,18 @@ public class IndexConnector {
     public IndexReader getReader() throws IOException {
         if (reader == null) {
             log.debug("Attempting to construct a reader");
-            reader = getReader(INDEXROOT);
+            reader = getNewReader(INDEXROOT);
         }
         return reader;
     }
 
     public IndexReader getNewReader() throws IOException {
         log.debug("Attempting to construct a guaranteed new reader");
-        reader = getReader(INDEXROOT);
+        reader = getNewReader(INDEXROOT);
         return reader;
     }
 
-    public IndexSearcher getSearcher() throws IOException {
+    public synchronized IndexSearcher getSearcher() throws IOException {
         if (searcher == null) {
             log.debug("Attempting to construct a searcher");
             searcher = new IndexSearcher(getReader());
@@ -149,13 +149,14 @@ public class IndexConnector {
         return searcher;
     }
 
+    // Should we reuse searcher?
     public IndexSearcher getNewSearcher() throws IOException {
         log.debug("Attempting to construct a guaranteed new searcher");
         searcher = new IndexSearcher(getNewReader());
         return searcher;
     }
 
-    private IndexReader getReader(String propertyKey) throws IOException {
+    private IndexReader getNewReader(String propertyKey) throws IOException {
         String iTypeS = configuration.getString(propertyKey + "TYPE");
         if (iTypeS == null) {
             throw new IllegalAccessError("The property " + propertyKey
@@ -182,7 +183,7 @@ public class IndexConnector {
                     log.info("Getting sub-reader " + (pos+1) + "/"
                              + indexKeys.size() + " '" + indexKey
                              + "' for MultiReader");
-                    subReaders[pos++] = getReader(indexKey);
+                    subReaders[pos++] = getNewReader(indexKey);
                 }
                 log.info("Constructing MultiReader based on " + indexKeys.size()
                          + " sub-readers");
@@ -194,7 +195,7 @@ public class IndexConnector {
                     log.info("Getting sub-reader " + counter + "/"
                              + indexKeys.size() + " '" + indexKey
                              + "' for ParallelReader");
-                    parallel.add(getReader(indexKey));
+                    parallel.add(getNewReader(indexKey));
                 }
                 log.info("Returning ParallelReader based on " + indexKeys.size()
                          + " sub-readers");

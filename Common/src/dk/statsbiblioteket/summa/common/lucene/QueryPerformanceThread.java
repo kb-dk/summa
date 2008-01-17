@@ -56,13 +56,16 @@ public class QueryPerformanceThread extends Thread {
     private static AtomicLong hitCount = new AtomicLong();
     private static AtomicInteger queryCount = new AtomicInteger();
     private static long startTime;
+    private static int maxHits;
 
     public static void test(int threadCount, String[] queries,
                             IndexConnector connector,
                             SearchDescriptor descriptor,
                             boolean simulate,
-                            boolean uniqueSearchers) throws IOException {
+                            boolean uniqueSearchers,
+                            int maxHits) throws IOException {
         QueryPerformanceThread.queries = queries;
+        QueryPerformanceThread.maxHits = maxHits;
         List<QueryPerformanceThread> performanceThreads =
                 new ArrayList<QueryPerformanceThread>(threadCount);
         hitCount.set(0);
@@ -137,18 +140,21 @@ public class QueryPerformanceThread extends Thread {
     private static void ping(long hitCount) {
         QueryPerformanceThread.hitCount.addAndGet(hitCount);
         profiler.beat();
-        if (queryCount.incrementAndGet() % feedback == 0) {
-            feedback((System.currentTimeMillis() - startTime)
-                               / 1000 + " sec. " + queryCount.get() + "/"
-                               + profiler.getExpectedTotal()
-                               + ". Hits: "
-                               + QueryPerformanceThread.hitCount.get()
-                               + ". Q/sec: "
-                        + QueryPerformance.round(profiler.getBps(true))
-                               + " ("
-                        + QueryPerformance.round(profiler.getBps(false))
-                               + " total). ETA: "
-                               + profiler.getETAAsString(true));
+        int count = queryCount.get();
+        if (count < 100 || count % feedback == 0) {
+            if (count < 10 || count % 10 == 0) {
+                feedback((System.currentTimeMillis() - startTime)
+                         / 1000 + " sec. " + queryCount.get() + "/"
+                                + profiler.getExpectedTotal()
+                                + ". Hits: "
+                                + QueryPerformanceThread.hitCount.get()
+                                + ". Q/sec: "
+                                + QueryPerformance.round(profiler.getBps(true))
+                                + " ("
+                                + QueryPerformance.round(profiler.getBps(false))
+                                + " total). ETA: "
+                                + profiler.getETAAsString(true));
+            }
         }
     }
 
@@ -178,7 +184,7 @@ public class QueryPerformanceThread extends Thread {
             Hits hits = searcher.search(parsedQuery);
             Iterator iterator = hits.iterator();
             int counter = 0;
-            while (counter++ < 20 && iterator.hasNext()) {
+            while (counter++ < maxHits && iterator.hasNext()) {
                 Hit hit = (Hit)iterator.next();
                 hit.get("shortformat");
 
