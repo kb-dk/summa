@@ -251,9 +251,8 @@ public class Configuration implements Serializable,
         try {
             return Integer.parseInt(val.toString());
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("The property " + key
-                                               + " is not an integer, but a "
-                                               + val.getClass());
+            throw new IllegalArgumentException("Bad number format for '" + key
+                                               + "': " + e.getMessage());
         }
     }
 
@@ -268,8 +267,12 @@ public class Configuration implements Serializable,
         try {
             return getInt(key);
         } catch (NullPointerException e) {
+            log.info("Unable to find property '" + key + "', using default "
+                     + defaultValue);
             return defaultValue;
         } catch (NumberFormatException e) {
+            log.warn("Bad number format for property '" + key + "': "
+                     + e.getMessage() + ". Using default " + defaultValue);
             return defaultValue;
         }
     }
@@ -426,7 +429,7 @@ public class Configuration implements Serializable,
             return getClass(key, classType);
         } catch (NullPointerException e) {
             log.warn ("Unable to find class for property '" + key
-                      + "'. Using default '" + defaultValue.getName() + "'", e);
+                      + "'. Using default '" + defaultValue.getName() + "'");
             return defaultValue;
         }
     }
