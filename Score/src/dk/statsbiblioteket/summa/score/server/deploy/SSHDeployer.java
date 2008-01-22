@@ -25,6 +25,7 @@ package dk.statsbiblioteket.summa.score.server.deploy;
 import java.io.File;
 
 import dk.statsbiblioteket.summa.score.server.ClientDeployer;
+import dk.statsbiblioteket.summa.score.server.ClientDeploymentException;
 import dk.statsbiblioteket.summa.score.api.Feedback;
 import dk.statsbiblioteket.summa.score.api.Message;
 import dk.statsbiblioteket.summa.score.api.ClientConnection;
@@ -66,8 +67,10 @@ public class SSHDeployer implements ClientDeployer {
     public void deploy(Feedback feedback) throws Exception {
         log.info("Deploying client");
 
+        /* Make sure target dir exists */
         makeDestination(login, destination);
 
+        /* Copy package to destination */
         log.debug("Deploying from " + source + " to " + destination);
         try {
             NativeRunner runner =
@@ -75,11 +78,11 @@ public class SSHDeployer implements ClientDeployer {
                                                   login + ":" + destination});
             runner.execute(50000, 50000);
         } catch(Exception e) {
-            String error = "Could not deploy from " + source
-                           + " to " + destination;
+            String error = "Could not deploy from source '" + source
+                           + "' to destination '" + destination + "'";
             log.error(error);
             feedback.putMessage(new Message(Message.MESSAGE_ALERT, error));
-            throw new Exception(error, e);
+            throw new ClientDeploymentException(error, e);
         }
         log.debug("Deployed from " + source + " to " + destination);
 
@@ -100,21 +103,21 @@ public class SSHDeployer implements ClientDeployer {
         try {
             int returnValue = runner.execute(50000, 50000);
             if (returnValue != 0) {
-                error = "Could not unpack " + archive + " with login "
-                        + login + ". Got return value "
-                        + returnValue + " and message "
+                error = "Could not unpack '" + archive + "' with login '"
+                        + login + "'. Got return value "
+                        + returnValue + " and message:\n\t"
                         + runner.getProcessErrorAsString();
             }
         } catch(Exception e) {
-            error = "Could not unpack " + archive + " with login "
-                    + login + ": "
+            error = "Could not unpack archive '" + archive + "' with login '"
+                    + login + "':\n\t"
                     + runner.getProcessErrorAsString();
             log.error("Exception in deploy: " + e.getMessage(), e);
         }
         if (error != null) {
             log.error(error);
             feedback.putMessage(new Message(Message.MESSAGE_ALERT, error));
-            throw new Exception(error);
+            throw new ClientDeploymentException(error);
         }
         log.debug("Unpacked " + archive + " at " + destination
                   + " with login " + login);
@@ -152,11 +155,11 @@ public class SSHDeployer implements ClientDeployer {
         if (runner.execute(50000, 50000) == 0) {
             log.debug("The destination " + destination + " was created");
         } else {
-            String error = "Could not create " + destination
-                           + " with login " + login
-                           + ": " + runner.getProcessErrorAsString();
+            String error = "Could not create directry '" + destination
+                           + "' with login '" + login
+                           + "':\n\t" + runner.getProcessErrorAsString();
             log.warn(error);
-            throw new Exception(error);
+            throw new ClientDeploymentException(error);
         }
     }
 
