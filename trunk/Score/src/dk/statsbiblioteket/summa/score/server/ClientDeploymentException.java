@@ -5,6 +5,10 @@ package dk.statsbiblioteket.summa.score.server;
  */
 public class ClientDeploymentException extends RuntimeException {
 
+    public ClientDeploymentException (String msg) {
+        super(msg);
+    }
+
     public ClientDeploymentException (Throwable cause) {
         super(cause);
     }
