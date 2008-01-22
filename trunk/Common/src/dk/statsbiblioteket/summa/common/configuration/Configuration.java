@@ -614,15 +614,38 @@ public class Configuration implements Serializable,
      * Use of URL means that the configuration is loaded only once and this
      * is static. Use of RMI means that every lookup in the configuration will
      * result in a RMI call.
-     *
+     * @param configPropName name of system property containing the address
+     *                       of the system configuration
      * @return a newly instantiated configuration
      */
     public static Configuration getSystemConfiguration (String configPropName) {
+        return getSystemConfiguration(configPropName, false);
+    }
+
+    /**
+     * As {@link #getSystemConfiguration(String)} but if the {@code allowUnset}
+     * argument is {@code true} an emoty memory based configuration will be
+     * returned if the system property {@code configPropName} is not set.
+     * @param configPropName name of system property containing the address
+     *                       of the system configuration
+     * @param allowUnset if {@code true} an empty memory based configuration
+     *                   will be returned if {@code configPropName} is not set
+     * @return System configuration or an empty config if none is set
+     */
+    public static Configuration getSystemConfiguration (String configPropName,
+                                                        boolean allowUnset) {
         ConfigurationStorage storage;
         String confLocation = System.getProperty(configPropName);
 
         if (confLocation == null) {
-            throw new ConfigurationException ("System resource " + configPropName + " not set");
+            if (allowUnset) {
+                log.debug ("System configuraion property '" + configPropName + "' "
+                          + "not set. Using empty configuration.");
+                return Configuration.newMemoryBased();
+            } else {
+                throw new ConfigurationException("Required system property '"
+                                                 + configPropName + "' not set");
+            }
         }
 
         return load (confLocation);
@@ -635,6 +658,19 @@ public class Configuration implements Serializable,
      */
     public static Configuration getSystemConfiguration () {
         return getSystemConfiguration(CONFIGURATION_PROPERTY);
+    }
+
+    /**
+     * <p>Get the default system configuration as specified in the system
+     * property {@link #CONFIGURATION_PROPERTY}.</p>
+     * <p>If the system configuration is not set, and {@code allowUnset} is
+     * true, use an empty memory based configuration instead.</p>
+     * @see #getSystemConfiguration(String, boolean)
+     * @param allowUnset if {@code true}
+     * @return a newly instantiated configuration
+     */
+    public static Configuration getSystemConfiguration (boolean allowUnset) {
+        return getSystemConfiguration(CONFIGURATION_PROPERTY, allowUnset);
     }
 
     /**
