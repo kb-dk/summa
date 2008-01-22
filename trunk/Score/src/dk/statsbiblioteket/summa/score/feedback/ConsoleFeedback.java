@@ -24,6 +24,7 @@ package dk.statsbiblioteket.summa.score.feedback;
 
 import dk.statsbiblioteket.summa.score.api.Feedback;
 import dk.statsbiblioteket.summa.score.api.Message;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.Console;
@@ -46,6 +47,10 @@ public class ConsoleFeedback implements Feedback {
     public ConsoleFeedback () {
         in = System.console();
         out = System.console().writer();
+    }
+
+    public ConsoleFeedback (Configuration conf) {
+        this();
     }
 
     /**

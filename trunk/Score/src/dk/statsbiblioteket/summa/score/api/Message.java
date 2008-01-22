@@ -24,6 +24,8 @@ package dk.statsbiblioteket.summa.score.api;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 
+import java.io.Serializable;
+
 /**
  * A Message is used by Feedback and consists of the message itself and an
  * optional request for a response.
@@ -31,7 +33,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
-public class Message {
+public class Message implements Serializable {
     /**
      * Plain messages should just be displayed and requires no response.
      */
@@ -115,5 +117,13 @@ public class Message {
      */
     public void setRawResponse (char[] response) {
         this.response = response;
+    }
+
+    /**
+     * Return the message string of this Message object
+     * @return same as {@link #getMessage()} 
+     */
+    public String toString () {
+        return message;
     }
 }
