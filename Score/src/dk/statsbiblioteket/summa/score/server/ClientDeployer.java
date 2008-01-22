@@ -93,7 +93,7 @@ public interface ClientDeployer extends Configurable {
      * to look up a {@link Configuration} with.</p>
      *
      * <p>If this property is not set the {@link ScoreCore} will set it to
-     * point at the Score's configuration server ebfore passing the configuration
+     * point at the Score's configuration server before passing the configuration
      * to {@link ClientDeployer}'s constructor.</p>
      *
      * {@link Configuration#getSystemConfiguration()}. 
@@ -117,6 +117,15 @@ public interface ClientDeployer extends Configurable {
                                                   "summa.score.deployer.bundle";
 
     /**
+     * <p>Configuration property naming the class used to provide user
+     * feedback.</p>
+     *
+     * <p>This property <i>must</i> be provided by the configuration.</p>
+     */
+    public static final String DEPLOYER_FEEDBACK_PROPERTY =
+                                          "summa.score.deployer.feedback.class";
+
+    /**
      * Deploy the client, as specified in the {@link Configuration} supplied
      * in the ClientDeployer's constructor.
      * @param feedback callback for communication with the user.
@@ -131,4 +140,11 @@ public interface ClientDeployer extends Configurable {
      * @throws Exception if something goes wrong during start.
      */
     public void start (Feedback feedback) throws Exception;
+
+    /**
+     * Get the hostname of the target to deploy to. The Score server needs this
+     * to be able to construct the address to contact the Client at.
+     * @return hostname of the target machine
+     */
+    public String getTargetHost ();
 }

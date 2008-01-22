@@ -13,12 +13,10 @@ import java.rmi.Remote;
  * 
  */
 public class SummaRMIConnectionFactory<E extends Remote>
-                                               extends SummaConnectionFactory<E>
+                                               extends RMIConnectionFactory<E>
                                                implements Configurable {
     
     public SummaRMIConnectionFactory (Configuration conf) {
-        super(conf);
-
-        backend = new RMIConnectionFactory<E>();
+        super ();
     }
 }

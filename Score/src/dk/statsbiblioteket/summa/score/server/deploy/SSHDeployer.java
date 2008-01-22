@@ -207,6 +207,18 @@ public class SSHDeployer implements ClientDeployer {
 
     }
 
+    public String getTargetHost() {
+        // Extract hostname from a string like user@host:/dir
+        int split = login.indexOf("@");
+        split += 1;
+        String hostname = login.substring(split);
+        split = hostname.indexOf(":");
+        if (split == -1) {
+            return hostname;
+        }
+        return hostname.substring(0, split);
+    }
+
     private String getProperty(String key) {
         String value = configuration.getString(key);
         if (key == null) {

@@ -58,6 +58,25 @@ public class ConfigurationManager implements Runnable, Configurable {
         return remote;
     }
 
+    /**
+     * <p>Get a string representing the public address on which
+     * {@link dk.statsbiblioteket.summa.score.client.Client}s can connect to
+     * the configuration managed by this ConfigurationManager.</p>
+     *
+     * <p>The returned address should be so that
+     * {@link Configuration#getSystemConfiguration(String)} will work for
+     * the clients.</p>
+     *
+     * <h2>FIXME: Limited to RMI atm</h2>
+     * <p>Currently the only the remote RMI configuration interface
+     * is supported. Thus this method will always return an RMI address,
+     * but this might be changed in the future.</p>
+     * @return address as descibed above
+     */
+    public String getPublicAddress () {
+        return remote.getServiceUrl();
+    }
+
     public void run() {
 
     }

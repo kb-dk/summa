@@ -5,9 +5,13 @@ import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
+import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
 import dk.statsbiblioteket.summa.score.api.ScoreConnection;
 import dk.statsbiblioteket.summa.score.api.BadConfigurationException;
 import dk.statsbiblioteket.summa.score.server.ClientDeployer;
+import dk.statsbiblioteket.summa.score.client.Client;
+import dk.statsbiblioteket.summa.score.feedback.RemoteFeedback;
+import dk.statsbiblioteket.summa.score.feedback.RemoteConsoleFeedback;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
@@ -23,6 +27,7 @@ public class DeployCommand extends Command {
 
     private ConnectionManager<ScoreConnection> cm;
     private String scoreAddress;
+    private String hostname;
 
     public DeployCommand(ConnectionManager<ScoreConnection> cm,
                          String scoreAddress) {
@@ -47,6 +52,8 @@ public class DeployCommand extends Command {
 
         this.cm = cm;
         this.scoreAddress = scoreAddress;
+
+        hostname = RemoteHelper.getHostname();
 
     }
 
@@ -90,7 +97,15 @@ public class DeployCommand extends Command {
                                              ClientDeployer.DEPLOYER_CLASS_PROPERTY,
                                              transport,
                                              ClientDeployer.DEPLOYER_TARGET_PROPERTY,
-                                             target);
+                                             target,
+                                             ClientDeployer.DEPLOYER_FEEDBACK_PROPERTY,
+                                             "dk.statsbiblioteket.summa.score.feedback.RemoteFeedbackClient",
+                                             RemoteFeedback.REGISTRY_HOST_PROPERTY,
+                                             hostname);
+
+        RemoteConsoleFeedback remoteConsole =
+                                      conf.create (RemoteConsoleFeedback.class);
+
 
         /* Connect to the Score and send the deployment request */
         ctx.prompt ("Deploying '" + instanceId + "' on '" + target + "' using "
@@ -106,6 +121,7 @@ public class DeployCommand extends Command {
 
             ScoreConnection score = connCtx.getConnection();
             score.deployClient(conf);
+            ctx.info ("OK");
 
         } catch (Exception e) {
             ctx.error (Strings.getStackTrace(e));
@@ -115,8 +131,7 @@ public class DeployCommand extends Command {
             }
         }
 
-        ctx.info ("OK");
-
+        remoteConsole.close ();
 
     }
 }

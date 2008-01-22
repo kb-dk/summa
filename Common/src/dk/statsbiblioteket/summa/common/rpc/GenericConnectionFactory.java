@@ -9,7 +9,7 @@ import dk.statsbiblioteket.util.rpc.ConnectionFactory;
  * A {@link ConnectionFactory} creating a backend {@link ConnectionFactory}
  * dynamically from a {@link Configuration}. 
  */
-public class GenericConnectionFactory<E> extends SummaConnectionFactory<E> {
+public class GenericConnectionFactory<E> extends ConnectionFactory<E> {
 
     /**
      * Number of seconds in between retrying broken connections.
@@ -31,19 +31,15 @@ public class GenericConnectionFactory<E> extends SummaConnectionFactory<E> {
     public static final String FACTORY = "summa.rpc.connections.factoryClass";
 
     private Log log;
+    private ConnectionFactory<? extends E> backend;
 
     @SuppressWarnings("unchecked")
     public GenericConnectionFactory (Configuration conf) {
-        super (conf);
-        log = LogFactory.getLog (SummaConnectionFactory.class);
+        super ();
+        log = LogFactory.getLog (GenericConnectionFactory.class);
 
-        graceTime = conf.getInt(GRACE_TIME, 5);
-        connectionRetries = conf.getInt(RETRIES, 5);
-        log.debug ("Configuration: gracetime=" + graceTime
-                 + ", and retries=" + connectionRetries);
-
-        Class<? extends SummaConnectionFactory> backendClass =
-                            conf.getClass(FACTORY, SummaConnectionFactory.class,
+        Class<? extends ConnectionFactory> backendClass =
+                            conf.getClass(FACTORY, ConnectionFactory.class,
                                           SummaRMIConnectionFactory.class);
 
         log.debug ("Found backend class " + backendClass.getName());
@@ -52,7 +48,29 @@ public class GenericConnectionFactory<E> extends SummaConnectionFactory<E> {
         backend = conf.create (backendClass);
 
         log.trace ("Applying configuration on backend");
-        backend.setGraceTime(graceTime);
-        backend.setNumRetries(connectionRetries);
+        setGraceTime(conf.getInt(GRACE_TIME, 5));
+        setNumRetries(conf.getInt(RETRIES, 5));
+        log.debug ("Configuration: gracetime=" + getGraceTime()
+                 + ", and retries=" + getNumRetries());
+    }
+
+    public E createConnection(String s) {
+        return backend.createConnection(s);
+    }
+
+    public int getGraceTime () {
+        return backend.getGraceTime();
+    }
+
+    public void setGraceTime (int seconds) {
+        backend.setGraceTime(seconds);
+    }
+
+    public int getNumRetries () {
+        return backend.getNumRetries();
+    }
+
+    public void setNumRetries (int retries) {
+        backend.setNumRetries(retries);
     }
 }
