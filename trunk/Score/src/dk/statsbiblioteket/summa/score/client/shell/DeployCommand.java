@@ -64,9 +64,8 @@ public class DeployCommand extends Command {
         try {
             client.deployService(pkgId, confLocation);
         } catch (Exception e) {
-            ctx.info ("FAILED");
-            ctx.error ("Deployment failed: " + Strings.getStackTrace(e));
-            return;
+            throw new RuntimeException("Deployment failed: " + e.getMessage(),
+                                       e);
         }
 
         ctx.info("OK");

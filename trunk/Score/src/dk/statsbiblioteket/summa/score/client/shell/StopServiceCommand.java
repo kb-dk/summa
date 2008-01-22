@@ -42,10 +42,8 @@ public class StopServiceCommand extends Command {
                 ctx.error(e.getMessage());
                 continue;
             } catch (Exception e) {
-                ctx.info ("FAILED");
-                ctx.error ("Stopping of service failed: "
-                        + Strings.getStackTrace(e));
-                continue;
+                throw new RuntimeException ("Stopping of service failed: "
+                                            + e.getMessage(), e);
             }            
 
             ctx.info("OK");

@@ -103,15 +103,13 @@ public class DeployCommand extends Command {
                                              RemoteFeedback.REGISTRY_HOST_PROPERTY,
                                              hostname);
 
-        RemoteConsoleFeedback remoteConsole =
-                                      conf.create (RemoteConsoleFeedback.class);
-
-
         /* Connect to the Score and send the deployment request */
         ctx.prompt ("Deploying '" + instanceId + "' on '" + target + "' using "
                     + "'" + transport + "' transport... ");
         ConnectionContext<ScoreConnection> connCtx = null;
+        RemoteConsoleFeedback remoteConsole = null;
         try {
+            remoteConsole = conf.create (RemoteConsoleFeedback.class);
             connCtx = cm.get (scoreAddress);
             if (connCtx == null) {
                 ctx.error ("Failed to connect to Score server at '"
@@ -122,14 +120,14 @@ public class DeployCommand extends Command {
             ScoreConnection score = connCtx.getConnection();
             score.deployClient(conf);
             ctx.info ("OK");
-
         } finally {
+            if (remoteConsole != null) {
+                remoteConsole.close();
+            }
             if (connCtx != null) {
                 cm.release (connCtx);
             }
         }
-
-        remoteConsole.close ();
 
     }
 }
