@@ -109,7 +109,7 @@ public class ScoreCore extends UnicastRemoteObject
         ClientDeployer deployer = conf.create (deployerClass);
 
         log.debug("Creating deployer feedback from class: "
-                  + conf.getString(ClientDeployer.DEPLOYER_CLASS_PROPERTY));
+                  + conf.getString(ClientDeployer.DEPLOYER_FEEDBACK_PROPERTY));
         Class<Feedback> feedbackClass =
                            conf.getClass(ClientDeployer.DEPLOYER_FEEDBACK_PROPERTY,
                                          Feedback.class);
@@ -122,7 +122,8 @@ public class ScoreCore extends UnicastRemoteObject
             deployer.deploy(feedback);
         } catch (Exception e) {
             throw new ClientDeploymentException("Error when deploying client '"
-                                                + instanceId + "'", e);
+                                                + instanceId + "': "
+                                                + e.getMessage(), e);
         }
 
         log.info ("Client '" + instanceId + "' deployed");

@@ -123,8 +123,6 @@ public class DeployCommand extends Command {
             score.deployClient(conf);
             ctx.info ("OK");
 
-        } catch (Exception e) {
-            ctx.error (Strings.getStackTrace(e));
         } finally {
             if (connCtx != null) {
                 cm.release (connCtx);

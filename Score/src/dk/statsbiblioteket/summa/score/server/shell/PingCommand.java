@@ -35,14 +35,16 @@ public class PingCommand extends Command {
         try {
             connCtx = cm.get (address);
         } catch (Exception e){
-            ctx.error ("Failed to connect to '" + address + "'. Error was:\n\t" 
-                       + Strings.getStackTrace(e));
+            ctx.error ("Failed to connect to '" + address + "'. Error was: "
+                       + e.getMessage());
+            throw new RuntimeException("Failed to connect to '" + address + "'",
+                                       e);
         } finally {
             if (connCtx != null) {
                 cm.release (connCtx);
                 ctx.info("OK");
             } else {
-                ctx.error ("Failed to connect");
+                ctx.error ("Failed to connect, unknown error");
             }
         }
 

@@ -30,13 +30,17 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.StringTokenizer;
+import java.util.List;
+import java.util.ArrayList;
 
 import dk.statsbiblioteket.summa.common.shell.notifications.AbortNotification;
 import dk.statsbiblioteket.summa.common.shell.notifications.BadCommandLineNotification;
 import dk.statsbiblioteket.summa.common.shell.notifications.Notification;
 import dk.statsbiblioteket.summa.common.shell.notifications.HelpNotification;
+import dk.statsbiblioteket.summa.common.shell.notifications.TraceNotification;
 import dk.statsbiblioteket.summa.common.shell.commands.Help;
 import dk.statsbiblioteket.summa.common.shell.commands.Quit;
+import dk.statsbiblioteket.summa.common.shell.commands.Trace;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
@@ -50,6 +54,7 @@ public class Core {
 
     private BufferedReader in;
     private HashMap<String, Command> commands;
+    private String lastTrace;
     private String header, prompt;
     private ShellContext shellCtx;
     private CommandLineParser cliParser;
@@ -65,6 +70,7 @@ public class Core {
         in = new BufferedReader (new InputStreamReader(System.in));
         cliParser = new PosixParser();
         commands = new HashMap<String,Command>();
+        lastTrace = null;
         header = "Summa Generic Shell $Id: Core.java,v 1.7 2007/10/04 13:28:20 te Exp $";
         prompt = "summa-shell> ";
 
@@ -98,6 +104,7 @@ public class Core {
         if (withDefaultCommands) {
             installCommand(new Help());
             installCommand(new Quit());
+            installCommand(new Trace());
         }
     }
 
@@ -211,6 +218,15 @@ public class Core {
         }
     }
 
+    private void handleTraceNotification (TraceNotification help) {
+        if (lastTrace == null) {
+            shellCtx.info ("No stack trace recorded");
+            return;
+        }
+
+        shellCtx.info ("Last recorded stack trace:\n\n\t" + lastTrace + "\n");
+    }
+
     /**
      * Print a help message for a command
      * @param cmd the command to print help for
@@ -260,12 +276,18 @@ public class Core {
                     break;
                 } else if (e instanceof HelpNotification) {
                     handleHelpNotification((HelpNotification)e);
+                } else if (e instanceof TraceNotification) {
+                    handleTraceNotification((TraceNotification)e);
+                } else {
+                    // This is a bug in the shell core
+                    shellCtx.error ("Shell Core encountered an unknown "
+                                    + "notification: " + e.getClass().getName());
                 }
             } catch (ParseException e) {
                 getShellContext().error ("Error parsing command line: "
                         + e.getMessage());
             } catch (Exception e) {
-                getShellContext().error (Strings.getStackTrace(e));
+                lastTrace = Strings.getStackTrace(e);
             }
         }
 
