@@ -61,7 +61,7 @@ public class ConfigurationTest extends TestCase {
     public void testGetStringsSingle() throws Exception {
         Configuration conf = new Configuration(
                                         new FileStorage("configuration.xml"));
-        List<String> l = conf.getStrings ("this.service.port");
+        List<String> l = conf.getStrings ("summa.configuration.service.port");
         assertEquals("getStrings on a value without ,s should have size 1",
                      1, l.size());
         assertEquals("getStrings on a value without ,s should return the expected",
@@ -81,7 +81,7 @@ public class ConfigurationTest extends TestCase {
 
     public void testGetString() throws Exception {
         Configuration conf = new Configuration(new FileStorage("configuration.xml"));
-        String s = conf.getString ("this.service.port");
+        String s = conf.getString ("summa.configuration.service.port");
         assertEquals("getString should return expected value", "2768", s);
     }
 
@@ -166,6 +166,8 @@ public class ConfigurationTest extends TestCase {
         assertTrue("Loading via getSystemConfiguration and directly should "
                      + "result in identical configurations",
                      conf.equals(originalConf));
+
+        System.clearProperty(Configuration.CONFIGURATION_PROPERTY);
     }
 
     public void testGetSystemConfigRemote () throws Exception {
@@ -182,6 +184,22 @@ public class ConfigurationTest extends TestCase {
         assertTrue("Loading via getSystemConfiguration and directly should "
                      + "result in identical configurations",
                      testConf.equals(originalConf));
+
+        System.clearProperty(Configuration.CONFIGURATION_PROPERTY);
+    }
+
+    public void testGetSystemConfigUnset () throws Exception {
+        Configuration conf = Configuration.getSystemConfiguration(true);
+        assertNotNull(conf);
+        assertNotNull(conf.getStorage());
+
+        try {
+            conf = Configuration.getSystemConfiguration(false);
+            fail ("Should not be able to retrieve system config when not set");
+        } catch (Configurable.ConfigurationException e) {
+            // expected
+        }
+
     }
 
     public void testNewMemoryBasedEmpty () {

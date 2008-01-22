@@ -6,6 +6,7 @@ import org.apache.commons.logging.Log;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import java.rmi.RemoteException;
+import java.rmi.NotBoundException;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.registry.Registry;
 import java.rmi.registry.LocateRegistry;
@@ -30,10 +31,14 @@ public class RemoteHelper {
      * @param serviceName the name of the service to export
      * @throws IOException if there is an error exporting the interface
      */
-    public static void exportRemoteInterfaces(Object obj,
+    public static void exportRemoteInterface(Object obj,
                                               int registryPort,
                                               String serviceName)
                                                             throws IOException {
+        log.trace ("Preparing to export remote interfaces of " + obj
+                   + "as '" + serviceName + "' with registry on port "
+                   + registryPort);
+
         UnicastRemoteObject remote = (UnicastRemoteObject) obj;
         Registry reg = null;
 
@@ -56,8 +61,36 @@ public class RemoteHelper {
         log.info(remote.getClass().getSimpleName()
                 + " bound in registry on //localhost:" + registryPort + "/"
                  + serviceName);
+    }
+
+    public static void unExportRemoteInterface (String serviceName,
+                                                int registryPort)
+                                                            throws IOException {
+        log.trace ("Preparing to unexport '" + serviceName + "' with registry on"
+                   + " port " + registryPort);
+        Registry reg = null;
+
+        try {
+            reg = LocateRegistry.createRegistry(registryPort);
+            log.debug("Created registry on port " + registryPort);
+        } catch (RemoteException e) {
+            reg = LocateRegistry.getRegistry("localhost", registryPort);
+            log.debug ("Found registry localhost:" + registryPort);
+        }
 
 
+        if (reg == null) {
+            throw new RemoteException ("Failed to locate or create registry on "
+                                        + "localhost:" + registryPort);
+        }
+
+        try {
+            reg.unbind(serviceName);
+            log.debug("Succesfully unexported service '" + serviceName + "'");
+        } catch (NotBoundException e) {
+            log.error ("Service '" + serviceName + "' not bound in registry on "
+                       + "port " + registryPort);
+        }
     }
 
     /**
@@ -81,6 +114,17 @@ public class RemoteHelper {
         } catch (Exception e) {
             throw new IOException("Failed to bind MBean '" + obj + "' "
                                   + "with '" + name + "'", e);
+        }
+    }
+
+    public static String getHostname () {
+        try {
+            java.net.InetAddress localMachine =
+                    java.net.InetAddress.getLocalHost();
+            return localMachine.getHostName();
+        } catch (java.net.UnknownHostException e) {
+            log.error ("Failed to get host name. Returning 'localhost'", e);
+            return "localhost";
         }
     }
 
