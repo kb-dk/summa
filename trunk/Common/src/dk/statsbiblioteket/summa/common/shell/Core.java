@@ -287,6 +287,7 @@ public class Core {
                 getShellContext().error ("Error parsing command line: "
                         + e.getMessage());
             } catch (Exception e) {
+                shellCtx.error (e.getMessage());
                 lastTrace = Strings.getStackTrace(e);
             }
         }
