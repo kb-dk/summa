@@ -30,6 +30,7 @@ import dk.statsbiblioteket.summa.score.bundle.BundleRepository;
 import dk.statsbiblioteket.summa.score.client.Client;
 import dk.statsbiblioteket.summa.score.server.ClientDeployer;
 import dk.statsbiblioteket.summa.score.api.NoSuchServiceException;
+import dk.statsbiblioteket.summa.score.server.ClientDeploymentException;
 
 import java.io.IOException;
 import java.util.List;
@@ -44,6 +45,17 @@ public interface ScoreConnection {
     public ConfigurationStorage getConfigurationStorage () throws IOException;
 
     public BundleRepository getRepository () throws IOException;
+
+    /**
+     * <p>Get the {@link Configuration} the client with <i>instanceId</i>
+     * uses.</p>
+     *
+     * <p>This method works whether the client is running or not.</p>
+     *
+     * @param instanceId the id of the client to look up the configuration for
+     * @return the configuration used by the client
+     */
+    /*public Configuration getClientConfiguration (String instanceId);*/
 
     /**
      * <p>Create a connection to a {@link Client}. If the client is deployed
@@ -78,12 +90,16 @@ public interface ScoreConnection {
      * to the ClientDeployer's constructor the Score server will replace it
      * with the full path to the bundle file to deploy.</p>
      *
-     * <p>When the client deployer is passed the same configuration to
-     * its constrcutor as the one passed in this method.</p>
+     * <p>The client deployer is passed the same configuration to
+     * its constructor as the one passed in this method.</p>
      * @param conf configuration used to instantiate deployer
      * @throws IOException if there is a problem communicating with the deployer
      *                     or if there is a problem deploying the bundle specified
      *                     by the configuration
+     * @throws BadConfigurationException if any one of the required configuration
+     *                                   parameters are missing
+     * @throws ClientDeploymentException if there is an error in the deployment
+     *                                   sub system
      */
     public void deployClient (Configuration conf) throws IOException;
 
@@ -94,12 +110,30 @@ public interface ScoreConnection {
      * to instantiate and configure a {@link ClientDeployer} as described in
      * {@link #deployClient}.</p>
      *
-     * @param conf configuration objecct passed to the client deployer
-     * @throws IOException if there is an error starting the client
+     * @param conf configuration object passed to the client deployer
+     * @throws IOException if there is an error communicating with the client
+     * @throws NoSuchServiceException if no client with the given client id is
+     *                                deployed
+     * @throws BadConfigurationException if any one of the required configuration
+     *                                   parameters are missing
+     */
+    public void startClient (Configuration conf) throws IOException;
+
+    /**
+     * <p>Stop a running client and all services managed by it.</p>
+     *
+     * <p>As specified by {@link ClientConnection#stop} this call will
+     * stop the JVM of the running client.</p>
+     *
+     * <p>If the client is not running a warning will be logged, but this method
+     * will do nothing.</p>
+     *
+     * @param instanceId id of the client to stop
+     * @throws IOException if there is an error communicating with the client
      * @throws NoSuchServiceException if no client with the given client id is
      *                                deployed
      */
-    public void startClient (Configuration conf) throws IOException;
+    public void stopClient (String instanceId) throws IOException;
 
     public List<String> getClients () throws IOException;
 

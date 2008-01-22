@@ -35,22 +35,34 @@ import java.rmi.RemoteException;
         author = "mke",
         comment="Some methods needs Javadoc")
 public class ClientException extends RuntimeException {
+
+    private String id;
+
+    public ClientException (String clientId, String message) {
+        super ("For client id '" + clientId + "': " + message);
+        id = clientId;
+    }
+
     public ClientException (Client client, String message) {
         super ("Client[" + getClientId(client) + "] " + message);
+        id = client.getId();
     }
 
     public ClientException (Client client, String message, Throwable cause) {
         super ("Client[" + getClientId(client) + "] " + message, cause);
+        id = client.getId();
     }
 
     public ClientException (Client client, Throwable cause) {
         super ("Client[" + getClientId(client) + "]", cause);
+        id = client.getId();
+    }
+
+    public String getClientId () {
+        return id;
     }
 
     private static String getClientId (Client client) {
-        String id;
-        id = client.getId();
-        
-        return id;
+        return client.getId();
     }
 }

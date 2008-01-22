@@ -64,13 +64,13 @@ public class SSHDeployerTest extends TestCase {
     }
 
     public void setUp() throws Exception {
-        if (!new File(PROPERTY_SOURCE).exists()) {
+        /*if (!new File(PROPERTY_SOURCE).exists()) {
             throw new IOException("The test-package " + PROPERTY_SOURCE
                                   + " should be at "
                                   + new File(PROPERTY_SOURCE).getAbsoluteFile().
                                     getParent() + ". It can be build with "
                                   + "the script maketestpackage.sh");
-        }
+        }*/
         super.setUp();
     }
 
@@ -88,11 +88,10 @@ public class SSHDeployerTest extends TestCase {
         return new TestSuite(SSHDeployerTest.class);
     }
 
-    public void testException() throws Exception {
-        SSHDeployer deployer =
-                new SSHDeployer(new Configuration(new MemoryStorage()));
+    public void testInstantiation() throws Exception {
         try {
-            deployer.deploy(new ConsoleFeedback());
+            SSHDeployer deployer =
+                new SSHDeployer(new Configuration(new MemoryStorage()));
             fail("The deployer should throw an exception when it could not "
                  + "find the right properties");
         } catch (Exception e) {
@@ -106,6 +105,7 @@ public class SSHDeployerTest extends TestCase {
         storage.put(SSHDeployer.BASEPATH_PROPERTY, PROPERTY_DESTINATION);
         storage.put(SSHDeployer.DEPLOYER_TARGET_PROPERTY, PROPERTY_LOGIN);
         storage.put(SSHDeployer.CLIENT_CONF_PROPERTY, PROPERTY_START_CONFSERVER);
+        storage.put(SSHDeployer.INSTANCE_ID_PROPERTY, "test-client-1");
         new FakeThinClient();
         return new Configuration(storage);
     }
@@ -144,5 +144,27 @@ public class SSHDeployerTest extends TestCase {
         assertTrue("The file " + output
                    + " should exist after start",
                    new File(output).exists());
+    }
+
+    public void testGetHostname () throws Exception {
+        Configuration conf = makeConfiguration();
+
+        conf.set (SSHDeployer.DEPLOYER_TARGET_PROPERTY, "user@host:~/dir");
+        SSHDeployer deployer = new SSHDeployer(conf);
+        assertEquals("host", deployer.getTargetHost());
+
+
+        conf.set (SSHDeployer.DEPLOYER_TARGET_PROPERTY, "host:~/dir");
+        deployer = new SSHDeployer(conf);
+        assertEquals("host", deployer.getTargetHost());
+
+        conf.set (SSHDeployer.DEPLOYER_TARGET_PROPERTY, "host");
+        deployer = new SSHDeployer(conf);
+        assertEquals("host", deployer.getTargetHost());
+
+        conf.set (SSHDeployer.DEPLOYER_TARGET_PROPERTY, "user@host");
+        deployer = new SSHDeployer(conf);
+        assertEquals("host", deployer.getTargetHost());
+
     }
 }
