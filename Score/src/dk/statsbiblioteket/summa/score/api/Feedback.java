@@ -23,9 +23,11 @@
 package dk.statsbiblioteket.summa.score.api;
 
 import dk.statsbiblioteket.summa.score.api.Message;
+import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.util.List;
+import java.io.IOException;
 
 /**
  * Provides feedback with optional requests for text input.
@@ -33,18 +35,20 @@ import java.util.List;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
-public interface Feedback {
+public interface Feedback extends Configurable {
     /**
      * Display the given messages to the user and collect responses. This
      * could be sequentially on a prompt or all at a time at a webpage.
      * This method can be called more than once.
      * @param messages the messages to display and collect responses for.
+     * @throws IOException if the is a communication error
      */
-    public void putMessages(List<Message> messages);
+    public void putMessages(List<Message> messages) throws IOException;
 
     /**
      * Convenience method for {@link #putMessages}.
      * @param message the message to display and collect a response for.
+     * @throws IOException if the is a communication error 
      */
-    public void putMessage(Message message);
+    public void putMessage(Message message) throws IOException;
 }
