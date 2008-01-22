@@ -172,7 +172,7 @@ public class SSHDeployer implements ClientDeployer {
                         "ssh", login,
                         "cd", destination,
                         ";", "java",
-                        "-cp lib/*.jar;config;.",
+                        "-cp lib/*.jar:config:.",
                         "-D" + Configuration.CONFIGURATION_PROPERTY + "=" + confLocation,
                         "-D" + INSTANCE_ID_PROPERTY + "=" + clientId,
                         "-jar", jar});
