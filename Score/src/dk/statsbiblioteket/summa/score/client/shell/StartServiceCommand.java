@@ -131,9 +131,9 @@ public class StartServiceCommand extends Command {
             client.startService(pkgId, confLocation);
             new Thread (new ServiceMonitor(client, pkgId, 5, ctx)).start();
         } catch (Exception e) {
-            ctx.info ("FAILED");
-            ctx.error ("Start of service failed: " + Strings.getStackTrace(e));
-            return;
+
+            throw new RuntimeException ("Start of service failed: "
+                                        + e.getMessage(), e);
         }
 
         ctx.info("OK");
