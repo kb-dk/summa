@@ -62,6 +62,8 @@ public class SSHDeployer implements ClientDeployer {
         clientId = conf.getString (INSTANCE_ID_PROPERTY);
         confLocation = conf.getString (CLIENT_CONF_PROPERTY,
                                        "configuration.xml");
+
+        destination += File.separator + clientId;
     }
 
     public void deploy(Feedback feedback) throws Exception {
@@ -86,14 +88,15 @@ public class SSHDeployer implements ClientDeployer {
         }
         log.debug("Deployed from " + source + " to " + destination);
 
-        /* Unpack */
+        /* Calculate archive name */
         String archive = source;
         if (source.lastIndexOf(File.separator) > 0) {
             archive = source.substring(source.lastIndexOf(File.separator) + 1);
         }
+        String archivePath = destination + File.separator + archive;
 
-        log.debug("Unpacking " + archive + " at " + destination
-                  + " with login " + login);
+        /* Unpack */
+        log.debug("Unpacking '" + archivePath + "' with login '" + login + "'");
         NativeRunner runner =
                 new NativeRunner(new String[]{"ssh", login,
                                               "cd", destination,
@@ -103,16 +106,16 @@ public class SSHDeployer implements ClientDeployer {
         try {
             int returnValue = runner.execute(50000, 50000);
             if (returnValue != 0) {
-                error = "Could not unpack '" + archive + "' with login '"
+                error = "Could not unpack '" + archivePath + "' with login '"
                         + login + "'. Got return value "
                         + returnValue + " and message:\n\t"
                         + runner.getProcessErrorAsString();
             }
         } catch(Exception e) {
-            error = "Could not unpack archive '" + archive + "' with login '"
-                    + login + "':\n\t"
+            error = "Could not unpack archive '" + archivePath + "' with login '"
+                    + login + "': " + e.getMessage() + "\n\n\t"
                     + runner.getProcessErrorAsString();
-            log.error("Exception in deploy: " + e.getMessage(), e);
+            log.error(error, e);
         }
         if (error != null) {
             log.error(error);
@@ -121,6 +124,36 @@ public class SSHDeployer implements ClientDeployer {
         }
         log.debug("Unpacked " + archive + " at " + destination
                   + " with login " + login);
+
+        /* Clean up */
+        log.debug("Deleting " + archivePath + " at " + destination
+                  + " with login " + login);
+        runner =
+                new NativeRunner(new String[]{"ssh", login,
+                                              "cd", destination,
+                                              ";", "rm", "-f",
+                                              archive});
+        error = null;
+        try {
+            int returnValue = runner.execute(50000, 50000);
+            if (returnValue != 0) {
+                error = "Could not delete '" + archivePath + "' with login '"
+                        + login + "'. Got return value "
+                        + returnValue + " and message:\n\t"
+                        + runner.getProcessErrorAsString();
+            }
+        } catch(Exception e) {
+            error = "Could not delete '" + archivePath + "' with login '"
+                    + login + "': " + e.getMessage() + "\n\n\t"
+                    + runner.getProcessErrorAsString();
+            log.error(error, e);
+        }
+        if (error != null) {
+            log.error(error);
+            feedback.putMessage(new Message(Message.MESSAGE_ALERT, error));
+            throw new ClientDeploymentException(error);
+        }
+        log.debug("Deleted '" + archivePath + "' with login " + login);
 
         log.info("Finished deploy of " + source + " to " + destination);
         /*
