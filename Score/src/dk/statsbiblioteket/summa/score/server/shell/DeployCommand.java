@@ -105,7 +105,7 @@ public class DeployCommand extends Command {
 
         /* Connect to the Score and send the deployment request */
         ctx.prompt ("Deploying '" + instanceId + "' on '" + target + "' using "
-                    + "'" + transport + "' transport... ");
+                    + "transport '" + transport + "'... ");
         ConnectionContext<ScoreConnection> connCtx = null;
         RemoteConsoleFeedback remoteConsole = null;
         try {
