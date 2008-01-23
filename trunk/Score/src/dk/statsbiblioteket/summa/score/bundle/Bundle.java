@@ -61,4 +61,9 @@ public interface Bundle {
      */
     public static final String BUNDLE_DIR = "summa.score.bundle.dir";
 
+    /**
+     * Extension used for bundle files.
+     */
+    public static final String BUNDLE_EXT = ".bundle";
+
 }

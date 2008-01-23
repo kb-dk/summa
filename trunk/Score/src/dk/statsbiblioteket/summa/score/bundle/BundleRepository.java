@@ -48,7 +48,8 @@ public interface BundleRepository extends Configurable, Serializable {
     /**
      * Retrieve a bundle returning a {@link File} reference to it.
      * The bundle file will be stored in
-     * {@code summa.score.repository.tmp.dir} as provided by the configuration.
+     * {@code summa.score.repository.download.dir} as provided by the
+     * configuration.
      * @param bundleId bundle id of the bundle to retrieve
      * @return a reference to the temporary {@code .bundle} file
      * @throws IOException if there is an error retrieving the bundle
