@@ -21,10 +21,6 @@ import java.util.List;
         comment="Unfinished")
 public interface ScoreRMIConnection extends ScoreConnection, Remote {
 
-    public ConfigurationStorage getConfigurationStorage() throws RemoteException;
-
-    public BundleRepository getRepository() throws RemoteException;
-
     public ClientConnection getClient(String instanceId) throws RemoteException;
 
     public void deployClient(Configuration conf) throws RemoteException;
@@ -32,5 +28,7 @@ public interface ScoreRMIConnection extends ScoreConnection, Remote {
     public void startClient(Configuration conf) throws RemoteException;
 
     public List<String> getClients() throws RemoteException;
+
+    public List<String> getBundles() throws RemoteException;
 
 }
