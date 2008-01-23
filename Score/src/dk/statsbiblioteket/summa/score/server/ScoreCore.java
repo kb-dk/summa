@@ -70,14 +70,6 @@ public class ScoreCore extends UnicastRemoteObject
         return conf.getInt(SCORE_CORE_PORT, 27001);
     }
 
-    public ConfigurationStorage getConfigurationStorage() {
-        return confManager.getExportedStorage();
-    }
-
-    public BundleRepository getRepository() {
-        throw new UnsupportedOperationException();
-    }
-
     /*public Configuration getClientConfiguration (String instanceId) {
         throw new UnsupportedOperationException();
     }*/
@@ -244,6 +236,10 @@ public class ScoreCore extends UnicastRemoteObject
 
     public List<String> getClients() {
         throw new UnsupportedOperationException();
+    }
+
+    public List<String> getBundles() {
+        return repoManager.getBundles();
     }
 
     public static void main (String[] args) {

@@ -40,11 +40,7 @@ import java.util.List;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke",
         comment="Unfinished")
-public interface ScoreConnection {    
-
-    public ConfigurationStorage getConfigurationStorage () throws IOException;
-
-    public BundleRepository getRepository () throws IOException;
+public interface ScoreConnection {
 
     /**
      * <p>Get the {@link Configuration} the client with <i>instanceId</i>
@@ -130,11 +126,28 @@ public interface ScoreConnection {
      *
      * @param instanceId id of the client to stop
      * @throws IOException if there is an error communicating with the client
+     *                     or score server
      * @throws NoSuchServiceException if no client with the given client id is
      *                                deployed
      */
     public void stopClient (String instanceId) throws IOException;
 
+    /**
+     * Get a list of all deployed (not necessarily running) Client
+     * instances.
+     * @return A list of instance ids
+     * @throws IOException if there is an error communicating with the Score
+     *                     server
+     */
     public List<String> getClients () throws IOException;
+
+    /**
+     * Get a list of all bundle ids available from the repository amanaged
+     * by the Score server.
+     * @return a list of bundle ids for the available bundles
+     * @throws IOException f there is an error communicating with the Score
+     *                     server
+     */
+    public List<String> getBundles () throws IOException;
 
 }

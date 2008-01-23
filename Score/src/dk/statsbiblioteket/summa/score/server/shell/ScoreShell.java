@@ -32,6 +32,7 @@ public class ScoreShell {
 
         shell.installCommand(new PingCommand(connManager, rmiAddress));
         shell.installCommand(new DeployCommand(connManager, rmiAddress));
+        shell.installCommand(new RepositoryCommand(connManager, rmiAddress));
 
     }
 
