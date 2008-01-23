@@ -42,8 +42,17 @@ public interface BundleRepository extends Configurable, Serializable {
      *
      * <p>If unset {@code ${user.home}/tmp} should be used.</p>
      */
-    public static final String DOWNLOAD_DIR =
-                                          "summa.score.repository.download.dir";    
+    public static final String DOWNLOAD_DIR_PROPERTY =
+                                          "summa.score.repository.download.dir";
+
+    /**
+     * Configuration property defining the address the repository is
+     * reachable on. If the repository is a {@link URLRepository} this should
+     * be an URI, if it is a repository exposed over RMI it should be the
+     * RMI address etc.
+     */
+    public static final String REPO_ADDRESS_PROPERTY =
+                                           "summa.score.repository.address";
 
     /**
      * Retrieve a bundle returning a {@link File} reference to it.

@@ -1,22 +1,23 @@
 package dk.statsbiblioteket.summa.score.server;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
 import dk.statsbiblioteket.summa.score.bundle.BundleRepository;
 import dk.statsbiblioteket.summa.score.bundle.Bundle;
 import dk.statsbiblioteket.summa.score.bundle.URLRepository;
+import dk.statsbiblioteket.summa.score.api.ClientConnection;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.FileFilter;
 import java.io.FilenameFilter;
-import java.io.Serializable;
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 import java.util.List;
-import java.util.Collections;
 import java.util.Arrays;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Helper class for the {@link ScoreCore} to manage the resources associated
@@ -45,15 +46,19 @@ public class RepositoryManager implements Configurable,
      * bundles from the Score's repository.
      */
     public static final String CLIENT_REPO_PROPERTY =
-                                           "summa.score.repository.clientClass";
+                                           "summa.score.repository.clientClass";    
 
 
     private File baseDir;
+    private String address;
     private Class<? extends BundleRepository> clientRepoClass;
-
+    private String clientDownloadDir;
+    private Log log;
 
     public RepositoryManager (Configuration conf) {
+        log = LogFactory.getLog (RepositoryManager.class);
 
+        /* Configure base path */
         String basePath = conf.getString (BASE_PATH_PROPERTY,
                                           System.getProperty("user.home")
                                         + File.separator
@@ -67,10 +72,26 @@ public class RepositoryManager implements Configurable,
         if (!baseDir.exists()) {
             baseDir.mkdirs();
         }
+        log.debug ("Using repository base dir: '" + baseDir + "'");
 
+        /* Configure Client Repo Class */
         clientRepoClass = conf.getClass (CLIENT_REPO_PROPERTY,
                                          BundleRepository.class,
                                          URLRepository.class);
+        log.debug ("Using client repository class: "
+                   + clientRepoClass.getName());
+
+        /* Configure public address */
+        address = conf.getString(BundleRepository.REPO_ADDRESS_PROPERTY,
+                                 "http://"
+                                 + RemoteHelper.getHostname()
+                                 + "/~"
+                                 + System.getProperty("user.name")
+                                 + "/score/repo");
+        log.debug ("Using repository address: '" + address + "'");
+
+        clientDownloadDir = conf.getString(BundleRepository.DOWNLOAD_DIR_PROPERTY,
+                                           "tmp");
     }
 
     /**
@@ -119,13 +140,34 @@ public class RepositoryManager implements Configurable,
      * @return list of bundle ids
      */
     public List<String> getBundles () {
+        log.trace ("Got getBundles() request");
         final FilenameFilter filter = new FilenameFilter () {
 
             public boolean accept(File file, String s) {
                 return baseDir.equals(file) && s.endsWith(Bundle.BUNDLE_EXT);
             }
         };
+        List<String> ids = Arrays.asList (baseDir.list(filter));
+        log.trace ("Returning " + Logs.expand(ids, 5) + " for getBundles()"
+                   + "request");
+        return ids;
+    }
 
-        return Arrays.asList (baseDir.list(filter));        
+    public Configuration getClientRepositoryConfig () {
+        Configuration conf = Configuration.newMemoryBased();
+
+        conf.set (BundleRepository.DOWNLOAD_DIR_PROPERTY, clientDownloadDir);
+        conf.set (ClientConnection.REPOSITORY_CLASS, clientRepoClass.getName());
+        conf.set (BundleRepository.REPO_ADDRESS_PROPERTY, address);
+
+        return conf;
+    }
+
+    /**
+     * Add a bundle to the repository.
+     * @param prospectBundle
+     */
+    public void upload (File prospectBundle) {
+
     }
 }

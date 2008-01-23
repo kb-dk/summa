@@ -36,42 +36,20 @@ import org.apache.commons.logging.LogFactory;
  * <p>A {@link BundleRepository} fetching bundles via Java {@link URL}s.</p>
  *
  * <p>Given a bundle id it is mapped to a URL as specified by the
- * {@link #BASE_URL} property in the {@link Configuration}.</p>
+ * {@link #REPO_ADDRESS_PROPERTY} property in the {@link Configuration}.</p>
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public class URLRepository implements BundleRepository {
 
-    /** <p>Property defining where the repository is located.
-     * Request to {@link #get(String bundleId)} will try and download
-     * the URL</p>
-     * <code>
-     *    ${summa.score.repository.url}/${bundleId}.bundle 
-     * </code>
-     *  */
-    public static final String BASE_URL = "summa.score.repository.url";
-
     private String tmpDir;
     private Log log;
     private String baseUrl;
 
     public URLRepository (Configuration conf) {
-        this.tmpDir = conf.getString(DOWNLOAD_DIR);
-
-        if (tmpDir == null || "".equals(tmpDir)) {
-            throw new ConfigurationException("Insufficient configuration. "
-                                           + "Property " + DOWNLOAD_DIR
-                                           + " not set");
-        }
-
-        this.baseUrl = conf.getString (BASE_URL);
-
-        if (baseUrl == null || "".equals(baseUrl)) {
-            throw new ConfigurationException("Insufficient configuration. "
-                                           + "Property " + BASE_URL
-                                           + " not set");
-        }
+        this.tmpDir = conf.getString(DOWNLOAD_DIR_PROPERTY);
+        this.baseUrl = conf.getString (BundleRepository.REPO_ADDRESS_PROPERTY);        
 
         /* make sure baseurl ends with a slash */
         if (!baseUrl.endsWith("/")) {

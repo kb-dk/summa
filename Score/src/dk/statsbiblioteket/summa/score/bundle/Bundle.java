@@ -66,4 +66,15 @@ public interface Bundle {
      */
     public static final String BUNDLE_EXT = ".bundle";
 
+    /**
+     * Enumeration of bundle types
+     */
+    public enum Type {
+        /** Specifies that a bundle is a Client bundle */
+        CLIENT,
+
+        /** Specifies that a bundle is a Service bundle */
+        SERVICE
+    }
+
 }
