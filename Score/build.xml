@@ -274,6 +274,48 @@
         <delete dir="${tmp.dir}"/>
     </target>
 
+    <target name=".test-client-1.bundle" depends=".jar, test.compile">
+        <mkdir dir="${tmp.dir}"/>
+
+        <!-- Roll client bundle -->
+        <copy todir="${tmp.dir}">
+            <fileset dir="${test.src.dir}" includes="**/*.xml"/>
+        </copy>
+        <replace value="!not found!" propertyfile="../build.properties"
+                 dir="${tmp.dir}">
+            <replacefilter
+                token="@project.version@"
+                value="lib/summa-common-${summa.version}.jar"/>
+            <replacefilter
+                token="@release.jar@"
+                value="${release.jar}"/>
+            <replacefilter
+                token="@summa.version@"
+                value="${summa.version}"/>
+        </replace>
+
+        <zip destfile="${dist.dir}/test-client-1.bundle">
+
+            <zipfileset file="${tmp.dir}/test-client-1/client.xml"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.common}"/>
+            <zipfileset prefix="lib" file="${summa.lib.commons-logging}"/>
+            <zipfileset prefix="lib" file="${summa.lib.log4j}"/>
+            <zipfileset prefix="lib" file="${release.jar}"/>
+
+            <zipfileset prefix="config" file="${test.src.dir}/test-client-1/config/configuration.xml"/>
+            <zipfileset prefix="config" file="${basedir}/config/log4j.xml"/>
+
+            <zipfileset dir="${test.src.dir}/test-client-1/config" prefix="config" filemode="600">
+                <include name="jmx.password"/>
+                <include name="jmx.access"/>
+                <include name="policy"/>
+            </zipfileset>
+
+        </zip>
+
+        <delete dir="${tmp.dir}"/>
+    </target>
+
     <target name="all" depends="release, .test-1.bundle"/>
 
 </project>
