@@ -383,7 +383,8 @@ public class Configuration implements Serializable,
      * @return the {@link Class} associated with {@code key}.
      * @throws NullPointerException if the property is not found.
      * @throws IllegalArgumentException      if the property is found but does
-     *                                       not map to a known {@link Class}.
+     *                                       not map to a known {@link Class}
+     *                                       or subclass of {@code classType}.
      * @throws ConfigurationStorageException if there is an error communicating
      *                                       with the storage backend.
      */
@@ -403,10 +404,17 @@ public class Configuration implements Serializable,
             } catch (ClassNotFoundException e) {
                 throw new IllegalArgumentException("The property " + key
                                                    + " does not map to an "
-                                                   + "existing class");
+                                                   + "existing class", e);
             }
         }
-        return (Class<T>) val;
+
+        try {
+            return (Class<T>) val;
+        } catch (ClassCastException e) {
+            throw new IllegalArgumentException("The property " + key
+                                             + " does not map to a subclass"
+                                             + " of " + classType, e);
+        }
     }
 
     public Class getClass (String key) {
