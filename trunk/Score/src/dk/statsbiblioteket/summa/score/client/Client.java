@@ -120,8 +120,14 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         this.persistentPath = basePath + File.separator
                                        + ".." + File.separator +"persistent";
 
-        setupServiceRepository(configuration);
-        setupServiceLoader(configuration);
+        /* Create repository */
+        Class<BundleRepository> repositoryClass =
+                                    configuration.getClass(REPOSITORY_CLASS,
+                                                        BundleRepository.class);
+        repository = configuration.create (repositoryClass);
+
+        /* Create bundle loader */
+        loader = configuration.create (BundleLoader.class);
 
         validateConfiguration ();
 
@@ -152,49 +158,6 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         new File(servicePath).mkdirs();
         new File(artifactPath).mkdirs();
         new File(persistentPath).mkdirs();
-    }
-
-    private void setupServiceRepository (Configuration conf) {
-        Configuration repoConfig;
-        if (conf.supportsSubConfiguration()) {
-            try {
-                repoConfig = conf.getSubConfiguration(REPOSITORY_CONFIG);
-                log.debug ("Using embedded config for repository");
-            } catch (IOException e) {
-                throw new Configurable.ConfigurationException ("Unable to get "
-                                                             + "sub config "
-                                                             + REPOSITORY_CONFIG,
-                                                             e);
-            }
-        } else {
-            repoConfig = conf;
-            log.debug ("Sharing config with repository");
-        }
-
-        Class<BundleRepository> repositoryClass =
-                                    repoConfig.getClass(REPOSITORY_CLASS,
-                                                        BundleRepository.class);
-        repository = repoConfig.create (repositoryClass);
-    }
-
-    private void setupServiceLoader (Configuration conf) {
-        Configuration loaderConfig;
-        if (conf.supportsSubConfiguration()) {
-            try {
-                loaderConfig = conf.getSubConfiguration(LOADER_CONFIG);
-                log.debug ("Using embedded config for bundle loader");
-            } catch (IOException e) {
-                throw new Configurable.ConfigurationException ("Unable to get "
-                                                             + "sub config "
-                                                             + LOADER_CONFIG,
-                                                             e);
-            }
-        } else {
-            loaderConfig = conf;
-            log.debug ("Sharing config with bundle loader");
-        }
-
-        loader = loaderConfig.create (BundleLoader.class);
     }
 
     /**

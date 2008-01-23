@@ -77,18 +77,6 @@ public interface ClientConnection {
     public static final String REPOSITORY_CLASS =
                                           "summa.score.client.repository.class";
 
-    /** Property from which a sub-{@link Configuration} for the
-     * {@link dk.statsbiblioteket.summa.score.bundle.BundleRepository} used by 
-     * by a {@link Client} */
-    public static final String REPOSITORY_CONFIG =
-                                         "summa.score.client.repository.config";
-
-    /** Property from which a sub-{@link Configuration} for the
-     * {@link dk.statsbiblioteket.summa.score.bundle.BundleLoader} used by
-     * by a {@link Client} */
-    public static final String LOADER_CONFIG =
-                                             "summa.score.client.loader.config";
-
     /**
      * Property defining the path uner which persisten files for Clients as
      * well as Services should be stored.

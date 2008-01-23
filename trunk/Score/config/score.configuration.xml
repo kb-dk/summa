@@ -18,6 +18,8 @@
 
     <entry key="summa.score.repository.download.dir">tmp</entry>
     <entry key="summa.score.repository.url">file:///home/mikkel/tmp</entry>
+    <entry key="summa.score.repository.dir">/home/mikkel/tmp</entry>
+    <entry key="summa.score.repository.clientClass">dk.statsbiblioteket.summa.score.bundle.URLRepository</entry>
 
 
 </properties>
