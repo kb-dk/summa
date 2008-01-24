@@ -2,6 +2,9 @@ package dk.statsbiblioteket.summa.score.server;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.util.watch.FolderWatcher;
+import dk.statsbiblioteket.util.watch.FolderListener;
+import dk.statsbiblioteket.util.watch.FolderEvent;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
@@ -12,9 +15,11 @@ import dk.statsbiblioteket.summa.score.api.ClientConnection;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Arrays;
+import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -60,6 +65,38 @@ public class RepositoryManager implements Configurable,
     private Class<? extends BundleRepository> clientRepoClass;
     private String clientDownloadDir;
     private Log log;
+    private File incomingDir;
+    private FolderWatcher incomingWatcher;
+
+    private class IncomingListener implements FolderListener {
+
+        private RepositoryManager repo;
+
+        public IncomingListener (RepositoryManager repo) {
+            this.repo = repo;
+        }
+
+        public void folderChanged(FolderEvent event) {
+            if (event.getEventType() != FolderEvent.EventType.added) {
+                    log.debug("Ignoring folder event: " + event.getEventType()
+                              + ", for files: "
+                              + Logs.expand(event.getChangeList(), 5));
+                return;
+             }
+
+            for (File changed : event.getChangeList()) {
+                if (changed.getName().endsWith(Bundle.BUNDLE_EXT)) {
+                    log.debug ("Detected incoming .bundle file '"
+                             + changed + "'");
+                    repo.importBundle(changed);
+                } else {
+                    log.debug ("Ignoring changed non-.bundle file in '"
+                              + event.getWatchedFolder() + "': "
+                              + changed);
+                }
+            }
+        }
+    }
 
     public RepositoryManager (Configuration conf) {
         log = LogFactory.getLog (RepositoryManager.class);
@@ -81,6 +118,16 @@ public class RepositoryManager implements Configurable,
 
         clientDownloadDir = conf.getString(BundleRepository.DOWNLOAD_DIR_PROPERTY,
                                            "tmp");
+
+        incomingDir = ScoreUtils.getIncomingDir(conf);
+        try {
+            incomingWatcher = new FolderWatcher(incomingDir, 5, 5);
+
+        } catch (IOException e) {
+            log.error ("Failed to initialize monitor for incming files on '"
+                       + incomingDir + "'. Will not be able to pick up any new " +
+                       "bundles from the incoming folder.");
+        }
     }
 
     /**
@@ -154,9 +201,10 @@ public class RepositoryManager implements Configurable,
 
     /**
      * Add a bundle to the repository.
-     * @param prospectBundle
+     * @param prospectBundle the bundle to import into the repository
      */
     public void importBundle (File prospectBundle) {
-
+        log.info ("Preparing to import bundle file '" + prospectBundle + "'");
+        throw new UnsupportedOperationException();
     }
 }
