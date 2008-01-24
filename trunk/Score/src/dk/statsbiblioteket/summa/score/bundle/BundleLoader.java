@@ -34,6 +34,7 @@ import java.util.*;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.Serializable;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -62,44 +63,10 @@ public class BundleLoader implements Configurable {
     /** The file name used to identify a client */
     public static final String CLIENT_BUNDLE_SPEC = "client.xml";
 
-    private DocumentBuilder xmlParser;
-
     private Log log;
 
-    private class MetaBundle {
-        private File bundleDir, bundleSpec, mainJar;
-        private String mainClass, instanceId, bundleId;
-        private List<String> jvmArgs;
-
-        public MetaBundle(File bundleDir, File bundleSpec, File mainJar,
-                          String mainClass, String instanceId, String bundleId,
-                          List<String> jvmArgs) {
-            this.bundleDir = bundleDir;
-            this.bundleSpec = bundleSpec;
-            this.mainJar = mainJar;
-            this.mainClass = mainClass;
-            this.instanceId = instanceId;
-            this.bundleId = bundleId;
-            this.jvmArgs = jvmArgs;
-        }
-
-        public File getBundleDir () { return bundleDir; }
-        public File getBundleSpec () { return bundleSpec; }
-        public File getMainJar () { return mainJar; }
-        public String getMainClass () { return mainClass; }
-        public String getInstanceId () { return instanceId; }
-        public String getBundleId () { return bundleId; }
-        public List<String> getJVMArgs () { return jvmArgs; }
-    }
-
     public BundleLoader (Configuration conf) {
-        log = LogFactory.getLog(BundleLoader.class);
-        try {
-            xmlParser = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-        } catch(ParserConfigurationException e){
-            throw new BundleLoadingException("Error creating DocumentBuilder", e);
-        }
-        log.debug ("Created " + this.getClass().getName());
+        log = LogFactory.getLog(BundleLoader.class);        
     }
 
     /**
@@ -110,10 +77,11 @@ public class BundleLoader implements Configurable {
      * @throws FileNotFoundException if the corresponding package is not deployed
      */
     public BundleStub load (File bundleDir) throws IOException {
-        MetaBundle meta = checkBundle(bundleDir);
         List<String> libs = new ArrayList<String>();
-        File libDir = new File (bundleDir, "lib");
+        List<String> jvmArgs = new ArrayList<String>(10);
+        BundleSpecBuilder builder = checkBundle(bundleDir);
 
+        File libDir = new File (bundleDir, "lib");
         if (libDir.exists()) {
             for (String lib : libDir.list()) {
                 if (lib.endsWith(".jar")) {
@@ -122,17 +90,21 @@ public class BundleLoader implements Configurable {
             }
         }
 
-        return new BundleStub(meta.getBundleDir(),
-                              meta.getBundleId(),
-                              meta.getInstanceId(),
-                              meta.getMainJar(),
-                              meta.getMainClass(),
+        for (Map.Entry<String, Serializable> entry : builder.getProperties()) {
+            jvmArgs.add ("-D"+entry.getKey()+"="+entry.getValue());
+        }
+
+        return new BundleStub(bundleDir,
+                              builder.getBundleId(),
+                              builder.getInstanceId(),
+                              new File(builder.getMainJar()),
+                              builder.getMainClass(),
                               libs,
-                              meta.getJVMArgs());
+                              jvmArgs);
 
     }
 
-    private MetaBundle checkBundle (File bundleDir) {
+    private BundleSpecBuilder checkBundle (File bundleDir) {
         if (!bundleDir.isDirectory()) {
             throw new BundleLoadingException(bundleDir + " is not a directory");
         }
@@ -162,128 +134,55 @@ public class BundleLoader implements Configurable {
 
     }
 
-    private MetaBundle checkBundleSpec (File bundleDir, File bundleSpec) {
-        Document doc;
-        Element docElement;
-        NodeList children;
-        File mainJar = null;
-        String mainClass = null;
-        String bundleId = null;
-        String instanceId = null;
-        String description = null;
-        List<String> jvmArgs = new ArrayList<String>();
-        boolean checkedFileList = false;
+    private BundleSpecBuilder checkBundleSpec (File bundleDir, File bundleSpec) {
+        BundleSpecBuilder builder;
 
         try {
-            doc = xmlParser.parse(bundleSpec);
-        } catch (Exception e) {
-            throw new BundleLoadingException("Error parsing bundle spec "
+            builder = BundleSpecBuilder.open (bundleSpec);
+        } catch (IOException e) {
+            throw new BundleLoadingException("Failed to read bundle spec "
                                              + bundleSpec, e);
         }
 
-        docElement = doc.getDocumentElement();
-        if (!docElement.getTagName().equals("bundle")) {
-            throw new BundleFormatException("Bundle spec " + bundleSpec
-                                          + " has root element '"
-                                          + docElement.getTagName()
-                                          + "', expected 'bundle'");
-        }
-
-        children = docElement.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            Node node = children.item(i);
-            if ("mainJar".equals(node.getNodeName())) {
-                if (mainJar != null) {
-                    log.error ("Duplicate definition of mainJar. Ignoring.");
-                }
-                mainJar = new File (node.getTextContent());
-            } else if ("mainClass".equals(node.getNodeName())) {
-                if (mainClass != null) {
-                    log.error ("Duplicate definition of mainClass. Ignoring.");
-                }
-                mainClass = node.getTextContent();
-            } else if ("description".equals(node.getNodeName())) {
-                if (description != null) {
-                    log.error ("Duplicate definition of description. Ignoring.");
-                }
-                description = node.getTextContent();
-            } else if ("bundleId".equals(node.getNodeName())) {
-                if (bundleId != null) {
-                    log.error ("Duplicate definition of bundleId. Ignoring.");
-                }
-                bundleId = node.getTextContent();
-            } else if ("instanceId".equals(node.getNodeName())) {
-                if (instanceId != null) {
-                    log.error ("Duplicate definition of instanceId. Ignoring.");
-                }
-                instanceId = node.getTextContent();
-            } else if ("fileList".equals(node.getNodeName())) {
-                if (checkedFileList) {
-                    log.error ("Duplicate definition of fileList. Ignoring.");
-                }
-                checkFilelist (bundleDir, node);
-                checkedFileList = true;
-            } else if ("property".equals(node.getNodeName())) {
-                String name = node.getAttributes().getNamedItem("name").getNodeValue();
-                String value = node.getAttributes().getNamedItem("value").getNodeValue();
-
-                if (name == null) {
-                    log.error ("Found property element without name. Ignoring.");
-                    continue;
-                } else if (value == null) {
-                    log.error ("Found property element '" + name
-                              + "'without value. Ignoring.");
-                    continue;
-                }
-                jvmArgs.add ("-D"+name+"="+value);
-            }
-        }
-
-        if (mainJar == null) {
+        if (builder.getMainJar() == null) {
             throw new BundleFormatException("In bundle spec '" + bundleSpec
                                           + "', missing 'mainJar' tag");
-        } else if (mainClass == null) {
+        } else if (builder.getMainClass() == null) {
             throw new BundleFormatException("In bundle spec '" + bundleSpec
                                           + "', missing  'mainClass' tag");
-        } else if (description == null) {
+        } else if (builder.getDescription() == null) {
             throw new BundleFormatException("In bundle spec '" + bundleSpec
                                           + "', missing 'description' tag");
-        } else if (bundleId == null) {
+        } else if (builder.getBundleId() == null) {
             throw new BundleFormatException("In bundle spec '" + bundleSpec
                                           + "', missing 'bundleId' tag");
-        } else if (instanceId == null) {
+        } else if (builder.getInstanceId() == null) {
             throw new BundleFormatException("In bundle spec '" + bundleSpec
                                           + "', missing  'instanceId' tag");
-        } else if (!checkedFileList) {
+        } else if (builder.getFiles().size() == 0) {
             throw new BundleFormatException("In bundle spec '" + bundleSpec
-                                          + "', missing  'fileList' tag");
+                                          + "', missing  or empty 'fileList'"
+                                          + " tag");
         }
 
-        return new MetaBundle(bundleDir, bundleSpec, mainJar,
-                              mainClass, instanceId, bundleId,
-                              jvmArgs);
+        File mainJar = new File(bundleDir, builder.getMainJar());
+        if (!mainJar.exists()) {
+            throw new BundleLoadingException("Main jar does not exist: '"
+                                             + mainJar + "'");
+        }
+
+        checkFilelist(builder, bundleDir);
+
+        return builder;
     }
 
-    private void checkFilelist(File bundleDir, Node node) {
-        NodeList files = node.getChildNodes();
-
+    private void checkFilelist(BundleSpecBuilder builder, File bundleDir) {
+        Collection<String> fileList = builder.getFiles();
         // Check that each file in fileList exists
-        for (int i = 0; i < files.getLength(); i++) {
+        for (String filename : fileList) {
 
-            // Skip garbage text and comments
-            if (files.item(i).getNodeType() == Node.TEXT_NODE ||
-                files.item(i).getNodeType() == Node.COMMENT_NODE) {
-                continue;
-            }
 
-            // Assert that we only have file nodes
-            if (!"file".equals(files.item(i).getNodeName())) {
-                throw new BundleFormatException("Illegal child '"
-                + files.item(i).getNodeName() + "' of fileList");
-            }
-
-            File testFile = new File (bundleDir,
-                                      files.item(i).getTextContent());
+            File testFile = new File (bundleDir, filename);
             if (!testFile.exists()) {
                 throw new BundleFormatException("Listed file '"
                                               + testFile + "' does not exist");
@@ -295,7 +194,4 @@ public class BundleLoader implements Configurable {
         // TODO: Check md5 if the md5 attribute exists on the file element
     }
 
-    private void checkJVMArgs (Node node) {
-
-    }
 }
