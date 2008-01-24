@@ -46,8 +46,14 @@ public class RepositoryManager implements Configurable,
      * bundles from the Score's repository.
      */
     public static final String CLIENT_REPO_PROPERTY =
-                                           "summa.score.repository.clientClass";    
+                                           "summa.score.repository.clientClass";
 
+    /**
+     * Configuration property defining the directory used for incoming bundles
+     * to be stored in the repository.
+     */
+    public static final String INCOMING_DIR_PROPERTY =
+                                          "summa.score.repository.incoming.dir";
 
     private File baseDir;
     private String address;
@@ -59,19 +65,7 @@ public class RepositoryManager implements Configurable,
         log = LogFactory.getLog (RepositoryManager.class);
 
         /* Configure base path */
-        String basePath = conf.getString (BASE_PATH_PROPERTY,
-                                          System.getProperty("user.home")
-                                        + File.separator
-                                        + "public_html"
-                                        + File.separator
-                                        + "score"
-                                        + File.separator
-                                        + "repo");
-
-        baseDir = new File (basePath);
-        if (!baseDir.exists()) {
-            baseDir.mkdirs();
-        }
+        baseDir = ScoreUtils.getRepositoryBaseDir(conf);
         log.debug ("Using repository base dir: '" + baseDir + "'");
 
         /* Configure Client Repo Class */
@@ -82,12 +76,7 @@ public class RepositoryManager implements Configurable,
                    + clientRepoClass.getName());
 
         /* Configure public address */
-        address = conf.getString(BundleRepository.REPO_ADDRESS_PROPERTY,
-                                 "http://"
-                                 + RemoteHelper.getHostname()
-                                 + "/~"
-                                 + System.getProperty("user.name")
-                                 + "/score/repo");
+        address = ScoreUtils.getRepositoryAddress(conf);
         log.debug ("Using repository address: '" + address + "'");
 
         clientDownloadDir = conf.getString(BundleRepository.DOWNLOAD_DIR_PROPERTY,
@@ -167,7 +156,7 @@ public class RepositoryManager implements Configurable,
      * Add a bundle to the repository.
      * @param prospectBundle
      */
-    public void upload (File prospectBundle) {
+    public void importBundle (File prospectBundle) {
 
     }
 }
