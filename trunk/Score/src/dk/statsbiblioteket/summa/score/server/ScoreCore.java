@@ -12,6 +12,7 @@ import dk.statsbiblioteket.summa.score.api.BadConfigurationException;
 import dk.statsbiblioteket.summa.score.api.Feedback;
 
 import java.io.IOException;
+import java.io.File;
 import java.util.List;
 import java.rmi.server.UnicastRemoteObject;
 
@@ -40,7 +41,14 @@ public class ScoreCore extends UnicastRemoteObject
      */
     public static final String SCORE_REGISTRY_PORT = "summa.score.core.registryPort";
 
+    /**
+     * Configuration property defining the base directory for the ScoreCore.
+     * Default is <code>${user.home}/summa-score</code>.
+     */
+    public static final String SCORE_BASE_DIR = "summa.score.core.dir";
+
     private Log log;
+    private File baseDir;
     private ClientManager clientManager;
     private RepositoryManager repoManager;
     private ConfigurationManager confManager;
@@ -52,7 +60,8 @@ public class ScoreCore extends UnicastRemoteObject
         repoManager = new RepositoryManager(conf);
         confManager = new ConfigurationManager(conf);
 
-
+        baseDir = ScoreUtils.getScoreBaseDir(conf);
+        log.debug ("Using base dir '" + baseDir + "'");
 
         RemoteHelper.exportRemoteInterface(this,
                                             conf.getInt(SCORE_REGISTRY_PORT, 27000),
@@ -69,10 +78,6 @@ public class ScoreCore extends UnicastRemoteObject
     private static int getServicePort(Configuration conf) {
         return conf.getInt(SCORE_CORE_PORT, 27001);
     }
-
-    /*public Configuration getClientConfiguration (String instanceId) {
-        throw new UnsupportedOperationException();
-    }*/
 
     public ClientConnection getClient(String instanceId) {
         ConnectionContext<ClientConnection> conn =
