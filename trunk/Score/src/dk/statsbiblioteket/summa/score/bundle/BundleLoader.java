@@ -49,8 +49,16 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.DocumentBuilder;
 
 /**
- * The {@code BundleLoader} class is used to create a {@link BundleStub} object
- * from a given unpacked {@code .bundle} file.
+ * <p>The {@code BundleLoader} class is used to create a {@link BundleStub} object
+ * from a given unpacked {@code .bundle} file.</p>
+ *
+ * <p>It facilitates a {@link BundleSpecBuilder} to read the bundle spec
+ * and then does additional validation on top. There core thing that sets
+ * it apart from a BundleSpecBuilder is that it needs a reference directory
+ * used to look up the files listed in the spec.</p>
+ *
+ * @see BundleStub
+ * @see BundleSpecBuilder
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
