@@ -13,6 +13,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Properties;
 import java.io.OutputStream;
 import java.io.IOException;
 import java.io.Writer;
@@ -24,8 +26,10 @@ import java.io.Reader;
 import java.io.InputStreamReader;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.Serializable;
 
 import dk.statsbiblioteket.util.FileAlreadyExistsException;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 
 /**
  *
@@ -38,13 +42,14 @@ public class BundleSpecBuilder {
     private String instanceId;
     private String description;
     private Bundle.Type bundleType;
-    private HashMap<String,String> properties;
+    private Configuration properties;
     private HashSet<String> fileSet;
 
     public BundleSpecBuilder () {
-        properties = new HashMap<String,String>();
-        fileSet = new HashSet<String>();
         bundleType = Bundle.Type.SERVICE;
+        properties = Configuration.newMemoryBased();
+        fileSet = new HashSet<String>();
+
     }
 
     public String getMainJar () { return mainJar; }
@@ -65,13 +70,15 @@ public class BundleSpecBuilder {
     public String getDescription () { return description; }
     public void setDescription (String description) { this.description = description; }
 
-    public String getProperty (String name) { return properties.get(name); }
-    public void setProperty (String name, String value) { properties.put (name, value); }
-    public void clearProperty (String name) { properties.remove(name); }
+    public String getProperty (String name) { return properties.getString(name); }
+    public void setProperty (String name, String value) { properties.set (name, value); }
+    public void clearProperty (String name) { properties.purge(name); }
+    public Configuration getProperties () { return properties; }
 
     public void addFile (String file) { fileSet.add(file); }
     public void removeFile (String file) { fileSet.remove(file); }
-    public void hasFile (String file) { fileSet.contains(file); }
+    public boolean hasFile (String file) { return fileSet.contains(file); }
+    public Collection<String> getFiles () { return fileSet; }
 
     public void write (OutputStream out) throws IOException {
         if (out == null) {
@@ -109,19 +116,19 @@ public class BundleSpecBuilder {
                 out.println ("  <description>" + description + "</description>");
             }
 
-            if (!properties.isEmpty()) {
-                for (Map.Entry<String,String> entry : properties.entrySet()) {
+            if (properties.getStorage().size() != 0) {
+                for (Map.Entry<String, Serializable> entry : properties) {
                     out.println ("  <property name=\"" + entry.getKey() + "\""
                                       + " value=\"" + entry.getValue() +"\"/>");
                 }
             }
 
             if (!fileSet.isEmpty()) {
-                out.println ("  <fileSet>");
+                out.println ("  <fileList>");
                 for (String file : fileSet) {
                     out.println ("    <file>" + file + "</file>");
                 }
-                out.println ("  </fileSet>");
+                out.println ("  </fileList>");
             }
 
             out.println("</bundle>");
