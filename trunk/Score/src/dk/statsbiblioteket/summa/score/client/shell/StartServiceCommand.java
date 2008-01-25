@@ -107,11 +107,17 @@ public class StartServiceCommand extends Command {
 
         setUsage("start [options] <service-id>");
 
-        installOption("c", "configuration", true, "Location of configuration. Url, file, or RMI server.");
+        installOption("c", "configuration", true, "Location of configuration. "
+                                                  + "Url, file, or RMI server."
+                                                  + " Defaults to "
+                                                  + "'configuration.xml'");
     }
 
     public void invoke(ShellContext ctx) throws Exception {
         String confLocation = getOption("c");
+        if (confLocation == null) {
+            confLocation = "configuration.xml";
+        }
 
         if (getArguments().length != 1) {
             ctx.error ("Exactly one package id should be specified. Found "

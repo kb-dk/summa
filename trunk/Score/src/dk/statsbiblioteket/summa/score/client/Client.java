@@ -24,7 +24,6 @@ package dk.statsbiblioteket.summa.score.client;
 
 import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
-import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configurable.ConfigurationException;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.score.api.*;
@@ -32,21 +31,17 @@ import dk.statsbiblioteket.summa.score.bundle.BundleLoader;
 import dk.statsbiblioteket.summa.score.bundle.BundleLoadingException;
 import dk.statsbiblioteket.summa.score.bundle.BundleRepository;
 import dk.statsbiblioteket.summa.score.bundle.BundleStub;
+import dk.statsbiblioteket.summa.score.bundle.BundleSpecBuilder;
 import dk.statsbiblioteket.util.*;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
 import java.io.File;
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.NotBoundException;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 import java.net.MalformedURLException;
@@ -186,7 +181,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         return "//"+registryHost+":"+registryPort+"/"+serviceName;
     }
 
-    private File getServiceFile (String id) {
+    private File getServiceDir(String id) {
         return new File (servicePath, id);
     }
 
@@ -236,20 +231,22 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         return status;
     }
 
-    public String deployService(String id, String configLocation) {
-        setStatusRunning("Deploying service '" + id + "' with config "
-                        + configLocation);
+    public String deployService(String bundleId,
+                                String instanceId,
+                                String configLocation) {
+        setStatusRunning("Deploying service '" + bundleId + "' with config "
+                        + configLocation + ", and instanceId '"
+                        + instanceId + "'");
         File tmpBundleFile;
 
         try {
-            tmpBundleFile = repository.get (id);            
+            tmpBundleFile = repository.get (bundleId);
         } catch (IOException e) {
-            throw new BundleLoadingException ("Failed to retrieve " + id
+            throw new BundleLoadingException ("Failed to retrieve " + bundleId
                                             + "from repository", e);
         }
 
-        String instanceId =
-                deployServiceFromLocalFile(id, tmpBundleFile, configLocation);
+        deployServiceFromLocalFile(instanceId, tmpBundleFile, configLocation);
         
         setStatusIdle();
         return instanceId;
@@ -257,33 +254,34 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
 
     /**
      * <p>If this call completes it is guaranteed that
-     * {@link #getServiceFile} returns an existing bundle file.</p>
+     * {@link #getServiceDir} returns an existing bundle file.</p>
      *
      * <p>The local file is unpacked to {@code servicePath/bundleId}</p>
      *
-     * @param bundleId the bundleId under which to deploy the file
+     * @param instanceId the instanceId under which to deploy the service
      * @param localFile the file to deploy
      * @param configLocation location for configuration, either an URL,
      *                       rmi address, or file path
      * @return the instance id of the deployed service or null on error
      */
-    public String deployServiceFromLocalFile (String bundleId, File localFile,
+    public void deployServiceFromLocalFile (String instanceId, File localFile,
                                             String configLocation) {
 
         if (servicePath.equals(localFile.getParent())) {
-            log.error ("Trying to deploy " + localFile + " which is already"
-                       + " in the service directory " + servicePath +"."
-                       + " Aborting deploy.");
-            return null;
+            throw new BundleLoadingException ("Trying to deploy " + localFile
+                                              + " which is already"
+                                              + " in the service directory "
+                                              + servicePath +"."
+                                              + " Aborting deploy.");
         } else if (!localFile.exists()) {
-            log.error ("Trying to deploy non-existing file " + localFile +
-                       ", aborting deploy.");
-            return null;
+            throw new BundleLoadingException ("Trying to deploy non-existing"
+                                              + " file " + localFile  + ", "
+                                              + "aborting deploy.");
         }
 
-        setStatusRunning ("Deploying '" + bundleId + "' from " + localFile);
+        setStatusRunning ("Deploying '" + instanceId + "' from " + localFile);
 
-        File tmpPkg = new File(tmpPath, bundleId);
+        File tmpPkg = new File(tmpPath, instanceId);
 
         // Assert that we don't have collisions in the tmp dir
         if (tmpPkg.exists()) {
@@ -292,46 +290,42 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                          + " collisions");
                 Files.delete (tmpPkg);
             } catch (IOException e) {
-                log.error("Failed to delete temporary file '" + tmpPkg
-                        + "' blocking the way. Bailing out on deploy.", e);
-                return null;
+                throw new BundleLoadingException ("Failed to delete temporary "
+                                                  + "file '" + tmpPkg + "'"
+                                                  + "' blocking the way. "
+                                                  + "Bailing out on deploy.", e);
             }
         }
 
-        // Unzip the file into the tmp directory
+        // Unzip the file into the tmp directory, and set the instance id
+        // in the spec file
         try {
             Zips.unzip (localFile.toString(), tmpPkg.toString(), false);
+            File specFile = new File(tmpPkg, "service.xml");
+            BundleSpecBuilder builder = BundleSpecBuilder.open (specFile);
+            builder.setInstanceId(instanceId);
+            builder.write (specFile);
+
         } catch (IOException e) {
-            log.error ("Error deploying " + localFile + ". "
-                       + "Purging " + tmpPkg + " from tmp dir", e);
             try {
                 Files.delete(tmpPkg);
+                throw new BundleLoadingException ("Error deploying "
+                                                  + localFile + ". "
+                                                  + "Purged " + tmpPkg
+                                                  + " from tmp dir", e);
             } catch (IOException ee) {
-                log.error ("Error deleting file " + tmpPkg
-                           + " when cleaning up buggy deploy", e);
+                log.error ("Failed to clean up after buggy deploy", ee);
+                throw new BundleLoadingException ("Error deleting file '"
+                                                  + tmpPkg + "' when cleaning "
+                                                  + "up buggy deploy", e);
             }
         }
 
-        // Extract the instance id
-        BundleStub stub;
-        try {
-            log.trace ("Reading bundle spec for " + tmpPkg);
-             stub = loader.load (tmpPkg);
-        } catch (IOException e) {
-            log.error ("Failed to load bundle stub. Cannot extract instance bundleId."
-                      + " Aborting deploy of '" + tmpPkg + "'", e);
-            return null;
-        }
-        String instanceId = stub.getInstanceId();
-        log.debug ("Found instance id '" + instanceId + "' for bundle '"
-                 + bundleId + "' in " + tmpPkg);
-
         // Check if the service is already deployed, ie if there already
-        // is a service with the same instance bundleId
-        File pkgFile = getServiceFile(instanceId);
+        // is a service with the same instanceId
+        File pkgFile = getServiceDir(instanceId);
         if (services.get(instanceId) != null || pkgFile.exists()) {
             reDeployService(instanceId, localFile);
-            return null;
         }
 
         // Move service bundle in place in services/<instanceid>
@@ -345,14 +339,13 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         checkPermissions(instanceId);
         
         setStatusIdle();
-        return instanceId;
     }
 
     public void startService(String id, String configLocation)
                                                         throws RemoteException {
         setStatusRunning ("Starting service " + id);
         Service service = services.get(id);
-        File serviceFile = getServiceFile(id);
+        File serviceFile = getServiceDir(id);
         BundleStub stub;
 
         if (service != null) {
@@ -518,7 +511,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         Service s = services.get (id);
 
         if (s == null) {
-            if (getServiceFile(id).exists()) {
+            if (getServiceDir(id).exists()) {
                 log.error ("Cannot stop service. Service '" + id + "' not running");
                 throw new InvalidServiceStateException(this, id, "stopService",
                         "Not running");
@@ -579,7 +572,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         }
 
         if (s == null) {
-            if (getServiceFile(id).exists()) {
+            if (getServiceDir(id).exists()) {
                 log.debug ("Got status request for non-running service '"
                            + id + "'");
                 return new Status(Status.CODE.not_instantiated,
@@ -630,37 +623,25 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
 
     /**
      * Deploy a local package over another (possibly running) service
-     * @param id if of the package to redeploy
+     * @param instanceId if of the package to redeploy
      * @param tmpPkgFile the downloaded package which to deploy instead of the
      *                   existing service
      */
-    private void reDeployService (String id, File tmpPkgFile) {
-        File pkgFile = new File (servicePath, id);
-        Service old = services.get (id);
+    private void reDeployService (String instanceId, File tmpPkgFile) {
+        File pkgFile = new File (servicePath, instanceId);
 
-        if (! pkgFile.exists()) {
-            log.error ("Trying to redeploy unexisting service " + pkgFile
-                       + ", skipping. ");
-            return;
-        }
-        if (old == null) {
-            throw new NullPointerException("Old service is null even though "
-                                         + "package file " + getServiceFile(id)
-                                         + " exists");
-        }
-
-        setStatusRunning("Redeploying service '" + id + "' from " + tmpPkgFile);
+        setStatusRunning("Redeploying service '" + instanceId + "' from " + tmpPkgFile);
 
 
         try {
-            removeService (id);
+            removeService (instanceId);
             Files.copy(tmpPkgFile, pkgFile, false);
             //FIXME: We should really unzip to the location instead
         } catch (RemoteException re){
-            log.error ("Error removing service '" + id + "', aborting redeploy",
+            log.error ("Error removing service '" + instanceId + "', aborting redeploy",
                        re);
         } catch (IOException e) {
-            log.error ("Error redeploying service '" + id + "' from "
+            log.error ("Error redeploying service '" + instanceId + "' from "
                                     + tmpPkgFile + " to " + pkgFile, e);
         }
 
@@ -674,7 +655,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
      */
     private void removeService(String id) throws RemoteException {
         Service service = services.get (id);
-        File pkgFile = getServiceFile(id);
+        File pkgFile = getServiceDir(id);
         String artifactPkgPath;
 
         if (!pkgFile.exists() && pkgFile.isDirectory()) {
@@ -682,11 +663,10 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                                              "cannot remove service '" + id + "'"
                                            + ", " + pkgFile + " is not a directory");
         }
-        if (service == null) {
-            throw new NoSuchServiceException(this, id, "removeServide");
+        if (service != null) {
+            service.stop ();
+            services.remove(id);
         }
-
-        service.stop ();
 
         int availNum = 1;
         artifactPkgPath = artifactPath +File.separator
@@ -697,7 +677,6 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         }
 
         pkgFile.renameTo(new File(artifactPkgPath));
-        services.remove(id);
     }
 
     /**
@@ -706,7 +685,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
      * @param id the id of the service to set permissions for
      */
     private void checkPermissions(String id) {
-        File bundleDir = getServiceFile(id);
+        File bundleDir = getServiceDir(id);
         File policy = new File(bundleDir, BundleStub.POLICY_FILE);
         File password = new File(bundleDir, BundleStub.JMX_PASSWORD_FILE);
         File access = new File(bundleDir, BundleStub.JMX_ACCESS_FILE);

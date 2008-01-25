@@ -6,7 +6,6 @@
     <property name="com.sun.management.jmxremote.ssl" value="false"/>
     <description>A simple test service for the Summa Score</description>
 	<bundleId>test-1</bundleId>
-	<instanceId>test-1-1</instanceId>
 	<fileList>
 		<file>test.jar</file>
         <file>lib/summa-common-@summa.version@.jar</file>

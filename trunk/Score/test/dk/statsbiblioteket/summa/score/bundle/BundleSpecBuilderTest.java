@@ -218,6 +218,13 @@ public class BundleSpecBuilderTest extends TestCase {
         assertEquals(5, b.getFiles().size());
     }
 
+    public void testGetFilename () throws Exception {
+        b.setBundleType(Bundle.Type.CLIENT);
+        assertEquals("client.xml", b.getFilename());
+        b.setBundleType(Bundle.Type.SERVICE);
+        assertEquals("service.xml", b.getFilename());
+    }
+
     public void testBuildBundle () throws Exception {
         b.setBundleType(Bundle.Type.SERVICE);
         b.addFile("config/configuration.xml");

@@ -52,8 +52,7 @@ public class ClientTest extends TestCase {
         ClientConnection client = (ClientConnection) Naming.lookup ("//localhost:2767/test-client-1");
         URL url = new URL("http://java.sun.com/javase/6/docs/api/java/net/HttpCookie.html");
 
-        client.deployService("test-1",                             
-                             null);
+        client.deployService("test-1", "test-1-1", null);
 
     }
 

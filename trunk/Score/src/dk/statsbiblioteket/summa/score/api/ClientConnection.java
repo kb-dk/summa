@@ -106,7 +106,9 @@ public interface ClientConnection {
      * Fetches the service bundle with a given bundle id from the configured
      * {@link BundleRepository} and deploys it according to the bundle's
      * configuration and instance id.
-     * @param id               the <i>bundle id</i> for the service
+     * @param bundleId          The <i>bundle id</i> for the service
+     * @param instanceId        The <i>instance id</i> to deploy the service
+     *                          under
      * @param configLocation    deploy-specific properties. This should not be
      *                         confused with the properties for
      *                         {@link #startService}, although it is probably
@@ -115,7 +117,9 @@ public interface ClientConnection {
      * @return the instance id of the deployed service or null on errors
      * @throws IOException in case of communication errors.
      */
-    public String deployService(String id, String configLocation)
+    public String deployService(String bundleId,
+                                String instanceId,
+                                String configLocation)
                               throws IOException;
 
     /**
