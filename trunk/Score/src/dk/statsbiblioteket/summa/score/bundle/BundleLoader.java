@@ -89,6 +89,7 @@ public class BundleLoader implements Configurable {
         List<String> jvmArgs = new ArrayList<String>(10);
         BundleSpecBuilder builder = checkBundle(bundleDir);
 
+        /* Find all .jar files in lib/ */
         File libDir = new File (bundleDir, "lib");
         if (libDir.exists()) {
             for (String lib : libDir.list()) {
@@ -98,6 +99,7 @@ public class BundleLoader implements Configurable {
             }
         }
 
+        /* Construct JVM args */
         for (Map.Entry<String, Serializable> entry : builder.getProperties()) {
             jvmArgs.add ("-D"+entry.getKey()+"="+entry.getValue());
         }

@@ -134,22 +134,16 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
 
         serviceTimeout = configuration.getInt(SERVICE_TIMEOUT, 5);
 
-        // Find client hostname
-        try {
-            java.net.InetAddress localMachine =
-                    java.net.InetAddress.getLocalHost();
-            hostname = localMachine.getHostName();
-            log.debug ("Found hostname: " + hostname);
-        } catch (Throwable t) {
-            hostname = "localhost";
-            log.warn ("Unable to get hostname for " + this
-                      + ". Using 'localhost'", t);
-        }
-
+        /* Find client hostname */
+        hostname = RemoteHelper.getHostname();
+        log.debug ("Found hostname: '" + hostname + "'");
 
         setStatus(Status.CODE.constructed, "Setting up remote interfaces (rmi,jmx)",
                   Logging.LogLevel.DEBUG);
-        exportRemoteInterfaces();
+
+        RemoteHelper.exportRemoteInterface(this, registryPort, serviceName);
+        RemoteHelper.exportMBean(this);
+
         setStatus(Status.CODE.constructed, "Remote interfaces up",
                   Logging.LogLevel.DEBUG);
 
@@ -215,53 +209,6 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                                        + "from configuration", e);
         }
 
-    }
-
-    /**
-     * Expose the Client as a remote service over rmi.
-     * @throws RemoteException
-     */
-    private void exportRemoteInterfaces() throws RemoteException {
-        Registry reg = null;
-
-        if ("localhost".equals(registryHost)) {
-            try {
-                reg = LocateRegistry.createRegistry(registryPort);
-                log.debug("Created registry on port " + servicePort);
-            } catch (RemoteException e) {
-                reg = LocateRegistry.getRegistry(registryHost, registryPort);
-                log.debug ("Found registry " + registryHost + ":" + registryPort);
-            }
-        } else {
-            reg = LocateRegistry.getRegistry(registryHost, registryPort);
-            log.debug ("Found registry " + registryHost + ":" + registryPort);
-        }
-
-        if (reg == null) {
-            throw new RemoteException ("Failed to locate or create registry on "
-                                        + registryHost + ":" + registryPort);
-        }
-
-        try {
-            reg.rebind(serviceName, this);
-        } catch (RemoteException ee) {
-            log.error("Failed to bind in registry", ee);
-            throw ee;
-        }
-
-        log.info(this.getClass().getSimpleName()
-                + " bound in registry "+ registryHost+":"+registryPort + " as '"
-                 + serviceName + "' on port " + servicePort);
-
-        try {
-            log.debug ("Registering at mbean server");
-            MBeanServer mbserver = ManagementFactory.getPlatformMBeanServer();
-            ObjectName name = new ObjectName(this.getClass().getName()+ ":type=Client");
-            mbserver.registerMBean(this, name);
-            log.info ("Registered at mbean server as " + name);
-        } catch (Exception e) {
-            log.error ("Failed to expose JMX interface. Going on without it.", e);
-        }
     }
 
     public void stop() {
