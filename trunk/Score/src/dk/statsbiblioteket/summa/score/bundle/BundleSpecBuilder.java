@@ -27,6 +27,7 @@ import java.io.InputStreamReader;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.Serializable;
+import java.io.FileNotFoundException;
 
 import dk.statsbiblioteket.util.FileAlreadyExistsException;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -310,6 +311,69 @@ public class BundleSpecBuilder {
             addFile(file);
 
         }
+    }
+
+    public void checkFileList (File bundleDir) {
+        // Check that each file in fileList exists
+        for (String filename : fileSet) {
+            File testFile = new File (bundleDir, filename);
+            if (!testFile.exists()) {
+                throw new BundleFormatException("Listed file '"
+                                              + testFile + "' does not exist");
+            }
+        }
+
+        // TODO: Check the converse - that each file is listed in fileList
+
+        // TODO: Check md5 if the md5 attribute exists on the file element
+    }
+
+    /**
+     * <p>Recusively scan a directory and add all files to the file list of this
+     * builder.</p>
+     *
+     * <p>The scanner will skip past any hidden files or directories.</p>
+     *
+     * @param bundleDir directory to scan
+     * @throws IOException if the file is not a directory
+     * @throws NullPointerException if the bundleDir is null
+     * @throws FileNotFoundException if the file {@code bundleDir} does not exist
+     */
+    public void buildFileList (File bundleDir) throws IOException {
+        if (bundleDir == null) {
+            throw new NullPointerException("bundleDir argument is null");
+        }
+        if (!bundleDir.exists()) {
+            throw new FileNotFoundException (bundleDir.getAbsolutePath());
+        }
+        if (!bundleDir.isDirectory()) {
+            throw new IOException("'" + bundleDir + "' is not a directory");
+        }
+        recursiveScan(bundleDir, null);
+    }
+
+    private void recursiveScan (File rootDir, String child) {
+        if (child == null) {
+            /* This is the root of the scan tree */
+            for (String file : rootDir.list()) {
+                recursiveScan(rootDir, file);
+            }
+            return;
+        }
+
+        File file = new File (rootDir, child);
+
+        if (file.isHidden()) {
+            return;
+        }
+
+        if (file.isFile()) {
+            addFile(child);
+        } else {
+            for (String subChild : file.list()) {
+                recursiveScan(rootDir, child + "/" + subChild);
+            }
+        }        
     }
 
 }

@@ -205,6 +205,18 @@ public class BundleSpecBuilderTest extends TestCase {
         doTestWriteFile();
     }
 
+    public void testBuildFileList () throws Exception {
+        File bundleRoot = new File ("Score/test/test-bundle-1");
+        b.buildFileList(bundleRoot);
+
+        assertTrue(b.hasFile("service.xml"));
+        assertTrue(b.hasFile("config/configuration.xml"));
+        assertTrue(b.hasFile("config/jmx.access"));
+        assertTrue(b.hasFile("config/jmx.password"));
+        assertTrue(b.hasFile("config/policy"));
+        assertEquals(5, b.getFiles().size());
+    }
+
 }
 
 
