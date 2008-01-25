@@ -5,6 +5,7 @@ package dk.statsbiblioteket.summa.score.bundle;
 
 import junit.framework.*;
 import dk.statsbiblioteket.summa.score.bundle.BundleSpecBuilder;
+import dk.statsbiblioteket.util.Files;
 
 import java.io.InputStream;
 import java.io.StringReader;
@@ -215,6 +216,18 @@ public class BundleSpecBuilderTest extends TestCase {
         assertTrue(b.hasFile("config/jmx.password"));
         assertTrue(b.hasFile("config/policy"));
         assertEquals(5, b.getFiles().size());
+    }
+
+    public void testBuildBundle () throws Exception {
+        b.setBundleType(Bundle.Type.SERVICE);
+        b.addFile("config/configuration.xml");
+        b.setBundleId("unit-test");
+        File bundleFile = b.buildBundle(new File("Score/test/test-bundle-1"),
+                                        new File("tmp/delete_me"));
+
+        System.out.println ("Wrote: " + bundleFile);
+
+        //Files.delete ("tmp/delete_me");
     }
 
 }
