@@ -60,6 +60,23 @@ public class RepositoryManager implements Configurable,
     public static final String INCOMING_DIR_PROPERTY =
                                           "summa.score.repository.incoming.dir";
 
+    /**
+     * Configuration property defining the gracetime for the
+     * {@link FolderWatcher} on the incoming directory. Ie the number of
+     * milliseconds a newly added file should be unchanged before it is
+     * transfered to the repository. Default is 3000.
+     */
+    public static final String WATCHER_GRACETIME_PROPERTY =
+                                     "summa.score.repository.watcher.graceTime";
+
+    /**
+     * Configuration property defining the number of seconds between each
+     * scan of the incoming directory, when watching for incoming bundles.
+     * Default is 5.
+     */
+    public static final String WATCHER_POLL_INTERVAL_PROPERTY =
+                                  "summa.score.repository.watcher.pollInterval";
+
     private File baseDir;
     private String address;
     private Class<? extends BundleRepository> clientRepoClass;
@@ -121,7 +138,10 @@ public class RepositoryManager implements Configurable,
 
         incomingDir = ScoreUtils.getIncomingDir(conf);
         try {
-            incomingWatcher = new FolderWatcher(incomingDir, 5, 5);
+            incomingWatcher =
+               new FolderWatcher(incomingDir,
+                                 conf.getInt(WATCHER_POLL_INTERVAL_PROPERTY, 5),
+                                 conf.getInt(WATCHER_GRACETIME_PROPERTY, 3000));
 
         } catch (IOException e) {
             log.error ("Failed to initialize monitor for incming files on '"

@@ -140,8 +140,6 @@ public class BundleLoader implements Configurable {
         }
 
         return checkBundleSpec(bundleDir, bundleSpec);
-
-
     }
 
     private BundleSpecBuilder checkBundleSpec (File bundleDir, File bundleSpec) {
