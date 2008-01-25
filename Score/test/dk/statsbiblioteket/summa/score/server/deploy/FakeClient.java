@@ -58,10 +58,10 @@ public class FakeClient implements ClientConnection {
         return new Status(Status.CODE.running, "Fake status");
     }
 
-    public String deployService(String id,
+    public String deployService(String bundleId, String instanceId,
                               String confLocation) throws RemoteException {
-        log.info("Fake deploying bundle " + id + " with config location "
-                + confLocation + " using instance id 'fake-instance-id'");
+        log.info("Fake deploying bundle " + bundleId + " with config location "
+                + confLocation + " using instance id '" + instanceId + "'");
         return "fake-instance-id";
     }
 

@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Properties;
+import java.util.zip.ZipOutputStream;
+import java.util.zip.ZipEntry;
 import java.io.OutputStream;
 import java.io.IOException;
 import java.io.Writer;
@@ -334,6 +336,10 @@ public class BundleSpecBuilder {
      *
      * <p>The scanner will skip past any hidden files or directories.</p>
      *
+     * <p>The bundle spec file as according to the bundle type of this builder
+     * will automatically be added to the list even if it does not exist
+     * on disk.</p>
+     *
      * @param bundleDir directory to scan
      * @throws IOException if the file is not a directory
      * @throws NullPointerException if the bundleDir is null
@@ -350,6 +356,10 @@ public class BundleSpecBuilder {
             throw new IOException("'" + bundleDir + "' is not a directory");
         }
         recursiveScan(bundleDir, null);
+
+        if (!hasFile(getFilename())) {
+            addFile(getFilename());
+        }
     }
 
     private void recursiveScan (File rootDir, String child) {
@@ -374,6 +384,84 @@ public class BundleSpecBuilder {
                 recursiveScan(rootDir, child + "/" + subChild);
             }
         }        
+    }
+
+    /**
+     * <p>Write a complete bundle file to a directory based on this bundle spec.
+     * The file list of this bundle (see {@link #getFiles}) will be traversed
+     * and all files in it will be added to a zip file that will be written
+     * in {@code outputDir} with the name {@code <bundleId>.bundle}.</p>
+     *
+     * <p>If the {@code mainJar} and spec file is not in the file list,
+     * they will be added automatically.</p>
+     *
+     * @param rootDir root directory containing the files to be packed into the
+     *                bundle
+     * @param outputDir directory where to write the output file
+     *
+     * @throws NullPointerException if any of the arguments are null
+     * @throws IOException if {@code rootDir} does not exist or there is an error writing
+     *                     the bundle
+     * @throws FileAlreadyExistsException if {@code outputDir} is a regualr file
+     * @throws BundleFormatException if this builder does not have a bundle id
+     * @returns a file handle pointing at the written bundle
+     */
+    public File buildBundle (File rootDir, File outputDir) throws IOException {
+        /* Validate parameters */
+        if (getBundleId() == null) {
+            throw new BundleFormatException("Bundle does not have a bundle id");
+        }
+
+        if (rootDir == null) {
+            throw new NullPointerException("rootDir argument is null");
+        } else if (outputDir == null) {
+            throw new NullPointerException("outputDir argument is null");
+        }
+
+        if (!rootDir.isDirectory()) {
+            throw new IOException("rootDir not a directory '" + rootDir + "'");
+        } else if (outputDir.isFile()) {
+            throw new FileAlreadyExistsException("outputDir is a regular file '"
+                                                 + outputDir + "'");
+        }
+
+        if (!hasFile(getFilename())) {
+            addFile(getFilename());
+        }
+
+        if (getMainJar() != null && !hasFile(getMainJar())) {
+            addFile(getMainJar());
+        }
+
+        /* Write the bundle spec */
+        outputDir.mkdirs();
+        write (new File(rootDir, getFilename()));
+
+        /* Write the actual zip ball */
+        File bundleFile =  new File (outputDir,
+                                     getBundleId() + Bundle.BUNDLE_EXT);
+
+        FileOutputStream fileWriter = new FileOutputStream(bundleFile);
+        ZipOutputStream zipStream = new ZipOutputStream(fileWriter);
+
+        byte[] buf = new byte[4096];
+        int len;
+        for (String file : getFiles()) {
+            zipStream.putNextEntry(new ZipEntry(file));
+            FileInputStream in = new FileInputStream(new File(rootDir, file));
+            while ((len = in.read(buf)) > 0) {
+                zipStream.write(buf, 0, len);
+            }
+        }
+
+        /* Clean up */
+        zipStream.flush();
+        zipStream.finish();
+        zipStream.close();
+        fileWriter.flush();
+        fileWriter.close();
+
+        return bundleFile;
     }
 
 }

@@ -20,7 +20,9 @@ public interface ClientRMIConnection extends Remote, ClientConnection {
     public Status getStatus() throws RemoteException;
 
 
-    public String deployService(String id, String configLocation)
+    public String deployService(String bundleId,
+                                String instanceId,
+                                String configLocation)
                                                          throws RemoteException;
 
     public void startService(String id, String configLocation)

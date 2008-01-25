@@ -39,30 +39,36 @@ public class DeployCommand extends Command {
         super("deploy", "Deploy a service given its bundle id");
         this.client = client;
 
-        setUsage ("deploy [options] <service-id>");
+        setUsage ("deploy [options] <bundle-id> <instanceId>");
 
-        installOption("c", "configuration", true, "The location of the configuration to use");
+        installOption("c", "configuration", true, "The location of the "
+                                                  + "configuration to use."
+                                                  + " Defaults to "
+                                                  + "'configuration.xml'");
     }
 
     public void invoke(ShellContext ctx) throws Exception {
         String confLocation = getOption("c");
+        if (confLocation == null) {
+            confLocation = "configuration.xml";
+        }
 
-        if (getArguments().length != 1) {
-            ctx.error ("Exactly one package id should be specified. Found "
+        if (getArguments().length != 2) {
+            ctx.error ("Exactly two arguments should be specified. Found "
                        + getArguments().length + ".");
             return;
         }
 
-        String pkgId = getArguments()[0];
+        String bundleId = getArguments()[0];
+        String instanceId = getArguments()[1];
 
-        ctx.prompt ("Deploying package '" + pkgId + "' "
-                    + (confLocation != null ?
-                                 " with configuration " + confLocation
-                               : " with no configuration ")
+        ctx.prompt ("Deploying bundle '" + bundleId + "' as instance "
+                    + "'" + instanceId + "'"
+                    + " with configuration '" + confLocation + "'"
                     + "... ");
 
         try {
-            client.deployService(pkgId, confLocation);
+            client.deployService(bundleId, instanceId, confLocation);
         } catch (Exception e) {
             throw new RuntimeException("Deployment failed: " + e.getMessage(),
                                        e);
