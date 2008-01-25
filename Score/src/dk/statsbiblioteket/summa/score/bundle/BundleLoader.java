@@ -179,27 +179,9 @@ public class BundleLoader implements Configurable {
                                              + mainJar + "'");
         }
 
-        checkFilelist(builder, bundleDir);
+        builder.checkFileList(bundleDir);
 
         return builder;
-    }
-
-    private void checkFilelist(BundleSpecBuilder builder, File bundleDir) {
-        Collection<String> fileList = builder.getFiles();
-        // Check that each file in fileList exists
-        for (String filename : fileList) {
-
-
-            File testFile = new File (bundleDir, filename);
-            if (!testFile.exists()) {
-                throw new BundleFormatException("Listed file '"
-                                              + testFile + "' does not exist");
-            }
-        }
-
-        // TODO: Check the converse - that each file is listed in fileList
-
-        // TODO: Check md5 if the md5 attribute exists on the file element
     }
 
 }
