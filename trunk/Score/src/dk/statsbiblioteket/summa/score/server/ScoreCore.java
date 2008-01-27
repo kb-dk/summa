@@ -7,6 +7,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
 import dk.statsbiblioteket.summa.score.bundle.BundleRepository;
+import dk.statsbiblioteket.summa.score.bundle.Bundle;
 import dk.statsbiblioteket.summa.score.api.ClientConnection;
 import dk.statsbiblioteket.summa.score.api.BadConfigurationException;
 import dk.statsbiblioteket.summa.score.api.Feedback;
@@ -94,6 +95,7 @@ public class ScoreCore extends UnicastRemoteObject
 
     public void deployClient(Configuration conf) {
         log.trace ("Got deployClient request");
+
         validateClientConf(conf);
         log.info ("Preparing to start client with deployer config: \n"
                    + conf.dumpString());
@@ -186,13 +188,36 @@ public class ScoreCore extends UnicastRemoteObject
      * <p>If the {@link ClientDeployer#CLIENT_CONF_PROPERTY} is not set,
      * it will be set to point at the configuration of this Score instance.</p>
      *
+     * <p>If the {@link ClientDeployer#DEPLOYER_BUNDLE_FILE_PROPERTY} is not
+     * set it will be calculated from the
+     * {@link ClientDeployer#DEPLOYER_BUNDLE_PROPERTY} and set in the
+     * configuration.</p>
+     *
      * @param conf the configuration to validate
      * @throws BadConfigurationException if any one of  the required properties
      *                                   listed in {@link ClientDeployer} is not
      *                                   present
      */
     private void validateClientConf(Configuration conf) {
-        try { conf.getString(ClientDeployer.DEPLOYER_BUNDLE_PROPERTY); }
+        try {
+            String bdl =  conf.getString(ClientDeployer.DEPLOYER_BUNDLE_PROPERTY);
+
+            File bdlFile = repoManager.getBundle(bdl);
+
+            if (!bdlFile.exists()) {
+                throw new BadConfigurationException("Bundle file '" + bdlFile
+                                                  + "' to deploy does not "
+                                                  + "exist");
+            }
+
+            /* Set bundle file prop if it is not already set */
+            String bdlFileProp =
+                   conf.getString (ClientDeployer.DEPLOYER_BUNDLE_FILE_PROPERTY,
+                                   bdlFile.getAbsolutePath());
+            conf.set(ClientDeployer.DEPLOYER_BUNDLE_FILE_PROPERTY,
+                     bdlFileProp);
+
+        }
         catch (NullPointerException e) {
             throw new BadConfigurationException("Required property: "
                                                 + ClientDeployer.DEPLOYER_BUNDLE_PROPERTY
