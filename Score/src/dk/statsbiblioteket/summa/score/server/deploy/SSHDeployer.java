@@ -58,7 +58,7 @@ public class SSHDeployer implements ClientDeployer {
     public SSHDeployer(Configuration conf) {
         login = conf.getString(DEPLOYER_TARGET_PROPERTY);
         destination = conf.getString(BASEPATH_PROPERTY, "summa-score");
-        source = conf.getString(DEPLOYER_BUNDLE_PROPERTY);
+        source = conf.getString(DEPLOYER_BUNDLE_FILE_PROPERTY);
         clientId = conf.getString (INSTANCE_ID_PROPERTY);
         confLocation = conf.getString (CLIENT_CONF_PROPERTY,
                                        "configuration.xml");

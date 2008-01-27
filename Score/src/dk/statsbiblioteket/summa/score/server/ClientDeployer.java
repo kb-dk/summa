@@ -107,14 +107,17 @@ public interface ClientDeployer extends Configurable {
      * or {@link ScoreConnection#startClient} should contain the
      * <i>bundle id</i> to use.</p>
      *
-     * <p>The Score server will replace the bundle id with the full path
-     * to the local bundle file before passing the {@link Configuration} to the
-     * {@link ClientDeployer}s constructor.</p>
-     *
      * <p>This property <i>must</i> be provided by the configuration.</p>
      */
     public static final String DEPLOYER_BUNDLE_PROPERTY =
-                                                  "summa.score.deployer.bundle";
+                                               "summa.score.deployer.bundle.id";
+
+    /**
+     * Configuration property set by the Score server. It contains the absolute
+     * path to the .bundle file to deploy.
+     */
+    public static final String DEPLOYER_BUNDLE_FILE_PROPERTY =
+                                             "summa.score.deployer.bundle.file";                                        
 
     /**
      * <p>Configuration property naming the class used to provide user

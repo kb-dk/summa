@@ -210,6 +210,7 @@
 
             <zipfileset prefix="${prefix}/config" file="${basedir}/config/log4j.xml"/>
             <zipfileset prefix="${prefix}/config" file="${basedir}/config/configuration-server.xml"/>
+            <zipfileset prefix="${prefix}/config" file="${basedir}/config/score.configuration.xml"/>
             <zipfileset prefix="${prefix}/config" file="${basedir}/config/.server.policy"/>
 
             <zipfileset dir="${basedir}/config/jmx" prefix="${prefix}/config/jmx" filemode="600">
@@ -316,6 +317,6 @@
         <delete dir="${tmp.dir}"/>
     </target>
 
-    <target name="all" depends="release, .test-1.bundle"/>
+    <target name="all" depends="release, .test-1.bundle, .test-client-1.bundle"/>
 
 </project>
