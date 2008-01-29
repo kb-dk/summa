@@ -112,6 +112,20 @@
         <ant dir="Score" inheritall="false" target="clean"/>
         <ant dir="Search" inheritall="false" target="clean"/>        
         <delete dir="${dist.dir}" />
+    </target>
+
+    <!-- Delete all files not in CVS -->
+    <target name="distclean">
+        <ant dir="ClusterExtractor" inheritall="false" target="distclean"/>
+        <ant dir="Common" inheritall="false" target="distclean"/>
+        <ant dir="Dice" inheritall="false" target="distclean"/>
+        <ant dir="FacetBrowser" inheritall="false" target="distclean"/>
+        <ant dir="Index" inheritall="false" target="distclean"/>
+        <ant dir="Ingest" inheritall="false" target="distclean"/>
+        <ant dir="MetadataStorage" inheritall="false" target="distclean"/>
+        <ant dir="Score" inheritall="false" target="distclean"/>
+        <ant dir="Search" inheritall="false" target="distclean"/>
+        <delete dir="${dist.dir}" />
         <delete dir="${doc.dir}" />
     </target>
     
@@ -134,7 +148,7 @@
                 <include name="${summa.license}"/>
             </fileset>
          </copy>
-         <copy todir="${release.tmp.dir}/doc">
+         <copy todir="${release.tmp.dir}/${summa.apidocs.dir}">
             <fileset dir ="${doc.dir}" includes="**/*"/>
          </copy>
 

@@ -20,7 +20,7 @@
     <property name="build.dir" value="${basedir}/${summa.classes.dir}"/>
     <property name="test.build.dir" value="${basedir}/${summa.test.classes.dir}"/>
     <property name="dist.dir" value="${basedir}/${summa.dist.dir}"/>
-    <property name="doc.dir" value="${basedir}/doc"/>
+    <property name="doc.dir" value="${basedir}/${summa.apidocs.dir}"/>
     <property name="tmp.dir" value="${basedir}/tmp"/>
     <property name="lib.dir" value="${basedir}/lib"/>
 
@@ -174,7 +174,7 @@
     </target>
 
     <target name="doc" depends="compile">
-        <echo message="doc.dir = ${doc.dir}"/>
+        <mkdir dir="${doc.dir}"/>
         <javadoc
                 packagenames="dk.statsbiblioteket.summa.*"
                 destdir="${doc.dir}"
@@ -246,7 +246,7 @@
             <zipfileset prefix="${prefix}/config" file="${basedir}/config/log4j.xml"/>
             <zipfileset prefix="${prefix}/config" file="${basedir}/config/search.properties.xml"/>
 
-            <zipfileset dir="${doc.dir}" prefix="${prefix}/doc">
+            <zipfileset dir="${doc.dir}" prefix="${prefix}/${summa.apidocs.dir}">
                 <include name="**/*"/>
             </zipfileset>
 
