@@ -216,7 +216,15 @@ public class RepositoryManager implements Configurable,
                 return repoBaseDir.equals(file) && s.endsWith(Bundle.BUNDLE_EXT);
             }
         };
-        List<String> ids = Arrays.asList (repoBaseDir.list(filter));
+        String[] idArray = repoBaseDir.list(filter);
+
+        /* Strip .bundle suffixes */
+        for (int i = 0; i < idArray.length; i++) {
+            idArray[i] = idArray[i].substring(0,
+                                              idArray[i].length()
+                                              - Bundle.BUNDLE_EXT.length());
+        }
+        List<String> ids = Arrays.asList(idArray);
         log.trace ("Returning " + Logs.expand(ids, 5) + " for getBundles()"
                    + "request");
         return ids;
