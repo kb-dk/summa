@@ -32,6 +32,7 @@ import dk.statsbiblioteket.summa.score.bundle.BundleLoadingException;
 import dk.statsbiblioteket.summa.score.bundle.BundleRepository;
 import dk.statsbiblioteket.summa.score.bundle.BundleStub;
 import dk.statsbiblioteket.summa.score.bundle.BundleSpecBuilder;
+import dk.statsbiblioteket.summa.score.bundle.URLRepository;
 import dk.statsbiblioteket.util.*;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -100,11 +101,16 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         super (getServicePort (configuration));
         log.debug("Constructing client");
 
-        this.registryHost = configuration.getString(REGISTRY_HOST);
-        this.registryPort = configuration.getInt(REGISTRY_PORT);
-        this.serviceName = configuration.getString(CLIENT_ID);
-        this.servicePort = configuration.getInt(REGISTRY_PORT);
-        this.id = configuration.getString(CLIENT_ID);
+        this.registryHost = configuration.getString(REGISTRY_HOST, "localhost");
+        this.registryPort = configuration.getInt(REGISTRY_PORT, 27000);
+        this.serviceName = System.getProperty(CLIENT_ID);
+        this.servicePort = configuration.getInt(SERVICE_PORT);
+        this.id = serviceName;
+
+        if (serviceName == null) {
+            throw new BadConfigurationException("System property '" + CLIENT_ID
+                                                + "' not set");
+        }
 
         this.basePath = System.getProperty("user.home") + File.separator
                                      + configuration.getString(CLIENT_BASEPATH)
@@ -116,9 +122,10 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                                        + ".." + File.separator +"persistent";
 
         /* Create repository */
-        Class<BundleRepository> repositoryClass =
+        Class<? extends BundleRepository> repositoryClass =
                                     configuration.getClass(REPOSITORY_CLASS,
-                                                        BundleRepository.class);
+                                                        BundleRepository.class,
+                                                        URLRepository.class);
         repository = configuration.create (repositoryClass);
 
         /* Create bundle loader */
@@ -716,6 +723,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
             // The spawned server thread for RMI will cause the JVM to not exit
         } catch (Throwable e) {
             log.fatal("Caught toplevel exception, bailing out.", e);
+            System.err.println (e.getMessage());
             System.exit (1);
         }
 

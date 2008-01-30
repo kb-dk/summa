@@ -9,6 +9,9 @@
 	<fileList>
         <file>lib/summa-common-@summa.version@.jar</file>
         <file>lib/@release.jar@</file>
+        <file>lib/commons-logging-1.1.jar</file>
+        <file>lib/log4j-1.2.14.jar</file>
+        <file>lib/sbutil-0.2.4.jar</file>
         <file>config/jmx.access</file>
         <file>config/jmx.password</file>
         <file>config/policy</file>
