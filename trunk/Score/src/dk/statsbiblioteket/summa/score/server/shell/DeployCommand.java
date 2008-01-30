@@ -17,6 +17,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
 import dk.statsbiblioteket.util.Strings;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  *
@@ -25,6 +27,8 @@ import dk.statsbiblioteket.util.Strings;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public class DeployCommand extends Command {
+
+    private Log log;
 
     private ConnectionManager<ScoreConnection> cm;
     private String scoreAddress;
@@ -53,9 +57,9 @@ public class DeployCommand extends Command {
 
         this.cm = cm;
         this.scoreAddress = scoreAddress;
-
         hostname = RemoteHelper.getHostname();
 
+        log = LogFactory.getLog (DeployCommand.class);
     }
 
     public void invoke(ShellContext ctx) throws Exception {
@@ -94,6 +98,8 @@ public class DeployCommand extends Command {
                                              "dk.statsbiblioteket.summa.score.feedback.RemoteFeedbackClient",
                                              RemoteFeedback.REGISTRY_HOST_PROPERTY,
                                              hostname);
+
+        log.trace ("Created deployment config:\n" + conf.dumpString());
 
         /* Connect to the Score and send the deployment request */
         ctx.prompt ("Deploying '" + instanceId + "' on '" + target + "' using "

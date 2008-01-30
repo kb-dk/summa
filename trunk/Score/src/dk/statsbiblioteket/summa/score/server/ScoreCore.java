@@ -133,10 +133,28 @@ public class ScoreCore extends UnicastRemoteObject
     }
 
     public void startClient(Configuration conf) {
-        log.trace ("Got startClient request");
-        validateClientConf(conf);
-        log.info ("Preparing to start client : "
-                  + conf.getString(ClientDeployer.INSTANCE_ID_PROPERTY));
+        String instanceId = conf.getString(ClientDeployer.INSTANCE_ID_PROPERTY);
+        String bundleId = clientManager.getBundleId(instanceId);
+
+        if (!clientManager.knowsClient(instanceId)) {
+            throw new BadConfigurationException("Unknown client instance id '"
+                                                + instanceId + "'");
+        }
+
+        log.info ("Preparing to start client '"
+                  + instanceId
+                  + "' with deployment configuration:\n" + conf.dumpString());
+
+        conf.set(ClientDeployer.DEPLOYER_TARGET_PROPERTY,
+                 clientManager.getDeployTarget(instanceId));
+
+        conf.set (ClientDeployer.DEPLOYER_BUNDLE_PROPERTY,
+                  bundleId);
+
+        conf.set (ClientDeployer.DEPLOYER_BUNDLE_FILE_PROPERTY,
+                  repoManager.getBundle(bundleId).getAbsolutePath());
+
+        log.debug ("Modified deployment configuration:\n" + conf.dumpString());
 
         log.debug("Creating deployer from class: "
                   + conf.getString(ClientDeployer.DEPLOYER_CLASS_PROPERTY));
@@ -151,8 +169,6 @@ public class ScoreCore extends UnicastRemoteObject
                            conf.getClass(ClientDeployer.DEPLOYER_FEEDBACK_PROPERTY,
                                          Feedback.class);
         Feedback feedback = conf.create (feedbackClass);
-
-        String instanceId = conf.getString(ClientDeployer.INSTANCE_ID_PROPERTY);
 
         try {
             deployer.start(feedback);
@@ -220,6 +236,8 @@ public class ScoreCore extends UnicastRemoteObject
             String bdlFileProp =
                    conf.getString (ClientDeployer.DEPLOYER_BUNDLE_FILE_PROPERTY,
                                    bdlFile.getAbsolutePath());
+            log.trace ("Setting " + ClientDeployer.DEPLOYER_BUNDLE_FILE_PROPERTY
+                       + " = " + bdlFileProp);
             conf.set(ClientDeployer.DEPLOYER_BUNDLE_FILE_PROPERTY,
                      bdlFileProp);
 

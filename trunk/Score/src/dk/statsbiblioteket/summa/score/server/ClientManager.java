@@ -118,13 +118,50 @@ public class ClientManager extends ConnectionManager<ClientConnection>
             conf.set (ClientConnection.REGISTRY_HOST, clientHost);
 
             int regPort = getClientRegistryPort (instanceId, deployConfig);
-            conf.set (ClientConnection.REGISTRY_PORT, regPort);
+            conf.set (ClientConnection.REGISTRY_PORT, new Integer(regPort).toString());
 
         } catch (IOException e) {
             log.error ("Failed to write client registration for '"
                        + instanceId + "' in '" + clientMeta + "'");
         }
 
+    }
+
+    /**
+     * Return the value of {@link ClientDeployer#DEPLOYER_TARGET_PROPERTY}
+     * as set when the client was deployed.
+     * @param instanceId the instance id of the client to look uo deployment
+     *                   target for
+     * @return the target property or null if it is not found
+     */
+    public String getDeployTarget (String instanceId) {
+        try {
+            File clientMeta = getClientMetaFile(instanceId);
+            Configuration conf = new Configuration (new FileStorage(clientMeta));
+            return conf.getString(ClientDeployer.DEPLOYER_TARGET_PROPERTY);
+        } catch (IOException e) {
+            log.error ("Error while looking up deployment target for '"
+                       + instanceId + "'");
+            return null;
+        }
+    }
+
+    /**
+     * Return the bundle id that a given instance is based on.
+     * @param instanceId the instance id of the client to look up the bundkle id
+     *                   for
+     * @return the bundle id or null if the instance id is not known
+     */
+    public String getBundleId (String instanceId) {
+        try {
+            File clientMeta = getClientMetaFile(instanceId);
+            Configuration conf = new Configuration (new FileStorage(clientMeta));
+            return conf.getString(ClientDeployer.DEPLOYER_BUNDLE_PROPERTY);
+        } catch (IOException e) {
+            log.error ("Error while looking up bundle id for '"
+                       + instanceId + "'");
+            return null;
+        }
     }
 
     /**
@@ -151,7 +188,8 @@ public class ClientManager extends ConnectionManager<ClientConnection>
         * Retrieve ClientConnection.REGISTRY_HOST and return it
         * */
 
-        throw new UnsupportedOperationException ("See TODO above");
+        log.error ("WARNING - HARDCODED CLIENT REG. PORT 2767");
+        return 2767;
     }
 
     public ConnectionContext<ClientConnection>get (String clientId) {

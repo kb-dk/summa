@@ -464,4 +464,47 @@ public class BundleSpecBuilder {
         return bundleFile;
     }
 
+    /**
+     * Create a bundle stub entirely based on the information found in the bundle
+     * spec.
+     * @return
+     */
+    public BundleStub getStub () {
+        List<String> libs = new ArrayList<String>();
+        List<String> jvmArgs = new ArrayList<String>();
+        /* Find all .jar files in lib/ */
+        for (String lib : getFiles()) {
+            if (lib.endsWith(".jar") && lib.startsWith("lib/")) {
+                libs.add(lib);
+            }
+        }
+
+        /* Construct JVM args */
+        for (Map.Entry<String, Serializable> entry : getProperties()) {
+            jvmArgs.add ("-D"+entry.getKey()+"="+entry.getValue());
+        }
+
+        /* Detect JMX support */
+        if (hasFile(BundleStub.JMX_PASSWORD_FILE)) {
+            jvmArgs.add ("-Dcom.sun.management.jmxremote.password.file="
+                         + BundleStub.JMX_PASSWORD_FILE);
+        }
+        if (hasFile(BundleStub.JMX_ACCESS_FILE)) {
+            jvmArgs.add ("-Dcom.sun.management.jmxremote.access.file="
+                         + BundleStub.JMX_ACCESS_FILE);
+        }
+        if (hasFile(BundleStub.POLICY_FILE)) {
+            jvmArgs.add ("-Djava.security.policy="
+                         + BundleStub.POLICY_FILE);
+        }
+
+        return new BundleStub(new File ("."),
+                              getBundleId(),
+                              getInstanceId(),
+                              new File(getMainJar()),
+                              getMainClass(),
+                              libs,
+                              jvmArgs);
+
+    }
 }

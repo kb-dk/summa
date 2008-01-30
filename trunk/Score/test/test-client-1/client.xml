@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bundle>
 	<mainJar>lib/@release.jar@</mainJar>
-	<mainClass>dk.statsbiblioteket.summa.score.service.Launcher</mainClass>
+	<mainClass>dk.statsbiblioteket.summa.score.client.Client</mainClass>
     <property name="com.sun.management.jmxremote.port" value="2765"/>
     <property name="com.sun.management.jmxremote.ssl" value="false"/>
     <description>A sample Client bundle for the Summa Score</description>
@@ -9,5 +9,8 @@
 	<fileList>
         <file>lib/summa-common-@summa.version@.jar</file>
         <file>lib/@release.jar@</file>
+        <file>config/jmx.access</file>
+        <file>config/jmx.password</file>
+        <file>config/policy</file>
     </fileList>
 </bundle>

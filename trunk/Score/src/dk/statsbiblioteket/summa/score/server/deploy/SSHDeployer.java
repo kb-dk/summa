@@ -23,15 +23,26 @@
 package dk.statsbiblioteket.summa.score.server.deploy;
 
 import java.io.File;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.List;
+import java.util.Arrays;
+import java.util.ArrayList;
 
 import dk.statsbiblioteket.summa.score.server.ClientDeployer;
 import dk.statsbiblioteket.summa.score.server.ClientDeploymentException;
+import dk.statsbiblioteket.summa.score.server.ScoreUtils;
 import dk.statsbiblioteket.summa.score.api.Feedback;
 import dk.statsbiblioteket.summa.score.api.Message;
 import dk.statsbiblioteket.summa.score.api.ClientConnection;
+import dk.statsbiblioteket.summa.score.api.BadConfigurationException;
+import dk.statsbiblioteket.summa.score.bundle.Bundle;
+import dk.statsbiblioteket.summa.score.bundle.BundleSpecBuilder;
+import dk.statsbiblioteket.summa.score.bundle.BundleStub;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.NativeRunner;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.Strings;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -68,6 +79,11 @@ public class SSHDeployer implements ClientDeployer {
 
     public void deploy(Feedback feedback) throws Exception {
         log.info("Deploying client");
+
+        if (source == null) {
+            throw new BadConfigurationException(DEPLOYER_BUNDLE_FILE_PROPERTY
+                                                + " not set");
+        }
 
         /* Make sure target dir exists */
         makeDestination(login, destination);
@@ -199,31 +215,49 @@ public class SSHDeployer implements ClientDeployer {
     public void start(Feedback feedback) throws Exception {
         log.info("Starting service");
 
-        String jar = "Main.jar"; //getProperty(PROPERTY_START_JAR);
+        /* Read the bundle spec */
+        File bdlFile = new File (source);
+        InputStream clientSpec = new ByteArrayInputStream
+                                (ScoreUtils.getZipEntry(bdlFile, "client.xml"));
+        BundleSpecBuilder builder = BundleSpecBuilder.open (clientSpec);
+        BundleStub stub = builder.getStub();
 
-        log.debug("Running " + jar + " with login " + login
-                  + " and configuration server " + confLocation);
+        /* Add properties to the command line as we are obliged to */
+        stub.addSystemProperty(Configuration.CONFIGURATION_PROPERTY,
+                               confLocation);
+        stub.addSystemProperty(ClientConnection.CLIENT_ID,
+                               clientId);
+
+        log.debug("Building command line for " + clientId + " with login "
+                  + login + " and configuration server " + confLocation);
+
+        /* Build the command line with and ssh prefix */
+        List<String> commandLine = new ArrayList<String>();
+        commandLine.addAll (Arrays.asList("ssh", login,
+                                          "cd", destination,
+                                          ";"));
+        commandLine.addAll(stub.buildCommandLine());
+
+        log.debug ("Command line for '" + clientId + "':\n"
+                   + Strings.join(commandLine, " "));
+
+        /* Run the command line */
         NativeRunner runner =
-                new NativeRunner(new String[]{
-                        "ssh", login,
-                        "cd", destination,
-                        ";", "java",
-                        "-cp lib/*.jar:config:.",
-                        "-D" + Configuration.CONFIGURATION_PROPERTY + "=" + confLocation,
-                        "-D" + INSTANCE_ID_PROPERTY + "=" + clientId,
-                        "-jar", jar});
+                new NativeRunner(commandLine.toArray(
+                                               new String[commandLine.size()]));
+
         String error = null;
         try {
             int returnValue = runner.execute(50000, 50000);
             if (returnValue != 0) {
-                error = "Could not run " + jar + " with login "
+                error = "Could not run client '" + clientId + "' with login "
                         + login + " and configuration server "
                         + confLocation + ". Got return value "
                         + returnValue + " and message "
                         + runner.getProcessErrorAsString();
             }
         } catch(Exception e) {
-            error = "Could not run" + jar + " with login "
+            error = "Could not start client '" + clientId + "' with login "
                     + login + " and configuration server " + confLocation
                     + ": " + runner.getProcessErrorAsString();
             log.error("Exception in start: " + e.getMessage(), e);
@@ -234,7 +268,7 @@ public class SSHDeployer implements ClientDeployer {
             throw new Exception(error);
 
         }
-        log.info("Finished start of " + jar + " with login "
+        log.info("Finished start of '" + clientId + "' with login "
                            + login + " and configuration server " + confLocation
                            + ": " + runner.getProcessErrorAsString());
         /**

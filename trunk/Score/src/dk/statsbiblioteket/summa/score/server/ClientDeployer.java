@@ -137,8 +137,17 @@ public interface ClientDeployer extends Configurable {
     public void deploy (Feedback feedback) throws Exception;
 
     /**
-     * Start the client specified in the base configuration for the
-     * ClientDeployer.
+     * <p>Start the client specified in the base configuration for the
+     * ClientDeployer.</p>
+     *
+     * <p>It is the reponsibility of the deployer to set the required system
+     * properties for the client. Besides those written in the client's spec
+     * file the following two properties must also be set
+     * <ul>
+     *   <li>summa.configuration</li>
+     *   <li>summa.score.client.id</li> 
+     * </ul></p>
+     *
      * @param feedback callback for communication with the user.
      * @throws Exception if something goes wrong during start.
      */
