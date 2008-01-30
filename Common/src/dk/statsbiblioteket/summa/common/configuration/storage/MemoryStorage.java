@@ -63,6 +63,23 @@ public class MemoryStorage implements ConfigurationStorage {
     }
 
     /**
+     * Create a new MemoryStorage loading default values from an
+     * input stream.
+     * @param in
+     * @throws IOException
+     */
+    public MemoryStorage (InputStream in) throws IOException {
+        this();
+        Properties p = new Properties();
+
+        p.loadFromXML(in);
+
+        for (Map.Entry entry : p.entrySet()) {
+            map.put ((String)entry.getKey(), (Serializable)entry.getValue());
+        }
+    }
+
+    /**
      * Create a new memory backed {@code ConfigurationStorage} importing
      * an initial set of properties from an {@link URL} (with content in
      * Java property xml format).
@@ -71,16 +88,7 @@ public class MemoryStorage implements ConfigurationStorage {
      * @throws IOException if there are errors fetching the external resource
      */
     public MemoryStorage (URL initialConfig) throws IOException {
-        this();
-        URLConnection con = initialConfig.openConnection();
-        InputStream in = new BufferedInputStream(con.getInputStream());
-        Properties p = new Properties();
-
-        p.loadFromXML(in);
-
-        for (Map.Entry entry : p.entrySet()) {
-            map.put ((String)entry.getKey(), (Serializable)entry.getValue());
-        }
+        this(initialConfig.openConnection().getInputStream());
     }
 
     /**

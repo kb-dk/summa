@@ -63,8 +63,10 @@ public interface ScoreConnection {
      * @param instanceId unique id of the client to connect to
      * @return A connection to the client or {@code null} if the client is
      *         known, but not running
-     * @throws NoSuchServiceException if the no client with {@code instanceId}
-     *                                is known
+     * @throws NoSuchServiceException if the client with {@code instanceId}
+     *                                is not known
+     * @throws IOException if there is an error communicating with the client
+     *                     or establishing the connection
      */
     public ClientConnection getClient (String instanceId) throws IOException;
 
