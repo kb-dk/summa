@@ -125,6 +125,10 @@ public class ScoreCore extends UnicastRemoteObject
                                                 + e.getMessage(), e);
         }
 
+        clientManager.register(instanceId,
+                               deployer.getTargetHost(),
+                               conf);
+
         log.info ("Client '" + instanceId + "' deployed");
     }
 
@@ -154,13 +158,15 @@ public class ScoreCore extends UnicastRemoteObject
             deployer.start(feedback);
         } catch (Exception e) {
             throw new ClientDeploymentException("Error when starting client '"
-                                                + instanceId + "'", e);
+                                                + instanceId + "': "
+                                                + e.getMessage(), e);
         }
 
         log.info ("Client '" + instanceId + "' deployed");
     }
 
     public void stopClient(String instanceId) {
+        log.trace ("Preparing to stop client '" + instanceId + "'");
         ConnectionContext<ClientConnection> conn = null;
         try {
             conn = clientManager.get(instanceId);
