@@ -2,20 +2,19 @@ package dk.statsbiblioteket.summa.score.server;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
-import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
-import dk.statsbiblioteket.summa.score.bundle.BundleRepository;
-import dk.statsbiblioteket.summa.score.bundle.Bundle;
 import dk.statsbiblioteket.summa.score.api.ClientConnection;
 import dk.statsbiblioteket.summa.score.api.BadConfigurationException;
 import dk.statsbiblioteket.summa.score.api.Feedback;
+import dk.statsbiblioteket.summa.score.api.NoSuchClientException;
 
 import java.io.IOException;
 import java.io.File;
 import java.util.List;
 import java.rmi.server.UnicastRemoteObject;
+import java.rmi.RemoteException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -81,11 +80,15 @@ public class ScoreCore extends UnicastRemoteObject
     }
 
     public ClientConnection getClient(String instanceId) {
+        if (!clientManager.knowsClient(instanceId)) {
+            throw new NoSuchClientException("Unknown client: " + instanceId);
+        }
+
         ConnectionContext<ClientConnection> conn =
                                                  clientManager.get (instanceId);
 
         if (conn == null) {
-            throw new NoSuchClientException(instanceId);
+            return null;
         }
 
         ClientConnection client = conn.getConnection();
@@ -294,11 +297,16 @@ public class ScoreCore extends UnicastRemoteObject
     }
 
     public List<String> getClients() {
-        throw new UnsupportedOperationException();
+        return clientManager.getClients();
     }
 
     public List<String> getBundles() {
         return repoManager.getBundles();
+    }
+
+    public Configuration getDeployConfiguration(String instanceId)
+            throws RemoteException {
+        return clientManager.getDeployConfiguration(instanceId);
     }
 
     public static void main (String[] args) {

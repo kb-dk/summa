@@ -2,17 +2,24 @@ package dk.statsbiblioteket.summa.score.server;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.storage.FileStorage;
+import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
 import dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory;
 import dk.statsbiblioteket.summa.common.rpc.SummaRMIConnectionFactory;
 import dk.statsbiblioteket.summa.score.api.ClientConnection;
 import dk.statsbiblioteket.summa.score.api.BadConfigurationException;
+import dk.statsbiblioteket.summa.score.api.NoSuchClientException;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionFactory;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
+import dk.statsbiblioteket.util.Logs;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.FileInputStream;
+import java.util.List;
+import java.util.ArrayList;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -74,6 +81,9 @@ public class ClientManager extends ConnectionManager<ClientConnection>
                               SummaRMIConnectionFactory.class);
 
         ConnectionFactory connFact = conf.create (connFactClass);
+        connFact.setGraceTime(1);
+        connFact.setNumRetries(2);
+
         return (ConnectionFactory<ClientConnection>) connFact;
     }
 
@@ -145,6 +155,24 @@ public class ClientManager extends ConnectionManager<ClientConnection>
         }
     }
 
+    public Configuration getDeployConfiguration (String instanceId) {
+        if (!knowsClient(instanceId)) {
+            throw new NoSuchClientException("No such client " + instanceId);
+        }
+
+        try {
+            /* We use a memory backed conf storage to avoid people being
+            * able to edit the legacy configs */
+            File clientMeta = getClientMetaFile(instanceId);
+            InputStream in = new FileInputStream(clientMeta);
+            return new Configuration (new MemoryStorage(in));
+        } catch (IOException e) {
+            log.error ("Error while looking up deployment target for '"
+                       + instanceId + "'");
+            return null;
+        }
+    }
+
     /**
      * Return the bundle id that a given instance is based on.
      * @param instanceId the instance id of the client to look up the bundkle id
@@ -192,12 +220,28 @@ public class ClientManager extends ConnectionManager<ClientConnection>
     }
 
     public ConnectionContext<ClientConnection>get (String clientId) {
-        String address = getClientAddress (clientId);
+        Configuration deployConf = getDeployConfiguration(clientId);
+        String address = getClientAddress (clientId, deployConf);
+
+        log.trace ("Returning client address '" + address + "' for client "
+                   + "'" + clientId + "'");
+
         return super.get (address);        
     }
 
-    public String getClientAddress (String instanceId) {
-        throw new UnsupportedOperationException();
+    public String getClientAddress (String instanceId,
+                                    Configuration clientDeployConf) {
+        if (!knowsClient(instanceId)) {
+            throw new NoSuchClientException("No such client: " + instanceId);
+        }
+
+        String address = "//" + clientDeployConf.getString(
+                                       ClientConnection.REGISTRY_HOST_PROPERTY);
+
+        address += ":" + getClientRegistryPort(instanceId, clientDeployConf);
+        address += "/" + instanceId;
+
+        return address;
     }
 
     public void run() {
@@ -206,5 +250,24 @@ public class ClientManager extends ConnectionManager<ClientConnection>
 
     private File getClientMetaFile (String instanceId) {
         return new File (metaDir, instanceId + CLIENT_META_FILE_EXT);
+    }
+
+    public List<String> getClients() {
+        log.trace ("Getting client list");
+        String[] metaContents = metaDir.list();
+        List<String> clients = new ArrayList(metaContents.length);
+
+        for (String client : metaContents) {
+            if (client.endsWith(CLIENT_META_FILE_EXT)) {
+                clients.add (
+                        client.substring(0,
+                                         client.length()
+                                         - CLIENT_META_FILE_EXT.length()));
+            }
+        }
+
+        log.trace ("Found clients: " + Logs.expand(clients, 10));
+
+        return clients;
     }
 }

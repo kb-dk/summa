@@ -30,8 +30,6 @@ import dk.statsbiblioteket.summa.score.client.ClientRMIConnection;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
 
-import java.rmi.Naming;
-
 /**
  * <p>A simple shell for communicating with a {@link Client}.</p>
  *
@@ -68,7 +66,7 @@ public class ClientShell {
         shell.installCommand(new DeployCommand(client));
         shell.installCommand(new StartServiceCommand(client));
         shell.installCommand(new StopServiceCommand(client));
-        shell.installCommand(new GetServicesCommand(client));
+        shell.installCommand(new ServicesCommand(client));
     }
 
     public void run () {
