@@ -16,7 +16,7 @@ public class ServicesCommand extends Command {
     ClientConnection client;
 
     public ServicesCommand(ClientConnection client) {
-        super("services", "list all deployed services");
+        super("services", "List and query all deployed services");
         this.client = client;
 
         installOption("s", "status", false,
