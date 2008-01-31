@@ -234,7 +234,7 @@ public class RepositoryManager implements Configurable,
         Configuration conf = Configuration.newMemoryBased();
 
         conf.set (BundleRepository.DOWNLOAD_DIR_PROPERTY, clientDownloadDir);
-        conf.set (ClientConnection.REPOSITORY_CLASS, clientRepoClass.getName());
+        conf.set (ClientConnection.REPOSITORY_CLASS_PROPERTY, clientRepoClass.getName());
         conf.set (BundleRepository.REPO_ADDRESS_PROPERTY, address);
 
         return conf;

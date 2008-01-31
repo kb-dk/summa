@@ -9,12 +9,12 @@
     <entry key="summa.configuration.registry.port">2767</entry>
     <entry key="summa.configuration.registry.host">localhost</entry>
 
-    <entry key="summa.score.client.id">test-client-1</entry>
+    <!--<entry key="summa.score.client.id">test-client-1</entry>
     <entry key="summa.score.client.basepath">summa-score</entry>
     <entry key="summa.score.client.service.port">5536</entry>
     <entry key="summa.score.client.registry.port">2767</entry>
     <entry key="summa.score.client.registry.host">localhost</entry>
-    <entry key="summa.score.client.repository.class">dk.statsbiblioteket.summa.score.bundle.URLRepository</entry>
+    <entry key="summa.score.client.repository.class">dk.statsbiblioteket.summa.score.bundle.URLRepository</entry>-->
 
     <entry key="summa.score.repository.download.dir">tmp</entry>
     <entry key="summa.score.repository.address">file:///home/mikkel/tmp</entry>

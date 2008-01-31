@@ -27,6 +27,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.score.api.Feedback;
 import dk.statsbiblioteket.summa.score.api.ClientConnection;
 import dk.statsbiblioteket.summa.score.api.ScoreConnection;
+import dk.statsbiblioteket.summa.score.bundle.BundleStub;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
@@ -60,10 +61,10 @@ public interface ClientDeployer extends Configurable {
      *
      * <p>Default is {@code summa-score}.</p>
      *
-     * @see ClientConnection#CLIENT_BASEPATH
+     * @see ClientConnection#CLIENT_BASEPATH_PROPERTY
      */
     public static final String BASEPATH_PROPERTY =
-                                               ClientConnection.CLIENT_BASEPATH;
+                                               ClientConnection.CLIENT_BASEPATH_PROPERTY;
 
     /**
      * <p>Configuration property defining the class name of the
@@ -129,8 +130,18 @@ public interface ClientDeployer extends Configurable {
                                           "summa.score.deployer.feedback.class";
 
     /**
-     * Deploy the client, as specified in the {@link Configuration} supplied
-     * in the ClientDeployer's constructor.
+     * <p>Deploy the client, as specified in the {@link Configuration} supplied
+     * in the ClientDeployer's constructor.</p>
+     *
+     * <p>It is the responsibility of the deployer to ensure that
+     * JMX files and policy have proper file permissions. Ie only the owner
+     * can read them. These files are:
+     * <ul>
+     *   <li>${@link BundleStub#POLICY_FILE}</li>
+     *   <li>${@link BundleStub#JMX_ACCESS_FILE}</li>
+     *   <li>${@link BundleStub#JMX_PASSWORD_FILE}</li>
+     * </ul>
+     * </p>
      * @param feedback callback for communication with the user.
      * @throws Exception if something goes wrong during deploy.
      */

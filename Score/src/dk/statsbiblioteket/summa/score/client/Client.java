@@ -101,10 +101,10 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         super (getServicePort (configuration));
         log.debug("Constructing client");
 
-        this.registryHost = configuration.getString(REGISTRY_HOST, "localhost");
-        this.registryPort = configuration.getInt(REGISTRY_PORT, 27000);
+        this.registryHost = configuration.getString(REGISTRY_HOST_PROPERTY, "localhost");
+        this.registryPort = configuration.getInt(REGISTRY_PORT_PROPERTY, 27000);
         this.serviceName = System.getProperty(CLIENT_ID);
-        this.servicePort = configuration.getInt(SERVICE_PORT);
+        this.servicePort = configuration.getInt(SERVICE_PORT_PROPERTY, 27002);
         this.id = serviceName;
 
         if (serviceName == null) {
@@ -113,17 +113,21 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         }
 
         this.basePath = System.getProperty("user.home") + File.separator
-                                     + configuration.getString(CLIENT_BASEPATH)
+                                     + configuration.getString(
+                                        CLIENT_BASEPATH_PROPERTY, "summa-score")
                                      + File.separator + serviceName;
+        log.debug ("Client '" + id + "' using basePath '" + basePath + "'");
+
         this.tmpPath = basePath + File.separator + "tmp";
         this.servicePath = basePath + File.separator + "services";
         this.artifactPath = basePath + File.separator + "artifacts";
-        this.persistentPath = basePath + File.separator
-                                       + ".." + File.separator +"persistent";
+        this.persistentPath = new File(basePath + File.separator
+                                       + ".." + File.separator +"persistent").getCanonicalPath();
 
         /* Create repository */
         Class<? extends BundleRepository> repositoryClass =
-                                    configuration.getClass(REPOSITORY_CLASS,
+                                    configuration.getClass(
+                                            REPOSITORY_CLASS_PROPERTY,
                                                         BundleRepository.class,
                                                         URLRepository.class);
         repository = configuration.create (repositoryClass);
@@ -164,10 +168,10 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
      */
     private void validateConfiguration() throws BadConfigurationException {
         if (registryHost.equals("")) {
-            throw new BadConfigurationException (this + ", " + REGISTRY_HOST
+            throw new BadConfigurationException (this + ", " + REGISTRY_HOST_PROPERTY
                                                  + " is empty");
         } else if (registryPort < 0) {
-            throw new BadConfigurationException (this + ", " + REGISTRY_PORT
+            throw new BadConfigurationException (this + ", " + REGISTRY_PORT_PROPERTY
                                                 + " < 0. Value " + registryPort);
         } else if (serviceName.equals("")) {
             throw new BadConfigurationException (this + ", " + CLIENT_ID
@@ -179,7 +183,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
             throw new BadConfigurationException (this +", " + CLIENT_ID
                                                  + " is empty");
         }  else if (basePath.equals("")) {
-            throw new BadConfigurationException (this +", " + CLIENT_BASEPATH
+            throw new BadConfigurationException (this +", " + CLIENT_BASEPATH_PROPERTY
                                                  + " is empty");
         }
     }
@@ -198,16 +202,16 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
      * This method is mainly here to be able to retrieve the service
      * port in the super() call in the constructor.
      *
-     * @param conf the configuration from which to read {@link #SERVICE_PORT}
+     * @param conf the configuration from which to read {@link #SERVICE_PORT_PROPERTY}
      * @return the port
-     * @throws ConfigurationException if {@link #SERVICE_PORT} cannot be read
+     * @throws ConfigurationException if {@link # SERVICE_PORT_PROPERTY} cannot be read
      */
     private static int getServicePort (Configuration conf) {
         try {
-            return conf.getInt(SERVICE_PORT);
+            return conf.getInt(SERVICE_PORT_PROPERTY);
         } catch (Exception e) {
-            log.fatal("Unable to read " + SERVICE_PORT + "from configuration", e);
-            throw new ConfigurationException("Unable to read " + SERVICE_PORT
+            log.fatal("Unable to read " + SERVICE_PORT_PROPERTY + "from configuration", e);
+            throw new ConfigurationException("Unable to read " + SERVICE_PORT_PROPERTY
                                        + "from configuration", e);
         }
 
@@ -348,23 +352,23 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         setStatusIdle();
     }
 
-    public void startService(String id, String configLocation)
+    public void startService(String instanceId, String configLocation)
                                                         throws RemoteException {
-        setStatusRunning ("Starting service " + id);
-        Service service = services.get(id);
-        File serviceFile = getServiceDir(id);
+        setStatusRunning ("Starting service " + instanceId);
+        Service service = services.get(instanceId);
+        File serviceFile = getServiceDir(instanceId);
         BundleStub stub;
 
         if (service != null) {
             if (service.getStatus().getCode() == Status.CODE.stopped) {
-                log.debug("Found cached connection to '" + id + "'"); 
-                log.debug("Calling start() on service '" + id +"'");
+                log.debug("Found cached connection to '" + instanceId + "'");
+                log.debug("Calling start() on service '" + instanceId +"'");
                 service.start();
             } else {
-                log.warn("Trying to start service '" + id
+                log.warn("Trying to start service '" + instanceId
                         + "', but it is already running. Ignoring request.");
 
-                throw new InvalidServiceStateException(this, id, "start",
+                throw new InvalidServiceStateException(this, instanceId, "start",
                                                         "Already running");
             }
             setStatusIdle();
@@ -372,28 +376,28 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         } else if (!serviceFile.exists()) {
             log.error ("Trying to start service " + serviceFile + "; no such"
                      + " file or directory. Ignoring request.");
-            throw new NoSuchServiceException(this, id, "start");
+            throw new NoSuchServiceException(this, instanceId, "start");
         }
 
         try {
             stub = loader.load (serviceFile);
         } catch (IOException e) {
             setStatusIdle();
-            throw new ServicePackageException (this, id,
-                                              "Error loading service '" + id
+            throw new ServicePackageException (this, instanceId,
+                                              "Error loading service '" + instanceId
                                             + "', from file " + serviceFile, e);
         }
 
-        stub.addSystemProperty(CLIENT_PERSISTENT_DIR, persistentPath);
+        stub.addSystemProperty(CLIENT_PERSISTENT_DIR_PROPERTY, persistentPath);
         stub.addSystemProperty(CLIENT_ID, id);
-        stub.addSystemProperty(Service.SERVICE_ID, id);
+        stub.addSystemProperty(Service.SERVICE_ID, instanceId);
         stub.addSystemProperty(Service.SERVICE_BASEPATH, serviceFile.getParent());
         stub.addSystemProperty("summa.configuration", configLocation);
 
         try {
             if (log.isDebugEnabled()) {
-                log.debug ("Launching '" + id + "' with command line:\n"
-                          + Logs.expand(stub.buildCommandLine(), 100));
+                log.debug ("Launching '" + instanceId + "' with command line:\n"
+                          + Strings.join(stub.buildCommandLine(), " "));
             }
             final Process p = stub.start();
 
@@ -407,7 +411,6 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                         Streams.pipeStream(p.getErrorStream(), System.err);
                         log.info("Waiting for process");
                         p.waitFor();
-                        p.wait(12);
                     } catch (Exception e) {
                         log.error ("Error flushing subprocess pipe", e);
                     }
@@ -420,12 +423,12 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
 
             registerService (stub, configLocation);
 
-            log.debug("Calling start() on service '" + id +"'");
-            service = services.get (id);
+            log.debug("Calling start() on service '" + instanceId +"'");
+            service = services.get (instanceId);
             service.start();
 
         } catch (IOException e) {
-            log.error ("Failed to start service '" + id
+            log.error ("Failed to start service '" + instanceId
                        + "' with command line:\n"
                        + Logs.expand(stub.buildCommandLine(), 100), e);
         }
@@ -466,14 +469,8 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
 
         Configuration serviceConf = Configuration.load(configLocation);
         int registryPort = serviceConf.getInt(Service.REGISTRY_PORT);
-        String serviceName = serviceConf.getString(Service.SERVICE_ID);
+        String serviceName = stub.getInstanceId();
         String serviceUrl = "//localhost:" + registryPort + "/" + serviceName;
-
-        if (!instanceId.equals(serviceName)) {
-            throw new BadConfigurationException("Instance id mismatch. "
-                                              + "Configuration says " + serviceName
-                                              + ", and stub says " + instanceId);
-        }
 
         log.trace ("Pinging service '" + instanceId +"' at '"
                    + serviceUrl + "'");
@@ -723,7 +720,8 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
             // The spawned server thread for RMI will cause the JVM to not exit
         } catch (Throwable e) {
             log.fatal("Caught toplevel exception, bailing out.", e);
-            System.err.println (e.getMessage());
+            System.err.println ("Client caught toplevel exception. "
+                                + "Bailing out: " + e.getMessage());
             System.exit (1);
         }
 

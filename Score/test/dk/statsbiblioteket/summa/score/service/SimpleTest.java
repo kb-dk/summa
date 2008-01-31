@@ -99,5 +99,8 @@ public class SimpleTest extends ServiceBase {
 
         setStatus(Status.CODE.stopped, "SimpleTest service " + this + " down.",
                 Logging.LogLevel.INFO);
+
+        log.info ("Real (or atleast most) services should call System.exit(0) "
+                  + "here");
     }
 }

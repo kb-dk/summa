@@ -4,11 +4,8 @@
 <!-- Test configuration -->
 <properties>
 
-    <!-- Instance Id -->
-    <entry key="summa.score.service.id">test-1-1</entry>
-
     <!-- The RMI communications port -->
-    <entry key="summa.score.service.port">2769</entry>
+    <entry key="summa.score.service.port">2770</entry>
 
     <!-- The port on which the registry should/does run -->
     <entry key="summa.score.service.registry.port">2767</entry>

@@ -136,6 +136,11 @@ public class ScoreCore extends UnicastRemoteObject
         String instanceId = conf.getString(ClientDeployer.INSTANCE_ID_PROPERTY);
         String bundleId = clientManager.getBundleId(instanceId);
 
+        if (bundleId == null) {
+            throw new ClientDeploymentException("Unknown instance '"
+                                                 + instanceId + "'");
+        }
+
         if (!clientManager.knowsClient(instanceId)) {
             throw new BadConfigurationException("Unknown client instance id '"
                                                 + instanceId + "'");
