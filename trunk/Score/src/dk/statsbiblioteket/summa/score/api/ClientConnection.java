@@ -23,14 +23,10 @@
 package dk.statsbiblioteket.summa.score.api;
 
 import dk.statsbiblioteket.summa.score.client.Client;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.score.bundle.BundleRepository;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
-import java.rmi.Remote;
-import java.rmi.RemoteException;
 import java.util.List;
-import java.net.URL;
 import java.io.IOException;
 
 /**
@@ -52,36 +48,57 @@ public interface ClientConnection {
      * */
     public static final String CLIENT_ID = "summa.score.client.id";
 
-    /** Property defining the relative path under which the client
+    /** <p>Property defining the relative path under which the client
      * should install itself. The path is relative to the system property
-     * {@code user.home} of the client's jvm<br/>
-     * <br/>
-     * The client will install itself under
-     * {@code <summa.score.client.basepath>/<summa.score.client.id>} */
-    public static final String CLIENT_BASEPATH = "summa.score.client.basepath";
+     * {@code user.home} of the client's jvm</p>
+     *
+     * <p>The client will install itself under
+     * {@code <summa.score.client.basepath>/<summa.score.client.id>}.</p>
+     *
+     * <p>The default value is {@code summa-score}</p>
+     */
+    public static final String CLIENT_BASEPATH_PROPERTY =
+                                                  "summa.score.client.basepath";
 
-    /** Property defining the port on which the client's rmi service should run */
-    public static final String SERVICE_PORT = "summa.score.client.service.port";
+    /** <p>Property defining the port on which the client's rmi service
+     * should run</p>
+     *
+     * <p>Default is 27002</p>
+     */
+    public static final String SERVICE_PORT_PROPERTY =
+                                            "summa.score.client.service.port";
 
-    /** Property defining the port on which the client should contact or create
-     * an rmi registry, see {@link #REGISTRY_HOST} */
-    public static final String REGISTRY_PORT = "summa.score.client.registry.port";
+    /** <p>Property defining the port on which the client should contact or create
+     * an rmi registry, see {@link #REGISTRY_HOST_PROPERTY}</p>
+     *
+     * <p>Default is 27000</p>
+     */
+    public static final String REGISTRY_PORT_PROPERTY =
+                                             "summa.score.client.registry.port";
 
-    /** Property defining the host on which the client can find the rmi registry.
+    /** <p>Property defining the host on which the client can find the rmi registry.
      * If this is set to {@code localhost} the client will create the registry
-     * if it is not already running */
-    public static final String REGISTRY_HOST = "summa.score.client.registry.host";
+     * if it is not already running</p>
+     *
+     * <p>Default is localhost</p>
+     */
+    public static final String REGISTRY_HOST_PROPERTY =
+                                            "summa.score.client.registry.host";
 
     /** <p>Property containing the class of {@link dk.statsbiblioteket.summa.score.bundle.BundleRepository}
-     * a {@link Client} should use for fetching bundles.</p> */
-    public static final String REPOSITORY_CLASS =
+     * a {@link Client} should use for fetching bundles.</p>
+     *
+     * <p>Default is to use a
+     * {@link dk.statsbiblioteket.summa.score.bundle.URLRepository}</p>
+     */
+    public static final String REPOSITORY_CLASS_PROPERTY =
                                           "summa.score.client.repository.class";
 
     /**
      * Property defining the path uner which persisten files for Clients as
      * well as Services should be stored.
      */
-    public static final String CLIENT_PERSISTENT_DIR =
+    public static final String CLIENT_PERSISTENT_DIR_PROPERTY =
                                             "summa.score.client.persistent.dir";
 
     /**

@@ -47,9 +47,22 @@ public class URLRepository implements BundleRepository {
     private Log log;
     private String baseUrl;
 
+    /**
+     * <p>Create a new URLRepository. If the {@link #DOWNLOAD_DIR_PROPERTY} is
+     * not set {@code tmp/} relative to the working directory will be used.</p>
+     *
+     * <p>If {@link #REPO_ADDRESS_PROPERTY} is not set in the configuration
+     * <code>file://${user.home}/summa-score/repo</code> is used.</p>
+     * @param conf
+     */
     public URLRepository (Configuration conf) {
-        this.tmpDir = conf.getString(DOWNLOAD_DIR_PROPERTY);
-        this.baseUrl = conf.getString (BundleRepository.REPO_ADDRESS_PROPERTY);        
+        String defaultRepo = "file://" + System.getProperty("user.home")
+                             + File.separator + "summa-score" + File.separator
+                             + "repo";
+
+        this.tmpDir = conf.getString(DOWNLOAD_DIR_PROPERTY, "tmp");
+        this.baseUrl = conf.getString (BundleRepository.REPO_ADDRESS_PROPERTY,
+                                       defaultRepo);        
 
         /* make sure baseurl ends with a slash */
         if (!baseUrl.endsWith("/")) {

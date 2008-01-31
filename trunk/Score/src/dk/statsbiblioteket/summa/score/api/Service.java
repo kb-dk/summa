@@ -53,14 +53,14 @@ public interface Service extends Configurable, Remote {
     public static final String SERVICE_BASEPATH = "summa.score.service.basepath";
 
     /**
-     * Property defining the port on which the client's rmi service should
-     * communicate.
+     * Property defining the port on which the service's rmi service should
+     * communicate. Default should be 27003.
      */
     public static final String SERVICE_PORT = "summa.score.service.port";
 
     /**
      * Property defining the port on which the service should contact or create
-     * an rmi registry */
+     * an rmi registry. Default should be 27000. */
     public static final String REGISTRY_PORT = "summa.score.service.registry.port";
 
     /**

@@ -33,16 +33,24 @@ public class Launcher {
 
         log.debug ("Getting system configuration ");
 
-        Configuration conf = Configuration.getSystemConfiguration();
+        try {
+            Configuration conf = Configuration.getSystemConfiguration();
 
-        log.trace ("Got system configuration");
 
-        Class<Service> serviceClass = conf.getClass (SERVICE_CLASS,
-                                                     Service.class);
-        log.debug ("Using service class " + SERVICE_CLASS
-                   + " = " + serviceClass);
+            log.trace ("Got system configuration");
 
-        Service service = conf.create (serviceClass);
+            Class<Service> serviceClass = conf.getClass (SERVICE_CLASS,
+                                                         Service.class);
+            log.debug ("Using service class " + SERVICE_CLASS
+                       + " = " + serviceClass);
+
+            Service service = conf.create (serviceClass);
+        } catch (Throwable t) {
+            log.fatal("Caught toplevel exception, bailing out.", t);
+            System.err.println ("Service launcher caught toplevel exception. "
+                                + "Bailing out: " + t.getMessage());
+            System.exit (1);
+        }
 
     }
 

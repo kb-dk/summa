@@ -25,6 +25,7 @@ package dk.statsbiblioteket.summa.score.server.deploy;
 import java.io.File;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.IOException;
 import java.util.List;
 import java.util.Arrays;
 import java.util.ArrayList;
@@ -171,6 +172,10 @@ public class SSHDeployer implements ClientDeployer {
         }
         log.debug("Deleted '" + archivePath + "' with login " + login);
 
+
+        ensurePermissions(feedback);
+
+
         log.info("Finished deploy of " + source + " to " + destination);
         /*
        scp foo.zip bar@zoo:/path/to/somewhere
@@ -208,6 +213,42 @@ public class SSHDeployer implements ClientDeployer {
                            + "' with login '" + login
                            + "':\n\t" + runner.getProcessErrorAsString();
             log.warn(error);
+            throw new ClientDeploymentException(error);
+        }
+    }
+
+    /**
+     * Set file permissions as described in the ClientDeployer interface
+     */
+    private void ensurePermissions (Feedback feedback) throws IOException {
+        log.debug("Setting file permissions for '" + destination + "'");
+        String[] command = new String[]{"ssh", login,
+                                        "cd", destination,
+                                        ";",
+                                        "chmod", "u=r",
+                                        BundleStub.POLICY_FILE,
+                                        BundleStub.JMX_ACCESS_FILE,
+                                        BundleStub.JMX_PASSWORD_FILE};
+        NativeRunner runner =
+                new NativeRunner(command);
+        String error = null;
+        try {
+            int returnValue = runner.execute(50000, 50000);
+            if (returnValue != 0) {
+                error = "Failed to set file permissions on '" + destination
+                        + "'. Got " + returnValue + " and message:\n\t"
+                        + runner.getProcessErrorAsString();
+            }
+        } catch(Exception e) {
+            error = "Failed to run:\n"
+                    + Strings.join(Arrays.asList(command), " ") + "\n"
+                    + "Got: " + e.getMessage() + "\n\n\t"
+                    + runner.getProcessErrorAsString();
+            log.error(error, e);
+        }
+        if (error != null) {
+            log.error(error);
+            feedback.putMessage(new Message(Message.MESSAGE_ALERT, error));
             throw new ClientDeploymentException(error);
         }
     }

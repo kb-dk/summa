@@ -1,6 +1,5 @@
 package dk.statsbiblioteket.summa.score.server;
 
-import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.storage.FileStorage;
 import dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory;
@@ -115,10 +114,10 @@ public class ClientManager extends ConnectionManager<ClientConnection>
             Configuration conf = new Configuration (
                                                 new FileStorage(clientMeta));
             conf.importConfiguration(deployConfig);
-            conf.set (ClientConnection.REGISTRY_HOST, clientHost);
+            conf.set (ClientConnection.REGISTRY_HOST_PROPERTY, clientHost);
 
             int regPort = getClientRegistryPort (instanceId, deployConfig);
-            conf.set (ClientConnection.REGISTRY_PORT, new Integer(regPort).toString());
+            conf.set (ClientConnection.REGISTRY_PORT_PROPERTY, new Integer(regPort).toString());
 
         } catch (IOException e) {
             log.error ("Failed to write client registration for '"
@@ -185,7 +184,7 @@ public class ClientManager extends ConnectionManager<ClientConnection>
         *     by using ScoreUtils.getZipEntry
         *
         * Create a Configuration on the previsouly created storage.
-        * Retrieve ClientConnection.REGISTRY_HOST and return it
+        * Retrieve ClientConnection.REGISTRY_HOST_PROPERTY and return it
         * */
 
         log.error ("WARNING - HARDCODED CLIENT REG. PORT 2767");

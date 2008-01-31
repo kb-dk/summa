@@ -261,6 +261,7 @@
             <zipfileset prefix="lib" file="../${summa.ilib.common}"/>
             <zipfileset prefix="lib" file="${summa.lib.commons-logging}"/>
             <zipfileset prefix="lib" file="${summa.lib.log4j}"/>
+            <zipfileset prefix="lib" file="${summa.lib.sbutil}"/>
             <zipfileset prefix="lib" file="${release.jar}"/>
 
             <zipfileset prefix="config" file="${test.src.dir}/test-bundle-1/config/configuration.xml"/>
@@ -303,6 +304,7 @@
             <zipfileset prefix="lib" file="../${summa.ilib.common}"/>
             <zipfileset prefix="lib" file="${summa.lib.commons-logging}"/>
             <zipfileset prefix="lib" file="${summa.lib.log4j}"/>
+            <zipfileset prefix="lib" file="${summa.lib.sbutil}"/>
             <zipfileset prefix="lib" file="${release.jar}"/>
 
             <zipfileset prefix="config" file="${test.src.dir}/test-client-1/config/configuration.xml"/>

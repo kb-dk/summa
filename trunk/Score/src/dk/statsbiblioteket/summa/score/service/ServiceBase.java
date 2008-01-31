@@ -79,9 +79,9 @@ public abstract class ServiceBase extends UnicastRemoteObject
             System.setSecurityManager(new RMISecurityManager());
         }
 
-        registryPort = conf.getInt(REGISTRY_PORT);
-        id = conf.getString(SERVICE_ID);
-        servicePort = conf.getInt(SERVICE_PORT);
+        registryPort = conf.getInt(REGISTRY_PORT, 27000);
+        servicePort = conf.getInt(SERVICE_PORT, 27003);
+        id = System.getProperty(SERVICE_ID);
         
     }
 
