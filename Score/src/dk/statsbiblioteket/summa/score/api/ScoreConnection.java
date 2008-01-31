@@ -63,7 +63,7 @@ public interface ScoreConnection {
      * @param instanceId unique id of the client to connect to
      * @return A connection to the client or {@code null} if the client is
      *         known, but not running
-     * @throws NoSuchServiceException if the client with {@code instanceId}
+     * @throws NoSuchClientException if the client with {@code instanceId}
      *                                is not known
      * @throws IOException if there is an error communicating with the client
      *                     or establishing the connection
@@ -151,5 +151,18 @@ public interface ScoreConnection {
      *                     server
      */
     public List<String> getBundles () throws IOException;
+
+    /**
+     * Get the configuration used to deploy the client given by
+     * <i>instanceId</i>.
+     * @throws NoSuchClientException if the client has not been deployed
+     * @param instanceId instance id of the client to look up the configuration
+     *                   for
+     * @return the configuration used by the deployer
+     * @throws IOException if there is an error communicating with the Score
+     *                     server
+     */
+    public Configuration getDeployConfiguration (String instanceId)
+                                                            throws IOException;
 
 }

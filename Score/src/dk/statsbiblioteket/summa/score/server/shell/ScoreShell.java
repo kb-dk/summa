@@ -34,6 +34,7 @@ public class ScoreShell {
         shell.installCommand(new DeployCommand(connManager, rmiAddress));
         shell.installCommand(new RepositoryCommand(connManager, rmiAddress));
         shell.installCommand(new StartCommand(connManager, rmiAddress));
+        shell.installCommand(new ClientsCommand(connManager, rmiAddress));
     }
 
     public void run () {

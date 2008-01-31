@@ -31,4 +31,7 @@ public interface ScoreRMIConnection extends ScoreConnection, Remote {
 
     public List<String> getBundles() throws RemoteException;
 
+    public Configuration getDeployConfiguration (String instanceId)
+                                                        throws RemoteException;
+
 }
