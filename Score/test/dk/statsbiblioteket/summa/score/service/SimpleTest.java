@@ -22,19 +22,24 @@
  */
 package dk.statsbiblioteket.summa.score.service;
 
-import dk.statsbiblioteket.summa.score.api.Status;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.Logging;
-import dk.statsbiblioteket.util.qa.QAInfo;
-
 import java.rmi.RemoteException;
+
+import dk.statsbiblioteket.summa.common.Logging;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.score.api.Status;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public class SimpleTest extends ServiceBase {
+    private Log log = LogFactory.getLog(SimpleTest.class);
 
     private class ActualService implements Runnable {
+
+        private Log log = LogFactory.getLog(ActualService.class);
 
         public boolean stopped = true;
 

@@ -115,7 +115,7 @@ public class QueryPerformanceThread extends Thread {
                            + QueryPerformance.round(profiler.getBps(false))
                            + ". Total time used: " + profiler.getSpendTime()
                            + ". Threads: " + threadCount
-                           + ". Total hits: " + hitCount.get());
+                           + ". One searcher/thread: " + uniqueSearchers);
     }
 
     private QueryPerformanceThread(IndexSearcher searcher,
