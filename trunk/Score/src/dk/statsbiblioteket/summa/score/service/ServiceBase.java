@@ -63,7 +63,7 @@ public abstract class ServiceBase extends UnicastRemoteObject
     /**
      *
      */
-    protected Log log;
+    private Log log;
 
     private int registryPort;
     private String id;
