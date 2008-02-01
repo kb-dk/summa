@@ -70,7 +70,8 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
      * so don't set this value to high. 5-10 ought to do it. 30 should be
      * absolute max.</p>
      */
-    public static final String SERVICE_TIMEOUT = "summa.score.client.serviceTimeout";
+    public static final String SERVICE_TIMEOUT =
+            "summa.score.client.serviceTimeout";
 
     private Map<String, Service> services = new HashMap<String, Service>(10);
     private Status status;
@@ -101,28 +102,29 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         super (getServicePort (configuration));
         log.debug("Constructing client");
 
-        this.registryHost = configuration.getString(REGISTRY_HOST_PROPERTY, "localhost");
-        this.registryPort = configuration.getInt(REGISTRY_PORT_PROPERTY, 27000);
-        this.serviceName = System.getProperty(CLIENT_ID);
-        this.servicePort = configuration.getInt(SERVICE_PORT_PROPERTY, 27002);
-        this.id = serviceName;
+        registryHost = configuration.getString(REGISTRY_HOST_PROPERTY, "localhost");
+        registryPort = configuration.getInt(REGISTRY_PORT_PROPERTY, 27000);
+        serviceName = System.getProperty(CLIENT_ID);
+        servicePort = configuration.getInt(SERVICE_PORT_PROPERTY, 27002);
+        id = serviceName;
 
         if (serviceName == null) {
             throw new BadConfigurationException("System property '" + CLIENT_ID
                                                 + "' not set");
         }
 
-        this.basePath = System.getProperty("user.home") + File.separator
+        basePath = System.getProperty("user.home") + File.separator
                                      + configuration.getString(
                                         CLIENT_BASEPATH_PROPERTY, "summa-score")
                                      + File.separator + serviceName;
         log.debug ("Client '" + id + "' using basePath '" + basePath + "'");
 
-        this.tmpPath = basePath + File.separator + "tmp";
-        this.servicePath = basePath + File.separator + "services";
-        this.artifactPath = basePath + File.separator + "artifacts";
-        this.persistentPath = new File(basePath + File.separator
-                                       + ".." + File.separator +"persistent").getCanonicalPath();
+        tmpPath = basePath + File.separator + "tmp";
+        servicePath = basePath + File.separator + "services";
+        artifactPath = basePath + File.separator + "artifacts";
+        persistentPath = new File(basePath + File.separator
+                                  + ".." + File.separator
+                                  + "persistent").getCanonicalPath();
 
         /* Create repository */
         Class<? extends BundleRepository> repositoryClass =
@@ -130,12 +132,12 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                                             REPOSITORY_CLASS_PROPERTY,
                                                         BundleRepository.class,
                                                         URLRepository.class);
-        repository = configuration.create (repositoryClass);
+        repository = configuration.create(repositoryClass);
 
         /* Create bundle loader */
-        loader = configuration.create (BundleLoader.class);
+        loader = configuration.create(BundleLoader.class);
 
-        validateConfiguration ();
+        validateConfiguration();
 
 
         serviceTimeout = configuration.getInt(SERVICE_TIMEOUT, 5);
@@ -144,7 +146,8 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         hostname = RemoteHelper.getHostname();
         log.debug ("Found hostname: '" + hostname + "'");
 
-        setStatus(Status.CODE.constructed, "Setting up remote interfaces (rmi,jmx)",
+        setStatus(Status.CODE.constructed,
+                  "Setting up remote interfaces (rmi,jmx)",
                   Logging.LogLevel.DEBUG);
 
         RemoteHelper.exportRemoteInterface(this, registryPort, serviceName);
@@ -154,10 +157,16 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                   Logging.LogLevel.DEBUG);
 
         // Make sure all needed directories are created
-        new File(tmpPath).mkdirs();
-        new File(servicePath).mkdirs();
-        new File(artifactPath).mkdirs();
-        new File(persistentPath).mkdirs();
+        String[] dirs = new String[]{tmpPath, servicePath, artifactPath,
+                                     persistentPath};
+        for (String dir: dirs) {
+            File dirFile = new File(dir);
+            dirFile.mkdirs();
+            if (!dirFile.exists()) {
+                throw new IOException("Could not create directory '"
+                                      + dirFile.getAbsoluteFile() + "'");
+            }
+        }
     }
 
     /**
@@ -168,11 +177,14 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
      */
     private void validateConfiguration() throws BadConfigurationException {
         if (registryHost.equals("")) {
-            throw new BadConfigurationException (this + ", " + REGISTRY_HOST_PROPERTY
+            throw new BadConfigurationException (this + ", "
+                                                 + REGISTRY_HOST_PROPERTY
                                                  + " is empty");
         } else if (registryPort < 0) {
-            throw new BadConfigurationException (this + ", " + REGISTRY_PORT_PROPERTY
-                                                + " < 0. Value " + registryPort);
+            throw new BadConfigurationException (this + ", "
+                                                 + REGISTRY_PORT_PROPERTY
+                                                + " < 0. Value "
+                                                + registryPort);
         } else if (serviceName.equals("")) {
             throw new BadConfigurationException (this + ", " + CLIENT_ID
                                                  + " is empty");
@@ -180,10 +192,11 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
             throw new BadConfigurationException (this + ", " + servicePort
                                                 + " < 0. Value " + servicePort);
         } else if (id.equals("")) {
-            throw new BadConfigurationException (this +", " + CLIENT_ID
+            throw new BadConfigurationException (this + ", " + CLIENT_ID
                                                  + " is empty");
         }  else if (basePath.equals("")) {
-            throw new BadConfigurationException (this +", " + CLIENT_BASEPATH_PROPERTY
+            throw new BadConfigurationException (this + ", "
+                                                 + CLIENT_BASEPATH_PROPERTY
                                                  + " is empty");
         }
     }

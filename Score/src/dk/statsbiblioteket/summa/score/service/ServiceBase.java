@@ -36,6 +36,7 @@ import javax.management.ObjectName;
 import java.lang.management.ManagementFactory;
 import java.rmi.RMISecurityManager;
 import java.rmi.RemoteException;
+import java.rmi.AccessException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
@@ -82,14 +83,18 @@ public abstract class ServiceBase extends UnicastRemoteObject
         registryPort = conf.getInt(REGISTRY_PORT, 27000);
         servicePort = conf.getInt(SERVICE_PORT, 27003);
         id = System.getProperty(SERVICE_ID);
-        
+        log.info("ServiceBase constructor finished with registryPort "
+                 + registryPort + ", servicePort " + servicePort
+                 + " and id '" + id + "'");
     }
 
     public Status getStatus() throws RemoteException {
+        log.trace("getStatus called, returning '" + status + "'");
         return status;
     }
 
     public String getId() throws RemoteException {
+        log.trace("getID called, returning '" + id + "'");
         return id;
     }
 
@@ -103,7 +108,7 @@ public abstract class ServiceBase extends UnicastRemoteObject
      * @return the port
      * @throws BadConfigurationException if {@link #SERVICE_PORT} cannot be read
      */
-    protected static int getServicePort (Configuration conf) {
+    protected static int getServicePort(Configuration conf) {
         try {
             return conf.getInt(SERVICE_PORT);
         } catch (Exception e) {
@@ -112,8 +117,8 @@ public abstract class ServiceBase extends UnicastRemoteObject
         }
     }
 
-    protected String getRMIAddress () {
-        return "//localhost"+":"+registryPort+"/"+id;
+    protected String getRMIAddress() {
+        return "//localhost" + ":" + registryPort + "/" + id;
     }
 
     /**
@@ -122,14 +127,23 @@ public abstract class ServiceBase extends UnicastRemoteObject
                                {@link Service} interface
      */
     protected void exportRemoteInterfaces() throws RemoteException {
-        Registry reg = null;
+        log.trace("exportRemoteInterfaces called");
+        Registry reg;
 
         try {
             reg = LocateRegistry.createRegistry(registryPort);
             log.debug("Created registry on port " + servicePort);
         } catch (RemoteException e) {
-            reg = LocateRegistry.getRegistry("localhost", registryPort);
-            log.debug ("Found registry localhost" + ":" + registryPort);
+            try {
+                log.debug("Create registry failed, attempting getRegistry");
+                reg = LocateRegistry.getRegistry("localhost", registryPort);
+                log.debug ("Found registry localhost" + ":" + registryPort);
+            } catch (RemoteException ee) {
+                String error = "Could not get registry for localhost:"
+                               + registryPort;
+                log.error(error,ee);
+                throw new RemoteException(error, ee);
+            }
         }
 
         if (reg == null) {
@@ -139,33 +153,43 @@ public abstract class ServiceBase extends UnicastRemoteObject
 
         try {
             reg.rebind(id, this);
+        } catch (AccessException e) {
+            String error = "Failed to access registry at port " + registryPort
+                           + " with id '" + id + "'";
+            log.error(error, e);
+            throw new AccessException(error, e);
         } catch (RemoteException ee) {
-            log.error("Failed to bind in registry", ee);
-            throw ee;
+            String error = "Failed to bind to registry at port " + registryPort
+                           + " with id '" + id + "'";
+            log.error(error, ee);
+            throw new RemoteException(error, ee);
         }
 
-        log.info(this.getClass().getSimpleName()
-                + " bound in registry on port: "+registryPort + " as '"
+        log.info(getClass().getSimpleName()
+                + " bound in registry on port: " + registryPort + " as '"
                  + id + "' on port " + servicePort);
 
         try {
             log.debug ("Registering at mbean server");
             MBeanServer mbserver = ManagementFactory.getPlatformMBeanServer();
-            ObjectName name = new ObjectName(this.getClass().getName()+ ":type=Service");
+            ObjectName name = new ObjectName(getClass().getName()
+                                             + ":type=Service");
             mbserver.registerMBean(this, name);
             log.info ("Registered at mbean server as " + name);
         } catch (Exception e) {
-            log.error ("Failed to expose JMX interface. Going on without it.", e);
+            log.error ("Failed to expose JMX interface. Going on without it.",
+                       e);
         }
     }
 
     /**
-     * Set the status and log a message
-     * @param code the status code to set
-     * @param msg a message for the status
-     * @param level the logging level to log on
+     * Set the status and log a message.
+     * @param code the status code to set.
+     * @param msg a message for the status.
+     * @param level the logging level to log on.
      */
-    protected void setStatus (Status.CODE code, String msg, Logging.LogLevel level) {
+    protected void setStatus(Status.CODE code, String msg,
+                             Logging.LogLevel level) {
         status = new Status(code, msg);
         Logging.log (this +" status: "+ status, log, level);
     }
@@ -174,7 +198,8 @@ public abstract class ServiceBase extends UnicastRemoteObject
      * Convenience method to set an idle status with a default message.
      * The status change will be logged on debug level.
      */
-    protected void setStatusIdle () {
+    protected void setStatusIdle() {
+        log.trace("setStatusIdle called");
         setStatus (Status.CODE.idle, "ready", Logging.LogLevel.DEBUG);
     }
 
@@ -183,12 +208,12 @@ public abstract class ServiceBase extends UnicastRemoteObject
      * with a given message. The status change will be logged on info level.
      * @param msg the message to set in the status
      */
-    protected void setStatusRunning (String msg) {
+    protected void setStatusRunning(String msg) {
+        log.trace("setStatusRunning called");
         setStatus (Status.CODE.running, msg, Logging.LogLevel.INFO);
     }
 
-    public String toString () {
-        return "[service:"+id+"@"+getRMIAddress()+"]";
+    public String toString() {
+        return "[service:" + id + "@" + getRMIAddress() + "]";
     }
-
 }
