@@ -26,8 +26,8 @@ public class Launcher {
 
     public static final String SERVICE_CLASS = "score.launcher.service.class";
 
-    public static void main (String[] args) {
-        Log log = LogFactory.getLog (Launcher.class);
+    public static void main(String[] args) {
+        Log log = LogFactory.getLog(Launcher.class);
         Thread.setDefaultUncaughtExceptionHandler(
                                               new LoggingExceptionHandler(log));
 
@@ -35,7 +35,6 @@ public class Launcher {
 
         try {
             Configuration conf = Configuration.getSystemConfiguration();
-
 
             log.trace ("Got system configuration");
 
