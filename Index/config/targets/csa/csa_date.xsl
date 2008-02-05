@@ -11,7 +11,7 @@
 	<xsl:output version="1.0" encoding="UTF-8" indent="yes" method="xml"/>
 	<xsl:template name="date">
 			<xsl:for-each select="py">
-								<Index:field Index:repeat="true" Index:name="year" Index:navn="år" Index:type="token" Index:boostFactor="2">
+								<Index:field Index:repeat="true" Index:name="py" Index:navn="år"  Index:type="token" Index:boostFactor="2">
 									<xsl:value-of select="."/>
 								</Index:field>
 							
