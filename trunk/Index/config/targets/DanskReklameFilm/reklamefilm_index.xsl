@@ -95,10 +95,10 @@
                        
                     </Index:group>
 
-                    <Index:field Index:repeat="true" Index:name="year" Index:navn="år" Index:type="token" Index:boostFactor="2">
+                    <Index:field Index:repeat="true" Index:name="py" Index:navn="år"  Index:type="token" Index:boostFactor="2">
 						 <xsl:value-of select="censor"/>
 					</Index:field>
-                    <Index:field Index:repeat="true" Index:name="year" Index:navn="år" Index:type="token" Index:boostFactor="2">
+                    <Index:field Index:repeat="true" Index:name="py" Index:navn="år"  Index:type="token" Index:boostFactor="2">
 						 <xsl:value-of select="premiereDate"/>
 					</Index:field>
 
