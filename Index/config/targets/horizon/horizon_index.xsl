@@ -193,6 +193,9 @@
                                 <xsl:when test="substring(.,1)='Cekvina'">
                                     <xsl:text>Ringgadebiblioteket, AU</xsl:text>
                                 </xsl:when>
+                                <xsl:when test="substring(.,1)='DJFA'">
+                                    <xsl:text>Det Jordbrugsvidenskabelige Fakultet, Årslev, AU</xsl:text>
+                                </xsl:when>
                                 <xsl:when test="substring(.,1)='DJFF'">
                                     <xsl:text>Det Jordbrugsvidenskabelige Fakultet, Foulum, AU</xsl:text>
                                 </xsl:when>
