@@ -101,10 +101,11 @@ public class ControlDerby extends DatabaseControl implements ControlDerbyMBean {
         log.trace("Construction completed");
     }
 
+    // TODO: Consider is authentication should be used or not
     protected void connectToDatabase(Configuration configuration) throws
                                                                RemoteException {
         //noinspection DuplicateStringLiteralInspection
-        log.info("Attempting to establish connection to JavaDB with driver '"
+        log.info("Establishing connection to JavaDB with driver '"
                  + driver + "', username '" + username + "', password "
                  + (password == null || "".equals(password) ?
                     "[defined]" : "[undefined]")
@@ -123,6 +124,7 @@ public class ControlDerby extends DatabaseControl implements ControlDerbyMBean {
                 }
             } else {
                 log.info("Reusing old database at '" + location + "'");
+                createNew = false;
             }
         } else {
             log.debug("No database at '" + location + "'");
@@ -145,6 +147,9 @@ public class ControlDerby extends DatabaseControl implements ControlDerbyMBean {
         }
         String sans = connectionURL;
         if (username != null && !"".equals(username)) {
+//            System.setProperty("derby.connection.requireAuthentication",
+//                               "true");
+            log.warn("Authentication is not currently supported");
             connectionURL += ";user=" + username;
             sans = connectionURL;
             connectionURL += password == null ? "" : ";password=" + password;
@@ -162,12 +167,13 @@ public class ControlDerby extends DatabaseControl implements ControlDerbyMBean {
             connection = DriverManager.getConnection(connectionURL);
         } catch (SQLException e) {
             throw new RemoteException("Could not establish connection to '"
-                                      + sans + "'" + (password == null
-                                                      || "".equals(password)
-                                                      ? ""
-                                                      : " [password defined]"),
-                                      e);
+                                      + sans + "'"
+                                      + (password == null
+                                         || "".equals(password)
+                                         ? ""
+                                         : " [password defined]"), e);
         }
+        
         log.info("Connected to database at '" + location + "'");
         if (createNew) {
             log.info("Creating new table for '" + location + "'");
