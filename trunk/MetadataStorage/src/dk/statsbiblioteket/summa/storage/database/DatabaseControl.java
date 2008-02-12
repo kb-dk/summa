@@ -168,7 +168,7 @@ public abstract class DatabaseControl extends Control {
      * @throws RemoteException if the initialization could not finish.
      */
     protected void init(Configuration configuration) throws RemoteException {
-        log.info("Initializing ControlDerby");
+        log.trace("init called");
         connectToDatabase(configuration);
         try {
             prepareStatements();
@@ -513,7 +513,7 @@ public abstract class DatabaseControl extends Control {
      * @throws RemoteException if the database could not be created.
      */
     protected void createTable() throws RemoteException {
-        log.info("Attempting to create table");
+        log.debug("Attempting to create table");
         try {
             constructCreateTableQuery().execute();
         } catch (SQLException e) {
@@ -679,5 +679,21 @@ public abstract class DatabaseControl extends Control {
         return anInt != 0;
     }
 
+    /**
+     * Queries the connection for information on the currently connected
+     * database. This can be used as a ping, as it will throw an exception if
+     * the info could not be retrieved.
+     * @return some info on the underlying database. The only guarantee is that
+     *         this will not be an empty string, if a connection to a database
+     *         is established.
+     * @throws RemoteException if the info could not be retireved.
+     */
+    public String getDatabaseInfo() throws RemoteException {
+        try {
+            return getConnection().getMetaData().getDatabaseProductName();
+        } catch (SQLException e) {
+            throw new RemoteException("Could not get catalog info", e);
+        }
+    }
 
 }
