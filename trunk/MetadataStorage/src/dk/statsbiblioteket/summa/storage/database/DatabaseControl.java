@@ -54,28 +54,92 @@ import org.apache.commons.logging.LogFactory;
 public abstract class DatabaseControl extends Control {
     private static Log log = LogFactory.getLog(DatabaseControl.class);
 
+    /**
+     * The property-key for the username for the underlying database, if needed.
+     */
     public static String PROP_USERNAME  = "summa.storage.database.username";
+    /**
+     * The property-key for the the password for the underlying database, if
+     * needed.
+     */
     public static String PROP_PASSWORD  = "summa.storage.database.password";
+    /**
+     * The property-key for the boolean value determining if a new database
+     * should be created is there is no existing database. If createnew is
+     * true and a database exists and forcenew is true, the existing database
+     * is deleted and a new one created. If createnew is true and a database
+     * exists and forcenew is false, the existing database is reused.
+     */
     public static String PROP_CREATENEW = "summa.storage.database.createnew";
+    /**
+     * The property-key for the boolean determining if a new database should
+     * be created, no matter is a database already exists.
+     */
+    public static String PROP_FORCENEW = "summa.storage.database.forcenew";
+    /**
+     * The location of the database to use/create.
+     */
     public static String PROP_LOCATION  = "summa.storage.database.location";
 
+    /**
+     * The name of the table in the database.
+     */
     public static final String TABLE            = "summa_io";
+    /**
+     * id is the unique identifier for a given record in the database.
+     */
     public static final String ID_COLUMN        = "id";
+    /**
+     * The base dictates choise of xslt's et al for the record.
+     */
     public static final String BASE_COLUMN      = "base";
+    /**
+     * deleted signifies that the record should be treated as non-existing.
+     * Implementations are free to clean up deleted records at will, but not
+     * required to.
+     */
     public static final String DELETED_COLUMN   = "deleted";
+    /**
+     * indexable signifies that the record should be delivered to the indexer
+     * upon request.
+     */
     public static final String INDEXABLE_COLUMN = "indexable";
+    /**
+     * data contains the raw record-data as ingested.
+     */
     public static final String DATA_COLUMN      = "data";
+    /**
+     * ctime signifies the time of record creation in the database.
+     */
     public static final String CTIME_COLUMN     = "ctime";
+    /**
+     * mtime signifies the time of record modification in the database.
+     * This timestamp is used when {@link #getRecordsModifiedAfter} is called.
+     */
     public static final String MTIME_COLUMN     = "mtime";
+    /**
+     * parent optionally contains the id of a parent record. The parent does
+     * not need to be present in the database, but if it is, the field indexable
+     * should be false for the child.
+     */
     public static final String PARENT_COLUMN    = "parent";
+    /**
+     * children optionally contains a list of children. The children does not
+     * need to be present in the database.
+     */
     public static final String CHILDREN_COLUMN  = "children";
+    /**
+     * The validation-state of the record. Valid states are notValidated, valid
+     * and invalid.
+     */
     public static final String VALID_COLUMN     = "valid";
 
+    /* Constants for database-setup */
     public static final int ID_LIMIT =       255;
     public static final int BASE_LIMIT =     31;
     public static final int DATA_LIMIT =     50*1024*1024;
     public static final int PARENT_LIMIT =   10*ID_LIMIT; // Room for the future
-    public static final int CHILDREN_LIMIT = 1000*ID_LIMIT;
+    public static final int CHILDREN_LIMIT = 100*ID_LIMIT; // Change to CLOB?
     public static final int VALID_LIMIT =    20;
     private static final int BLOB_MAX_SIZE = 50*1024*1024; // MAX_VALUE instead?
 
@@ -87,7 +151,6 @@ public abstract class DatabaseControl extends Control {
     private PreparedStatement stmtDeleteRecord;
     private PreparedStatement stmtCreateRecord;
     private PreparedStatement stmtUpdateRecord;
-    private PreparedStatement stmtCreateTable;
 
     private static final int FETCH_SIZE = 10000;
 
@@ -121,6 +184,8 @@ public abstract class DatabaseControl extends Control {
      * configuration, this might involve creating a table in the database and
      * initializing that to Summa-use.
      * @param configuration setup for the database.
+     * @throws RemoteException if a connection could not be established to the
+     *                         database.
      */
     protected abstract void connectToDatabase(Configuration configuration)
                                                         throws RemoteException;
@@ -151,12 +216,14 @@ public abstract class DatabaseControl extends Control {
         String allQuery = "SELECT " + allCells
                           + " FROM " + TABLE
                           + " ORDER BY " + ID_COLUMN;
+        log.debug("Preparing query getAll with '" + allQuery + "'");
         stmtGetAll = getConnection().prepareStatement(allQuery);
 
         String fromBaseQuery = "SELECT " + allCells
                                + " FROM " + TABLE
                                + " WHERE " + BASE_COLUMN + "=?"
                                + " ORDER BY " + ID_COLUMN;
+        log.debug("Preparing query getFromBase with '" + fromBaseQuery + "'");
         stmtGetFromBase = getConnection().prepareStatement(fromBaseQuery);
 
         String modifiedAfterQuery = "SELECT " + allCells
@@ -164,24 +231,30 @@ public abstract class DatabaseControl extends Control {
                                     + " WHERE " + BASE_COLUMN + "=?"
                                     + " AND " + MTIME_COLUMN + ">?"
                                     + " ORDER BY " + ID_COLUMN;
+        log.debug("Preparing query getModifiedAfter with '"
+                  + modifiedAfterQuery + "'");
         stmtGetModifiedAfter = getConnection().prepareStatement(modifiedAfterQuery);
-
+// TODO: Handle deletions and indexables
         String fromQuery = "SELECT " + allCells
                            + " FROM " + TABLE
                            + " WHERE " + BASE_COLUMN + "=?"
                            + " AND " + ID_COLUMN + ">=?"
                            + " ORDER BY " + ID_COLUMN;
+        log.debug("Preparing query getFrom with '" + fromQuery + "'");
         stmtGetFrom = getConnection().prepareStatement(fromQuery);
 
         String getRecordQuery = "SELECT " + allCells
                                 + " FROM " + TABLE
                                 + " WHERE " + ID_COLUMN + "=?";
+        log.debug("Preparing query recordQuery with '" + getRecordQuery + "'");
         stmtGetRecord = getConnection().prepareStatement(getRecordQuery);
 
         String deleteRecordQuery = "UPDATE " + TABLE
                                    + " SET " + MTIME_COLUMN + "=?, "
                                    + DELETED_COLUMN + "=?"
                                    + " WHERE " + ID_COLUMN + "=?";
+        log.debug("Preparing query deleteRecord with '"
+                  + deleteRecordQuery + "'");
         stmtDeleteRecord = getConnection().prepareStatement(deleteRecordQuery);
 
         String createRecordQuery = "INSERT INTO " + TABLE
@@ -195,7 +268,9 @@ public abstract class DatabaseControl extends Control {
                                        + PARENT_COLUMN + ","
                                        + CHILDREN_COLUMN + ","
                                        + VALID_COLUMN
-                                       + ") VALUES (?,?,?,?,?,?,?,?,?, ?)";
+                                       + ") VALUES (?,?,?,?,?,?,?,?,?,?)";
+        log.debug("Preparing query createRecord with '" + createRecordQuery
+                  + "'");
         stmtCreateRecord = getConnection().prepareStatement(createRecordQuery);
 
         String updateRecordQuery = "UPDATE " + TABLE + " SET "
@@ -205,29 +280,19 @@ public abstract class DatabaseControl extends Control {
                                    + DATA_COLUMN + "=?, "
                                    + MTIME_COLUMN + "=?, "
                                    + PARENT_COLUMN + "=?, "
-                                   + CHILDREN_COLUMN + "=? "
+                                   + CHILDREN_COLUMN + "=?, "
                                    + VALID_COLUMN + "=? "
                                    + "WHERE " + ID_COLUMN +"=?";
+        log.debug("Preparing query updateRecord with '" + updateRecordQuery
+                  + "'");
         stmtUpdateRecord = getConnection().prepareStatement(updateRecordQuery);
 
         String touchRecordQuery = "UPDATE " + TABLE + " SET "
-                                   + MTIME_COLUMN + "=?, "
+                                   + MTIME_COLUMN + "=? "
                                    + "WHERE " + ID_COLUMN +"=?";
+        log.debug("Preparing query touchRecord with '" + touchRecordQuery
+                  + "'");
         stmtUpdateRecord = prepareStatement(touchRecordQuery);
-
-        String createTableQuery =
-                "CREATE table " + TABLE + " ("
-                + ID_COLUMN        + " VARCHAR(" + ID_LIMIT + ") PRIMARY KEY, "
-                + BASE_COLUMN      + " VARCHAR(" + BASE_LIMIT + "), "
-                + DELETED_COLUMN   + " BOOLEAN NOT NULL, "
-                + INDEXABLE_COLUMN + " BOOLEAN NOT NULL, "
-                + DATA_COLUMN      + " BLOB(" + BLOB_MAX_SIZE + "), "
-                + CTIME_COLUMN     + " TIMESTAMP, "
-                + MTIME_COLUMN     + " TIMESTAMP, "
-                + PARENT_COLUMN    + " VARCHAR(" + PARENT_LIMIT + "), "
-                + CHILDREN_COLUMN  + " VARCHAR(" + CHILDREN_LIMIT + "), "
-                + VALID_COLUMN     + " VARCHAR(" + VALID_LIMIT + ") );";
-        stmtCreateTable = prepareStatement(createTableQuery);
 
         log.trace("Finished preparing SQL statements");
     }
@@ -363,8 +428,8 @@ public abstract class DatabaseControl extends Control {
         try {
             stmtCreateRecord.setString(1, record.getId());
             stmtCreateRecord.setString(2, record.getBase());
-            stmtCreateRecord.setBoolean(3, record.isDeleted());
-            stmtCreateRecord.setBoolean(4, record.isIndexable());
+            stmtCreateRecord.setInt(3, boolToInt(record.isDeleted()));
+            stmtCreateRecord.setInt(4, boolToInt(record.isIndexable()));
             stmtCreateRecord.setBytes(5, GZIPUtils.gzip(record.getContent()));
             stmtCreateRecord.setTimestamp(6,
                                  new Timestamp(record.getCreationTime()));
@@ -391,8 +456,8 @@ public abstract class DatabaseControl extends Control {
         // TODO: Check for existence before creating
         try {
             stmtUpdateRecord.setString(1, record.getBase());
-            stmtUpdateRecord.setBoolean(2, record.isDeleted());
-            stmtUpdateRecord.setBoolean(3, record.isIndexable());
+            stmtUpdateRecord.setInt(2, boolToInt(record.isDeleted()));
+            stmtUpdateRecord.setInt(3, boolToInt(record.isIndexable()));
             stmtUpdateRecord.setBytes(4, GZIPUtils.gzip(record.getContent()));
             stmtUpdateRecord.setTimestamp(5,
                                  new Timestamp(record.getModificationTime()));
@@ -450,10 +515,28 @@ public abstract class DatabaseControl extends Control {
     protected void createTable() throws RemoteException {
         log.info("Attempting to create table");
         try {
-            stmtCreateTable.execute();
+            constructCreateTableQuery().execute();
         } catch (SQLException e) {
             throw new RemoteException("Could not create table", e);
         }
+    }
+
+    private PreparedStatement constructCreateTableQuery() throws
+                                                            SQLException {
+        String createTableQuery =
+                "CREATE table " + TABLE + " ("
+                + ID_COLUMN        + " VARCHAR(" + ID_LIMIT + ") PRIMARY KEY, "
+                + BASE_COLUMN      + " VARCHAR(" + BASE_LIMIT + "), "
+                + DELETED_COLUMN   + " INTEGER, "
+                + INDEXABLE_COLUMN + " INTEGER, "
+                + DATA_COLUMN      + " BLOB(" + BLOB_MAX_SIZE + "), "
+                + CTIME_COLUMN     + " TIMESTAMP, "
+                + MTIME_COLUMN     + " TIMESTAMP, "
+                + PARENT_COLUMN    + " VARCHAR(" + PARENT_LIMIT + "), "
+                + CHILDREN_COLUMN  + " VARCHAR(" + CHILDREN_LIMIT + "), "
+                + VALID_COLUMN     + " VARCHAR(" + VALID_LIMIT + ") )";
+        log.debug("Creating table with query '" + createTableQuery + "'");
+        return prepareStatement(createTableQuery);
     }
 
     public void perform() {
@@ -474,8 +557,8 @@ public abstract class DatabaseControl extends Control {
                                                              IOException {
         return new Record(resultSet.getString(ID_COLUMN),
                           resultSet.getString(BASE_COLUMN),
-                          resultSet.getBoolean(DELETED_COLUMN),
-                          resultSet.getBoolean(INDEXABLE_COLUMN),
+                          intToBool(resultSet.getInt(DELETED_COLUMN)),
+                          intToBool(resultSet.getInt(INDEXABLE_COLUMN)),
                           GZIPUtils.gunzip(resultSet.getBytes(DATA_COLUMN)),
                           resultSet.getTimestamp(CTIME_COLUMN).getTime(),
                           resultSet.getTimestamp(MTIME_COLUMN).getTime(),
@@ -585,5 +668,16 @@ public abstract class DatabaseControl extends Control {
         log.trace("returning new RecordIterator");
         return new RecordIterator(this, iterator.getKey(), iterator.hasNext());
     }
+
+    /* Our version of a boolean packed as integer is that 0 = false, everything
+       else = true. This should match common practice.
+     */
+    private int boolToInt(boolean isTrue) {
+        return isTrue ? 1 : 0;
+    }
+    private static boolean intToBool(int anInt) {
+        return anInt != 0;
+    }
+
 
 }
