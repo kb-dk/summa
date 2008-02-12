@@ -49,7 +49,8 @@ public class TestBasicDerby extends TestCase {
     public static final int BLOB_SIZE = 10000;
 
     String driver = "org.apache.derby.jdbc.EmbeddedDriver";
-    String dbRoot = "MetadataStorage/test/DerbyDB";
+    String dbRoot = System.getProperty("java.io.tmpdir") + "/DerbyDB";
+//    String dbRoot = "MetadataStorage/test/DerbyDB";
     String dbName = "test14";
     Connection conn = null;
     /**

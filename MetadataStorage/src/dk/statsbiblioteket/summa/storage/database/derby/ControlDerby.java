@@ -29,11 +29,9 @@ package dk.statsbiblioteket.summa.storage.database.derby;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.rmi.RemoteException;
 import java.io.IOException;
 import java.io.File;
-import java.io.FileNotFoundException;
 
 import dk.statsbiblioteket.summa.storage.database.DatabaseControl;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -48,16 +46,20 @@ import org.apache.commons.logging.LogFactory;
 public class ControlDerby extends DatabaseControl implements ControlDerbyMBean {
     private static Log log = LogFactory.getLog(ControlDerby.class);
 
+    @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public static final String driver = "org.apache.derby.jdbc.EmbeddedDriver";
 
     private String username;
     private String password;
     private String location;
-    private boolean createNew = false;
+    private boolean createNew = true;
+    private boolean forceNew = false;
 
     private Connection connection;
 
+    @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public ControlDerby(Configuration configuration) throws RemoteException {
+        log.trace("Constructing ControlDerby");
         username = configuration.getString(PROP_USERNAME, "");
         password = configuration.getString(PROP_PASSWORD, "");
         boolean locationExists;
@@ -81,40 +83,64 @@ public class ControlDerby extends DatabaseControl implements ControlDerbyMBean {
             throw new RemoteException("Exception requesting property "
                                       + PROP_CREATENEW, e);
         }
+        try {
+            if (configuration.valueExists(PROP_FORCENEW)) {
+                forceNew = configuration.getBoolean(PROP_FORCENEW);
+            }
+        } catch (IOException e) {
+            //noinspection DuplicateStringLiteralInspection
+            throw new RemoteException("Exception requesting property "
+                                      + PROP_FORCENEW, e);
+        }
+        log.debug("ControlDerby extracted properties username: " + username
+                 + ", password: "
+                  + (password == null ? "[undefined]" : "[defined]")
+                  + ", location: '" + location + "', createNew: " + createNew 
+                  + ", forceNew: " + forceNew);
         init(configuration);
+        log.trace("Construction completed");
     }
 
     protected void connectToDatabase(Configuration configuration) throws
                                                                RemoteException {
+        //noinspection DuplicateStringLiteralInspection
         log.info("Attempting to establish connection to JavaDB with driver '"
-                 + driver + "', username '" + username + "', "
+                 + driver + "', username '" + username + "', password "
                  + (password == null || "".equals(password) ?
-                    "no password" : "a password")
-                 + ", location '" + location + "' and createNew " + createNew);
+                    "[defined]" : "[undefined]")
+                 + ", location '" + location + "', createNew " + createNew
+                 + " and forceNew " + forceNew);
 
-        if (!createNew && !new File(location).exists()) {
-            log.info("No new database was requested, but no current database "
-                     + "exists. Turning createNew on");
-            createNew = true;
-        }
-        if (createNew && new File(location).exists()) {
-            log.debug("New database requested while '" + location
-                      + "' exists. Deleting '" + location + "'");
-            try {
-                Files.delete(location);
-            } catch (IOException e) {
-                throw new RemoteException("Could not delete old database at '"
-                                          + location + "'", e);
+        if (new File(location).exists()) { /* Database location exists*/
+            log.debug("Old database found at '" + location + "'");
+            if (forceNew) {
+                log.info("Deleting existing database at '" + location + "'");
+                try {
+                    Files.delete(location);
+                } catch (IOException e) {
+                    throw new RemoteException("Could not delete old database "
+                                              + "at '" + location + "'", e);
+                }
+            } else {
+                log.info("Reusing old database at '" + location + "'");
+            }
+        } else {
+            log.debug("No database at '" + location + "'");
+            if (createNew) {
+                log.debug("A new database will be created at '" + location
+                          + "'");
+            } else {
+                throw new RemoteException("No database exists at '" + location
+                                          + " and createNew is false. The "
+                                          + "metadata storage cannot run "
+                                          + "without a backend. Exiting");
             }
         }
-        if (!new File(location).exists()) {
-            log.debug("Creating folder '" + location + "' for database");
-            new File(location).mkdirs();
-        }
 
-        //noinspection NonConstantStringShouldBeStringBuffer
+        //noinspection NonConstantStringShouldBeStringBuffer,DuplicateStringLiteralInspection
         String connectionURL = "jdbc:derby:" + location;
         if (createNew) {
+            //noinspection DuplicateStringLiteralInspection
             connectionURL += ";create=true";
         }
         String sans = connectionURL;
@@ -139,15 +165,18 @@ public class ControlDerby extends DatabaseControl implements ControlDerbyMBean {
                                       + sans + "'" + (password == null
                                                       || "".equals(password)
                                                       ? ""
-                                                      : " (password removed)"));
+                                                      : " [password defined]"),
+                                      e);
         }
+        log.info("Connected to database at '" + location + "'");
         if (createNew) {
+            log.info("Creating new table for '" + location + "'");
             createTable();
         }
     }
-    
+
     protected Connection getConnection() {
-        return null;
+        return connection;
     }
 
     public void close() throws RemoteException {

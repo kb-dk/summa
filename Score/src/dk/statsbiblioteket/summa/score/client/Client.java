@@ -314,10 +314,10 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                          + " collisions");
                 Files.delete (tmpPkg);
             } catch (IOException e) {
-                throw new BundleLoadingException ("Failed to delete temporary "
-                                                  + "file '" + tmpPkg + "'"
-                                                  + "' blocking the way. "
-                                                  + "Bailing out on deploy.", e);
+                throw new BundleLoadingException("Failed to delete temporary "
+                                                 + "file '" + tmpPkg + "'"
+                                                 + "' blocking the way. "
+                                                 + "Bailing out on deploy.", e);
             }
         }
 
@@ -381,7 +381,8 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                 log.warn("Trying to start service '" + instanceId
                         + "', but it is already running. Ignoring request.");
 
-                throw new InvalidServiceStateException(this, instanceId, "start",
+                throw new InvalidServiceStateException(this, instanceId,
+                                                       "start",
                                                         "Already running");
             }
             setStatusIdle();
@@ -397,14 +398,17 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         } catch (IOException e) {
             setStatusIdle();
             throw new ServicePackageException (this, instanceId,
-                                              "Error loading service '" + instanceId
-                                            + "', from file " + serviceFile, e);
+                                              "Error loading service '"
+                                              + instanceId
+                                              + "', from file " + serviceFile,
+                                              e);
         }
 
         stub.addSystemProperty(CLIENT_PERSISTENT_DIR_PROPERTY, persistentPath);
         stub.addSystemProperty(CLIENT_ID, id);
         stub.addSystemProperty(Service.SERVICE_ID, instanceId);
-        stub.addSystemProperty(Service.SERVICE_BASEPATH, serviceFile.getParent());
+        stub.addSystemProperty(Service.SERVICE_BASEPATH,
+                               serviceFile.getParent());
         stub.addSystemProperty("summa.configuration", configLocation);
 
         try {
@@ -529,7 +533,8 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
 
         if (s == null) {
             if (getServiceDir(id).exists()) {
-                log.error ("Cannot stop service. Service '" + id + "' not running");
+                log.error ("Cannot stop service. Service '" + id
+                           + "' not running");
                 throw new InvalidServiceStateException(this, id, "stopService",
                         "Not running");
             } else {
@@ -567,7 +572,8 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
             if (!serviceIsDead) {
                 throw new InvalidServiceStateException(this, id, "stop",
                                                        "Service should be dead,"
-                                                   + " but is still responding");
+                                                       + " but is still"
+                                                       + " responding");
             }
 
             // If we get here, the service has stopped responding
@@ -621,7 +627,8 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         return id;
     }
 
-    private void setStatus (Status.CODE code, String msg, Logging.LogLevel level) {
+    private void setStatus (Status.CODE code, String msg,
+                            Logging.LogLevel level) {
         status = new Status(code, msg);
         Logging.log (this +" status: "+ status, log, level);        
     }
@@ -647,7 +654,8 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
     private void reDeployService (String instanceId, File tmpPkgFile) {
         File pkgFile = new File (servicePath, instanceId);
 
-        setStatusRunning("Redeploying service '" + instanceId + "' from " + tmpPkgFile);
+        setStatusRunning("Redeploying service '" + instanceId
+                         + "' from " + tmpPkgFile);
 
 
         try {
@@ -655,8 +663,8 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
             Files.copy(tmpPkgFile, pkgFile, false);
             //FIXME: We should really unzip to the location instead
         } catch (RemoteException re){
-            log.error ("Error removing service '" + instanceId + "', aborting redeploy",
-                       re);
+            log.error ("Error removing service '" + instanceId
+                       + "', aborting redeploy", re);
         } catch (IOException e) {
             log.error ("Error redeploying service '" + instanceId + "' from "
                                     + tmpPkgFile + " to " + pkgFile, e);
@@ -677,8 +685,10 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
 
         if (!pkgFile.exists() && pkgFile.isDirectory()) {
             throw new ServicePackageException(this, id,
-                                             "cannot remove service '" + id + "'"
-                                           + ", " + pkgFile + " is not a directory");
+                                             "cannot remove service '"
+                                             + id + "'"
+                                             + ", " + pkgFile
+                                             + " is not a directory");
         }
         if (service != null) {
             service.stop ();
