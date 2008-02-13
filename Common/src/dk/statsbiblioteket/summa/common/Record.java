@@ -22,19 +22,17 @@
  */
 package dk.statsbiblioteket.summa.common;
 
+import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Calendar;
-import java.util.Date;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Strings;
-import dk.statsbiblioteket.util.Logs;
+import java.util.List;
 
 /**
  * A Record is the atom data unit in summa. Is is used for ingesting to the
@@ -353,7 +351,7 @@ public class Record implements Serializable, Comparable{
      * @return true if the Record is modified.
      */
     public boolean isModified() {
-        return getModificationTime() > getCreationTime();
+        return !isNew();
     }
 
     /**
@@ -390,6 +388,32 @@ public class Record implements Serializable, Comparable{
      */
     public int compareTo(Object o) {
         return getId().compareTo(((Record) o).getId());
+    }
+
+    public boolean equals(Object o) {
+        if (o == null || !(o instanceof Record)) {
+            return false;
+        }
+        Record other = (Record)o;
+        try {
+            return id.equals(other.getId())
+                   && base.equals(other.getBase())
+                   && creationTime == other.getCreationTime()
+                   && modificationTime == other.getModificationTime()
+                   && deleted == other.isDeleted()
+                   && indexable == other.isIndexable()
+                   && ((parent == null && other.getParent() == null)
+                       || (parent != null && parent.equals(other.getParent())))
+                   &&  validationState == other.getValidationState()
+                   && Arrays.equals(data, other.getContent())
+                   && ((children == null && other.getChildren() == null) ||
+                       (children != null) && Strings.join(children, ",").equals(
+                    Strings.join(other.getChildren(), ",")));
+        } catch (Exception e) {
+            log.error("Error calling equals for " + this + " and " + other
+                      + ". Returning false", e);
+            return false;
+        }
     }
 
     /**

@@ -198,6 +198,5 @@ public class ControlDerby extends DatabaseControl implements ControlDerbyMBean,
         } catch (SQLException e) {
             throw new RemoteException("SQLException when closing connection",
                                       e);
-        }
-    }
+        }    }
 }

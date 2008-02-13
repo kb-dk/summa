@@ -404,16 +404,20 @@ public abstract class DatabaseControl extends Control {
     }
 
     public void flush(Record record) throws RemoteException {
-        log.debug("Flushing record '" + record.getId() + "' from base '"
-                  + record.getBase() + "'");
         if (log.isTraceEnabled()) {
             log.trace("Flushing " + record);
         }
         if (record.isDeleted()){
+            log.debug("Deleting record '" + record.getId() + "' from base '"
+                      + record.getBase() + "'");
             deleteRecord(record.getId());
         } else if (record.isNew()){
+            log.debug("Creaing new record '" + record.getId() + "' from base '"
+                      + record.getBase() + "'");
             createNewRecord(record);
         } else if (record.isModified()){
+            log.debug("Updating record '" + record.getId() + "' from base '"
+                      + record.getBase() + "'");
             updateRecord(record);
         } else {
             throw new RemoteException("Illegal State",
@@ -424,7 +428,7 @@ public abstract class DatabaseControl extends Control {
     }
 
     private void createNewRecord(Record record) throws RemoteException {
-        // TODO: Check for existence before creating
+        // TODO: Consider calling modify if the record already exists
         try {
             stmtCreateRecord.setString(1, record.getId());
             stmtCreateRecord.setString(2, record.getBase());
@@ -468,6 +472,13 @@ public abstract class DatabaseControl extends Control {
                                  record.getValidationState().toString());
             stmtUpdateRecord.setString(9, record.getId());
             stmtUpdateRecord.execute();
+            if (stmtUpdateRecord.getUpdateCount() == 0) {
+                log.warn("The record with id '" + record.getId()
+                         + "' was marked as modified, but did not exist in the"
+                         + " database. The record will be added as new");
+                createNewRecord(record);
+                return;
+            }
         } catch (IOException e) {
             throw new RemoteException("IOException GZIPping data from record '"
                                       + record.getId() + "'", e);

@@ -26,17 +26,17 @@
  */
 package dk.statsbiblioteket.summa.storage.database.derby;
 
-import junit.framework.TestCase;
-
-import java.sql.*;
-import java.io.File;
-import java.io.InputStream;
-import java.io.ByteArrayInputStream;
-import java.util.Random;
-
+import dk.statsbiblioteket.summa.storage.database.DatabaseControl;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.storage.database.DatabaseControl;
+import junit.framework.TestCase;
+import org.apache.derby.jdbc.EmbeddedDriver;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.InputStream;
+import java.sql.*;
+import java.util.Random;
 
 /**
  * Some experimentations with Derby.
