@@ -266,7 +266,7 @@ public class Record implements Serializable, Comparable{
         return data;
     }
     public void setContent(byte[] content) {
-        if (data == null) {
+        if (content == null) {
             //noinspection DuplicateStringLiteralInspection
             throw new IllegalArgumentException("data must be specified for "
                                                + "record '" + getId()

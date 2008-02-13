@@ -151,6 +151,7 @@ public abstract class DatabaseControl extends Control {
     private PreparedStatement stmtDeleteRecord;
     private PreparedStatement stmtCreateRecord;
     private PreparedStatement stmtUpdateRecord;
+    private PreparedStatement stmtTouchRecord;
 
     private static final int FETCH_SIZE = 10000;
 
@@ -292,7 +293,7 @@ public abstract class DatabaseControl extends Control {
                                    + "WHERE " + ID_COLUMN +"=?";
         log.debug("Preparing query touchRecord with '" + touchRecordQuery
                   + "'");
-        stmtUpdateRecord = prepareStatement(touchRecordQuery);
+        stmtTouchRecord = prepareStatement(touchRecordQuery);
 
         log.trace("Finished preparing SQL statements");
     }
@@ -416,10 +417,9 @@ public abstract class DatabaseControl extends Control {
             updateRecord(record);
         } else {
             throw new RemoteException("Illegal State",
-                                      new IllegalStateException(record
-                                                                + " not i a "
-                                                                + "flushable "
-                                                                + "state"));
+                                      new IllegalStateException(
+                                              record + " not in a flushable "
+                                              + "state"));
         }
     }
 
@@ -498,9 +498,9 @@ public abstract class DatabaseControl extends Control {
                                                            RemoteException {
         // TODO: Check for existence before touching
         try {
-            stmtUpdateRecord.setTimestamp(1, new Timestamp(lastModified));
-            stmtUpdateRecord.setString(2, id);
-            stmtUpdateRecord.execute();
+            stmtTouchRecord.setTimestamp(1, new Timestamp(lastModified));
+            stmtTouchRecord.setString(2, id);
+            stmtTouchRecord.execute();
         } catch (SQLException e) {
             throw new RemoteException("SQLException touching record '"
                                       + id + "'", e);
