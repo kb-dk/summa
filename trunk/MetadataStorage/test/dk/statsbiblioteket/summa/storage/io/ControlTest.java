@@ -1,8 +1,5 @@
 package dk.statsbiblioteket.summa.storage.io;
 
-import java.io.File;
-import java.rmi.RemoteException;
-
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.storage.StorageFactory;
@@ -11,6 +8,11 @@ import dk.statsbiblioteket.util.Files;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
+import java.io.File;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This JUnit-test is written with ControlDerby testing in mind. However, it
@@ -23,17 +25,18 @@ public class ControlTest extends TestCase {
         super(name);
     }
 
+    static int testdirCounter = 0;
     Control control;
-    static final File location =
-            new File(System.getProperty("java.io.tmpdir"), "controltest");
-    private static Configuration conf;
-    {
-        conf = Configuration.newMemoryBased();
-        conf.set(DatabaseControl.PROP_LOCATION, location.toString());
-    }
+    File location;
+    private Configuration conf;
 
     public void setUp() throws Exception {
         super.setUp();
+        location = new File(System.getProperty("java.io.tmpdir"), "controltest"
+                                                            + testdirCounter++);
+        conf = Configuration.newMemoryBased();
+        conf.set(DatabaseControl.PROP_LOCATION, location.toString());
+
         if (location.exists()) {
             Files.delete(location);
             if (location.exists()) {
@@ -46,10 +49,7 @@ public class ControlTest extends TestCase {
     public void tearDown() throws Exception {
         super.tearDown();
         control.close();
-        Files.delete(location);
-        if (location.exists()) {
-            fail("Failed to remove '" + location + "' on tearDown");
-        }
+        // We don't delete the files as the Derby JDBC-driver maintains a lock
     }
 
     public static Test suite() {
@@ -78,14 +78,49 @@ public class ControlTest extends TestCase {
     }
 
     public void testModified() throws Exception {
-        Record record = new Record("foo", "bar", new byte[0]);
+        long time = System.currentTimeMillis();
+        Record record = new Record("foo", "bar", false, true, 
+                                   new byte[]{(byte)1}, time, time, "boo", null,
+                                   Record.ValidationState.notValidated);
         control.flush(record);
-        record.setModificationTime(System.currentTimeMillis() + 1);
+        assertEquals("Requesting the new stored record shouldn't change "
+                     + "anything", record, control.getRecord("foo"));
+
+        time++;
+        List<String> children = new ArrayList<String>(2);
+        children.add("ping1");
+        children.add("ping2");
+        Record modified = new Record("foo", "bar2", false, false,
+                                   new byte[]{(byte)2}, time, time, "boo2",
+                                   children, Record.ValidationState.invalid);
+        modified.setModificationTime(time + 5000);
+
+        assertTrue("The record should be classified as modified",
+                   modified.isModified());
         try {
-            control.flush(record);
+            control.flush(modified);
         } catch (RemoteException e) {
             e.printStackTrace();
             fail("Flushing a modified record should not give an exception");
+        }
+        Record extracted = control.getRecord("foo");
+        System.out.println(extracted);
+        String m = modified.toString();
+        String e = extracted.toString();
+        System.out.println("- " + m + " - ");
+        System.out.println("- " + e + " - ");
+        assertEquals("The modified base should be reflected",
+                     modified, extracted);
+    }
+
+    public void testModifiedFail() throws Exception {
+        Record record = new Record("foo", "bar", new byte[0]);
+        record.setModificationTime(System.currentTimeMillis() + 5000);
+        try {
+            control.flush(record);
+        } catch (RemoteException e) {
+            fail("Flushing a non-existing modified record should not give an "
+                 + "exception");
         }
     }
 
