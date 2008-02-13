@@ -116,8 +116,8 @@ public abstract class Control extends UnicastRemoteObject implements Access,
     }
 
     /**
-     * Close the connection to the underlying storage. The state after close is
-     * undefined.
+     * Close the connection to the underlying storage. The state of the Control
+     * after close is undefined.
      * @throws RemoteException if the connection could not be closed properly.
      */
     public abstract void close() throws RemoteException;
