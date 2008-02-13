@@ -17,6 +17,7 @@ import junit.framework.TestSuite;
  * @since <pre>02/11/2008</pre>
  * @version 1.0
  */
+@SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class ControlDerbyTest extends TestCase {
     public ControlDerbyTest(String name) {
         super(name);
@@ -76,7 +77,7 @@ public class ControlDerbyTest extends TestCase {
             fail("createNew was false, so construction of ControlDerby "
                  + "should fail");
             control.close();
-        } catch (Exception e) {
+        } catch (RemoteException e) {
             // Expected
         }
     }
