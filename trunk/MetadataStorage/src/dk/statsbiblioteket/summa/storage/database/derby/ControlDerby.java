@@ -26,15 +26,16 @@
  */
 package dk.statsbiblioteket.summa.storage.database.derby;
 
+import java.io.File;
+import java.io.IOException;
+import java.rmi.RemoteException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.rmi.RemoteException;
-import java.io.IOException;
-import java.io.File;
 
-import dk.statsbiblioteket.summa.storage.database.DatabaseControl;
+import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.storage.database.DatabaseControl;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -43,7 +44,8 @@ import org.apache.commons.logging.LogFactory;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class ControlDerby extends DatabaseControl implements ControlDerbyMBean {
+public class ControlDerby extends DatabaseControl implements ControlDerbyMBean,
+                                                             Configurable {
     private static Log log = LogFactory.getLog(ControlDerby.class);
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})

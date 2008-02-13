@@ -45,8 +45,8 @@ public class StorageFactory {
      */
     public static final String PROP_CONTROLLER = "summa.storage.controller";
 
-    private static final String DEFAULT_CONTROLLER =
-            ControlDerby.class.toString();
+    private static final Class<? extends Control> DEFAULT_CONTROLLER =
+            ControlDerby.class;
 
     /**
      * Construct a metadata storage controller based on the given properties.
@@ -60,53 +60,26 @@ public class StorageFactory {
      */
     public static Control createController(Configuration configuration) throws
                                                                RemoteException {
-/*        log.trace("createController created");
-        String controllerName;
+        log.trace("createController called");
+
+        Class<? extends Control> controllerClass;
         try {
-            if (configuration.valueExists(PROP_CONTROLLER)) {
-                controllerName = configuration.getString(PROP_CONTROLLER);
-            } else {
-                log.info("No controller specified for createController. "
-                         + "Defaulting to " + DEFAULT_CONTROLLER);
-                controllerName = DEFAULT_CONTROLLER;
-                //noinspection DuplicateStringLiteralInspection,ThrowCaughtLocally
-                throw new RemoteException("The property " + PROP_CONTROLLER
-                                          + " does not exist in the "
-                                          + "properties");
-            }
-        } catch (RemoteException e) {
-            throw new RemoteException("Remote exception requesting property "
-                                      + PROP_CONTROLLER, e);
-        } catch (IOException e) {
-            //noinspection DuplicateStringLiteralInspection
-            throw new RemoteException("Exception requesting property "
+            controllerClass = configuration.getClass(PROP_CONTROLLER,
+                                                     Control.class,
+                                                     DEFAULT_CONTROLLER);
+        } catch (Exception e) {
+            throw new RemoteException("Could not get metadata storage control"
+                                      + " class from property "
                                       + PROP_CONTROLLER, e);
         }
-
-        log.debug("Attempting to create controller " + controllerName);
-        return configuration.
-        if (!Control.class.isAssignableFrom(controllerName)) {
-            throw new IllegalArgumentException("Class " + configurable
-                                               + " is not a Configurable");
-        }
-
+        log.debug("Got controller class " + controllerClass
+                  + ". Commencing creation");
         try {
-            Constructor<T> con = configurable.getConstructor(Configuration.class);
-            return con.newInstance(this);
-
-        } catch (NoSuchMethodException e) {
-            throw new IllegalArgumentException ("The class " + configurable.getSimpleName()
-                                                        + " does not have a constructor taking a Configuration"
-                                                        + " as its sole argument", e);
-        } catch (IllegalAccessException e) {
-            throw new Configurable.ConfigurationException(e);
-        } catch (InvocationTargetException e) {
-            throw new Configurable.ConfigurationException(e);
-        } catch (InstantiationException e) {
-            throw new Configurable.ConfigurationException(e);
+            return configuration.create(controllerClass);
+        } catch (Exception e) {
+            throw new RemoteException("Could not create controller class "
+                                      + controllerClass, e);
         }
-  */
-        return null;
     }
 
 }
