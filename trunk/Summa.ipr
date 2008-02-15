@@ -454,15 +454,6 @@
       <JAVADOC />
       <SOURCES />
     </library>
-    <library name="lucene-core-2.1.0">
-      <CLASSES>
-        <root url="jar://$PROJECT_DIR$/lib/lucene-core-2.1.0.jar!/" />
-      </CLASSES>
-      <JAVADOC>
-        <root url="jar://$PROJECT_DIR$/lib/apidocs/lucene-2.1.0-apidocs.zip!/" />
-      </JAVADOC>
-      <SOURCES />
-    </library>
     <library name="derby-10.3.1.4">
       <CLASSES>
         <root url="jar://$PROJECT_DIR$/lib/derby-10.3.1.4.jar!/" />
@@ -485,6 +476,28 @@
         <root url="jar://$PROJECT_DIR$/lib/apidocs/sbutil-0.2.4-apidocs.zip!/sbutil-0.2.4/doc" />
       </JAVADOC>
       <SOURCES />
+    </library>
+    <library name="lucene-core-2.3.0">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/lib/lucene-core-2.3.0.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$PROJECT_DIR$/lib/apidocs/lucene-2.3.0-apidocs.zip!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-core-2.3.0-src.zip!/lucene-2.3.0/src/java" />
+      </SOURCES>
+    </library>
+    <library name="lucene-queries-2.3.0">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/lib/lucene-queries-2.3.0.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$PROJECT_DIR$/lib/apidocs/lucene-queries-2.3.0-javadoc.zip!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-queries-2.3.0-src.zip!/src/java" />
+      </SOURCES>
     </library>
   </component>
 </project>
