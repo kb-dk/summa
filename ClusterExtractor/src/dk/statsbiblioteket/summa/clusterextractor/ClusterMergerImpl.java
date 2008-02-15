@@ -27,6 +27,7 @@ import dk.statsbiblioteket.summa.clusterextractor.math.CoordinateComparator;
 import dk.statsbiblioteket.summa.clusterextractor.math.IncrementalCentroid;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.Profiler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -41,6 +42,18 @@ import java.util.*;
  * merger. The merger merges the local centroid sets into one centroid set
  * and then into a dendrogram. The merged dendrogram is then
  * pushed to the known providers.
+ * <p>
+ * The buildDendrogram method is the crucial method. The idea is:<br>
+ *
+ * We are given a set of centroids S = {c1, c2, ..., cn}.<br>
+ *
+ * First create a work-array of dendrogram nodes from S:<br>
+ * W = [d1, d2, ..., dn, ...] of size 2*|S|+1.<br>
+ *
+ * Create priority queue P of all similarities between centroids (think of a
+ * similarity matrix). The initial size of P is |S|^2 and the maximum size is
+ * the double.<br>
+ *
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -147,10 +160,22 @@ public class ClusterMergerImpl extends UnicastRemoteObject implements ClusterMer
                 pQueue.offer(new PQueueSimilarity(simValue, i, j));
             }
         }
+
         //build dendrogram (look at notes)
         DendrogramNode parent = null;
+        //2007 02 07: feedback!
+        Profiler feedback = new Profiler();
+        feedback.setExpectedTotal(2*size*size);
         while (!pQueue.isEmpty()) {
             PQueueSimilarity sim = pQueue.poll();
+
+            feedback.beat();
+            if (log.isTraceEnabled() && (index%10==0 || index>1300)) {
+                log.trace("ClusterMergerImpl.buildDendrogram. "
+                        + "pQueue.size(): " + pQueue.size() + "; ETA: "
+                        + feedback.getETAAsString(false));
+            }
+
             //'old similarities' are not removed when outdated
             //but simply skipped when encountered
             if (workArray[sim.getI()]==null || workArray[sim.getJ()]==null) {
@@ -261,8 +286,20 @@ public class ClusterMergerImpl extends UnicastRemoteObject implements ClusterMer
         ClusterSet newClusterSet = new ClusterSet();
 
         int listSize = clusterArray.length;
+
+        //2007 02 07: feedback!
+        Profiler feedback = new Profiler();
+        feedback.setExpectedTotal(listSize);
+
         for (int i=0; i<listSize; i++) {
             Cluster first = clusterArray[i];
+
+            feedback.beat();
+            if (log.isTraceEnabled() && i%100==0) {
+                log.trace("ClusterMergerImpl.resolveNameConflicts. "
+                        + "i=" + i + " / " + listSize + "; ETA: "
+                        + feedback.getETAAsString(false));
+            }
 
             for (int j=i+1; j<listSize; j++) {
                 if (first == null) {break;}

@@ -33,12 +33,6 @@ import org.apache.lucene.document.Field;
  *
  * The work flow for extracting clusters looks something like this:
  * • For each index machine:
- *   – run the ClusterBuilder.buildVocabulary method
- *   – move the created vocabulary data structure to a central location
- *   (defined in the properties).
- * • Central: Call the ClusterMerger.mergeVocabularies method.
- * • For each index machine:
- *   – copy the new full vocabulary to this machine
  *   – run the ClusterBuilder.buildCentroids method
  *   – copy the new local centroid data structure to a central location.
  * • Central: Call the ClusterMerger.mergeCentroidSets method.

@@ -26,6 +26,7 @@ import dk.statsbiblioteket.summa.clusterextractor.math.SparseVector;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.Serializable;
+import java.util.Map;
 
 /**
  * A Cluster object represents a cluster with a name and a centroid vector.
@@ -52,6 +53,9 @@ public class Cluster implements Serializable {
     /** Expected size of this cluster. */
     private int expectedSize;
 
+    /** Set of 'core documents' in this cluster (map from vectors to id's). */
+    private transient Map<SparseVector, String> corePoints;
+
     /**
      * Construct a Cluster with the given name, centroid and # points in build.
      * @param name name of cluster
@@ -62,6 +66,7 @@ public class Cluster implements Serializable {
         this.name = name;
         this.centroidVector = centroidVector;
         this.numberOfPointsInBuild = numberOfPoints;
+        this.corePoints = null;
     }
 
     /**
@@ -163,4 +168,40 @@ public class Cluster implements Serializable {
     public String toString() {
         return this.getName() + "; Centroid: " + this.getCentroid().toString();
     }
+
+    /**
+     * Get the set of representatives or core points of this cluster.
+     * @return map from vectors to id's
+     */
+    public Map<SparseVector, String> getCorePoints() {
+        return corePoints;
+    }
+
+    /**
+     * Set the set of representatives or core points of this cluster.
+     * @param corePoints map from vectors to id's
+     */
+    public void setCorePoints(Map<SparseVector, String> corePoints) {
+        this.corePoints = corePoints;
+    }
+
+    /* TODO: can we calculate 'within-cluster variation' based upon a small
+     * TODO: set of core points, and do we need it?
+     * Calculate 'within-cluster variation' of this cluster.
+     * The within-cluster variation is a cluster quality measure, which should
+     * be minimised to optimise clusters...
+     * TODO: look up within-cluster variation formulas and test
+     * @return within-cluster variation
+    public double calculateWithinClusterVariation() {
+        if (content == null) {
+            return -1;
+        }
+        double sum = 0;
+        for (SparseVector x: content.keySet()) {
+            sum = sum + (1 - centroidVector.similarity(x));
+        }
+        return sum / content.size();
+    }
+     */
+
 }
