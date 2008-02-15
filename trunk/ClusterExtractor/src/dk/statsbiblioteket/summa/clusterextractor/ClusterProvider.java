@@ -24,6 +24,7 @@ package dk.statsbiblioteket.summa.clusterextractor;
 
 import org.apache.lucene.document.Document;
 import dk.statsbiblioteket.summa.common.lucene.index.FieldType;
+import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
@@ -36,7 +37,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "bam")
-public interface ClusterProvider {
+public interface ClusterProvider extends Configurable {
     /** The String key to the dendogram path property. */
     public static final String DENDROGRAM_PATH_KEY = "clusterprovider.dendrogrampath";
 

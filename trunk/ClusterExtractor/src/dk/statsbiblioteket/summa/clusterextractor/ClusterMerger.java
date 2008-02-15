@@ -24,6 +24,7 @@ package dk.statsbiblioteket.summa.clusterextractor;
 
 import dk.statsbiblioteket.summa.clusterextractor.data.ClusterSet;
 import dk.statsbiblioteket.summa.clusterextractor.data.Dendrogram;
+import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
@@ -45,7 +46,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "bam")
-public interface ClusterMerger {
+public interface ClusterMerger extends Configurable {
     public static final String CLUSTER_SETS_PATH_KEY = "clustermerger.clustersetspath";
     /** The String key to the dendogram path property. */
     public static final String DENDROGRAM_PATH_KEY = "clustermerger.dendrogrampath";

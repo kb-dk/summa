@@ -23,6 +23,7 @@
 package dk.statsbiblioteket.summa.clusterextractor;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.common.configuration.Configurable;
 
 /**
  * ClusterBuilder is responsible for building local centroid sets.
@@ -34,7 +35,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "bam")
-public interface ClusterBuilder {
+public interface ClusterBuilder extends Configurable {
     /** The String key to the local work index path property. */
     public static final String LOCAL_INDEX_PATH_KEY = "search.index.main";
 
