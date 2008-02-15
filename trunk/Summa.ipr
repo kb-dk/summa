@@ -399,7 +399,7 @@
     </modules>
   </component>
   <component name="ProjectRootManager" version="2" assert-keyword="true" jdk-15="true" project-jdk-name="1.6" project-jdk-type="JavaSDK">
-    <output url="file://$APPLICATION_HOME_DIR$/bin/classes" />
+    <output url="file://$PROJECT_DIR$/classes" />
   </component>
   <component name="RMI Configuration">
     <Server />
