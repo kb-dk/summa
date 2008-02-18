@@ -84,8 +84,8 @@ public class RecordWriter implements RecordFilter {
     }
 
     public void setSource(StreamFilter source) {
-        throw new IllegalArgumentException("RecordWriter cannot use a "
-                                           + "StreamFilter as a source");
+        throw new UnsupportedOperationException("RecordWriter cannot use a "
+                                                + "StreamFilter as a source");
     }
 
     public void setSource(RecordFilter source) {

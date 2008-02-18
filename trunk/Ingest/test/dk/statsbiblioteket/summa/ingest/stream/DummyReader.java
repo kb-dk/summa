@@ -63,20 +63,19 @@ public class DummyReader extends StreamFilter {
                  + " and bodySize " + bodySize);
     }
 
+    public void setSource(StreamFilter source) {
+        throw new UnsupportedOperationException("No source accepted");
+    }
+
     public void close(boolean success) {
         log.info("Closing Dummyreader with success " + success);
     }
 
     private ArrayList<Integer> createContent() {
         ArrayList<Integer> content = new ArrayList<Integer>(bodySize + 8);
-        long length = bodySize;
-        int[] theLong = new int[8];
-        for (int i = 7 ; i >= 0 ; i--) {
-            theLong[i] = (byte)length;
-            length >>>= 8;
-        }
-        for (int l: theLong) {
-            content.add(l);
+        byte[] theLong = longToBytes(bodySize);
+        for (byte l: theLong) {
+            content.add(0xff & l);
         }
         while (content.size() < bodySize + 8) {
             content.add(random.nextInt(256));
@@ -90,7 +89,7 @@ public class DummyReader extends StreamFilter {
      */
     public int read() throws IOException {
         if (content == null) {
-            throw new IOException("Attempting read on depleted Dummy Reader");
+            return EOF;
         }
         if (content.size() > 0) {
             // Inside a body

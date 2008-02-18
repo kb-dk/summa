@@ -22,9 +22,12 @@
  */
 package dk.statsbiblioteket.summa.ingest;
 
-import java.io.InputStream;
-
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
+
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
 
 /**
  * On an abstract level, ingesting is just a chain of filters. In the beginning
@@ -43,8 +46,12 @@ import dk.statsbiblioteket.summa.common.configuration.Configurable;
  * An example of use could be a file loader that scans for multiple files,
  * reads the content sequentially and sends a stream made up of a body for
  * each file read. If the length of the content is unknown at load-time,
- * the filter must state -1 as the length. Readers must then continue to read
- * content until EOF is reached after which the filter is considered depleted.
+ * the filter must state Long.MAX_VALUE as the length. Readers must then
+ * continue to read content until EOF is reached after which the filter is
+ * considered depleted.
+ * </p><p>
+ * If EOF is reached and a read is performed, the implementation must continue
+ * to return EOF.
  * </p><p>
  * An overall principle for filters is that they should only fail in case of
  * catastrophic events, such as out of memory. If the input is not as expected,
@@ -75,4 +82,33 @@ public abstract class StreamFilter extends InputStream implements Configurable {
      *                error occured and the ingest was incomplete.
      */
     public abstract void close(boolean success);
+
+    /**
+     * @return the next long in the stream if present. If EOF was reached
+     *         during read, an exception is thrown.
+     * @throws IOException  if a fatal error occured during read.
+     * @throws EOFException if EOF was reached during read.
+     */
+    public long readLong() throws IOException {
+        ByteBuffer bb = ByteBuffer.allocate(8);
+        for (int i = 0 ; i < 8 ; i++) {
+            int value = read();
+            if (value == EOF) {
+                throw new EOFException("Attempting to read past EOF");
+            }
+            bb.put((byte)value);
+        }
+        return bb.getLong(0);
+    }
+
+    /**
+     * Convertes the given long to an array of bytes of length 8.
+     * @param value the long to convert to bytes.
+     * @return the long as bytes in big-endian order.
+     */
+    protected byte[] longToBytes(long value) {
+        ByteBuffer bb = ByteBuffer.allocate(8);
+        bb.putLong(value);
+        return bb.array();
+    }
 }
