@@ -1,6 +1,6 @@
 /**
  * Created: te 18-02-2008 22:17:40
- * CVS:     $Id:$
+ * CVS:     $Id$
  */
 package dk.statsbiblioteket.summa.ingest.records;
 
@@ -54,6 +54,7 @@ public class DummyStreamToRecords implements RecordFilter {
         return record;
     }
 
+    // Note: This ignores the length of the body's, which is okay for testing
     private void refreshRecord() throws IOException {
         ByteArrayOutputStream content = new ByteArrayOutputStream(dataSize);
         int value;
