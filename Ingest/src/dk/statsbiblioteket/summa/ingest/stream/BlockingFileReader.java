@@ -37,7 +37,12 @@ import dk.statsbiblioteket.summa.ingest.StreamFilter;
  * {@code root/sub1/sub2/myfile.xml} is moved to
  * {@code success/sub1/sub2/myfile.xml}.
  */
+// TODO: Implement this class
 public class BlockingFileReader extends StreamFilter {
+
+    public void setSource(StreamFilter source) {
+        // log.warn("Ignoring source");
+    }
 
     public void close(boolean success) {
     }
