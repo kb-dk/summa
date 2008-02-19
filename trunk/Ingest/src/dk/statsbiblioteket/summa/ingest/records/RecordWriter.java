@@ -52,6 +52,7 @@ public class RecordWriter implements RecordFilter {
     private RecordFilter source;
     private Access access;
 
+    // FIXME: Only throw runtimeexceptions?
     public RecordWriter(Configuration configuration) throws RemoteException {
         log.trace("Constructing RecordWriter");
         String accessPoint;
