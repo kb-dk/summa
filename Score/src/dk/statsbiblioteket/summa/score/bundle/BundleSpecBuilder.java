@@ -1,43 +1,41 @@
 package dk.statsbiblioteket.summa.score.bundle;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import org.w3c.dom.Node;
-
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Properties;
-import java.util.zip.ZipOutputStream;
-import java.util.zip.ZipEntry;
-import java.io.OutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.Writer;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.io.File;
-import java.io.InputStream;
-import java.io.Reader;
-import java.io.InputStreamReader;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.Serializable;
-import java.io.FileNotFoundException;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
-import dk.statsbiblioteket.util.FileAlreadyExistsException;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.util.FileAlreadyExistsException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  *
  */
 public class BundleSpecBuilder {
+    private Log log = LogFactory.getLog(BundleSpecBuilder.class);
 
     private String mainJar;
     private String mainClass;
@@ -91,6 +89,7 @@ public class BundleSpecBuilder {
     }
 
     public void write (Writer writer) throws IOException {
+        log.trace("write called");
         if (writer == null) {
             throw new NullPointerException("writer argument is null");
         }
@@ -138,7 +137,7 @@ public class BundleSpecBuilder {
         } finally {
             out.close();
         }
-
+        log.trace("Finished write");
     }
 
     /**
@@ -169,6 +168,7 @@ public class BundleSpecBuilder {
      * @throws FileAlreadyExistsException if the output dir is a regular file
      */
     public File writeToDir (File dir) throws IOException {
+        log.trace("writeToDir called");
         if (dir == null) {
             throw new NullPointerException("Directory argument is null");
         }
@@ -181,6 +181,7 @@ public class BundleSpecBuilder {
 
         File target = new File (dir, getFilename());
         write (target);
+        log.trace("Finished writeToDir");
         return target;
     }
 
@@ -191,6 +192,7 @@ public class BundleSpecBuilder {
      * @return filename as per bundle type
      */
     public String getFilename () {
+        log.trace("Getting file name for bundle type '" + bundleType + "'");
         if (Bundle.Type.CLIENT == bundleType) {
             return "client.xml";
         } else if (Bundle.Type.SERVICE == bundleType) {
@@ -209,8 +211,8 @@ public class BundleSpecBuilder {
      * @return a bundle spec ready for manipulations
      * @throws IOException if there is an error reading the file
      */
-    public static BundleSpecBuilder open (File file) throws IOException {
-        BundleSpecBuilder builder = open (new FileInputStream(file));
+    public static BundleSpecBuilder open(File file) throws IOException {
+        BundleSpecBuilder builder = open(new FileInputStream(file));
         String filename = file.toString();
         if (filename.endsWith("client.xml")) {
             builder.setBundleType(Bundle.Type.CLIENT);
@@ -226,7 +228,7 @@ public class BundleSpecBuilder {
      * @param in inout stream to read from
      * @return a bundle spec ready for manipulations
      */
-    public static BundleSpecBuilder open (InputStream in) {
+    public static BundleSpecBuilder open(InputStream in) {
         BundleSpecBuilder builder = new BundleSpecBuilder();
         builder.read(in);
         return builder;
@@ -237,24 +239,26 @@ public class BundleSpecBuilder {
      * @param in stream to read spec from
      */
     public void read (InputStream in) {
-
+        log.trace("read called");
         DocumentBuilder xmlParser;
         Document doc;
         Element docElement;
         NodeList children;
 
         try {
+            log.trace("read: Creating XML parser");
             xmlParser = DocumentBuilderFactory.newInstance().newDocumentBuilder();
         } catch(ParserConfigurationException e){
             throw new BundleLoadingException("Error creating DocumentBuilder", e);
         }
 
         try {
+            log.trace("read: Parsing input");
             doc = xmlParser.parse(in);
         } catch (Exception e) {
             throw new BundleLoadingException("Error parsing bundle spec ", e);
         }
-
+        log.trace("read: calling getDocumentElement");
         docElement = doc.getDocumentElement();
         if (!docElement.getTagName().equals("bundle")) {
             throw new BundleFormatException("Bundle spec has root element '"
@@ -262,6 +266,7 @@ public class BundleSpecBuilder {
                                           + "', expected 'bundle'");
         }
 
+        log.trace("read: Getting children nodes");
         children = docElement.getChildNodes();
         for (int i = 0; i < children.getLength(); i++) {
             Node node = children.item(i);
@@ -287,11 +292,16 @@ public class BundleSpecBuilder {
                     value="!unset!";
                 }
                 setProperty(name, value);
+            } else {
+                log.debug("Unknown node '" + node.getNodeName()
+                          + "' with content '" + node.getTextContent() + "'");
             }
         }
+        log.trace("Finished read");
     }
 
     private void readFilelist(Node node) {
+        log.trace("readFileList called");
         NodeList files = node.getChildNodes();
 
         // Check that each file in fileList exists
@@ -311,11 +321,12 @@ public class BundleSpecBuilder {
 
             String file = files.item(i).getTextContent();
             addFile(file);
-
         }
+        log.trace("Finished readFileList");
     }
 
     public void checkFileList (File bundleDir) {
+        log.trace("checkFileList called");
         // Check that each file in fileList exists
         for (String filename : fileSet) {
             File testFile = new File (bundleDir, filename);
@@ -328,6 +339,7 @@ public class BundleSpecBuilder {
         // TODO: Check the converse - that each file is listed in fileList
 
         // TODO: Check md5 if the md5 attribute exists on the file element
+        log.trace("Finished checkFileList");
     }
 
     /**
@@ -346,6 +358,7 @@ public class BundleSpecBuilder {
      * @throws FileNotFoundException if the file {@code bundleDir} does not exist
      */
     public void buildFileList (File bundleDir) throws IOException {
+        log.trace("buildFileList(" + bundleDir + ") called");
         if (bundleDir == null) {
             throw new NullPointerException("bundleDir argument is null");
         }
@@ -360,9 +373,11 @@ public class BundleSpecBuilder {
         if (!hasFile(getFilename())) {
             addFile(getFilename());
         }
+        log.trace("Finished buildFileList(" + bundleDir + ")");
     }
 
     private void recursiveScan (File rootDir, String child) {
+        log.trace("recursiveScan(" + rootDir + ", " + child + ") called");
         if (child == null) {
             /* This is the root of the scan tree */
             for (String file : rootDir.list()) {
@@ -384,6 +399,7 @@ public class BundleSpecBuilder {
                 recursiveScan(rootDir, child + "/" + subChild);
             }
         }        
+        log.trace("Finished recursiveScan(" + rootDir + ", " + child + ")");
     }
 
     /**
@@ -407,6 +423,7 @@ public class BundleSpecBuilder {
      * @returns a file handle pointing at the written bundle
      */
     public File buildBundle (File rootDir, File outputDir) throws IOException {
+        log.trace("buildBundle(" + rootDir + ", " + outputDir + ") called");
         /* Validate parameters */
         if (getBundleId() == null) {
             throw new BundleFormatException("Bundle does not have a bundle id");
@@ -433,20 +450,26 @@ public class BundleSpecBuilder {
             addFile(getMainJar());
         }
 
+        log.trace("buildBundle: Making dirs '" + outputDir + "'");
         /* Write the bundle spec */
         outputDir.mkdirs();
-        write (new File(rootDir, getFilename()));
+        log.trace("buildBundle: Calling write with File('" + rootDir + ", "
+                  + getFilename() + ")");
+        write(new File(rootDir, getFilename()));
 
         /* Write the actual zip ball */
         File bundleFile =  new File (outputDir,
                                      getBundleId() + Bundle.BUNDLE_EXT);
 
+        log.trace("buildBundle: Creating fileWriter for '" + bundleFile + "'");
         FileOutputStream fileWriter = new FileOutputStream(bundleFile);
+        log.trace("buildBundle: Wrapping fileWriter i ZIP output stream");
         ZipOutputStream zipStream = new ZipOutputStream(fileWriter);
 
         byte[] buf = new byte[4096];
         int len;
         for (String file : getFiles()) {
+        log.trace("buildBundle: Adding '" + file + "' to ZIP stream");
             zipStream.putNextEntry(new ZipEntry(file));
             FileInputStream in = new FileInputStream(new File(rootDir, file));
             while ((len = in.read(buf)) > 0) {
@@ -454,6 +477,7 @@ public class BundleSpecBuilder {
             }
         }
 
+        log.trace("buildBundle: Flushing and closing streams");
         /* Clean up */
         zipStream.flush();
         zipStream.finish();
@@ -461,6 +485,7 @@ public class BundleSpecBuilder {
         fileWriter.flush();
         fileWriter.close();
 
+        log.trace("Finished buildBundle(" + rootDir + ", " + outputDir + ")");
         return bundleFile;
     }
 
@@ -470,18 +495,22 @@ public class BundleSpecBuilder {
      * @return
      */
     public BundleStub getStub () {
-        List<String> libs = new ArrayList<String>();
-        List<String> jvmArgs = new ArrayList<String>();
+        log.trace("getStub called");
+        List<String> libs = new ArrayList<String>(20);
+        List<String> jvmArgs = new ArrayList<String>(20);
         /* Find all .jar files in lib/ */
         for (String lib : getFiles()) {
             if (lib.endsWith(".jar") && lib.startsWith("lib/")) {
+                log.trace("getStub: Adding '" + lib + "' to libs");
                 libs.add(lib);
             }
         }
 
         /* Construct JVM args */
         for (Map.Entry<String, Serializable> entry : getProperties()) {
-            jvmArgs.add ("-D"+entry.getKey()+"="+entry.getValue());
+            String arg ="-D"+entry.getKey()+"="+entry.getValue();
+            jvmArgs.add(arg);
+            log.trace("getStub: Adding argument " + arg);
         }
 
         /* Detect JMX support */
@@ -498,13 +527,16 @@ public class BundleSpecBuilder {
                          + BundleStub.POLICY_FILE);
         }
 
-        return new BundleStub(new File ("."),
+        log.trace("getStub: Creating BundleStub");
+        BundleStub stub = new BundleStub(new File ("."),
                               getBundleId(),
                               getInstanceId(),
                               new File(getMainJar()),
                               getMainClass(),
                               libs,
                               jvmArgs);
+        log.trace("Finished getStub, returning BundleStub " + stub);
+        return stub;
 
     }
 }

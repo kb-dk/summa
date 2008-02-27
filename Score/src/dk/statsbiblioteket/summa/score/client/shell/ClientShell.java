@@ -50,7 +50,7 @@ public class ClientShell {
         shell.setPrompt ("client-shell> ");
 
         connManager = new ConnectionManager<ClientConnection> (
-                                    new SummaRMIConnectionFactory<ClientRMIConnection>(null));
+                      new SummaRMIConnectionFactory<ClientRMIConnection>(null));
 
         // Although the client shell use a connection manager
         // it does not currently use stateless connections. That would
@@ -77,7 +77,8 @@ public class ClientShell {
 
     public static void printUsage () {
         System.err.println ("USAGE:\n\tclient-shell <client-rmi-address>\n");
-        System.err.println ("For example:\n\tclient-shell //localhost:2768/score-client-2");
+        System.err.println ("For example:\n\tclient-shell "
+                            + "//localhost:2768/score-client-2");
     }
 
     public static void main (String[] args) {

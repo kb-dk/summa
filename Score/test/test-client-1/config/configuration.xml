@@ -11,6 +11,6 @@
     <entry key="summa.score.client.registry.port">2767</entry>
 
     <!-- Base path for the service repo -->
-    <entry key="summa.score.repository.address">file:///home/mikkel/tmp</entry>
+    <entry key="summa.score.repository.address">file:///tmp/summatest</entry>
 
 </properties>

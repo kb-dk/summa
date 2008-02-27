@@ -102,7 +102,8 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         super (getServicePort (configuration));
         log.debug("Constructing client");
 
-        registryHost = configuration.getString(REGISTRY_HOST_PROPERTY, "localhost");
+        registryHost = configuration.getString(REGISTRY_HOST_PROPERTY,
+                                               "localhost");
         registryPort = configuration.getInt(REGISTRY_PORT_PROPERTY, 27000);
         serviceName = System.getProperty(CLIENT_ID);
         servicePort = configuration.getInt(SERVICE_PORT_PROPERTY, 27002);
@@ -223,9 +224,11 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         try {
             return conf.getInt(SERVICE_PORT_PROPERTY);
         } catch (Exception e) {
-            log.fatal("Unable to read " + SERVICE_PORT_PROPERTY + "from configuration", e);
-            throw new ConfigurationException("Unable to read " + SERVICE_PORT_PROPERTY
-                                       + "from configuration", e);
+            log.fatal("Unable to read " + SERVICE_PORT_PROPERTY
+                      + "from configuration", e);
+            throw new ConfigurationException("Unable to read "
+                                             + SERVICE_PORT_PROPERTY
+                                             + "from configuration", e);
         }
 
     }
@@ -394,6 +397,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         }
 
         try {
+            log.debug("Calling load for serviceFile '" + serviceFile + "'");
             stub = loader.load (serviceFile);
         } catch (IOException e) {
             setStatusIdle();
@@ -441,7 +445,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
             registerService (stub, configLocation);
 
             log.debug("Calling start() on service '" + instanceId +"'");
-            service = services.get (instanceId);
+            service = services.get(instanceId);
             service.start();
 
         } catch (IOException e) {

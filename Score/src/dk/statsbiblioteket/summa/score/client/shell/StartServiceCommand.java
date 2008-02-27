@@ -29,16 +29,14 @@ import dk.statsbiblioteket.summa.score.api.Service;
 import dk.statsbiblioteket.summa.score.api.Status;
 import dk.statsbiblioteket.summa.score.client.Client;
 import dk.statsbiblioteket.util.Strings;
-
-import java.net.MalformedURLException;
-import java.rmi.Naming;
-import java.rmi.NotBoundException;
-import java.rmi.RemoteException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * A shell command to launch a {@link Service} deployed in a {@link Client}.
  */
 public class StartServiceCommand extends Command {
+    private Log log = LogFactory.getLog(StartServiceCommand.class);
 
     private class ServiceMonitor implements Runnable {
 
@@ -115,8 +113,10 @@ public class StartServiceCommand extends Command {
 
     public void invoke(ShellContext ctx) throws Exception {
         String confLocation = getOption("c");
+        log.debug("invoke called with confLocation '" + confLocation + "'");
         if (confLocation == null) {
             confLocation = "configuration.xml";
+            log.debug("confLocation for invoke sat to " + confLocation);
         }
 
         if (getArguments().length != 1) {
@@ -133,15 +133,21 @@ public class StartServiceCommand extends Command {
                                : " with no configuration ")
                     + "... ");
 
+        String baseMeta = "client '" + client.getId()+ "' with pkgId '"
+                          + pkgId + "' and confLocation '" + confLocation
+                          + "' in invoke";
         try {
+
+            log.debug("calling startService for " + baseMeta);
             client.startService(pkgId, confLocation);
+            log.debug("Attaching ServiceMonitor to " + baseMeta);
             new Thread (new ServiceMonitor(client, pkgId, 5, ctx)).start();
         } catch (Exception e) {
 
             throw new RuntimeException ("Start of service failed: "
                                         + e.getMessage(), e);
         }
-
+        log.debug("End if invoke for " + baseMeta);
         ctx.info("OK");
     }
 }
