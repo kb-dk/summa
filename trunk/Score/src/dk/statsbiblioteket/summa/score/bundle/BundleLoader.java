@@ -85,7 +85,8 @@ public class BundleLoader implements Configurable {
      * @throws FileNotFoundException if the corresponding package is not deployed
      */
     public BundleStub load (File bundleDir) throws IOException {
-        List<String> libs = new ArrayList<String>();
+        log.trace("load(" + bundleDir + ") called");
+        List<String> libs = new ArrayList<String>(20);
         List<String> jvmArgs = new ArrayList<String>(10);
         BundleSpecBuilder builder = checkBundle(bundleDir);
 
@@ -94,16 +95,23 @@ public class BundleLoader implements Configurable {
         if (libDir.exists()) {
             for (String lib : libDir.list()) {
                 if (lib.endsWith(".jar")) {
-                    libs.add("lib" + File.separator + lib);
+                    String jar = "lib" + File.separator + lib;
+                    libs.add(jar);
+                    log.trace("load added jar '" + jar + "'");
                 }
             }
         }
 
         /* Construct JVM args */
         for (Map.Entry<String, Serializable> entry : builder.getProperties()) {
-            jvmArgs.add ("-D"+entry.getKey()+"="+entry.getValue());
+            String arg = "-D"+entry.getKey()+"="+entry.getValue();
+            jvmArgs.add(arg);
+            log.trace("load added JVM arg " + arg);
         }
 
+        log.trace("Returning BundleStub for instance '"
+                  + builder.getInstanceId() + "' of '"
+                  + builder.getBundleId() + "'");
         return new BundleStub(bundleDir,
                               builder.getBundleId(),
                               builder.getInstanceId(),

@@ -69,7 +69,7 @@ public class BundleStub {
     private String bundleId, instanceId, mainClass;
     private List<String> libs;
     private List<String> jvmArgs;
-    private Log log;
+    private Log log = LogFactory.getLog (BundleStub.class);
     private List<String> classPath;
 
     /**
@@ -94,6 +94,8 @@ public class BundleStub {
     BundleStub (File bundleDir, String bundleId, String instanceId,
                 File mainJar, String mainClass,
                 List<String> libs, List<String> jvmArgs) {
+        log.trace("Creating BundleStub with instance id '" + instanceId
+                  + "' for '" + bundleId + "'");
         this.bundleDir = bundleDir;
         this.bundleId = bundleId;
         this.instanceId = instanceId;
@@ -102,7 +104,6 @@ public class BundleStub {
         this.libs = libs;
         this.jvmArgs = jvmArgs;
 
-        log = LogFactory.getLog (BundleStub.class);
     }
 
     /**
@@ -127,6 +128,7 @@ public class BundleStub {
      * @return A process handle to the spawned JVM
      */
     public Process start () throws IOException {
+        log.trace("start called");
         List<String> cmdLine = buildCommandLine();
         ProcessBuilder pb = new ProcessBuilder();
         pb.directory(bundleDir);
@@ -161,7 +163,7 @@ public class BundleStub {
      */
     public List<String> buildCommandLine () {
         String javaExecutable;
-        List<String> cl = new ArrayList<String>();
+        List<String> cl = new ArrayList<String>(20);
         boolean hasJmxPassword = false, hasJmxAccess = false, hasPolicy = false;
 
         javaExecutable = System.getProperty("java.home")
@@ -169,28 +171,42 @@ public class BundleStub {
 
         cl.add (javaExecutable);
 
-        if (new File(bundleDir,POLICY_FILE).exists()) {
-            cl.add ("-Djava.security.policy=" + POLICY_FILE);
+        if (new File(bundleDir, POLICY_FILE).exists()) {
+            cl.add("-Djava.security.policy=" + POLICY_FILE);
             hasPolicy = true;
-        }
+        } else {
+            log.debug("Could not locate '" + new File(bundleDir, POLICY_FILE)
+                      + "' ("
+                      + new File(bundleDir, POLICY_FILE).getAbsoluteFile()
+                      + ")");        }
 
-        if (new File(bundleDir,JMX_PASSWORD_FILE).exists()) {
-            cl.add ("-Dcom.sun.management.jmxremote.password.file="
-                    + JMX_PASSWORD_FILE);
+        if (new File(bundleDir, JMX_PASSWORD_FILE).exists()) {
+            cl.add("-Dcom.sun.management.jmxremote.password.file="
+                   + JMX_PASSWORD_FILE);
             hasJmxPassword = true;
+        } else {
+            log.debug("Could not locate '"
+                      + new File(bundleDir, JMX_PASSWORD_FILE) + "' ("
+                      + new File(bundleDir, JMX_PASSWORD_FILE).getAbsoluteFile()
+                      + ")");
         }
 
-        if (new File(bundleDir,JMX_ACCESS_FILE).exists()) {
-            cl.add ("-Dcom.sun.management.jmxremote.access.file="
+        if (new File(bundleDir, JMX_ACCESS_FILE).exists()) {
+            cl.add("-Dcom.sun.management.jmxremote.access.file="
                     + JMX_ACCESS_FILE);
             hasJmxAccess = true;
+        } else {
+            log.debug("Could not locate '"
+                      + new File(bundleDir, JMX_ACCESS_FILE) + "' ("
+                      + new File(bundleDir, JMX_ACCESS_FILE).getAbsoluteFile()
+                      + ")");
         }
 
-        if ( ! (hasPolicy == hasJmxAccess == hasJmxPassword)) {
-            log.warn ("Missing " + (hasPolicy ? "":POLICY_FILE) + " "
-                                 + (hasJmxAccess ? "":JMX_ACCESS_FILE) + " "
-                                 + (hasJmxPassword ? "":JMX_PASSWORD_FILE)
-                                 + ". JMX is unlikely to work.");
+        if ( !(hasPolicy == hasJmxAccess == hasJmxPassword)) {
+            log.warn("Missing " + (hasPolicy ? "":POLICY_FILE) + " "
+                                + (hasJmxAccess ? "":JMX_ACCESS_FILE) + " "
+                                + (hasJmxPassword ? "":JMX_PASSWORD_FILE)
+                                + ". JMX is unlikely to work.");
         }
 
         cl.addAll(jvmArgs);

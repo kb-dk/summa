@@ -258,11 +258,22 @@ public class SSHDeployer implements ClientDeployer {
 
         /* Read the bundle spec */
         File bdlFile = new File (source);
-        InputStream clientSpec = new ByteArrayInputStream
-                                (ScoreUtils.getZipEntry(bdlFile, "client.xml"));
+        log.trace("Creating InputStream for bdlFile '" + bdlFile
+                  + "', client.xml");
+        InputStream clientSpec;
+        try {
+            clientSpec = new ByteArrayInputStream
+                    (ScoreUtils.getZipEntry(bdlFile, "client.xml"));
+        } catch(IOException e) {
+            throw new IOException("Could not create InputStream for bdlFile '"
+                                  + bdlFile + "', client.xml", e);
+        }
+        log.trace("Opening clientSpec with BundleSpecBuilder");
         BundleSpecBuilder builder = BundleSpecBuilder.open (clientSpec);
+        log.trace("Getting BundleStub from BundleSpecBuilder");
         BundleStub stub = builder.getStub();
 
+        log.trace("Adding properties to command line");
         /* Add properties to the command line as we are obliged to */
         stub.addSystemProperty(Configuration.CONFIGURATION_PROPERTY,
                                confLocation);
