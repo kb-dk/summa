@@ -38,7 +38,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 @QAInfo(level = QAInfo.Level.NORMAL,
        state = QAInfo.State.IN_DEVELOPMENT,
        author = "bam, hal, te")
-public class RecordIterator implements Iterator, Serializable {
+public class RecordIterator implements Iterator<Record>, Serializable {
     // TODO: Consider making this adjustable
     public static int MAX_QUEUE_SIZE = 100;
     private final Access iteratorHolder;

@@ -140,4 +140,59 @@ public class ControlTest extends TestCase {
         }
   */
     }
+
+    public void testGetRecords() throws Exception {
+        control.flush(new Record("foo1", "bar", new byte[0]));
+        control.flush(new Record("foo2", "bar", new byte[0]));
+        control.flush(new Record("zoo1", "baz", new byte[0]));
+        control.flush(new Record("zoo2", "baz", new byte[0]));
+
+        for (String base: new String[]{"bar", "baz"}) {
+            RecordIterator i = control.getRecords(base);
+            int counter = 0;
+            while (i.hasNext()) {
+                assertEquals("All records should be from the right base",
+                             base, i.next().getBase());
+                counter++;
+            }
+            assertEquals("There should be the correct number of records in base" 
+                         + " " + base, 2, counter);
+        }
+    }
+
+    public void testGetRecordsModifiedAfter() throws Exception {
+        long now = System.currentTimeMillis();
+        for (int i = 0 ; i < 10 ; i++) {
+            Record record = new Record("bar" + i, "foo", new byte[0]);
+            record.setModificationTime(now + 10000 * i);
+            control.flush(record);
+        }
+        RecordIterator i = control.getRecordsModifiedAfter(now + 40000, "foo");
+        assertEquals("The number of extracted Records from the middle should "
+                     + "match",
+                     5, countRecords(i));
+
+        i = control.getRecordsModifiedAfter(now - 40000, "foo");
+        assertEquals("The number of extracted Records from before start",
+                     10, countRecords(i));
+
+        i = control.getRecordsModifiedAfter(now + 900000, "foo");
+        assertEquals("The number of extracted Records from after end should "
+                     + "match",
+                     0, countRecords(i));
+
+        i = control.getRecordsModifiedAfter(now + 900000, "baons");
+        assertEquals("The number of extracted Records from an empty base should"
+                     + " match", 
+                     0, countRecords(i));
+    }
+
+    private int countRecords(RecordIterator iterator) {
+        int counter = 0;
+        while (iterator.hasNext()) {
+            iterator.next();
+            counter++;
+        }
+        return counter;
+    }
 }
