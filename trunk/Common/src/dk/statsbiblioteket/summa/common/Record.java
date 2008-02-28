@@ -395,11 +395,12 @@ public class Record implements Serializable, Comparable{
             return false;
         }
         Record other = (Record)o;
+
         try {
             return id.equals(other.getId())
                    && base.equals(other.getBase())
-                   && creationTime == other.getCreationTime()
-                   && modificationTime == other.getModificationTime()
+                   && timeEquals(creationTime, other.getCreationTime())
+                   && timeEquals(modificationTime, other.getModificationTime())
                    && deleted == other.isDeleted()
                    && indexable == other.isIndexable()
                    && ((parent == null && other.getParent() == null)
@@ -414,6 +415,16 @@ public class Record implements Serializable, Comparable{
                       + ". Returning false", e);
             return false;
         }
+    }
+
+    /**
+     * The time granularity is milliseconds for equals.
+     * @param time1 a timestamp in nanoseconds
+     * @param time2 a timestamp in nanoseconds
+     * @return true if the timestamps are equal down to millisecond resolution.
+     */
+    private boolean timeEquals(long time1, long time2) {
+        return time1 / 1000 == time2 / 1000;
     }
 
     /**

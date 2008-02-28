@@ -104,11 +104,6 @@ public class ControlTest extends TestCase {
             fail("Flushing a modified record should not give an exception");
         }
         Record extracted = control.getRecord("foo");
-        System.out.println(extracted);
-        String m = modified.toString();
-        String e = extracted.toString();
-        System.out.println("- " + m + " - ");
-        System.out.println("- " + e + " - ");
         assertEquals("The modified base should be reflected",
                      modified, extracted);
     }
