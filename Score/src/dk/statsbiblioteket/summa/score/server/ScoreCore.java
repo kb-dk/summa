@@ -47,7 +47,7 @@ public class ScoreCore extends UnicastRemoteObject
      */
     public static final String SCORE_BASE_DIR = "summa.score.core.dir";
 
-    private Log log;
+    private Log log = LogFactory.getLog (ScoreCore.class);
     private File baseDir;
     private ClientManager clientManager;
     private RepositoryManager repoManager;
@@ -55,7 +55,7 @@ public class ScoreCore extends UnicastRemoteObject
 
     public ScoreCore (Configuration conf) throws IOException {
         super (getServicePort(conf));
-        log = LogFactory.getLog (ScoreCore.class);
+        log.debug("Creating ScoreCore");
         clientManager = new ClientManager(conf);
         repoManager = new RepositoryManager(conf);
         confManager = new ConfigurationManager(conf);
@@ -63,9 +63,10 @@ public class ScoreCore extends UnicastRemoteObject
         baseDir = ScoreUtils.getScoreBaseDir(conf);
         log.debug ("Using base dir '" + baseDir + "'");
 
+        log.trace("Exporting remote interface summa-score");
         RemoteHelper.exportRemoteInterface(this,
-                                            conf.getInt(SCORE_REGISTRY_PORT, 27000),
-                                            "summa-score");
+                                        conf.getInt(SCORE_REGISTRY_PORT, 27000),
+                                        "summa-score");
 
         try {
             RemoteHelper.exportMBean(this);
@@ -80,6 +81,7 @@ public class ScoreCore extends UnicastRemoteObject
     }
 
     public ClientConnection getClient(String instanceId) {
+        log.trace("getClient called");
         if (!clientManager.knowsClient(instanceId)) {
             throw new NoSuchClientException("Unknown client: " + instanceId);
         }
@@ -136,8 +138,10 @@ public class ScoreCore extends UnicastRemoteObject
     }
 
     public void startClient(Configuration conf) {
+        log.trace("startClient called");
         String instanceId = conf.getString(ClientDeployer.INSTANCE_ID_PROPERTY);
         String bundleId = clientManager.getBundleId(instanceId);
+        log.trace("startClient: got bundleId '" + bundleId + "'");
 
         if (bundleId == null) {
             throw new ClientDeploymentException("Unknown instance '"
@@ -229,6 +233,7 @@ public class ScoreCore extends UnicastRemoteObject
      *                                   present
      */
     private void validateClientConf(Configuration conf) {
+        log.trace("validateClientConf called");
         try {
             String bdl =  conf.getString(ClientDeployer.DEPLOYER_BUNDLE_PROPERTY);
 

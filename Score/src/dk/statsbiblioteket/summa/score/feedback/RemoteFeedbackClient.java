@@ -25,10 +25,9 @@ public class RemoteFeedbackClient implements Feedback {
 
     private ConnectionManager<Feedback> cm;
     private String remoteAddress;
-    private Log log;
+    private Log log = LogFactory.getLog (RemoteFeedbackClient.class);
 
     public RemoteFeedbackClient(Configuration conf) {
-        log = LogFactory.getLog (RemoteFeedbackClient.class);
         cm = new ConnectionManager<Feedback> (new RMIConnectionFactory<RemoteFeedback>());
 
 

@@ -64,7 +64,7 @@ public abstract class ServiceBase extends UnicastRemoteObject
     /**
      *
      */
-    private Log log;
+    private Log log = LogFactory.getLog(ServiceBase.class);
 
     private int registryPort;
     private String id;
@@ -72,8 +72,6 @@ public abstract class ServiceBase extends UnicastRemoteObject
 
     public ServiceBase(Configuration conf) throws RemoteException {
         super (getServicePort(conf));
-
-        log = LogFactory.getLog(ServiceBase.class);
 
         if (System.getSecurityManager() == null) {
             log.info ("No security manager found. Setting RMI security manager");

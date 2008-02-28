@@ -87,7 +87,7 @@ public class RepositoryManager implements Configurable,
     private String address;
     private Class<? extends BundleRepository> clientRepoClass;
     private String clientDownloadDir;
-    private Log log;
+    private Log log = LogFactory.getLog (RepositoryManager.class);
     private File incomingDir;
     private FolderWatcher incomingWatcher;
 
@@ -127,8 +127,6 @@ public class RepositoryManager implements Configurable,
     }
 
     public RepositoryManager (Configuration conf) {
-        log = LogFactory.getLog (RepositoryManager.class);
-
         /* Configure base path */
         repoBaseDir = ScoreUtils.getRepositoryBaseDir(conf);
         log.debug ("Using repository base dir: '" + repoBaseDir + "'");

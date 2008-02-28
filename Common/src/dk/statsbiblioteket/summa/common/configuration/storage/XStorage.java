@@ -26,20 +26,17 @@
  */
 package dk.statsbiblioteket.summa.common.configuration.storage;
 
-import java.io.Serializable;
-import java.io.IOException;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.BufferedOutputStream;
-import java.util.Map;
-import java.util.Iterator;
-import java.util.HashMap;
-
-import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
 import dk.statsbiblioteket.util.XProperties;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import java.io.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -50,7 +47,7 @@ public class XStorage implements ConfigurationStorage {
 
     private File storageFile;
     private XProperties xprops;
-    private Log log;
+    private Log log = LogFactory.getLog(XStorage.class);
 
     /**
      * Creates a XStorage around a XProperties.
@@ -71,6 +68,12 @@ public class XStorage implements ConfigurationStorage {
         storageFile = nextAvailableConfigurationFile();
         new Configuration(this).importConfiguration(configuration);
         syncStorageFile();
+    }
+
+    // FIXME: Very ad-hoc
+    private XStorage(XProperties properties) throws IOException {
+        xprops = properties;
+        storageFile = nextAvailableConfigurationFile();
     }
 
     public XStorage(File configurationFile) throws IOException {
@@ -140,9 +143,10 @@ public class XStorage implements ConfigurationStorage {
                                   + sub.getClass() + "'. Expected XStorage");
         }
 
-        throw new UnsupportedOperationException(
-           "See https://gforge.statsbiblioteket.dk/tracker/index.php?aid=1186");
-        //return new XStorage((XProperties)sub);
+        // TODO: Solve https://gforge.statsbiblioteket.dk/tracker/index.php?aid=1186
+        log.warn("Unclear cemantics. See https://gforge.statsbiblioteket.dk/"
+                 + "tracker/index.php?aid=1186");
+        return new XStorage((XProperties)sub);
     }
 
     public ConfigurationStorage createSubStorage(
