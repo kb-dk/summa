@@ -26,13 +26,12 @@ public class ConfigurationManager implements Runnable, Configurable {
     public static final String PROP_STORAGE =
                                     "summa.score.configurationManager.storage";
 
-    private Log log;
+    private Log log = LogFactory.getLog (ConfigurationManager.class);
     private ConfigurationStorage storage;
     private RemoteStorage remote;
 
     public ConfigurationManager (Configuration conf) {
-        log = LogFactory.getLog (ConfigurationManager.class);
-
+        log.debug("Creating ConfigurationManager");
         setupStorage(conf);
         exportRemoteStorage(conf);
     }

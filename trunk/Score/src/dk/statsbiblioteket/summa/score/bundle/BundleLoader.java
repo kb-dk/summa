@@ -71,10 +71,10 @@ public class BundleLoader implements Configurable {
     /** The file name used to identify a client */
     public static final String CLIENT_BUNDLE_SPEC = "client.xml";
 
-    private Log log;
+    private Log log = LogFactory.getLog(BundleLoader.class);;
 
     public BundleLoader (Configuration conf) {
-        log = LogFactory.getLog(BundleLoader.class);        
+        // Do nothing
     }
 
     /**

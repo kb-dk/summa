@@ -28,7 +28,7 @@ import org.apache.commons.logging.LogFactory;
         author = "mke")
 public class DeployCommand extends Command {
 
-    private Log log;
+    private Log log = LogFactory.getLog (DeployCommand.class);
 
     private ConnectionManager<ScoreConnection> cm;
     private String scoreAddress;
@@ -40,64 +40,68 @@ public class DeployCommand extends Command {
 
         setUsage("deploy [options] <bundle-id> <instance-id> <target-host>");
 
-        installOption ("t", "transport", true, "Which deployment transport to"
-                                             + " use. Allowed values are 'ssh'."
-                                             + "Default is ssh");
+        installOption ("t", "transport", true,
+                       "Which deployment transport to use. Allowed values are"
+                       + " 'ssh'. Default is ssh");
 
-        installOption ("b", "basepath", true, "What basepath to use for the client"
-                                            + " installation relative to the "
-                                            + "client user's home directory. "
-                                            + "Default is 'summa-score'");
+        installOption ("b", "basepath", true,
+                       "What basepath to use for the client installation "
+                       + "relative to the client user's home directory. "
+                       + "Default is 'summa-score'");
 
-        installOption ("c", "configuration", true, "Url, RMI address or file"
-                                                 + " path where the client can"
-                                                 + " find its configuration."
-                                                 + " Default points at the "
-                                                 + "Score configuration server");
+        installOption ("c", "configuration", true,
+                       "Url, RMI address or file path where the client can"
+                       + " find its configuration. Default points at the "
+                       + "Score configuration server");
 
         this.cm = cm;
         this.scoreAddress = scoreAddress;
         hostname = RemoteHelper.getHostname();
-
-        log = LogFactory.getLog (DeployCommand.class);
     }
 
     public void invoke(ShellContext ctx) throws Exception {
+        log.trace("invoke called");
         /* Extract and validate arguments */
         String[] args = getArguments();
         if (args.length != 3) {
-            ctx.error("You must provide exactly 3 arguments. Found " + args.length);
+            ctx.error("You must provide exactly 3 arguments. Found "
+                      + args.length);
             return;
         }
         String bundleId = args[0];
         String instanceId = args[1];
         String target = args[2];
 
+        log.trace("invoke called with bundleId '" + bundleId
+                  + "', instanceId '"
+                  + instanceId + "' and target '" + target + "'");
         String transport = getOption("t") != null ? getOption("t") : "ssh";
         transport = ScoreUtils.getDeployerClassName(transport);
 
-        String basePath = getOption("b") != null ? getOption("b") : "summa-score";
+        String basePath =
+                getOption("b") != null ? getOption("b") : "summa-score";
         String confLocation = getOption("c"); // This is allowed to be unset
-                                              // - see ClientDeployer#CLIENT_CONF_PROPERTY
+                                    // - see ClientDeployer#CLIENT_CONF_PROPERTY
 
         /* Set up a configuration for the deployment request */
         Configuration conf =
-                Configuration.newMemoryBased(ClientDeployer.BASEPATH_PROPERTY,
-                                             basePath,
-                                             ClientDeployer.CLIENT_CONF_PROPERTY,
-                                             confLocation,
-                                             ClientDeployer.DEPLOYER_BUNDLE_PROPERTY,
-                                             bundleId,
-                                             ClientDeployer.INSTANCE_ID_PROPERTY,
-                                             instanceId,
-                                             ClientDeployer.DEPLOYER_CLASS_PROPERTY,
-                                             transport,
-                                             ClientDeployer.DEPLOYER_TARGET_PROPERTY,
-                                             target,
-                                             ClientDeployer.DEPLOYER_FEEDBACK_PROPERTY,
-                                             "dk.statsbiblioteket.summa.score.feedback.RemoteFeedbackClient",
-                                             RemoteFeedback.REGISTRY_HOST_PROPERTY,
-                                             hostname);
+                Configuration.newMemoryBased(
+                        ClientDeployer.BASEPATH_PROPERTY,
+                        basePath,
+                        ClientDeployer.CLIENT_CONF_PROPERTY,
+                        confLocation,
+                        ClientDeployer.DEPLOYER_BUNDLE_PROPERTY,
+                        bundleId,
+                        ClientDeployer.INSTANCE_ID_PROPERTY,
+                        instanceId,
+                        ClientDeployer.DEPLOYER_CLASS_PROPERTY,
+                        transport,
+                        ClientDeployer.DEPLOYER_TARGET_PROPERTY,
+                        target,
+                        ClientDeployer.DEPLOYER_FEEDBACK_PROPERTY,
+                "dk.statsbiblioteket.summa.score.feedback.RemoteFeedbackClient",
+                        RemoteFeedback.REGISTRY_HOST_PROPERTY,
+                        hostname);
 
         log.trace ("Created deployment config:\n" + conf.dumpString());
 
@@ -107,7 +111,10 @@ public class DeployCommand extends Command {
         ConnectionContext<ScoreConnection> connCtx = null;
         RemoteConsoleFeedback remoteConsole = null;
         try {
+            log.trace("invoke: Creating remoteConsole");
             remoteConsole = conf.create (RemoteConsoleFeedback.class);
+            log.trace("invoke: Getting connCtx for scoreAddress '"
+                      + scoreAddress + "'");
             connCtx = cm.get (scoreAddress);
             if (connCtx == null) {
                 ctx.error ("Failed to connect to Score server at '"
@@ -115,7 +122,9 @@ public class DeployCommand extends Command {
                 return;
             }
 
+            log.trace("invoke: Getting score connection");
             ScoreConnection score = connCtx.getConnection();
+            log.trace("invoke: Calling deployClient");
             score.deployClient(conf);
             ctx.info ("OK");
         } finally {

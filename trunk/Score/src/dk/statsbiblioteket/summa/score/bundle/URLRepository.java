@@ -44,7 +44,7 @@ import org.apache.commons.logging.LogFactory;
 public class URLRepository implements BundleRepository {
 
     private String tmpDir;
-    private Log log;
+    private Log log = LogFactory.getLog(this.getClass());;
     private String baseUrl;
 
     /**
@@ -69,8 +69,6 @@ public class URLRepository implements BundleRepository {
             baseUrl += "/";
         }
 
-
-        this.log = LogFactory.getLog(this.getClass());
 
         log.debug ("Created " + this.getClass().getName()
                  + " instance with base url " + baseUrl);

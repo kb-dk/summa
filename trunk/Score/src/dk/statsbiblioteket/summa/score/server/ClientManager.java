@@ -63,13 +63,12 @@ public class ClientManager extends ConnectionManager<ClientConnection>
      */
     public static final String CLIENT_META_FILE_EXT = ".meta.xml";
 
-    private Log log;
+    private Log log = LogFactory.getLog (ClientManager.class);
     private File metaDir;
 
     public ClientManager(Configuration conf) throws IOException {
         super (getConnectionFactory(conf));
 
-        log = LogFactory.getLog (ClientManager.class);
         metaDir = ScoreUtils.getClientMetaDir(conf);
     }
 
