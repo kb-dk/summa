@@ -3,7 +3,7 @@
 
 <log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/" debug="false">
     <appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
-        <param name="Threshold" value="DEBUG"/><!-- or ERROR or INFO -->
+        <param name="Threshold" value="TRACE"/><!-- or ERROR or INFO -->
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
         </layout>
@@ -20,13 +20,13 @@
         </layout>
     </appender>
 
-    <logger name="dk.statsbiblioteket">
-        <level value="DEBUG" />
+    <logger name="dk.statsbiblioteket.summa.storage">
+        <level value="TRACE" />
         <appender-ref ref="CONSOLE" />
     </logger>
 
     <root>
-        <level value="TRACE" />
+        <level value="INFO" />
         <appender-ref ref="FULL_LOG" />
     </root>
 

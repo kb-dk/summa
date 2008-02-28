@@ -667,9 +667,12 @@ public abstract class DatabaseControl extends Control {
      */
     private RecordIterator createRecordIterator(ResultSet resultSet) throws
                                                                RemoteException {
+        log.trace("createRecordIterator entered with result set " + resultSet);
         ResultIterator iterator;
         try {
             iterator = new ResultIterator(resultSet);
+            log.trace("createRecordIterator: God iterator " + iterator.getKey()
+                      + " adding to iterator-list");
             iterators.put(iterator.getKey(), iterator);
         } catch (SQLException e) {
             log.error("SQLException creating record iterator", e);
