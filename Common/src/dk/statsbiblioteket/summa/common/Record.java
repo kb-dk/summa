@@ -418,10 +418,13 @@ public class Record implements Serializable, Comparable{
     }
 
     /**
-     * The time granularity is milliseconds for equals.
-     * @param time1 a timestamp in nanoseconds
-     * @param time2 a timestamp in nanoseconds
-     * @return true if the timestamps are equal down to millisecond resolution.
+     * As we cannot rely on the underlying storage for fine granularity of
+     * time, we use seconds when comparing timestamps.
+     * @param time1 a timestamp in milliseconds, as used by
+     *              System.currentTimeMsillis.
+     * @param time2 a timestamp in milliseconds, as used by
+     *              System.currentTimeMillis.
+     * @return true if the timestamps are equal down to second resolution.
      */
     private boolean timeEquals(long time1, long time2) {
         return time1 / 1000 == time2 / 1000;
