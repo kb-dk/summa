@@ -35,12 +35,14 @@ import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.lucene.analysis.SimpleAnalyzer;
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.TokenMgrError;
 import org.apache.lucene.search.Hit;
 import org.apache.lucene.search.Hits;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.store.RAMDirectory;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -72,14 +74,22 @@ public class QueryPerformanceThread extends Thread {
         queryCount.set(0);
         simulateSearch = simulate;
 
+        IndexSearcher searcher = null;
         for (int i = 0 ; i < threadCount ; i++) {
             SummaQueryParser queryParser = new SummaQueryParser(new String[]{},
                                               new SimpleAnalyzer(), descriptor);
             queryParser.setDefaultFields(("au author_normalized su lsubj ti "
                                           + "freetext sort_title").split(" "));
-            IndexSearcher searcher;
             if (uniqueSearchers) {
-                searcher = connector.getNewSearcher();
+                if (searcher != null &&
+                    searcher.getIndexReader().directory() instanceof
+                            RAMDirectory) {
+                    // We reuse the directory when we're using RAM
+                    searcher = new IndexSearcher(IndexReader.open(
+                            searcher.getIndexReader().directory()));
+                } else {
+                    searcher = connector.getNewSearcher();
+                }
             } else {
                 searcher = connector.getSearcher();
             }
