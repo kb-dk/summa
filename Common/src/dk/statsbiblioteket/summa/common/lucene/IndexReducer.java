@@ -102,8 +102,9 @@ public class IndexReducer {
             double fractionCounter = 0.0;
             for (int i = docCount-1; i >= 0; i--) {
                 if ((int)fractionCounter != lastReduction) {
-                    ir.deleteDocument(i);
                     lastReduction = (int)fractionCounter;
+                } else {
+                    ir.deleteDocument(i);
                 }
                 fractionCounter += fraction;
                 if (i % feedback == 0) {
