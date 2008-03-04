@@ -87,17 +87,28 @@ public abstract class Control extends UnicastRemoteObject implements Access,
 
     protected void updateMultiVolume(Record record) {
         log.warn("updateMultiVolume not implemented yet");
-        // TODO: Implement this
-        /* Pseudo-code:
+        // TODO: Implement multi-volume as described in the pseudo-code
+        /* Pseudo-code for new or modified (self = new or modified record):
         if parent exists
-          mark as not indexable
+          mark self as not indexable
           add self to parent-children
-          update parent upwards
+          touch parent upwards (to trigger update)
         foreach child
           mark child as not indexable
           set self as child parent
-         */
+        foreach child in each record
+          if child equals self
+            touch record
 
+        Idea: Keep a cache of ghost-childs (child-id's without corresponding
+              record) and their Record-id, for faster lookup.
+
+        Pseudo-code for deleted:
+          if parent exists
+            touch parent upwards
+          foreach child
+            mark child as indexable
+         */
     }
 
     /**
