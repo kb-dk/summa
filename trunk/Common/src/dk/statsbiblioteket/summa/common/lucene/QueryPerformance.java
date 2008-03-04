@@ -94,7 +94,6 @@ public class QueryPerformance {
                          indexLocation.toString());
             configuration = new Configuration(memStore);
             connector = new IndexConnector(configuration);
-            searcher = connector.getSearcher();
         } catch (Exception e) {
             throw new RuntimeException("Could not connect to index at '"
                                        + indexLocation + "'", e);
@@ -229,6 +228,7 @@ public class QueryPerformance {
     }
 
     private void interactive() throws IOException {
+        searcher = connector.getSearcher();
         Profiler profiler = new Profiler();
         while(true) {
             System.out.print("Enter a query, HITS divisions query or QUIT: ");
