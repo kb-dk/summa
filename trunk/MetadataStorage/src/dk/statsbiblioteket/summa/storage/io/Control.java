@@ -108,7 +108,7 @@ public abstract class Control extends UnicastRemoteObject implements Access,
      */
     public boolean recordActive(String id) throws RemoteException {
         Record record = getRecord(id);
-        return !record.isDeleted() && record.isIndexable();
+        return record != null && !record.isDeleted() && record.isIndexable();
     }
 
     public boolean recordExists(String name) throws RemoteException {
