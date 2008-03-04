@@ -22,17 +22,18 @@
  */
 package dk.statsbiblioteket.summa.score.bundle;
 
-import dk.statsbiblioteket.summa.score.client.Client;
-import dk.statsbiblioteket.summa.score.api.Service;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Strings;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import dk.statsbiblioteket.summa.score.api.Service;
+import dk.statsbiblioteket.summa.score.client.Client;
+import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Stub class for launching a bundle in a separate JVM.
@@ -130,11 +131,15 @@ public class BundleStub {
     public Process start () throws IOException {
         log.trace("start called");
         List<String> cmdLine = buildCommandLine();
+        Logs.log(log, Logs.Level.DEBUG, "start: Bundle dir is '" + bundleDir
+                                        + "', command line is ", cmdLine);
         ProcessBuilder pb = new ProcessBuilder();
         pb.directory(bundleDir);
         pb.command(cmdLine);
 
-        return pb.start();
+        Process process = pb.start();
+        log.trace("Returning Process");
+        return process;
     }
 
     /**
