@@ -267,7 +267,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         File tmpBundleFile;
 
         try {
-            tmpBundleFile = repository.get (bundleId);
+            tmpBundleFile = repository.get(bundleId);
         } catch (IOException e) {
             throw new BundleLoadingException ("Failed to retrieve " + bundleId
                                             + "from repository", e);
@@ -291,8 +291,8 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
      *                       rmi address, or file path
      * @return the instance id of the deployed service or null on error
      */
-    public void deployServiceFromLocalFile (String instanceId, File localFile,
-                                            String configLocation) {
+    public void deployServiceFromLocalFile(String instanceId, File localFile,
+                                           String configLocation) {
 
         if (servicePath.equals(localFile.getParent())) {
             throw new BundleLoadingException ("Trying to deploy " + localFile
@@ -725,18 +725,21 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
             log.trace("Setting " + policy + " read only");
             policy.setReadable(false, false); // disallow all reading
             policy.setReadable(true); // allow user reading
+            policy.setWritable(false, false); // disallow all writing
         }
 
         if (password.exists()) {
             log.trace("Setting " + password + " read only");
             password.setReadable(false, false); // disallow all reading
             password.setReadable(true); // allow user reading
+            password.setWritable(false, false); // disallow all writing
         }
 
         if (access.exists()) {
             log.trace("Setting " + access + " read only");
             access.setReadable(false, false); // disallow all reading
             access.setReadable(true); // allow user reading
+            access.setWritable(false, false); // disallow all writing
         }
     }
 

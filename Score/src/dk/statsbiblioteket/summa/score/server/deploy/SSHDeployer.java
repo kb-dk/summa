@@ -183,6 +183,43 @@ public class SSHDeployer implements ClientDeployer {
         */
     }
 
+    private String[] privateFiles = new String[]{"jmx.access", "jmx.password"};
+    /**
+     * The permissions for JMX.access and JMX.password needs to be readable only
+     * for the owner. The Unzip provided by Java does not handle file
+     * permissions and a readily available substitute has not been found.
+     * This method performs a recursive descend and sets the correct permissions
+     * for all jmx.access and jmx.password files it encounters.
+     * @param root where to start the search for JMX-files.
+     */
+    private void fixJMXPermissions(File root) {
+        log.trace("fixJMXPermissions(" + root + ") entered");
+        try {
+            File[] files = root.listFiles();
+            for (File file: files) {
+                if (file.isDirectory()) {
+                    fixJMXPermissions(file);
+                } else {
+                    for (String privateFile: privateFiles) {
+                        if (privateFile.equals(file.getName())) {
+                            log.debug("Setting permissions for '"
+                                      + file.getAbsoluteFile()
+                                      + " to read-only for owner and no "
+                                      + "permissions for everyone else");
+                            file.setReadable(false, false);
+                            file.setReadable(true, true);
+                            file.setWritable(false, false);
+                            file.setExecutable(false, false);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("fixJMXPermissions: Could not handle '" + root
+                     + "'. Skipping");
+        }
+    }
+
     /**
      * Check to see whether the destination folde rexists. If it doesn't, try
      * to create it.

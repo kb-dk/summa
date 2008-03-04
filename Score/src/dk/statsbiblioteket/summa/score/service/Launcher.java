@@ -44,6 +44,7 @@ public class Launcher {
                        + " = " + serviceClass);
 
             Service service = conf.create (serviceClass);
+            log.debug("Created service. The launch has completed.");
         } catch (Throwable t) {
             log.fatal("Caught toplevel exception, bailing out.", t);
             System.err.println ("Service launcher caught toplevel exception. "
