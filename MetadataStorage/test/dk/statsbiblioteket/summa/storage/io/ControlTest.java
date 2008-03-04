@@ -1,5 +1,11 @@
 package dk.statsbiblioteket.summa.storage.io;
 
+import java.io.File;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.storage.StorageFactory;
@@ -8,11 +14,6 @@ import dk.statsbiblioteket.util.Files;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
-import java.io.File;
-import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * This JUnit-test is written with ControlDerby testing in mind. However, it
@@ -186,6 +187,76 @@ public class ControlTest extends TestCase {
                      + " match", 
                      0, countRecords(i));
     }
+
+    public void testGetRecordsFrom() throws Exception {
+        String[] ids = new String[]{"b1", "a1", "a0", "b7", "b2"};
+        String from = "a1";
+        for (String id: ids) {
+            control.flush(new Record(id, "bar", new byte[0]));
+        }
+
+        String[] expected = Arrays.copyOf(ids, ids.length);
+        Arrays.sort(expected);
+        expected = Arrays.copyOfRange(expected,
+                                      Arrays.binarySearch(expected, from)+1,
+                                      expected.length);
+
+        List<String> result = new ArrayList<String>(expected.length);
+        RecordIterator i = control.getRecordsFrom(from, "bar");
+        while (i.hasNext()) {
+            Record record = i.next();
+            result.add(record.getId());
+        }
+        assertEquals("The length of expected and result should be equal",
+                     expected.length, result.size());
+        for (int j = 0 ; j < expected.length ; j++) {
+            assertEquals("The id at position " + j + " should be the same for " 
+                         + "expected and result", expected[j], result.get(j));
+        }
+    }
+
+    public void testGetRecord() throws Exception {
+        control.flush(new Record("foo", "bar", new byte[0]));
+        control.flush(new Record("baz", "bar", new byte[0]));
+        assertEquals("The extracted record should have the right base",
+                     "bar", control.getRecord("foo").getBase());
+        assertNull("Requesting a non-existing Record should return null",
+                   control.getRecord("bada-boom"));
+    }
+
+    public void testRecordExists() throws Exception {
+        control.flush(new Record("foo", "bar", new byte[0]));
+        control.flush(new Record("baz", "bar", new byte[0]));
+        assertTrue("The record foo should exist", control.recordExists("foo"));
+        assertFalse("The record w3 should not exist",
+                    control.recordExists("w3"));
+    }
+
+    @SuppressWarnings({"deprecation"})
+    public void testRecordActive() throws Exception {
+        control.flush(new Record("foo", "bar", new byte[0]));
+        Record deleted = new Record("baz", "bar", new byte[0]);
+        control.flush(deleted);
+        deleted.setDeleted(true);
+        deleted.touch();
+        control.flush(deleted);
+        Record notactive = new Record("zoo", "bar", new byte[0]);
+        control.flush(notactive);
+        notactive.setIndexable(false);
+        notactive.touch();
+        control.flush(notactive);
+
+        assertTrue("The plain record foo should be active",
+                   control.recordActive("foo"));
+        assertFalse("The deleted record baz should not be active",
+                   control.recordActive("baz"));
+        assertFalse("The non-indexable record zoo should not be active",
+                   control.recordActive("zoo"));
+        assertFalse("The non-existing record nada should not be active", 
+                   control.recordActive("nada"));
+    }
+
+
 
     private int countRecords(RecordIterator iterator) {
         int counter = 0;

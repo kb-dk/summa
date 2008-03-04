@@ -239,7 +239,7 @@ public abstract class DatabaseControl extends Control {
         String fromQuery = "SELECT " + allCells
                            + " FROM " + TABLE
                            + " WHERE " + BASE_COLUMN + "=?"
-                           + " AND " + ID_COLUMN + ">=?"
+                           + " AND " + ID_COLUMN + ">?"
                            + " ORDER BY " + ID_COLUMN;
         log.debug("Preparing query getFrom with '" + fromQuery + "'");
         stmtGetFrom = getConnection().prepareStatement(fromQuery);
