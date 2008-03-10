@@ -73,6 +73,7 @@ public abstract class ServiceBase extends UnicastRemoteObject
     public ServiceBase(Configuration conf) throws RemoteException {
         super (getServicePort(conf));
 
+        id = System.getProperty(SERVICE_ID);
         if (System.getSecurityManager() == null) {
             log.info ("No security manager found. Setting RMI security manager");
             System.setSecurityManager(new RMISecurityManager());
@@ -80,7 +81,6 @@ public abstract class ServiceBase extends UnicastRemoteObject
 
         registryPort = conf.getInt(REGISTRY_PORT, 27000);
         servicePort = conf.getInt(SERVICE_PORT, 27003);
-        id = System.getProperty(SERVICE_ID);
         log.info("ServiceBase constructor finished with registryPort "
                  + registryPort + ", servicePort " + servicePort
                  + " and id '" + id + "'");
@@ -190,6 +190,19 @@ public abstract class ServiceBase extends UnicastRemoteObject
                              Logging.LogLevel level) {
         status = new Status(code, msg);
         Logging.log (this +" status: "+ status, log, level);
+    }
+
+    /**
+     * Set the status and log a message.
+     * @param code the status code to set.
+     * @param msg a message for the status.
+     * @param level the logging level to log on.
+     * @param cause the cause of the change in status
+     */
+    protected void setStatus(Status.CODE code, String msg,
+                             Logging.LogLevel level, Throwable cause) {
+        status = new Status(code, msg);
+        Logging.log(this +" status: "+ status, log, level, cause);
     }
 
     /**
