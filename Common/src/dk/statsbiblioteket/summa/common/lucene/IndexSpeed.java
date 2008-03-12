@@ -39,6 +39,9 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.MatchAllDocsQuery;
+import org.apache.lucene.search.Query;
 
 /**
  * A class for testing index speed under various circumstances. This is more of
@@ -58,12 +61,16 @@ public class IndexSpeed {
     private static int threads = 1;
     private static int termlength = 0;
     private static String indexLocation = null;
+    private static int searchinterval = -1;
+    private static boolean reopen = false;
+    private static boolean warm = false;
 
     private static int feedbackInterval = 10000;
     private static final String[] SEMI_RANDOMS = new String[]{
             "foo", "bar", "zoo", "kablooie", "Hamster", "Huey", "gooey", "and",
             "the"};
     private IndexWriter writer;
+    SearcherThread searcherThread = new SearcherThread();
 
     private static int counter = 0;
     private static Profiler profiler;
@@ -72,6 +79,7 @@ public class IndexSpeed {
         if (!(args.length >= 1)) {
             System.err.println("Usage: IndexSpeed [-m maxdocs] [-r rambuffer]"
                                + " [-f flushcount] [-d] [-u termlength] "
+                               + " [-s searcherinterval] [-rs] [-w] "
                                + "indexlocation");
             System.err.println("-m maxdocs\tThe maximum number of documents to "
                                + "create (default: Integer.MAX_VALUE-1)");
@@ -84,75 +92,60 @@ public class IndexSpeed {
             System.err.println("-u termlength\tCreate a unique random term of "
                                + "size termlength (Default: " + termlength
                                + ")");
+            System.err.println("-s searchinterval\tOpen a searcher every"
+                               + " searchinterval millisecond, if possible."
+                               + " An open triggers a flush. (default: -1 ("
+                               + "disabled))");
+            System.err.println("-rs\tUse the re-open method for searcher");
+            System.err.println("-w\tWarm searcher after opening with a "
+                               + "catch-all search");
             System.err.println("indexlocation\tA folder for the index");
             System.exit(-1);
         }
 
         List<String> arguments = new LinkedList<String>(Arrays.asList(args));
         while (arguments.size() > 0) {
-            if ("-m".equals(arguments.get(0))) {
-                arguments.remove(0);
-                try {
-                    maxdocs = Integer.parseInt(arguments.get(0));
-                } catch (NumberFormatException e) {
-                    System.err.println("Expected maxdocs (an integer)."
-                                       + " Got '"
-                                       + arguments.get(0) + "'. Exiting");
-                    System.exit(-1);
-                }
-                arguments.remove(0);
-            } else if ("-r".equals(arguments.get(0))) {
-                arguments.remove(0);
-                try {
-                    ramBuffer = Integer.parseInt(arguments.get(0));
-                } catch (NumberFormatException e) {
-                    System.err.println("Expected rambuffer (an integer). Got '"
-                                       + arguments.get(0) + "'. Exiting");
-                    System.exit(-1);
-                }
-                arguments.remove(0);
-            } else if ("-t".equals(arguments.get(0))) {
-                arguments.remove(0);
-                try {
-                    threads = Integer.parseInt(arguments.get(0));
-                } catch (NumberFormatException e) {
-                    System.err.println("Expected threads (an integer). Got '"
-                                       + arguments.get(0) + "'. Exiting");
-                    System.exit(-1);
-                }
-                arguments.remove(0);
-            } else if ("-u".equals(arguments.get(0))) {
-                arguments.remove(0);
-                try {
-                    termlength = Integer.parseInt(arguments.get(0));
-                } catch (NumberFormatException e) {
-                    System.err.println("Expected termlength (an integer). Got '"
-                                       + arguments.get(0) + "'. Exiting");
-                    System.exit(-1);
-                }
-                arguments.remove(0);
-            } else if ("-f".equals(arguments.get(0))) {
-                arguments.remove(0);
-                try {
-                    flush = Integer.parseInt(arguments.get(0));
-                } catch (NumberFormatException e) {
-                    System.err.println("Expected flushcount (an integer). Got '"
-                                       + arguments.get(0) + "'. Exiting");
-                    System.exit(-1);
-                }
-                arguments.remove(0);
-            } else if ("-d".equals(arguments.get(0))) {
-                arguments.remove(0);
+            String next = arguments.remove(0);
+            if ("-m".equals(next)) {
+                maxdocs = getIntFromArgs(arguments, "maxdocs");
+            } else if ("-r".equals(next)) {
+                ramBuffer = getIntFromArgs(arguments, "rambuffer");
+            } else if ("-t".equals(next)) {
+                threads = getIntFromArgs(arguments, "threads");
+            } else if ("-u".equals(next)) {
+                termlength = getIntFromArgs(arguments, "termlength");
+            } else if ("-f".equals(next)) {
+                flush = getIntFromArgs(arguments, "flushcount");
+            } else if ("-s".equals(next)) {
+                searchinterval = getIntFromArgs(arguments, "searchinterval");
+            } else if ("-d".equals(next)) {
                 docReuse = true;
+            } else if ("-rs".equals(next)) {
+                reopen = true;
+            } else if ("-w".equals(next)) {
+                warm = true;
             } else if (indexLocation == null) {
-                indexLocation = arguments.remove(0);
+                indexLocation = next;
             } else {
-                System.err.println("Unexpected token: '" + arguments.get(0)
+                System.err.println("Unexpected token: '" + next
                                    + "'. Exiting");
                 System.exit(-1);
             }
         }
         new IndexSpeed().speedTest();
+    }
+
+    private static int getIntFromArgs(List<String> arguments, String expected) {
+        int result = -1;
+        try {
+            result = Integer.parseInt(arguments.get(0));
+        } catch (NumberFormatException e) {
+            System.err.println("Expected " + expected + " (an integer). Got '"
+                               + arguments.get(0) + "'. Exiting");
+            System.exit(-1);
+        }
+        arguments.remove(0);
+        return result;
     }
 
     /**
@@ -163,15 +156,72 @@ public class IndexSpeed {
         profiler.beat();
         if (counter % feedbackInterval == 0 && counter > 0) {
             System.out.println(counter + "/" + maxdocs + "("
-                               + (counter * 100 / maxdocs) + "%) at "
+                               + counter * 100 / maxdocs + "%) at "
                                + profiler.getBps(true) + " doc/sec ("
                                + profiler.getBps(false) + " total). "
-                               + "ETA: " + profiler.getETAAsString(true));
+                               + searcherThread.getStats()
+                               + ". ETA: " + profiler.getETAAsString(true));
         }
         if (counter++ >= maxdocs) {
             return -1;
         }
         return counter;
+    }
+
+    class SearcherThread extends Thread {
+        private IndexSearcher searcher;
+        public boolean running = false;
+        private long nextOpening = System.currentTimeMillis();
+        private long openingtime = 0; // Nano-seconds
+        private int openingCounter = 0;
+        private Query everything  = new MatchAllDocsQuery();
+        public void run() {
+            //noinspection OverlyBroadCatchBlock
+            try {
+                running = true;
+                while (running && counter < maxdocs) {
+                    if (System.currentTimeMillis() >= nextOpening) {
+                        long beginTime = System.nanoTime();
+                        writer.flush();
+                        nextOpening+= searchinterval;
+                        if (searcher == null || !reopen) {
+                            if (searcher != null) {
+                                searcher.getIndexReader().close();
+                                searcher.close(); // Redundant?
+                            }
+                            searcher = new IndexSearcher(writer.getDirectory());
+                        } else {
+                            searcher.getIndexReader().reopen();
+                        }
+                        if (warm) {
+                            searcher.search(everything);
+                        }
+                        openingtime += System.nanoTime() - beginTime;
+                        openingCounter++;
+                    }
+                    long sleep = Math.min(1000,
+                                          nextOpening
+                                          - System.currentTimeMillis());
+                    if (sleep > 0) {
+                        Thread.sleep(sleep);
+                    }
+                }
+                if (searcher != null) {
+                    searcher.getIndexReader().close();
+                    searcher.close(); // Redundant?
+                }
+            } catch (Exception e) {
+                System.err.println("Exception while opening searcher");
+                e.printStackTrace();
+            }
+        }
+
+        public String getStats() {
+            long ms = openingtime / 1000000;
+            return "Searcher opened " + openingCounter + " times in " + ms
+                   + "ms (" + (openingtime > 0 ? ms / openingCounter : "NA")
+                   + " ms/open)";
+        }
     }
 
     class SpeedThread extends Thread {
@@ -277,13 +327,20 @@ public class IndexSpeed {
         }
         log.debug("Started " + threads + " threads");
 
+        if (searchinterval >= 0) {
+            searcherThread.start();
+            log.debug("Started searcher thread");
+        }
+
         for (SpeedThread t: threadList) {
             t.join();
         }
+        searcherThread.running = false;
 
         String status = "Indexed " + maxdocs + " documents at "
                         + profiler.getBps() + " doc/sec in "
-                        + profiler.getSpendTime() + ".";
+                        + profiler.getSpendTime() + ". "
+                        + searcherThread.getStats();
         System.out.println(status);
         log.info(status);
         writer.close(true);
@@ -291,9 +348,11 @@ public class IndexSpeed {
         Profiler optimizeProfiler = new Profiler();
         writer = new IndexWriter(new File(indexLocation),
                                  new StandardAnalyzer(), false);
+        writer.optimize(true);
         System.out.println("Finished optimizing in "
                            + optimizeProfiler.getSpendTime()
-                           + ". Total time spend: " + profiler.getSpendTime());
+                           + ".");
+        System.out.println("Total time spend: " + profiler.getSpendTime());
         System.out.println("Index: " + meta);
         writer.close();
     }
