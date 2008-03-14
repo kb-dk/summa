@@ -54,8 +54,7 @@ import org.apache.lucene.search.Query;
         author = "te")
 public class IndexSpeed {
     private static final Log log = LogFactory.getLog(IndexSpeed.class);
-    private static final String version =
-            "$Rev:$";
+    private static final String version = "$Rev$";
 
     private static int maxdocs = Integer.MAX_VALUE-1;
     private static int ramBuffer = 8;

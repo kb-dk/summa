@@ -58,7 +58,7 @@ public class RAMEater {
             }
         } catch (OutOfMemoryError e) {
             System.out.println("Allocated "
-                               + bytes.size() * BLOCK_SIZE / 1024 / 1024
+                               + (long)bytes.size() * BLOCK_SIZE / 1024 / 1024
                                + "MB before OutOfMemoryError was thrown");
         }
     }
