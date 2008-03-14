@@ -38,6 +38,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
@@ -53,6 +54,7 @@ import org.apache.lucene.search.Query;
         author = "te")
 public class IndexSpeed {
     private static final Log log = LogFactory.getLog(IndexSpeed.class);
+    private static final String version = "$Id:$ $Version:$";
 
     private static int maxdocs = Integer.MAX_VALUE-1;
     private static int ramBuffer = 8;
@@ -170,6 +172,8 @@ public class IndexSpeed {
 
     class SearcherThread extends Thread {
         private IndexSearcher searcher;
+        private IndexReader reader;
+
         public boolean running = false;
         private long nextOpening = System.currentTimeMillis();
         private long openingtime = 0; // Nano-seconds
@@ -189,9 +193,18 @@ public class IndexSpeed {
                                 searcher.getIndexReader().close();
                                 searcher.close(); // Redundant?
                             }
-                            searcher = new IndexSearcher(writer.getDirectory());
+                            reader = IndexReader.open(writer.getDirectory());
+                            searcher = new IndexSearcher(reader);
                         } else {
-                            searcher.getIndexReader().reopen();
+                            IndexReader newreader =
+                                    searcher.getIndexReader().reopen();
+                            //noinspection ObjectEquality
+                            if (newreader != searcher.getIndexReader()) {
+                                searcher.getIndexReader().close();
+                                searcher.close(); // Redundant?
+                                searcher = new IndexSearcher(newreader);
+                                reader = newreader;
+                            }
                         }
                         if (warm) {
                             searcher.search(everything);
@@ -319,7 +332,7 @@ public class IndexSpeed {
         List<SpeedThread> threadList = new ArrayList<SpeedThread>(threads);
         profiler = new Profiler();
         profiler.setExpectedTotal(maxdocs);
-        profiler.setBpsSpan(1000);
+        profiler.setBpsSpan(feedbackInterval);
         for (int i = 0 ; i < threads ; i++) {
             SpeedThread st = new SpeedThread();
             threadList.add(st);
