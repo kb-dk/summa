@@ -37,6 +37,7 @@ import java.lang.management.ManagementFactory;
 import java.rmi.RMISecurityManager;
 import java.rmi.RemoteException;
 import java.rmi.AccessException;
+import java.rmi.NotBoundException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
@@ -126,28 +127,7 @@ public abstract class ServiceBase extends UnicastRemoteObject
      */
     protected void exportRemoteInterfaces() throws RemoteException {
         log.trace("exportRemoteInterfaces called");
-        Registry reg;
-
-        try {
-            reg = LocateRegistry.createRegistry(registryPort);
-            log.debug("Created registry on port " + servicePort);
-        } catch (RemoteException e) {
-            try {
-                log.debug("Create registry failed, attempting getRegistry");
-                reg = LocateRegistry.getRegistry("localhost", registryPort);
-                log.debug ("Found registry localhost" + ":" + registryPort);
-            } catch (RemoteException ee) {
-                String error = "Could not get registry for localhost:"
-                               + registryPort;
-                log.error(error,ee);
-                throw new RemoteException(error, ee);
-            }
-        }
-
-        if (reg == null) {
-            throw new RemoteException ("Failed to locate or create registry on "
-                                     + "localhost:" + registryPort);
-        }
+        Registry reg = getRegistry();
 
         try {
             reg.rebind(id, this);
@@ -178,6 +158,54 @@ public abstract class ServiceBase extends UnicastRemoteObject
             log.error ("Failed to expose JMX interface. Going on without it.",
                        e);
         }
+    }
+
+    protected void unexportRemoteInterfaces() throws RemoteException {
+        log.trace("unbindRemoteInterfaces called");
+        Registry reg = getRegistry();
+        try {
+            reg.unbind(id);
+        } catch (NotBoundException e) {
+            String error = "Attempting to unbind non-bound id '" + id + "'";
+            log.error(error, e);
+            throw new RemoteException(error, e);
+        }
+        log.debug("Unbound '" + id + "'");
+        //noinspection OverlyBroadCatchBlock
+        try {
+            MBeanServer mbserver = ManagementFactory.getPlatformMBeanServer();
+            ObjectName name = new ObjectName(getClass().getName()
+                                             + ":type=Service");
+            mbserver.unregisterMBean(name);
+        } catch (Exception e) {
+            log.warn("Failed to unexpose JMX interface. Continuing.", e);
+        }
+    }
+
+    private Registry getRegistry() throws RemoteException {
+        log.trace("getRegistry called");
+        Registry reg;
+        try {
+            reg = LocateRegistry.createRegistry(registryPort);
+            log.debug("Created registry on port " + servicePort);
+        } catch (RemoteException e) {
+            try {
+                log.debug("Create registry failed, attempting getRegistry");
+                reg = LocateRegistry.getRegistry("localhost", registryPort);
+                log.debug ("Found registry localhost" + ":" + registryPort);
+            } catch (RemoteException ee) {
+                String error = "Could not get registry for localhost:"
+                               + registryPort;
+                log.error(error,ee);
+                throw new RemoteException(error, ee);
+            }
+        }
+
+        if (reg == null) {
+            throw new RemoteException ("Failed to locate or create registry on "
+                                     + "localhost:" + registryPort);
+        }
+        return reg;
     }
 
     /**
