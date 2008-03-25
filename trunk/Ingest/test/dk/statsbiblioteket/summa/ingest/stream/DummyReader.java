@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.Random;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.ingest.StreamFilter;
+import dk.statsbiblioteket.summa.ingest.stream.StreamFilter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 

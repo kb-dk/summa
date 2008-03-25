@@ -4,16 +4,16 @@
  */
 package dk.statsbiblioteket.summa.ingest.records;
 
-import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.ingest.RecordFilter;
-import dk.statsbiblioteket.summa.ingest.StreamFilter;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.rmi.RemoteException;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.ingest.stream.StreamFilter;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Test-class that takes a stream and transforms received data into Records.
@@ -27,7 +27,7 @@ public class DummyStreamToRecords implements RecordFilter {
     private StreamFilter source;
     private int dataSize = 100;
     private Record record;
-    private int idCounter = 0;
+    private static AtomicInteger idCounter = new AtomicInteger();
 
     public DummyStreamToRecords(Configuration configuration) throws
                                                              RemoteException {
@@ -63,8 +63,8 @@ public class DummyStreamToRecords implements RecordFilter {
             if (content.size() == dataSize) break;
         }
         if (content.size() > 0) {
-            record = new Record("DummyRecord_" + idCounter++, "Dummy",
-                                content.toByteArray());
+            record = new Record("DummyRecord_" + idCounter.getAndIncrement(),
+                                "Dummy", content.toByteArray());
         } else {
             record = null;
         }
@@ -73,5 +73,13 @@ public class DummyStreamToRecords implements RecordFilter {
     public void close(boolean success) {
         log.debug("Closing with success " + success);
         source.close(success);
+    }
+
+    public static int getIdCount() {
+        return idCounter.get();
+    }
+
+    public static void clearIdCount() {
+        idCounter.set(0);
     }
 }

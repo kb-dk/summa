@@ -61,6 +61,9 @@ public class FilterPumpTest extends TestCase {
 
         FilterPump pump = new FilterPump(pumpConf);
 
-        pump.run();
+        pump.start();
+        pump.waitForFinish();
+        assertTrue("The number of processed records should be > 0",
+                   DummyStreamToRecords.getIdCount() > 0);
     }
 }
