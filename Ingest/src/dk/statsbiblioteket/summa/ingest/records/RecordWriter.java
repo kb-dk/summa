@@ -30,8 +30,8 @@ import java.net.MalformedURLException;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.ingest.RecordFilter;
-import dk.statsbiblioteket.summa.ingest.StreamFilter;
+import dk.statsbiblioteket.summa.ingest.records.RecordFilter;
+import dk.statsbiblioteket.summa.ingest.stream.StreamFilter;
 import dk.statsbiblioteket.summa.storage.io.Access;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

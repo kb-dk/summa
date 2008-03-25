@@ -24,7 +24,8 @@ package dk.statsbiblioteket.summa.ingest.stream;
 
 import java.io.IOException;
 
-import dk.statsbiblioteket.summa.ingest.StreamFilter;
+import dk.statsbiblioteket.summa.ingest.stream.StreamFilter;
+import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * This readers performs a continuous scan of the local file system for any
@@ -38,6 +39,9 @@ import dk.statsbiblioteket.summa.ingest.StreamFilter;
  * {@code success/sub1/sub2/myfile.xml}.
  */
 // TODO: Implement this class
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.IN_DEVELOPMENT,
+        author = "te")
 public class BlockingFileReader extends StreamFilter {
 
     public void setSource(StreamFilter source) {

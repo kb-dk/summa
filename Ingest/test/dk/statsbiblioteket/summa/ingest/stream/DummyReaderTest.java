@@ -2,7 +2,7 @@ package dk.statsbiblioteket.summa.ingest.stream;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
-import dk.statsbiblioteket.summa.ingest.StreamFilter;
+import dk.statsbiblioteket.summa.ingest.stream.StreamFilter;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;

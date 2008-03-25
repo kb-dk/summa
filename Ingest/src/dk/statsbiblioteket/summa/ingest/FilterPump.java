@@ -1,18 +1,23 @@
 /**
  * Created: te 18-02-2008 23:59:10
- * CVS:     $Id:$
+ * CVS:     $Id$
  */
 package dk.statsbiblioteket.summa.ingest;
 
-import dk.statsbiblioteket.summa.common.configuration.Configurable;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.util.Logs;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
+import java.io.IOException;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.io.IOException;
+
+import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.util.StateThread;
+import dk.statsbiblioteket.summa.ingest.records.RecordFilter;
+import dk.statsbiblioteket.summa.ingest.stream.StreamFilter;
+import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Sets up a chain of filters and pumps the last filter until EOF is reached.
@@ -24,13 +29,19 @@ import java.io.IOException;
  * </p><p>
  * RecordFilters are chained after SteamFilters.
  */
-public class FilterPump implements Runnable, Configurable {
-    private static final Log log = LogFactory.getLog(FilterPump.class);
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.IN_DEVELOPMENT,
+        author = "te")
+public class FilterPump extends StateThread implements Configurable {
+    /* We delay the creation of the log until we know the name of the chain. */
+    private Log log;
 
     public static final String CONF_STREAM_FILTERS = "FilterPump.StreamFilters";
     public static final String CONF_RECORD_FILTERS = "FilterPump.RecordFilters";
-    public static final String CONF_CHAIN_NAME = "FilterPump.ChainName";
-
+    /**
+     * The name of the chain is used for feedback and debugging.
+     */
+    public static final String CONF_CHAIN_NAME =     "FilterPump.ChainName";
     public static final String CONF_FILTER_CLASS = "FilterPump.FilterClass";
 
     private ArrayList<StreamFilter> streamFilters =
@@ -39,6 +50,7 @@ public class FilterPump implements Runnable, Configurable {
     private ArrayList<RecordFilter> recordFilters =
             new ArrayList<RecordFilter>(10);
     private RecordFilter lastRecordFilter;
+
     private String chainName = "Unnamed Chain";
 
     long recordCounter = 0;
@@ -46,6 +58,7 @@ public class FilterPump implements Runnable, Configurable {
 
     public FilterPump(Configuration configuration) throws IOException {
         chainName = configuration.getString(CONF_CHAIN_NAME, chainName);
+        log = LogFactory.getLog(FilterPump.class + "." + chainName);
         log.info("Constructing FilterPump for chain '" + chainName + "'");
         List<String> streamFilterNames = null;
         try {
@@ -56,6 +69,7 @@ public class FilterPump implements Runnable, Configurable {
         List<String> recordFilterNames = null;
         try {
             recordFilterNames = configuration.getStrings(CONF_RECORD_FILTERS);
+            //noinspection DuplicateStringLiteralInspection
             Logs.log(log, Logs.Level.INFO, "Building record filter chain with ",
                      recordFilterNames);
         } catch (NullPointerException e) {
@@ -71,6 +85,7 @@ public class FilterPump implements Runnable, Configurable {
     }
 
     // TODO: Too much redundancy. Consider a superclass for filters
+    @SuppressWarnings({"DuplicateStringLiteralInspection"})
     private void buildChain(Configuration configuration,
                             List<String> streamFilterNames,
                             List<String> recordFilterNames) throws IOException {
@@ -120,6 +135,7 @@ public class FilterPump implements Runnable, Configurable {
         log.trace("Exiting buildChain for '" + chainName + "'");
     }
 
+    @SuppressWarnings({"DuplicateStringLiteralInspection"})
     private StreamFilter createStreamFilter(Configuration configuration) {
         Class<? extends StreamFilter> streamFilter =
                 configuration.getClass(CONF_FILTER_CLASS, StreamFilter.class);
@@ -127,6 +143,7 @@ public class FilterPump implements Runnable, Configurable {
                   + ". Commencing creation");
         return configuration.create(streamFilter);
     }
+    @SuppressWarnings({"DuplicateStringLiteralInspection"})
     private RecordFilter createRecordFilter(Configuration configuration) {
         Class<? extends RecordFilter> recordFilter =
                 configuration.getClass(CONF_FILTER_CLASS, RecordFilter.class);
@@ -137,28 +154,55 @@ public class FilterPump implements Runnable, Configurable {
 
     // TODO: Better feedback with Profiler
 
+    /**
+     * The run method is normally managed by the {@link #start} and
+     * {@link #stop} methods of FilterPump. It is not advisable to call it
+     * explicitly.
+     */
+    @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public void run() {
         log.debug("Running FilterChain '" + chainName + "'");
         try {
-            while (true) {
+            while (getStatus() == STATUS.running) {
                 if (lastRecordFilter != null) {
                     if (lastRecordFilter.getNextRecord() == null) {
                         log.info("Finished pumping " + recordCounter
                                  + " records from '" + chainName + "'");
-                        return;
+                        break;
                     }
                     recordCounter++;
                 } else {
                     if (lastStreamFilter.read() == StreamFilter.EOF) {
                         log.info("Finished pumping " + streamBytesCounter
                                  + " bytes from '" + chainName + "'");
-                        return;
+                        break;
                     }
                     streamBytesCounter++;
                 }
             }
+        } catch (IOException e) {
+            log.error("IOException caught running FilterPump", e);
+            setError();
         } catch (Throwable t) {
             log.error("Throwable caught running FilterPump", t);
+            setError();
         }
+    }
+
+    public String getChainName() {
+        return chainName;
+    }
+
+    public String toString() {
+        StringWriter sw = new StringWriter(500);
+        sw.append(getStatus().toString()).append(": ");
+        for (StreamFilter sf: streamFilters) {
+            sw.append(sf.getClass().toString()).append(" => ");
+        }
+        for (RecordFilter rf: recordFilters) {
+            sw.append(rf.getClass().toString()).append(" => ");
+        }
+        sw.append("pump");
+        return sw.toString();
     }
 }

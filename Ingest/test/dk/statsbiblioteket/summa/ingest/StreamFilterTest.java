@@ -1,6 +1,6 @@
 /**
  * Created: te 18-02-2008 23:30:32
- * CVS:     $Id:$
+ * CVS:     $Id$
  */
 package dk.statsbiblioteket.summa.ingest;
 
@@ -8,6 +8,8 @@ import junit.framework.TestCase;
 
 import java.io.IOException;
 import java.util.ArrayList;
+
+import dk.statsbiblioteket.summa.ingest.stream.StreamFilter;
 
 public class StreamFilterTest extends TestCase {
 
