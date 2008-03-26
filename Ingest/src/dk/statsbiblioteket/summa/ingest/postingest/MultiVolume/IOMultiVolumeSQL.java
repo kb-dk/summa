@@ -154,7 +154,7 @@ public class IOMultiVolumeSQL implements IOMultiVolume {
 
         log.info("database_pool_size: " + database_pool_size);
         source.setMaxConnections(database_pool_size);*/
-        throw new UnsupportedOperationException("The Summa Ingester is not implemented yet!");
+        throw new UnsupportedOperationException("The Summa FilterControl is not implemented yet!");
 
     }
 
@@ -175,7 +175,7 @@ public class IOMultiVolumeSQL implements IOMultiVolume {
         }
 
         return null;*/
-        throw new UnsupportedOperationException("The Summa Ingester is not implemented yet!");
+        throw new UnsupportedOperationException("The Summa FilterControl is not implemented yet!");
     }
 
     /**

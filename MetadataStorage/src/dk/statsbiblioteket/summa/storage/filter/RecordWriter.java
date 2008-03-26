@@ -20,18 +20,19 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.summa.ingest.records;
+package dk.statsbiblioteket.summa.storage.filter;
 
 import java.io.IOException;
-import java.rmi.Naming;
-import java.rmi.RemoteException;
-import java.rmi.NotBoundException;
 import java.net.MalformedURLException;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.util.NoSuchElementException;
 
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.ingest.records.RecordFilter;
-import dk.statsbiblioteket.summa.ingest.stream.StreamFilter;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.filter.Filter;
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.storage.io.Access;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -41,15 +42,15 @@ import org.apache.commons.logging.LogFactory;
  * The MetadataStorage is accessed via RMI at the address specified by
  * {@link #CONF_METADATA_STORAGE}.
  * </p><p>
- * Note: This RecordFilter can only be chained after another RecordFilter.
+ * Note: This ObjectFilter can only be chained after another ObjectFilter.
  */
-public class RecordWriter implements RecordFilter {
+public class RecordWriter implements ObjectFilter {
     private static final Log log = LogFactory.getLog(RecordWriter.class);
 
     public static final String CONF_METADATA_STORAGE =
             "RecordWriter.MetadataStorage";
 
-    private RecordFilter source;
+    private ObjectFilter source;
     private Access access;
 
     // FIXME: Only throw runtimeexceptions?
@@ -84,30 +85,32 @@ public class RecordWriter implements RecordFilter {
         // TODO: Perform a check to see if the MetadataStorage is alive
     }
 
-    public void setSource(StreamFilter source) {
-        throw new UnsupportedOperationException("RecordWriter cannot use a "
-                                                + "StreamFilter as a source");
+    public void setSource(Filter source) {
+        if (!(source instanceof ObjectFilter)) {
+            throw new UnsupportedOperationException("RecordWriter can only use "
+                                                    + "an ObjectFilter as a "
+                                                    + "source");
+        }
+        this.source = (ObjectFilter)source;
     }
 
-    public void setSource(RecordFilter source) {
-        log.trace("setSource(" + source + ") called");
-        this.source = source;
+    public boolean pump() throws IOException {
+        return hasNext() && next() != null;
     }
 
     /**
-     * Pumping Records with this methis has the side-effect of flushing them
+     * Pumping Payloads with this method has the side-effect of flushing Records
      * to the MetadataStorage.
-     * @return the next Record or null if there are no more Records.
-     * @throws IOException if the Record could not be retrieved or if a fatal
-     *         error occured when storing it to MetadataStorage.
+     * @return the next Record.
+     * @throws NoSuchElementException if the Record could not be retrieved.
      */
-    public Record getNextRecord() throws IOException {
-        log.trace("getNextRecord called");
-        Record record = source.getNextRecord();
+    public Payload next() throws NoSuchElementException {
+        log.trace("next called");
+        Payload payload = source.next();
+        Record record = payload.getRecord();
         if (record == null) {
-            log.debug("null received in getNextRecord. This means that there "
-                      + "are no more Records available");
-            return null;
+            throw new IllegalStateException("null received in Payload in next()"
+                                            + ". This should not happen");
         }
         try {
             if (log.isTraceEnabled()) {
@@ -121,7 +124,12 @@ public class RecordWriter implements RecordFilter {
             log.error("Exception flushing " + record, e);
             // TODO: Consider checking for fatal errors (the connection is down)
         }
-        return record;
+        return payload;
+    }
+
+    public void remove() {
+        throw new UnsupportedOperationException("No removal of Payloads for "
+                                                + "RecordWriter");
     }
 
     public void close(boolean success) {
@@ -131,7 +139,7 @@ public class RecordWriter implements RecordFilter {
         source.close(success);
     }
 
-    public boolean hasMoreRecords() throws IOException {
-        return source.hasMoreRecords();
+    public boolean hasNext() {
+        return source.hasNext();
     }
 }

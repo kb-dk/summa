@@ -20,14 +20,14 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.summa.ingest.stream;
+package dk.statsbiblioteket.summa.common.filter.stream;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.ingest.stream.StreamFilter;
+import dk.statsbiblioteket.summa.common.filter.Filter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -63,8 +63,12 @@ public class DummyReader extends StreamFilter {
                  + " and bodySize " + bodySize);
     }
 
-    public void setSource(StreamFilter source) {
+    public void setSource(Filter source) {
         throw new UnsupportedOperationException("No source accepted");
+    }
+
+    public boolean pump() throws IOException {
+        return read() != EOF;
     }
 
     public void close(boolean success) {
@@ -89,7 +93,7 @@ public class DummyReader extends StreamFilter {
      */
     public int read() throws IOException {
         if (content == null) {
-            return EOF;
+            return StreamFilter.EOF;
         }
         if (content.size() > 0) {
             // Inside a body
@@ -104,6 +108,6 @@ public class DummyReader extends StreamFilter {
         // No more bodies or bytes
         //noinspection AssignmentToNull
         content = null;
-        return EOF;
+        return StreamFilter.EOF;
     }
 }

@@ -24,7 +24,8 @@ package dk.statsbiblioteket.summa.ingest.stream;
 
 import java.io.IOException;
 
-import dk.statsbiblioteket.summa.ingest.stream.StreamFilter;
+import dk.statsbiblioteket.summa.common.filter.Filter;
+import dk.statsbiblioteket.summa.common.filter.stream.StreamFilter;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
@@ -44,8 +45,12 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         author = "te")
 public class BlockingFileReader extends StreamFilter {
 
-    public void setSource(StreamFilter source) {
+    public void setSource(Filter source) {
         // log.warn("Ignoring source");
+    }
+
+    public boolean pump() throws IOException {
+        return false;
     }
 
     public void close(boolean success) {
