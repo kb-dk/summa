@@ -128,11 +128,6 @@ public abstract class DatabaseControl extends Control {
      * need to be present in the database.
      */
     public static final String CHILDREN_COLUMN  = "children";
-    /**
-     * The validation-state of the record. Valid states are notValidated, valid
-     * and invalid.
-     */
-    public static final String VALID_COLUMN     = "valid";
 
     /* Constants for database-setup */
     public static final int ID_LIMIT =       255;
@@ -140,7 +135,6 @@ public abstract class DatabaseControl extends Control {
     public static final int DATA_LIMIT =     50*1024*1024;
     public static final int PARENT_LIMIT =   10*ID_LIMIT; // Room for the future
     public static final int CHILDREN_LIMIT = 100*ID_LIMIT; // Change to CLOB?
-    public static final int VALID_LIMIT =    20;
     private static final int BLOB_MAX_SIZE = 50*1024*1024; // MAX_VALUE instead?
 
     private PreparedStatement stmtGetAll;
@@ -211,8 +205,7 @@ public abstract class DatabaseControl extends Control {
                           + TABLE + "." + CTIME_COLUMN + ","
                           + TABLE + "." + MTIME_COLUMN + ","
                           + TABLE + "." + PARENT_COLUMN + ","
-                          + TABLE + "." + CHILDREN_COLUMN + ","
-                          + TABLE + "." + VALID_COLUMN;
+                          + TABLE + "." + CHILDREN_COLUMN;
 
         String allQuery = "SELECT " + allCells
                           + " FROM " + TABLE
@@ -267,9 +260,8 @@ public abstract class DatabaseControl extends Control {
                                        + CTIME_COLUMN + ","
                                        + MTIME_COLUMN + ","
                                        + PARENT_COLUMN + ","
-                                       + CHILDREN_COLUMN + ","
-                                       + VALID_COLUMN
-                                       + ") VALUES (?,?,?,?,?,?,?,?,?,?)";
+                                       + CHILDREN_COLUMN
+                                       + ") VALUES (?,?,?,?,?,?,?,?,?)";
         log.debug("Preparing query createRecord with '" + createRecordQuery
                   + "'");
         stmtCreateRecord = getConnection().prepareStatement(createRecordQuery);
@@ -281,8 +273,7 @@ public abstract class DatabaseControl extends Control {
                                    + DATA_COLUMN + "=?, "
                                    + MTIME_COLUMN + "=?, "
                                    + PARENT_COLUMN + "=?, "
-                                   + CHILDREN_COLUMN + "=?, "
-                                   + VALID_COLUMN + "=? "
+                                   + CHILDREN_COLUMN + "=? "
                                    + "WHERE " + ID_COLUMN +"=?";
         log.debug("Preparing query updateRecord with '" + updateRecordQuery
                   + "'");
@@ -442,8 +433,6 @@ public abstract class DatabaseControl extends Control {
             stmtCreateRecord.setString(8, record.getParent());
             stmtCreateRecord.setString(9,
                              Record.childrenListToString(record.getChildren()));
-            stmtCreateRecord.setString(10,
-                                 record.getValidationState().toString());
             stmtCreateRecord.execute();
         } catch (IOException e) {
             throw new RemoteException("IOException GZIPping data from record '"
@@ -468,8 +457,6 @@ public abstract class DatabaseControl extends Control {
             stmtUpdateRecord.setString(6, record.getParent());
             stmtUpdateRecord.setString(7,
                              Record.childrenListToString(record.getChildren()));
-            stmtUpdateRecord.setString(8,
-                                 record.getValidationState().toString());
             stmtUpdateRecord.setString(9, record.getId());
             stmtUpdateRecord.execute();
             if (stmtUpdateRecord.getUpdateCount() == 0) {
@@ -544,8 +531,7 @@ public abstract class DatabaseControl extends Control {
                 + CTIME_COLUMN     + " TIMESTAMP, "
                 + MTIME_COLUMN     + " TIMESTAMP, "
                 + PARENT_COLUMN    + " VARCHAR(" + PARENT_LIMIT + "), "
-                + CHILDREN_COLUMN  + " VARCHAR(" + CHILDREN_LIMIT + "), "
-                + VALID_COLUMN     + " VARCHAR(" + VALID_LIMIT + ") )";
+                + CHILDREN_COLUMN  + " VARCHAR(" + CHILDREN_LIMIT + ") )";
         log.debug("Creating table with query '" + createTableQuery + "'");
         return prepareStatement(createTableQuery);
     }
@@ -575,9 +561,7 @@ public abstract class DatabaseControl extends Control {
                           resultSet.getTimestamp(MTIME_COLUMN).getTime(),
                           resultSet.getString(PARENT_COLUMN),
                           Record.childrenStringToList(resultSet.
-                                  getString(CHILDREN_COLUMN)),
-                          Record.ValidationState.fromString(
-                                  resultSet.getString(VALID_COLUMN)));
+                                  getString(CHILDREN_COLUMN)));
     }
 
     /**

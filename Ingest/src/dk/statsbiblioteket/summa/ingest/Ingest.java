@@ -150,25 +150,30 @@ public class Ingest {
      * @param record the record to flush to the storage server.
      */
     public void flush(Record record){
-       log.info("Flushing record: isDeleted: " + record.isDeleted()
-                + " isIndexable: " + record.isIndexable()
-                + " isValid: " + record.getValidationState()
-                + " base:" + record.getBase()
-                + " id:" + record.getId());
+        String validationState =
+                record.getMeta(Record.META_VALIDATION_STATE) == null ?
+                Record.ValidationState.notValidated.toString() :
+                Record.ValidationState.fromString(record.getMeta(
+                        Record.META_VALIDATION_STATE)).toString();
+        log.info("Flushing record: isDeleted: " + record.isDeleted()
+                 + " isIndexable: " + record.isIndexable()
+                 + " isValid: " + validationState
+                 + " base:" + record.getBase()
+                 + " id:" + record.getId());
         // TODO: Should we ingest if the record is invalid
 //        if (record.getState() != null &&
         if (record.getBase() != null &&
-           record.getId() != null) {
-           if (record.isModified()){
-               update(record.getId(), record.getContent(), record.getBase());
-           } else if (record.isDeleted()){
-               delete(record.getId());
-           } else {
-               ingest(record.getId(), record.getContent(), record.getBase());
-           }
-       } else {
-           throw new IllegalStateException("Record not ready for flush");
-       }
+            record.getId() != null) {
+            if (record.isModified()){
+                update(record.getId(), record.getContent(), record.getBase());
+            } else if (record.isDeleted()){
+                delete(record.getId());
+            } else {
+                ingest(record.getId(), record.getContent(), record.getBase());
+            }
+        } else {
+            throw new IllegalStateException("Record not ready for flush");
+        }
     }
 
     /**

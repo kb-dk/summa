@@ -111,14 +111,15 @@ public abstract class ParserTask implements Runnable{
 
     /**
      * The store method will submit a record to the {@link Ingest}.
-     * Calling store with a record will guarantee that: at some time in the future,
-     * attempts will be made to actually store the record.
-     *
+     * Calling store with a record will guarantee that: at some time in the
+     * future, attempts will be made to actually store the record.
      * @param r             the record scheduled for storage.
      */
     public void store(Record r){
 
-        if (r.getValidationState() == Record.ValidationState.invalid) {
+        if (Record.ValidationState.fromString(
+                r.getMeta(Record.META_VALIDATION_STATE)) ==
+                                               Record.ValidationState.invalid) {
             log.debug(r + " not stored as the data are invalid");
             Progress.nogood();
             return;

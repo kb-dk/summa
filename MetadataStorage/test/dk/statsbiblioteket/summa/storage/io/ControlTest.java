@@ -81,8 +81,7 @@ public class ControlTest extends TestCase {
     public void testModified() throws Exception {
         long time = System.currentTimeMillis();
         Record record = new Record("foo", "bar", false, true, 
-                                   new byte[]{(byte)1}, time, time, "boo", null,
-                                   Record.ValidationState.notValidated);
+                                   new byte[]{(byte)1}, time, time, "boo", null);
         control.flush(record);
         assertEquals("Requesting the new stored record shouldn't change "
                      + "anything", record, control.getRecord("foo"));
@@ -93,7 +92,7 @@ public class ControlTest extends TestCase {
         children.add("ping2");
         Record modified = new Record("foo", "bar2", false, false,
                                    new byte[]{(byte)2}, time, time, "boo2",
-                                   children, Record.ValidationState.invalid);
+                                   children);
         modified.setModificationTime(time + 5000);
 
         assertTrue("The record should be classified as modified",

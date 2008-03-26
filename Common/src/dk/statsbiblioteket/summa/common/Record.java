@@ -22,17 +22,19 @@
  */
 package dk.statsbiblioteket.summa.common;
 
-import dk.statsbiblioteket.util.Logs;
-import dk.statsbiblioteket.util.Strings;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Map;
+
+import dk.statsbiblioteket.summa.common.util.StringMap;
+import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * A Record is the atom data unit in summa. Is is used for ingesting to the
@@ -43,8 +45,11 @@ import java.util.List;
         author = "hal, te")
 public class Record implements Serializable, Comparable{
     private static Log log = LogFactory.getLog(Record.class);
-    public static final String ID_DELIMITER = ";";
 
+    /**
+     * The validation-state can only be stored indirectly using the map
+     * provided by getMeta().
+     */
     public enum ValidationState {notValidated, valid, invalid;
         public static ValidationState fromString(String in) {
             if ("notValidated".equals(in)) {
@@ -54,13 +59,16 @@ public class Record implements Serializable, Comparable{
             } else if ("invalid".equals(in)) {
                 return invalid;
             } else {
-                log.warn("Unknown state: '" + in 
+                log.warn("Unknown state: '" + in
                          + "' in ValidationState.fromString. Returning "
                          + notValidated);
                 return notValidated;
             }
         }
     }
+    public static final String META_VALIDATION_STATE = "ValidationState";
+
+    public static final String ID_DELIMITER = ";";
 
     /**
      * The id is a persistent unique identifier for the Record. This is normally
@@ -109,10 +117,11 @@ public class Record implements Serializable, Comparable{
     private List<String> children;
 
     /**
-     * States whether the data content of this Record is considered valid.
-     * Note that a possible stats is notValidated.
+     * Meta-data for the Record, such as validation-state. Used for filter-
+     * specific data. The map can be accessed by {@link#getMeta}. It does not
+     * permit null - neither as key, nor value.
      */
-    private ValidationState validationState;
+    private Map<String, String> meta;
 
     /**
      * Create a Record without content. The state of the Record is not
@@ -130,8 +139,7 @@ public class Record implements Serializable, Comparable{
      */
     public Record(String id, String base, byte[] data) {
         long now = System.currentTimeMillis();
-        init(id, base, false, true, data, now, now, null, null,
-             ValidationState.notValidated);
+        init(id, base, false, true, data, now, now, null, null);
     }
 
     /**
@@ -143,8 +151,7 @@ public class Record implements Serializable, Comparable{
      * @param lastModified {@link #modificationTime}.
      */
      public Record(String id, String base, byte[] data, long lastModified){
-         init(id, base, false, true, data, 0, lastModified, null, null,
-              ValidationState.notValidated);
+         init(id, base, false, true, data, 0, lastModified, null, null);
     }
 
     /**
@@ -161,15 +168,12 @@ public class Record implements Serializable, Comparable{
      *                     {@link #modificationTime}.
      * @param parent       the ID for the parent record. {@link #parent}.
      * @param children     the ID's for the children records. {@link #children}.
-     * @param validationState whether the Record data is valid or not.
-     *                     See {@link #validationState}.
      */
     public Record(String id, String base, boolean deleted, boolean indexable,
                   byte[] data, long creationTime, long lastModified,
-                  String parent, List<String> children,
-                  ValidationState validationState){
+                  String parent, List<String> children){
         init(id, base, deleted, indexable, data, creationTime, lastModified,
-             parent, children, validationState);
+             parent, children);
     }
 
     /**
@@ -186,14 +190,11 @@ public class Record implements Serializable, Comparable{
      *                     {@link #modificationTime}.
      * @param parent       the ID for the parent record. {@link #parent}.
      * @param children     the ID's for the children records. {@link #children}.
-     * @param validationState whether the Record data is valid or not.
-     *                     See {@link #validationState}.
      */
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public void init(String id, String base, boolean deleted, boolean indexable,
                      byte[] data, long creationTime, long lastModified,
-                     String parent, List<String> children,
-                     ValidationState validationState){
+                     String parent, List<String> children){
         log.trace("Creating Record with id '" + id + "' from base '" + base
                   + "'");
         setId(id);
@@ -205,7 +206,6 @@ public class Record implements Serializable, Comparable{
         setModificationTime(lastModified);
         setParent(parent);
         setChildren(children);
-        setValidationState(validationState);
         if (log.isDebugEnabled()) {
             log.debug("Created " + toString());
         }
@@ -321,13 +321,6 @@ public class Record implements Serializable, Comparable{
         }
     }
 
-    public ValidationState getValidationState() {
-        return validationState;
-    }
-    public void setValidationState(ValidationState validationState) {
-        this.validationState = validationState;
-    }
-
     public long getLastModified() {
         return getModificationTime();
     }
@@ -363,6 +356,38 @@ public class Record implements Serializable, Comparable{
     }
 
     /**
+     * There is always a meta-map for each Record, but it is created lazily if
+     * it has no values. Use {@link #getMeta(String)} for fast look-up of values
+     * where it is expected that the map is empty, as it will never create a
+     * new map.
+     * @return the meta-map for this Record.
+     */
+    public Map<String, String> getMeta() {
+        if (meta == null) {
+            meta = new StringMap(10);
+        }
+        return meta;
+    }
+
+    /**
+     * Request a meta-value for the given key. This method is more efficient
+     * than requesting the full map with {@link#getMeta()}, as it never creates
+     * a new map.
+     * @param key the key for the value.
+     * @return the value for the key, or null if the key is not in the map.
+     */
+    public String getMeta(String key) {
+        return meta == null ? null :meta.get(key);
+    }
+
+    /**
+     * @return true if a meta-map has been created.
+     */
+    protected boolean hasMeta() {
+        return meta != null;
+    }
+
+    /**
      * Returns a hash code value for the record.
      * @return a hash code value
      */
@@ -390,6 +415,11 @@ public class Record implements Serializable, Comparable{
         return getId().compareTo(((Record) o).getId());
     }
 
+    @SuppressWarnings({"UnnecessaryParentheses"})
+    @QAInfo(level = QAInfo.Level.PEDANTIC,
+            state = QAInfo.State.IN_DEVELOPMENT,
+            author = "te",
+            comment="Tripple-check children and meta")
     public boolean equals(Object o) {
         if (o == null || !(o instanceof Record)) {
             return false;
@@ -405,11 +435,12 @@ public class Record implements Serializable, Comparable{
                    && indexable == other.isIndexable()
                    && ((parent == null && other.getParent() == null)
                        || (parent != null && parent.equals(other.getParent())))
-                   &&  validationState == other.getValidationState()
                    && Arrays.equals(data, other.getContent())
                    && ((children == null && other.getChildren() == null) ||
                        (children != null) && Strings.join(children, ",").equals(
-                    Strings.join(other.getChildren(), ",")));
+                    Strings.join(other.getChildren(), ",")))
+                    && ((!hasMeta() == !other.hasMeta()) 
+                        || (hasMeta() && getMeta().equals(other.getMeta())));
         } catch (Exception e) {
             log.error("Error calling equals for " + this + " and " + other
                       + ". Returning false", e);
@@ -432,7 +463,7 @@ public class Record implements Serializable, Comparable{
 
     /**
      * @return a human-readable single line version of Record.
-     * Note: This used Calendar to output timestamps and is thus expensive. 
+     * Note: This uses Calendar to output timestamps and is thus expensive.
      */
     public String toString() {
         return "Record [id(" + getId() + "), base(" + getBase()
@@ -443,7 +474,10 @@ public class Record implements Serializable, Comparable{
                + "), parent(" + getParent()
                + "), children("
                + (children == null ? "" : Logs.expand(children, 5))
-               + "), isValid(" + getValidationState() + ")]";
+               + "), meta("
+               + (meta == null ? "" : Logs.expand(
+                Arrays.asList(meta.keySet().toArray()), 5))
+               + ")]";
     }
 
     /**
@@ -496,6 +530,13 @@ public class Record implements Serializable, Comparable{
         return sw.toString();
     }
 
+    /**
+     * Helper-method for creating a pseudo-Record which represents a deleted
+     * Record.
+     * @param id   {@link #id}
+     * @param base {@link #base}
+     * @return a Record marked as deleted.
+     */
     public static Record createDeletedRecord(String id, String base) {
         Record record = new Record();
         record.setId(id);
