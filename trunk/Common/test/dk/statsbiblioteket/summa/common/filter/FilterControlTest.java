@@ -1,26 +1,25 @@
-package dk.statsbiblioteket.summa.ingest;
+package dk.statsbiblioteket.summa.common.filter;
 
 import java.util.Arrays;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
 import dk.statsbiblioteket.summa.common.configuration.storage.XStorage;
-import dk.statsbiblioteket.summa.ingest.records.DummyStreamToRecords;
-import dk.statsbiblioteket.summa.ingest.stream.DummyReader;
+import dk.statsbiblioteket.summa.common.filter.object.DummyStreamToRecords;
+import dk.statsbiblioteket.summa.common.filter.stream.DummyReader;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 /**
- * Ingester Tester.
+ * FilterControl Tester.
  *
  * @author <Authors name>
- * @since <pre>03/25/2008</pre>
+ * @since <pre>03/26/2008</pre>
  * @version 1.0
  */
-@SuppressWarnings({"DuplicateStringLiteralInspection"})
-public class IngesterTest extends TestCase {
-    public IngesterTest(String name) {
+public class FilterControlTest extends TestCase {
+    public FilterControlTest(String name) {
         super(name);
     }
 
@@ -32,10 +31,13 @@ public class IngesterTest extends TestCase {
         super.tearDown();
     }
 
-    public static Test suite() {
-        return new TestSuite(IngesterTest.class);
+    public void testGetVerboseStatus() throws Exception {
+        //TODO: Test goes here...
     }
 
+    public static Test suite() {
+        return new TestSuite(FilterControlTest.class);
+    }
     private void makeSimple(ConfigurationStorage storage) throws Exception {
         ConfigurationStorage streamSub =
                 storage.createSubStorage("Streamer");
@@ -52,10 +54,8 @@ public class IngesterTest extends TestCase {
 
         Configuration pumpConf = new Configuration(storage);
         pumpConf.set(FilterPump.CONF_CHAIN_NAME, "FilterPumpTest");
-        pumpConf.setStrings(FilterPump.CONF_STREAM_FILTERS,
-                            Arrays.asList("Streamer"));
-        pumpConf.setStrings(FilterPump.CONF_RECORD_FILTERS,
-                            Arrays.asList("Converter"));
+        pumpConf.setStrings(FilterPump.CONF_FILTERS,
+                            Arrays.asList("Streamer", "Converter"));
     }
 
     /*
@@ -69,10 +69,11 @@ public class IngesterTest extends TestCase {
                 ingesterStorage.createSubStorage("TestPump");
         makeSimple(pumpStorage);
         Configuration ingestConf = new Configuration(ingesterStorage);
-        ingestConf.setStrings(Ingester.CONF_CHAINS,
+        ingestConf.setStrings(FilterControl.CONF_CHAINS,
                               Arrays.asList("TestPump"));
-        ingestConf.set(Ingester.CONF_SEQUENTIAL, true);
-        Ingester ingester = new Ingester(new Configuration(ingesterStorage));
+        ingestConf.set(FilterControl.CONF_SEQUENTIAL, true);
+        FilterControl ingester =
+                new FilterControl(new Configuration(ingesterStorage));
         ingester.start();
         ingester.waitForFinish();
         return DummyStreamToRecords.getIdCount();
@@ -91,7 +92,7 @@ public class IngesterTest extends TestCase {
     public void testMultipleSequential() throws Exception {
         testMultiple(true);
     }
-    
+
     public void testMultipleParallel() throws Exception {
         testMultiple(false);
     }
@@ -110,11 +111,12 @@ public class IngesterTest extends TestCase {
         makeSimple(pumpStorage2);
 
         Configuration ingestConf = new Configuration(ingesterStorage);
-        ingestConf.setStrings(Ingester.CONF_CHAINS,
+        ingestConf.setStrings(FilterControl.CONF_CHAINS,
                               Arrays.asList("TestPump1", "TestPump2"));
-        ingestConf.set(Ingester.CONF_SEQUENTIAL, true);
+        ingestConf.set(FilterControl.CONF_SEQUENTIAL, true);
 
-        Ingester ingester = new Ingester(new Configuration(ingesterStorage));
+        FilterControl ingester =
+                new FilterControl(new Configuration(ingesterStorage));
         ingester.start();
         ingester.waitForFinish();
         assertEquals("The number of records processed (sequential: "

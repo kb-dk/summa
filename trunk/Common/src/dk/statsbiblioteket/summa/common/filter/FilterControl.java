@@ -20,7 +20,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.summa.ingest;
+package dk.statsbiblioteket.summa.common.filter;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -35,16 +35,16 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * The ingester creates a given number of filter chains and pumps contents
- * through them until they are all empty. The ingester allows for chains to be
+ * This class creates a given number of filter chains and pumps contents
+ * through them until they are all empty. The class allows for chains to be
  * executed either sequentially or in parallel, depending on configuration.
  */
 // TODO: Add scheduling capabilities
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class Ingester extends StateThread implements Configurable {
-    private final Log log = LogFactory.getLog(Ingester.class);
+public class FilterControl extends StateThread implements Configurable {
+    private final Log log = LogFactory.getLog(FilterControl.class);
 
     private List<FilterPump> pumps;
 
@@ -55,27 +55,27 @@ public class Ingester extends StateThread implements Configurable {
      * name as key and that configuration will be used for creating a
      * FilterPump.
      */
-    public static final String CONF_CHAINS = "Ingester.Chains";
+    public static final String CONF_CHAINS = "FilterControl.Chains";
 
     /**
-     * If true, the chains will be started in order of appearance, the Ingester
+     * If true, the chains will be started in order of appearance, the FilterControl
      * will wait for any previous chain to finish, before starting the next one.
      * If false, all chains will be started simultaneously.
      * </p><p>
      * Default: True.
      */
-    public static final String CONF_SEQUENTIAL = "Ingester.Sequential";
+    public static final String CONF_SEQUENTIAL = "FilterControl.Sequential";
 
     private boolean sequential = true;
 
     /**
-     * The Ingester sets up the Filter Chains defines by the configuration.
+     * The FilterControl sets up the Filter Chains defines by the configuration.
      * The chains aren't pumped before {@link #start} is called.
-     * @param configuration setup for the Ingester's underlying filter chains.
+     * @param configuration setup for the FilterControl's underlying filter chains.
      */
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    public Ingester(Configuration configuration) {
-        log.trace("Creating Ingester");
+    public FilterControl(Configuration configuration) {
+        log.trace("Creating FilterControl");
         List<String> chains = configuration.getStrings(CONF_CHAINS);
         pumps = new ArrayList<FilterPump>(chains.size());
         for (String chain: chains) {
@@ -153,6 +153,7 @@ public class Ingester extends StateThread implements Configurable {
             pump.stop();
         }
         log.trace("Pumps stopped");
+        // TODO: Add graceful timeout for pumping so cached data are processed
     }
 
     /**

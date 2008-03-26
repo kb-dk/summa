@@ -2,10 +2,10 @@
  * Created: te 18-02-2008 22:42:55
  * CVS:     $Id$
  */
-package dk.statsbiblioteket.summa.ingest.records;
+package dk.statsbiblioteket.summa.common.filter.object;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.ingest.stream.DummyReader;
+import dk.statsbiblioteket.summa.common.filter.stream.DummyReader;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -39,13 +39,17 @@ public class DummyStreamToRecordsTest extends TestCase {
         recorder.setSource(reader);
         for (int i = 0 ; i < RECORDS ; i++) {
             assertNotNull("We should be able to get Record " + (i+1),
-                          recorder.getNextRecord());
+                          recorder.next().getRecord());
         }
-        assertNull("After depleting, the next record should be null",
-                   recorder.getNextRecord());
-        assertNull("After depleting and getting next record, the next record "
-                   + "should still be null",
-                   recorder.getNextRecord());
+
+        assertFalse("After depleting, the hasNext should be false",
+                    recorder.hasNext());
+        try {
+            recorder.next();
+            fail("After depleting, the next payload should throw an exception");
+        } catch (Exception e) {
+            // Expected
+        }
     }
 
 }
