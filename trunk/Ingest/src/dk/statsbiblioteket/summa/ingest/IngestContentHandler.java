@@ -53,7 +53,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
        state = QAInfo.State.IN_DEVELOPMENT,
-       author = "hal")
+       author = "hal, te")
 public abstract class IngestContentHandler extends DefaultHandler2 {
 
     protected Record.ValidationState validationState;
@@ -85,9 +85,9 @@ public abstract class IngestContentHandler extends DefaultHandler2 {
      */
     public IngestContentHandler(String DEFAULT_NAMESPACE, ParserTask taskrunner){
         super();
-        this.task = taskrunner;
+        task = taskrunner;
         validationState = Record.ValidationState.notValidated;
-        buf = new StringBuffer();
+        buf = new StringBuffer(2000);
         inRecord = false;
         checkoutput = true;
         ns = new DefaultNamespaceContext(DEFAULT_NAMESPACE);
@@ -162,7 +162,8 @@ public abstract class IngestContentHandler extends DefaultHandler2 {
             buf.append('<').append('/').append(ns.getPrefix(uri)).append(localName).append(">");
         }
 
-        if (ns.getNamespaceURI(XMLConstants.DEFAULT_NS_PREFIX).equals(uri) && recordTagName.equals(localName)) {
+        if (ns.getNamespaceURI(XMLConstants.DEFAULT_NS_PREFIX).equals(uri)
+            && recordTagName.equals(localName)) {
             byte[] content = null;
             try {
                 if (checkoutput) {
@@ -182,7 +183,8 @@ public abstract class IngestContentHandler extends DefaultHandler2 {
             } else {
                 record = new Record(getID(), "unknown", content);
             }
-            record.setValidationState(validationState);
+            record.getMeta().put(Record.META_VALIDATION_STATE,
+                                 validationState.toString());
             record.setDeleted(isDeleted);
             task.store(record);
             clearBuffers();
