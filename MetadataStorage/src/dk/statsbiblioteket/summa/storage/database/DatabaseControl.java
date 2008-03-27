@@ -166,6 +166,10 @@ public abstract class DatabaseControl extends Control {
         // We need to define this to declare RemoteException
     }
 
+    public DatabaseControl(int port) throws RemoteException {
+        // We need to define this to declare RemoteException
+    }
+
     /**
      * The initializer connects to the database and prepares SQL statements.
      * It is recommended that this is called by all constructors.
