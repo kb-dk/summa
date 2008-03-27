@@ -39,6 +39,7 @@ public class StringMapTest extends TestCase {
     private static final String[][] entries = new String[][]{
             {"=/e/s\n///n/ee/s", "\n"},
             {"", ""},
+            {"d", ""},
             {"=", "="},
             {"hello world", "!"}
     };
