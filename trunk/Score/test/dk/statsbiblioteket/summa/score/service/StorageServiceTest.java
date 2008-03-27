@@ -26,6 +26,7 @@ public class StorageServiceTest extends TestCase {
 
     public void setUp() throws Exception {
         super.setUp();
+        checkSecurityManager();
     }
 
     public void tearDown() throws Exception {
@@ -36,31 +37,12 @@ public class StorageServiceTest extends TestCase {
         return new TestSuite(StorageServiceTest.class);
     }
 
-
     private String EXIT_MESSAGE = "Thou shall not exit!";
+    File location =
+            new File(System.getProperty("java.io.tmpdir"), "kabloey");
+
     public void testConstruction() throws Exception {
-        if (System.getSecurityManager() == null) {
-            System.setSecurityManager(new SecurityManager() {
-                public void checkPermission(Permission perm) {
-                    if (perm.getName().startsWith("exitVM")) {
-                        throw new SecurityException(EXIT_MESSAGE);
-                    }
-                }
-                public void checkPermission(Permission perm, Object context) {
-                    if (perm.getName().startsWith("exitVM")) {
-                        throw new SecurityException(EXIT_MESSAGE);
-                    }
-                }
-            });
-        }
-        File location =
-                new File(System.getProperty("java.io.tmpdir"), "kabloey");
-        Configuration conf = Configuration.newMemoryBased();
-        conf.set(DatabaseControl.PROP_LOCATION, location.toString());
-        conf.set(Service.SERVICE_PORT, 27003);
-        conf.set(Service.REGISTRY_PORT, 27000);
-        conf.set(Service.SERVICE_ID, "TestStorage");
-        System.setProperty(Service.SERVICE_ID, "TestStorage");
+        Configuration conf = createconfiguration();
         
         StorageService storage = new StorageService(conf);
         assertEquals("The state of the service should be "
@@ -90,5 +72,36 @@ public class StorageServiceTest extends TestCase {
         assertEquals("The state of the service should be "
                      + Status.CODE.stopped,
                      Status.CODE.stopped, storage.getStatus().getCode());
+    }
+
+    public void testRemote() throws Exception {
+        // TODO: Create StorageService, connect, try Control-interface
+    }
+
+    private Configuration createconfiguration() {
+        Configuration conf = Configuration.newMemoryBased();
+        conf.set(DatabaseControl.PROP_LOCATION, location.toString());
+        conf.set(Service.SERVICE_PORT, 27003);
+        conf.set(Service.REGISTRY_PORT, 27000);
+        conf.set(Service.SERVICE_ID, "TestStorage");
+        System.setProperty(Service.SERVICE_ID, "TestStorage");
+        return conf;
+    }
+
+    private void checkSecurityManager() {
+        if (System.getSecurityManager() == null) {
+            System.setSecurityManager(new SecurityManager() {
+                public void checkPermission(Permission perm) {
+                    if (perm.getName().startsWith("exitVM")) {
+                        throw new SecurityException(EXIT_MESSAGE);
+                    }
+                }
+                public void checkPermission(Permission perm, Object context) {
+                    if (perm.getName().startsWith("exitVM")) {
+                        throw new SecurityException(EXIT_MESSAGE);
+                    }
+                }
+            });
+        }
     }
 }

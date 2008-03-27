@@ -22,17 +22,15 @@
  */
 package dk.statsbiblioteket.summa.storage.io;
 
-import dk.statsbiblioteket.util.schedule.Schedulable;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.common.Status;
-
-import java.rmi.server.UnicastRemoteObject;
 import java.rmi.RemoteException;
-import java.io.IOException;
-import java.util.List;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.List;
 
+import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.schedule.Schedulable;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -49,11 +47,20 @@ public abstract class Control extends UnicastRemoteObject implements Access,
     private static Log log = LogFactory.getLog(Control.class);
 
     /**
-     * Control constructor.
-     * @throws RemoteException
+     * Using the default constructor means that the Control will not be
+     * exposed as a RMI service by Control itself.
+     * @throws RemoteException in case of any error.
      */
     public Control() throws RemoteException {
         super();
+    }
+
+    /**
+     * The recommended constructor as it allows for RMI exposure.
+     * @param configuration
+     * @throws RemoteException
+     */
+    public Control(Configuration configuration) throws RemoteException {
 
     }
 
