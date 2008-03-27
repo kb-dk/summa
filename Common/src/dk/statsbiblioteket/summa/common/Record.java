@@ -27,7 +27,6 @@ import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
-import java.util.Map;
 
 import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.util.Logs;
@@ -121,7 +120,7 @@ public class Record implements Serializable, Comparable{
      * specific data. The map can be accessed by {@link#getMeta}. It does not
      * permit null - neither as key, nor value.
      */
-    private Map<String, String> meta;
+    private StringMap meta;
 
     /**
      * Create a Record without content. The state of the Record is not
@@ -139,7 +138,7 @@ public class Record implements Serializable, Comparable{
      */
     public Record(String id, String base, byte[] data) {
         long now = System.currentTimeMillis();
-        init(id, base, false, true, data, now, now, null, null);
+        init(id, base, false, true, data, now, now, null, null, null);
     }
 
     /**
@@ -151,7 +150,7 @@ public class Record implements Serializable, Comparable{
      * @param lastModified {@link #modificationTime}.
      */
      public Record(String id, String base, byte[] data, long lastModified){
-         init(id, base, false, true, data, 0, lastModified, null, null);
+         init(id, base, false, true, data, 0, lastModified, null, null, null);
     }
 
     /**
@@ -168,12 +167,13 @@ public class Record implements Serializable, Comparable{
      *                     {@link #modificationTime}.
      * @param parent       the ID for the parent record. {@link #parent}.
      * @param children     the ID's for the children records. {@link #children}.
+     * @param meta         metadata for the Record.
      */
     public Record(String id, String base, boolean deleted, boolean indexable,
                   byte[] data, long creationTime, long lastModified,
-                  String parent, List<String> children){
+                  String parent, List<String> children, StringMap meta){
         init(id, base, deleted, indexable, data, creationTime, lastModified,
-             parent, children);
+             parent, children, meta);
     }
 
     /**
@@ -190,11 +190,12 @@ public class Record implements Serializable, Comparable{
      *                     {@link #modificationTime}.
      * @param parent       the ID for the parent record. {@link #parent}.
      * @param children     the ID's for the children records. {@link #children}.
+     * @param meta         metadata for the Record.
      */
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public void init(String id, String base, boolean deleted, boolean indexable,
                      byte[] data, long creationTime, long lastModified,
-                     String parent, List<String> children){
+                     String parent, List<String> children, StringMap meta){
         log.trace("Creating Record with id '" + id + "' from base '" + base
                   + "'");
         setId(id);
@@ -206,6 +207,7 @@ public class Record implements Serializable, Comparable{
         setModificationTime(lastModified);
         setParent(parent);
         setChildren(children);
+        this.meta = meta;
         if (log.isDebugEnabled()) {
             log.debug("Created " + toString());
         }
@@ -362,7 +364,7 @@ public class Record implements Serializable, Comparable{
      * new map.
      * @return the meta-map for this Record.
      */
-    public Map<String, String> getMeta() {
+    public StringMap getMeta() {
         if (meta == null) {
             meta = new StringMap(10);
         }
@@ -381,9 +383,10 @@ public class Record implements Serializable, Comparable{
     }
 
     /**
-     * @return true if a meta-map has been created.
+     * @return true if a meta-map has been created. Used for time/space
+     *         optimization. 
      */
-    protected boolean hasMeta() {
+    public boolean hasMeta() {
         return meta != null;
     }
 

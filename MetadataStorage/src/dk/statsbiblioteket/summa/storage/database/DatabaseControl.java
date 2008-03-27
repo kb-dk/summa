@@ -26,20 +26,24 @@
  */
 package dk.statsbiblioteket.summa.storage.database;
 
-import dk.statsbiblioteket.summa.storage.io.Control;
-import dk.statsbiblioteket.summa.storage.io.RecordIterator;
-import dk.statsbiblioteket.summa.storage.io.RecordAndNext;
+import java.io.IOException;
+import java.rmi.RemoteException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.HashMap;
+import java.util.Map;
+
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.util.StringMap;
+import dk.statsbiblioteket.summa.storage.io.Control;
+import dk.statsbiblioteket.summa.storage.io.RecordAndNext;
+import dk.statsbiblioteket.summa.storage.io.RecordIterator;
 import dk.statsbiblioteket.util.GZIP.GZIPUtils;
 import dk.statsbiblioteket.util.qa.QAInfo;
-
-import java.rmi.RemoteException;
-import java.sql.*;
-import java.io.IOException;
-import java.util.Map;
-import java.util.HashMap;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -128,6 +132,11 @@ public abstract class DatabaseControl extends Control {
      * need to be present in the database.
      */
     public static final String CHILDREN_COLUMN  = "children";
+    /**
+     * meta contains meta-data for the Record in the form of key-value pairs
+     * of Strings. See {@link StringMap#toFormal()} for format.
+     */
+    public static final String META_COLUMN  = "meta";
 
     /* Constants for database-setup */
     public static final int ID_LIMIT =       255;
@@ -135,6 +144,7 @@ public abstract class DatabaseControl extends Control {
     public static final int DATA_LIMIT =     50*1024*1024;
     public static final int PARENT_LIMIT =   10*ID_LIMIT; // Room for the future
     public static final int CHILDREN_LIMIT = 100*ID_LIMIT; // Change to CLOB?
+    public static final int META_LIMIT =     50*1024*1024; // MAX_VALUE instead?
     private static final int BLOB_MAX_SIZE = 50*1024*1024; // MAX_VALUE instead?
 
     private PreparedStatement stmtGetAll;
@@ -205,7 +215,8 @@ public abstract class DatabaseControl extends Control {
                           + TABLE + "." + CTIME_COLUMN + ","
                           + TABLE + "." + MTIME_COLUMN + ","
                           + TABLE + "." + PARENT_COLUMN + ","
-                          + TABLE + "." + CHILDREN_COLUMN;
+                          + TABLE + "." + CHILDREN_COLUMN + ","
+                          + TABLE + "." + META_COLUMN;
 
         String allQuery = "SELECT " + allCells
                           + " FROM " + TABLE
@@ -260,8 +271,9 @@ public abstract class DatabaseControl extends Control {
                                        + CTIME_COLUMN + ","
                                        + MTIME_COLUMN + ","
                                        + PARENT_COLUMN + ","
-                                       + CHILDREN_COLUMN
-                                       + ") VALUES (?,?,?,?,?,?,?,?,?)";
+                                       + CHILDREN_COLUMN + ","
+                                       + META_COLUMN
+                                       + ") VALUES (?,?,?,?,?,?,?,?,?,?)";
         log.debug("Preparing query createRecord with '" + createRecordQuery
                   + "'");
         stmtCreateRecord = getConnection().prepareStatement(createRecordQuery);
@@ -273,7 +285,8 @@ public abstract class DatabaseControl extends Control {
                                    + DATA_COLUMN + "=?, "
                                    + MTIME_COLUMN + "=?, "
                                    + PARENT_COLUMN + "=?, "
-                                   + CHILDREN_COLUMN + "=? "
+                                   + CHILDREN_COLUMN + "=?, "
+                                   + META_COLUMN + "=? "
                                    + "WHERE " + ID_COLUMN +"=?";
         log.debug("Preparing query updateRecord with '" + updateRecordQuery
                   + "'");
@@ -433,6 +446,9 @@ public abstract class DatabaseControl extends Control {
             stmtCreateRecord.setString(8, record.getParent());
             stmtCreateRecord.setString(9,
                              Record.childrenListToString(record.getChildren()));
+            stmtCreateRecord.setBytes(10,record.hasMeta() ?
+                                         record.getMeta().toFormalBytes() :
+                                         new byte[0]);
             stmtCreateRecord.execute();
         } catch (IOException e) {
             throw new RemoteException("IOException GZIPping data from record '"
@@ -457,6 +473,9 @@ public abstract class DatabaseControl extends Control {
             stmtUpdateRecord.setString(6, record.getParent());
             stmtUpdateRecord.setString(7,
                              Record.childrenListToString(record.getChildren()));
+            stmtUpdateRecord.setBytes(8, record.hasMeta() ?
+                                         record.getMeta().toFormalBytes() :
+                                         new byte[0]);
             stmtUpdateRecord.setString(9, record.getId());
             stmtUpdateRecord.execute();
             if (stmtUpdateRecord.getUpdateCount() == 0) {
@@ -466,6 +485,9 @@ public abstract class DatabaseControl extends Control {
                 createNewRecord(record);
                 return;
             }
+        } catch (RemoteException e) {
+            throw new RemoteException("RemoteException calling update for "
+                                      + "record '" + record.getId() + "'", e);
         } catch (IOException e) {
             throw new RemoteException("IOException GZIPping data from record '"
                                       + record.getId() + "'", e);
@@ -531,7 +553,8 @@ public abstract class DatabaseControl extends Control {
                 + CTIME_COLUMN     + " TIMESTAMP, "
                 + MTIME_COLUMN     + " TIMESTAMP, "
                 + PARENT_COLUMN    + " VARCHAR(" + PARENT_LIMIT + "), "
-                + CHILDREN_COLUMN  + " VARCHAR(" + CHILDREN_LIMIT + ") )";
+                + CHILDREN_COLUMN  + " VARCHAR(" + CHILDREN_LIMIT + "), "
+                + META_COLUMN      + " BLOB(" + META_LIMIT + ") )";
         log.debug("Creating table with query '" + createTableQuery + "'");
         return prepareStatement(createTableQuery);
     }
@@ -561,7 +584,9 @@ public abstract class DatabaseControl extends Control {
                           resultSet.getTimestamp(MTIME_COLUMN).getTime(),
                           resultSet.getString(PARENT_COLUMN),
                           Record.childrenStringToList(resultSet.
-                                  getString(CHILDREN_COLUMN)));
+                                  getString(CHILDREN_COLUMN)),
+                          StringMap.fromFormal(resultSet.
+                                  getBytes(META_COLUMN)));
     }
 
     /**

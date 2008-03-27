@@ -8,6 +8,7 @@ import java.util.List;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.summa.storage.StorageFactory;
 import dk.statsbiblioteket.summa.storage.database.DatabaseControl;
 import dk.statsbiblioteket.util.Files;
@@ -78,10 +79,40 @@ public class ControlTest extends TestCase {
         }
     }
 
+    public void testGet() throws Exception {
+        long time = System.currentTimeMillis();
+        List<String> children = new ArrayList<String>(2);
+        StringMap meta = new StringMap(10);
+        meta.put("", "=/e/n//");
+        meta.put("hello world", "");
+        meta.put("plain", "case");
+        children.add("ping1");
+        children.add("ping2");
+        Record original = new Record("foos", "bary", false, false,
+                                     new byte[]{(byte)2}, time, time, "boo2",
+                                     children, meta);
+        // Create new
+        control.flush(original);
+
+        Record retrieved = control.getRecord("foos");
+        assertEquals("The retrieved record should be equal to the stored one",
+                     original, retrieved);
+
+        retrieved.setIndexable(true);
+        retrieved.getMeta().put("new one", "here");
+        retrieved.touch();
+        // Update existing
+        control.flush(retrieved);
+        Record updatedRetrieved = control.getRecord("foos");
+        assertEquals("The updated Record should be intact after storing",
+                     retrieved, updatedRetrieved);
+    }
+
     public void testModified() throws Exception {
         long time = System.currentTimeMillis();
         Record record = new Record("foo", "bar", false, true, 
-                                   new byte[]{(byte)1}, time, time, "boo", null);
+                                   new byte[]{(byte)1}, time, time, "boo",
+                                   null, null);
         control.flush(record);
         assertEquals("Requesting the new stored record shouldn't change "
                      + "anything", record, control.getRecord("foo"));
@@ -92,7 +123,7 @@ public class ControlTest extends TestCase {
         children.add("ping2");
         Record modified = new Record("foo", "bar2", false, false,
                                    new byte[]{(byte)2}, time, time, "boo2",
-                                   children);
+                                   children, null);
         modified.setModificationTime(time + 5000);
 
         assertTrue("The record should be classified as modified",
@@ -254,8 +285,6 @@ public class ControlTest extends TestCase {
         assertFalse("The non-existing record nada should not be active", 
                    control.recordActive("nada"));
     }
-
-
 
     private int countRecords(RecordIterator iterator) {
         int counter = 0;
