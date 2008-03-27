@@ -54,8 +54,8 @@ public class StringMapTest extends TestCase {
                          entry[1], original.get(entry[0]));
         }
 
-        String formal = original.toFormalString();
-        StringMap fromFormal = StringMap.fromFormalString(formal);
+        String formal = original.toFormal();
+        StringMap fromFormal = StringMap.fromFormal(formal);
         assertEquals("The map should survive to and from formal String",
                      original, fromFormal);
 
