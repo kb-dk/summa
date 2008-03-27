@@ -130,13 +130,14 @@ public class StringMap extends HashMap<String, String> {
         String[] lines = formal.split("\n");
         StringMap map = new StringMap(lines.length * 2);
         for (String line: lines) {
-            String[] tokens = line.split("=");
-            if (!(tokens.length == 2)) {
+            // We don't use split here, as we want to support empty key/values
+            int divPos = line.indexOf('=');
+            if (divPos == -1) {
                 throw new IllegalArgumentException("The line '" + line
-                                                   + "' did not contain one and"
-                                                   + " only one =");
+                                                   + "' did not contain an =");
             }
-            map.put(unescape(tokens[0]), unescape(tokens[1]));
+            map.put(unescape(line.substring(0, divPos)),
+                    unescape(line.substring(divPos+1, line.length())));
         }
         return map;
     }
