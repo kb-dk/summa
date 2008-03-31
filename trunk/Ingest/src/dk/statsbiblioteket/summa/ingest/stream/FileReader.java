@@ -40,7 +40,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * This readers performs a recursive scan for a given pattern of files.
+ * This reader performs a recursive scan for a given pattern of files.
  * When it finds a candidate for data it opens it and sends the
  * content onwards in unmodified form. When a file has been emptied, the next
  * file is processed. If close(true) is called, processed files are marked with
