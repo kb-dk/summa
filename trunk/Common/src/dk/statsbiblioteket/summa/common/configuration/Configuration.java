@@ -267,8 +267,8 @@ public class Configuration implements Serializable,
         try {
             return getInt(key);
         } catch (NullPointerException e) {
-            log.info("Unable to find property '" + key + "', using default "
-                     + defaultValue);
+            log.debug("Unable to find property '" + key + "', using default "
+                      + defaultValue);
             return defaultValue;
         } catch (NumberFormatException e) {
             log.warn("Bad number format for property '" + key + "': "
@@ -298,6 +298,24 @@ public class Configuration implements Serializable,
             throw new IllegalArgumentException("The property " + key
                                                + " is not a boolean, but a "
                                                + val.getClass());
+        }
+    }
+    
+    public boolean getBoolean(String key, boolean defaultValue) {
+        Object val = get(key);
+        if (val == null) {
+            log.debug("Unable to locate value for key '" + key
+                      + "'. Defaulting to " + defaultValue);
+            return defaultValue;
+        }
+        try {
+            return Boolean.parseBoolean(val.toString());
+        } catch (NumberFormatException e) {
+            //noinspection DuplicateStringLiteralInspection
+            log.warn("Bad format for property '" + key + "' with value '"
+                     + val + "'. Expected boolean, got " + val.getClass()
+                     + ". Defaulting to " + defaultValue);
+            return defaultValue;
         }
     }
 
