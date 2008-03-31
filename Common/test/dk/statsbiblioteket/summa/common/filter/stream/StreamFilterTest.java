@@ -1,7 +1,10 @@
 package dk.statsbiblioteket.summa.common.filter.stream;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Random;
 
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
@@ -90,5 +93,31 @@ public class StreamFilterTest extends TestCase {
             assertEquals("The stored long should be retrievable",
                          l, lf.readLong());
         }
+    }
+    public void testMetaInfo(int contentLength) throws Exception {
+        byte[] content = new byte[contentLength];
+        new Random().nextBytes(content);
+        ByteArrayInputStream contentStream = new ByteArrayInputStream(content);
+        StreamFilter.MetaInfo meta = new StreamFilter.MetaInfo("foo",
+                                                               content.length);
+        InputStream sequence = meta.appendHeader(contentStream);
+
+        StreamFilter.MetaInfo extractedMeta =
+                new StreamFilter.MetaInfo(sequence);
+        assertEquals("The extracted id should be correct",
+                     "foo", extractedMeta.getId());
+        assertEquals("The extracted content length should match",
+                     content.length, extractedMeta.getContentLength());
+        for (int i = 0 ; i < extractedMeta.getContentLength() ; i++) {
+            assertEquals("The byte at position " + i + " should match",
+                         content[i], (byte)sequence.read());
+        }
+        assertEquals("EOF should be reached after the content",
+                     StreamFilter.EOF, sequence.read());
+    }
+
+    public void testMetaInfo() throws Exception {
+        testMetaInfo(100);
+        testMetaInfo(0);
     }
 }

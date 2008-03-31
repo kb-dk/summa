@@ -22,9 +22,13 @@
  */
 package dk.statsbiblioteket.summa.common.filter.stream;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.SequenceInputStream;
+import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
@@ -40,8 +44,9 @@ import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
  * </p><p>
  * The format for the top-level datastream is as follows:<br />
  * {@code
- * STREAM: (BODY)*EOF
- * BODY: Length(long) Content(Length bytes)
+ * STREAM: (HEAD BODY)*EOF
+ * HEAD: ID-Size(long) ID(Size bytes of ID-String in utf-8)
+ * BODY: Content-Size(long) Content(Size bytes)
  * EOF: -1, as used in the standard InputStream.
  * }
  * </p><p>
@@ -74,9 +79,13 @@ public abstract class StreamFilter extends InputStream implements Configurable,
      * @throws EOFException if EOF was reached during read.
      */
     public long readLong() throws IOException {
+        return readLong(this);
+    }
+
+    private static long readLong(InputStream in) throws IOException {
         ByteBuffer bb = ByteBuffer.allocate(8);
         for (int i = 0 ; i < 8 ; i++) {
-            int value = read();
+            int value = in.read();
             if (value == EOF) {
                 throw new EOFException("Attempting to read past EOF");
             }
@@ -90,9 +99,95 @@ public abstract class StreamFilter extends InputStream implements Configurable,
      * @param value the long to convert to bytes.
      * @return the long as bytes in big-endian order.
      */
-    protected byte[] longToBytes(long value) {
+    protected static byte[] longToBytes(long value) {
         ByteBuffer bb = ByteBuffer.allocate(8);
         bb.putLong(value);
         return bb.array();
+    }
+
+    /**
+     * Default implementation of pump(). Requests data from read() and returns
+     * whether the result was EOF or not.
+     * @return true if more data is available.
+     * @throws IOException in case of read error.
+     */
+    public boolean pump() throws IOException {
+        return read() != EOF;
+    }
+
+
+    /**
+     * Helper class for handling construction and parsing of header-information
+     * to and from bytes.
+     */
+    public static class MetaInfo {
+        private String id;
+        private long contentLength;
+
+        /**
+         * Create a MetaInfo, ready for appending header-information through
+         * the method {@link #appendHeader}.
+         * @param id            an id for a stream.
+         * @param contentLength the length in bytes of the stream.
+         */
+        public MetaInfo(String id, long contentLength) {
+            this.id = id;
+            this.contentLength = contentLength;
+        }
+
+        /**
+         * Extracts id and contentLength from the given stream.
+         * @param stream a stream in the format specified by StreamFilter.
+         * @throws IOException in case of read errors.
+         */
+        public MetaInfo(InputStream stream) throws IOException {
+            long idLength = readLong(stream);
+            ByteArrayOutputStream idStream =
+                    new ByteArrayOutputStream((int)idLength);
+            for (int i = 0 ; i < idLength ; i++) {
+                idStream.write(stream.read());
+            }
+            id = idStream.toString("utf-8");
+            contentLength = readLong(stream);
+        }
+
+        /**
+         * Convert the data in the header to a Stream, prepends the stream to
+         * the given content-stream and returns a new stream made from the
+         * coupling (a SequenceInputStream).
+         * @param content the stream to prepend the header to.
+         * @return a stream with meta-data prepended to content.
+         */
+        public InputStream appendHeader(InputStream content) {
+            byte[] idBytes;
+            try {
+                idBytes = id.getBytes("utf-8");
+            } catch (UnsupportedEncodingException e) {
+                throw new RuntimeException("utf-8 encoding not supported", e);
+            }
+            byte[] idSizeBytes = longToBytes(idBytes.length);
+            byte[] contentSizeBytes = longToBytes(contentLength);
+
+            byte[] buffer = new byte[idBytes.length + 2 * 8];
+            System.arraycopy(idSizeBytes, 0,
+                             buffer, 0, idSizeBytes.length);
+            System.arraycopy(idBytes, 0,
+                             buffer, idSizeBytes.length, idBytes.length);
+            System.arraycopy(contentSizeBytes, 0,
+                             buffer, idSizeBytes.length + idBytes.length,
+                             contentSizeBytes.length);
+
+            InputStream headerStream = new ByteArrayInputStream(buffer);
+            return new SequenceInputStream(headerStream, content);
+        }
+
+        /* Accessors */
+        public String getId() {
+            return id;
+        }
+        public long getContentLength() {
+            return contentLength;
+        }
+
     }
 }
