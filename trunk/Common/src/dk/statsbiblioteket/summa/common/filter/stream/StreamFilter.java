@@ -139,22 +139,33 @@ public abstract class StreamFilter extends InputStream implements Configurable,
          * Extracts id and contentLength from the given stream.
          * @param stream a stream in the format specified by StreamFilter.
          * @throws IOException in case of read errors.
+         * @return a MetaInfo with id and content length if possible. null is
+         *         returned if the stream has reached EOF.
          */
-        public MetaInfo(InputStream stream) throws IOException {
-            long idLength = readLong(stream);
-            ByteArrayOutputStream idStream =
-                    new ByteArrayOutputStream((int)idLength);
-            for (int i = 0 ; i < idLength ; i++) {
-                idStream.write(stream.read());
+        public static MetaInfo getMetaInfo(InputStream stream) throws IOException {
+            try {
+                long idLength = readLong(stream);
+                ByteArrayOutputStream idStream =
+                        new ByteArrayOutputStream((int)idLength);
+                for (int i = 0 ; i < idLength ; i++) {
+                    idStream.write(stream.read());
+                }
+                String id = idStream.toString("utf-8");
+                long contentLength = readLong(stream);
+                return new MetaInfo(id, contentLength);
+            } catch (EOFException e) {
+                // Consider making a more proper check for EOF at the beginning
+                return null;
             }
-            id = idStream.toString("utf-8");
-            contentLength = readLong(stream);
         }
 
         /**
          * Convert the data in the header to a Stream, prepends the stream to
          * the given content-stream and returns a new stream made from the
          * coupling (a SequenceInputStream).
+         * </p><p>
+         * Note: The method available() of the returnes InputStream might
+         *       return 0, eventhough there are still bytes to be read.
          * @param content the stream to prepend the header to.
          * @return a stream with meta-data prepended to content.
          */

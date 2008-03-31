@@ -103,7 +103,7 @@ public class StreamFilterTest extends TestCase {
         InputStream sequence = meta.appendHeader(contentStream);
 
         StreamFilter.MetaInfo extractedMeta =
-                new StreamFilter.MetaInfo(sequence);
+                StreamFilter.MetaInfo.getMetaInfo(sequence);
         assertEquals("The extracted id should be correct",
                      "foo", extractedMeta.getId());
         assertEquals("The extracted content length should match",
