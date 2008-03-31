@@ -276,11 +276,12 @@ public class FileReader extends StreamFilter {
     }
 
     /**
-     * This implementation of available only looks at the first file.
+     * Warning: This implementation is not guaranteed to return > 0 if there is
+     * available content.
      * @return a minimum amount of bytes available.
      * @throws IOException if a read exception occured.
      */
-    // FIXME: Handle the case where the current file is empty.
+    // FIXME: Make the method more useful by guaranteeing > 0 in case of content
     public int available() throws IOException {
         checkInit();
         return current == null ? 0 : inputStream.available();
@@ -294,14 +295,16 @@ public class FileReader extends StreamFilter {
     public int read() throws IOException {
         checkInit();
         if (current == null) {
+            log.trace("current == null: EOF reached");
             return EOF;
         }
-        while (inputStream.available() == 0) {
+        int value;
+        while ((value = inputStream.read()) == EOF) {
             openNext();
             if (current == null) {
                 return EOF;
             }
         }
-        return inputStream.read();
+        return value;
     }
 }
