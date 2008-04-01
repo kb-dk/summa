@@ -7,12 +7,13 @@ package dk.statsbiblioteket.summa.common.filter.object;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.rmi.RemoteException;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.NoSuchElementException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Filter;
+import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.stream.StreamFilter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

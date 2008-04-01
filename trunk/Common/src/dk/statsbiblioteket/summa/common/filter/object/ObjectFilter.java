@@ -24,69 +24,24 @@ package dk.statsbiblioteket.summa.common.filter.object;
 
 import java.util.Iterator;
 
-import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.filter.Filter;
-import dk.statsbiblioteket.summa.common.filter.stream.StreamFilter;
+import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.lucene.document.Document;
 
 /**
- * An ObjectFilter works on Record and Document level. It can be fed from either
- * a another ObjectFilter or a StreamFilter. It is expected that most filters
+ * An ObjectFilter processes a triplet of Stream, Record and Document. Not all
+ * parts of the triplet needs to be present. It is expected that most filters
  * will be of this type.
  * </p><p>
- * Records and Documents  are pumped through the chain of filters by calling
- * {@link #next()} on the last filter in the chain.
+ * Streams, Records and Documents are pumped through the chain of filters by
+ * calling {@link #pump()} on the last filter in the chain. It is up to the
+ * individual filters to process the stream if present.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public interface ObjectFilter extends Configurable, Filter,
-                                      Iterator<ObjectFilter.Payload> {
-    /**
-     * The payload is the object that gets pumped through a filter chain.
-     * It is a simple wrapper for Record and Document. Only one of these have
-     * to be present.
-     */
-    public class Payload {
-        private Record record;
-        private Document document;
-
-        public Payload(Record record) {
-            this.record = record;
-        }
-        public Payload(Document document) {
-            this.document = document;
-        }
-        public Payload(Record record, Document document) {
-            this.record = record;
-            this.document = document;
-        }
-
-        public Record getRecord() {
-            return record;
-        }
-        public void setRecord(Record record) {
-            if (record == null && document == null) {
-                throw new IllegalStateException("Either record or document must"
-                                                + " be defined");
-            }
-            this.record = record;
-        }
-
-        public Document getDocument() {
-            return document;
-        }
-        public void setDocument(Document document) {
-            if (document == null && record == null) {
-                throw new IllegalStateException("Either record or document must"
-                                                + " be defined");
-            }
-            this.document = document;
-        }
-    }
-
+public interface ObjectFilter extends Configurable, Filter, Iterator<Payload> {
     /**
      * This call might be blocking. If true is returned, it is expected that
      * a Payload can be returned by {@link #next()}. If false is returned,

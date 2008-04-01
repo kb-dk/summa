@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.Random;
 
 import dk.statsbiblioteket.summa.common.filter.Filter;
-import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
+import dk.statsbiblioteket.summa.common.filter.Payload;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -74,7 +74,7 @@ public class StreamFilterTest extends TestCase {
         public boolean hasNext() {
             throw new UnsupportedOperationException("Just a dummy");
         }
-        public ObjectFilter.Payload next() {
+        public Payload next() {
             throw new UnsupportedOperationException("Just a dummy");
         }
         public void remove() {
