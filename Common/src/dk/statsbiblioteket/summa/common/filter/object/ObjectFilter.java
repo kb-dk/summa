@@ -47,7 +47,7 @@ public interface ObjectFilter extends Configurable, Filter, Iterator<Payload> {
      * a Payload can be returned by {@link #next()}. If false is returned,
      * it is guaranteed that no more Payloads can be returned by getNext().
      * </p><p>
-     * If getNext() has returned null, hasNext must return false.
+     * If next() has returned null, hasNext must return false.
      * @return true if more Payloads are available, else false.
      */
     public boolean hasNext();

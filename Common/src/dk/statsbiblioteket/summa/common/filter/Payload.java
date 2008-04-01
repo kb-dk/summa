@@ -183,4 +183,17 @@ public class Payload {
         }
         return cont;
     }
+
+    /**
+     * The clone-method is a shallow cloning, which means that all fields are
+     * copied directly.
+     * @return a shallow copy of this object.
+     */
+    @SuppressWarnings({"CloneDoesntDeclareCloneNotSupportedException",
+                       "CloneDoesntCallSuperClone"})
+    public Payload clone() {
+        Payload clone = new Payload(getStream(), getRecord(), getDocument());
+        clone.meta = meta;
+        return clone;
+    }
 }
