@@ -64,6 +64,8 @@ import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
  * catastrophic events, such as out of memory. If the input is not as expected,
  * the filter should skip corrupt input (with appropriate logging of errors)
  * and attempt to continue processing further data.
+ * @deprecated {@link ObjectFilter} has been extended to handle streams and
+ *             provides a more flexible interface.
  */
 public abstract class StreamFilter extends InputStream implements Configurable,
                                                                   Filter {

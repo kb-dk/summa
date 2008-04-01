@@ -1,6 +1,15 @@
 package dk.statsbiblioteket.summa.ingest.stream;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.SequenceInputStream;
+import java.util.Random;
+
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.stream.StreamFilter;
 import dk.statsbiblioteket.util.Files;
 import junit.framework.Test;
@@ -8,9 +17,6 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.io.*;
-import java.util.Random;
 
 public class FileReaderTest extends TestCase {
     private static Log log = LogFactory.getLog(FileReader.class);
@@ -26,7 +32,7 @@ public class FileReaderTest extends TestCase {
     File sub2 = new File(root, "2");
     File rootFile10;
     File rootFile20;
-    File rootFileFoo;
+    File rootFileFoo20;
 
     public void setUp() throws Exception {
         super.setUp();
@@ -39,7 +45,7 @@ public class FileReaderTest extends TestCase {
         sub2.mkdirs();
         rootFile10 = makeFile(root, "file10.xml", 10);
         rootFile20 = makeFile(root, "file20.xml", 20);
-        rootFileFoo = makeFile(root, "file20.foo", 20);
+        rootFileFoo20 = makeFile(root, "file20.foo", 20);
         File sub1File0 = makeFile(sub1, "file0.xml", 0);
         File sub1File1000 = makeFile(sub1, "file1000.xml", 1000);
         assertEquals("The file size for '" + sub1File1000 + "' should match",
@@ -96,21 +102,23 @@ public class FileReaderTest extends TestCase {
         conf.set(FileReader.CONF_FILE_PATTERN, ".*\\.foo");
         conf.set(FileReader.CONF_COMPLETED_POSTFIX, ".finito");
         FileReader reader = new FileReader(conf);
-        StreamFilter.MetaInfo meta = StreamFilter.MetaInfo.getMetaInfo(reader);
-        log.debug("Got stream with id '" + meta.getId()
-                  + "' and length " + meta.getContentLength()
-                  + ". Available bytes: " + reader.available());
-        for (int i = 0 ; i < meta.getContentLength() ; i++) {
+        Payload payload = reader.next();
+        assertNotNull("The payload should have a stream", payload.getStream());
+        assertEquals("The payload should have meta-info with file name",
+                     rootFileFoo20.getPath(),
+                     payload.getMeta(FileReader.FILENAME));
+        for (int i = 0 ; i < 20 ; i++) {
             assertTrue("reader should not be empty at position " + i + "/"
-                       + meta.getContentLength(),
-                       reader.read() != StreamFilter.EOF);
+                       + 20,
+                       payload.getStream().read() != StreamFilter.EOF);
         }
         assertEquals("The reader should be empty after "
-                     + meta.getContentLength() + " bytes has been read",
-                     StreamFilter.EOF, reader.read());
+                     + 20 + " bytes has been read",
+                     StreamFilter.EOF, payload.getStream().read());
+        payload.close();
         reader.close(true);
         assertTrue("The file should be renamed after close(true)",
-                   new File(rootFileFoo.getPath() + ".finito").exists());
+                   new File(rootFileFoo20.getPath() + ".finito").exists());
     }
 
     // TODO: Check for file rename, depending on success
@@ -123,19 +131,19 @@ public class FileReaderTest extends TestCase {
         conf.set(FileReader.CONF_COMPLETED_POSTFIX, ".fin");
         FileReader reader = new FileReader(conf);
         int filecount = 0;
-        StreamFilter.MetaInfo meta;
-        while ((meta = StreamFilter.MetaInfo.getMetaInfo(reader)) != null) {
-            log.debug("Got stream with id '" + meta.getId()
-                      + "' and length '" + meta.getContentLength());
-            for (int i = 0 ; i < meta.getContentLength() ; i++) {
-                assertTrue("reader should not be empty yet",
-                           reader.read() != StreamFilter.EOF);
-            }
+        Payload payload;
+        while (reader.hasNext()) {
+            payload = reader.next();
+            log.debug("Got payload with filename '"
+                      + payload.getMeta(FileReader.FILENAME));
             filecount++;
         }
         assertEquals("The number of streams should match", 4, filecount);
-        assertEquals("The reader should be empty", 
-                     StreamFilter.EOF, reader.read());
+        reader.close(false);
+        assertTrue("No renaming should take place with close(false)",
+                   rootFile10.exists());
         reader.close(true);
+        assertTrue("Renaming should take place with close(true)",
+                   new File(rootFile10.getPath() + ".fin").exists());
     }
 }

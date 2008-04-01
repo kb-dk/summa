@@ -48,6 +48,16 @@ public interface Filter {
     /**
      * Filters are utilized by calling pump until it returns false.
      * Calling pump after it has returned false should return false.
+     * </p><p>
+     * Any filter must be able to empty its underlying filters completely
+     * (if the underlying filters can be emptied completely, that is) by
+     * repeated calls to pump until pump returns false.
+     * </p><p>
+     * Note: The behavious of pumping is left to the implementation.
+     * For stream-oriented filters, this will normally result in the emptying
+     * of streams embedded in Payloads before further payloads are requested
+     * downstream.
+     * </p><p>
      * @return true if more data are available, else false.
      * @throws IOException if case of major errors during pumping.
      */

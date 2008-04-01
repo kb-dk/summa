@@ -22,7 +22,6 @@
  */
 package dk.statsbiblioteket.summa.ingest.stream;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -34,7 +33,8 @@ import java.util.regex.Pattern;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Filter;
-import dk.statsbiblioteket.summa.common.filter.stream.StreamFilter;
+import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -42,19 +42,20 @@ import org.apache.commons.logging.LogFactory;
 /**
  * This reader performs a recursive scan for a given pattern of files.
  * When it finds a candidate for data it opens it and sends the
- * content onwards in unmodified form. When a file has been emptied, the next
- * file is processed. If close(true) is called, processed files are marked with
+ * content onwards in unmodified form, packaged as a stream in a Payload.
+ * If close(true) is called, processed files are marked with
  * a given postfix (default: .completed). Any currently opened file is kept open
  * until it has been emptied, but no new files are opened.
  * </p><p>
- * if close(false) is called, no files are marked with the postfix and any open
+ * If close(false) is called, no files are marked with the postfix and any open
  * files are closed immediately.
  * </p><p>
+ * Meta-info for delivered payloads will contain {@link #FILENAME}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class FileReader extends StreamFilter {
+public class FileReader implements ObjectFilter {
     private static Log log = LogFactory.getLog(FileReader.class);
 
     /**
@@ -87,6 +88,11 @@ public class FileReader extends StreamFilter {
     public static final String CONF_COMPLETED_POSTFIX =
             "summa.ingest.filereader.completed_postfix";
 
+    /**
+     * The key for the filename-value, added to meta-info in delivered payloads.
+     */
+    public static final String FILENAME = "filename";
+
     private File root;
     private boolean recursive = true;
     private Pattern filePattern;
@@ -95,11 +101,8 @@ public class FileReader extends StreamFilter {
 
     private boolean started = false;
     private List<File> todo;
-    private File current;
-    private List<File> done;
+    private List<Payload> delivered;
     private boolean closedWithSuccess = false;
-
-    private InputStream inputStream;
 
     /**
      * Sets up the properties for the FileReader. Scanning for files are
@@ -174,137 +177,155 @@ public class FileReader extends StreamFilter {
         log.trace("checkInit: Filling todo");
         todo = new ArrayList<File>(100);
         fillToDo(root);
-        done = new ArrayList<File>(Math.max(1, todo.size()));
+        delivered = new ArrayList<Payload>(Math.max(1, todo.size()));
         started = true;
         log.info("Located " + todo.size() + " files matching pattern '"
                  + filePattern.pattern() + "'");
-        openNext();
     }
 
     /**
-     * Opens the next file in {@link #todo}. If a stream is currently open, it
-     * is closed before the next file is opened. Opening a file removes it from
-     * the todo. Closing a file adds it to {@link #done}. Opened files are
-     * stored in {@link #current}.
+     * FileInputStream that is capable of renaming the file upon close.
      */
-    private void openNext() {
-        closePrevious();
-        while (current == null) {
-            if (todo.size() == 0) {
-                log.info("openNext: No more files available");
+    class RenamingFileStream extends FileInputStream {
+        private Log log = LogFactory.getLog(RenamingFileStream.class);
+
+        private boolean success = false;
+        private File file;
+        private boolean closed = false;
+        private boolean renamed = false;
+
+        /**
+         * Constructs a FileInputStream where the postfix will potentially be
+         * used upon close.
+         * @param file    the file to open.
+         * @param postfix the postfix to add, is setSuccess(true) has been
+         *                called and close is called.
+         * @throws FileNotFoundException if the file could not be located.
+         */
+        public RenamingFileStream(File file, String postfix) throws
+                                                         FileNotFoundException {
+            super(file);
+            log.trace("Created reader for '" + file
+                      + "' with potential postfix '" + postfix + "'");
+            this.file = file;
+        }
+        public void setSuccess(boolean success) {
+            this.success = success;
+            rename();
+        }
+        public void close() throws IOException {
+            super.close();
+            closed = true;
+            rename();
+        }
+
+        private void rename() {
+            if (renamed) {
                 return;
             }
-            current = todo.remove(0);
-            log.info("Opening file '" + current + "'");
-            try {
-                InputStream in = new FileInputStream(current);
-                // BufferedInputStream does not support streams > 2GB?
-                inputStream = new MetaInfo(current.toString(),
-                                           current.length()).appendHeader(in);
-                log.debug("File '" + current + "' opened successfully");
-            } catch (FileNotFoundException e) {
-                //noinspection DuplicateStringLiteralInspection
-                log.error("Could not locate '" + current
-                          + "'. Skipping to next file");
-                //noinspection AssignmentToNull
-                current = null;
-            }
-        }
-    }
-
-    /**
-     * If any file is currently open, close it and add it to done.
-     */
-    private void closePrevious() {
-        log.trace("closePrevious called");
-        if (inputStream != null) {
-            log.debug("Closing previous InputStream '" + current + "'");
-            try {
-                inputStream.close();
-                if (current != null) { // Only add to done when no error
-                    done.add(current);
-                    if (closedWithSuccess) {
-                        markAsProcessed(current);
-                    }
-                    //noinspection AssignmentToNull
-                    current = null;
+            if (closed && success && postfix != null && !"".equals(postfix)) {
+                File newName = new File(file.getPath() + postfix);
+                try {
+                    file.renameTo(newName);
+                    renamed = true;
+                } catch(Exception e) {
+                    log.error("Could not rename '" + file
+                              + "' to '" + newName + "'", e);
                 }
-            } catch (IOException e) {
-                log.error("openNext: Exception closing InputStream '"
-                          + current + "'. Ignoring and continuing", e);
             }
         }
     }
 
+    /**
+     * Opens the next file in {@link #todo} and produces a Payload with a
+     * stream to the file content.
+     * @return a Payload with a stream for the next file or null if no further
+     *         files are available.
+     */
+    public synchronized Payload next() {
+        checkInit();
+        if (todo.size() == 0) {
+            log.info("next: No more files available");
+            return null;
+        }
+        File current = todo.remove(0);
+        log.info("Opening file '" + current + "'");
+        try {
+            RenamingFileStream in = new RenamingFileStream(current, postfix);
+            Payload payload = new Payload(in);
+            payload.getMeta().put(FILENAME, current.getPath());
+            log.debug("File '" + current + "' opened successfully");
+            delivered.add(payload);
+            return payload;
+        } catch (FileNotFoundException e) {
+            //noinspection DuplicateStringLiteralInspection
+            log.error("Could not locate '" + current
+                      + "'. Skipping to next file");
+            return next();
+        }
+    }
 
     /**
-     * Graceful shutdown of opened filed.
+     * Graceful shutdown of opened files.
      * @param success if false, all opened files are closed immediately. If
      *                true, processed files are appended with {@link #postfix}
      *                and any currently opened files are kept open until they
      *                are emptied.
      */
-    public void close(boolean success) {
+    public synchronized void close(boolean success) {
+        log.debug("close(" + success + ") called");
+        checkInit();
         //noinspection DuplicateStringLiteralInspection
-        log.trace("close(" + success + ") called");
-        if (!success) {
-            closePrevious();
+        for (Payload payload: delivered) {
+            if (payload.getStream() == null) {
+                log.warn("close: Encountered payload without stream");
+                continue;
+            }
+            if (!(payload.getStream() instanceof RenamingFileStream)) {
+                log.warn("close: Encountered payload with stream that was not "
+                         + "RenamingFileStream");
+                continue;
+            }
+            RenamingFileStream stream = (RenamingFileStream)payload.getStream();
+            stream.setSuccess(success);
+            if (!success) {
+                // Force close
+                log.debug("Forcing close on payload " + payload);
+                payload.close();
+            }
         }
         if (todo.size() > 0) {
             log.debug("close: Discarding " + todo + " files from todo");
-        }
-        todo.clear();
-        if (success && !"".equals(postfix)) {
-            log.debug("Adding postfix '" + postfix + " to processed files");
-            for (File file: done) {
-                markAsProcessed(file);
-            }
+            todo.clear();
         }
         closedWithSuccess = success;
-        // Note: if success, then current might still be open.
-    }
-
-    private void markAsProcessed(File file) {
-        File newName = new File(file.getPath() + postfix);
-        try {
-            log.trace("Rename '" + file + "' to '" + newName + "'");
-            file.renameTo(newName);
-        } catch (Exception e) {
-            log.warn("Could not rename '" + file + "' to '" + newName
-                     + "'");
-        }
+        // Note: if success, some streams might still be open.
     }
 
     /**
-     * Warning: This implementation is not guaranteed to return > 0 if there is
-     * available content.
-     * @return a minimum amount of bytes available.
-     * @throws IOException if a read exception occured.
+     * Pump iterates through all {@link #delivered} payloads and empties the
+     * embedded streams. When all streams are emptied, a new payload is created.
+     * @return true if pumping should continue, in order to process all data.
+     * @throws IOException in case of read errors.
      */
-    // FIXME: Make the method more useful by guaranteeing > 0 in case of content
-    public int available() throws IOException {
+    public synchronized boolean pump() throws IOException {
         checkInit();
-        return current == null ? 0 : inputStream.available();
-    }
-
-    public boolean pump() throws IOException {
-        checkInit();
-        return super.pump();
-    }
-
-    public int read() throws IOException {
-        checkInit();
-        if (current == null) {
-            log.trace("current == null: EOF reached");
-            return EOF;
-        }
-        int value;
-        while ((value = inputStream.read()) == EOF) {
-            openNext();
-            if (current == null) {
-                return EOF;
+        for (Payload payload: delivered) {
+            if (payload.pump()) {
+                return true;
             }
         }
-        return value;
+        return hasNext() && next() != null;
+    }
+
+    /* Interface implementations */
+
+    public boolean hasNext() {
+        checkInit();
+        return todo.size() > 0;
+    }
+
+    public void remove() {
+        log.warn("Remove not implemented for FileReader");
     }
 }
