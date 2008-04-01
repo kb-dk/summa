@@ -26,7 +26,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -50,7 +49,8 @@ import org.apache.commons.logging.LogFactory;
  * If close(false) is called, no files are marked with the postfix and any open
  * files are closed immediately.
  * </p><p>
- * Meta-info for delivered payloads will contain {@link #FILENAME}.
+ * Meta-info for delivered payloads will contain {@link #ORIGIN} which states
+ * the opriginating file for the stream.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -91,7 +91,7 @@ public class FileReader implements ObjectFilter {
     /**
      * The key for the filename-value, added to meta-info in delivered payloads.
      */
-    public static final String FILENAME = "filename";
+    public static final String ORIGIN = "filename";
 
     private File root;
     private boolean recursive = true;
@@ -128,8 +128,8 @@ public class FileReader implements ObjectFilter {
                 }
             }
         } catch (Exception e) {
-            throw new IllegalArgumentException("No root specified for key "
-                                               + CONF_ROOT_FOLDER);
+            throw new ConfigurationException("No root specified for key "
+                                             + CONF_ROOT_FOLDER);
         }
         recursive = configuration.getBoolean(CONF_RECURSIVE, recursive);
         filePattern = Pattern.compile(configuration.
@@ -253,7 +253,7 @@ public class FileReader implements ObjectFilter {
         try {
             RenamingFileStream in = new RenamingFileStream(current, postfix);
             Payload payload = new Payload(in);
-            payload.getMeta().put(FILENAME, current.getPath());
+            payload.getMeta().put(ORIGIN, current.getPath());
             log.debug("File '" + current + "' opened successfully");
             delivered.add(payload);
             return payload;
