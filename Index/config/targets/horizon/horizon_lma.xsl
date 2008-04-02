@@ -104,7 +104,19 @@
 										</xsl:choose>
 									</xsl:when>
 									<xsl:when test="contains(/mc:record/mc:datafield[@tag='008']/mc:subfield[@code='t'],'p')">
-										<Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
+                                        <xsl:choose>
+                                            <xsl:when test="contains(/mc:record/mc:datafield[@tag='005']/mc:subfield[@code='v'],'g')">
+                                                 <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
+                                                                                           <xsl:text>radio/tv</xsl:text>
+                                                </Index:field>
+                                                                                       </xsl:when>
+                                             <xsl:when test="contains(/mc:record/mc:datafield[@tag='005']/mc:subfield[@code='v'],'v')">
+                                                 <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
+                                                                                           <xsl:text>radio/tv</xsl:text>
+                                                </Index:field>
+                                                                                       </xsl:when>
+                                            <xsl:otherwise>
+                                        <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
 											<xsl:text>peri</xsl:text>
 										</Index:field>
 										<xsl:for-each select="/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g' or @code='h']">
@@ -122,7 +134,9 @@
 												</xsl:when>
 											</xsl:choose>
 										</xsl:for-each>
-									</xsl:when>
+									    </xsl:otherwise>
+                                        </xsl:choose>
+                                    </xsl:when>
 								</xsl:choose>
 							</xsl:if>
 							<xsl:if test="contains(.,'c') or contains(.,'d')">
