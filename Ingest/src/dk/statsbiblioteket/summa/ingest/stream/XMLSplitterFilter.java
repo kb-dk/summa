@@ -126,41 +126,59 @@ public class XMLSplitterFilter implements ObjectFilter {
      * The key for meta-info in Record. Valid values are "true" and "false".
      */
     public static final String VALID_XML = "valid_xml";
-    
 
-    private String idPrefix = "";
-    private boolean collapsePrefix = true;
-    @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    private String recordElement = "record";
-    private String idElement ="id";
-    private String base;
-    private boolean requireValid = false;
+    /**
+     * Contains all target-specific settings.
+     */
+    public static class Target {
+        public String idPrefix = "";
+        public boolean collapsePrefix = true;
+        @SuppressWarnings({"DuplicateStringLiteralInspection"})
+        public String recordElement = "record";
+        public String idElement ="id";
+        public String base;
+        public boolean preserveNamespaces = true;
+        public boolean requireValid = false;
 
+        /**
+         * Create a new Target containing the target-specific information from
+         * configuration.
+         * @param configuration setup for the target.
+         */
+        public Target(Configuration configuration) {
+            idPrefix = configuration.getString(CONF_ID_PREFIX, idPrefix);
+            collapsePrefix =
+                    configuration.getBoolean(CONF_COLLAPSE_PREFIX, collapsePrefix);
+            recordElement =
+                    configuration.getString(CONF_RECORD_ELEMENT, recordElement);
+            idElement = configuration.getString(CONF_ID_ELEMENT, idElement);
+            try {
+                base = configuration.getString(CONF_BASE);
+                if ("".equals(base)) {
+                    throw new ConfigurationException("Base, as defined by "
+                                                     + CONF_BASE
+                                                     + ", must not be empty");
+                }
+            } catch (NullPointerException e) {
+                //noinspection DuplicateStringLiteralInspection
+                throw new ConfigurationException("Could not get " + CONF_BASE
+                                                 + " from configuration");
+            }
+            preserveNamespaces = configuration.getBoolean(CONF_PRESERVE_NAMESPACES,
+                                                          preserveNamespaces);
+            requireValid =
+                    configuration.getBoolean(CONF_REQUIRE_VALID, requireValid);
+        }
+
+    }
+
+    private Target target;
     private ObjectFilter source;
     private Payload payload = null;
 
     public XMLSplitterFilter(Configuration configuration) {
-        idPrefix = configuration.getString(CONF_ID_PREFIX, idPrefix);
-        collapsePrefix =
-                configuration.getBoolean(CONF_COLLAPSE_PREFIX, collapsePrefix);
-        recordElement =
-                configuration.getString(CONF_RECORD_ELEMENT, recordElement);
-        idElement = configuration.getString(CONF_ID_ELEMENT, idElement);
-        try {
-            base = configuration.getString(CONF_BASE);
-            if ("".equals(base)) {
-                throw new ConfigurationException("Base, as defined by "
-                                                 + CONF_BASE
-                                                 + ", must not be empty");
-            }
-        } catch (NullPointerException e) {
-            //noinspection DuplicateStringLiteralInspection
-            throw new ConfigurationException("Could not get " + CONF_BASE
-                                             + " from configuration");
-        }
-        requireValid =
-                configuration.getBoolean(CONF_REQUIRE_VALID, requireValid);
-
+        target = new Target(configuration);
+        log.info("Created XMLSplitterFilter for base '" + target.base + "'");
     }
 
     public boolean hasNext() {
