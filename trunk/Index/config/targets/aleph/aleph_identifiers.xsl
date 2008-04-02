@@ -74,12 +74,12 @@
 							</Index:field>
 						</xsl:for-each>
 						<xsl:for-each select="mc:datafield[@tag='440' or @tag='490' or @tag='840']/mc:subfield[@code='z']">
-							<Index:field Index:name="issn" Index:navn="is" Index:type="number" Index:boostFactor="10">
+							<Index:field Index:name="issn" Index:navn="in" Index:type="number" Index:boostFactor="10">
 								<xsl:value-of select="."/>
 							</Index:field>
 						</xsl:for-each>
 						<xsl:for-each select="mc:datafield[@tag='534']/mc:subfield[@code='8']">
-							<Index:field Index:name="issn" Index:navn="is" Index:type="number" Index:boostFactor="10">
+							<Index:field Index:name="issn" Index:navn="in" Index:type="number" Index:boostFactor="10">
 								<xsl:value-of select="."/>
 							</Index:field>
 						</xsl:for-each>
@@ -120,17 +120,17 @@
 							</Index:field>
 						</xsl:for-each>
 						<xsl:for-each select="mc:datafield[@tag='022']/mc:subfield[@code='a' or @code='x' or @code='z']">
-							<Index:field Index:name="issn" Index:type="number" Index:boostFactor="10">
+							<Index:field Index:name="issn"  Index:navn="in" Index:type="number" Index:boostFactor="10">
 								<xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.Normalize.normalize(.)"/>
 							</Index:field>
 						</xsl:for-each>
 						<xsl:for-each select="mc:datafield[@tag='440' or @tag='490' or @tag='840']/mc:subfield[@code='z']">
-							<Index:field Index:name="issn" Index:type="number" Index:boostFactor="10">
+							<Index:field Index:name="issn"  Index:navn="in" Index:type="number" Index:boostFactor="10">
 								<xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.Normalize.normalize(.)"/>
 							</Index:field>
 						</xsl:for-each>
 						<xsl:for-each select="mc:datafield[@tag='534']/mc:subfield[@code='8']">
-							<Index:field Index:name="issn" Index:type="number" Index:boostFactor="10">
+							<Index:field Index:name="issn"  Index:navn="in" Index:type="number" Index:boostFactor="10">
 								<xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.Normalize.normalize(.)"/>
 							</Index:field>
 						</xsl:for-each>

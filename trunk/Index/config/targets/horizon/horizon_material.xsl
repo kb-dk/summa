@@ -468,7 +468,19 @@
 								</xsl:if>
 							</Index:field>
 						</xsl:for-each>
-					</Index:group>
+            <xsl:for-each select="mc:datafield[@tag='005']/mc:subfield[@code='v']">
+                <Index:field Index:repeat="true" Index:name="ma_short" Index:navn="ma_kort" Index:type="token" Index:boostFactor="4">
+                    <xsl:if test="contains(.,'g')">
+                        <xsl:text>tv</xsl:text>
+                    </xsl:if>
+                    <xsl:if test="contains(.,'v')">
+                        <xsl:text>ra</xsl:text>
+                    </xsl:if>
+                    
+                </Index:field>
+            </xsl:for-each>
+
+                    </Index:group>
 
         <xsl:for-each select="mc:datafield[@tag='009']/mc:subfield[@code='a' or @code='b']">
 						<xsl:if test="contains(.,'a')">
