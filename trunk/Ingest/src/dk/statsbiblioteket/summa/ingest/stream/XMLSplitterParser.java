@@ -354,8 +354,8 @@ public class XMLSplitterParser extends DefaultHandler2 implements
         for (int i = 0 ; i < atts.getLength() ; i++) {
             sw.append(" ").append(atts.getQName(i)).append("=\"");
             sw.append(atts.getValue(i)).append("\"");
-            if (inId && !"".equals(target.idElement) &&
-                equalsAny(target.idElement,
+            if (inId && !"".equals(target.idTag) &&
+                equalsAny(target.idTag,
                           atts.getQName(i), atts.getLocalName(i))) {
                 // ID matches attribute
                 id.append(atts.getValue(i));
