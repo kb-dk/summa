@@ -83,7 +83,18 @@ public class XMLSplitterFilter implements ObjectFilter {
 
     /**
      * The id-element containing the id for a given record. The element must be
-     * present inside the record-element.
+     * present inside the record-element. If a tag inside an element is used for
+     * id, the syntag is element#tag.
+     * </p><p>
+     * Example 1: "foo" matches <foo>myid</foo> and returns myid.<br />
+     * Example 2: "foo#bar" matches <foo bar="myid">whatever</foo> and returns
+     *             myid.<br />
+     * </p><p>
+     * The element can be qualified or non-qualified. Non-qualified ids will
+     * match qualified documents, but not the other way around.
+     * </p><p>
+     * Example 3: "foo" matches <baz:foo>myid</baz:foo> and returns myid. 
+     * Example 4: "baz:foo" does not match <foo>myid</foo>.
      * </p><p>
      * Default: "id".
      */
@@ -136,6 +147,7 @@ public class XMLSplitterFilter implements ObjectFilter {
         @SuppressWarnings({"DuplicateStringLiteralInspection"})
         public String recordElement = "record";
         public String idElement ="id";
+        public String idTag = "";
         public String base;
         public boolean preserveNamespaces = true;
         public boolean requireValid = false;
@@ -152,6 +164,18 @@ public class XMLSplitterFilter implements ObjectFilter {
             recordElement =
                     configuration.getString(CONF_RECORD_ELEMENT, recordElement);
             idElement = configuration.getString(CONF_ID_ELEMENT, idElement);
+            if (idElement.contains("#")) {
+                if (!idElement.endsWith("#") || idElement.startsWith("#")) {
+                    String oldIdElement = idElement;
+                    idTag = idElement.substring(idElement.indexOf("#")+1);
+                    idElement = idElement.substring(0, idElement.indexOf("#"));
+                    log.debug("split idElement '" + oldIdElement
+                              + "' into '" + idElement + "' # '" + idTag + "'");
+                } else {
+                    log.warn("Suspeciously looking idElement for Target: '"
+                             + idElement + "'");
+                }
+            }
             try {
                 base = configuration.getString(CONF_BASE);
                 if ("".equals(base)) {

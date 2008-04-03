@@ -4,6 +4,7 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import java.io.ByteArrayInputStream;
 
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import junit.framework.Test;
@@ -27,6 +28,7 @@ public class XMLSplitterParserTest extends TestCase {
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
     + "<OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\""
     + " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
+    + " xmlns:foo=\"http://example.com/somename\""
     + " xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/"
     + " http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\">\n"
     + "<responseDate>2008-03-12T16:53:55Z</responseDate>\n"
@@ -39,7 +41,6 @@ public class XMLSplitterParserTest extends TestCase {
     + "</ListRecords>\n"
     + "</OAI-PMH>";
 
-
     private final static String singleXML = headXML
     + "<record xmlns=\"http://www.openarchives.org/OAI/2.0/\">\n"
 
@@ -47,6 +48,13 @@ public class XMLSplitterParserTest extends TestCase {
     + "<identifier>test:SingleElemmet</identifier>\n"
     + "<datestamp>2008-03-12T14:40:37Z</datestamp>\n"
     + "<single foo=\"bar\"/>\n"
+    + "<empty/>\n"
+    + "<amp>&amp;</amp>\n"
+    + "<intertwine>boo<sub>subbio</sub></intertwine>\n"
+    + "<emptywithtag mytag=\"bar\"/>\n"
+    + "<!-- Comment -->\n"
+    + "<embeddedrecord><record>Hello</record></embeddedrecord>\n"
+    + "<cdata><![CDATA[Evil & Live <, \\>,]]></cdata>"
     + "</header>\n"
 
     + "<metadata>\n"
@@ -133,6 +141,16 @@ public class XMLSplitterParserTest extends TestCase {
     + "</record>\n"
     + tailXML;
 
+    private static final String noNameXML =
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+    + "<outer>\n"
+    + "<simple foo=\"bar\">some content</simple>\n"
+    + "<empty/>\n"
+    + "<emptywhite  />\n"
+    + "<emptyspan></emptyspan>\n"
+    + "<nearlyempty sometag=\"zoo\"/>\n"
+    + "</outer>";
+
 
     public XMLSplitterParserTest(String name) {
         super(name);
@@ -151,13 +169,15 @@ public class XMLSplitterParserTest extends TestCase {
     }
 
     public void testSAX() throws Exception {
-        SAXParser parser = SAXParserFactory.newInstance().newSAXParser();
+        SAXParserFactory factory = SAXParserFactory.newInstance();
+        factory.setNamespaceAware(true);
+        SAXParser parser = factory.newSAXParser();
 //        parser.setProperty();
         assertTrue("The parser should be namespaceaware", 
                    parser.isNamespaceAware());
     }
 
-    public void testSimpleParse() throws Exception {
+    private Configuration getBasicConfiguration() {
         Configuration conf = Configuration.newMemoryBased();
         conf.set(XMLSplitterFilter.CONF_BASE, "testbase");
         conf.set(XMLSplitterFilter.CONF_COLLAPSE_PREFIX, "true");
@@ -166,6 +186,11 @@ public class XMLSplitterParserTest extends TestCase {
         conf.set(XMLSplitterFilter.CONF_PRESERVE_NAMESPACES, "true");
         conf.set(XMLSplitterFilter.CONF_RECORD_ELEMENT, "record");
         conf.set(XMLSplitterFilter.CONF_REQUIRE_VALID, "true");
+        return conf;
+    }
+
+    public void testSimpleParse() throws Exception {
+        Configuration conf = getBasicConfiguration();
         XMLSplitterFilter.Target target = new XMLSplitterFilter.Target(conf);
         XMLSplitterParser parser = new XMLSplitterParser(target);
         ByteArrayInputStream stream =
@@ -174,9 +199,52 @@ public class XMLSplitterParserTest extends TestCase {
         parser.openPayload(new Payload(stream));
         assertTrue("parser should have something",
                    parser.hasNext());
+        Payload payload = parser.next();
         assertNotNull("Something should be returned by parser.next()",
+                      payload);
+        assertFalse("After one request, the parser should be empty",
+                    parser.hasNext());
+        log.debug("Got Record " + payload.getRecord() + " with content\n" +
+                  payload.getRecord().getContentAsUTF8());
+    }
+
+    public void testMultiParse() throws Exception {
+        Configuration conf = getBasicConfiguration();
+        XMLSplitterFilter.Target target = new XMLSplitterFilter.Target(conf);
+        XMLSplitterParser parser = new XMLSplitterParser(target);
+        ByteArrayInputStream stream =
+                new ByteArrayInputStream(multiXML.getBytes("utf-8"));
+
+        parser.openPayload(new Payload(stream));
+        assertTrue("parser should have something",
+                   parser.hasNext());
+        Payload payload = parser.next();
+        assertNotNull("Something should be returned by parser.next()",
+                      payload);
+        assertNotNull("Something should be returned by next() second call",
                       parser.next());
-        assertFalse("After one request, the parser should be empty", 
+        assertFalse("After two requests, the parser should be empty",
+                    parser.hasNext());
+    }
+
+    // TODO: Check for extracted id and prefix
+
+    public void testNoNamespaceParse() throws Exception {
+        Configuration conf = getBasicConfiguration();
+        conf.set(XMLSplitterFilter.CONF_RECORD_ELEMENT, "outer");
+        conf.set(XMLSplitterFilter.CONF_ID_ELEMENT, "nearlyempty#sometag");
+        XMLSplitterFilter.Target target = new XMLSplitterFilter.Target(conf);
+        XMLSplitterParser parser = new XMLSplitterParser(target);
+        ByteArrayInputStream stream =
+                new ByteArrayInputStream(noNameXML.getBytes("utf-8"));
+
+        parser.openPayload(new Payload(stream));
+        assertTrue("parser should have something",
+                   parser.hasNext());
+        Payload payload = parser.next();
+        assertNotNull("Something should be returned by parser.next()",
+                      payload);
+        assertFalse("After one request, the parser should be empty",
                     parser.hasNext());
     }
 
