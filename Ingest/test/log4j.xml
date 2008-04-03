@@ -47,12 +47,12 @@
 
 
     <logger name="dk.statsbiblioteket.summa.ingest.stream.FileReader">
-        <level value="trace" />
+        <level value="info" />
         <appender-ref ref="CONSOLE"/>
     </logger>
 
     <logger name="dk.statsbiblioteket.summa.ingest.stream.XMLSplitterParser">
-        <level value="debug" />
+        <level value="trace" />
         <appender-ref ref="CONSOLE"/>
     </logger>
 

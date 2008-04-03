@@ -24,6 +24,7 @@ package dk.statsbiblioteket.summa.common;
 
 import java.io.Serializable;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
@@ -275,6 +276,13 @@ public class Record implements Serializable, Comparable{
         }
         data = content;
     }
+    public String getContentAsUTF8() {
+        try {
+            return new String(data, "utf-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException("Could not convert uning utf-8");
+        }
+    }
 
     public long getCreationTime() {
         return creationTime;
@@ -466,20 +474,32 @@ public class Record implements Serializable, Comparable{
 
     /**
      * @return a human-readable single line version of Record.
-     * Note: This uses Calendar to output timestamps and is thus expensive.
      */
     public String toString() {
+        return toString(false);
+    }
+
+    /**
+     * @param verbose if true, a verbose description is returned.
+     * @return a human-readable single line version of Record.
+     * Note: The verbose option uses Calendar to output timestamps and is thus
+     *       expensive.
+     */
+    public String toString(boolean verbose) {
         return "Record [id(" + getId() + "), base(" + getBase()
                + "), deleted(" + isDeleted() + "), indexable(" + isIndexable()
                + "), data-length(" + getLength()
-               + "), creationTime(" + timeToString(getCreationTime())
-               + "), modificationTime(" + timeToString(getModificationTime())
-               + "), parent(" + getParent()
-               + "), children("
-               + (children == null ? "" : Logs.expand(children, 5))
-               + "), meta("
-               + (meta == null ? "" : Logs.expand(
-                Arrays.asList(meta.keySet().toArray()), 5))
+               + ")" + (verbose ?
+                        ", creationTime(" + timeToString(getCreationTime())
+                        + "), modificationTime("
+                        + timeToString(getModificationTime())
+                        + "), parent(" + getParent()
+                        + "), children("
+                        + (children == null ? "" : Logs.expand(children, 5))
+                        + "), meta("
+                        + (meta == null ? "" : Logs.expand(
+                                Arrays.asList(meta.keySet().toArray()), 5))
+                        : "")
                + ")]";
     }
 
