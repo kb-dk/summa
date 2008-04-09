@@ -48,6 +48,11 @@ import org.apache.commons.logging.LogFactory;
 public class RecordWriter implements ObjectFilter {
     private static final Log log = LogFactory.getLog(RecordWriter.class);
 
+    /**
+     * The Storage to connect to. This is a standard RMI address.
+     * Example: //localhost:6789/;
+
+     */
     public static final String CONF_METADATA_STORAGE =
             "RecordWriter.MetadataStorage";
 

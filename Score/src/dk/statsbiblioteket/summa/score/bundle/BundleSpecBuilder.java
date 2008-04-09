@@ -379,7 +379,7 @@ public class BundleSpecBuilder {
     private void recursiveScan (File rootDir, String child) {
         log.trace("recursiveScan(" + rootDir + ", " + child + ") called");
         if (child == null) {
-            /* This is the root of the scan tree */
+            /* This is the sourceRoot of the scan tree */
             for (String file : rootDir.list()) {
                 recursiveScan(rootDir, file);
             }
@@ -411,7 +411,7 @@ public class BundleSpecBuilder {
      * <p>If the {@code mainJar} and spec file is not in the file list,
      * they will be added automatically.</p>
      *
-     * @param rootDir root directory containing the files to be packed into the
+     * @param rootDir sourceRoot directory containing the files to be packed into the
      *                bundle
      * @param outputDir directory where to write the output file
      *

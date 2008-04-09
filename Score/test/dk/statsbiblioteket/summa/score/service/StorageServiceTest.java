@@ -1,7 +1,6 @@
 package dk.statsbiblioteket.summa.score.service;
 
 import java.io.File;
-import java.security.AllPermission;
 import java.security.Permission;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -9,6 +8,7 @@ import dk.statsbiblioteket.summa.score.api.Service;
 import dk.statsbiblioteket.summa.score.api.Status;
 import dk.statsbiblioteket.summa.storage.database.DatabaseControl;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -75,6 +75,11 @@ public class StorageServiceTest extends TestCase {
     }
 
     public void testRemote() throws Exception {
+        Configuration conf = createconfiguration();
+        StorageService storage = new StorageService(conf);
+
+//        ConnectionManager manager 
+
         // TODO: Create StorageService, connect, try Control-interface
     }
 

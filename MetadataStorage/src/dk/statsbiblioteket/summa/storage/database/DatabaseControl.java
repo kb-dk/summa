@@ -334,7 +334,7 @@ public abstract class DatabaseControl extends Control {
     public synchronized RecordIterator getRecordsModifiedAfter(long time,
                                                                String base)
                                                         throws RemoteException {
-        log.debug("getRecordsModifiedAfter('" + base + "', " + time
+        log.debug("getRecordsModifiedAfter('" + time + "', " + base
                   + ") entered");
         try {
             stmtGetModifiedAfter.setString(1, base);
@@ -631,6 +631,8 @@ public abstract class DatabaseControl extends Control {
         public ResultIterator(ResultSet resultSet) throws SQLException {
             this.resultSet = resultSet;
             hasNext = resultSet.next();
+            log.trace("Constructed Record iterater with initial hasNext: "
+                      + hasNext);
             lastAccess = System.currentTimeMillis();
         }
 

@@ -50,8 +50,6 @@ public class RecordWriterTest extends TestCase {
         conf.set(DatabaseControl.PROP_LOCATION, storageLocation.toString());
         Control control = StorageFactory.createController(conf);
         assertNotNull("A controller should be available now", control);
-
-
     }
 
 

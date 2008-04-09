@@ -45,7 +45,7 @@ public class RepositoryManager implements Configurable,
                                           Iterable<String> {
 
     /**
-     * Configuration property defining the path to the root directory of the
+     * Configuration property defining the path to the sourceRoot directory of the
      * Score server's {@link BundleRepository}. The default value is
      * <code>${user.home}/public_html/score/repo</code>.
      */
