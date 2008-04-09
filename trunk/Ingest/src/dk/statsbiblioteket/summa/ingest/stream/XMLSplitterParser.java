@@ -169,7 +169,7 @@ public class XMLSplitterParser extends DefaultHandler2 implements
             parser.parse(payload.getStream(), this);
         } catch (IOException e) {
             //noinspection DuplicateStringLiteralInspection
-            log.error("IOException during parse of payload '" + payload
+            log.warn("IOException during parse of payload '" + payload
                       + "'. Closing stream and exiting", e);
         } catch (SAXException e) {
             //noinspection ObjectEquality
@@ -177,7 +177,7 @@ public class XMLSplitterParser extends DefaultHandler2 implements
                 log.info("Aborting parser as stopParsing was called");
             } else {
                 //noinspection DuplicateStringLiteralInspection
-                log.error("SAXException during parse of payload '" + payload
+                log.warn("SAXException during parse of payload '" + payload
                           + "'. Closing stream and exiting", e);
             }
         } catch (Exception e) {
@@ -220,13 +220,12 @@ public class XMLSplitterParser extends DefaultHandler2 implements
             try {
                 Thread.sleep(HASNEXT_SLEEP);
             } catch (InterruptedException e) {
-                log.error("Interrupted while waiting for Record in hasNext(). "
+                log.warn("Interrupted while waiting for Record in hasNext(). "
                           + "Returning false", e);
                 return false;
             }
-            log.error("");
         }
-        log.error("hasNext taited more than '" + QUEUE_TIMEOUT
+        log.warn("hasNext taited more than '" + QUEUE_TIMEOUT
                   + "' ms for status and got none. Returning false");
         return false;
     }
@@ -391,7 +390,7 @@ public class XMLSplitterParser extends DefaultHandler2 implements
             // Record XML end reached
             log.debug("Record XML collected, creating Record");
             if ("".equals(id.toString())) {
-                log.error("Record found, but no id could be located. Skipping");
+                log.warn("Record found, but no id could be located. Skipping");
                 if (log.isTraceEnabled()) {
                     log.trace("Dumping id-less Record-XML (expected id-element "
                               + target.idElement + " # " + target.idTag

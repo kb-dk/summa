@@ -56,7 +56,7 @@ public interface Bundle {
     public static final String SERVICE_ID = "summa.score.service.id";
 
     /**
-     * The full path to the root of the bundle installation, passed as a
+     * The full path to the sourceRoot of the bundle installation, passed as a
      * system property.
      */
     public static final String BUNDLE_DIR = "summa.score.bundle.dir";

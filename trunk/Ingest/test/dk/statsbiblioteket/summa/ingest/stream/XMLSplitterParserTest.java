@@ -41,7 +41,7 @@ public class XMLSplitterParserTest extends TestCase {
     + "</ListRecords>\n"
     + "</OAI-PMH>";
 
-    private final static String singleXML = headXML
+    public final static String singleXML = headXML
     + "<record xmlns=\"http://www.openarchives.org/OAI/2.0/\">\n"
 
     + "<header>\n"
@@ -80,7 +80,7 @@ public class XMLSplitterParserTest extends TestCase {
     + "</record>\n"
     + tailXML;
 
-    private final static String multiXML = headXML
+    public final static String multiXML = headXML
     + "<record xmlns=\"http://www.openarchives.org/OAI/2.0/\">\n"
 
     + "<header>\n"
@@ -141,7 +141,7 @@ public class XMLSplitterParserTest extends TestCase {
     + "</record>\n"
     + tailXML;
 
-    private static final String noNameXML =
+    public static final String noNameXML =
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
     + "<outer>\n"
     + "<simple foo=\"bar\">some content</simple>\n"

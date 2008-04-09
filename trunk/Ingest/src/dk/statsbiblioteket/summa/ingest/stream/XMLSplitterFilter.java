@@ -198,6 +198,7 @@ public class XMLSplitterFilter implements ObjectFilter {
 
     private Target target;
     private ObjectFilter source;
+    private XMLSplitterParser parser = null;
     private Payload payload = null;
 
     public XMLSplitterFilter(Configuration configuration) {
@@ -233,6 +234,10 @@ public class XMLSplitterFilter implements ObjectFilter {
     }
 
     public void setSource(Filter filter) {
+        if (parser != null) {
+            throw new IllegalStateException("Parser already activated on old"
+                                            + " source");
+        }
         if (filter instanceof ObjectFilter) {
             source = (ObjectFilter)filter;
         } else {
@@ -249,6 +254,9 @@ public class XMLSplitterFilter implements ObjectFilter {
         if (source == null) {
             log.warn("Cannot close as no source is specified");
         } else {
+            if (parser != null) {
+                parser.stopParsing();
+            }
             source.close(success);
         }
     }
@@ -267,12 +275,40 @@ public class XMLSplitterFilter implements ObjectFilter {
             log.trace("makePayload: payload already assigned");
             return;
         }
-        // TODO: Create/call instance of SimpleXML parser here
-/*
-        SAXBuilder builder = new SAXBuilder(false);
-    Document doc = doc = builder.build(new StringReader(xml));
-    String name = doc.getRootElement().getChild("name").getText();
-  */
+        if (source == null) {
+            throw new IllegalStateException("No source defined");
+        }
+        while (payload == null) {
+            if (parser == null) {
+                if (!source.hasNext()) {
+                    log.debug("Source has no more stream payloads");
+                    return;
+                }
+                log.debug("Creating new parser for target " + target);
+                parser = new XMLSplitterParser(target);
+                Payload streamPayload = source.next();
+                log.debug("Opening stream payload " + payload);
+                parser.openPayload(streamPayload);
+            }
+            if (parser.hasNext()) {
+                try {
+                    payload = parser.next();
+                    return;
+                } catch (Exception e) {
+                    log.warn("Exception requesting payload from parser, "
+                             + "skipping to next stream payload");
+                    parser.stopParsing();
+                }
+            }
+            if (source.hasNext()) {
+                Payload streamPayload = source.next();
+                log.debug("Opening stream payload " + payload);
+                parser.openPayload(streamPayload);
+            } else {
+                log.debug("No more stream payloads available");
+                return;
+            }
+        }
     }
 
 }
