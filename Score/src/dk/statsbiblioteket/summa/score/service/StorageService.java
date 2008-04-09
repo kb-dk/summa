@@ -22,16 +22,21 @@
  */
 package dk.statsbiblioteket.summa.score.service;
 
-import java.rmi.RemoteException;
-
 import dk.statsbiblioteket.summa.common.Logging;
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.score.api.Status;
 import dk.statsbiblioteket.summa.storage.StorageFactory;
+import dk.statsbiblioteket.summa.storage.io.Access;
 import dk.statsbiblioteket.summa.storage.io.Control;
+import dk.statsbiblioteket.summa.storage.io.RecordAndNext;
+import dk.statsbiblioteket.summa.storage.io.RecordIterator;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.rmi.RemoteException;
+import java.util.List;
 
 /**
  * Wrapper for Metadata Storage. The underlying type of storage (Lucene,
@@ -43,7 +48,7 @@ import org.apache.commons.logging.LogFactory;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class StorageService extends ServiceBase {
+public class StorageService extends ServiceBase implements Access {
     private Log log = LogFactory.getLog(StorageService.class);
 
     /**
@@ -53,9 +58,15 @@ public class StorageService extends ServiceBase {
     private static final int SHUTDOWN_TIMEOUT = 10 * 1000;
 
     /**
+     * The Storage implementation wrapped in this service.
+     */
+    private Control storageControl;
+
+    /**
      * A simple thread that waits for a stop-signal, upon which it shuts down
      * the Metadata Storage.
      */
+    // TODO: No need for threading here, so discard it
     private class StorageServiceThread extends Thread  {
         private Log log = LogFactory.getLog(StorageServiceThread.class);
 
@@ -70,7 +81,6 @@ public class StorageService extends ServiceBase {
             stopped = false;
             log.info ("Service started");
             log.debug("Getting storage from StorageFactory");
-            Control storageControl;
             try {
                 storageControl = StorageFactory.createController(conf);
             } catch (RemoteException t) {
@@ -136,6 +146,7 @@ public class StorageService extends ServiceBase {
 
         if (service.stopped) {
             new Thread(service).start();
+            // TODO: Wait for proper start before returning
         } else {
             log.warn("Trying to start service, but it is already running");
         }
@@ -180,7 +191,48 @@ public class StorageService extends ServiceBase {
 
         // Do we really need to do this? It cleans up any stray threads, yes,
         // but isn't that the responsibility of the StorageServiceThread?
-        // TODO: Consider removing System.exit
+        // TODO: Consider if System.exit is needed upon stop
         System.exit(0);
+    }
+
+    /* Interface send-through for Access */
+
+    public RecordIterator getRecords(String base) throws RemoteException {
+        return storageControl.getRecords(base);
+    }
+
+    public RecordIterator getRecordsModifiedAfter(long time, String base)
+            throws RemoteException {
+        return storageControl.getRecordsModifiedAfter(time, base);
+    }
+
+    public RecordIterator getRecordsFrom(String id, String base)
+            throws RemoteException {
+        return storageControl.getRecordsFrom(id, base);
+    }
+
+    public Record getRecord(String id) throws RemoteException {
+        return storageControl.getRecord(id);
+    }
+
+    public boolean recordExists(String id) throws RemoteException {
+        return storageControl.recordExists(id);
+    }
+
+    public boolean recordActive(String id) throws RemoteException {
+        return storageControl.recordActive(id);
+    }
+
+    public RecordAndNext next(Long iteratorKey) throws RemoteException {
+        return storageControl.next(iteratorKey);
+    }
+
+    public List<RecordAndNext> next(Long iteratorKey, int maxRecords)
+            throws RemoteException {
+        return storageControl.next(iteratorKey, maxRecords);
+    }
+
+    public void flush(Record record) throws RemoteException {
+        storageControl.flush(record);
     }
 }

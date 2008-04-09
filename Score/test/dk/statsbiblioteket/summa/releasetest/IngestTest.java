@@ -127,7 +127,6 @@ public class IngestTest extends TestCase {
         Files.delete(sourceRoot);
     }
 
-
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public static final File sourceRoot =
             new File(new File(System.getProperty("java.io.tmpdir")),
@@ -226,6 +225,7 @@ public class IngestTest extends TestCase {
 
     public void testIngestToStorage() throws Exception {
         // TODO: Implement this
+        
 /*        Configuration storageConf = getStorageConfiguration();
         Control control = StorageFactory.createController(storageConf);
 
