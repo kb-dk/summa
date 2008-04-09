@@ -1,17 +1,24 @@
 package dk.statsbiblioteket.summa.score.service;
 
-import java.io.File;
-import java.security.Permission;
-
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.score.api.Service;
 import dk.statsbiblioteket.summa.score.api.Status;
 import dk.statsbiblioteket.summa.storage.database.DatabaseControl;
+import dk.statsbiblioteket.summa.storage.io.Access;
+import dk.statsbiblioteket.summa.storage.io.RecordIterator;
+import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.rpc.ConnectionContext;
+import dk.statsbiblioteket.util.rpc.ConnectionFactory;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
+import dk.statsbiblioteket.util.rpc.RMIConnectionFactory;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
+import java.io.File;
+import java.security.Permission;
 
 /**
  * StorageService Tester.
@@ -27,6 +34,14 @@ public class StorageServiceTest extends TestCase {
     public void setUp() throws Exception {
         super.setUp();
         checkSecurityManager();
+        if (location.exists()) {
+            try {
+                Files.delete(location);
+            } catch (Exception e) {
+                System.out.println("Could not remove previous database at '"
+                                   + location + "'");
+            }
+        }
     }
 
     public void tearDown() throws Exception {
@@ -39,11 +54,10 @@ public class StorageServiceTest extends TestCase {
 
     private String EXIT_MESSAGE = "Thou shall not exit!";
     File location =
-            new File(System.getProperty("java.io.tmpdir"), "kabloey");
+            new File(System.getProperty("java.io.tmpdir"), "gooeykabloey");
 
     public void testConstruction() throws Exception {
         Configuration conf = createconfiguration();
-        
         StorageService storage = new StorageService(conf);
         assertEquals("The state of the service should be "
                      + Status.CODE.constructed,
@@ -77,6 +91,45 @@ public class StorageServiceTest extends TestCase {
     public void testRemote() throws Exception {
         Configuration conf = createconfiguration();
         StorageService storage = new StorageService(conf);
+
+        // Start the service remotely
+        ConnectionFactory<Service> serviceCF =
+                new RMIConnectionFactory<Service>();
+        ConnectionManager<Service> serviceCM =
+                new ConnectionManager<Service>(serviceCF);
+        ConnectionContext<Service> serviceContext =
+                serviceCM.get("//localhost:27000/TestStorage");
+        assertNotNull("The ConnectionManager should return a Service"
+                      + " ConnectionContext", serviceContext);
+        Service serviceRemote = serviceContext.getConnection();
+        serviceRemote.start();
+        System.out.println("Sleeping 10 seconds (hack until threading is removed in the StorageService)");
+        Thread.sleep(10*1000);
+        System.out.println("Finished sleeping, commencing");
+
+        // Connect to the Storage remotely
+        ConnectionFactory<Access> cf = new RMIConnectionFactory<Access>();
+        ConnectionManager<Access> cm = new ConnectionManager<Access>(cf);
+
+        // Do this for each connection
+        ConnectionContext<Access> ctx =
+                cm.get("//localhost:27000/TestStorage");
+        assertNotNull("The ConnectionManager should return an Access"
+                      + " ConnectionContext", ctx);
+        Access remoteStorage = ctx.getConnection();
+        remoteStorage.flush(new Record("foo", "bar", new byte[0]));
+        RecordIterator recordIterator =
+                remoteStorage.getRecordsModifiedAfter(0, "bar");
+        assertTrue("The iterator should have at least one element",
+                   recordIterator.hasNext());
+        Record extracted = recordIterator.next();
+        assertEquals("The extracted Record should match the flushed",
+                     "foo", extracted.getId());
+
+        cm.release(ctx);
+        serviceRemote.stop();
+        serviceCM.release(serviceContext);
+
 
 //        ConnectionManager manager 
 
