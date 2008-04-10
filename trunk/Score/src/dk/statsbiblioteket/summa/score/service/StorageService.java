@@ -52,12 +52,6 @@ public class StorageService extends ServiceBase implements Access {
     private Log log = LogFactory.getLog(StorageService.class);
 
     /**
-     * The amount of ms that we will wait for the StorageServiceThread to
-     * properly shut down, before forcing a shutdown.
-     */
-    private static final int SHUTDOWN_TIMEOUT = 10 * 1000;
-
-    /**
      * The Storage implementation wrapped in this service.
      */
     private Control storageControl;
@@ -71,10 +65,11 @@ public class StorageService extends ServiceBase implements Access {
         super(conf);
         setStatus(Status.CODE.constructed, "Created StorageService object",
                   Logging.LogLevel.DEBUG);
+        // TODO: It is bad style to store this. Find an alternative
         this.conf = conf;
         exportRemoteInterfaces();
 
-        setStatus(Status.CODE.constructed, "Remote interfaces up",
+        setStatus(Status.CODE.constructed, "Remote interfaces are up",
                   Logging.LogLevel.DEBUG);
     }
 
@@ -94,11 +89,12 @@ public class StorageService extends ServiceBase implements Access {
             storageControl = StorageFactory.createController(conf);
         } catch (RemoteException t) {
             setStatus(Status.CODE.crashed,
-                      "Crashed due to RemoteException when requesting "
-                      + "storage", Logging.LogLevel.FATAL, t);
+                      "Crashed due to RemoteException when requesting storage",
+                      Logging.LogLevel.FATAL, t);
             stopped = true;
             throw new RemoteException("Crashed during startup", t);
         } catch (Throwable t) {
+            //noinspection DuplicateStringLiteralInspection
             setStatus(Status.CODE.crashed,
                       "Crashed due to unexpected Throwable when requesting "
                       + "storage", Logging.LogLevel.FATAL, t);
@@ -106,11 +102,11 @@ public class StorageService extends ServiceBase implements Access {
             throw new RemoteException("Crashed with throwable during startup",
                                       t);
         }
-        setStatusRunning("The service is running");
+        setStatusRunning("The Storage service is running");
     }
 
     public void stop() throws RemoteException {
-        log.trace("Recieved request to stop.");
+        log.trace("Recieved request to stop Storage service");
         if (stopped) {
             log.warn("Attempting to stop when not started");
             return;

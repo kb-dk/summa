@@ -119,10 +119,8 @@ public abstract class Control extends UnicastRemoteObject implements Access,
     }
 
     /**
-     * The underlying status for records in the database has changed since
-     * Stable Summa. This method returns !DELETED & INDEXABLE.
-     * @deprecated the status field has been removed. See DELETED and INDEXABLE
-     *             in the package description.
+     * Is a Record is active, it should be indexed. This method returns
+     * !DELETED & INDEXABLE.
      */
     public boolean recordActive(String id) throws RemoteException {
         Record record = getRecord(id);
