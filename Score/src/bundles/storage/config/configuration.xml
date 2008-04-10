@@ -41,9 +41,11 @@
     <entry key="summa.storage.database.forcenew">true</entry>
 
     <!--
-     * The location of the database to use/create.
+     * The location of the database to use/create. This will be relative to
+       the persistent-dir for the client. This also means that only one instance
+       of this service can be deployed at each client.
      -->
-    <entry key="summa.storage.database.location"></entry>
+    <entry key="summa.storage.database.location">storage</entry>
 
 
 </properties>
