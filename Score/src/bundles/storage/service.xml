@@ -4,7 +4,7 @@
 	<mainClass>dk.statsbiblioteket.summa.score.service.Launcher</mainClass>
     <property name="com.sun.management.jmxremote.port" value="2769"/>
     <property name="com.sun.management.jmxremote.ssl" value="false"/>
-    <description>The module MetadataStorage</description>
+    <description>The Storage module</description>
 	<bundleId>storage</bundleId>
 	<fileList>
 		<file>metadatastorage-@summa.version@.jar</file>

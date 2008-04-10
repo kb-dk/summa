@@ -26,6 +26,7 @@
  */
 package dk.statsbiblioteket.summa.storage.database;
 
+import java.io.File;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.sql.Connection;
@@ -81,9 +82,14 @@ public abstract class DatabaseControl extends Control {
      */
     public static String PROP_FORCENEW = "summa.storage.database.forcenew";
     /**
-     * The location of the database to use/create.
+     * The location of the database to use/create. If the location is not an
+     * absolute path, it will be appended to the System property "
+     * summa.score.client.persistent.dir". If that system property does not
+     * exist, the location will be relative to the current dir.
      */
     public static String PROP_LOCATION  = "summa.storage.database.location";
+    private static final String SYSPROP_PERSISTENT_DIR =
+            "summa.score.client.persistent.dir";
 
     /**
      * The name of the table in the database.
@@ -168,6 +174,42 @@ public abstract class DatabaseControl extends Control {
 
     public DatabaseControl(int port) throws RemoteException {
         // We need to define this to declare RemoteException
+    }
+
+    public DatabaseControl(Configuration configuration) throws RemoteException {
+        super(updateConfiguration(configuration));
+    }
+
+    private static Configuration updateConfiguration(Configuration
+                                                     configuration) {
+        try {
+            String location = configuration.getString(PROP_LOCATION);
+            File locationFile = new File(location);
+            if (!locationFile.getPath().equals(
+                    locationFile.getAbsolutePath())) {
+                try {
+                    String persistentBase =
+                            System.getProperty(SYSPROP_PERSISTENT_DIR);
+                    File persistentBaseFile = new File(persistentBase);
+                    File newLocationFile = new File(persistentBaseFile,
+                                                    location);
+                    log.debug("Storing new location '" + newLocationFile
+                              + "' to property key " + PROP_LOCATION);
+                    configuration.set(PROP_LOCATION, newLocationFile.getPath());
+                } catch (Exception e) {
+                    log.debug("Could not locate the System property "
+                              + SYSPROP_PERSISTENT_DIR + ". No changes will be"
+                              + " done");
+                }
+            } else {
+                log.debug(PROP_LOCATION + " is an absolute path ("
+                          + locationFile + "). No changes will be done");
+            }
+        } catch (Exception e) {
+            log.debug("Could not transmute key '" + PROP_LOCATION
+                      + "' in configuration", e);
+        }
+        return configuration;
     }
 
     /**

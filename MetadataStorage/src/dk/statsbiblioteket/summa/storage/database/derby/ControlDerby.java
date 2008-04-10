@@ -61,6 +61,7 @@ public class ControlDerby extends DatabaseControl implements ControlDerbyMBean,
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public ControlDerby(Configuration configuration) throws RemoteException {
+        super(configuration);
         log.trace("Constructing ControlDerby");
         username = configuration.getString(PROP_USERNAME, "");
         password = configuration.getString(PROP_PASSWORD, "");

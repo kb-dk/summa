@@ -61,6 +61,7 @@ public class StorageServiceTest extends NoExitTestCase {
 
     public void testConstruction() throws Exception {
         Configuration conf = createconfiguration();
+//        System.setProperty("summa.score.client.persistent.dir", "/tmp/t");
         StorageService storage = new StorageService(conf);
         assertEquals("The state of the service should be "
                      + Status.CODE.constructed,
