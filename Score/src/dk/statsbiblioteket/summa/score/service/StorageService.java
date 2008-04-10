@@ -63,67 +63,6 @@ public class StorageService extends ServiceBase implements Access {
     private Control storageControl;
 
     /**
-     * A simple thread that waits for a stop-signal, upon which it shuts down
-     * the Metadata Storage.
-     */
-    // TODO: No need for threading here, so discard it
-    private class StorageServiceThread extends Thread  {
-        private Log log = LogFactory.getLog(StorageServiceThread.class);
-
-        public boolean stopped = true;
-        private Configuration conf; // Is it okay to keep this?
-
-        public StorageServiceThread(Configuration conf) {
-            this.conf = conf;
-        }
-
-        public void run() {
-            stopped = false;
-            log.info ("Service started");
-            log.debug("Getting storage from StorageFactory");
-            try {
-                storageControl = StorageFactory.createController(conf);
-            } catch (RemoteException t) {
-                setStatus(Status.CODE.crashed,
-                          "Crashed due to RemoteException when requesting "
-                          + "storage", Logging.LogLevel.FATAL, t);
-                stopped = true;
-                return;
-            } catch (Throwable t) {
-                setStatus(Status.CODE.crashed,
-                          "Crashed due to unexpected Throwable when requesting "
-                          + "storage", Logging.LogLevel.FATAL, t);
-                stopped = true;
-                return;
-            }
-            setStatusRunning("The service is running");
-            while (!stopped) {
-                try {
-                    Thread.sleep(2000);
-                    log.trace("Service still running...");
-                } catch (InterruptedException e) {
-                    log.debug("Service interrupted!");
-                    stopped = true;
-                }
-            }
-            try {
-                setStatus(Status.CODE.stopping, "Stopping storage control",
-                          Logging.LogLevel.DEBUG);
-                storageControl.close();
-                setStatus(Status.CODE.stopped,
-                          "Storage control stopped successfully",
-                          Logging.LogLevel.INFO);
-            } catch (RemoteException e) {
-                setStatus(Status.CODE.crashed,
-                          "Storage control crashed while stopping",
-                          Logging.LogLevel.ERROR, e);
-                log.error("RemoteException when closing storage control", e);
-            }
-        }
-    }
-
-    private StorageServiceThread service;
-    /**
      * Standard setup for Services. This does not start the Metadata Storage.
      * @param conf             the configuration to use.
      * @throws RemoteException if the setup could not be performed.
@@ -132,56 +71,67 @@ public class StorageService extends ServiceBase implements Access {
         super(conf);
         setStatus(Status.CODE.constructed, "Created StorageService object",
                   Logging.LogLevel.DEBUG);
-
-        service = new StorageServiceThread(conf);
+        this.conf = conf;
         exportRemoteInterfaces();
 
         setStatus(Status.CODE.constructed, "Remote interfaces up",
                   Logging.LogLevel.DEBUG);
     }
 
+    private boolean stopped = true;
+    private Configuration conf; // Is it okay to keep this?
     public void start() throws RemoteException {
+        if (!stopped) {
+            log.warn("start called when already running");
+            return;
+        }
         setStatus(Status.CODE.startingUp, "Starting StorageServiceThread",
                   Logging.LogLevel.INFO);
-
-        if (service.stopped) {
-            new Thread(service).start();
-            // TODO: Wait for proper start before returning
-        } else {
-            log.warn("Trying to start service, but it is already running");
+        stopped = false;
+        log.info ("StorageService started");
+        log.debug("Getting storage from StorageFactory");
+        try {
+            storageControl = StorageFactory.createController(conf);
+        } catch (RemoteException t) {
+            setStatus(Status.CODE.crashed,
+                      "Crashed due to RemoteException when requesting "
+                      + "storage", Logging.LogLevel.FATAL, t);
+            stopped = true;
+            throw new RemoteException("Crashed during startup", t);
+        } catch (Throwable t) {
+            setStatus(Status.CODE.crashed,
+                      "Crashed due to unexpected Throwable when requesting "
+                      + "storage", Logging.LogLevel.FATAL, t);
+            stopped = true;
+            throw new RemoteException("Crashed with throwable during startup",
+                                      t);
         }
+        setStatusRunning("The service is running");
     }
 
     public void stop() throws RemoteException {
         log.trace("Recieved request to stop.");
-        if (service.stopped) {
-            log.warn ("Trying to stop the service but it is already stopped");
+        if (stopped) {
+            log.warn("Attempting to stop when not started");
             return;
         }
-
-        setStatus(Status.CODE.stopping, "Shutting down StorageServicethread",
-                Logging.LogLevel.DEBUG);
-        service.stopped = true;
-
         try {
-            service.join(SHUTDOWN_TIMEOUT);
-        } catch (InterruptedException e) {
+            setStatus(Status.CODE.stopping, "Stopping storage control",
+                      Logging.LogLevel.DEBUG);
+            storageControl.close();
+            setStatus(Status.CODE.stopped,
+                      "Storage control stopped successfully",
+                      Logging.LogLevel.INFO);
+        } catch (RemoteException e) {
             setStatus(Status.CODE.crashed,
-                      "Interrupted while waiting for the StorageServiceThread "
-                      + "to shut down properly",
+                      "Storage control crashed while stopping",
                       Logging.LogLevel.ERROR, e);
+            throw new RemoteException("RemoteException when closing storage "
+                                      + "control", e);
         }
-        if (service.isAlive()) {
-            log.error("A shutdown of StorageServiceThread has been attempted, "
-                      + "but was unsuccessful. Shutdown will now be forced with"
-                      + " System.exit");
-            System.exit(-1);
-        }
-
         setStatus(Status.CODE.stopped,
                   "StorageService down, all lights green, performing clean-up",
                   Logging.LogLevel.INFO);
-
         try {
             unexportRemoteInterfaces();
             log.info("Clean-up finished. Calling System.exit");
@@ -192,7 +142,11 @@ public class StorageService extends ServiceBase implements Access {
         // Do we really need to do this? It cleans up any stray threads, yes,
         // but isn't that the responsibility of the StorageServiceThread?
         // TODO: Consider if System.exit is needed upon stop
-        System.exit(0);
+        try {
+            System.exit(0);
+        } catch (SecurityException e) {
+            log.warn("System.exit disabled");
+        }
     }
 
     /* Interface send-through for Access */
