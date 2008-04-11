@@ -87,7 +87,9 @@ public class SetupServices {
         // the key and the second is the value
         //
  	    Properties props = new Properties();
-            props.put("java.security.policy", POLICY.toString());
+        props.put("java.security.policy", POLICY.toString());
+        // TODO: Check if -Djava.security.manager is needed here
+
 
         ActivationGroupDesc.CommandEnvironment ace = null;
  	    ActivationGroupDesc exampleGroup = new ActivationGroupDesc(props, ace);

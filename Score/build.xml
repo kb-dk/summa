@@ -49,6 +49,8 @@
     <!-- Internal project dependencies -->
     <path id="lib.internal">    
         <pathelement location="../Common/${summa.classes.dir}"/>
+        <pathelement location="../Ingest/${summa.classes.dir}"/>
+        <pathelement location="../MetadataStorage/${summa.classes.dir}"/>
     </path>
     
     <!-- lib.files : set by the .checkDepends target -->
@@ -230,12 +232,20 @@
         </zip>
     </target>
 
-    <target name=".test-1.bundle" depends=".jar, test.compile">                        
+    <target name=".test-data">
+        <delete dir="${dist.dir}/data"/>
+        <mkdir dir="${dist.dir}/data"/>
+        <copy todir="${dist.dir}/data">
+            <fileset dir="${test.src.dir}/data" includes="**/**"/>
+        </copy>
+    </target>
+
+    <target name=".test-1.bundle" depends=".jar, test.compile">
         <mkdir dir="${tmp.dir}"/>
-        
-        <!-- Create jar file for test service -->    
+
+        <!-- Create jar file for test service -->
         <jar basedir="${test.build.dir}" compress="true" jarfile="${tmp.dir}/test.jar"/>
-        
+
         <!-- Roll service bundle -->
         <copy todir="${tmp.dir}">
             <fileset dir="${test.src.dir}" includes="**/*.xml"/>
@@ -281,8 +291,8 @@
     <target name="bundle-storage" depends=".jar, compile">
         <mkdir dir="${tmp.dir}"/>
 
-        <!-- Create jar file for test service -->
-        <jar basedir="$build.dir}" compress="true" jarfile="${tmp.dir}/build.jar"/>
+        <!-- Create jar file for Storage service -->
+        <jar basedir="${build.dir}" compress="true" jarfile="${tmp.dir}/storage-service-${summa.version}.jar"/>
 
         <!-- Roll service bundle -->
         <copy todir="${tmp.dir}">
@@ -303,14 +313,13 @@
 
         <zip destfile="${dist.dir}/storage.bundle">
 
-            <zipfileset file="${tmp.dir}/build.jar"/>
+            <zipfileset file="${tmp.dir}/storage-service-${summa.version}.jar"/>
 
             <zipfileset file="${tmp.dir}/bundles/storage/service.xml"/>
             <zipfileset prefix="lib" file="../${summa.ilib.common}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.storage}"/>
             <zipfileset prefix="lib" file="${summa.lib.commons-logging}"/>
             <zipfileset prefix="lib" file="${summa.lib.log4j}"/>
-            <zipfileset prefix="lib" file="${summa.lib.log4j}"/>
-            <!--metadatastorage, commons-->
             <zipfileset prefix="lib" file="${summa.lib.sbutil}"/>
             <zipfileset prefix="lib" file="${release.jar}"/>
 
@@ -352,11 +361,12 @@
 
             <zipfileset file="${tmp.dir}/test-client-1/client.xml"/>
             <zipfileset prefix="lib" file="../${summa.ilib.common}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.storage}"/>
             <zipfileset prefix="lib" file="${summa.lib.commons-logging}"/>
             <zipfileset prefix="lib" file="${summa.lib.log4j}"/>
             <zipfileset prefix="lib" file="${summa.lib.sbutil}"/>
             <zipfileset prefix="lib" file="${release.jar}"/>
-
+            
             <zipfileset prefix="config" file="${test.src.dir}/test-client-1/config/configuration.xml"/>
             <zipfileset prefix="config" file="${basedir}/config/log4j.xml"/>
 
@@ -371,6 +381,6 @@
         <delete dir="${tmp.dir}"/>
     </target>
 
-    <target name="all" depends="release, .test-1.bundle, .test-client-1.bundle"/>
+    <target name="all" depends="release, .test-1.bundle, .test-client-1.bundle, bundle-storage, .test-data"/>
 
 </project>

@@ -23,7 +23,6 @@ import org.apache.commons.logging.LogFactory;
         author = "mke",
         comment="Unfinished")
 public class Launcher {
-
     public static final String SERVICE_CLASS = "score.launcher.service.class";
 
     public static void main(String[] args) {
@@ -32,6 +31,8 @@ public class Launcher {
                                               new LoggingExceptionHandler(log));
 
         log.debug ("Getting system configuration ");
+
+        log.debug("SecurityManager: " + System.getSecurityManager());
 
         try {
             Configuration conf = Configuration.getSystemConfiguration();
@@ -43,7 +44,7 @@ public class Launcher {
             log.debug ("Using service class " + SERVICE_CLASS
                        + " = " + serviceClass);
 
-            Service service = conf.create (serviceClass);
+            Service service = conf.create(serviceClass);
             log.debug("Created service. The launch has completed.");
         } catch (Throwable t) {
             log.fatal("Caught toplevel exception, bailing out.", t);

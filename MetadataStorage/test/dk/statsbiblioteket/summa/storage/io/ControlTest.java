@@ -26,7 +26,7 @@ public class ControlTest extends TestCase {
     public ControlTest(String name) {
         super(name);
     }
-
+    // TODO: Test iterating deleted and not indexable records
     static int testdirCounter = 0;
     Control control;
     File location;

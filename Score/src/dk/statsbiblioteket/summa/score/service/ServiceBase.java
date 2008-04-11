@@ -78,6 +78,9 @@ public abstract class ServiceBase extends UnicastRemoteObject
         if (System.getSecurityManager() == null) {
             log.info ("No security manager found. Setting RMI security manager");
             System.setSecurityManager(new RMISecurityManager());
+        } else {
+            log.info("SecurityManager '" + System.getSecurityManager()
+                     + "' present");
         }
 
         registryPort = conf.getInt(REGISTRY_PORT, 27000);

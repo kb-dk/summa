@@ -323,7 +323,7 @@ public class SSHDeployer implements ClientDeployer {
         /* Build the command line with and ssh prefix */
         List<String> commandLine = new ArrayList<String>();
         commandLine.addAll (Arrays.asList("ssh", login,
-                                          "cd", destination,
+                                          "cd", destination,                
                                           ";"));
         commandLine.addAll(stub.buildCommandLine());
 
