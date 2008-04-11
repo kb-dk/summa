@@ -51,6 +51,9 @@ import java.util.List;
 public class StorageService extends ServiceBase implements Access {
     private Log log = LogFactory.getLog(StorageService.class);
 
+    // TODO: This should probably be in a module separate from Score,
+    // so that the Score is not dependend on the modules it can start.
+
     /**
      * The Storage implementation wrapped in this service.
      */

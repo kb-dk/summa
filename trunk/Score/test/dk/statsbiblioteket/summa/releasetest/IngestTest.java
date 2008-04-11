@@ -134,7 +134,7 @@ public class IngestTest extends NoExitTestCase {
     }
     public void tearDown() throws Exception {
         super.tearDown();
-        Files.delete(sourceRoot);
+        //Files.delete(sourceRoot);
     }
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})

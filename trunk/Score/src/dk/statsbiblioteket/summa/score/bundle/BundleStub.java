@@ -1,4 +1,4 @@
-/* $Id: BundleStub.java,v 1.9 2007/10/29 14:38:15 mke Exp $
+    /* $Id: BundleStub.java,v 1.9 2007/10/29 14:38:15 mke Exp $
  * $Revision: 1.9 $
  * $Date: 2007/10/29 14:38:15 $
  * $Author: mke $
@@ -128,15 +128,18 @@ public class BundleStub {
      * @throws IOException if there is an error launching the command
      * @return A process handle to the spawned JVM
      */
-    public Process start () throws IOException {
+    public Process start() throws IOException {
         log.trace("start called");
         List<String> cmdLine = buildCommandLine();
-        Logs.log(log, Logs.Level.DEBUG, "start: Bundle dir is '" + bundleDir
-                                        + "', command line is ", cmdLine);
+        log.debug("start: Bundle dir is '" + bundleDir + "', command line is "
+                 + Strings.join(cmdLine, " "));
         ProcessBuilder pb = new ProcessBuilder();
+        log.trace("ProcessBuilder created, setting directory '" + bundleDir
+                  + "'");
         pb.directory(bundleDir);
+        log.trace("Setting command line on process builder");
         pb.command(cmdLine);
-
+        log.trace("Starting process on process builder");
         Process process = pb.start();
         log.trace("Returning Process");
         return process;
@@ -176,7 +179,9 @@ public class BundleStub {
 
         cl.add (javaExecutable);
 
+        // TODO: Do we verify the existence of non-deployed bundles properly? 
         if (new File(bundleDir, POLICY_FILE).exists()) {
+            cl.add("-Djava.security.manager");
             cl.add("-Djava.security.policy=" + POLICY_FILE);
             hasPolicy = true;
         } else {

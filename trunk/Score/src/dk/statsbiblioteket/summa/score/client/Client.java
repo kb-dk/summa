@@ -101,6 +101,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
     public Client(Configuration configuration) throws IOException {
         super (getServicePort (configuration));
         log.debug("Constructing client");
+        log.trace("Home dir: " + new File(".").getAbsolutePath());
 
         registryHost = configuration.getString(REGISTRY_HOST_PROPERTY,
                                                "localhost");
@@ -378,8 +379,10 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         if (service != null) {
             if (service.getStatus().getCode() == Status.CODE.stopped) {
                 log.debug("Found cached connection to '" + instanceId + "'");
-                log.debug("Calling start() on service '" + instanceId +"'");
+                log.debug("Calling start() on stopped service '" + instanceId
+                          + "'");
                 service.start();
+                log.debug("Stopped service started");
             } else {
                 log.warn("Trying to start service '" + instanceId
                         + "', but it is already running. Ignoring request.");
@@ -421,15 +424,15 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                           + Strings.join(stub.buildCommandLine(), " "));
             }
             final Process p = stub.start();
-
+            log.trace("startService: Process started");
             // Flush output stream
             new Thread (new Runnable () {
 
                 public void run() {
                     log.info("Flushing output of child " + p);
                     try {
-                        Streams.pipeStream(p.getInputStream(), System.out);
-                        Streams.pipeStream(p.getErrorStream(), System.err);
+                        Streams.pipe(p.getInputStream(), System.out);
+                        Streams.pipe(p.getErrorStream(), System.err);
                         log.info("Waiting for process");
                         p.waitFor();
                     } catch (Exception e) {
@@ -442,11 +445,14 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
             
             // FIXME: Should care about the returned Process?
 
+            log.trace("Registering service");
             registerService (stub, configLocation);
 
             log.debug("Calling start() on service '" + instanceId +"'");
             service = services.get(instanceId);
+            log.trace("Got service '" + service + "'");
             service.start();
+            log.debug("Start called without errors");
 
         } catch (IOException e) {
             log.error ("Failed to start service '" + instanceId

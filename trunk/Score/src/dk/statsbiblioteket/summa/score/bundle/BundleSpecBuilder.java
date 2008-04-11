@@ -523,6 +523,7 @@ public class BundleSpecBuilder {
                          + BundleStub.JMX_ACCESS_FILE);
         }
         if (hasFile(BundleStub.POLICY_FILE)) {
+            jvmArgs.add ("-Djava.security.manager");
             jvmArgs.add ("-Djava.security.policy="
                          + BundleStub.POLICY_FILE);
         }
