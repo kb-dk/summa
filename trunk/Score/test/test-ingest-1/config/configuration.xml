@@ -17,35 +17,7 @@
     <!-- The following properties are taken from StorageFactory and
          DatabaseControl -->
 
-    <!-- The backend to use for Storage -->
-    <entry key="summa.storage.controller">dk.statsbiblioteket.summa.storage.database.derby.ControlDerby</entry>
-
-    <!--
-    <entry key="summa.storage.database.username"></entry>
-    <entry key="summa.storage.database.password"></entry>
-    -->
-
-    <!--
-     * The property-key for the boolean value determining if a new database
-     * should be created is there is no existing database. If createnew is
-     * true and a database exists and forcenew is true, the existing database
-     * is deleted and a new one created. If createnew is true and a database
-     * exists and forcenew is false, the existing database is reused.
-     -->
-    <entry key="summa.storage.database.createnew">true</entry>
-
-    <!--
-     * The property-key for the boolean determining if a new database should
-     * be created, no matter is a database already exists.
-     -->
-    <entry key="summa.storage.database.forcenew">true</entry>
-
-    <!--
-     * The location of the database to use/create. This will be relative to
-       the persistent-dir for the client. This also means that only one instance
-       of this service can be deployed at each client.
-     -->
-    <entry key="summa.storage.database.location">storage</entry>
+     TODO: Fill this with the properties from 5records/filter_setup
 
 
 </properties>
