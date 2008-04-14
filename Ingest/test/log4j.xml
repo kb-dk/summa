@@ -23,6 +23,8 @@
         </layout>
     </appender>
 
+    <!-- A time/date based rolling appender -->
+
     <appender name="FILE" class="org.apache.log4j.RollingFileAppender">
         <param name="File" value="log/logfile.log"/>
         <param name="Append" value="true"/>
@@ -56,6 +58,7 @@
         <appender-ref ref="CONSOLE"/>
     </logger>
 
+    <!-- all loggeres inherit the root logger - so don't include the root appenders in the other loggers (will duplicate log entries in the log file) -->
     <root>
         <level value="INFO" />
         <appender-ref ref="CONSOLE" />

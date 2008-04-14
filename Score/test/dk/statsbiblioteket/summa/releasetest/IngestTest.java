@@ -27,11 +27,14 @@ import java.io.File;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.filter.FilterControl;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.ingest.stream.FileReader;
 import dk.statsbiblioteket.summa.ingest.stream.XMLSplitterFilter;
 import dk.statsbiblioteket.summa.score.api.Service;
+import dk.statsbiblioteket.summa.score.api.Status;
 import dk.statsbiblioteket.summa.score.service.StorageService;
+import dk.statsbiblioteket.summa.score.service.FilterService;
 import dk.statsbiblioteket.summa.storage.StorageFactory;
 import dk.statsbiblioteket.summa.storage.database.DatabaseControl;
 import dk.statsbiblioteket.summa.storage.filter.RecordWriter;
@@ -214,7 +217,8 @@ public class IngestTest extends NoExitTestCase {
 
     public void testStorage() throws Exception {
         Configuration storageConf = getStorageConfiguration();
-
+        assertTrue("Storage conf should have location", storageConf.valueExists(
+                DatabaseControl.PROP_LOCATION));
         Control control = StorageFactory.createController(storageConf);
 
         RecordIterator iterator = control.getRecordsModifiedAfter(0, TESTBASE);
@@ -308,7 +312,49 @@ public class IngestTest extends NoExitTestCase {
 
     // with proper use of FilterChain
     public void testFullIngestWorkflow() throws Exception {
-        // TODO: Implement this. Remember to use a proper filter chain
+        System.out.println("Note: This is a pseudo-unit-test as it requires "
+                           + "that the test-folder 5records are copied to "
+                           + "/tmp/summatest/data");
 
+        int TIMEOUT = 10000;
+
+        // Storage
+        Configuration storageConf = getStorageConfiguration();
+        StorageService storage = new StorageService(storageConf);
+        storage.start();
+
+        // FIXME: Use classloader to locate the test root
+        File filterConfFile = new File("Score/test/data/5records/"
+                                       + "filter_setup.xml").getAbsoluteFile();
+        assertTrue("The filter conf. should exist", filterConfFile.exists());
+        Configuration filterConf = Configuration.load(filterConfFile.getPath());
+        assertNotNull("Configuration should contain "
+                      + FilterControl.CONF_CHAINS,
+                      filterConf.getString(FilterControl.CONF_CHAINS));
+
+        FilterService ingester = new FilterService(filterConf);
+        ingester.start();
+
+        long endTime = System.currentTimeMillis() + TIMEOUT;
+        while (!ingester.getStatus().getCode().equals(Status.CODE.stopped) &&
+               System.currentTimeMillis() < endTime) {
+            log.debug("Sleeping a bit");
+            Thread.sleep(100);
+        }
+        assertTrue("The ingester should have stopped by now",
+                   ingester.getStatus().getCode().equals(Status.CODE.stopped));
+
+        RecordIterator recordIterator =
+                storage.getRecordsModifiedAfter(0, TESTBASE);
+        assertTrue("The iterator should have at least one element",
+                   recordIterator.hasNext());
+        for (int i = 0 ; i < NUM_RECORDS ; i++) {
+            assertTrue("Storage should have next for record #" + (i+1),
+                       recordIterator.hasNext());
+            Record record = recordIterator.next();
+            assertNotNull("The next should give a record", record);
+        }
+        assertFalse("After " + NUM_RECORDS + " Records, iterator should finish",
+                    recordIterator.hasNext());
     }
 }

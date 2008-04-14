@@ -22,24 +22,30 @@
  */
 package dk.statsbiblioteket.summa.common.configuration;
 
-import dk.statsbiblioteket.summa.common.configuration.storage.RemoteStorage;
-import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
-import dk.statsbiblioteket.summa.common.configuration.storage.FileStorage;
-import dk.statsbiblioteket.util.qa.QAInfo;
-
-import java.io.Serializable;
-import java.io.IOException;
-import java.io.StringWriter;
 import java.io.File;
-import java.util.*;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.Serializable;
+import java.io.StringWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.rmi.RMISecurityManager;
 import java.security.Permission;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import dk.statsbiblioteket.summa.common.configuration.storage.FileStorage;
+import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
+import dk.statsbiblioteket.summa.common.configuration.storage.RemoteStorage;
+import dk.statsbiblioteket.summa.common.configuration.storage.XStorage;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -423,7 +429,8 @@ public class Configuration implements Serializable,
                 val = Class.forName((String)val);
             } catch (ClassNotFoundException e) {
                 throw new IllegalArgumentException("The property " + key
-                                                   + " does not map to an "
+                                                   + " with value '" + val
+                                                   + "' does not map to an "
                                                    + "existing class", e);
             }
         }
@@ -619,21 +626,21 @@ public class Configuration implements Serializable,
      */
     private void checkSecurityManager() {
         if (System.getSecurityManager() == null) {
-            log.info ("No security manager found. "
-                      + "Setting allow-all security manager");
+            log.warn("No security manager found. "
+                     + "Setting allow-all security manager");
             System.setSecurityManager(new RMISecurityManager() {
                 public void checkPermission(Permission perm) {
                     // Do nothing (allow all)
-                    if (log.isTraceEnabled()) {
+/*                    if (log.isTraceEnabled()) {
                         log.trace("checkPermission(" + perm + ") called");
-                    }
+                    }*/
                 }
                 public void checkPermission(Permission perm, Object context) {
                     // Do nothing (allow all)
-                    if (log.isTraceEnabled()) {
+/*                    if (log.isTraceEnabled()) {
                         log.trace("checkPermission(" + perm + ", " + context
                                   + ") called");
-                    }
+                    }*/
                 }
             });
         } else {
@@ -763,6 +770,7 @@ public class Configuration implements Serializable,
             log.debug ("Loading configuration from URL " + confLocation);
             try {
                 URL storageUrl = new URL (confLocation);
+                // TODO: Add XStorage capabilities
                 storage = new MemoryStorage(storageUrl);
             } catch (Exception e) {
                 throw new ConfigurationException("Unable retrieve configuration from " + confLocation, e);
@@ -771,9 +779,24 @@ public class Configuration implements Serializable,
             // Assume this is a regular file
             log.debug ("Loading configuration from file " + confLocation);
             try {
-                storage = new FileStorage (new File(confLocation));
+                storage = new FileStorage(new File(confLocation));
+            } catch (FileNotFoundException e) {
+                //noinspection DuplicateStringLiteralInspection
+                throw new ConfigurationException("Could not locate "
+                                                 + "configuration at '"
+                                                 + confLocation + "'");
             } catch (IOException e) {
-                throw new ConfigurationException("Error reading configuration file " + confLocation, e);
+                log.debug("Could not load configuration using FileStorage. "
+                          + "Switching to XStorage");
+                try {
+                    storage = new XStorage(new File(confLocation));
+                } catch (IOException ex) {
+                    throw new ConfigurationException("Error reading "
+                                                     + "configuration file '"
+                                                     + confLocation
+                                                     + "using XStorage", ex);
+                }
+                //throw new ConfigurationException("Error reading configuration file " + confLocation, e);
             }
         } else {
             // Assume this is a resource

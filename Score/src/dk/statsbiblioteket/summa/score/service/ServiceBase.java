@@ -76,7 +76,8 @@ public abstract class ServiceBase extends UnicastRemoteObject
 
         id = System.getProperty(SERVICE_ID);
         if (System.getSecurityManager() == null) {
-            log.info ("No security manager found. Setting RMI security manager");
+            log.info ("No security manager found. "
+                      + "Setting RMI security manager");
             System.setSecurityManager(new RMISecurityManager());
         } else {
             log.info("SecurityManager '" + System.getSecurityManager()

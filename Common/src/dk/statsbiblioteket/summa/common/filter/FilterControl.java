@@ -43,7 +43,8 @@ import org.apache.commons.logging.LogFactory;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class FilterControl extends StateThread implements Configurable {
+public class FilterControl extends StateThread implements Configurable,
+                                                          FilterChainHandler {
     private final Log log = LogFactory.getLog(FilterControl.class);
 
     private List<FilterPump> pumps;
@@ -103,7 +104,7 @@ public class FilterControl extends StateThread implements Configurable {
     }
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    public void run() {
+    protected void runMethod() {
         log.info("Activating filter pump(s)");
         for (FilterPump pump: pumps) {
             if (getStatus() != STATUS.running) {
@@ -172,4 +173,5 @@ public class FilterControl extends StateThread implements Configurable {
         }
         return sw.toString();
     }
+
 }
