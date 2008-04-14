@@ -37,6 +37,7 @@ import java.util.regex.Matcher;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
+import java.rmi.RMISecurityManager;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -589,6 +590,7 @@ public class Configuration implements Serializable,
      *                                  {@code Configurable}.
      */
     public <T> T create (Class<T> configurable) {
+        checkSecurityManager();
         if (!Configurable.class.isAssignableFrom(configurable)) {
             throw new IllegalArgumentException("Class " + configurable
                                                + " is not a Configurable");
@@ -608,6 +610,20 @@ public class Configuration implements Serializable,
             throw new Configurable.ConfigurationException(e);
         } catch (InstantiationException e) {
             throw new Configurable.ConfigurationException(e);
+        }
+    }
+
+    /**
+     * Creates a RMISecurityManager is no manager is present.
+     */
+    private void checkSecurityManager() {
+        if (System.getSecurityManager() == null) {
+            log.info ("No security manager found. "
+                      + "Setting RMI security manager");
+            System.setSecurityManager(new RMISecurityManager());
+        } else {
+            log.info("SecurityManager '" + System.getSecurityManager()
+                     + "' present");
         }
     }
 
