@@ -137,16 +137,24 @@ public class XStorage implements ConfigurationStorage {
     }
 
     public ConfigurationStorage getSubStorage(String key) throws IOException {
-        Object sub = get(key);
-        if (!(sub instanceof XProperties)) {
-            throw new IOException("The value for '" + key + "' was of class '"
-                                  + sub.getClass() + "'. Expected XStorage");
-        }
+        try {
+            Object sub = get(key);
+            if (!(sub instanceof XProperties)) {
+                throw new IOException("The value for '" + key
+                                      + "' was of class '"
+                                      + sub.getClass()
+                                      + "'. Expected XStorage");
+            }
 
-        // TODO: Solve https://gforge.statsbiblioteket.dk/tracker/index.php?aid=1186
-        log.warn("Unclear cemantics. See https://gforge.statsbiblioteket.dk/"
-                 + "tracker/index.php?aid=1186");
-        return new XStorage((XProperties)sub);
+            // TODO: Solve https://gforge.statsbiblioteket.dk/tracker/index.php?aid=1186
+            log.warn("Unclear cemantics. " 
+                     + "See https://gforge.statsbiblioteket.dk/"
+                     + "tracker/index.php?aid=1186");
+            return new XStorage((XProperties)sub);
+        } catch (NullPointerException e) {
+            throw new IOException("Could not locate value for key '" + key
+                                  + "':", e);
+        }
     }
 
     public ConfigurationStorage createSubStorage(

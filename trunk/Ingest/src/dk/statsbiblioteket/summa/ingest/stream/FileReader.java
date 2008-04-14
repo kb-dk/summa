@@ -180,7 +180,7 @@ public class FileReader implements ObjectFilter {
         delivered = new ArrayList<Payload>(Math.max(1, todo.size()));
         started = true;
         log.info("Located " + todo.size() + " files matching pattern '"
-                 + filePattern.pattern() + "'");
+                 + filePattern.pattern() + "' from root " + root.getPath());
     }
 
     /**

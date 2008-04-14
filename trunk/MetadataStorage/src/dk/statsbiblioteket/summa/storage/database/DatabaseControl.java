@@ -182,8 +182,15 @@ public abstract class DatabaseControl extends Control {
 
     private static Configuration updateConfiguration(Configuration
                                                      configuration) {
+        String location;
         try {
-            String location = configuration.getString(PROP_LOCATION);
+            location = configuration.getString(PROP_LOCATION);
+        } catch (NullPointerException e) {
+            log.debug("Could not locate key " + PROP_LOCATION
+                      + ". Skipping updating of location");
+            return configuration;
+        }
+        try {
             File locationFile = new File(location);
             if (!locationFile.getPath().equals(
                     locationFile.getAbsolutePath())) {

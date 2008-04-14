@@ -30,7 +30,7 @@ import org.apache.commons.logging.LogFactory;
  * Simple extension of Runnable that allows for status and resuming after stop.
  * </p><p>
  * Implementers should query {@link #getStatus} periodically and stop executing
- * if the result is not STATUS.running. Note that the run-method might be
+ * if the result is not STATUS.running. Note that the runMethod might be
  * called again after stop. If this is undesired, the implementation must take
  * steps to skip execution for subsequent calls.
  */
@@ -50,6 +50,7 @@ public abstract class StateThread implements Runnable {
      */
     public static enum STATUS {ready, running, stopping, stopped, error}
 
+    // TODO: Consider reusing the Status from the Score framework
     private STATUS status = STATUS.ready;
     private Thread thread;
 
@@ -68,6 +69,32 @@ public abstract class StateThread implements Runnable {
      */
     protected void setError() {
         status = STATUS.error;
+    }
+
+    /**
+     * Implement this method as a standard run from Thread. Remember to check
+     * for getStatus() == STATUS.running continously as described in the
+     * class documentation.
+     */
+    protected abstract void runMethod();
+
+    public final void run() {
+        try {
+            log.debug("Starting run");
+            runMethod();
+            if (!status.equals(STATUS.error)) {
+                status = STATUS.stopped;
+            }
+            log.debug("run stopped. Status " + status);
+        } catch (Throwable t) {
+            log.error("Exception during run" , t);
+            status = STATUS.error;
+        }
+        try {
+            finishedCallback();
+        } catch (Throwable t) {
+            log.error("Throwable during finishedCallback", t);
+        }
     }
 
     /**
@@ -156,6 +183,13 @@ public abstract class StateThread implements Runnable {
     }
 
     /**
+     * @return true if the thread is running or stopping, else false.
+     */
+    public boolean isRunning() {
+        return status.equals(STATUS.running) || status.equals(STATUS.stopping);
+    }
+
+    /**
     * Wait for the implementation to finish.
     * @throws InterruptedException if any Thread has interrupted the underlying
     *                              thread.
@@ -181,4 +215,9 @@ public abstract class StateThread implements Runnable {
         thread.join(timeout);
     }
 
+    /**
+     * This method will be called when the runMethod exits. Override it if some
+     * processing should be done then.
+     */
+    protected void finishedCallback() { }
 }

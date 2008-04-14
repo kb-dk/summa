@@ -53,7 +53,7 @@ public class FilterPump extends StateThread implements Configurable {
         chainName = configuration.getString(CONF_CHAIN_NAME, chainName);
         log = LogFactory.getLog(FilterPump.class + "." + chainName);
         log.info("Constructing FilterPump for chain '" + chainName + "'");
-        List<String> filterNames = null;
+        List<String> filterNames;
         try {
             filterNames = configuration.getStrings(CONF_FILTERS);
         } catch (NullPointerException e) {
@@ -102,12 +102,12 @@ public class FilterPump extends StateThread implements Configurable {
     // TODO: Better feedback with Profiler
 
     /**
-     * The run method is normally managed by the {@link #start} and
+     * The runMethod is normally managed by the {@link #start} and
      * {@link #stop} methods of FilterPump. It is not advisable to call it
      * explicitly.
      */
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    public void run() {
+    protected void runMethod() {
         log.debug("Running FilterChain '" + chainName + "'");
         try {
             while (getStatus() == STATUS.running) {

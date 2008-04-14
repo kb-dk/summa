@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+
+<!-- Test configuration -->
+<properties>
+
+    <!-- The RMI communications port -->
+    <entry key="summa.score.service.port">2771</entry>
+
+    <!-- The port on which the registry should/does run -->
+    <entry key="summa.score.service.registry.port">2767</entry>
+
+    <!-- The class implementing the Service interface -->
+    <entry key="score.launcher.service.class">dk.statsbiblioteket.summa.score.service.IngestService</entry>
+
+
+    <!-- The following properties are taken from StorageFactory and
+         DatabaseControl -->
+
+    <!-- The backend to use for Storage -->
+    <entry key="summa.storage.controller">dk.statsbiblioteket.summa.storage.database.derby.ControlDerby</entry>
+
+    <!--
+    <entry key="summa.storage.database.username"></entry>
+    <entry key="summa.storage.database.password"></entry>
+    -->
+
+    <!--
+     * The property-key for the boolean value determining if a new database
+     * should be created is there is no existing database. If createnew is
+     * true and a database exists and forcenew is true, the existing database
+     * is deleted and a new one created. If createnew is true and a database
+     * exists and forcenew is false, the existing database is reused.
+     -->
+    <entry key="summa.storage.database.createnew">true</entry>
+
+    <!--
+     * The property-key for the boolean determining if a new database should
+     * be created, no matter is a database already exists.
+     -->
+    <entry key="summa.storage.database.forcenew">true</entry>
+
+    <!--
+     * The location of the database to use/create. This will be relative to
+       the persistent-dir for the client. This also means that only one instance
+       of this service can be deployed at each client.
+     -->
+    <entry key="summa.storage.database.location">storage</entry>
+
+
+</properties>

@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.NotBoundException;
+import java.rmi.RMISecurityManager;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 import java.net.MalformedURLException;
@@ -102,6 +103,15 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         super (getServicePort (configuration));
         log.debug("Constructing client");
         log.trace("Home dir: " + new File(".").getAbsolutePath());
+
+        if (System.getSecurityManager() == null) {
+            log.info ("No security manager found. "
+                      + "Setting RMI security manager");
+            System.setSecurityManager(new RMISecurityManager());
+        } else {
+            log.info("SecurityManager '" + System.getSecurityManager()
+                     + "' present");
+        }
 
         registryHost = configuration.getString(REGISTRY_HOST_PROPERTY,
                                                "localhost");

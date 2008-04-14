@@ -75,7 +75,9 @@ public class StorageFactory {
         log.debug("Got controller class " + controllerClass
                   + ". Commencing creation");
         try {
+            // FIXME: This forces a RMI call when packing as a service. Not good 
             return configuration.create(controllerClass);
+//            return Configuration.newMemoryBased().create(controllerClass);
         } catch (Exception e) {
             throw new RemoteException("Could not create controller class "
                                       + controllerClass, e);
