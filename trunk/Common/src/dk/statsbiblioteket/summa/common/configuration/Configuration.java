@@ -38,6 +38,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.rmi.RMISecurityManager;
+import java.security.Permission;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -614,13 +615,27 @@ public class Configuration implements Serializable,
     }
 
     /**
-     * Creates a RMISecurityManager is no manager is present.
+     * Creates an allow-all if no manager is present.
      */
     private void checkSecurityManager() {
         if (System.getSecurityManager() == null) {
             log.info ("No security manager found. "
-                      + "Setting RMI security manager");
-            System.setSecurityManager(new RMISecurityManager());
+                      + "Setting allow-all security manager");
+            System.setSecurityManager(new RMISecurityManager() {
+                public void checkPermission(Permission perm) {
+                    // Do nothing (allow all)
+                    if (log.isTraceEnabled()) {
+                        log.trace("checkPermission(" + perm + ") called");
+                    }
+                }
+                public void checkPermission(Permission perm, Object context) {
+                    // Do nothing (allow all)
+                    if (log.isTraceEnabled()) {
+                        log.trace("checkPermission(" + perm + ", " + context
+                                  + ") called");
+                    }
+                }
+            });
         } else {
             log.info("SecurityManager '" + System.getSecurityManager()
                      + "' present");
