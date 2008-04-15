@@ -85,7 +85,8 @@ public class StartCommand extends Command {
         RemoteConsoleFeedback remoteConsole = null;
         try {
             log.trace("Creating remote console");
-            remoteConsole = conf.create(RemoteConsoleFeedback.class);
+            remoteConsole = Configuration.create(RemoteConsoleFeedback.class,
+                                                 conf);
             log.trace("Calling get on ConnectionManager with " + scoreAddress);
             connCtx = cm.get(scoreAddress);
             if (connCtx == null) {

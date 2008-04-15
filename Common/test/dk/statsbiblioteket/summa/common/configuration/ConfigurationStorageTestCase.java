@@ -68,7 +68,8 @@ public class ConfigurationStorageTestCase extends TestCase {
 
         Configuration conf = Configuration.newMemoryBased("key", "value");
 
-        ConfigurationStorage testStorage = conf.create (storage.getClass());
+        ConfigurationStorage testStorage =
+                Configuration.create(storage.getClass(), conf);
         assertEquals("value", testStorage.get("key"));
     }
 

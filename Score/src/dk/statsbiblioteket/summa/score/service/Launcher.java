@@ -39,12 +39,13 @@ public class Launcher {
 
             log.trace ("Got system configuration");
 
-            Class<Service> serviceClass = conf.getClass (SERVICE_CLASS,
-                                                         Service.class);
+            Class<Service> serviceClass = Configuration.getClass(SERVICE_CLASS,
+                                                                 Service.class,
+                                                                 conf);
             log.debug ("Using service class " + SERVICE_CLASS
                        + " = " + serviceClass);
 
-            Service service = conf.create(serviceClass);
+            Service service = Configuration.create(serviceClass, conf);
             log.debug("Created service. The launch has completed.");
         } catch (Throwable t) {
             log.fatal("Caught toplevel exception, bailing out.", t);

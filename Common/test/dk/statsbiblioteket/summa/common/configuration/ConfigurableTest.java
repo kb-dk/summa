@@ -50,13 +50,13 @@ public class ConfigurableTest extends TestCase {
     public void testStorageInstantiations () throws Exception {
         Configuration base = new Configuration(new FileStorage("configuration.xml"));
 
-        Configuration fileConf = new Configuration ((ConfigurationStorage)base.create (FileStorage.class));
+        Configuration fileConf = new Configuration ((ConfigurationStorage)Configuration.create (FileStorage.class, base));
         assertTrue (base.equals(fileConf));
 
-        Configuration memConf = new Configuration ((ConfigurationStorage)base.create (MemoryStorage.class));
+        Configuration memConf = new Configuration ((ConfigurationStorage)Configuration.create(MemoryStorage.class, base));
         assertTrue (base.equals(memConf));
 
-        Configuration remoteConf = new Configuration ((ConfigurationStorage)base.create (RemoteStorage.class));
+        Configuration remoteConf = new Configuration ((ConfigurationStorage)Configuration.create(RemoteStorage.class, base));
         assertTrue (base.equals(remoteConf));
     }
 }

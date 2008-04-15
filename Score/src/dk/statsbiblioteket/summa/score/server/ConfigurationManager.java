@@ -43,12 +43,12 @@ public class ConfigurationManager implements Runnable, Configurable {
                                                      XStorage.class);
         log.debug ("Using configuration storage class: "
                    + storageClass.getName());
-        storage = conf.create (storageClass);
+        storage = Configuration.create(storageClass, conf);
     }
 
     private void exportRemoteStorage (Configuration conf) {
         log.debug("Setting up remote interface");
-        remote = conf.create (RemoteStorage.class);
+        remote = Configuration.create(RemoteStorage.class, conf);
         log.trace("Overriding default storage for RemoteStorage");
         remote.setStorage(storage);
     }

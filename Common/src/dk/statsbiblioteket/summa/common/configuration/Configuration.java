@@ -416,7 +416,34 @@ public class Configuration implements Serializable,
      */
     @SuppressWarnings ("unchecked")
     public <T> Class<T> getClass (String key, Class<T> classType) {
-        Object val = get (key);
+        return getClass(key, classType, this);
+    }
+
+    public Class getClass(String key) {
+        return getClass(key, Object.class);
+    }
+
+    public static Class getClass (String key, Configuration conf) {
+        return getClass(key, Object.class, conf);
+    }
+
+    /**
+     * Static version of getClass. Use this to ensure that the classLoader runs
+     * locally and not through RMI.
+     * @param key the name of the property to look up.
+     * @param classType the class of which the return type should be.
+     * @param conf the configuration from where the class-name is located.
+     * @return the {@link Class} associated with {@code key}.
+     * @throws NullPointerException if the property is not found.
+     * @throws IllegalArgumentException      if the property is found but does
+     *                                       not map to a known {@link Class}
+     *                                       or subclass of {@code classType}.
+     * @throws ConfigurationStorageException if there is an error communicating
+     *                                       with the storage backend.
+     */
+    public static <T> Class<T> getClass(String key, Class<T> classType,
+                                        Configuration conf) {
+        Object val = conf.get(key);
         if (val == null) {
             throw new NullPointerException("No such property: " + key);
         }
@@ -442,10 +469,6 @@ public class Configuration implements Serializable,
                                              + " does not map to a subclass"
                                              + " of " + classType, e);
         }
-    }
-
-    public Class getClass (String key) {
-        return getClass(key, Object.class);
     }
 
     /**
@@ -596,8 +619,27 @@ public class Configuration implements Serializable,
      *                                   instantiating the {@code Configurable}.
      * @throws IllegalArgumentException if the input class in not a
      *                                  {@code Configurable}.
+     * @deprecated use the static method instead, in order to guard against
+     *             unintentional RMI-based creation.
      */
-    public <T> T create (Class<T> configurable) {
+    public <T> T create(Class<T> configurable) {
+        return create(configurable, this);
+    }
+
+    /**
+     * A static version of create. Use this when the configuration is expected
+     * to be remote, in order to avoid a RMI-bases class-loading and
+     * instantiation.
+     *
+     * @param configurable the {@code Configurable} class to instantiate.
+     * @param conf the configuration to give toth econstructor.
+     * @return an object instantiated from the given class.
+     * @throws Configurable.ConfigurationException if there is a problem
+     *                                   instantiating the {@code Configurable}.
+     * @throws IllegalArgumentException if the input class in not a
+     *                                  {@code Configurable}.
+     */
+    public static <T> T create (Class<T> configurable, Configuration conf) {
         checkSecurityManager();
         if (!Configurable.class.isAssignableFrom(configurable)) {
             throw new IllegalArgumentException("Class " + configurable
@@ -605,13 +647,15 @@ public class Configuration implements Serializable,
         }
 
         try {
-            Constructor<T> con = configurable.getConstructor(Configuration.class);
-            return con.newInstance(this);
+            Constructor<T> con =
+                    configurable.getConstructor(Configuration.class);
+            return con.newInstance(conf);
 
         } catch (NoSuchMethodException e) {
-            throw new IllegalArgumentException ("The class " + configurable.getSimpleName()
-                                                        + " does not have a constructor taking a Configuration"
-                                                        + " as its sole argument", e);
+            throw new IllegalArgumentException(
+                    "The class " + configurable.getSimpleName()
+                    + " does not have a constructor taking a Configuration"
+                    + " as its sole argument", e);
         } catch (IllegalAccessException e) {
             throw new Configurable.ConfigurationException(e);
         } catch (InvocationTargetException e) {
@@ -624,7 +668,7 @@ public class Configuration implements Serializable,
     /**
      * Creates an allow-all if no manager is present.
      */
-    private void checkSecurityManager() {
+    private static void checkSecurityManager() {
         if (System.getSecurityManager() == null) {
             log.warn("No security manager found. "
                      + "Setting allow-all security manager");
@@ -775,11 +819,20 @@ public class Configuration implements Serializable,
             } catch (Exception e) {
                 throw new ConfigurationException("Unable retrieve configuration from " + confLocation, e);
             }
-        } else if (confLocation.startsWith("/")) {
+        } else { /* {if (confLocation.startsWith("/")) {*/
             // Assume this is a regular file
-            log.debug ("Loading configuration from file " + confLocation);
             try {
-                storage = new FileStorage(new File(confLocation));
+                if (confLocation.startsWith("/")) {
+                    log.debug ("Loading configuration from file "
+                               + confLocation);
+                    storage = new FileStorage(new File(confLocation));
+                    log.trace("Loaded FileStorage configuration");
+                } else {
+                    log.debug ("Loading configuration from resource "
+                               + confLocation);
+                    storage = new FileStorage (confLocation);
+                    log.trace("Loaded FileStorage configuration from resource");
+                }
             } catch (FileNotFoundException e) {
                 //noinspection DuplicateStringLiteralInspection
                 throw new ConfigurationException("Could not locate "
@@ -789,7 +842,8 @@ public class Configuration implements Serializable,
                 log.debug("Could not load configuration using FileStorage. "
                           + "Switching to XStorage");
                 try {
-                    storage = new XStorage(new File(confLocation));
+                    storage = new XStorage(confLocation);
+                    log.trace("Loaded XStorage configuration");
                 } catch (IOException ex) {
                     throw new ConfigurationException("Error reading "
                                                      + "configuration file '"
@@ -798,7 +852,7 @@ public class Configuration implements Serializable,
                 }
                 //throw new ConfigurationException("Error reading configuration file " + confLocation, e);
             }
-        } else {
+        } /*else {
             // Assume this is a resource
             log.debug ("Loading configuration from resource " + confLocation);
             try {
@@ -806,7 +860,8 @@ public class Configuration implements Serializable,
             } catch (IOException e) {
                 throw new ConfigurationException("Error reading configuration file " + confLocation, e);
             }
-        }
+        }   */
+        log.trace("Returning storage");
         return new Configuration(storage);
     }
 

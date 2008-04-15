@@ -22,13 +22,9 @@
  */
 package dk.statsbiblioteket.summa.storage;
 
-import java.io.IOException;
 import java.rmi.RemoteException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.storage.database.derby.ControlDerby;
 import dk.statsbiblioteket.summa.storage.io.Control;
 import org.apache.commons.logging.Log;
@@ -72,11 +68,12 @@ public class StorageFactory {
                                       + " class from property "
                                       + PROP_CONTROLLER, e);
         }
+        //noinspection DuplicateStringLiteralInspection
         log.debug("Got controller class " + controllerClass
                   + ". Commencing creation");
         try {
             // FIXME: This forces a RMI call when packing as a service. Not good 
-            return configuration.create(controllerClass);
+            return Configuration.create(controllerClass, configuration);
 //            return Configuration.newMemoryBased().create(controllerClass);
         } catch (Exception e) {
             throw new RemoteException("Could not create controller class "
