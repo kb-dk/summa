@@ -51,7 +51,7 @@ public class XStorage implements ConfigurationStorage {
 
     /**
      * Creates a XStorage around a XProperties.
-     * @param properties the properties to wrap around.
+     * @paramproperties the properties to wrap around.
      */
     /*protected XStorage(XProperties properties) throws IOException {
         this (nextAvailableConfigurationFile());
@@ -80,11 +80,18 @@ public class XStorage implements ConfigurationStorage {
         storageFile = configurationFile;
         xprops = new XProperties();
         if (!configurationFile.exists()) {
+            log.warn("Property file '" + configurationFile + "' does not exist."
+                     + " Creating new file");
             syncStorageFile();
         } else {
             xprops.load(configurationFile.getAbsoluteFile().toString(),
                  false, false);
         }
+    }
+
+    public XStorage(String resource) throws IOException {
+        xprops = new XProperties();
+        xprops.load(resource, false, false);
     }
 
     /**

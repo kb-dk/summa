@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bundle>
-	<mainJar>ingest-service-@summa.version@.jar</mainJar>
+	<mainJar>test-ingest-service-@summa.version@.jar</mainJar>
 	<mainClass>dk.statsbiblioteket.summa.score.service.Launcher</mainClass>
     <property name="com.sun.management.jmxremote.port" value="2772"/>
     <property name="com.sun.management.jmxremote.ssl" value="false"/>
@@ -17,5 +17,6 @@
         <file>config/jmx.access</file>
         <file>config/jmx.password</file>
         <file>config/policy</file>
+        <file>config/configuration.xml</file>
     </fileList>
 </bundle>

@@ -175,6 +175,10 @@
 
     <target name=".jar" depends="compile">
         <jar basedir="${build.dir}" compress="true" jarfile="${release.jar}"/>
+        <mkdir dir="${dist.dir}/summa-score-${summa.version}/"/>
+        <copy todir="${dist.dir}/summa-score-${summa.version}/">
+            <fileset dir="." includes="${release.jar}"/>
+        </copy>
     </target>
 
     <target name=".scripts" depends=".release.depends">
@@ -211,6 +215,8 @@
 
             <zipfileset prefix="${prefix}/lib" dir="${lib.dir}" includes="${lib.files}"/>
             <zipfileset prefix="${prefix}/lib" file="../${summa.ilib.common}"/>
+            <zipfileset prefix="${prefix}/lib" file="../${summa.ilib.storage}"/>
+            <zipfileset prefix="${prefix}/lib" file="../${summa.ilib.ingest}"/>
 
             <zipfileset prefix="${prefix}/config" file="${basedir}/config/log4j.xml"/>
             <zipfileset prefix="${prefix}/config" file="${basedir}/config/configuration-server.xml"/>
@@ -292,7 +298,7 @@
         <mkdir dir="${tmp.dir}"/>
 
         <!-- Create jar file for test service -->
-        <jar basedir="${test.build.dir}" compress="true" jarfile="${tmp.dir}/test.jar"/>
+        <jar basedir="${test.build.dir}" compress="true" jarfile="${tmp.dir}/test-ingest-service-${summa.version}.jar"/>
 
         <!-- Roll service bundle -->
         <copy todir="${tmp.dir}">
@@ -311,11 +317,11 @@
                 value="${summa.version}"/>
         </replace>
 
-        <zip destfile="${dist.dir}/test-filter-1.bundle">
+        <zip destfile="${dist.dir}/test-ingest-1.bundle">
 
-            <zipfileset file="${tmp.dir}/test.jar"/>
+            <zipfileset file="${tmp.dir}/test-ingest-service-${summa.version}.jar"/>
 
-            <zipfileset file="${tmp.dir}/test-filter-1/service.xml"/>
+            <zipfileset file="${tmp.dir}/test-ingest-1/service.xml"/>
             <zipfileset prefix="lib" file="../${summa.ilib.common}"/>
             <zipfileset prefix="lib" file="../${summa.ilib.storage}"/>
             <zipfileset prefix="lib" file="../${summa.ilib.ingest}"/>
@@ -327,7 +333,7 @@
             <zipfileset prefix="config" file="${test.src.dir}/test-ingest-1/config/configuration.xml"/>
             <zipfileset prefix="config" file="${basedir}/config/log4j.xml"/>
 
-            <zipfileset dir="${test.src.dir}/test-bundle-1/config" prefix="config" filemode="600">
+            <zipfileset dir="${test.src.dir}/test-ingest-1/config" prefix="config" filemode="600">
                 <include name="jmx.password"/>
                 <include name="jmx.access"/>
                 <include name="policy"/>
@@ -412,7 +418,10 @@
 
             <zipfileset file="${tmp.dir}/test-client-1/client.xml"/>
             <zipfileset prefix="lib" file="../${summa.ilib.common}"/>
+            <!-- We shouldn't have to include these -->
             <zipfileset prefix="lib" file="../${summa.ilib.storage}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.ingest}"/>
+            <!-- End of shouldn't -->
             <zipfileset prefix="lib" file="${summa.lib.commons-logging}"/>
             <zipfileset prefix="lib" file="${summa.lib.log4j}"/>
             <zipfileset prefix="lib" file="${summa.lib.sbutil}"/>
@@ -432,6 +441,6 @@
         <delete dir="${tmp.dir}"/>
     </target>
 
-    <target name="all" depends="release, .test-1.bundle, .test-client-1.bundle, bundle-storage, .test-data"/>
+    <target name="all" depends="release, .test-1.bundle, .test-client-1.bundle, bundle-storage, .test-data, .test-ingest-1.bundle"/>
 
 </project>

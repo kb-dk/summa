@@ -11,6 +11,7 @@
         <!-- It is bad that these must be known! -->
         <file>lib/summa-storage-@summa.version@.jar</file>
         <file>lib/summa-common-@summa.version@.jar</file>
+        <file>lib/summa-ingest-@summa.version@.jar</file>
         <!-- End of bad -->
         <file>lib/@release.jar@</file>
         <file>lib/commons-logging-1.1.jar</file>

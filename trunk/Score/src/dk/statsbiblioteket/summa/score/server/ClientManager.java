@@ -79,7 +79,7 @@ public class ClientManager extends ConnectionManager<ClientConnection>
                 conf.getClass(CONNECTION_FACTORY_PROP, ConnectionFactory.class,
                               SummaRMIConnectionFactory.class);
 
-        ConnectionFactory connFact = conf.create (connFactClass);
+        ConnectionFactory connFact = Configuration.create(connFactClass, conf);
         connFact.setGraceTime(1);
         connFact.setNumRetries(2);
 

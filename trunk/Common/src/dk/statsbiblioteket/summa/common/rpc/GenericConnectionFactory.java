@@ -45,7 +45,7 @@ public class GenericConnectionFactory<E> extends ConnectionFactory<E> {
         log.debug ("Found backend class " + backendClass.getName());
 
         // Suppressed unchecked assignment here
-        backend = conf.create (backendClass);
+        backend = Configuration.create(backendClass, conf);
 
         log.trace ("Applying configuration on backend");
         setGraceTime(conf.getInt(GRACE_TIME, 5));

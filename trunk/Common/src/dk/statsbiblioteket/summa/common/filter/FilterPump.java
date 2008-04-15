@@ -96,7 +96,7 @@ public class FilterPump extends StateThread implements Configurable {
         Class<? extends Filter> filter =
                 configuration.getClass(CONF_FILTER_CLASS, Filter.class);
         log.debug("Got filter class " + filter + ". Commencing creation");
-        return configuration.create(filter);
+        return Configuration.create(filter, configuration);
     }
 
     // TODO: Better feedback with Profiler

@@ -469,7 +469,7 @@ public abstract class DatabaseControl extends Control {
                       + record.getBase() + "'");
             deleteRecord(record.getId());
         } else if (record.isNew()){
-            log.debug("Creaing new record '" + record.getId() + "' from base '"
+            log.debug("Creating new record '" + record.getId() + "' from base '"
                       + record.getBase() + "'");
             createNewRecord(record);
         } else if (record.isModified()){

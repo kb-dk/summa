@@ -46,7 +46,8 @@ public class RemoteStorageTest extends ConfigurationStorageTestCase {
         Configuration conf = new Configuration(storage);
 
         System.out.println (testName + ": Creating remote storage");
-        direct_storage = (RemoteStorage) conf.create(RemoteStorage.class);
+        direct_storage =
+                (RemoteStorage) Configuration.create(RemoteStorage.class, conf);
 
         System.out.println (testName + ": Connecting to registry on " +
                                                   conf.getString(RemoteStorage.PROP_REGISTRY_HOST) +

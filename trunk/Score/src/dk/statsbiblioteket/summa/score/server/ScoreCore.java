@@ -110,14 +110,14 @@ public class ScoreCore extends UnicastRemoteObject
         Class<ClientDeployer> deployerClass =
                            conf.getClass(ClientDeployer.DEPLOYER_CLASS_PROPERTY,
                                          ClientDeployer.class);
-        ClientDeployer deployer = conf.create (deployerClass);
+        ClientDeployer deployer = Configuration.create(deployerClass, conf);
 
         log.debug("Creating deployer feedback from class: "
                   + conf.getString(ClientDeployer.DEPLOYER_FEEDBACK_PROPERTY));
         Class<Feedback> feedbackClass =
                            conf.getClass(ClientDeployer.DEPLOYER_FEEDBACK_PROPERTY,
                                          Feedback.class);
-        Feedback feedback = conf.create (feedbackClass);
+        Feedback feedback = Configuration.create(feedbackClass, conf);
 
 
         String instanceId = conf.getString(ClientDeployer.INSTANCE_ID_PROPERTY);
@@ -173,14 +173,14 @@ public class ScoreCore extends UnicastRemoteObject
         Class<ClientDeployer> deployerClass =
                            conf.getClass(ClientDeployer.DEPLOYER_CLASS_PROPERTY,
                                          ClientDeployer.class);
-        ClientDeployer deployer = conf.create (deployerClass);
+        ClientDeployer deployer = Configuration.create(deployerClass, conf);
 
         log.debug("Creating deployer feedback from class: "
                   + conf.getString(ClientDeployer.DEPLOYER_CLASS_PROPERTY));
         Class<Feedback> feedbackClass =
                            conf.getClass(ClientDeployer.DEPLOYER_FEEDBACK_PROPERTY,
                                          Feedback.class);
-        Feedback feedback = conf.create (feedbackClass);
+        Feedback feedback = Configuration.create(feedbackClass, conf);
 
         try {
             deployer.start(feedback);

@@ -142,12 +142,12 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         Class<? extends BundleRepository> repositoryClass =
                                     configuration.getClass(
                                             REPOSITORY_CLASS_PROPERTY,
-                                                        BundleRepository.class,
-                                                        URLRepository.class);
-        repository = configuration.create(repositoryClass);
+                                            BundleRepository.class,
+                                            URLRepository.class);
+        repository = Configuration.create(repositoryClass, configuration);
 
         /* Create bundle loader */
-        loader = configuration.create(BundleLoader.class);
+        loader = Configuration.create(BundleLoader.class, configuration);
 
         validateConfiguration();
 

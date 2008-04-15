@@ -1,23 +1,118 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<xproperties>
+    <xproperties>
+        <!-- The RMI communications port -->
+        <entry>
+            <key>summa.score.service.port</key>
+            <value class="int">2773</value>
+        </entry>
 
-<!-- Test configuration -->
-<properties>
+        <!-- The port on which the registry should/does run -->
+        <entry>
+            <key>summa.score.service.registry.port</key>
+            <value class="int">2767</value>
+        </entry>
 
-    <!-- The RMI communications port -->
-    <entry key="summa.score.service.port">2771</entry>
+        <!-- The class implementing the Service interface -->
+        <entry>
+            <key>score.launcher.service.class</key>
+            <value class="string">dk.statsbiblioteket.summa.score.service.FilterService</value>
+        </entry>
 
-    <!-- The port on which the registry should/does run -->
-    <entry key="summa.score.service.registry.port">2767</entry>
-
-    <!-- The class implementing the Service interface -->
-    <entry key="score.launcher.service.class">dk.statsbiblioteket.summa.score.service.IngestService</entry>
-
-
-    <!-- The following properties are taken from StorageFactory and
-         DatabaseControl -->
-
-     TODO: Fill this with the properties from 5records/filter_setup
-
-
-</properties>
+        <entry>
+            <key>FilterPump.ChainName</key>
+            <value class="string">Simple file-based ingest</value>
+        </entry>
+        <entry>
+            <key>FilterControl.Chains</key>
+            <value class="string">SingleChain</value>
+        </entry>
+        <entry>
+            <key>FilterControl.Sequential</key>
+            <value class="boolean">true</value>
+        </entry>
+        <entry>
+            <key>SingleChain</key>
+            <value class="xproperties">
+                <entry>
+                    <key>FilterPump.Filters</key>
+                    <value class="string">Reader, Splitter, Writer</value>
+                </entry>
+                <entry>
+                    <key>Reader</key>
+                    <value class="xproperties">
+                        <entry>
+                            <key>FilterPump.FilterClass</key>
+                            <value class="string">dk.statsbiblioteket.summa.ingest.stream.FileReader</value>
+                        </entry>
+                        <entry>
+                            <key>summa.ingest.filereader.root_folder</key>
+                            <value class="string">/tmp/summatest/data/5records</value>
+                        </entry>
+                        <entry>
+                            <key>summa.ingest.filereader.recursive</key>
+                            <value class="boolean">true</value>
+                        </entry>
+                        <entry>
+                            <key>summa.ingest.filereader.file_pattern</key>
+                            <value class="string">.*\.xml</value>
+                        </entry>
+                        <entry>
+                            <key>summa.ingest.filereader.completed_postfix</key>
+                            <value class="string">.completed</value>
+                        </entry>
+                    </value>
+                </entry>
+                <entry>
+                    <key>Splitter</key>
+                    <value class="xproperties">
+                        <entry>
+                            <key>FilterPump.FilterClass</key>
+                            <value class="string">dk.statsbiblioteket.summa.ingest.stream.XMLSplitterFilter</value>
+                        </entry>
+                        <entry>
+                            <key>summa.ingest.xmlsplitter.id_prefix</key>
+                            <value class="string">myprefix</value>
+                        </entry>
+                        <entry>
+                            <key>summa.ingest.xmlsplitter.collapse_profix</key>
+                            <value class="boolean">true</value>
+                        </entry>
+                        <entry>
+                            <key>summa.ingest.xmlsplitter.record_element</key>
+                            <value class="string">record</value>
+                        </entry>
+                        <entry>
+                            <key>summa.ingest.xmlsplitter.id_element</key>
+                            <value class="string">record#id</value>
+                        </entry>
+                        <entry>
+                            <key>summa.ingest.xmlsplitter.base</key>
+                            <value class="string">testbase</value>
+                        </entry>
+                        <entry>
+                            <key>summa.ingest.xmlsplitter.preserve_namespaces</key>
+                            <value class="boolean">true</value>
+                        </entry>
+                        <entry>
+                            <key>summa.ingest.xmlsplitter.require_valid</key>
+                            <value class="boolean">false</value>
+                        </entry>
+                    </value>
+                </entry>
+                <entry>
+                    <key>Writer</key>
+                    <value class="xproperties">
+                        <entry>
+                            <key>FilterPump.FilterClass</key>
+                            <value class="string">dk.statsbiblioteket.summa.storage.filter.RecordWriter</value>
+                        </entry>
+                        <entry>
+                            <key>RecordWriter.MetadataStorage</key>
+                            <value class="string">//localhost:2767/TestStorage</value>
+                        </entry>
+                    </value>
+                </entry>
+            </value>
+        </entry>
+    </xproperties>
+</xproperties>

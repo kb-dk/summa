@@ -112,7 +112,8 @@ public class DeployCommand extends Command {
         RemoteConsoleFeedback remoteConsole = null;
         try {
             log.trace("invoke: Creating remoteConsole");
-            remoteConsole = conf.create (RemoteConsoleFeedback.class);
+            remoteConsole = Configuration.create(RemoteConsoleFeedback.class,
+                                                 conf);
             log.trace("invoke: Getting connCtx for scoreAddress '"
                       + scoreAddress + "'");
             connCtx = cm.get (scoreAddress);

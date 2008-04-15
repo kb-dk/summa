@@ -17,5 +17,6 @@
         <file>config/jmx.access</file>
         <file>config/jmx.password</file>
         <file>config/policy</file>
+        <file>config/configuration.xml</file>
     </fileList>
 </bundle>
