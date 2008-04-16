@@ -49,6 +49,8 @@ import org.apache.commons.logging.LogFactory;
  * the Parser process.<br>
  *
  * The buffer has a fixed size of 10K write operations, if the buffer limit is exceeded write operations will block.<br>
+ * @deprecated this has been superceeded by the general filter workflow and
+ *             specifically by RecordWriter in the Storage module. 
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
        state = QAInfo.State.IN_DEVELOPMENT,
