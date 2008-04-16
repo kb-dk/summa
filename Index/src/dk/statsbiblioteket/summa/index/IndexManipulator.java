@@ -43,6 +43,17 @@ import dk.statsbiblioteket.summa.common.configuration.Configurable;
         author = "te")
 public interface IndexManipulator extends Configurable {
     /**
+     * The index root location defines the top-level for the index.
+     * If the location is not an absolute path, it must be appended to the
+     * System property "summa.score.client.persistent.dir". If that system
+     * property does not exist, the location must be relative to the current
+     * dir.
+     */
+    public static final String CONF_INDEX_ROOT_LOCATION =
+            "summa.index.index-root-location";
+
+
+    /**
      * Clear the index, preparing for a fresh start.
      * @throws IOException in case of I/O problems.
      */
