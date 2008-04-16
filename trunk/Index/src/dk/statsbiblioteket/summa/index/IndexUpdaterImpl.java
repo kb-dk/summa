@@ -28,7 +28,6 @@ import java.io.IOException;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Profiler;
-import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.StateThread;
 import dk.statsbiblioteket.summa.common.filter.Filter;
@@ -38,7 +37,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * The default implementation of IndexUpdater.
+ * The default implementation of IndexUpdater. It is basically an aggregator for
+ * IndexManipulators, which also contains a timer that calls commit and
+ * consolidate at configurable intervals. It is also a standard ObjectFilter,
+ * so further chaining is possible.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
