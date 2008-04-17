@@ -58,7 +58,15 @@ public class DummyStreamToRecords implements ObjectFilter {
     }
 
     public boolean pump() throws IOException {
-        return hasNext() && next() != null;
+        if (!hasNext()) {
+            return false;
+        }
+        Payload next = next();
+        if (next == null) {
+            return false;
+        }
+        next.close();
+        return true;
     }
 
     public Payload next() {

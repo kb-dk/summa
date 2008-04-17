@@ -37,6 +37,10 @@ import dk.statsbiblioteket.util.qa.QAInfo;
  * Streams, Records and Documents are pumped through the chain of filters by
  * calling {@link #pump()} on the last filter in the chain. It is up to the
  * individual filters to process the stream if present.
+ * </p><p>
+ * Important: pump()-implementations that extracts payloads from source-
+ *            ObjectFilters are required to call close() on the extracted
+ *            payloads.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,

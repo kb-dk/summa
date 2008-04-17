@@ -59,33 +59,34 @@ public class RecordWriter implements ObjectFilter {
     private ObjectFilter source;
     private Access access;
 
-    // FIXME: Only throw runtimeexceptions?
-    public RecordWriter(Configuration configuration) throws RemoteException {
+    public RecordWriter(Configuration configuration) {
         log.trace("Constructing RecordWriter");
         String accessPoint;
         try {
             accessPoint = configuration.getString(CONF_METADATA_STORAGE);
         } catch (Exception e) {
-            throw new RemoteException("Unable to get the RMI address for the "
-                                      + "remote MetadataStorage from the "
-                                      + "configuration with key '"
-                                      + CONF_METADATA_STORAGE + "'");
+            throw new ConfigurationException(
+                    "Unable to get the RMI address for the remote "
+                    + "MetadataStorage from the configuration with key '"
+                    + CONF_METADATA_STORAGE + "'");
         }
         log.debug("Connecting to the access point '" + accessPoint + "'");
         try {
             access = (Access)Naming.lookup(accessPoint);
         } catch (NotBoundException e) {
-            throw new RemoteException("NotBoundException for RMI lookup for '"
-                                      + accessPoint + "'", e);
+            throw new ConfigurationException("NotBoundException for RMI lookup "
+                                             + "for '" + accessPoint + "'", e);
         } catch (MalformedURLException e) {
-            throw new RemoteException("MalformedURLException for RMI lookup "
-                                      + "for '" + accessPoint + "'", e);
+            throw new ConfigurationException("MalformedURLException for RMI "
+                                             + "lookup for '" + accessPoint
+                                             + "'", e);
         } catch (RemoteException e) {
-            throw new RemoteException("RemoteException performing RMI lookup "
-                                      + "for '" + accessPoint + "'", e);
+            throw new ConfigurationException("RemoteException performing RMI "
+                                             + "lookup for '" + accessPoint
+                                             + "'", e);
         } catch (Exception e) {
-            throw new RemoteException("Exception performing RMI lookup "
-                                      + "for '" + accessPoint + "'", e);
+            throw new ConfigurationException("Exception performing RMI lookup "
+                                             + "for '" + accessPoint + "'", e);
         }
         log.debug("Connected to MetadataStorage at '" + accessPoint + "'");
         // TODO: Perform a check to see if the MetadataStorage is alive
@@ -101,7 +102,15 @@ public class RecordWriter implements ObjectFilter {
     }
 
     public boolean pump() throws IOException {
-        return hasNext() && next() != null;
+        if (!hasNext()) {
+            return false;
+        }
+        Payload next = next();
+        if (next == null) {
+            return false;
+        }
+        next.close();
+        return true;
     }
 
     /**

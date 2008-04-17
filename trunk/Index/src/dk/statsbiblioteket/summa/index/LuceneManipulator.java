@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.io.File;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import org.apache.commons.logging.Log;
@@ -38,10 +37,20 @@ import org.apache.commons.logging.LogFactory;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class LuceneUpdater implements IndexManipulator {
-    private static Log log = LogFactory.getLog(LuceneUpdater.class);
+public class LuceneManipulator implements IndexManipulator {
+    private static Log log = LogFactory.getLog(LuceneManipulator.class);
 
-    public LuceneUpdater(Configuration conf) {
+    /*
+
+    No autocommit,
+    huge buffer (option) - what to do on overflow?
+    no automerge
+
+
+
+     */
+
+    public LuceneManipulator(Configuration conf) {
 
     }
 

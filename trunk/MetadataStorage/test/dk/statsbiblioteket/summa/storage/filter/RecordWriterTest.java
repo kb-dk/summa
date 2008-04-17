@@ -90,7 +90,15 @@ public class RecordWriterTest extends TestCase {
         }
 
         public boolean pump() throws IOException {
-            return hasNext() && next() != null;
+            if (!hasNext()) {
+                return false;
+            }
+            Payload next = next();
+            if (next == null) {
+                return false;
+            }
+            next.close();
+            return true;
         }
 
         public void close(boolean success) {
