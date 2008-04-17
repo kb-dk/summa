@@ -24,6 +24,8 @@ package dk.statsbiblioteket.summa.index;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
 import java.util.regex.Pattern;
 import java.io.IOException;
 import java.io.File;
@@ -32,6 +34,7 @@ import java.io.FilenameFilter;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.util.StateThread;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
@@ -160,6 +163,11 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
 
     private static final int PROFILER_SPAN = 1000;
 
+    /* The indexRoot is the main root. Indexes will always be in sub-folders */
+    @SuppressWarnings({"FieldCanBeLocal"}) // Saved for auto-change of location
+    private File indexRoot;
+    /* The indexLocation is where the current index is. See getConcreteRoot */
+    private File indexLocation;
     private List<IndexManipulator> manipulators;
     private int commitTimeout =           DEFAULT_COMMIT_TIMEOUT;
     private int commitMaxDocuments =      DEFAULT_COMMIT_MAX_DOCUMENTS;
@@ -177,10 +185,26 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
 
     private boolean indexIsOpen = false;
     private ObjectFilter source;
-    private File indexRoot;
 
     public IndexUpdaterImpl(Configuration conf) {
         log.debug("Creating IndexUpdaterImpl");
+        String indexRootCandidate = conf.getString(CONF_INDEX_ROOT_LOCATION,
+                                                   DEFAULT_INDEX_ROOT_LOCATION);
+        try {
+            indexRoot = new File(indexRootCandidate);
+        } catch (Exception e) {
+            log.error("Could not construct File from '" + indexRootCandidate
+                      + "'. Defaulting to '" + DEFAULT_INDEX_ROOT_LOCATION
+                      + "'");
+            indexRoot = new File(DEFAULT_INDEX_ROOT_LOCATION);
+        }
+        try {
+            indexRoot = Resolver.getPersistentFile(indexRoot);
+        } catch (Exception e) {
+            throw new ConfigurationException("Exception resolving '"
+                                             + indexRoot
+                                             + "' to absolute path");
+        }
         List<String> manipulatorKeys;
         try {
             manipulatorKeys = conf.getStrings(CONF_MANIPULATORS);
@@ -229,11 +253,24 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
                                            + manipulatorKey + "'", e);
             }
         }
-        log.trace("Manipulators created. Activating watchdog");
+        log.debug("Manipulators created, opening index");
         profiler = new Profiler();
         profiler.setBpsSpan(PROFILER_SPAN);
-        // TODO: Set this
-        open(indexRoot);
+        try {
+            log.debug("Getting concrete root for '" + indexRoot + "'");
+            indexLocation = getConcreteRoot(indexRoot);
+        } catch (IOException e) {
+            throw new ConfigurationException("Could not get concrete root for '"
+                                             + indexRoot + "'");
+        }
+        try {
+            open(indexLocation);
+        } catch (IOException e) {
+            throw new ConfigurationException("Could not open index at '"
+                                             + indexLocation.getPath() + "'",
+                                             e);
+        }
+        log.debug("Index opened, starting Watchdog");
         start();
         log.debug("Creation of IndexUpdaterImpl finished. Ready for Payloads");
     }
@@ -332,9 +369,16 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
         return profiler.getBps(true);
     }
 
+    /**
+     * @return the current location of the index.
+     */
+    public File getIndexLocation() {
+        return indexLocation;
+    }
+
     /* The IndexManipulator interface aggregates the underlying manipulators */
 
-    public synchronized void open(File indexRoot) {
+    public synchronized void open(File indexRoot) throws IOException {
         //noinspection DuplicateStringLiteralInspection
         log.info("open(" + indexRoot + ") called");
         if (indexIsOpen) {
@@ -345,9 +389,7 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
                 log.error("Error closing previously opened index", e);
             }
         }
-        // TODO: Call here
-        //File concreteRoot = getConcreteRoot(indexRoot);
-        File concreteRoot = null;
+        File concreteRoot = getConcreteRoot(indexRoot);
         log.debug("Using '" + concreteRoot + "' as concrete root");
         indexIsOpen = true;
         lastCommit =                  System.currentTimeMillis();
@@ -362,8 +404,18 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
         log.trace("Finished open()");
     }
 
-    private static final Pattern TIMESTAMP =
+    public static final Pattern TIMESTAMP_PATTERN =
             Pattern.compile("[0-9]{8}-[0-9]{4}");
+    public static final String TIMESTAMP_FORMAT = "%1$tY%1$tm%1$td-%1$tH%1$tM";
+    public static final FilenameFilter SUBFOLDER_FILTER =
+            new FilenameFilter() {
+                public boolean accept(File dir, String name) {
+                    File full = new File(dir, name);
+                    return full.isDirectory() && full.canWrite() &&
+                           IndexUpdaterImpl.TIMESTAMP_PATTERN.matcher(name).matches();
+                }
+            };
+
     /*
     * The location of the index files is a subfolder to indexRoot.
     * The name of the subfolder is a timestamp for the construction time of the
@@ -385,12 +437,23 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
             }
         }
         // Locate existing folders
-        File[] subs = indexRoot.listFiles(new FilenameFilter() {
-            public boolean accept(File dir, String name) {
-                return dir.canWrite() && TIMESTAMP.matcher(name).matches();
-            }
-        });
-        return null;
+        File[] subs = indexRoot.listFiles(SUBFOLDER_FILTER);
+        Arrays.sort(subs);
+        if (subs.length > 0) {
+            File concreteRoot = subs[subs.length-1];
+            log.debug("Located index root '" + concreteRoot + "'");
+            return concreteRoot;
+        }
+        // Create new folder
+        Calendar now = Calendar.getInstance();
+        String folderName = String.format(TIMESTAMP_FORMAT, now);
+        File concreteRoot = new File(indexRoot, folderName);
+        log.debug("Got new root '" + concreteRoot + "'. Creating folder");
+        if (!concreteRoot.mkdirs()) {
+            throw new IOException("Could not create index folder '"
+                                  + concreteRoot + "'");
+        }
+        return concreteRoot;
     }
 
     public synchronized void clear() throws IOException {
@@ -495,14 +558,21 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
         try {
             update(payload);
         } catch (IOException e) {
-            // Non-updates of indexes is a serious offense, so we escalate
+            // Exceptions while indexing is a serious offense, so we escalate
             throw new IOException("IOException when calling update("
                                   + payload + ")", e);
+        }
+        try {
+            payload.close();
+        } catch (Exception e) {
+            log.warn("Exception while calling close() on payload '" + payload
+                     + "' in pump()");
         }
         return source.hasNext();
     }
 
     public void close(boolean success) {
+        log.trace("close(" + success + ") called");
         if (source == null) {
             log.error("No source defined, cannot close");
         }

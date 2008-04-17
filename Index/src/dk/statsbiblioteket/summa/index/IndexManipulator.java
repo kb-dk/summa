@@ -59,7 +59,7 @@ public interface IndexManipulator extends Configurable {
      *                  manipulators should not put files highter in the folder
      *                  structure than indexRoot.
      */
-    public void open(File indexRoot);
+    public void open(File indexRoot) throws IOException;
 
     /**
      * Clear the index, preparing for a fresh start.
