@@ -24,7 +24,10 @@ package dk.statsbiblioteket.summa.index;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.regex.Pattern;
 import java.io.IOException;
+import java.io.File;
+import java.io.FilenameFilter;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Profiler;
@@ -58,6 +61,19 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
      * This property is mandatory. No default.
      */
     public static final String CONF_MANIPULATORS = "summa.index.manipulators";
+
+    /**
+     * The index root location defines the top-level for the index.
+     * If the location is not an absolute path, it will be appended to the
+     * System property "summa.score.client.persistent.dir". If that system
+     * property does not exist, the location will be relative to the current
+     * dir.
+     * </p><p>
+     * This property is optional. Default is "index".
+     */
+    public static final String CONF_INDEX_ROOT_LOCATION =
+            "summa.index.index-root-location";
+    public static final String DEFAULT_INDEX_ROOT_LOCATION = "index";
 
     /**
      * The maximum amount of seconds before a commit is called. Setting this
@@ -158,9 +174,10 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
     private long commitsSinceLastConsolidate = 0;
 
     private Profiler profiler;
-    private ObjectFilter source;
 
-    private boolean closed = false; // Whether close has been called
+    private boolean indexIsOpen = false;
+    private ObjectFilter source;
+    private File indexRoot;
 
     public IndexUpdaterImpl(Configuration conf) {
         log.debug("Creating IndexUpdaterImpl");
@@ -215,6 +232,8 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
         log.trace("Manipulators created. Activating watchdog");
         profiler = new Profiler();
         profiler.setBpsSpan(PROFILER_SPAN);
+        // TODO: Set this
+        open(indexRoot);
         start();
         log.debug("Creation of IndexUpdaterImpl finished. Ready for Payloads");
     }
@@ -238,6 +257,10 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
 
     private synchronized void triggerCheck() throws IOException {
         log.trace("Triggercheck called");
+        if (!indexIsOpen) {
+            log.trace("No index open");
+            return;
+        }
         if (commitTimeout != -1 &&
             lastCommit + commitTimeout < System.currentTimeMillis()
             || commitMaxDocuments != -1 &&
@@ -311,6 +334,65 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
 
     /* The IndexManipulator interface aggregates the underlying manipulators */
 
+    public synchronized void open(File indexRoot) {
+        //noinspection DuplicateStringLiteralInspection
+        log.info("open(" + indexRoot + ") called");
+        if (indexIsOpen) {
+            log.debug("Calling close() on previously opened index");
+            try {
+                close();
+            } catch (Exception e) {
+                log.error("Error closing previously opened index", e);
+            }
+        }
+        // TODO: Call here
+        //File concreteRoot = getConcreteRoot(indexRoot);
+        File concreteRoot = null;
+        log.debug("Using '" + concreteRoot + "' as concrete root");
+        indexIsOpen = true;
+        lastCommit =                  System.currentTimeMillis();
+        updatesSinceLastCommit =      0;
+        lastConsolidate =             System.currentTimeMillis();
+        updatesSinceLastConsolidate = 0;
+        commitsSinceLastConsolidate = 0;
+        profiler.reset();
+        for (IndexManipulator manipulator: manipulators) {
+            manipulator.open(concreteRoot);
+        }
+        log.trace("Finished open()");
+    }
+
+    private static final Pattern TIMESTAMP =
+            Pattern.compile("[0-9]{8}-[0-9]{4}");
+    /*
+    * The location of the index files is a subfolder to indexRoot.
+    * The name of the subfolder is a timestamp for the construction time of the
+    * index with the format YYYYMMDD-HHMM. If subfolders matching the pattern
+    * are present in indexRoot, the last (sorted alphanumerically) folder
+    * is used. If no such folder exists, a new one is created.
+    */
+    private File getConcreteRoot(File indexRoot) throws IOException {
+        if (!indexRoot.exists()) {
+            log.debug("Creating non-existing indexRoot '" + indexRoot + "'");
+            try {
+                if (!indexRoot.mkdirs()) {
+                    throw new IOException("Unable to create indexRoot '"
+                                          + indexRoot + "'");
+                }
+            } catch (SecurityException e) {
+                throw new IOException("Not allowed to create indexRoot '"
+                                      + indexRoot + "'");
+            }
+        }
+        // Locate existing folders
+        File[] subs = indexRoot.listFiles(new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                return dir.canWrite() && TIMESTAMP.matcher(name).matches();
+            }
+        });
+        return null;
+    }
+
     public synchronized void clear() throws IOException {
         log.debug("clear() called");
         lastCommit =                  System.currentTimeMillis();
@@ -374,13 +456,12 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
     }
 
     public void close() {
-        if (closed) {
+        if (!indexIsOpen) {
             log.trace("close() called on already closed");
             return;
         }
-        closed = true;
+        indexIsOpen = false;
         log.debug("Closing down IndexUpdaterImpl");
-        stop();
         for (IndexManipulator manipulator: manipulators) {
             manipulator.close();
         }
@@ -405,8 +486,9 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
         if (source == null) {
             throw new IOException("No source defined, cannot pump");
         }
-        if (!source.hasNext()) {
+        if (!source.hasNext()) { // The big shutdown
             close();
+            stop();
             return false;
         }
         Payload payload = source.next();
