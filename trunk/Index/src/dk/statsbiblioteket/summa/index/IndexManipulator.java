@@ -23,6 +23,7 @@
 package dk.statsbiblioteket.summa.index;
 
 import java.io.IOException;
+import java.io.File;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.filter.Payload;
@@ -34,6 +35,9 @@ import dk.statsbiblioteket.summa.common.configuration.Configurable;
  * If the specific part of the index is not initialized upon start, the
  * manipulator is responsible for the initialization.
  * </p><p>
+ * Manipulators should not do anything active to any index, before the open-
+ * method has been called.
+ * </p><p>
  * Note that it is expected that readers of the index can connect to the index
  * at any time, so manipulators /must/ ensure that the persistent files are
  * kept in a readable state at all time.
@@ -43,15 +47,19 @@ import dk.statsbiblioteket.summa.common.configuration.Configurable;
         author = "te")
 public interface IndexManipulator extends Configurable {
     /**
-     * The index root location defines the top-level for the index.
-     * If the location is not an absolute path, it must be appended to the
-     * System property "summa.score.client.persistent.dir". If that system
-     * property does not exist, the location must be relative to the current
-     * dir.
+     * If an index exists at the indexRoot, the manipulator should open it.
+     * If not, the manipulator should create it. In either case, the manipulator
+     * must be ready for updates after open has been called.
+     * </p><p>
+     * If a manipulator is already open, when open is called, all cached content
+     * should be discarded. If is the responsibility of the caller to ensure
+     * that close has been called, if a gracefull shutdown is required.
+     * @param indexRoot the root location for the index. It is allowed to create
+     *                  sub-folders to this root for index structures, but
+     *                  manipulators should not put files highter in the folder
+     *                  structure than indexRoot.
      */
-    public static final String CONF_INDEX_ROOT_LOCATION =
-            "summa.index.index-root-location";
-
+    public void open(File indexRoot);
 
     /**
      * Clear the index, preparing for a fresh start.
@@ -93,8 +101,8 @@ public interface IndexManipulator extends Configurable {
 
     /**
      * Ensure that all content is flushed to persistent storage and close down
-     * any open connections. No action should be performed on manipulators
-     * after close has been called.
+     * any open connections. After a close has been called, the only allowable
+     * action on a manipulator is open.
      */
     public void close();
 }

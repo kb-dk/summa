@@ -23,6 +23,7 @@
 package dk.statsbiblioteket.summa.index;
 
 import java.io.IOException;
+import java.io.File;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
@@ -33,11 +34,6 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * Handles iterative updates of a Lucene index.
- * </p><p>
- * The location of the Lucene files is derived from the property
- * {@link IndexManipulator#CONF_INDEX_ROOT_LOCATION} and is a sub-folder to
- * that. The name of the subfolder is a timestamp for the construction time og
- * the index with the format YYYYMMDD-HHMM. When a Lucene-updater   
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -47,6 +43,10 @@ public class LuceneUpdater implements IndexManipulator {
 
     public LuceneUpdater(Configuration conf) {
 
+    }
+
+    public void open(File indexRoot) {
+        // TODO: Implement this
     }
 
     public void clear() throws IOException {

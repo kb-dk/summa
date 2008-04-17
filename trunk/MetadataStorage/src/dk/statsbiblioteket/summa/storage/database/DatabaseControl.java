@@ -39,6 +39,7 @@ import java.util.Map;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.summa.storage.io.Control;
 import dk.statsbiblioteket.summa.storage.io.RecordAndNext;
@@ -88,8 +89,6 @@ public abstract class DatabaseControl extends Control {
      * exist, the location will be relative to the current dir.
      */
     public static String PROP_LOCATION  = "summa.storage.database.location";
-    private static final String SYSPROP_PERSISTENT_DIR =
-            "summa.score.client.persistent.dir";
 
     /**
      * The name of the table in the database.
@@ -192,22 +191,12 @@ public abstract class DatabaseControl extends Control {
         }
         try {
             File locationFile = new File(location);
-            if (!locationFile.getPath().equals(
-                    locationFile.getAbsolutePath())) {
-                try {
-                    String persistentBase =
-                            System.getProperty(SYSPROP_PERSISTENT_DIR);
-                    File persistentBaseFile = new File(persistentBase);
-                    File newLocationFile = new File(persistentBaseFile,
-                                                    location);
+            File newLocationFile = Resolver.getPersistentFile(locationFile);
+
+            if (!locationFile.equals(newLocationFile)) {
                     log.debug("Storing new location '" + newLocationFile
                               + "' to property key " + PROP_LOCATION);
                     configuration.set(PROP_LOCATION, newLocationFile.getPath());
-                } catch (Exception e) {
-                    log.debug("Could not locate the System property "
-                              + SYSPROP_PERSISTENT_DIR + ". No changes will be"
-                              + " done");
-                }
             } else {
                 log.debug(PROP_LOCATION + " is an absolute path ("
                           + locationFile + "). No changes will be done");

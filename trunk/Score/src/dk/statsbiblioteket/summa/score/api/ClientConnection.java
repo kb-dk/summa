@@ -24,6 +24,7 @@ package dk.statsbiblioteket.summa.score.api;
 
 import dk.statsbiblioteket.summa.score.client.Client;
 import dk.statsbiblioteket.summa.score.bundle.BundleRepository;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.util.List;
@@ -99,7 +100,7 @@ public interface ClientConnection {
      * well as Services should be stored.
      */
     public static final String CLIENT_PERSISTENT_DIR_PROPERTY =
-                                            "summa.score.client.persistent.dir";
+            Resolver.SYSPROP_PERSISTENT_DIR;
 
     /**
      * Stop the client specified in the base configuration for the
