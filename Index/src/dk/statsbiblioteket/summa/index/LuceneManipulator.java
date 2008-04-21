@@ -95,6 +95,7 @@ public class LuceneManipulator implements IndexManipulator {
      */
     private IDMapper idMapper;
 
+    @SuppressWarnings({"UnusedDeclaration", "UnusedDeclaration"})
     private int bufferSizePayloads = DEFAULT_BUFFER_SIZE_PAYLOADS;
 
     /*

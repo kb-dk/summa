@@ -180,6 +180,7 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
     @SuppressWarnings({"FieldCanBeLocal"}) // Saved for auto-change of location
     private File indexRoot;
     /* The indexLocation is where the current index is. See getConcreteRoot */
+    @SuppressWarnings({"FieldCanBeLocal"}) // Saved for auto-change of location
     private File indexLocation;
     private List<IndexManipulator> manipulators;
     private int commitTimeout =           DEFAULT_COMMIT_TIMEOUT;
@@ -397,12 +398,14 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
             log.debug("Calling close() on previously opened index");
             try {
                 close();
+            } catch (IOException e) {
+                log.error("IOExceptin closing previously opened index", e);
             } catch (Exception e) {
                 log.error("Error closing previously opened index", e);
             }
         }
-        File concreteRoot = getConcreteRoot(indexRoot, createNewIndex);
-        log.debug("Using '" + concreteRoot + "' as concrete root");
+        indexLocation = getConcreteRoot(indexRoot, createNewIndex);
+        log.debug("Using '" + indexLocation + "' as concrete root");
         indexIsOpen = true;
         lastCommit =                  System.currentTimeMillis();
         updatesSinceLastCommit =      0;
@@ -411,7 +414,7 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
         commitsSinceLastConsolidate = 0;
         profiler.reset();
         for (IndexManipulator manipulator: manipulators) {
-            manipulator.open(concreteRoot);
+            manipulator.open(indexLocation);
         }
         log.trace("Finished open()");
     }
@@ -516,6 +519,7 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
 
     public synchronized void commit() throws IOException {
         long startTime = System.currentTimeMillis();
+        //noinspection DuplicateStringLiteralInspection
         log.debug("commit() called");
         for (IndexManipulator manipulator: manipulators) {
             manipulator.commit();
