@@ -40,13 +40,12 @@ import org.apache.commons.logging.LogFactory;
 public class LuceneManipulator implements IndexManipulator {
     private static Log log = LogFactory.getLog(LuceneManipulator.class);
 
+    private File indexRoot;
     /*
 
     No autocommit,
     huge buffer (option) - what to do on overflow?
     no automerge
-
-
 
      */
 
@@ -55,6 +54,8 @@ public class LuceneManipulator implements IndexManipulator {
     }
 
     public void open(File indexRoot) {
+        log.info("Opening Lucene index at '" + indexRoot + "'");
+        this.indexRoot = indexRoot;
         // TODO: Implement this
     }
 
@@ -62,8 +63,9 @@ public class LuceneManipulator implements IndexManipulator {
         // TODO: Implement this
     }
 
-    public void update(Payload payload) throws IOException {
+    public boolean update(Payload payload) throws IOException {
         // TODO: Implement this
+        return false;
     }
 
     public void commit() throws IOException {

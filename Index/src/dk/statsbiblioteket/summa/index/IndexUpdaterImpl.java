@@ -79,6 +79,17 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
     public static final String DEFAULT_INDEX_ROOT_LOCATION = "index";
 
     /**
+     * Whether or not a new index should be created upon start. If false, the
+     * loading of an existing older index will be attempted.
+     * </p><p>
+     * This property is optional. Default is false.
+     */
+    public static final String CONF_CREATE_NEW_INDEX =
+            "summa.index.create-new-index";
+    public static final boolean DEFAULT_CREATE_NEW_INDEX = false;
+
+
+    /**
      * The maximum amount of seconds before a commit is called. Setting this
      * to 0 means that a commit is called for every document update.
      * </p><p>
@@ -230,6 +241,8 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
            conf.getInt(CONF_CONSOLIDATE_MAX_DOCUMENTS, consolidateMaxDocuments);
         consolidateMaxCommits =
                conf.getInt(CONF_CONSOLIDATE_MAX_COMMITS, consolidateMaxCommits);
+        boolean createNewIndex = conf.getBoolean(CONF_CREATE_NEW_INDEX,
+                                                 DEFAULT_CREATE_NEW_INDEX);
         log.debug("Basic setup: commitTimeout: " + consolidateTimeout
                   + " seconds, commitMaxDocuments: " + commitMaxDocuments
                   + ", consolidateTimeout: " + consolidateTimeout + " seconds, "
@@ -257,14 +270,7 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
         profiler = new Profiler();
         profiler.setBpsSpan(PROFILER_SPAN);
         try {
-            log.debug("Getting concrete root for '" + indexRoot + "'");
-            indexLocation = getConcreteRoot(indexRoot);
-        } catch (IOException e) {
-            throw new ConfigurationException("Could not get concrete root for '"
-                                             + indexRoot + "'");
-        }
-        try {
-            open(indexLocation);
+            open(indexLocation, createNewIndex);
         } catch (IOException e) {
             throw new ConfigurationException("Could not open index at '"
                                              + indexLocation.getPath() + "'",
@@ -379,6 +385,10 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
     /* The IndexManipulator interface aggregates the underlying manipulators */
 
     public synchronized void open(File indexRoot) throws IOException {
+        open(indexRoot, false);
+    }
+    public synchronized void open(File indexRoot, boolean createNewIndex) throws
+                                                                   IOException {
         //noinspection DuplicateStringLiteralInspection
         log.info("open(" + indexRoot + ") called");
         if (indexIsOpen) {
@@ -389,7 +399,7 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
                 log.error("Error closing previously opened index", e);
             }
         }
-        File concreteRoot = getConcreteRoot(indexRoot);
+        File concreteRoot = getConcreteRoot(indexRoot, createNewIndex);
         log.debug("Using '" + concreteRoot + "' as concrete root");
         indexIsOpen = true;
         lastCommit =                  System.currentTimeMillis();
@@ -423,7 +433,8 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
     * are present in indexRoot, the last (sorted alphanumerically) folder
     * is used. If no such folder exists, a new one is created.
     */
-    private File getConcreteRoot(File indexRoot) throws IOException {
+    private File getConcreteRoot(File indexRoot, boolean createNewIndex) throws
+                                                                   IOException {
         if (!indexRoot.exists()) {
             log.debug("Creating non-existing indexRoot '" + indexRoot + "'");
             try {
@@ -437,14 +448,18 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
             }
         }
         // Locate existing folders
-        File[] subs = indexRoot.listFiles(SUBFOLDER_FILTER);
-        Arrays.sort(subs);
-        if (subs.length > 0) {
-            File concreteRoot = subs[subs.length-1];
-            log.debug("Located index root '" + concreteRoot + "'");
-            return concreteRoot;
+        if (!createNewIndex) {
+            log.trace("Attempting to locate existing index root");
+            File[] subs = indexRoot.listFiles(SUBFOLDER_FILTER);
+            Arrays.sort(subs);
+            if (subs.length > 0) {
+                File concreteRoot = subs[subs.length-1];
+                log.debug("Located index root '" + concreteRoot + "'");
+                return concreteRoot;
+            }
         }
         // Create new folder
+        log.trace("Attempting to create new index root");
         Calendar now = Calendar.getInstance();
         String folderName = String.format(TIMESTAMP_FORMAT, now);
         File concreteRoot = new File(indexRoot, folderName);
@@ -471,7 +486,7 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
     }
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    public synchronized void update(Payload payload) throws IOException {
+    public synchronized boolean update(Payload payload) throws IOException {
         if (log.isDebugEnabled()) {
             log.debug("update(" + payload + ") called");
         }
@@ -480,17 +495,23 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
         }
         updatesSinceLastCommit++;
         updatesSinceLastConsolidate++;
+        boolean requestCommit = false;
         for (IndexManipulator manipulator: manipulators) {
-            manipulator.update(payload);
+            requestCommit = requestCommit | manipulator.update(payload);
         }
         profiler.beat();
+        if (requestCommit) {
+            log.debug("Commit requested during update. Calling commit()");
+            commit();
+        }
         triggerCheck();
         if (log.isTraceEnabled()) {
             log.trace("update(" + payload + ") finished");
         }
+        return requestCommit;
     }
 
-    public void commit() throws IOException {
+    public synchronized void commit() throws IOException {
         long startTime = System.currentTimeMillis();
         log.debug("commit() called");
         for (IndexManipulator manipulator: manipulators) {
@@ -503,7 +524,7 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
                   + (System.currentTimeMillis() - startTime) + " ms");
     }
 
-    public void consolidate() throws IOException {
+    public synchronized void consolidate() throws IOException {
         long startTime = System.currentTimeMillis();
         log.debug("consolidate() called");
         for (IndexManipulator manipulator: manipulators) {
@@ -518,7 +539,7 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
                   + (System.currentTimeMillis() - startTime) + " ms");
     }
 
-    public void close() {
+    public synchronized void close() {
         if (!indexIsOpen) {
             log.trace("close() called on already closed");
             return;
@@ -533,7 +554,7 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
 
     /* ObjectFilter interface */
 
-    public void setSource(Filter filter) {
+    public synchronized void setSource(Filter filter) {
         if (filter instanceof ObjectFilter) {
             log.debug("Assigning source filter" + filter);
             source = (ObjectFilter)filter;
@@ -605,11 +626,12 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
 
     /* IndexUpdater interface */
 
-    public void addManipulator(IndexManipulator manipulator) {
+    public synchronized void addManipulator(IndexManipulator manipulator) {
         manipulators.add(manipulator);
     }
 
-    public boolean removeManipulator(IndexManipulator manipulator) {
+    public synchronized boolean removeManipulator(IndexManipulator
+            manipulator) {
         return manipulators.remove(manipulator);
     }
 }
