@@ -63,11 +63,13 @@ public interface IndexManipulator extends Configurable {
      *                  sub-folders to this root for index structures, but
      *                  manipulators should not put files highter in the folder
      *                  structure than indexRoot.
+     * @throws IOException if an index could not be opened.
      */
     public void open(File indexRoot) throws IOException;
 
     /**
-     * Clear the index, preparing for a fresh start.
+     * Clear the index, preparing for a fresh start. This discards all cached
+     * data.
      * @throws IOException in case of I/O problems.
      */
     public void clear() throws IOException;
@@ -110,6 +112,7 @@ public interface IndexManipulator extends Configurable {
      * Ensure that all content is flushed to persistent storage and close down
      * any open connections. After a close has been called, the only allowable
      * action on a manipulator is open.
+     * @throws IOException in case of I/O problems.
      */
-    public void close();
+    public void close() throws IOException;
 }
