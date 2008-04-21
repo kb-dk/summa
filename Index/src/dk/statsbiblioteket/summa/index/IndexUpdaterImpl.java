@@ -48,6 +48,8 @@ import org.apache.commons.logging.LogFactory;
  * consolidate at configurable intervals. It is also a standard ObjectFilter,
  * so further chaining is possible.
  */
+// TODO: Mark update on commit, consolidate, eof, meta-key-value-pattern
+// TODO: Consider write-lock
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
@@ -472,6 +474,7 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
     }
 
     public synchronized void clear() throws IOException {
+        //noinspection DuplicateStringLiteralInspection
         log.debug("clear() called");
         lastCommit =                  System.currentTimeMillis();
         updatesSinceLastCommit =      0;
@@ -539,7 +542,7 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
                   + (System.currentTimeMillis() - startTime) + " ms");
     }
 
-    public synchronized void close() {
+    public synchronized void close() throws IOException {
         if (!indexIsOpen) {
             log.trace("close() called on already closed");
             return;
@@ -593,6 +596,7 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
     }
 
     public void close(boolean success) {
+        //noinspection DuplicateStringLiteralInspection
         log.trace("close(" + success + ") called");
         if (source == null) {
             log.error("No source defined, cannot close");
