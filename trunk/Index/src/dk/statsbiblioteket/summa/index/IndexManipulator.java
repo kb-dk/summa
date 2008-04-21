@@ -41,6 +41,11 @@ import dk.statsbiblioteket.summa.common.configuration.Configurable;
  * Note that it is expected that readers of the index can connect to the index
  * at any time, so manipulators /must/ ensure that the persistent files are
  * kept in a readable state at all time.
+ * </p><p>
+ * Note: The field RecordID is mandatory for the searchable index (typically
+ * Lucene). The index should be stored for debug reasons and must be indexed.
+ * The RecordID is the unique identifier for the Record and thus one and only
+ * one Document in a given index has any given RecordID.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -78,8 +83,10 @@ public interface IndexManipulator extends Configurable {
      * @param payload the parload containing a Document to add, change or
      *                delete in the index.
      * @throws IOException in case of I/O problems.
+     * @return true   if a commit is requested. This might be to reasons such as
+     *                internal buffers being full.
      */
-    public void update(Payload payload) throws IOException;
+    public boolean update(Payload payload) throws IOException;
 
     /**
      * Commit any cached structures to persistent storage and ensure that new
