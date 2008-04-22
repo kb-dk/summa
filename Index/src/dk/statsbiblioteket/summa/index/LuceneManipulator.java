@@ -24,7 +24,8 @@ package dk.statsbiblioteket.summa.index;
 
 import java.io.IOException;
 import java.io.File;
-import java.util.LinkedHashSet;
+import java.io.StringWriter;
+import java.util.LinkedHashMap;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Files;
@@ -45,6 +46,10 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
  * </p><p>
  * The manipulator maintains a cache of RecordIDs in the given index, mapped to
  * LuceneIDs. This consumes memory linear to the number of Documents.
+ * </p><p>
+ * The RecordID is extracted from incoming Payloads as the id from the embedded
+ * Records. If no Record exists, the id is extracted from the embedded
+ * Document as field RecordID.
  */
 // TODO: Verify that the order of documents is strict under all operations
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -80,14 +85,18 @@ public class LuceneManipulator implements IndexManipulator {
     private IndexReader reader;
     /**
      * An ordered collections of the deletions that should be performed upon
-     * commit. The deletions takes place before additions.
+     * commit. The deletions takes place before additions. The map goes from
+     * RecordIDs to Payloads.
      */
-    private LinkedHashSet<Payload> deletions = new LinkedHashSet<Payload>(100);
+    private LinkedHashMap<String, Payload> deletions =
+            new LinkedHashMap<String, Payload>(100);
     /**
      * An ordered collection of the additions that should be performed upon
-     * commit. The additions takes place after deletions.
+     * commit. The additions takes place after deletions. The map goes from
+     * RecordIDs to Payloads.
      */
-    private LinkedHashSet<Payload> additions = new LinkedHashSet<Payload>(100);
+    private LinkedHashMap<String, Payload> additions =
+            new LinkedHashMap<String, Payload>(100);
 
     /**
      * Keeps track of RecordIDs. The idMapper is used and updated by
@@ -97,14 +106,6 @@ public class LuceneManipulator implements IndexManipulator {
 
     @SuppressWarnings({"UnusedDeclaration", "UnusedDeclaration"})
     private int bufferSizePayloads = DEFAULT_BUFFER_SIZE_PAYLOADS;
-
-    /*
-
-    No autocommit,
-    huge buffer (option) - what to do on overflow?
-    no automerge
-
-     */
 
     public LuceneManipulator(Configuration conf) {
         bufferSizePayloads = conf.getInt(CONF_BUFFER_SIZE_PAYLOADS,
@@ -149,6 +150,8 @@ public class LuceneManipulator implements IndexManipulator {
             writer = new IndexWriter(indexDirectory, false,
                                      new StandardAnalyzer(), false);
             writer.setMaxFieldLength(Integer.MAX_VALUE-1);
+            // TODO: Set conservative merges et al
+            // TODO: Infer analyzer
         } catch (CorruptIndexException e) {
             throw new IOException("Corrupt index found at '"
                                   + indexDirectory.getFile() + "'",e );
@@ -205,10 +208,137 @@ public class LuceneManipulator implements IndexManipulator {
         open(indexRoot);
     }
 
+    /*
+      * new deletion & existing deletion & no existing addition =>
+      *   remove(existing deletion), add(new deletion)
+      * new deletion & existing deletion & existing addition =>
+      *   remove(existing deletion), remove(existing addition), add(new deletion)
+      * new deletion & no existing deletion & no existing addition =>
+      *   add(new deletion)
+      * new deletion & no existing deletion & existing addition =>
+      *   remove(existing addition), add(new deletion)
+      *
+      * new addition & existing deletion & no existing addition =>
+      *   add(new addition)
+      * new addition & existing deletion & existing addition =>
+      *   remove(existing addition), add(new addition)
+      * new addition & no existing deletion & no existing addition =>
+      *   add(new addition)
+      * new addition & no existing deletion & existing addition =>
+      *   remove(existing addition), add(new deletion)
+     */
+    @SuppressWarnings({"DuplicateStringLiteralInspection"})
+    @QAInfo(level = QAInfo.Level.PEDANTIC,
+            state = QAInfo.State.IN_DEVELOPMENT,
+            author = "te")
     public synchronized boolean update(Payload payload) throws IOException {
-        // TODO: Implement this
-        // If no deletions: add to index and update idMapper
+        if (payload.getDocument() == null) {
+            throw new IllegalArgumentException("No Document defined in"
+                                               + " Payload '" + payload + "'");
+        }
+        String id = payload.getId();
+        if (id == null) {
+            throw new IllegalArgumentException("Could not extract id from "
+                                               + "Payload '" + payload + "'");
+        }
+        ensureStoredID(id, payload);
+        boolean deleted =
+                payload.getRecord() != null && payload.getRecord().isDeleted();
+        if (deleted) {
+            updateDeletion(id, payload);
+        } else {
+            updateAddition(id, payload);
+        }
         return deletions.size() + additions.size() >= bufferSizePayloads;
+    }
+
+    @SuppressWarnings({"DuplicateStringLiteralInspection"})
+    private void updateAddition(String id, Payload payload) throws IOException {
+        StringWriter debug = new StringWriter(300);
+        debug.write("new addition(" + id + ")");
+        if (idMapper.containsKey(id)) {
+            log.debug(debug.toString() + " already present in index, so delete "
+                      + "is called before addition");
+            updateDeletion(id, payload);
+            debug.write(" was present in index (a delete has been performed)");
+        }
+
+        if (deletions.size() == 0) {
+            if (additions.size() > 0) {
+                log.error("update(" + payload + ") has 0 pending deletions "
+                          + "but " + additions.size() + " pending additions"
+                          + " (this should be 0)");
+            }
+            debug.write(" and no pending deletions");
+            debug.write(" => ingesting and updating idMap");
+            log.debug(debug.toString());
+            checkWriter();
+            writer.addDocument(payload.getDocument());
+            idMapper.put(id, writer.docCount());
+        } else {
+            if (deletions.containsKey(id)) {
+                debug.write(" & existing deletion");
+                if (additions.containsKey(id)) {
+                    debug.write(" & existing addition =>");
+                    debug.write(" remove(existing addition),");
+                } else {
+                    debug.write(" & no existing addition =>");
+                }
+            } else {
+                debug.write(" & no existing deletion");
+                if (additions.containsKey(id)) {
+                    debug.write(" & existing addition =>");
+                    debug.write(" remove(existing addition),");
+                } else {
+                    debug.write(" & no existing addition =>");
+                    // Ingesting here messes up the order, so we queue instead
+                }
+            }
+            debug.write(" add(new addition)");
+            log.debug(debug.toString());
+            additions.put(id, payload); // Replaces any existing addition
+        }
+    }
+
+    @SuppressWarnings({"DuplicateStringLiteralInspection"})
+    // TODO: Optimize the case where delete has no effect
+    private void updateDeletion(String id, Payload payload) {
+        StringWriter debug = new StringWriter(300);
+        debug.write("new deletion(" + id + ")");
+        if (deletions.containsKey(id)) {
+            debug.write(" & existing deletion");
+            if (additions.containsKey(id)) {
+                debug.write(" & existing addition =>");
+                debug.write(" remove(existing deletion),");
+                debug.write(" remove(existing addition),");
+                additions.remove(id);
+            } else {
+                debug.write(" & no existing addition =>");
+                debug.write(" remove(existing deletion),");
+            }
+        } else {
+            debug.write(" & no existing deletion");
+            if (additions.containsKey(id)) {
+                debug.write(" & existing addition =>");
+                debug.write(" remove(existing addition),");
+                additions.remove(id);
+            } else {
+                debug.write(" & no existing addition =>");
+            }
+        }
+        debug.write(" add(new deletion)");
+        log.debug(debug.toString());
+        deletions.put(id, payload); // Replaces any existing deletion
+    }
+
+    /**
+     * Ensures that the Document in payload has a RecordID-field which contains
+     * id as term.
+     * @param id      the RecordID for the Document.
+     * @param payload the container containing the Document.
+     */
+    private void ensureStoredID(String id, Payload payload) {
+        payload.setID(id);
     }
 
     public synchronized void commit() throws IOException {
@@ -301,3 +431,4 @@ public class LuceneManipulator implements IndexManipulator {
     }
 
 }
+

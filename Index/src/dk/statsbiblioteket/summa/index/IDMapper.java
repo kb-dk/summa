@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.Collection;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.common.filter.Payload;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.store.Directory;
@@ -53,8 +54,6 @@ import org.apache.lucene.index.TermEnum;
         author = "te")
 public class IDMapper implements Map<String, Integer> {
     private static Log log = LogFactory.getLog(IDMapper.class);
-
-    public static final String RECORD_FIELD = "RecordID";
 
     private Map<String, Integer> recordIDs;
 
@@ -81,12 +80,13 @@ public class IDMapper implements Map<String, Integer> {
         long startTime = System.currentTimeMillis();
         IndexReader reader = IndexReader.open(directory);
         recordIDs = new HashMap<String, Integer>((int)(reader.maxDoc() * 1.2));
-        TermEnum termEnum = reader.terms(new Term(RECORD_FIELD, ""));
+        TermEnum termEnum = reader.terms(new Term(Payload.RECORD_FIELD, ""));
         while (termEnum.next()) {
-            if (!termEnum.term().field().equals(RECORD_FIELD)) {
+            if (!termEnum.term().field().equals(Payload.RECORD_FIELD)) {
                 break;
             }
-            TermDocs termDocs = reader.termDocs(new Term(RECORD_FIELD, ""));
+            TermDocs termDocs =
+                    reader.termDocs(new Term(Payload.RECORD_FIELD, ""));
             String termString = termEnum.term().text();
             boolean found = false;
             while (termDocs.next()) {
@@ -97,13 +97,14 @@ public class IDMapper implements Map<String, Integer> {
                 }
                 if (recordIDs.containsKey(termString)) {
                     log.warn("A LuceneID (" + recordIDs.get(termString)
-                             + ") already exists for field " + RECORD_FIELD
+                             + ") already exists for field "
+                             + Payload.RECORD_FIELD
                              + " (" + termDocs.doc() + ")");
                 }
                 recordIDs.put(termString, termDocs.doc());
             }
             if (!found) {
-                log.warn("No RecordID found in field " + RECORD_FIELD);
+                log.warn("No RecordID found in field " + Payload.RECORD_FIELD);
             }
         }
         if (recordIDs.size() != reader.maxDoc()) {

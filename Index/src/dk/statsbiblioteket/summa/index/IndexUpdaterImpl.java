@@ -503,8 +503,10 @@ public class IndexUpdaterImpl extends StateThread implements ObjectFilter,
         updatesSinceLastConsolidate++;
         boolean requestCommit = false;
         for (IndexManipulator manipulator: manipulators) {
+            // TODO: Handle IllegalArgumentexception gracefully for first manipulator
             requestCommit = requestCommit | manipulator.update(payload);
         }
+        // TODO: Keep received Payloads and close them on commit?
         profiler.beat();
         if (requestCommit) {
             log.debug("Commit requested during update. Calling commit()");

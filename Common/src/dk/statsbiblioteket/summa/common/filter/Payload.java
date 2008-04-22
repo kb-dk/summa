@@ -26,9 +26,11 @@ import java.io.InputStream;
 import java.io.IOException;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.util.StringMap;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -46,6 +48,13 @@ import org.apache.commons.logging.LogFactory;
 public class Payload {
     private static Log log = LogFactory.getLog(Payload.class);
 
+    /**
+     * The field-name for the Lucene Field containing the Record ID for the
+     * Document. All Document in Summa Lucene Indexes must have one and only
+     * one RecordID stored and indexed.
+     */
+    public static final String RECORD_FIELD = "RecordID";
+
     private InputStream stream = null;
     private Record record = null;
     private Document document = null;
@@ -56,6 +65,7 @@ public class Payload {
      * permit null - neither as key, nor value.
      */
     private StringMap meta;
+
 
     /* Constructors */
 
@@ -118,6 +128,87 @@ public class Payload {
         return meta != null;
     }
 
+    /**
+     * Extracts an id from the Payload, if possible. The order of priority for
+     * extracting the ID is as follows:
+     * 1. If the meta-data contains {@link #RECORD_FIELD}, the value is used.
+     * 2. If a Record is defined, its ID is used.
+     * 3. If a Document is defined, the value of the field RECORD_FIELD is used.
+     * 4. If none of the above is present, null is returned.
+     * @return the id for the Payload if present, else null.
+     */
+    public String getId() {
+        String id = getMeta(RECORD_FIELD);
+        if (id != null) {
+            return id;
+        }
+        if (getRecord() != null) {
+            return getRecord().getId();
+        }
+        if (getDocument() != null) {
+            String[] ids = getDocument().getValues(RECORD_FIELD);
+            if (ids != null && ids.length > 0) {
+                if (ids.length > 1) {
+                    Logs.log(log, Logs.Level.WARN, "Multiple RecordIDs defined "
+                                                   + "in Document for Payload '"
+                                                   + this + "'. Returning first"
+                                                   + " RecordID out of: ",
+                             (Object)ids);
+                }
+                return ids[0];
+            }
+        }
+        log.debug("Could not extract ID for payload '" + this + "'");
+        return null;
+    }
+
+    /**
+     * Store the given id as RecordID in the embedded Document, meta-data and
+     * Record, if possible. This method is forgiving: It can be called multiple
+     * times and tries to correct any inconsistencies.
+     * @param id the id to assign to the Payload.
+     */
+    public void setID(String id) {
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("setID(" + id + ") called");
+        if (id == null || "".equals(id)) {
+            throw new IllegalArgumentException("The id must be defined");
+        }
+        if (hasMeta()) {
+            getMeta().put(RECORD_FIELD, id);
+        }
+        if (getRecord() != null) {
+            getRecord().setId(id);
+        }
+        if (getDocument() != null) {
+            String[] ids = getDocument().getValues(Payload.RECORD_FIELD);
+            if (ids != null && ids.length == 1 && ids[0].equals(id)) {
+                return;
+            }
+            if (ids == null || ids.length == 0) {
+                log.trace("setId: Adding id '" + id + "' to Document");
+                return;
+            }
+            if (id.length() == 1) {
+                if (ids[0].equals(id)) {
+                    return;
+                } else {
+                    log.debug("Old Document id was '" + ids[0]
+                              + "'. Assigning new id '" + id + "'");
+                    document.removeFields(RECORD_FIELD);
+                }
+            } else {
+                Logs.log(log, Logs.Level.WARN, "Document contains multiple "
+                                               + "RecordIDs. Clearing old ids"
+                                               + " and assigning id '" + id
+                                               + "'. Old ids:", (Object)ids);
+                document.removeFields(RECORD_FIELD);
+            }
+            getDocument().add(new Field(Payload.RECORD_FIELD, id,
+                                        Field.Store.YES,
+                                        Field.Index.UN_TOKENIZED));
+        }
+    }
 
     /* Mutators */
 
