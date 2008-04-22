@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.File;
 import java.io.StringWriter;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Files;
@@ -36,6 +37,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.CorruptIndexException;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.LockObtainFailedException;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -52,6 +54,8 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
  * Document as field RecordID.
  */
 // TODO: Verify that the order of documents is strict under all operations
+// TODO: Use indexable instead of deleted
+// TODO: Add maximum number of segments property for consolidate
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
@@ -133,6 +137,9 @@ public class LuceneManipulator implements IndexManipulator {
             log.debug("Extracting existing RecordIDs from index at '"
                       + indexDirectory.getFile() + "'");
             idMapper = new IDMapper(indexDirectory);
+        } else {
+            log.debug("No existing index, creating empty idMapper");
+            idMapper = new IDMapper();
         }
         checkWriter();
     }
@@ -143,12 +150,24 @@ public class LuceneManipulator implements IndexManipulator {
      */
     private void checkWriter() throws IOException {
         if (writer != null) {
-            log.debug("checkWriter: Writer already opened");
+            log.trace("checkWriter: Writer already opened");
             return;
         }
         try {
-            writer = new IndexWriter(indexDirectory, false,
-                                     new StandardAnalyzer(), false);
+            if (IndexReader.indexExists(indexDirectory)) {
+                log.debug("checkWriter: Opening writer for existing index at '"
+                          + indexDirectory.getFile() + "'");
+                writer = new IndexWriter(indexDirectory, false,
+                                         new StandardAnalyzer(), false);
+                writer.setMergeFactor(100); // TODO: Verify this
+                // We want to avoid implicit merging of segments as is messes
+                // up document ordering
+            } else {
+                log.debug("No existing index at '" + indexDirectory.getFile()
+                          + "', creating new index");
+                writer = new IndexWriter(indexDirectory, false,
+                                         new StandardAnalyzer(), true);
+            }
             writer.setMaxFieldLength(Integer.MAX_VALUE-1);
             // TODO: Set conservative merges et al
             // TODO: Infer analyzer
@@ -231,6 +250,7 @@ public class LuceneManipulator implements IndexManipulator {
     @QAInfo(level = QAInfo.Level.PEDANTIC,
             state = QAInfo.State.IN_DEVELOPMENT,
             author = "te")
+    // TODO: Consider if adds can be done immediately as dels does not shift ids
     public synchronized boolean update(Payload payload) throws IOException {
         if (payload.getDocument() == null) {
             throw new IllegalArgumentException("No Document defined in"
@@ -345,18 +365,32 @@ public class LuceneManipulator implements IndexManipulator {
         //noinspection DuplicateStringLiteralInspection
         log.trace("commit() called");
         long startTime = System.currentTimeMillis();
-        close(true);
+        closeWriter();
         flushDeletions();
         flushAdditions();
+        log.debug("commit: Flushing index");
+        closeWriter();
         log.trace("Commit finished in "
                   + (System.currentTimeMillis() - startTime) + " ms");
     }
 
+    /* Note: The flush does not call commit */
     private void flushAdditions() throws IOException {
-        if (additions.size() > 0) {
-            log.debug("Flushing ' " + additions + " additions");
+        if (additions.size() == 0) {
+            log.debug("No additions to flush");
+            return;
         }
-        // TODO: Implement this
+        log.debug("Flushing  " + additions.size() + " additions");
+        checkWriter();
+        for (Map.Entry<String, Payload> entry: additions.entrySet()) {
+            Payload addition = entry.getValue();
+            //noinspection DuplicateStringLiteralInspection
+            log.debug("Adding '" + addition.getId() + "' to index");
+            idMapper.put(addition.getId(), writer.docCount());
+            writer.addDocument(addition.getDocument());
+        }
+        additions.clear();
+        log.trace("Finished addition flush");
     }
 
     private void flushDeletions() throws IOException {
@@ -365,18 +399,42 @@ public class LuceneManipulator implements IndexManipulator {
             return;
         }
         log.trace("Calling close(true)");
-        close(true);
+        closeWriter();
         log.debug("Opening reader ");
         openReader();
-        log.debug("Flushing '" + deletions.size() + " deletions");
-
-        // TODO: Remove and remove from idMapper
+        //noinspection DuplicateStringLiteralInspection
+        log.debug("Flushing " + deletions.size() + " deletions");
+        for (Map.Entry<String, Payload> entry: deletions.entrySet()) {
+            Payload deletion = entry.getValue();
+            int delCount;
+            if ((delCount =
+                    reader.deleteDocuments(new Term(Payload.RECORD_FIELD,
+                                                    deletion.getId()))) != 1) {
+                if (delCount == 0) {
+                    log.warn("flushDeletions: Deleted 0 documents for id '"
+                             + deletion.getId() + "'");
+                } else {
+                    log.warn("flushDeletions: Deleted " + delCount
+                             + " documents for id '" + deletion.getId()
+                             + "'. Expected 1");
+                }
+            }
+            idMapper.remove(deletion.getId());
+        }
+        reader.close();
+        deletions.clear();
+        log.trace("flushDeletions() finished");
     }
 
     public synchronized void consolidate() throws IOException {
         log.trace("consolidate() called. Calling commit()");
+        long startTime = System.currentTimeMillis();
         commit();
-        // TODO: Implement this
+        checkWriter();
+        writer.optimize();
+        writer.flush();
+        log.debug("Consolidate finished in "
+                  + (System.currentTimeMillis()- startTime) + " ms");
     }
 
     public synchronized void close() throws IOException {
@@ -384,6 +442,9 @@ public class LuceneManipulator implements IndexManipulator {
     }
 
     private void close(boolean flush) throws IOException {
+        if (indexDirectory == null) { // Never opened
+            return;
+        }
         log.trace("close(flush) called for '" + indexDirectory.getFile() + "'");
         if (flush) {
             commit();
@@ -391,13 +452,7 @@ public class LuceneManipulator implements IndexManipulator {
         if (writer != null) {
             log.debug("Closing writer for '" + indexDirectory.getFile() + "'");
             try {
-                writer.close();
-            } catch (CorruptIndexException e) {
-                throw new IOException("Corrupt index in writer for '"
-                                      + indexDirectory.getFile() + "'", e);
-            } catch (IOException e) {
-                throw new IOException("Exception closing writer for '"
-                                      + indexDirectory.getFile() + "'", e);
+                closeWriter();
             } finally {
                 try {
                     if (IndexReader.isLocked(indexDirectory)) {
@@ -428,6 +483,29 @@ public class LuceneManipulator implements IndexManipulator {
         idMapper.clear();
         //noinspection AssignmentToNull
         idMapper = null;
+    }
+
+    private void closeWriter() throws IOException {
+        if (indexDirectory == null) {
+            log.trace("closeWriter: Index never opened");
+            return;
+        }
+        if (writer == null) {
+            log.trace("closeWriter: No writer present");
+            return;
+        }
+        log.debug("closeWriter: Closing '" + indexDirectory.getFile() + "'");
+        try {
+            writer.close();
+            //noinspection AssignmentToNull
+            writer = null;
+        } catch (CorruptIndexException e) {
+            throw new IOException("Corrupt index in writer for '"
+                                  + indexDirectory.getFile() + "'", e);
+        } catch (IOException e) {
+            throw new IOException("Exception closing writer for '"
+                                  + indexDirectory.getFile() + "'", e);
+        }
     }
 
 }

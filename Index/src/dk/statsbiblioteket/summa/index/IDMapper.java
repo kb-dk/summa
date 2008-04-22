@@ -40,8 +40,8 @@ import org.apache.lucene.index.TermEnum;
 
 /**
  * Maps from RecordIDs to LuceneIDs for a given Lucene Index. The RecordIDs must
- * be indexed in a Field named "RecordID" in the index. One and only one
- * RecordID for each Document in the index.
+ * be stored and indexed in a Field named "RecordID" in the index. One and only
+ * one RecordID for each Document in the index.
  * </p><p>
  * The IDMapper extracts IDs from the given Directory upon startup. After that,
  * there are no connection to the Directory.
@@ -49,6 +49,7 @@ import org.apache.lucene.index.TermEnum;
  * It is the responsibility of the caller to ensure that changes to the
  * underlying index triggers an update of the IDMapper.
  */
+// TODO: Consider a speed-optimization here
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
@@ -81,13 +82,13 @@ public class IDMapper implements Map<String, Integer> {
         IndexReader reader = IndexReader.open(directory);
         recordIDs = new HashMap<String, Integer>((int)(reader.maxDoc() * 1.2));
         TermEnum termEnum = reader.terms(new Term(Payload.RECORD_FIELD, ""));
-        while (termEnum.next()) {
+        while (termEnum.term() != null) {
             if (!termEnum.term().field().equals(Payload.RECORD_FIELD)) {
                 break;
             }
-            TermDocs termDocs =
-                    reader.termDocs(new Term(Payload.RECORD_FIELD, ""));
             String termString = termEnum.term().text();
+            TermDocs termDocs =
+                    reader.termDocs(new Term(Payload.RECORD_FIELD, termString));
             boolean found = false;
             while (termDocs.next()) {
                 found = true;
@@ -106,6 +107,7 @@ public class IDMapper implements Map<String, Integer> {
             if (!found) {
                 log.warn("No RecordID found in field " + Payload.RECORD_FIELD);
             }
+            termEnum.next();
         }
         if (recordIDs.size() != reader.maxDoc()) {
             log.warn("The number of extracted RecordIDs (" + recordIDs.size()
