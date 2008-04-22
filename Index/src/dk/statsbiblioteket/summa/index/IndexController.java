@@ -43,19 +43,20 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * The default implementation of IndexUpdater. It is basically an aggregator for
- * IndexManipulators, which also contains a timer that calls commit and
+ * The default implementation of IndexUpdater. It is basically an aggregator
+ * for IndexManipulators, which also contains a timer that calls commit and
  * consolidate at configurable intervals. It is also a standard ObjectFilter,
  * so further chaining is possible.
  */
 // TODO: Mark update on commit, consolidate, eof, meta-key-value-pattern
 // TODO: Consider write-lock
+// TODO: Handle deletions without documents
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class IndexController extends StateThread implements ObjectFilter,
-                                                             IndexManipulator,
-                                                             IndexUpdater {
+                                                            IndexManipulator,
+                                                            IndexUpdater {
     private static Log log = LogFactory.getLog(IndexController.class);
 
     /**
@@ -427,7 +428,7 @@ public class IndexController extends StateThread implements ObjectFilter,
                 public boolean accept(File dir, String name) {
                     File full = new File(dir, name);
                     return full.isDirectory() && full.canWrite() &&
-                           IndexController.TIMESTAMP_PATTERN.matcher(name).matches();
+                      IndexController.TIMESTAMP_PATTERN.matcher(name).matches();
                 }
             };
 

@@ -53,7 +53,7 @@ public class Payload {
      * Document. All Document in Summa Lucene Indexes must have one and only
      * one RecordID stored and indexed.
      */
-    public static final String RECORD_FIELD = "RecordID";
+    public static final String RECORD_FIELD = "recordID";
 
     private InputStream stream = null;
     private Record record = null;
