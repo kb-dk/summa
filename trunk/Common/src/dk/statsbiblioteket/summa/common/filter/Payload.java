@@ -187,22 +187,22 @@ public class Payload {
             }
             if (ids == null || ids.length == 0) {
                 log.trace("setId: Adding id '" + id + "' to Document");
-                return;
-            }
-            if (id.length() == 1) {
-                if (ids[0].equals(id)) {
-                    return;
+            } else {
+                if (id.length() == 1) {
+                    if (ids[0].equals(id)) {
+                        return;
+                    } else {
+                        log.debug("Old Document id was '" + ids[0]
+                                  + "'. Assigning new id '" + id + "'");
+                        document.removeFields(RECORD_FIELD);
+                    }
                 } else {
-                    log.debug("Old Document id was '" + ids[0]
-                              + "'. Assigning new id '" + id + "'");
+                    Logs.log(log, Logs.Level.WARN,
+                             "Document contains multiple RecordIDs. Clearing "
+                             + "old ids and assigning id '" + id
+                             + "'. Old ids:", (Object)ids);
                     document.removeFields(RECORD_FIELD);
                 }
-            } else {
-                Logs.log(log, Logs.Level.WARN, "Document contains multiple "
-                                               + "RecordIDs. Clearing old ids"
-                                               + " and assigning id '" + id
-                                               + "'. Old ids:", (Object)ids);
-                document.removeFields(RECORD_FIELD);
             }
             getDocument().add(new Field(Payload.RECORD_FIELD, id,
                                         Field.Store.YES,
@@ -286,5 +286,9 @@ public class Payload {
         Payload clone = new Payload(getStream(), getRecord(), getDocument());
         clone.meta = meta;
         return clone;
+    }
+
+    public String toString() {
+        return "Payload(" + getId() + ")"; 
     }
 }
