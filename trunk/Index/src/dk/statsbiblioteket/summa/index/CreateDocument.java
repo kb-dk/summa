@@ -38,7 +38,7 @@ import java.util.Collection;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
-import dk.statsbiblioteket.summa.common.filter.Filter;
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.xml.DefaultNamespaceContext;
@@ -69,10 +69,8 @@ import org.w3c.dom.Node;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 // TODO: Port boost from stable
-public class CreateDocument implements ObjectFilter {
+public class CreateDocument extends ObjectFilterImpl {
     private static Log log = LogFactory.getLog(CreateDocument.class);
-
-    private ObjectFilter source;
 
     /**
      * Builder for building DOM objects out of SummaDocumentXML.
@@ -155,9 +153,9 @@ public class CreateDocument implements ObjectFilter {
      * @param payload the container for the Record-content to convert.
      */
     // TODO: If not added, mark meta-data with unadded and continue gracefully
-    public void addDocument(Payload payload) {
+    public void processPayload(Payload payload) {
         //noinspection DuplicateStringLiteralInspection
-        log.debug("addDocument(" + payload + ") called");
+        log.debug("processPayload(" + payload + ") called");
         long startTime = System.currentTimeMillis();
         if (payload.getRecord() == null) {
             throw new IllegalArgumentException(payload + " has no Record");
@@ -383,50 +381,4 @@ public class CreateDocument implements ObjectFilter {
 
     }
 
-    /* ObjectFilter interface implementation */
-
-    public boolean hasNext() {
-        checkSource();
-        return source.hasNext();
-    }
-
-    public Payload next() {
-        checkSource();
-        Payload payload = source.next();
-        addDocument(payload);
-        return payload;
-    }
-
-    public void remove() {
-        log.warn("Remove() is unsupported");
-    }
-
-    public void setSource(Filter filter) {
-        if (filter == null) {
-            throw new IllegalArgumentException("Source filter was null");
-        }
-        if (!(filter instanceof ObjectFilter)) {
-            throw new IllegalArgumentException("Only ObjectFilters accepted as "
-                                               + "source. The filter provided "
-                                               + "was of class "
-                                               + filter.getClass());
-        }
-        source = (ObjectFilter)filter;
-    }
-
-    public boolean pump() throws IOException {
-        checkSource();
-        return hasNext() && next() != null;
-    }
-
-    public void close(boolean success) {
-        checkSource();
-    }
-
-    private void checkSource() {
-        if (source == null) {
-            throw new IllegalStateException("No source defined for "
-                                            + "CreateDocument filter");
-        }
-    }
 }
