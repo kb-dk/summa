@@ -211,7 +211,7 @@ public class IngestTest extends NoExitTestCase {
     }
     private Configuration getWriterConfiguration() {
         Configuration writerConf = Configuration.newMemoryBased();
-        writerConf.set(RecordWriter.CONF_METADATA_STORAGE, STORAGE_ADDRESS);
+        writerConf.set(RecordWriter.CONF_STORAGE, STORAGE_ADDRESS);
         return writerConf;
     }
 
