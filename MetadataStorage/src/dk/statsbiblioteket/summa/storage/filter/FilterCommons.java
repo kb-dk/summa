@@ -66,6 +66,7 @@ public class FilterCommons {
         log.debug("Connecting to the access point '" + accessPoint + "'");
         Access access;
         try {
+            // TODO: Use the proper framework for RMI connections
             access = (Access) Naming.lookup(accessPoint);
         } catch (NotBoundException e) {
             throw new Configurable.ConfigurationException(
