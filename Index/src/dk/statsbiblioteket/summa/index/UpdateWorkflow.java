@@ -244,8 +244,8 @@ public class UpdateWorkflow {
 //            Document clu = new Document();
 //            Field f = new Field("cluster","", Field.Store.NO,Field.Index.TOKENIZED);
 //            clu.add(f);
-//            wIn.addDocument(d);
-//            if (hasCluster)wClu.addDocument(clu);
+//            wIn.processPayload(d);
+//            if (hasCluster)wClu.processPayload(clu);
 //        }
 //
 //        //wIn.optimize();
