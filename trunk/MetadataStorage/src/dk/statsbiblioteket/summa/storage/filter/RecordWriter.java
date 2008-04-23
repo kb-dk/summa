@@ -34,7 +34,9 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.storage.io.Access;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -44,8 +46,13 @@ import org.apache.commons.logging.LogFactory;
  * {@link #CONF_METADATA_STORAGE}.
  * </p><p>
  * Note: This ObjectFilter can only be chained after another ObjectFilter.
+ * </p><p>
+ * Note: Only Record is stored. All other data in Payload is ignored.
  */
-public class RecordWriter implements ObjectFilter {
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.IN_DEVELOPMENT,
+        author = "te")
+public class RecordWriter extends ObjectFilterImpl {
     private static final Log log = LogFactory.getLog(RecordWriter.class);
 
     /**
@@ -54,9 +61,8 @@ public class RecordWriter implements ObjectFilter {
 
      */
     public static final String CONF_METADATA_STORAGE =
-            "RecordWriter.MetadataStorage";
+            "summa.storage.RecordWriter.MetadataStorage";
 
-    private ObjectFilter source;
     private Access access;
 
     public RecordWriter(Configuration configuration) {
@@ -92,36 +98,11 @@ public class RecordWriter implements ObjectFilter {
         // TODO: Perform a check to see if the MetadataStorage is alive
     }
 
-    public void setSource(Filter source) {
-        if (!(source instanceof ObjectFilter)) {
-            throw new UnsupportedOperationException("RecordWriter can only use "
-                                                    + "an ObjectFilter as a "
-                                                    + "source");
-        }
-        this.source = (ObjectFilter)source;
-    }
-
-    public boolean pump() throws IOException {
-        if (!hasNext()) {
-            return false;
-        }
-        Payload next = next();
-        if (next == null) {
-            return false;
-        }
-        next.close();
-        return true;
-    }
-
     /**
-     * Pumping Payloads with this method has the side-effect of flushing Records
-     * to the MetadataStorage.
-     * @return the next Record.
-     * @throws NoSuchElementException if the Record could not be retrieved.
+     * Flushes Records to Storage.
+     * @param payload the Payload containing the Record to flush.
      */
-    public Payload next() throws NoSuchElementException {
-        log.trace("next called");
-        Payload payload = source.next();
+    protected void processPayload(Payload payload) {
         Record record = payload.getRecord();
         if (record == null) {
             throw new IllegalStateException("null received in Payload in next()"
@@ -139,22 +120,6 @@ public class RecordWriter implements ObjectFilter {
             log.error("Exception flushing " + record, e);
             // TODO: Consider checking for fatal errors (the connection is down)
         }
-        return payload;
     }
 
-    public void remove() {
-        throw new UnsupportedOperationException("No removal of Payloads for "
-                                                + "RecordWriter");
-    }
-
-    public void close(boolean success) {
-        log.trace("Closing RecordWriter with success " + success);
-        // TODO: Close the access properly
-        log.trace("Closing the source for RecordWriter");
-        source.close(success);
-    }
-
-    public boolean hasNext() {
-        return source.hasNext();
-    }
 }
