@@ -253,7 +253,7 @@ public class FileReader implements ObjectFilter {
         try {
             RenamingFileStream in = new RenamingFileStream(current, postfix);
             Payload payload = new Payload(in);
-            payload.getMeta().put(ORIGIN, current.getPath());
+            payload.getData().put(ORIGIN, current.getPath());
             log.debug("File '" + current + "' opened successfully");
             delivered.add(payload);
             return payload;
@@ -273,6 +273,7 @@ public class FileReader implements ObjectFilter {
      *                are emptied.
      */
     public synchronized void close(boolean success) {
+        //noinspection DuplicateStringLiteralInspection
         log.debug("close(" + success + ") called");
         checkInit();
         //noinspection DuplicateStringLiteralInspection

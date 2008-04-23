@@ -71,6 +71,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
  * Any information about the index therefore should be fetched from the SearchDescriptor {@see SearchDescriptor}
  * This implementation uses the Apache commons-logging framework for logging and needs log4j, or an alternative logging backend supported by commons-logging,
  * to be configured with a Category for the package name.
+ * @deprecated use {@link CreateDocument} instead.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,

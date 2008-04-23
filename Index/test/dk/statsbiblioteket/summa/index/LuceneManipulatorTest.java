@@ -12,6 +12,7 @@ import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
@@ -139,7 +140,7 @@ public class LuceneManipulatorTest extends TestCase {
                                  + "index at position " + i,
                                  ids[expectedCount],
                                  reader.document(i).getValues(
-                                         Payload.RECORD_FIELD)[0]);
+                                         IndexUtils.RECORD_FIELD)[0]);
                     expectedCount++;
                 }
             }
@@ -167,7 +168,7 @@ public class LuceneManipulatorTest extends TestCase {
                     try {
                         log.debug("id(" + i + "): "
                                   + reader.document(i).getValues(
-                                Payload.RECORD_FIELD)[0]);
+                                IndexUtils.RECORD_FIELD)[0]);
                     } catch (Exception e) {
                         log.warn("Could not extract id(" + i + ")", e);
                     }
@@ -191,6 +192,8 @@ public class LuceneManipulatorTest extends TestCase {
         if (deleted) {
             record.setDeleted(true);
         }
-        return new Payload(record, document);
+        Payload payload = new Payload(record);
+        payload.getData().put(Payload.LUCENE_DOCUMENT, document);
+        return payload;
     }
 }

@@ -32,6 +32,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.IndexWriter;
@@ -41,6 +42,7 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.LockObtainFailedException;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.document.Document;
 
 /**
  * Handles iterative updates of a Lucene index. A Record that is an update of an
@@ -252,7 +254,7 @@ public class LuceneManipulator implements IndexManipulator {
             author = "te")
     // TODO: Consider if adds can be done immediately as dels does not shift ids
     public synchronized boolean update(Payload payload) throws IOException {
-        if (payload.getDocument() == null) {
+        if (payload.getData(Payload.LUCENE_DOCUMENT) == null) {
             throw new IllegalArgumentException("No Document defined in"
                                                + " Payload '" + payload + "'");
         }
@@ -293,7 +295,9 @@ public class LuceneManipulator implements IndexManipulator {
             debug.write(" => ingesting and updating idMap");
             log.debug(debug.toString());
             checkWriter();
-            writer.addDocument(payload.getDocument());
+            Document document =
+                    (Document)payload.getData(Payload.LUCENE_DOCUMENT);
+            writer.addDocument(document);
             idMapper.put(id, writer.docCount());
         } else {
             if (deletions.containsKey(id)) {
@@ -358,7 +362,9 @@ public class LuceneManipulator implements IndexManipulator {
      * @param payload the container containing the Document.
      */
     private void ensureStoredID(String id, Payload payload) {
-        payload.setID(id);
+        Document document =
+                (Document)payload.getData(Payload.LUCENE_DOCUMENT);
+        IndexUtils.assignID(id, document);
     }
 
     public synchronized void commit() throws IOException {
@@ -387,7 +393,9 @@ public class LuceneManipulator implements IndexManipulator {
             //noinspection DuplicateStringLiteralInspection
             log.debug("Adding '" + addition.getId() + "' to index");
             idMapper.put(addition.getId(), writer.docCount());
-            writer.addDocument(addition.getDocument());
+            Document document =
+                    (Document)addition.getData(Payload.LUCENE_DOCUMENT);
+            writer.addDocument(document);
         }
         additions.clear();
         log.trace("Finished addition flush");
@@ -408,7 +416,7 @@ public class LuceneManipulator implements IndexManipulator {
             Payload deletion = entry.getValue();
             int delCount;
             if ((delCount =
-                    reader.deleteDocuments(new Term(Payload.RECORD_FIELD,
+                    reader.deleteDocuments(new Term(IndexUtils.RECORD_FIELD,
                                                     deletion.getId()))) != 1) {
                 if (delCount == 0) {
                     log.warn("flushDeletions: Deleted 0 documents for id '"

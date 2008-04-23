@@ -30,19 +30,24 @@ import java.util.ArrayList;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
- * The IndexField is a stub class wrapping all attributes for a Field in the Summa index.<br><br>
- *
+ * The IndexField is a stub class wrapping all attributes for a Field in the
+ * Summa index.
+ * </p><p>
  * Attribute List:<br>
- * name - The name of the field, this attribute is defined by Lucene.<br>
- * group - The name of the group this field belongs to.<br>
- * language - The language code for this field, used in multi-lingual indexes.<br>
- * type - The type of the field, wrapping Lucene characteristics {link:FieldType}<br>
- * repeatExt - this attribute is deprecated, do not use.<br>
- * boost - the boostFactor for the field.<br>
- * suggest - hint to indicate that Summa should use the field as base for suggestions.<br>
- * freetext - Determines if the content part of the field is duplicated to the freetext index.<br>
- * repeat - this is deprecated and part of the type.<br>
- * aliases - a list a language Aliases.<br>
+ * name -     The name of the field, this attribute is defined by Lucene.<br>
+ * group -    The name of the group this field belongs to.<br>
+ * language - The language code for this field, used in multi-lingual
+ *            indexes.<br>
+ * type -     The type of the field, wrapping Lucene characteristics
+ *            {link:FieldType}<br>
+ * repeatExt  - this attribute is deprecated, do not use.<br>
+ * boost -    the boostFactor for the field.<br>
+ * suggest -  hint to indicate that Summa should use the field as base for
+ *            suggestions.<br>
+ * freetext - Determines if the content part of the field is duplicated to the
+ *            freetext index.<br>
+ * repeat -   this is deprecated and part of the type.<br>
+ * aliases -  a list a language Aliases.<br>
  * resolver - the resolver for the document.<br><br> 
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -104,9 +109,10 @@ public class IndexField implements Comparable {
     }
 
     /**
-     * An alias i summa is a naming convention for naming fields in different languages.<br>
-     * This is uswed for automated generation multi-lingual aware queryparsers.
-     *
+     * An alias i summa is a naming convention for naming fields in different
+     * languages.<br>
+     * This is used for automated generation of multi-lingual aware
+     * queryparsers.
      * @author Hans Lund, State and University Library, Denmark
      * @version $Id: IndexField.java,v 1.5 2007/10/04 13:28:19 te Exp $
      */
@@ -126,7 +132,8 @@ public class IndexField implements Comparable {
         }
 
         /**
-         * The name used for the associated Field in the queryparser for the Alias's language.
+         * The name used for the associated Field in the queryparser for the
+         * Alias's language.
          * @return the name for this alias.
          */
         public String getName() {
@@ -134,7 +141,8 @@ public class IndexField implements Comparable {
         }
 
         /**
-         * Sets the name for the associated Field in the queryparser for the Alias's language.
+         * Sets the name for the associated Field in the queryparser for the
+         * Alias's language.
          * @param name the name to use for the field with the alias language.
          */
         public void setName(String name) {
@@ -142,8 +150,8 @@ public class IndexField implements Comparable {
         }
 
         /**
-         * Gets the language code for this alias, codes follows the XML:lang language code specification. (lang-contry)<br>
-         *
+         * Gets the language code for this alias, codes follows the XML:lang
+         * language code specification. (lang-contry).
          * @return the ISO language code.
          */
         public String getLang() {
@@ -162,11 +170,11 @@ public class IndexField implements Comparable {
 
         /**
          * Indicates if Object o is equal to this Alias.<br>
-         * Two Aliases are considered equal if both the name and the lang for the alias are constidered equal according to the String equal method.
-         * {@link java.lang.String#equals(Object o)}<br>   
-         *
+         * Two Aliases are considered equal if both the name and the lang for
+         * the alias are constidered equal according to the String equal method.
+         * {@link java.lang.String#equals(Object o)}.
+         * </p><p>
          * Two equal Aliases will always produce the same hashCode.
-         *
          * @param o
          * @return
          * @see #hashCode()
