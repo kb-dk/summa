@@ -12,7 +12,7 @@
     content or adds meta-data. One example would be the addition of the current
     status of availability for a book.
     The Record content is transformed from source-specific XML to
-    SummaDocumentXML by the filter CreateSummaDocumentXML.
+    SummaDocumentXML by the filter XMLTransformer.
     The SummaDocumentXML is transformed to a Lucene Document by the filter
     CreateDocument.
     The Lucene Document is added to an existing index by the filter
@@ -21,7 +21,7 @@
     In case of very rapidly changing meta-data, such as availability for books,
     an alternative path could be:
 </p><p>
-    1. Storage1 => CreateSummaDocumentXML => Storage2.
+    1. Storage1 => XMLTransformer => Storage2.
     2. Storage2 => EnrichWithAvailability => CreateDocument => IndexController.
     Where step 1 is performed when new books arrive and step 2 is performed
     upon changed in availability status.
