@@ -6,6 +6,7 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
@@ -63,16 +64,21 @@ public class PayloadTest extends TestCase {
         document.add(new Field("ettu",
                                Integer.toString(random.nextInt(1000)),
                                Field.Store.YES, Field.Index.UN_TOKENIZED));
-        Payload payload = new Payload(record, document);
+        Payload payload = new Payload(record);
+        payload.getData().put(Payload.LUCENE_DOCUMENT, document);
+        Document insertedDocument =
+                (Document)payload.getData().get(Payload.LUCENE_DOCUMENT);
         assertNull("The id in the document should be null",
-                   payload.getDocument().getValues(Payload.RECORD_FIELD));
+                   insertedDocument.getValues(IndexUtils.RECORD_FIELD));
         payload.setID("baz");
-        System.out.println(payload.getDocument());
+/*        insertedDocument =
+                (Document)payload.getData().get(Payload.LUCENE_DOCUMENT);
+        System.out.println(insertedDocument);
         assertEquals("The id in the document should now be defined",
                      "baz",                    
-                     payload.getDocument().getValues(Payload.RECORD_FIELD)[0]);
-
-        //TODO: Test goes here...
+                     insertedDocument.getValues(Payload.RECORD_FIELD)[0]);
+  */
+        //TODO: Better check for id
     }
 
     public static Test suite() {

@@ -28,10 +28,13 @@ import org.w3c.dom.NodeList;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
 
 import javax.xml.XMLConstants;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.Logs;
 
 /**
  * IndexUtils is a set of static common used methods used for manipulating or
@@ -43,7 +46,76 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 public class IndexUtils {
 
     private static Log log = LogFactory.getLog(IndexUtils.class);
+    /**
+     * The field-name for the Lucene Field containing the Record ID for the
+     * Document. All Document in Summa Lucene Indexes must have one and only
+     * one RecordID stored and indexed.
+     */
+    @SuppressWarnings({"DuplicateStringLiteralInspection"})
+    public static final String RECORD_FIELD = "recordID";
 
+    /**
+     * Stores the given ID in the Field RECORD_FIELD in the given Document.
+     * If the Field already exists, it is overwritten.
+     * @param id       the ID to store in the document.
+     * @param document where the ID is stored.
+     */
+    @QAInfo(level = QAInfo.Level.NORMAL,
+            state = QAInfo.State.QA_NEEDED,
+            author = "te")
+    public static void assignID(String id, Document document) {
+        log.trace("assignID(" + id + ", ...) called");
+        String[] ids = document.getValues(RECORD_FIELD);
+        if (ids != null && ids.length == 1 && ids[0].equals(id)) {
+            return;
+        }
+        if (ids == null || ids.length == 0) {
+            log.trace("setId: Adding id '" + id + "' to Document");
+        } else {
+            if (id.length() == 1) {
+                if (ids[0].equals(id)) {
+                    return;
+                }
+                log.debug("Old Document id was '" + ids[0]
+                          + "'. Assigning new id '" + id + "'");
+            } else {
+                Logs.log(log, Logs.Level.WARN,
+                         "Document contains multiple RecordIDs. Clearing "
+                         + "old ids and assigning id '" + id
+                         + "'. Old ids:", (Object)ids);
+            }
+            document.removeFields(RECORD_FIELD);
+        }
+        document.add(new Field(RECORD_FIELD, id,
+                               Field.Store.YES,
+                               Field.Index.UN_TOKENIZED));
+    }
+
+    /**
+     * Extracts the ID from a Document, if it is present. In case of multiple
+     * ID's, the first one is returned. The ID is stored in the field
+     * RECORD_FIELD.
+     * @param document where to extract the ID.
+     * @return the ID for the Document if present, else null.
+     */
+    @QAInfo(level = QAInfo.Level.NORMAL,
+            state = QAInfo.State.QA_NEEDED,
+            author = "te")
+    public String getID(Document document) {
+        String[] ids = document.getValues(RECORD_FIELD);
+        if (ids != null && ids.length > 0) {
+            if (ids.length > 1) {
+                Logs.log(log, Logs.Level.WARN, "Multiple RecordIDs defined "
+                                               + "in Document '"
+                                               + this + "'. Returning first"
+                                               + " RecordID out of: ",
+                         (Object)ids);
+            }
+            return ids[0];
+        }
+        log.trace("getID: No ID found in document");
+        return null;
+    }
 
     /**
      * Used for extracting fieldType information out of a DOM node.<br>

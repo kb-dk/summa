@@ -29,7 +29,7 @@ import java.util.Set;
 import java.util.Collection;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.store.Directory;
@@ -81,14 +81,14 @@ public class IDMapper implements Map<String, Integer> {
         long startTime = System.currentTimeMillis();
         IndexReader reader = IndexReader.open(directory);
         recordIDs = new HashMap<String, Integer>((int)(reader.maxDoc() * 1.2));
-        TermEnum termEnum = reader.terms(new Term(Payload.RECORD_FIELD, ""));
+        TermEnum termEnum = reader.terms(new Term(IndexUtils.RECORD_FIELD, ""));
         while (termEnum.term() != null) {
-            if (!termEnum.term().field().equals(Payload.RECORD_FIELD)) {
+            if (!termEnum.term().field().equals(IndexUtils.RECORD_FIELD)) {
                 break;
             }
             String termString = termEnum.term().text();
             TermDocs termDocs =
-                    reader.termDocs(new Term(Payload.RECORD_FIELD, termString));
+                    reader.termDocs(new Term(IndexUtils.RECORD_FIELD, termString));
             boolean found = false;
             while (termDocs.next()) {
                 found = true;
@@ -99,13 +99,13 @@ public class IDMapper implements Map<String, Integer> {
                 if (recordIDs.containsKey(termString)) {
                     log.warn("A LuceneID (" + recordIDs.get(termString)
                              + ") already exists for field "
-                             + Payload.RECORD_FIELD
+                             + IndexUtils.RECORD_FIELD
                              + " (" + termDocs.doc() + ")");
                 }
                 recordIDs.put(termString, termDocs.doc());
             }
             if (!found) {
-                log.warn("No RecordID found in field " + Payload.RECORD_FIELD);
+                log.warn("No RecordID found in field " + IndexUtils.RECORD_FIELD);
             }
             termEnum.next();
         }

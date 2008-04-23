@@ -18,6 +18,7 @@ import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+@SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class FileReaderTest extends TestCase {
     private static Log log = LogFactory.getLog(FileReader.class);
 
@@ -106,7 +107,7 @@ public class FileReaderTest extends TestCase {
         assertNotNull("The payload should have a stream", payload.getStream());
         assertEquals("The payload should have meta-info with file name",
                      rootFileFoo20.getPath(),
-                     payload.getMeta(FileReader.ORIGIN));
+                     payload.getStringData(FileReader.ORIGIN));
         for (int i = 0 ; i < 20 ; i++) {
             assertTrue("reader should not be empty at position " + i + "/"
                        + 20,
@@ -135,7 +136,7 @@ public class FileReaderTest extends TestCase {
         while (reader.hasNext()) {
             payload = reader.next();
             log.debug("Got payload with filename '"
-                      + payload.getMeta(FileReader.ORIGIN));
+                      + payload.getStringData(FileReader.ORIGIN));
             filecount++;
         }
         assertEquals("The number of streams should match", 4, filecount);
