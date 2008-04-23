@@ -98,7 +98,7 @@
                             <value class="string">dk.statsbiblioteket.summa.storage.filter.RecordWriter</value>
                         </entry>
                         <entry>
-                            <key>RecordWriter.MetadataStorage</key>
+                            <key>summa.storage.RecordWriter.MetadataStorage</key>
                             <value class="string">//localhost:27000/TestStorage</value>
                         </entry>
                     </value>
