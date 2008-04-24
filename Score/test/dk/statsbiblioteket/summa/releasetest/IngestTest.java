@@ -23,6 +23,7 @@
 package dk.statsbiblioteket.summa.releasetest;
 
 import java.io.File;
+import java.io.IOException;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -42,6 +43,7 @@ import dk.statsbiblioteket.summa.storage.io.Access;
 import dk.statsbiblioteket.summa.storage.io.Control;
 import dk.statsbiblioteket.summa.storage.io.RecordIterator;
 import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
 import dk.statsbiblioteket.util.rpc.ConnectionFactory;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
@@ -53,6 +55,10 @@ import org.apache.commons.logging.LogFactory;
  * The purpose of this class is to test "files => ingest-chain => storage".
  * It relies on the modules Common, Ingest and Storage.
  */
+@SuppressWarnings({"DuplicateStringLiteralInspection"})
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.IN_DEVELOPMENT,
+        author = "te")
 public class IngestTest extends NoExitTestCase {
     private static Log log = LogFactory.getLog(IngestTest.class);
 
@@ -126,14 +132,11 @@ public class IngestTest extends NoExitTestCase {
                 try {
                     Files.delete(attempDelete);
                     log.debug("Deleted '" + attempDelete + "'");
-                } catch (Exception e) {
+                } catch (IOException e) {
                     log.warn("Could not delete '" + attempDelete + "'");
                 }
             }
         }
-        storageLocation =
-            new File(System.getProperty("java.io.tmpdir"),
-                     "storage" + storageCounter++);
     }
     public void tearDown() throws Exception {
         super.tearDown();
@@ -146,7 +149,10 @@ public class IngestTest extends NoExitTestCase {
                      "IngestTest");
 
 
-    public File storageLocation;
+    public static File getStorageLocation() {
+        return new File(System.getProperty("java.io.tmpdir"),
+                        "storage" + storageCounter++);
+    }
 
     public void testBasicLoad() throws Exception {
         Configuration conf = getReaderConfiguration();
@@ -179,7 +185,7 @@ public class IngestTest extends NoExitTestCase {
                    splitter.hasNext());
     }
 
-    private Configuration getSplitterConfiguration() {
+    public static Configuration getSplitterConfiguration() {
         Configuration splitterConf = Configuration.newMemoryBased();
         splitterConf.set(XMLSplitterFilter.CONF_BASE, TESTBASE);
         splitterConf.set(XMLSplitterFilter.CONF_COLLAPSE_PREFIX, "true");
@@ -190,7 +196,7 @@ public class IngestTest extends NoExitTestCase {
         splitterConf.set(XMLSplitterFilter.CONF_REQUIRE_VALID, "false");
         return splitterConf;
     }
-    private Configuration getReaderConfiguration() {
+    public static Configuration getReaderConfiguration() {
         Configuration readerConf = Configuration.newMemoryBased();
         readerConf.set(FileReader.CONF_ROOT_FOLDER, sourceRoot.toString());
         readerConf.set(FileReader.CONF_RECURSIVE, true);
@@ -198,11 +204,12 @@ public class IngestTest extends NoExitTestCase {
         readerConf.set(FileReader.CONF_COMPLETED_POSTFIX, ".processed");
         return readerConf;
     }
-    private static final String STORAGE_ADDRESS =
+    public static final String STORAGE_ADDRESS =
             "//localhost:27000/TestStorage";
-    private Configuration getStorageConfiguration() {
+    public static Configuration getStorageConfiguration() {
         Configuration conf = Configuration.newMemoryBased();
-        conf.set(DatabaseControl.PROP_LOCATION, storageLocation.toString());
+        conf.set(DatabaseControl.PROP_LOCATION,
+                 getStorageLocation().toString());
         conf.set(Service.SERVICE_PORT, 27003);
         conf.set(Service.REGISTRY_PORT, 27000);
         conf.set(Service.SERVICE_ID, "TestStorage");
@@ -246,7 +253,7 @@ public class IngestTest extends NoExitTestCase {
         Configuration storageConf = getStorageConfiguration();
 
         // Start the Storage service remotely
-        StorageService storage = new StorageService(storageConf);
+        new StorageService(storageConf);
         ConnectionFactory<Service> serviceCF =
                 new RMIConnectionFactory<Service>();
         ConnectionManager<Service> serviceCM =

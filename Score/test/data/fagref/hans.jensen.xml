@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<fagref>
+    <navn>Hans Jensen</navn>
+    <navn_sort>Jensen Hans</navn_sort>
+    <stilling>Fagekspert i Datalogi</stilling>
+    <titel>IT-udvikler</titel>
+    <email>hj@example.com</email>
+    <emneLink>http://www.example.com/emneguide/science/datalogi/</emneLink>
+    <emneLink>http://www.example.com/emneguide/science/matematik/</emneLink>
+    <emneLink>http://www.example.com/emneguide/science/fysik/</emneLink>
+    <beskrivelse>
+        Ansvarlig for at vejlede indenfor alle datalogi-relaterede områder, såsom programmering, 
+        hardware og pizzaspisning. Er specielt vidende om sprogene Java og Python.
+</beskrivelse>
+    <emner>
+        <emne>Java</emne>
+        <emne>Python</emne>
+        <emne>Pizza</emne>
+        <emne>Coca Cola</emne>
+        <emne>Von Neumann maskiner</emne>
+        <emne>Von Neumann machines</emne>
+    </emner>
+</fagref>
+
+
+
+
