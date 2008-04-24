@@ -1,3 +1,25 @@
+/* $Id$
+ * $Revision$
+ * $Date$
+ * $Author$
+ *
+ * The Summa project.
+ * Copyright (C) 2005-2007  The State and University Library
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
 package dk.statsbiblioteket.summa.storage.filter;
 
 import java.io.File;
@@ -15,10 +37,15 @@ import dk.statsbiblioteket.summa.storage.StorageFactory;
 import dk.statsbiblioteket.summa.storage.database.DatabaseControl;
 import dk.statsbiblioteket.summa.storage.io.Control;
 import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+@SuppressWarnings({"DuplicateStringLiteralInspection"})
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.IN_DEVELOPMENT,
+        author = "te")
 public class RecordWriterTest extends TestCase {
     public RecordWriterTest(String name) {
         super(name);
@@ -41,7 +68,6 @@ public class RecordWriterTest extends TestCase {
         return new TestSuite(RecordWriterTest.class);
     }
 
-    @SuppressWarnings({"DuplicateStringLiteralInspection"})
     private static final File storageLocation =
             new File(System.getProperty("java.io.tmpdir"), "kabloey");
 
@@ -51,7 +77,6 @@ public class RecordWriterTest extends TestCase {
         Control control = StorageFactory.createController(conf);
         assertNotNull("A controller should be available now", control);
     }
-
 
     /* ObjectFilter test-implementation */
     class ObjectProvider implements ObjectFilter {
