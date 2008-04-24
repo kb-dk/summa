@@ -37,7 +37,6 @@ import java.util.HashSet;
 import java.util.Collection;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -218,6 +217,12 @@ public class CreateDocument extends ObjectFilterImpl {
             log.warn("Got IndexServiceException while processing group fields "
                      + "for " + payload);
         }
+
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("Setting " + IndexUtils.RECORD_FIELD + " to '"
+                  + payload.getId() + "'");
+        IndexUtils.assignID(payload.getId(), luceneDoc);
+        
         payload.getData().put(Payload.LUCENE_DOCUMENT, luceneDoc);
         payload.getData().put(Payload.SEARCH_DESCRIPTOR, luceneDoc);
         log.debug("Added Lucene Document and SearchDescriptor to payload "

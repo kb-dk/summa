@@ -93,6 +93,7 @@ public class XMLTransformer extends ObjectFilterImpl {
         } catch (IndexServiceException e) {
             throw new ConfigurationException("Unable to create transformer", e);
         }
+        log.debug("Transformer ready for use");
     }
 
     /**
