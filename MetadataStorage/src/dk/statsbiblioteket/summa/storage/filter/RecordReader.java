@@ -23,17 +23,23 @@
 package dk.statsbiblioteket.summa.storage.filter;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.storage.io.Access;
+import dk.statsbiblioteket.summa.storage.io.RecordIterator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.io.File;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
+import java.util.GregorianCalendar;
+import java.util.NoSuchElementException;
+import java.rmi.RemoteException;
 
 /**
  * Retrieves Records from storage based on the criteria given in the properties.
@@ -72,6 +78,9 @@ public class RecordReader implements ObjectFilter {
      * If true, the state of progress is stored in {@link #CONF_PROGRESS_FILE}.
      * This means that new runs will continue where the previous run left.
      * If no progress-file exists, a new one will be created.
+     * </p><p>
+     * Note that progress will only be stored in the event of a call to
+     * {@link #close(boolean)} with a value of true.
      * </p><p>
      * This property is optional. Default is true.
      */
@@ -119,13 +128,22 @@ public class RecordReader implements ObjectFilter {
             "summa.storage.RecordReader.base";
     public static final String DEFAULT_BASE = "";
 
+    @SuppressWarnings({"FieldCanBeLocal"})
     private Access access;
+    @SuppressWarnings({"FieldCanBeLocal"})
+    private String base = DEFAULT_BASE;
     private File progressFile;
     private boolean usePersistence = DEFAULT_USE_PERSISTENCE;
     private boolean startFromScratch = DEFAULT_START_FROM_SCRATCH;
     private int maxReadRecords = DEFAULT_MAX_READ_RECORDS;
     private int maxReadSeconds = DEFAULT_MAX_READ_SECONDS;
-    private String base = DEFAULT_BASE;
+
+    private boolean eooReached = false;
+    private long recordCounter = 0;
+    private long startTime;
+    private long lastRecordTimestamp;
+
+    RecordIterator recordIterator;
 
     /**
      * Connects to the Storage specified in the configuration and request an
@@ -160,21 +178,129 @@ public class RecordReader implements ObjectFilter {
                                               DEFAULT_MAX_READ_RECORDS);
         maxReadSeconds = configuration.getInt(CONF_MAX_READ_SECONDS,
                                               DEFAULT_MAX_READ_SECONDS);
+        // TODO: Support empty base in reader
+        if ("".equals(base)) {
+            throw new ConfigurationException("Empty base not supported yet");
+        }
 
-        // TODO: Get persistent state, get iterator from access
+        try {
+            recordIterator =
+                    access.getRecordsModifiedAfter(getStartTime(), base);
+        } catch (RemoteException e) {
+            throw new ConfigurationException("RemoteException while getting "
+                                             + "recordIterator for time "
+                                             + getStartTime() + " and base '"
+                                             + base +"'");
+        }
+        startTime = 0;
         log.trace("RecordReader constructed, ready for pumping");
     }
 
-    // TODO: Handle close on EOF.
+    private static final String TAG = "lastRecordTimestamp";
+    public static final Pattern TIMESTAMP_PATTERN =
+            Pattern.compile(".*<" + TAG + ">"
+                            + "([0-9]{4})([0-9]{2})([0-9]{2})-"
+                            + "([0-9]{2})([0-9]{2})([0-9]{2})"
+                            + "</" + TAG + ">.*", Pattern.DOTALL);
+    public static final String TIMESTAMP_FORMAT =
+            "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n"
+            +"<" + TAG + ">"
+            + "%1$tY%1$tm%1$td-%1$tH%1$tM%1$tS"
+            + "</" + TAG + ">\n";
+    /**
+     * If !START_FROM_SCRATCH && USE_PERSISTENCE then get last timestamp
+     * from persistence file, else return 0.
+     * @return the timestamp to continue harvesting from.
+     */
+    private long getStartTime() {
+        if (startFromScratch || !usePersistence) {
+            log.trace("getStartTime: Starttime set to 0");
+            return 0;
+        }
+
+        if (progressFile.exists() && progressFile.isFile() &&
+            progressFile.canRead()) {
+            log.trace("getStartTime has persistence file");
+            try {
+                long startTime = getTimestamp(progressFile,
+                                              Files.loadString(progressFile));
+                if (log.isDebugEnabled()) {
+                    try {
+                        log.debug(String.format("Extracted timestamp %1$tY%1$tm"
+                                                + "%1$td-%1$tH%1$tM%1$tS from "
+                                                + "'" + progressFile + "'",
+                                                startTime));
+                    } catch (Exception e) {
+                        log.warn("Could not output properly formatted timestamp"
+                                 + " for " + startTime + " ms");
+                    }
+                }
+                return startTime;
+            } catch (IOException e) {
+                //noinspection DuplicateStringLiteralInspection
+                log.error("getStartTime: Unable to open existing file '"
+                          + progressFile + "'. Returning 0");
+                return 0;
+            }
+        }
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("getStartTime: Could not access file '" + progressFile
+                  + "'. Returning 0");
+        return 0;
+    }
+
+    static long getTimestamp(File progressFile, String xml) {
+        Matcher matcher = TIMESTAMP_PATTERN.matcher(xml);
+        if (!matcher.matches() || matcher.groupCount() != 6) {
+            //noinspection DuplicateStringLiteralInspection
+            log.error("getTimestamp: Could not locate timestamp in "
+                      + "file '" + progressFile + "' containing '"
+                      + xml + "'. Returning 0");
+            return 0;
+        }
+        return new GregorianCalendar(Integer.parseInt(matcher.group(1)),
+                                     Integer.parseInt(matcher.group(2))-1,
+                                     Integer.parseInt(matcher.group(3)),
+                                     Integer.parseInt(matcher.group(4)),
+                                     Integer.parseInt(matcher.group(5)),
+                                     Integer.parseInt(matcher.group(6))).
+                getTimeInMillis();
+    }
 
     /* ObjectFilter interface */
 
     public boolean hasNext() {
-        return false;  // TODO: Implement this
+        if (eooReached) {
+            return false;
+        }
+        if (!recordIterator.hasNext()) {
+            eooReached = true;
+            return false;
+        }
+        return true;
     }
 
     public Payload next() {
-        return null;  // TODO: Implement this
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("next() called");
+        if (!hasNext()) {
+            throw new NoSuchElementException("No more Records available");
+        }
+        Payload payload = new Payload(recordIterator.next());
+        recordCounter++;
+        lastRecordTimestamp = payload.getRecord().getLastModified();
+        if (maxReadRecords != -1 && maxReadRecords <= recordCounter) {
+            log.debug("Reached maximum number of Records to read ("
+                      + maxReadRecords + ")");
+            eooReached = true;
+        }
+        if (maxReadSeconds != -1 &&
+            maxReadSeconds * 1000 <= System.currentTimeMillis() - startTime) {
+            log.debug("Reached maximum allow time usage ("
+                      + maxReadSeconds + ") seconds");
+            eooReached = true;
+        }
+        return payload;
     }
 
     public void remove() {
@@ -199,7 +325,32 @@ public class RecordReader implements ObjectFilter {
          return true;
      }
 
+    /**
+     * If success is true and persistence enabled, the current progress in the
+     * harvest is stored. If success is false, no progress is stored.
+     * @param success whether the while ingest has been successfull or not.
+     */
     public void close(boolean success) {
-        // TODO: Store progress state, close down connection
+        //noinspection DuplicateStringLiteralInspection
+        log.debug("close(" + success + ") entered");
+        eooReached = true;
+        if (success) {
+            writeProgress();
+        }
+        // TODO: Close down Access-connection
+    }
+
+    private void writeProgress() {
+        if (usePersistence && recordCounter > 0) {
+            log.debug("Storing progress in '" + progressFile + "'");
+            try {
+                Files.saveString(String.format(TIMESTAMP_FORMAT,
+                                               lastRecordTimestamp),
+                                 progressFile);
+            } catch (IOException e) {
+                log.error("close(true): Unable to store progress in file '"
+                          + progressFile + "'");
+            }
+        }
     }
 }
