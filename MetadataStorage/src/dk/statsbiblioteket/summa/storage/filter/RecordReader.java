@@ -27,11 +27,13 @@ import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.storage.io.Access;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
+import java.io.File;
 
 /**
  * Retrieves Records from storage based on the criteria given in the properties.
@@ -58,11 +60,34 @@ public class RecordReader implements ObjectFilter {
      * </p><p>
      * The progress file is resolved to the default dir if it is not absolute.
      * </p><p>
-     * This property id optional. Default is "progress.xml".
+     * This property is optional. Default is "<base>.progress.xml",
+     * for example "horizon.progress.xml".
+     * If no base is defined, the default value is "progress.xml".
      */
     public static final String CONF_PROGRESS_FILE =
-            "summa.storage.RecordReader.MetadataStorage";
-    public static final String DEFAULT_PROGRESS_FILE = "progress.xml";
+            "summa.storage.RecordReader.progress-file";
+    public static final String DEFAULT_PROGRESS_FILE_POSTFIX = "progress.xml";
+
+    /**
+     * If true, the state of progress is stored in {@link #CONF_PROGRESS_FILE}.
+     * This means that new runs will continue where the previous run left.
+     * If no progress-file exists, a new one will be created.
+     * </p><p>
+     * This property is optional. Default is true.
+     */
+    public static final String CONF_USE_PERSISTENCE =
+            "summa.storage.RecordReader.use-persistence";
+    public static final boolean DEFAULT_USE_PERSISTENCE = true;
+
+    /**
+     * If true, any existing progress is ignored and the harvest from the
+     * Storage is restarted.
+     * </p><p>
+     * This property is optional. Default is false.
+     */
+    public static final String CONF_START_FROM_SCRATCH =
+            "summa.storage.RecordReader.start-from-scratch";
+    public static final boolean DEFAULT_START_FROM_SCRATCH = false;
 
     /**
      * The maximum number of Records to read before signalling EOF onwards in
@@ -95,22 +120,48 @@ public class RecordReader implements ObjectFilter {
     public static final String DEFAULT_BASE = "";
 
     private Access access;
+    private File progressFile;
+    private boolean usePersistence = DEFAULT_USE_PERSISTENCE;
+    private boolean startFromScratch = DEFAULT_START_FROM_SCRATCH;
+    private int maxReadRecords = DEFAULT_MAX_READ_RECORDS;
+    private int maxReadSeconds = DEFAULT_MAX_READ_SECONDS;
+    private String base = DEFAULT_BASE;
 
     /**
-     * Connects to the Storage specified in the configuration, but delays the
-     * extraction of Records until the first call to {@link #hasNext()},
-     * {@link #next()} or {@link #pump()}
+     * Connects to the Storage specified in the configuration and request an
+     * iteration of the Records specified by the properties.
      * @param configuration contains setup information.
      * @see {@link #CONF_BASE}.
      * @see {@link #CONF_MAX_READ_RECORDS}.
      * @see {@link #CONF_MAX_READ_SECONDS}.
      * @see {@link #CONF_METADATA_STORAGE}.
      * @see {@link #CONF_PROGRESS_FILE}.
+     * @see {@link #CONF_START_FROM_SCRATCH}.
+     * @see {@link #CONF_USE_PERSISTENCE}.
      */
     public RecordReader(Configuration configuration) {
         log.trace("Constructing RecordReader");
         access = FilterCommons.getAccess(configuration, CONF_METADATA_STORAGE);
-        // TODO: Extract properties for RecordReader
+        base = configuration.getString(CONF_BASE, DEFAULT_BASE);
+        String progressFileString =
+                configuration.getString(CONF_PROGRESS_FILE, null);
+        if (progressFileString == null || "".equals(progressFileString)) {
+            progressFile = new File(("".equals(base) ? "" : base + ".")
+                                    + DEFAULT_PROGRESS_FILE_POSTFIX);
+            log.debug("No progress-file defined in key " + CONF_PROGRESS_FILE
+                      + ". Constructing progress file '" + progressFile + "'");
+        }
+        progressFile = progressFile.getAbsoluteFile();
+        usePersistence = configuration.getBoolean(CONF_USE_PERSISTENCE,
+                                                  DEFAULT_USE_PERSISTENCE);
+        startFromScratch = configuration.getBoolean(CONF_START_FROM_SCRATCH,
+                                                    DEFAULT_START_FROM_SCRATCH);
+        maxReadRecords = configuration.getInt(CONF_MAX_READ_RECORDS,
+                                              DEFAULT_MAX_READ_RECORDS);
+        maxReadSeconds = configuration.getInt(CONF_MAX_READ_SECONDS,
+                                              DEFAULT_MAX_READ_SECONDS);
+
+        // TODO: Get persistent state, get iterator from access
         log.trace("RecordReader constructed, ready for pumping");
     }
 
