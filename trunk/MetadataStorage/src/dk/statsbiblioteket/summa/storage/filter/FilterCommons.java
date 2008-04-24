@@ -53,7 +53,8 @@ public class FilterCommons {
      */
     public static Access getAccess(Configuration configuration,
                                    String accessKey) {
-        log.trace("Constructing RecordWriter");
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("getAccess(..., " + accessKey + ") called");
         String accessPoint;
         try {
             accessPoint = configuration.getString(accessKey);
