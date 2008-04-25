@@ -228,7 +228,7 @@
                 <include name="jmx.password"/>
                 <include name="jmxremote.access"/>
             </zipfileset>
-
+                                                                                
             <zipfileset dir="${dist.dir}/bin" prefix="${prefix}/bin" filemode="755">
                 <include name="*"/>
             </zipfileset>
@@ -345,6 +345,111 @@
         <delete dir="${tmp.dir}"/>
     </target>
 
+    <target name=".test-ingest-fagref.bundle" depends=".jar, test.compile">
+        <property name="bundle-id" value="test-ingest-fagref"/>
+
+        <mkdir dir="${tmp.dir}"/>
+
+        <!-- Create jar file for test service -->
+        <jar basedir="${test.build.dir}" compress="true" jarfile="${tmp.dir}/${bundle-id}-service-${summa.version}.jar"/>
+
+        <!-- Roll service bundle -->
+        <copy todir="${tmp.dir}">
+            <fileset dir="${test.src.dir}" includes="**/*.xml"/>
+        </copy>
+        <replace value="!not found!" propertyfile="../build.properties"
+                 dir="${tmp.dir}">
+            <replacefilter
+                token="@project.version@"
+                value="lib/summa-common-${summa.version}.jar"/>
+            <replacefilter
+                token="@release.jar@"
+                value="${release.jar}"/>
+            <replacefilter
+                token="@summa.version@"
+                value="${summa.version}"/>
+        </replace>
+
+        <zip destfile="${dist.dir}/${bundle-id}.bundle">
+
+            <zipfileset file="${tmp.dir}/${bundle-id}-service-${summa.version}.jar"/>
+
+            <zipfileset file="${tmp.dir}/${bundle-id}/service.xml"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.common}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.storage}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.ingest}"/>
+            <zipfileset prefix="lib" file="${summa.lib.commons-logging}"/>
+            <zipfileset prefix="lib" file="${summa.lib.log4j}"/>
+            <zipfileset prefix="lib" file="${summa.lib.sbutil}"/>
+            <zipfileset prefix="lib" file="${release.jar}"/>
+
+            <zipfileset prefix="config" file="${test.src.dir}/${bundle-id}/config/configuration.xml"/>
+            <zipfileset prefix="config" file="${basedir}/config/log4j.xml"/>
+
+            <zipfileset dir="${test.src.dir}/${bundle-id}/config" prefix="config" filemode="600">
+                <include name="jmx.password"/>
+                <include name="jmx.access"/>
+                <include name="policy"/>
+            </zipfileset>
+
+        </zip>
+
+        <delete dir="${tmp.dir}"/>
+    </target>
+
+    <target name=".test-index-fagref.bundle" depends=".jar, test.compile">
+        <property name="bundle-id" value="test-index-fagref"/>
+
+        <mkdir dir="${tmp.dir}"/>
+
+        <!-- Create jar file for test service -->
+        <jar basedir="${test.build.dir}" compress="true" jarfile="${tmp.dir}/${bundle-id}-service-${summa.version}.jar"/>
+
+        <!-- Roll service bundle -->
+        <copy todir="${tmp.dir}">
+            <fileset dir="${test.src.dir}" includes="**/*.xml"/>
+        </copy>
+        <replace value="!not found!" propertyfile="../build.properties"
+                 dir="${tmp.dir}">
+            <replacefilter
+                token="@project.version@"
+                value="lib/summa-common-${summa.version}.jar"/>
+            <replacefilter
+                token="@release.jar@"
+                value="${release.jar}"/>
+            <replacefilter
+                token="@summa.version@"
+                value="${summa.version}"/>
+        </replace>
+
+        <zip destfile="${dist.dir}/test-index-fagref.bundle">
+
+            <zipfileset file="${tmp.dir}/${bundle-id}-service-${summa.version}.jar"/>
+
+            <zipfileset file="${tmp.dir}/${bundle-id}/service.xml"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.common}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.storage}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.index}"/>
+            <zipfileset prefix="lib" file="${summa.lib.commons-logging}"/>
+            <zipfileset prefix="lib" file="${summa.lib.log4j}"/>
+            <zipfileset prefix="lib" file="${summa.lib.sbutil}"/>
+            <zipfileset prefix="lib" file="${basedir}/../${summa.lib.lucene}"/>
+            <zipfileset prefix="lib" file="${release.jar}"/>
+
+            <zipfileset prefix="config" file="${test.src.dir}/${bundle-id}/config/configuration.xml"/>
+            <zipfileset prefix="config" file="${basedir}/config/log4j.xml"/>
+
+            <zipfileset dir="${test.src.dir}/${bundle-id}/config" prefix="config" filemode="600">
+                <include name="jmx.password"/>
+                <include name="jmx.access"/>
+                <include name="policy"/>
+            </zipfileset>
+
+        </zip>
+
+        <delete dir="${tmp.dir}"/>
+    </target>
+
     <target name="bundle-storage" depends=".jar, compile">
         <mkdir dir="${tmp.dir}"/>
 
@@ -442,6 +547,6 @@
         <delete dir="${tmp.dir}"/>
     </target>
 
-    <target name="all" depends="release, .test-1.bundle, .test-client-1.bundle, bundle-storage, .test-data, .test-ingest-1.bundle"/>
+    <target name="all" depends="release, .test-1.bundle, .test-client-1.bundle, bundle-storage, .test-data, .test-ingest-1.bundle, .test-ingest-fagref.bundle, .test-index-fagref.bundle"/>
 
 </project>
