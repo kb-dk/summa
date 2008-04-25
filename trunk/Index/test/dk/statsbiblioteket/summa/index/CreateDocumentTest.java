@@ -1,6 +1,5 @@
 package dk.statsbiblioteket.summa.index;
 
-import java.net.URL;
 import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
@@ -51,8 +50,8 @@ public class CreateDocumentTest extends TestCase implements ObjectFilter {
         XMLTransformer transformer = new XMLTransformer(conf);
         transformer.setSource(this);
 
-        CreateDocument creator =
-                new CreateDocument(Configuration.newMemoryBased());
+        DocumentCreator creator =
+                new DocumentCreator(Configuration.newMemoryBased());
         creator.setSource(transformer);
 
         assertTrue("The chain must have an element", creator.hasNext());

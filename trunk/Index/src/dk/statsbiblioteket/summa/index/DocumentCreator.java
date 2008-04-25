@@ -68,8 +68,8 @@ import org.w3c.dom.Node;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 // TODO: Port boost from stable
-public class CreateDocument extends ObjectFilterImpl {
-    private static Log log = LogFactory.getLog(CreateDocument.class);
+public class DocumentCreator extends ObjectFilterImpl {
+    private static Log log = LogFactory.getLog(DocumentCreator.class);
 
     /**
      * Builder for building DOM objects out of SummaDocumentXML.
@@ -99,7 +99,7 @@ public class CreateDocument extends ObjectFilterImpl {
      * @param conf the configuration for CreateDocument.
      */
     @SuppressWarnings({"UnusedDeclaration"})
-    public CreateDocument(Configuration conf) {
+    public DocumentCreator(Configuration conf) {
         // No prooperties as of now
         initXPaths();
         createDocumentBuilder();

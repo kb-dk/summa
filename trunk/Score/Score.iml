@@ -19,6 +19,7 @@
     <orderEntry type="library" name="lucene-core-2.3.0" level="project" />
     <orderEntry type="module" module-name="MetadataStorage" />
     <orderEntry type="module" module-name="Ingest" />
+    <orderEntry type="module" module-name="Index" />
     <orderEntryProperties />
   </component>
 </module>

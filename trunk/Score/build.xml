@@ -50,6 +50,7 @@
     <path id="lib.internal">    
         <pathelement location="../Common/${summa.classes.dir}"/>
         <pathelement location="../Ingest/${summa.classes.dir}"/>
+        <pathelement location="../Index/${summa.classes.dir}"/>
         <pathelement location="../MetadataStorage/${summa.classes.dir}"/>
     </path>
     

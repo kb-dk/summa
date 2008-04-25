@@ -124,6 +124,19 @@ public class IngestTest extends NoExitTestCase {
         Files.saveString(NO_RECORDS, new File(sourceRoot, "none.xml"));
         Files.saveString(INVALID_RECORDS, new File(sourceRoot, "invalid.xml"));
         Files.saveString("Dummy content", new File(sourceRoot, "dummy.dummy"));
+        deleteOldStorages();
+    }
+    public void tearDown() throws Exception {
+        super.tearDown();
+        //Files.delete(sourceRoot);
+    }
+
+    @SuppressWarnings({"DuplicateStringLiteralInspection"})
+    public static final File sourceRoot =
+            new File(new File(System.getProperty("java.io.tmpdir")),
+                     "IngestTest");
+
+    public static void deleteOldStorages() throws Exception {
         for (int i = 0 ; i < 40 ; i++) { // Up to the number of distinct tests
             File attempDelete =
                     new File(System.getProperty("java.io.tmpdir"),
@@ -138,16 +151,6 @@ public class IngestTest extends NoExitTestCase {
             }
         }
     }
-    public void tearDown() throws Exception {
-        super.tearDown();
-        //Files.delete(sourceRoot);
-    }
-
-    @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    public static final File sourceRoot =
-            new File(new File(System.getProperty("java.io.tmpdir")),
-                     "IngestTest");
-
 
     public static File getStorageLocation() {
         return new File(System.getProperty("java.io.tmpdir"),
@@ -333,7 +336,8 @@ public class IngestTest extends NoExitTestCase {
         // FIXME: Use classloader to locate the test root
         File filterConfFile = new File("Score/test/data/5records/"
                                        + "filter_setup.xml").getAbsoluteFile();
-        assertTrue("The filter conf. should exist", filterConfFile.exists());
+        assertTrue("The filter conf. '" + filterConfFile + "' should exist",
+                   filterConfFile.exists());
         Configuration filterConf = Configuration.load(filterConfFile.getPath());
         assertNotNull("Configuration should contain "
                       + FilterControl.CONF_CHAINS,

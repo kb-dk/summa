@@ -174,4 +174,8 @@ public class FilterControl extends StateThread implements Configurable,
         return sw.toString();
     }
 
+    // TODO: Consider is this should not be accessible
+    public List<FilterPump> getPumps() {
+        return pumps;
+    }
 }

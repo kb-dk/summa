@@ -47,7 +47,7 @@ public class XMLSplitterFilter implements ObjectFilter {
     private static Log log = LogFactory.getLog(XMLSplitterFilter.class);
 
     /**
-     * The prefix to prepend to any calculated Record-ids.
+     * The prefix to prepend to any calcuopenilated Record-ids.
      * </p><p>
      * Default: "".
      */

@@ -214,7 +214,7 @@ public class IndexController extends StateThread implements ObjectFilter,
             indexRoot = new File(DEFAULT_INDEX_ROOT_LOCATION);
         }
         try {
-            indexRoot = Resolver.getPersistentFile(indexRoot);
+            indexLocation = Resolver.getPersistentFile(indexRoot);
         } catch (Exception e) {
             throw new ConfigurationException("Exception resolving '"
                                              + indexRoot
@@ -393,6 +393,9 @@ public class IndexController extends StateThread implements ObjectFilter,
     }
     public synchronized void open(File indexRoot, boolean createNewIndex) throws
                                                                    IOException {
+        if (indexRoot == null) {
+            throw new IllegalArgumentException("indexRoot must not be null");
+        }
         //noinspection DuplicateStringLiteralInspection
         log.info("open(" + indexRoot + ") called");
         if (indexIsOpen) {

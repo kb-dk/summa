@@ -138,4 +138,12 @@ public class FilterPump extends StateThread implements Configurable {
         sw.append("pump");
         return sw.toString();
     }
+
+    /**
+     * @return a shallow copy of the list of the filters in this pump.
+     */
+    public List<Filter> getFilters() {
+        return new ArrayList<Filter>(filters);
+    }
+
 }

@@ -152,6 +152,11 @@ public class FilterService extends ServiceBase implements FilterChainHandler {
         }
     }
 
+    // TODO: Consider if this should be replaced by more interface methods
+    public FilterControl getFilterControl() {
+        return filterControl;
+    }
+
 
 
 }
