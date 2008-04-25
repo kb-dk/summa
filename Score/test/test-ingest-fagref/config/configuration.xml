@@ -2,13 +2,19 @@
     <xproperties>
         <entry>
             <key>summa.score.service.port</key>
-            <value class="int">2772</value>
+            <value class="int">2777</value>
         </entry>
         <entry>
             <key>summa.score.service.registry.port</key>
             <value class="int">2767</value>
         </entry>
 
+        <!-- The class implementing the Service interface -->
+        <entry>
+            <key>score.launcher.service.class</key>
+            <value class="string">dk.statsbiblioteket.summa.score.service.FilterService</value>
+        </entry>
+        
         <entry>
             <key>FilterPump.ChainName</key>
             <value class="string">Simple file-based ingest</value>
@@ -37,7 +43,7 @@
                         </entry>
                         <entry>
                             <key>summa.ingest.filereader.root_folder</key>
-                            <value class="string">/tmp/summatest/data/5records</value>
+                            <value class="string">/tmp/summatest/data/fagref</value>
                         </entry>
                         <entry>
                             <key>summa.ingest.filereader.recursive</key>
@@ -62,23 +68,23 @@
                         </entry>
                         <entry>
                             <key>summa.ingest.xmlsplitter.id_prefix</key>
-                            <value class="string">myprefix</value>
+                            <value class="string">fagref:</value>
                         </entry>
                         <entry>
-                            <key>summa.ingest.xmlsplitter.collapse_profix</key>
+                            <key>summa.ingest.xmlsplitter.collapse_prefix</key>
                             <value class="boolean">true</value>
                         </entry>
                         <entry>
                             <key>summa.ingest.xmlsplitter.record_element</key>
-                            <value class="string">record</value>
+                            <value class="string">fagref</value>
                         </entry>
                         <entry>
                             <key>summa.ingest.xmlsplitter.id_element</key>
-                            <value class="string">record#id</value>
+                            <value class="string">email</value>
                         </entry>
                         <entry>
                             <key>summa.ingest.xmlsplitter.base</key>
-                            <value class="string">testbase</value>
+                            <value class="string">fagref</value>
                         </entry>
                         <entry>
                             <key>summa.ingest.xmlsplitter.preserve_namespaces</key>
@@ -99,7 +105,7 @@
                         </entry>
                         <entry>
                             <key>summa.storage.RecordWriter.MetadataStorage</key>
-                            <value class="string">//localhost:27000/TestStorage</value>
+                            <value class="string">//localhost:2767/TestStorage</value>
                         </entry>
                     </value>
                 </entry>
