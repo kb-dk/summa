@@ -56,8 +56,6 @@ public class ClusterProviderImpl extends UnicastRemoteObject implements ClusterP
     protected Configuration conf;
     /** Dendrogram. */
     protected Dendrogram dendrogram;
-    /** Merger to get data from*/
-    private ClusterMerger merger;
 
     /** Positive Fields Pattern. */
     protected Pattern pFields;
@@ -239,14 +237,6 @@ public class ClusterProviderImpl extends UnicastRemoteObject implements ClusterP
 
     public void reload() {
         //TODO make reload make sense again !!!
-        if (this.merger==null) {
-            loadDendrogram();
-        } else {
-            this.dendrogram = this.merger.getNewDendrogram();
-        }
-    }
-
-    public void registerMerger(ClusterMerger merger) {
-        this.merger = merger;
+        loadDendrogram();
     }
 }

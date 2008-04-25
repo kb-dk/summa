@@ -24,6 +24,7 @@ package dk.statsbiblioteket.summa.clusterextractor.math;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.clusterextractor.data.Cluster;
+import dk.statsbiblioteket.summa.clusterextractor.data.ClusterRepresentative;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -205,7 +206,7 @@ public class IncrementalCentroid {
      * @return CentroidVector
      * TODO: loose getCutCentroidCluster method (not used)
      */
-    public Cluster getCutCentroidCluster(int maxSize, double minValue,
+    public ClusterRepresentative getCutCentroidCluster(int maxSize, double minValue,
                                              boolean normalise) {
         int denominator = numberOfPoints;
         if (normaliseWhenAdding) {denominator = 1;}

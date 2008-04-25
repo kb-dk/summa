@@ -37,7 +37,7 @@ import java.util.HashSet;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "bam")
-public class ClusterSet extends HashSet<Cluster> {
+public class ClusterSet extends HashSet<ClusterRepresentative> {
     protected static final Log log = LogFactory.getLog(ClusterSet.class);
     private String builderId;
 

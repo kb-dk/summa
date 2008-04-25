@@ -25,23 +25,23 @@ package dk.statsbiblioteket.summa.clusterextractor.data;
 import dk.statsbiblioteket.summa.clusterextractor.math.SparseVector;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
-import java.io.Serializable;
 import java.util.Map;
 
 /**
- * A Cluster object represents a cluster with a name and a centroid vector.
+ * Cluster is a simple cluster representative with a name and centroid vector.
+ * Cluster can also hold a similarity threshold, a 'number of points used in
+ * build of centroid vector'attribute, an 'expected size' attribute and a set
+ * of core points (map from vectors to ids).
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "bam")
-public class Cluster implements Serializable {
+public class Cluster implements ClusterRepresentative {
 
     /** Name of this cluster. */
     private String name;
     /** Centroid of this cluster as a {@link SparseVector}. */
     private SparseVector centroidVector;
-    /** Number of points used to build the centroid of this cluster. */
-    private int numberOfPointsInBuild;
 
     /**
      * Similarity threshold for this cluster.
@@ -49,12 +49,24 @@ public class Cluster implements Serializable {
      * considered part of this cluster?
      */
     private double similarityThreshold;
-
+    /** Number of points used to build the centroid of this cluster. */
+    private int numberOfPointsInBuild;
     /** Expected size of this cluster. */
     private int expectedSize;
 
     /** Set of 'core documents' in this cluster (map from vectors to id's). */
     private transient Map<SparseVector, String> corePoints;
+
+    /**
+     * Construct a Cluster with the given name, centroid and # points in build.
+     * @param name name of cluster
+     * @param centroidVector centroid of cluster
+     */
+    public Cluster(String name, SparseVector centroidVector) {
+        this.name = name;
+        this.centroidVector = centroidVector;
+        this.corePoints = null;
+    }
 
     /**
      * Construct a Cluster with the given name, centroid and # points in build.
@@ -94,14 +106,6 @@ public class Cluster implements Serializable {
     }
 
     /**
-     * Get number of points used to build the centroid of this Cluster.
-     * @return number of points used to build centroid
-     */
-    public int getNumberOfPointsInBuild() {
-        return numberOfPointsInBuild;
-    }
-
-    /**
      * Get similarity threshold of this cluster.
      * I.e. how similar to the centroid should a given vector be to be
      * considered part of this cluster?
@@ -119,6 +123,22 @@ public class Cluster implements Serializable {
      */
     public void setSimilarityThreshold(double similarityThreshold) {
         this.similarityThreshold = similarityThreshold;
+    }
+
+    /**
+     * Get number of points in build of centroid vector of this cluster.
+     * @return number of points in build
+     */
+    public int getNumberOfPointsInBuild() {
+        return numberOfPointsInBuild;
+    }
+
+    /**
+     * Set number of points in build of centroid vector of this cluster.
+     * @param numberOfPointsInBuild number of points in build
+     */
+    public void setNumberOfPointsInBuild(int numberOfPointsInBuild) {
+        this.numberOfPointsInBuild = numberOfPointsInBuild;
     }
 
     /**
@@ -143,7 +163,7 @@ public class Cluster implements Serializable {
      * @return true if this object is the same as the argument; false otherwise
      */
     public boolean equals(Object o) {
-        if (o==null || !(o instanceof Cluster)) {
+        if (o==null || !(o instanceof ClusterRepresentative)) {
             return false;
         }
         Cluster other = (Cluster) o;
@@ -184,24 +204,4 @@ public class Cluster implements Serializable {
     public void setCorePoints(Map<SparseVector, String> corePoints) {
         this.corePoints = corePoints;
     }
-
-    /* TODO: can we calculate 'within-cluster variation' based upon a small
-     * TODO: set of core points, and do we need it?
-     * Calculate 'within-cluster variation' of this cluster.
-     * The within-cluster variation is a cluster quality measure, which should
-     * be minimised to optimise clusters...
-     * TODO: look up within-cluster variation formulas and test
-     * @return within-cluster variation
-    public double calculateWithinClusterVariation() {
-        if (content == null) {
-            return -1;
-        }
-        double sum = 0;
-        for (SparseVector x: content.keySet()) {
-            sum = sum + (1 - centroidVector.similarity(x));
-        }
-        return sum / content.size();
-    }
-     */
-
 }

@@ -56,18 +56,8 @@ public interface ClusterMerger extends Configurable {
     /** The String key to the join similarity threshold for centroids with the same name. */
     public static final String JOIN_SIMILARITY_THRESHOLD_SAME_NAME_KEY = "clustermerger.joinSimilarityThresholdSameName";
 
-    /*
-     * Upload new locally build centroid set from given machine, handle, file info.
-     * @param machineId the Id of the machine, which has build this vocabulary
-     * @param handle the handle to upload the file
-     * @param clusterSet the centroid set TODO remove centroid set parameter
-     */
-    public void uploadCentroidSet(String machineId, long handle, ClusterSet clusterSet);
-
     /**
      * Merge all known centroid sets to one dendrogram and push to local providers.
      */
     public void mergeCentroidSets();
-    public Dendrogram getNewDendrogram();
-    //TODO public long getNewDendrogram(int handle); ???
 }
