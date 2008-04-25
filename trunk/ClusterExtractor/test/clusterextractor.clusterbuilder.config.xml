@@ -80,11 +80,17 @@
     <entry key="clusterbuilder.SimilarityThresholdFraction">.6</entry>
 
     <!-- ****************************************************************** -->
-    <!-- ************** CLUSTER PROPERTIES ******************* -->
+    <!-- ************** CLUSTER AND BUILD PROPERTIES ********************** -->
     <!-- ****************************************************************** -->
 
     <!-- The recommended maximum size of a cluster TODO: max cluster size 100000 ? -->
-    <entry key="clusterbuilder.MaxClusterSize">1000</entry>
+    <entry key="clusterbuilder.MaxClusterSize">10000</entry>
+    <!-- The approximation factor determines how much of the index the
+         centroids will be based on. An approximation factor of k means
+         that only one out of k documents are used in the build.
+         I recommend keeping this as low as possible. 1 means no
+         approximation. 2 or 3 is acceptable... -->
+    <entry key="clusterbuilder.ApproxFactor">20</entry>
 
 </properties>
         

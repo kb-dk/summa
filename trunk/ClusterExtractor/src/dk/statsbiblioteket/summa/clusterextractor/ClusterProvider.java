@@ -61,10 +61,6 @@ public interface ClusterProvider extends Configurable {
      * Reload data structure(s) from disc.
      */
     public void reload();
-    /**
-     * Register the merger to get dendrogram from.
-     * TODO: register merger with provider or?
-     * @param merger ClusterMerger to get data from
-     */
-    public void registerMerger(ClusterMerger merger);
+
+    //TODO: register merger with provider or?
 }

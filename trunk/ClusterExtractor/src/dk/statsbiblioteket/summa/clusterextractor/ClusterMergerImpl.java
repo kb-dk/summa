@@ -142,7 +142,7 @@ public class ClusterMergerImpl extends UnicastRemoteObject implements ClusterMer
         DendrogramNode[] workArray = new DendrogramNode[centroids.size()*2+1];
         int size = centroids.size();
         int index = 0;
-        for (Cluster current: centroids) {
+        for (ClusterRepresentative current: centroids) {
             workArray[index] = new DendrogramNode(current);
             index++;
         }

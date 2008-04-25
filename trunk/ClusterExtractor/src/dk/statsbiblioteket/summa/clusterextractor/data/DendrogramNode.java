@@ -56,8 +56,8 @@ public class DendrogramNode extends Cluster {
      * Construct DendrogramNode from the given cluster (no children).
      * @param cluster Cluster of this DendrogramNode
      */
-    public DendrogramNode(Cluster cluster) {
-        this(cluster.getName(), cluster.getCentroid(), cluster.getNumberOfPointsInBuild());
+    public DendrogramNode(ClusterRepresentative cluster) {
+        this(cluster.getName(), cluster.getCentroid());
 
     }
 
@@ -67,10 +67,9 @@ public class DendrogramNode extends Cluster {
      *
      * @param name           name of cluster
      * @param centroidVector centroid of cluster
-     * @param numberOfPoints number of points used to calculate the centroid
      */
-    public DendrogramNode(String name, SparseVector centroidVector, int numberOfPoints) {
-        super(name, centroidVector, numberOfPoints);
+    public DendrogramNode(String name, SparseVector centroidVector) {
+        super(name, centroidVector);
         this.children = new HashSet<DendrogramNode>();
     }
 

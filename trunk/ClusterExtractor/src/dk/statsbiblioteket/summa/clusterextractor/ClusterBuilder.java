@@ -67,7 +67,7 @@ public interface ClusterBuilder extends Configurable {
     public static final String MIN_NUMBER_OF_FIELDS_KEY =
             "clusterbuilder.MinNumberOfFields";
 
-    // String keys to properties used when creating centroids (from queries)
+    // String keys to properties used when creating centroids
     public static final String NORMALISE_WHEN_ADDING_KEY =
             "clusterbuilder.NormaliseWhenAdding";
     public static final String OPTIMISE_EVERY_X_POINTS_KEY =
@@ -81,9 +81,10 @@ public interface ClusterBuilder extends Configurable {
     public static final String SIMILARITY_THRESHOLD_KEY =
             "clusterbuilder.SimilarityThresholdFraction";
 
-    // String keys to properties used when creating clusters
     public static final String MAX_CLUSTER_SIZE_KEY =
             "clusterbuilder.MaxClusterSize";
+    public static final String APPROX_FACTOR_KEY =
+            "clusterbuilder.ApproxFactor";
 
     /**
      * Build centroids based on index specified in configuration.
@@ -92,10 +93,5 @@ public interface ClusterBuilder extends Configurable {
      */
     public void buildCentroids();
 
-    /**
-     * Register the merger to send the build data to.
-     * TODO: register merger with builder or?
-     * @param merger ClusterMerger to send data to
-     */
-    public void registerMerger(ClusterMerger merger);
+    //TODO: register merger with builder or?
 }

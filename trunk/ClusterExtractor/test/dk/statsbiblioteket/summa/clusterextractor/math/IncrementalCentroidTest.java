@@ -22,7 +22,7 @@
  */
 package dk.statsbiblioteket.summa.clusterextractor.math;
 
-import dk.statsbiblioteket.summa.clusterextractor.data.Cluster;
+import dk.statsbiblioteket.summa.clusterextractor.data.ClusterRepresentative;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -75,7 +75,7 @@ public class IncrementalCentroidTest extends TestCase {
         vec = new SparseVectorMapImpl(entries);
         incCenStd.addPoint(vec);
 
-        Cluster cls = incCenStd.getCluster();
+        ClusterRepresentative cls = incCenStd.getCluster();
         System.out.println("cls = " + cls);
 
         System.out.println("cls.getCentroid().getCoordinates() = "

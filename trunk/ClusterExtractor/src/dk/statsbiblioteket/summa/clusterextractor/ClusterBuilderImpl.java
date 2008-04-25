@@ -54,13 +54,10 @@ public class ClusterBuilderImpl extends UnicastRemoteObject implements ClusterBu
     protected static final Log log = LogFactory.getLog(ClusterBuilderImpl.class);
     /** Configurations. */
     protected Configuration conf;
-    /** Index reader for the work index. */
-    protected IndexReader ir;
     /** Machine id for this provider. */
     protected String id;
-    /** The merger to upload data to. */
-    private ClusterMerger merger;
-
+    /** Storage and Index Access. */
+    private StorageAndIndexAccess access;
     /** Fields in which to look for candidate terms initially. */
     protected List<String> fieldsUsedInInit;
     /** Fields to use in vectors and queries. */
@@ -82,8 +79,8 @@ public class ClusterBuilderImpl extends UnicastRemoteObject implements ClusterBu
     public ClusterBuilderImpl(Configuration conf) throws RemoteException {
         super();
         this.conf = conf;
-        this.openIndexReader();
         this.id = conf.getString(LOCAL_MACHINE_ID_KEY);
+        this.access = new StorageAndIndexAccess(conf.getString(LOCAL_INDEX_PATH_KEY));
         fieldsUsedInInit = getFieldsToUseInInit();
         fieldsUsedInVectors = getFieldsToUseInVectors();
         String terms = conf.getString(TERM_TEXT_KEY);
@@ -99,44 +96,29 @@ public class ClusterBuilderImpl extends UnicastRemoteObject implements ClusterBu
         exportRemoteInterfaces();
     }
 
-    /**
-     * Open {@link IndexReader} to index specified in known {@link Configuration}.
-     * @return true if successfull, false otherwise
-     */
-    private boolean openIndexReader() {
-        String index_location = conf.getString(LOCAL_INDEX_PATH_KEY);
-        try {
-            this.ir = IndexReader.open(index_location);
-        } catch (IOException e) {
-            log.error("ClusterBuilderImpl constructor not able to open " +
-                    "IndexReader; index_location = " + index_location +
-                    "; the cluster builder does not work without " +
-                    "access to an index.", e);
-            return false;
-        }
-        return true;
+    public void buildCentroids() {
+        Set<String> candidateTerms = getCandidateTerms();
+        ClusterSet clusterSet = buildCentroidsUsingSearch(candidateTerms);
+
+        saveCentroids(clusterSet);
     }
 
-    public void buildCentroids() {
-        if (ir==null && !openIndexReader()) {
-            log.error("Centroids cannot be build without access to an index.");
-            return;
-        }
-
-        Set<String> candidateTerms = getCandidateTerms();
+    private ClusterSet buildCentroidsUsingSearch(Set<String> candidateTerms) {
         Map<String, Query> queries =
                 candidateTermsToQueries
                         (candidateTerms, fieldsUsedInInit);
+        return queriesToCentroids(queries);
+    }
 
-        ClusterSet clusterSet = queriesToCentroids(queries);
-        //TODO: loose the search
-        //ClusterSet tobe = buildCentroidsFromStorage(candidateTerms);
+    public void buildCentroids2() {
+        Set<String> candidateTerms = getCandidateTerms();
 
-        File file = saveCentroids(clusterSet);
-        //TODO: look up merger, get handle and move new centroid set to merger?
-        if (file != null && this.merger!=null) {
-            this.merger.uploadCentroidSet(this.id, -1, clusterSet);
-        }
+        int maxClusterSize = conf.getInt(MAX_CLUSTER_SIZE_KEY);
+        int approximationFactor = conf.getInt(APPROX_FACTOR_KEY);
+        ClusterSet clusterSet = buildCentroidsFromStorage(candidateTerms,
+                maxClusterSize, approximationFactor);
+
+        saveCentroids(clusterSet);
     }
 
     /**
@@ -144,9 +126,12 @@ public class ClusterBuilderImpl extends UnicastRemoteObject implements ClusterBu
      * If a candidateterm is in the record, the record is used in a
      * corresponding centroid. I think a split method will be necessary.
      * @param candidateTerms terms occurring often, but not too often in index
+     * @param maxClusterSize the maximum expected cluster size
+     * @param approximationFactor use one out of approx factor docs in build
      * @return ClusterSet
      */
-    public ClusterSet buildCentroidsFromStorage(Set<String> candidateTerms) {
+    public ClusterSet buildCentroidsFromStorage(Set<String> candidateTerms,
+                                                int maxClusterSize, int approximationFactor) {
         long startTime = System.currentTimeMillis();
         Map<String, IncrementalCentroid> centroids =
                 new HashMap<String, IncrementalCentroid>(candidateTerms.size());
@@ -154,11 +139,12 @@ public class ClusterBuilderImpl extends UnicastRemoteObject implements ClusterBu
                 new HashMap<String, List<Integer>>(candidateTerms.size());
         //Note this Map to id sets is potentially huge...
 
-        int maxClusterSize = conf.getInt(MAX_CLUSTER_SIZE_KEY);
-
         ClusterSet resultSet = new ClusterSet(this.id, candidateTerms.size());
 
         //20071212: We loop through index for now (we want storage access based on the indexer)
+        //get index reader
+        IndexReader ir = access.getIndexReader();
+        //TODO: remove index reader from method
         int maxDoc = ir.maxDoc();
         if (log.isTraceEnabled()) {
             log.trace("ClusterBuilderImpl.buildCentroidsFromStorage: maxDoc = " + maxDoc);
@@ -169,8 +155,10 @@ public class ClusterBuilderImpl extends UnicastRemoteObject implements ClusterBu
         SparseVector vec;
         IncrementalCentroid incCen;
         List<Integer> idSet;
-        for (int index=0; index<maxDoc; index++) {
-            vec = getVec(index);
+        //This method could be threaded, but we may not be able to so
+        //when changing to storage/index access provided by storage/index
+        for (int index=0; index<maxDoc; index = index + approximationFactor) {
+            vec = getVec(ir, index);
 
             feedback.beat();
             if (log.isTraceEnabled() && index%10000==0) {
@@ -199,11 +187,24 @@ public class ClusterBuilderImpl extends UnicastRemoteObject implements ClusterBu
                 //maybe we should normalise the vectors and only look at
                 //dimensions over a certain threshold
             }
+
         }
+
+        feedback.reset();
+        feedback.setExpectedTotal(centroids.size());
+        int count = 0;
 
         for (Map.Entry<String, IncrementalCentroid> entry: centroids.entrySet()) {
             incCen = entry.getValue();
-            if (incCen.getNumberOfPoints()>maxClusterSize) {
+            feedback.beat();
+            count++;
+            if (incCen.getNumberOfPoints()*approximationFactor>maxClusterSize) {
+                if (log.isTraceEnabled()) {
+                    log.trace("ClusterBuilderImpl.buildCentroidsFromStorage SPLIT ("
+                            + count + "/" + centroids.size() + "); ETA: "
+                            + feedback.getETAAsString(false));
+                }
+
                 ClusterSet splitCentroids =
                         split(incCen, idSets.get(entry.getKey()), maxClusterSize);
                     resultSet.addAll(splitCentroids);
@@ -227,10 +228,17 @@ public class ClusterBuilderImpl extends UnicastRemoteObject implements ClusterBu
      * @param maxClusterSize maximum size of clusters after split
      * @return set of clusters generated from the given id list
      */
-    private ClusterSet split(IncrementalCentroid bigCen,List<Integer> idList, int maxClusterSize) {
+    private ClusterSet split(IncrementalCentroid bigCen,List<Integer> idList,
+                             int maxClusterSize) {
         if (log.isTraceEnabled()) {
-            log.trace("ClusterBuilderImpl.split: split " + bigCen.getName() + " centroid.");
+            log.trace("ClusterBuilderImpl.split: split " + bigCen.getName() +
+                    " centroid (idList.size() = "+idList.size()+").");
         }
+
+        //get index reader
+        IndexReader ir = access.getIndexReader();
+        //TODO: remove index reader from method
+
         //first pick random seeds
         int numberOfSeeds = idList.size()/maxClusterSize + 1;
         int seedId;
@@ -239,7 +247,7 @@ public class ClusterBuilderImpl extends UnicastRemoteObject implements ClusterBu
         IncrementalCentroid[] centroidArray = new IncrementalCentroid[numberOfSeeds];
         for (int count = 0; count < numberOfSeeds; count++) {
             seedId = idList.remove((int) Math.random()*idList.size());
-            vec = getVec(seedId);
+            vec = getVec(ir, seedId);
             seedCentroid = new IncrementalCentroid(Integer.toString(seedId));
             seedCentroid.addPoint(vec);
             centroidArray[count] = seedCentroid;
@@ -251,8 +259,22 @@ public class ClusterBuilderImpl extends UnicastRemoteObject implements ClusterBu
         double similarity;
         double maxSim;
         int maxSimIndex;
+
+        Profiler feedback = new Profiler();
+        feedback.setExpectedTotal(idList.size());
+        int count = 0;
+
         for (Integer id : idList) {
-            vec = getVec(id);
+
+            feedback.beat();
+            count++;
+            if (log.isTraceEnabled() && count%1000==0) {
+                log.trace("ClusterBuilderImpl.split ("
+                        + count + "/" + idList.size() + "); ETA: "
+                        + feedback.getETAAsString(false));
+            }
+
+            vec = getVec(ir, id);
             maxSim = 0;
             maxSimIndex = 0;
             for (int centroidArrayIndex = 0; centroidArrayIndex < numberOfSeeds; centroidArrayIndex++) {
@@ -265,7 +287,6 @@ public class ClusterBuilderImpl extends UnicastRemoteObject implements ClusterBu
             }
             centroidArray[maxSimIndex].addPoint(vec);
         }
-
         //and create reasonable names
         ClusterSet resultSet = new ClusterSet(numberOfSeeds);
         Cluster cluster;
@@ -335,6 +356,12 @@ public class ClusterBuilderImpl extends UnicastRemoteObject implements ClusterBu
         //Array used for statistics on number of non-zero dimensions in doc vectors
         int[] numberOfVectorsWithThisNumberOfDiffTerms = new int[100];
 
+        //get index reader
+        IndexReader ir = access.getIndexReader();
+        //TODO: remove index reader from method
+        IndexSearcher is = new IndexSearcher(ir);
+        Hits hits;
+
         //iterate through all names and query entries; use queries to get hits
         //and use hits to create centroids
         int clusterCounter = 0;
@@ -343,8 +370,6 @@ public class ClusterBuilderImpl extends UnicastRemoteObject implements ClusterBu
         for (Map.Entry<String, Query> entry: namesToQueries.entrySet()) {
             feedback.beat();
 
-            Hits hits;
-            IndexSearcher is = new IndexSearcher(ir);
             try {
                 hits = is.search(entry.getValue());
             } catch (IOException e) {
@@ -371,7 +396,7 @@ public class ClusterBuilderImpl extends UnicastRemoteObject implements ClusterBu
             for (hitsIndex = 0; hitsIndex < hits.length() &&
                     hitsIndex < maxPointsToBuild; hitsIndex++) {
                 try {
-                    SparseVector vec = getVec(hits.id(hitsIndex), hits.score(hitsIndex));
+                    SparseVector vec = getVec(ir, hits.id(hitsIndex), hits.score(hitsIndex));
                     //if not zero-vector, add to initial cluster and centroid
                     if (vec!=null && !vec.equals(zero)) {
                         initialCluster.add(vec);
@@ -389,6 +414,9 @@ public class ClusterBuilderImpl extends UnicastRemoteObject implements ClusterBu
                             hitsIndex, e);
                 }
             }
+
+            
+
             //cut and normalise centroid vector, set properties
             Cluster cluster = incCentroid.getCutCentroidCluster(maxFinalSize);
             cluster.getCentroid().normalise();
@@ -458,22 +486,25 @@ public class ClusterBuilderImpl extends UnicastRemoteObject implements ClusterBu
     /**
      * Get the vector for the document with this document id.
      * Any stopwords are removed and all dimension names are converted to lowercase.
+     * @param ir index reader
      * @param docId a document id
      * @return the sparse vector for the document with the given doc id
      */
-    public SparseVector getVec(int docId) {
-        return getVec(docId, 1);
+    public SparseVector getVec(IndexReader ir, int docId) {
+        return getVec(ir, docId, 1);
     }
     /**
      * Get the vector for the document with this document id.
      * The vector entries are weighted with the given score.
      * Any stopwords are removed and all dimension names are converted to lowercase.
+     * @param ir index reader
      * @param docId a document id
      * @param score the score of this document relative to some Hits result
      * @return the sparse vector for the document with the given doc id
      *         weighted with the given score
      */
-    public SparseVector getVec(int docId, float score) {
+    public SparseVector getVec(IndexReader ir, int docId, float score) {
+        //TODO: remove index reader from method
         HashMap<String, Number> coordinates = new HashMap<String, Number>();
         for (String field : fieldsUsedInVectors) {
             TermFreqVector tfv = null;
@@ -567,6 +598,10 @@ public class ClusterBuilderImpl extends UnicastRemoteObject implements ClusterBu
         int minTermLocalSum = conf.getInt(MIN_TERM_LOCAL_SUM_KEY);
         int maxTermSum = conf.getInt(MAX_TERM_SUM_KEY);
 
+        //get index reader
+        IndexReader ir = access.getIndexReader();
+        //TODO: remove index reader from method
+
         Map<String, Integer> resultMap = new HashMap<String, Integer>();
         try {
             // look at all terms in index
@@ -598,7 +633,6 @@ public class ClusterBuilderImpl extends UnicastRemoteObject implements ClusterBu
 
         //get minimum number of fields, in which term text must occur
         int minNumberOfFields = conf.getInt(MIN_NUMBER_OF_FIELDS_KEY);
-
         Set<String> resultSet = new HashSet<String>();
         int tooFewFieldsCounter = 0; //statistics
         for (Map.Entry<String, Integer> entry: resultMap.entrySet()) {
@@ -670,6 +704,8 @@ public class ClusterBuilderImpl extends UnicastRemoteObject implements ClusterBu
      * in this list, are returned.
      * If the negative fields list is non-empty, only fields in index and NOT
      * in this list, are returned.
+     * If a list of fields in index is not accessible, the result is the fields
+     * in the positive list.
      * @param positiveFieldsKey String key to positive fields property
      * @param negativeFieldsKey String key to negative fields property
      * @return list of filtered fieldnames
@@ -680,24 +716,26 @@ public class ClusterBuilderImpl extends UnicastRemoteObject implements ClusterBu
         String nFields = conf.getString(negativeFieldsKey);
         Pattern pNFields = nFields == null || nFields.equals("") ? null : Pattern.compile(nFields);
 
-        List<String> fieldsToUseInInit = new LinkedList<String>();
-        Collection fieldNames = ir.getFieldNames(IndexReader.FieldOption.INDEXED_WITH_TERMVECTOR);
-        for (Object fieldObj: fieldNames) {
-            if (fieldObj instanceof String) {
-                String field = (String) fieldObj;
-                if ((pFields==null ||
-                        pFields.matcher(field).matches()) &&
-                        (pNFields==null ||
-                                !pNFields.matcher(field).matches())) {
-                    fieldsToUseInInit.add(field);
+        List<String> fieldsToUse = new LinkedList<String>();
+        Collection fieldNames = access.getFieldNames();
+        if (fieldNames!=null) {
+            for (Object fieldObj: fieldNames) {
+                if (fieldObj instanceof String) {
+                    String field = (String) fieldObj;
+                    if ((pFields==null ||
+                            pFields.matcher(field).matches()) &&
+                            (pNFields==null ||
+                                    !pNFields.matcher(field).matches())) {
+                        fieldsToUse.add(field);
+                    }
                 }
             }
+        } else {
+            if (fields != null) {
+                fieldsToUse.addAll(Arrays.asList(fields.split("|")));
+            }
         }
-        return fieldsToUseInInit;
-    }
-
-    public void registerMerger(ClusterMerger merger) {
-        this.merger = merger;
+        return fieldsToUse;
     }
 
     /**

@@ -80,12 +80,8 @@ public class WorkFlowTest extends TestCase {
         conf.importConfiguration(confBuilder2);
         provider2 = new ClusterProviderImpl(conf);
 
-        //register merger with builders and providers
-        builder1.registerMerger(merger);
-        builder2.registerMerger(merger);
-        provider1.registerMerger(merger);
-        provider2.registerMerger(merger);
-        
+        //register merger with builders and providers???
+
         //create test document
         doc = new Document();
         doc.add(new Field("title", "valentino", Field.Store.NO, Field.Index.TOKENIZED));
