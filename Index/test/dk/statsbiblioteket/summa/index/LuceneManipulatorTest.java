@@ -12,6 +12,7 @@ import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.unittest.LuceneUtils;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -63,7 +64,8 @@ public class LuceneManipulatorTest extends TestCase {
         }
         manipulator.close();
         logIndex();
-        verifyContent(ids);
+        LuceneUtils.verifyContent(
+                new File(location, LuceneManipulator.LUCENE_FOLDER), ids);
     }
 
     // TODO: Randomized deletions, additions and updated
@@ -84,7 +86,8 @@ public class LuceneManipulatorTest extends TestCase {
             profiler.beat();
         }
         manipulator.close();
-        verifyContent(ids);
+        LuceneUtils.verifyContent(
+                new File(location, LuceneManipulator.LUCENE_FOLDER), ids);
         System.out.println("Spend " + profiler.getSpendTime() + " on "
                            + docCount + " additions. Mean speed: "
                            + profiler.getBps() + " additions/second");
@@ -97,7 +100,8 @@ public class LuceneManipulatorTest extends TestCase {
             profiler.beat();
         }
         manipulator.close();
-        verifyContent(ids);
+        LuceneUtils.verifyContent(
+                new File(location, LuceneManipulator.LUCENE_FOLDER), ids);
         System.out.println("Spend " + profiler.getSpendTime() + " on "
                            + docCount + " updates. Mean speed: "
                            + profiler.getBps() + " updates/second");
@@ -116,46 +120,8 @@ public class LuceneManipulatorTest extends TestCase {
 
         manipulator.close();
         logIndex();
-        verifyContent(expected);
-    }
-
-    private void verifyContent(String[] ids) throws IOException {
-        IndexReader reader = IndexReader.open(
-                new File(location, LuceneManipulator.LUCENE_FOLDER));
-/*        List<String> indexIDs = new ArrayList<String>(reader.maxDoc());
-        TermEnum idEnum = reader.terms(new Term(Payload.RECORD_FIELD, ""));
-        while (idEnum.term() != null) {
-            if (!idEnum.term().field().equals(Payload.RECORD_FIELD)) {
-                break;
-            }
-            indexIDs.add(idEnum.term().text());
-            idEnum.next();
-        }*/
-        try {
-            int expectedCount = 0;
-            for (int i = 0 ; i < reader.maxDoc() ; i++) {
-                if (!reader.isDeleted(i)) {
-                    assertEquals("The id '" + ids[expectedCount]
-                                 + "' should be present in the "
-                                 + "index at position " + i,
-                                 ids[expectedCount],
-                                 reader.document(i).getValues(
-                                         IndexUtils.RECORD_FIELD)[0]);
-                    expectedCount++;
-                }
-            }
-            assertEquals("The number of checked ids should match",
-                         expectedCount, ids.length);
-        } finally {
-            reader.close();
-        }
-/*        for (String id: ids) {
-            assertTrue("The id '" + id + "' should be present in the index",
-                       indexIDs.contains(id));
-        }
-        assertEquals("The number of ids should match",
-                     ids.length, indexIDs.size());
-                     */
+        LuceneUtils.verifyContent(
+                new File(location, LuceneManipulator.LUCENE_FOLDER), expected);
     }
 
     @SuppressWarnings({"OverlyBroadCatchBlock"})

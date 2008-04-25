@@ -24,16 +24,24 @@ package dk.statsbiblioteket.summa.releasetest;
 
 import java.io.File;
 import java.net.URL;
+import java.rmi.RemoteException;
+import java.util.List;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.Streams;
+import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
+import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
+import dk.statsbiblioteket.summa.common.unittest.LuceneUtils;
 import dk.statsbiblioteket.summa.score.service.StorageService;
 import dk.statsbiblioteket.summa.score.service.FilterService;
 import dk.statsbiblioteket.summa.score.api.Status;
 import dk.statsbiblioteket.summa.storage.io.RecordIterator;
+import dk.statsbiblioteket.summa.index.LuceneManipulator;
+import dk.statsbiblioteket.summa.index.IndexController;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -47,8 +55,73 @@ public class IndexTest extends NoExitTestCase {
     public static final String TESTBASE = "fagref";
     public static final int NUM_RECORDS = 3;
 
+    public void setUp () throws Exception {
+        super.setUp();
+        IngestTest.deleteOldStorages();
+    }
+
     public void testIngestAndIndex() throws Exception {
         StorageService storage = fillStorage();
+    }
+
+    // TODO: Implement proper shutdown of single tests
+
+    /**
+     * Tests the workflow from filed on disk to finished index.
+     * @throws Exception if the workflow failed.
+     */
+    public void testWorkflow() throws Exception {
+        StorageService storage = fillStorage();
+
+        File INDEX_ROOT = new File(System.getProperty("java.io.tmpdir"),
+                                   "testindex");
+
+        // Index chain setup
+        URL xsltLocation =
+                Thread.currentThread().getContextClassLoader().getResource(
+                        "data/fagref/fagref_index.xsl");
+        assertNotNull("The original xslt location should not be null",
+                      xsltLocation);
+
+        String filterConfString =
+                Streams.getUTF8Resource("data/fagref/fagref_index_setup.xml");
+        filterConfString = filterConfString.replace("/tmp/summatest/data/"
+                                                    + "fagref/fagref_index.xsl",
+                                                    xsltLocation.toString());
+        filterConfString =
+                filterConfString.replace("/tmp/summatest/data/fagref",
+                                         INDEX_ROOT.toString());
+        assertFalse("Replace should work",
+                    filterConfString.contains("/tmp/summatest/data/fagref/"
+                                              + "fagref_index.xsl"));
+        File indexConfFile = new File(System.getProperty("java.io.tmpdir"),
+                                                          "indexConf.xml");
+        Files.saveString(filterConfString, indexConfFile);
+
+        assertTrue("The index conf. should exist", indexConfFile.exists());
+        Configuration filterConf = Configuration.load(indexConfFile.getPath());
+        assertNotNull("Configuration should contain "
+                      + FilterControl.CONF_CHAINS,
+                      filterConf.getString(FilterControl.CONF_CHAINS));
+
+        FilterService indexService = new FilterService(filterConf);
+        indexService.start();
+
+        waitForService(indexService);
+
+        List<Filter> filters =
+                indexService.getFilterControl().getPumps().get(0).getFilters();
+        File indexLocation = ((IndexController)filters.get(filters.size()-1)).
+                getIndexLocation();
+
+        String[] EXPECTED_IDS = new String[] {"fagref:gm@example.com",
+                                              "fagref:hj@example.com",
+                                              "fagref:jh@example.com"};
+        LuceneUtils.verifyContent(
+                new File(indexLocation, LuceneManipulator.LUCENE_FOLDER),
+                EXPECTED_IDS);
+
+        storage.stop();
     }
 
     /**
@@ -57,23 +130,28 @@ public class IndexTest extends NoExitTestCase {
      * @throws Exception if the fill failed.
      */
     public StorageService fillStorage() throws Exception {
-        URL dataLocation =
-                Thread.currentThread().getContextClassLoader().getResource(
-                        "data/fagref/fagref_testdata.txt");
-        assertNotNull("The data location should not be null", dataLocation);
-        File ingestRoot = new File(dataLocation.getFile()).getParentFile();
-
-        int TIMEOUT = 10000;
-
         // Storage
         Configuration storageConf = IngestTest.getStorageConfiguration();
         StorageService storage = new StorageService(storageConf);
         storage.start();
 
-        // FIXME: Use classloader to locate the test root
-        // TODO: Copy and replace %INGEST_ROOT%
-        File filterConfFile = new File("Score/test/data/5records/"
-                                       + "filter_setup.xml").getAbsoluteFile();
+        // Ingest
+        URL dataLocation =
+                Thread.currentThread().getContextClassLoader().getResource(
+                        "data/fagref/fagref_testdata.txt");
+        assertNotNull("The data location should not be null", dataLocation);
+        File ingestRoot = new File(dataLocation.getFile()).getParentFile();
+        String filterConfString =
+                Streams.getUTF8Resource("data/fagref/fagref_filter_setup.xml");
+        filterConfString =
+                filterConfString.replace("/tmp/summatest/data/fagref",
+                                         ingestRoot.toString());
+        assertFalse("Replace should work",
+                    filterConfString.contains("/tmp/summatest/data/fagref"));
+        File filterConfFile = new File(System.getProperty("java.io.tmpdir"),
+                                                          "filterConf.xml");
+        Files.saveString(filterConfString, filterConfFile);
+
         assertTrue("The filter conf. should exist", filterConfFile.exists());
         Configuration filterConf = Configuration.load(filterConfFile.getPath());
         assertNotNull("Configuration should contain "
@@ -83,14 +161,7 @@ public class IndexTest extends NoExitTestCase {
         FilterService ingester = new FilterService(filterConf);
         ingester.start();
 
-        long endTime = System.currentTimeMillis() + TIMEOUT;
-        while (!ingester.getStatus().getCode().equals(Status.CODE.stopped) &&
-               System.currentTimeMillis() < endTime) {
-            log.debug("Sleeping a bit");
-            Thread.sleep(100);
-        }
-        assertTrue("The ingester should have stopped by now",
-                   ingester.getStatus().getCode().equals(Status.CODE.stopped));
+        waitForService(ingester);
 
         RecordIterator recordIterator =
                 storage.getRecordsModifiedAfter(0, TESTBASE);
@@ -105,5 +176,18 @@ public class IndexTest extends NoExitTestCase {
         assertFalse("After " + NUM_RECORDS + " Records, iterator should finish",
                     recordIterator.hasNext());
         return storage;
+    }
+
+    private void waitForService(FilterService service) throws RemoteException,
+                                                          InterruptedException {
+        int TIMEOUT = 10000;
+        long endTime = System.currentTimeMillis() + TIMEOUT;
+        while (!service.getStatus().getCode().equals(Status.CODE.stopped) &&
+               System.currentTimeMillis() < endTime) {
+            log.debug("Sleeping a bit");
+            Thread.sleep(100);
+        }
+        assertTrue("The service '" + service + "' should have stopped by now",
+                   service.getStatus().getCode().equals(Status.CODE.stopped));
     }
 }

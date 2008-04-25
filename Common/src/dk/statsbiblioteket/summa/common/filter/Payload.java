@@ -145,14 +145,21 @@ public class Payload {
      * @return the id for the Payload if present, else null.
      */
     public String getId() {
-        String id = getStringData(IndexUtils.RECORD_FIELD);
-        if (id != null) {
-            return id;
+        try {
+            String id = getStringData(IndexUtils.RECORD_FIELD);
+            if (id != null) {
+                return id;
+            }
+            if (getRecord() != null) {
+                return getRecord().getId();
+            }
+        } catch (Exception e) {
+            log.error("Exception extracting ID from payload '"
+                      + super.toString() + "'. Returning null", e);
+            return null;
         }
-        if (getRecord() != null) {
-            return getRecord().getId();
-        }
-        log.debug("Could not extract ID for payload '" + this + "'");
+        log.debug("Could not extract ID for payload '"
+                  + super.toString() + "'");
         return null;
     }
 
