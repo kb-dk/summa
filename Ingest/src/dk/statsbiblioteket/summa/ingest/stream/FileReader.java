@@ -28,6 +28,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Collections;
 import java.util.regex.Pattern;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -177,6 +178,7 @@ public class FileReader implements ObjectFilter {
         log.trace("checkInit: Filling todo");
         todo = new ArrayList<File>(100);
         fillToDo(root);
+        Collections.sort(todo);
         delivered = new ArrayList<Payload>(Math.max(1, todo.size()));
         started = true;
         log.info("Located " + todo.size() + " files matching pattern '"
@@ -255,6 +257,7 @@ public class FileReader implements ObjectFilter {
             Payload payload = new Payload(in);
             payload.getData().put(ORIGIN, current.getPath());
             log.debug("File '" + current + "' opened successfully");
+            System.out.println(delivered + " " + payload);
             delivered.add(payload);
             return payload;
         } catch (FileNotFoundException e) {
