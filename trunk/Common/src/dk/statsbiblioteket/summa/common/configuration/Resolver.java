@@ -42,12 +42,12 @@ public class Resolver {
      * by calling System.getProperty(SYSPROP_PERSISTENT_DIR).
      */
     public static final String SYSPROP_PERSISTENT_DIR =
-            "summa.score.client.persistent.dir";
+            "summa.control.client.persistent.dir";
 
     /**
      * Transforms the given file to an absolute path, if it is not absolute
      * already. The absolute location will be relative to the System property
-     * "summa.score.client.persistent.dir". If that system property does not
+     * "summa.control.client.persistent.dir". If that system property does not
      * exist, the location will be relative to the current dir.
      * @param file a file that should be relative to the persistent dir.
      * @return the file relative to the persistent dir.

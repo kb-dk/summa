@@ -37,7 +37,7 @@ import java.rmi.RemoteException;
 /**
  * Provides merge functionality of records whit content type MARC-XML.<br>
  * Most functionality is provided by specifying a proper MARC-XML xslt for initial normalizing.
- * @deprecated Multi volume is now part of the MetadataStorage.
+ * @deprecated Multi volume is now part of the Storage.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,

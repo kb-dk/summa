@@ -71,7 +71,7 @@ public class IndexController extends StateThread implements ObjectFilter,
     /**
      * The index root location defines the top-level for the index.
      * If the location is not an absolute path, it will be appended to the
-     * System property "summa.score.client.persistent.dir". If that system
+     * System property "summa.control.client.persistent.dir". If that system
      * property does not exist, the location will be relative to the current
      * dir.
      * </p><p>

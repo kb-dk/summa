@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+
+<!-- Configuration used by configuration-server.sh  -->
+<properties>
+
+    <entry key="summa.configuration.service.port">2768</entry>
+    <entry key="summa.configuration.service.name">ConfigurationStorage</entry>
+    <entry key="summa.configuration.registry.port">2767</entry>
+    <entry key="summa.configuration.registry.host">localhost</entry>
+
+    <entry key="summa.control.client.id">test-client-1</entry>
+    <entry key="summa.control.client.basepath">summa-control</entry>
+    <entry key="summa.control.client.service.port">5536</entry>
+    <entry key="summa.control.client.registry.port">2767</entry>
+    <entry key="summa.control.client.registry.host">localhost</entry>
+    <entry key="summa.control.client.repository.class">
+        dk.statsbiblioteket.summa.control.bundle.URLRepository
+    </entry>
+
+    <entry key="summa.control.repository.download.dir">tmp</entry>
+    <entry key="summa.control.repository.address">file:///tmp/summatest</entry>
+
+
+</properties>

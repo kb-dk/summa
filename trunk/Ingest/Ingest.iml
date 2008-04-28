@@ -11,7 +11,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="MetadataStorage" />
+    <orderEntry type="module" module-name="Storage" />
     <orderEntry type="module" module-name="Common" />
     <orderEntry type="library" name="commons-logging-1.1" level="project" />
     <orderEntry type="library" name="junit-3.8.1" level="project" />

@@ -31,7 +31,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
  * A Special Record with the following characteristics.
  *
  * Supports partial discovery where child records always can be added.
- * @deprecated Multi volume is now part of the MetadataStorage.
+ * @deprecated Multi volume is now part of the Storage.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,

@@ -38,7 +38,7 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * A Record is the atom data unit in summa. Is is used for ingesting to the
- * MetadataStorage as well as extracting from it.<br>
+ * Storage as well as extracting from it.<br>
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -81,13 +81,13 @@ public class Record implements Serializable, Comparable{
      */
     private String base;
     /**
-     * If true, the Record is/is to be marked as deleted in the MetadataStorage.
+     * If true, the Record is/is to be marked as deleted in the Storage.
      * Deleted records should not be indexed, but they can be viewed.
      */
     private boolean deleted = false;
     /**
      * If true, the Record should be indexed by the indexer. This is normally
-     * controlled by the MetadataStorage when it scans for multi-volumes.
+     * controlled by the Storage when it scans for multi-volumes.
      */
     private boolean indexable = true;
     /**

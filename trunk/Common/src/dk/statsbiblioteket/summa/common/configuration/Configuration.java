@@ -59,7 +59,7 @@ public class Configuration implements Serializable,
     private static Log log = LogFactory.getLog(Configuration.class);
 
     private ConfigurationStorage storage;
-    public static final String DEFAULT_RESOURCE = "score.properties.xml";
+    public static final String DEFAULT_RESOURCE = "control.properties.xml";
 
     /** System property defining where to fetch the configuration.
      * This can be a normal URL or an rmi path.*/
@@ -717,7 +717,7 @@ public class Configuration implements Serializable,
 
     /**
      * Get a {@link Configuration} object as defined by the system property
-     * {@code summa.score.configuration}. The value of this property
+     * {@code summa.control.configuration}. The value of this property
      * can be an URL or an rmi service path.
      * Use of URL means that the configuration is loaded only once and this
      * is static. Use of RMI means that every lookup in the configuration will
