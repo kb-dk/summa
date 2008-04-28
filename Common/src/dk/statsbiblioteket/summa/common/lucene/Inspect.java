@@ -55,9 +55,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         author = "te",
         comment = "Class and methods needs Javadoc")
 public class Inspect {
-    private static final String defaultIndex =
-//            "/home/te/projects/NetmusikSpeed/netmusik-index/full";
-    "/home/te/projects/NetmusikSpeed/storage-data";
+    private static final String defaultIndex = "/space/512th";
 
     private static BufferedReader in =
             new BufferedReader(new InputStreamReader(System.in));
@@ -65,7 +63,14 @@ public class Inspect {
     private static final long MAXSPEEDTIME = 1000 * 30;
     private List<String> fieldnames;
     private static final String COMMANDS =
-            "STATS, SPEED, HITS, TOPDOCS, QUIT, docID or FieldName";
+            "STATS [field divider], SPEED, HITS, TOPDOCS, QUIT, docID or "
+            + "FieldName\n\n"
+            + "STATS field divider example:\n"
+            + "=> STATS recordID :\n"
+            + "will extract all fields with the name 'recordID', then split "
+            + "the content of the field at : and count the frequency of the"
+            + "first token in the split.\n"
+            + "=> ";
 
     public static void main(String[] args) throws Exception {
         if (args.length == 0) {
@@ -78,14 +83,17 @@ public class Inspect {
         }
     }
 
+    public static final String STATS = "STATS";
     public Inspect(String indexLocation) throws Exception {
         openIndex(indexLocation);
         System.out.println("Simple Lucene Index inspection tool. Commands:");
         System.out.print(COMMANDS + ": ");
         String command = "";
         while (!"QUIT".equals(command = in.readLine())) {
-            if ("STATS".equals(command)) {
+            if (STATS.equals(command)) {
                 stats();
+            } else if (command.startsWith(STATS)) {
+                    stats(command.substring(STATS.length() + 1).split(" "));
             } else if ("SPEED".equals(command)) {
                 speed();
             } else if ("HITS".equals(command)) {
@@ -103,8 +111,58 @@ public class Inspect {
                                        + e.getMessage());*/
                 }
             }
-            System.out.print(COMMANDS + ": ");
+            System.out.print(COMMANDS);
         }
+    }
+
+    private void stats(String[] strings) throws IOException {
+        int feedback = ir.maxDoc() / 50;
+        if (strings.length != 2) {
+            System.err.println("STATS expected 2 arguments: field and divider");
+            return;
+        }
+        String fieldName = strings[0];
+        String divider = strings[1];
+        HashMap<String, Integer> buckets = new HashMap<String, Integer>(100);
+        TermEnum termEnum = ir.terms(new Term(fieldName, "*"));
+        int counter = 0;
+        int errors = 0;
+        while (termEnum.term() != null) {
+            if (!termEnum.term().field().equals(fieldName)) {
+                break;
+            }
+            String[] split = termEnum.term().text().split(divider, 2);
+            if (split.length != 2) {
+                errors++;
+                if (errors == 1) {
+                    System.err.println("Term '" + termEnum.term().text()
+                                       + "' in field " + fieldName
+                                       + "' did not divide by '" + divider
+                                       + "'. Skipping all following errors");
+                }
+            } else {
+                if (!buckets.containsKey(split[0])) {
+                    buckets.put(split[0], 1);
+                } else {
+                    buckets.put(split[0], buckets.get(split[0]) + 1);
+                }
+            }
+            if (counter++ % feedback == 0) {
+                System.out.print(".");
+            }
+            termEnum.next();
+        }
+        System.out.println("\nStats for field '" + fieldName + " with divider '"
+                           + divider + "'. DocCount: " + ir.maxDoc()
+                           + ". FieldTermCount: " + counter);
+        for (Map.Entry<String, Integer> bucket: buckets.entrySet()) {
+            System.out.println(bucket.getKey() + ": " + bucket.getValue());
+        }
+        System.out.flush();
+        if (errors > 0) {
+            System.err.println(errors + " terms could not be parsed");
+        }
+        System.out.println("");
     }
 
     private void hits() throws IOException {
