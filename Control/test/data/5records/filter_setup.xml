@@ -1,0 +1,109 @@
+<xproperties>
+    <xproperties>
+        <entry>
+            <key>summa.control.service.port</key>
+            <value class="int">2772</value>
+        </entry>
+        <entry>
+            <key>summa.control.service.registry.port</key>
+            <value class="int">2767</value>
+        </entry>
+
+        <entry>
+            <key>FilterPump.ChainName</key>
+            <value class="string">Simple file-based ingest</value>
+        </entry>
+        <entry>
+            <key>FilterControl.Chains</key>
+            <value class="string">SingleChain</value>
+        </entry>
+        <entry>
+            <key>FilterControl.Sequential</key>
+            <value class="boolean">true</value>
+        </entry>
+        <entry>
+            <key>SingleChain</key>
+            <value class="xproperties">
+                <entry>
+                    <key>FilterPump.Filters</key>
+                    <value class="string">Reader, Splitter, Writer</value>
+                </entry>
+                <entry>
+                    <key>Reader</key>
+                    <value class="xproperties">
+                        <entry>
+                            <key>FilterPump.FilterClass</key>
+                            <value class="string">dk.statsbiblioteket.summa.ingest.stream.FileReader</value>
+                        </entry>
+                        <entry>
+                            <key>summa.ingest.filereader.root_folder</key>
+                            <value class="string">/tmp/summatest/data/5records</value>
+                        </entry>
+                        <entry>
+                            <key>summa.ingest.filereader.recursive</key>
+                            <value class="boolean">true</value>
+                        </entry>
+                        <entry>
+                            <key>summa.ingest.filereader.file_pattern</key>
+                            <value class="string">.*\.xml</value>
+                        </entry>
+                        <entry>
+                            <key>summa.ingest.filereader.completed_postfix</key>
+                            <value class="string">.completed</value>
+                        </entry>
+                    </value>
+                </entry>
+                <entry>
+                    <key>Splitter</key>
+                    <value class="xproperties">
+                        <entry>
+                            <key>FilterPump.FilterClass</key>
+                            <value class="string">dk.statsbiblioteket.summa.ingest.stream.XMLSplitterFilter</value>
+                        </entry>
+                        <entry>
+                            <key>summa.ingest.xmlsplitter.id_prefix</key>
+                            <value class="string">myprefix</value>
+                        </entry>
+                        <entry>
+                            <key>summa.ingest.xmlsplitter.collapse_profix</key>
+                            <value class="boolean">true</value>
+                        </entry>
+                        <entry>
+                            <key>summa.ingest.xmlsplitter.record_element</key>
+                            <value class="string">record</value>
+                        </entry>
+                        <entry>
+                            <key>summa.ingest.xmlsplitter.id_element</key>
+                            <value class="string">record#id</value>
+                        </entry>
+                        <entry>
+                            <key>summa.ingest.xmlsplitter.base</key>
+                            <value class="string">testbase</value>
+                        </entry>
+                        <entry>
+                            <key>summa.ingest.xmlsplitter.preserve_namespaces</key>
+                            <value class="boolean">true</value>
+                        </entry>
+                        <entry>
+                            <key>summa.ingest.xmlsplitter.require_valid</key>
+                            <value class="boolean">false</value>
+                        </entry>
+                    </value>
+                </entry>
+                <entry>
+                    <key>Writer</key>
+                    <value class="xproperties">
+                        <entry>
+                            <key>FilterPump.FilterClass</key>
+                            <value class="string">dk.statsbiblioteket.summa.storage.filter.RecordWriter</value>
+                        </entry>
+                        <entry>
+                            <key>summa.storage.RecordWriter.Storage</key>
+                            <value class="string">//localhost:27000/TestStorage</value>
+                        </entry>
+                    </value>
+                </entry>
+            </value>
+        </entry>
+    </xproperties>
+</xproperties>

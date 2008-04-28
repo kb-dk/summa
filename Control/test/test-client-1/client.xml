@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bundle>
+	<mainJar>lib/@release.jar@</mainJar>
+	<mainClass>dk.statsbiblioteket.summa.control.client.Client</mainClass>
+    <property name="com.sun.management.jmxremote.port" value="2765"/>
+    <property name="com.sun.management.jmxremote.ssl" value="false"/>
+    <description>A sample Client bundle for the Summa Control</description>
+	<bundleId>test-client-1</bundleId>
+	<fileList>
+        <file>lib/summa-common-@summa.version@.jar</file>
+        <!-- It is bad that these must be known! -->
+        <file>lib/summa-storage-@summa.version@.jar</file>
+        <file>lib/summa-common-@summa.version@.jar</file>
+        <file>lib/summa-ingest-@summa.version@.jar</file>
+        <!-- End of bad -->
+        <file>lib/@release.jar@</file>
+        <file>lib/commons-logging-1.1.jar</file>
+        <file>lib/log4j-1.2.14.jar</file>
+        <file>lib/sbutil-0.3.2.jar</file>
+        <file>config/jmx.access</file>
+        <file>config/jmx.password</file>
+        <file>config/policy</file>
+    </fileList>
+</bundle>

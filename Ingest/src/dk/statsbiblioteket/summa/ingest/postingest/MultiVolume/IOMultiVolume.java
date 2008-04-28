@@ -27,7 +27,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 /**
  * The multi volume merger needs its own persistent layer, where information about structure between records can be accumulated during ingest.<br>
  * This interface defines the core set of functionality needed to support such a work flow.
- * @deprecated Multi volume is now part of the MetadataStorage.
+ * @deprecated Multi volume is now part of the Storage.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,

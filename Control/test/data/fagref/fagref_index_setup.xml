@@ -1,0 +1,111 @@
+<xproperties>
+    <xproperties>
+        <entry>
+            <key>summa.control.service.port</key>
+            <value class="int">2774</value>
+        </entry>
+        <entry>
+            <key>summa.control.service.registry.port</key>
+            <value class="int">2767</value>
+        </entry>
+
+        <entry>
+            <key>FilterPump.ChainName</key>
+            <value class="string">Simple fagref index</value>
+        </entry>
+        <entry>
+            <key>FilterControl.Chains</key>
+            <value class="string">SingleChain</value>
+        </entry>
+        <entry>
+            <key>FilterControl.Sequential</key>
+            <value class="boolean">true</value>
+        </entry>
+        <entry>
+            <key>SingleChain</key>
+            <value class="xproperties">
+                <entry>
+                    <key>FilterPump.Filters</key>
+                    <value class="string">StorageReader, XMLTransformer, DocumentCreator, IndexUpdate</value>
+                </entry>
+                <entry>
+                    <key>StorageReader</key>
+                    <value class="xproperties">
+                        <entry>
+                            <key>FilterPump.FilterClass</key>
+                            <value class="string">dk.statsbiblioteket.summa.storage.filter.RecordReader</value>
+                        </entry>
+                        <entry>
+                            <key>summa.storage.RecordReader.Storage</key>
+                            <value class="string">//localhost:27000/TestStorage</value>
+                        </entry>
+                        <entry>
+                            <key>summa.storage.RecordReader.start-from-scratch</key>
+                            <value class="boolean">false</value>
+                        </entry>
+                        <entry>
+                            <key>summa.storage.RecordReader.max-read.records</key>
+                            <value class="int">-1</value>
+                        </entry>
+                        <entry>
+                            <key>summa.storage.RecordReader.base</key>
+                            <value class="string">fagref</value>
+                        </entry>
+                    </value>
+                </entry>
+                <entry>
+                    <key>XMLTransformer</key>
+                    <value class="xproperties">
+                        <entry>
+                            <key>FilterPump.FilterClass</key>
+                            <value class="string">dk.statsbiblioteket.summa.index.XMLTransformer</value>
+                        </entry>
+                        <entry>
+                            <key>summa.index.create-summa-document-xml.xslt</key>
+                            <value class="string">/tmp/summatest/data/fagref/fagref_index.xsl</value>
+                        </entry>
+                    </value>
+                </entry>
+                <entry>
+                    <key>DocumentCreator</key>
+                    <value class="xproperties">
+                        <entry>
+                            <key>FilterPump.FilterClass</key>
+                            <value class="string">dk.statsbiblioteket.summa.index.DocumentCreator</value>
+                        </entry>
+                    </value>
+                </entry>
+                <entry>
+                    <key>IndexUpdate</key>
+                    <value class="xproperties">
+                        <entry>
+                            <key>FilterPump.FilterClass</key>
+                            <value class="string">dk.statsbiblioteket.summa.index.IndexController</value>
+                        </entry>
+                        <entry>
+                            <key>summa.index.manipulators</key>
+                            <value class="string">LuceneUpdater</value>
+                        </entry>
+                        <entry>
+                            <key>summa.index.create-new-index</key>
+                            <value class="boolean">true</value>
+                        </entry>
+                        <entry>
+                            <key>summa.index.index-root-location</key>
+                            <value class="string">/tmp/summatest/data/fagref</value>
+                        </entry>
+                        <entry>
+                            <key>LuceneUpdater</key>
+                            <value class="xproperties">
+                                <entry>
+                                    <key>summa.index.manipulator-class</key>
+                                    <value class="string">dk.statsbiblioteket.summa.index.LuceneManipulator</value>
+                                </entry>
+                            </value>
+                        </entry>
+                    </value>
+                </entry>
+            </value>
+        </entry>
+    </xproperties>
+</xproperties>

@@ -52,7 +52,7 @@
 
     <!-- Internal project dependencies -->
     <path id="lib.internal">
-        <pathelement location="../MetadataStorage/${summa.classes.dir}"/>
+        <pathelement location="../Storage/${summa.classes.dir}"/>
         <pathelement location="../Common/${summa.classes.dir}"/>
         <pathelement location="../Dice/${summa.classes.dir}"/>
     </path>
@@ -82,12 +82,12 @@
         <ant inheritAll="false" dir="../Dice" target="release"/>
     </target>
 
-    <target name=".compileMetadataStorage">
-        <ant inheritAll="false" dir="../MetadataStorage" target="compile"/>
+    <target name=".compileStorage">
+        <ant inheritAll="false" dir="../Storage" target="compile"/>
     </target>
 
-    <target name=".releaseMetadataStorage">
-        <ant inheritAll="false" dir="../MetadataStorage" target="release"/>
+    <target name=".releaseStorage">
+        <ant inheritAll="false" dir="../Storage" target="release"/>
     </target>
 
     <target name="depends">
@@ -107,12 +107,12 @@
         </condition>
         <antcall target="${newTask}"/>
 
-        <!-- Check that MetadataStorage is compiled -->
-        <echo message="Checking whether MetadataStorage is compiled"/>
-        <condition property="compileMetadataStorageTask" value=".phony" else=".compileMetadataStorage">
-            <available file="../MetadataStorage/${summa.classes.dir}"/>
+        <!-- Check that Storage is compiled -->
+        <echo message="Checking whether Storage is compiled"/>
+        <condition property="compileStorageTask" value=".phony" else=".compileStorage">
+            <available file="../Storage/${summa.classes.dir}"/>
         </condition>
-        <antcall target="${compileMetadataStorageTask}"/>
+        <antcall target="${compileStorageTask}"/>
 
         <!-- Check that Common is compiled -->
         <echo message="Checking whether Common is compiled"/>
@@ -142,10 +142,10 @@
         <antcall target="${releaseCommonTask}"/>
 
         <!-- Check that Metadata release is compiled -->
-        <condition property="releaseMetadataStorageTask" value=".phony" else=".releaseMetadataStorage">
+        <condition property="releaseStorageTask" value=".phony" else=".releaseStorage">
             <available file="../${summa.ilib.storage}"/>
         </condition>
-        <antcall target="${releaseMetadataStorageTask}"/>
+        <antcall target="${releaseStorageTask}"/>
 
         <!-- Check that Metadata release is compiled -->
         <condition property="releaseDiceTask" value=".phony" else=".releaseDice">

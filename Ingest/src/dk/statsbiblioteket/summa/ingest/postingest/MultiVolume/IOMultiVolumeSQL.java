@@ -60,7 +60,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
  *     "flerbind_pkey" PRIMARY KEY, btree (id)
  *
  * main => ((section|bind)*  =>)* bind+
- * @deprecated Multi volume is now part of the MetadataStorage.
+ * @deprecated Multi volume is now part of the Storage.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,

@@ -13,7 +13,7 @@ Ingesting is defined by 3 steps.<br>
     <li>Pre-ingest filters, used to convert data from one form to another. For data enrichment a pre-ingest filter will also be the right way to proceed.
     <ul><li>Multiple pre-ingest filters can be defined.</li></ul>
     </li>
-    <li>Ingest, used to define {@link dk.statsbiblioteket.summa.common.Record} objects and commit them to the {@link dk.statsbiblioteket.summa.MetadataStorage}
+    <li>Ingest, used to define {@link dk.statsbiblioteket.summa.common.Record} objects and commit them to the {@link dk.statsbiblioteket.summa.Storage}
     <ul>
         <li>Implementors needs to implement a {@link dk.statsbiblioteket.summa.ingest.Ingest}, a
         {@link dk.statsbiblioteket.summa.ingest.Digester} and properly extend

@@ -50,7 +50,7 @@ public abstract class StateThread implements Runnable {
      */
     public static enum STATUS {ready, running, stopping, stopped, error}
 
-    // TODO: Consider reusing the Status from the Score framework
+    // TODO: Consider reusing the Status from the Control framework
     private STATUS status = STATUS.ready;
     private Thread thread;
 

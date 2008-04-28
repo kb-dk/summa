@@ -3,7 +3,7 @@ checkDepends
 clean
 compile
 compileCluster
-compileMetadataStorage
+compileStorage
 doc
 getLibs
 init
