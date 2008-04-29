@@ -312,7 +312,7 @@ public class SearchEngineImpl implements SearchEngineImplMBean, SearchEngine, Lo
             }
             logPer.info( "dk.statsbiblioteket.summa.search.SearchEngineImpl.getRecord  in:" + (System.currentTimeMillis() - start) + "ms");
             return rec;
-            //return r != null ? new String(r.getContent(), "utf-8") : null;
+            //return r != null ? new String(r.getUTF8Content(), "utf-8") : null;
         } catch (UnsupportedEncodingException e) {
                 log.error("The recordContent for record: " + recordID + " is not supported", e);
             return null;

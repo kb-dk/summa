@@ -190,7 +190,7 @@ public class Test {
  /*       RecordIterator ir = io.getRecords("netmusik");
         while (ir.hasNext()){
             Record r = ir.next();
-            String content = new String(r.getContent(), "utf-8");
+            String content = new String(r.getUTF8Content(), "utf-8");
             String tr = transform(new StringReader(content),t);
             String tr1 = transform(new StringReader(content), t1);
             if (!tr.equals(tr1)){ w.append("XSLT not identical"); }
