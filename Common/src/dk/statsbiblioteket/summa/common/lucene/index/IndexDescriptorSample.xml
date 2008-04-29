@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  An amalgam of the old Summa SearchDescriptor and SOLR schema.xml.
+  Maybe the two can be merged sometime in the future?
+  -->
+<IndexDescriptor version="1.0">
+    <!-- The different types are used by the fields -->
+    <types>
+        <fieldType name="text" stored="false" indexed="true" boost="1.0" sortLocale="da" inFreeText="true" class="summa.TextField">
+
+            <analyzer type="index">
+                <analyzerClass>class="dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzerClass>
+                <!-- <tokenizer class="..."/> SOLR-style -->
+                <filter class="someFilter" mytag="mytagvalue"/>
+            </analyzer>
+            <analyzer type="query" class="dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer">
+                <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+                <filter class="someOtherFilter" anothertag="myothertagvalue"/>
+            </analyzer>
+        </fieldType>
+
+        <fieldType name="someOtherType">
+            <analyzer> <!-- no type, so this is used both for index and query -->
+                <analyzerClass>class="dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzerClass>
+            </analyzer>
+        </fieldType>
+
+    </types>
+
+
+    <fields>
+        <!-- Valid attributes for fields (most taken from SOLR schema.xml):
+          name: mandatory - the name for the field
+          type: mandatory - the name of a previously defined type from the <types> section
+          indexed: true if this field should be indexed (searchable or sortable)
+          stored: true if this field should be retrievable
+          multiValued: true if this field may contain multiple values per document
+          boost: the query-time boost for this field (default: 1.0)
+          sortLocale: the locale (see Java Locale) used for sorting the Field
+          inFreeText: true/false. If true, the tokens in this field are added to the freetext field
+          required: true/false: Should be present - used for validation of documents prior to indexing
+        -->
+
+        <field name="author" type="text" indexed="true" stored="true" required="true" />
+
+
+        <!-- Taken directly from SOLR.
+        Dynamic field definitions.  If a field name is not found, dynamicFields
+will be used if the name matches any of the patterns.
+RESTRICTION: the glob-like pattern in the name attribute must have
+a "*" only at the start or the end.
+EXAMPLE:  name="*_i" will match any field ending in _i (like myid_i, z_i)
+Longer patterns will be matched first.  if equal size patterns
+both match, the first appearing in the schema will be used.  -->
+        <dynamicField name="*_i"  type="sint"    indexed="true"  stored="true"/>
+
+    </fields>
+
+    <!-- Field to use to determine and enforce document uniqueness.
+       Unless this field is marked with required="false", it will be a required field
+    -->
+    <uniqueKey>id</uniqueKey>
+
+    <!-- fields for the QueryParser to use when an explicit fieldname is absent
+         Delimited by space-->
+    <defaultSearchFields>text id</defaultSearchFields>
+
+    <!-- SummaQueryParser configuration (the equivalent to SolrQueryParser):
+         defaultOperator="AND|OR".
+         If not present, the default is AND -->
+
+    <SummaQueryParser defaultOperator="OR"/>
+
+
+
+</IndexDescriptor>

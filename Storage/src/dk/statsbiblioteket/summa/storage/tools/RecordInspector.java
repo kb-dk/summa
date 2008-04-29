@@ -37,24 +37,11 @@ import dk.statsbiblioteket.summa.storage.io.Access;
 
 import dk.statsbiblioteket.summa.storage.io.RecordIterator;
 import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.common.Status;
 import dk.statsbiblioteket.summa.common.xml.DefaultNamespaceContext;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathFactory;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.namespace.NamespaceContext;
-import javax.xml.XMLConstants;
-import java.rmi.Naming;
 import java.rmi.RMISecurityManager;
-import java.util.Properties;
-import java.util.Date;
-import java.util.Iterator;
-import java.io.*;
-
-import org.xml.sax.InputSource;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -108,7 +95,7 @@ public class RecordInspector {
         header += "Base: \t\t" + rec.getBase() + "\n";
         header += "Status: \t" + rec.getState() + stateInvalid + "\n";
         header += "MTime: \t\t" + new Date(rec.getLastModified()) + "\n";
-        header += "Size: \t\t" + rec.getContent().length/1024.0 + " kB";
+        header += "Size: \t\t" + rec.getUTF8Content().length/1024.0 + " kB";
   */
         output.println (rec);
 
