@@ -25,6 +25,15 @@ package dk.statsbiblioteket.summa.common.lucene.index;
 import java.io.IOException;
 import java.io.File;
 import java.net.URL;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.TreeSet;
+import java.util.Collections;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
@@ -90,21 +99,35 @@ public class IndexDescriptor implements Configurable {
             "summa.common.index.check-interval";
     public static final int DEFAULT_CHECK_INTERVAL = 5*60*1000; // 5 minutes
 
+    /**
+     * The name of the Field containing unordered freely searchable terms.
+     */
+    @SuppressWarnings({"DuplicateStringLiteralInspection"})
+    public static final String FREETEXT = "freetext";
+
+    public static enum OPERATOR {and, or}
+
     private ResourceListener listener;
     private URL absoluteLocation;
 
+    /**
+     * The free fields is all fields not explicitely attached to a group.
+     */
+    private IndexGroup freeFields = new IndexGroup("ungrouped");
+    private IndexGroup rootGroup = new IndexGroup("root");
+    /**
+     * IndexTerms contains query-time boosts based on terms. An example:
+     * An index-term with (title, nature, 2.0) is created. A query string is
+     * expanded to a Query. The Query is searched recursively for the term
+     * matching title, nature. If found, the boost for the query gets multiplied
+     * by 2.0.
+     */
+    private Map<String, IndexTerm> terms = new HashMap<String, IndexTerm>(20);
 
-    // Fields - stored, indexable, alias, mandatory?, analyzer, filters?,
-    //          defaultboost, type, sort, multi-value, isinfreetext
-    // Groups - list of field names?, alias,
-    // Default-operator
-    // Default-field
-    // DefaultField-boost <...>
-    // DefaultTerm-boost <...>
-    // uniqueKey
-    // defaultSearchFields
-    // freetext-field
-
+    private String defaultLanguage = "en";
+    private String uniqueKey = "id";
+    private List<String> defaultFields = Arrays.asList(FREETEXT);
+    private OPERATOR defaultOperator = OPERATOR.or;
 
     /**
      * Extracts a locationRoot or an absoluteLocation from configuration,
@@ -222,6 +245,83 @@ public class IndexDescriptor implements Configurable {
         log.trace("close() called");
         if (listener != null) {
             listener.setActive(false);
+        }
+    }
+
+    /**
+     * Adds the given IndexField to the descriptors free fields, if the
+     * Field-object is not already present and if no existing field matches
+     * the name of the new field.
+     * @param field the field to add to the descriptor.
+     * @return true if the Field was added, else false.
+     * @see {@link #freeFields}.
+     */
+    public boolean addFreeField(IndexField field) {
+        if (freeFields.getField(field.getName(), null, false) != null) {
+            log.debug("A Field with name '" + field.getName() + "' is already "
+                      + "present in freeFields");
+            return false;
+        }
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("Adding " + field + " to freeFields");
+        freeFields.addField(field);
+        return true;
+    }
+
+    /**
+     * Adds the given IndexTerm to the list of query-time boosting terms.
+     * @param term the term to add to the descriptor.
+     * @see {@link #terms}.
+     */
+    public void addTerm(IndexTerm term) {
+        terms.put(term.getKey(), term);
+    }
+
+    /**
+     * See {@link IndexDescriptor#terms} for details on this class.
+     */
+    public class IndexTerm {
+        private String field;
+        private String text;
+
+        private float boost;
+
+        public IndexTerm(String field, String text, float boost) {
+            log.trace("Creating IndexTerm(" + field + ", " + text + ", " + boost
+                      + ")");
+            if (field == null) {
+                throw new IllegalArgumentException("Field must never be null "
+                                                   + "for IndexTerms");
+            }
+            if (text == null) {
+                throw new IllegalArgumentException("Text for IndexTerm for "
+                                                   + "Field '" + field + "'"
+                                                   + " must never be null ");
+            }
+            this.field = field;
+            this.text = text;
+            this.boost = boost;
+        }
+
+        public float getBoost() {
+            return boost;
+        }
+
+        public String getField() {
+            return field;
+        }
+
+        public String getText() {
+            return text;
+        }
+
+        public String getKey() {
+            return field + ":" + text;
+        }
+
+        public String toString() {
+            //noinspection DuplicateStringLiteralInspection
+            return "IndexTerm(" + field + ", " + text + ", " + boost + ")";
         }
     }
 }

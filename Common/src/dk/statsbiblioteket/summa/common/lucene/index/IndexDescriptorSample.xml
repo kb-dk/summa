@@ -2,15 +2,24 @@
 <!--
   An amalgam of the old Summa SearchDescriptor and SOLR schema.xml.
   Maybe the two can be merged sometime in the future?
+
+  Precedence rules for name resolving is
+  group-name
+  group-alias
+  field-name
+  field-alias
   -->
 <IndexDescriptor version="1.0">
-    <!-- The different types are used by the fields -->
+    <!-- The different types are used by the field
+
+    To be enabled at a later time
+
     <types>
         <fieldType name="text" stored="false" indexed="true" boost="1.0" sortLocale="da" inFreeText="true" class="summa.TextField">
 
             <analyzer type="index">
                 <analyzerClass>class="dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzerClass>
-                <!-- <tokenizer class="..."/> SOLR-style -->
+                <-s- <tokenizer class="..."/> SOLR-style -s->
                 <filter class="someFilter" mytag="mytagvalue"/>
             </analyzer>
             <analyzer type="query" class="dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer">
@@ -20,13 +29,32 @@
         </fieldType>
 
         <fieldType name="someOtherType">
-            <analyzer> <!-- no type, so this is used both for index and query -->
+            <analyzer> <-s- no type, so this is used both for index and query -s->
                 <analyzerClass>class="dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzerClass>
             </analyzer>
         </fieldType>
 
     </types>
+        -->
 
+    <!-- Groups can contain other groups. Making circular references is cheating
+         and will not be accepted -->
+    <groups>
+        <group name="ti">
+            <!-- Fields in group always refers to a field specified in the
+                 fields-section -->
+            <field name="title"/>
+            <field name="titel"/>
+            <alias name="titel" lang="da"/>
+            <group name="subtitle"/>
+        </group>
+        <group name="subtitle">
+            <field name="lessimportanttitle"/>
+        </group>
+    </groups>
+
+
+    <!-- Reserved field-names are "freetext" and "summa_default" -->
 
     <fields>
         <!-- Valid attributes for fields (most taken from SOLR schema.xml):
@@ -41,7 +69,13 @@
           required: true/false: Should be present - used for validation of documents prior to indexing
         -->
 
-        <field name="author" type="text" indexed="true" stored="true" required="true" />
+        <field name="author" type="text" indexed="true" stored="true" multiValued="true" boost="2.0" sortLocale="da" inFreeText="true" required="true">
+            <alias name="forfatter" lang="da"/>
+        </field>
+
+        <field name="title" type="text" indexed="true" stored="true"/>
+        <field name="titel" type="text" indexed="true" stored="true"/>
+        <field name="lessimportanttitle" type="text" indexed="true" stored="false"/>
 
 
         <!-- Taken directly from SOLR.
@@ -51,26 +85,39 @@ RESTRICTION: the glob-like pattern in the name attribute must have
 a "*" only at the start or the end.
 EXAMPLE:  name="*_i" will match any field ending in _i (like myid_i, z_i)
 Longer patterns will be matched first.  if equal size patterns
-both match, the first appearing in the schema will be used.  -->
+both match, the first appearing in the schema will be used.
         <dynamicField name="*_i"  type="sint"    indexed="true"  stored="true"/>
-
+                                                             -->
     </fields>
 
+    <!-- Expanded query manipulation of terms.
+     When the query string has been transformed to a Query tree, the tree is
+     traversed and matching terms are updated according to the attributes
+     specified. Boosts are multiplied with existing boosts. -->
+    <terms>
+        <term field="title" text="nature" boost="2.0"/>
+    </terms>
+
+
+    <!-- The default language us used for alias-resolving.
+         Optional. Default is "en". -->
+    <defaultLanguage>da</defaultLanguage>
+    
     <!-- Field to use to determine and enforce document uniqueness.
-       Unless this field is marked with required="false", it will be a required field
+       Unless this field is marked with required="false", it will be a required
+       field.
+       Optional. Default is "id".
     -->
     <uniqueKey>id</uniqueKey>
 
     <!-- fields for the QueryParser to use when an explicit fieldname is absent
-         Delimited by space-->
-    <defaultSearchFields>text id</defaultSearchFields>
+         Delimited by space.
+         Optional. Default is "freetext". -->
+    <defaultSearchFields>freetext title id</defaultSearchFields>
 
     <!-- SummaQueryParser configuration (the equivalent to SolrQueryParser):
          defaultOperator="AND|OR".
-         If not present, the default is AND -->
-
+         Optional. Default is AND. -->
     <SummaQueryParser defaultOperator="OR"/>
-
-
 
 </IndexDescriptor>
