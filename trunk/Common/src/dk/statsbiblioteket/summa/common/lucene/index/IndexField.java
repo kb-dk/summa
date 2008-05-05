@@ -124,7 +124,8 @@ public class IndexField implements Comparable {
         /**
          * Generates a new Alias with a given name on a given language.<br>
          * @param name the name of the alias (as used by the queryparser)
-         * @param lang the language to bind this name to.
+         * @param lang the language to bind this name to. This can be null,
+         *             in which case all langs in {@link#isMatch} matches.
          */
         public Alias(String name, String lang) {
             this.name = name;
@@ -231,7 +232,11 @@ public class IndexField implements Comparable {
 
         }
 
-
+        public boolean isMatch(String name, String lang) {
+            return this.name.equals(name)
+                   && (this.lang == null || lang == null
+                       || this.lang.equals(lang));
+        }
     }
 
     /**
@@ -526,5 +531,16 @@ public class IndexField implements Comparable {
         return result;
     }
 
-
+    public boolean isMatch(String name, String lang) {
+        if (this.name.equals(name) && (language == null || lang == null
+                                       || language.equals(lang))) {
+            return true;
+        }
+        for (Alias alias: aliases) {
+            if (alias.isMatch(name, lang)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
