@@ -198,7 +198,7 @@ public class IndexUtils {
                     } else if ("freetext".equals(localName)) {
                         f.setFreetext(Boolean.parseBoolean(value));
                     } else if ("navn".equals(localName)){
-                        f.addAlias(new OldIndexField.Alias(value, "da"));
+                        f.addAlias(new IndexAlias(value, "da"));
                     } else if ("repeat".equals(localName)){
                         f.setRepeat(Boolean.parseBoolean(value));
                     }

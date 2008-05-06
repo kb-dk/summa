@@ -64,7 +64,7 @@ public class OldIndexField implements Comparable {
     private boolean suggest;
     private boolean freetext;
     private boolean repeat;
-    private ArrayList<Alias> aliases;
+    private ArrayList<IndexAlias> aliases;
     private String resolver;
 
     private static Log log = LogFactory.getLog(OldIndexField.class);
@@ -109,143 +109,6 @@ public class OldIndexField implements Comparable {
     }
 
     /**
-     * An alias i summa is a naming convention for naming fields in different
-     * languages.<br>
-     * This is used for automated generation of multi-lingual aware
-     * queryparsers.
-     * @author Hans Lund, State and University Library, Denmark
-     * @version $Id: IndexField.java,v 1.5 2007/10/04 13:28:19 te Exp $
-     */
-    public static final class Alias implements Comparable {
-
-        private String name;
-        private String lang;
-
-        /**
-         * Generates a new Alias with a given name on a given language.<br>
-         * @param name the name of the alias (as used by the queryparser)
-         * @param lang the language to bind this name to. This can be null,
-         *             in which case all langs in {@link#isMatch} matches.
-         */
-        public Alias(String name, String lang) {
-            this.name = name;
-            this.lang = lang;
-        }
-
-        /**
-         * The name used for the associated Field in the queryparser for the
-         * Alias's language.
-         * @return the name for this alias.
-         */
-        public String getName() {
-            return name;
-        }
-
-        /**
-         * Sets the name for the associated Field in the queryparser for the
-         * Alias's language.
-         * @param name the name to use for the field with the alias language.
-         */
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        /**
-         * Gets the language code for this alias, codes follows the XML:lang
-         * language code specification. (lang-contry).
-         * @return the ISO language code.
-         */
-        public String getLang() {
-            return lang;
-        }
-
-        //todo: check the format for the lang attribute
-        /**
-         *
-         * @param lang
-         */
-        public void setLang(String lang)  {
-
-            this.lang = lang;
-        }
-
-        /**
-         * Indicates if Object o is equal to this Alias.<br>
-         * Two Aliases are considered equal if both the name and the lang for
-         * the alias are constidered equal according to the String equal method.
-         * {@link java.lang.String#equals(Object o)}.
-         * </p><p>
-         * Two equal Aliases will always produce the same hashCode.
-         * @param o
-         * @return
-         * @see #hashCode()
-         */
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            final Alias alias = (Alias) o;
-
-            if (lang != null ? !lang.equals(alias.lang) : alias.lang != null) return false;
-            if (name != null ? !name.equals(alias.name) : alias.name != null) return false;
-
-            return true;
-        }
-
-        //reuses javadoc
-        public int hashCode() {
-            int result;
-            result = (name != null ? name.hashCode() : 0);
-            result = 29 * result + (lang != null ? lang.hashCode() : 0);
-            return result;
-        }
-
-        //reuse javadoc
-        public int compareTo(Object o) {
-            if (this == o) {
-                return 0;
-            }
-            OldIndexField.Alias that = (OldIndexField.Alias) o;
-            int compare;
-            if (this.name != null) {
-                if (that.name == null) {
-                    return -1;
-                }
-                compare = this.name.compareTo(that.name);
-                if (compare != 0) {
-                    return compare;
-                }
-            } else if (that.name != null) {
-                return 1;
-            }
-
-            if (this.lang != null) {
-                if (that.lang == null) {
-                    return -1;
-                }
-                return this.lang.compareTo(that.lang);
-            } else if (that.lang != null) {
-                return 1;
-            }
-
-            return 0;
-
-        }
-
-        public boolean isMatch(String name, String lang) {
-            return this.name.equals(name)
-                   && (this.lang == null || lang == null
-                       || this.lang.equals(lang));
-        }
-
-        public String toXMLFragment() {
-            return "<alias name=\"" + name + "\""
-                   + (lang == null ? "" : " lang=\"" + lang + "\"")
-                   + "/>\n";
-        }
-    }
-
-    /**
      * Generates a new IndexField using the defaults in {@link dk.statsbiblioteket.summa.common.lucene.index.IndexDefaults}.
      *
      * @param def The IndexDefaults used with this field.
@@ -261,7 +124,7 @@ public class OldIndexField implements Comparable {
         this.suggest = def.isSuggest();
         this.freetext = def.isFreeText();
         this.repeat = def.isGroup();
-        this.aliases = new ArrayList<Alias>();
+        this.aliases = new ArrayList<IndexAlias>();
         this.resolver = def.getResolver();
 
     }
@@ -376,11 +239,11 @@ public class OldIndexField implements Comparable {
 
     /**
      * The added Alias, provide language specific query syntax on this field as specified
-     *  in the alias {@link OldIndexField.Alias}.
+     *  in the alias {@link IndexAlias}.
      *
      * @param a the alias to add
      */
-    public void addAlias(Alias a) {
+    public void addAlias(IndexAlias a) {
         aliases.add(a);
     }
 
@@ -388,9 +251,9 @@ public class OldIndexField implements Comparable {
      * Gets the list of aliases.
      * Each alias should represent a unique language code.
      *
-     * @return a list of {@link OldIndexField.Alias}.
+     * @return a list of {@link IndexAlias}.
      */
-    public ArrayList<Alias> getAliases() {
+    public ArrayList<IndexAlias> getAliases() {
         return aliases;
     }
 
@@ -453,7 +316,7 @@ public class OldIndexField implements Comparable {
             buffer.append("<repeatSuffix>").append(this.getRepeatExt()).append("</repeatSuffix>");
         }
 
-        for (Alias a : aliases) {
+        for (IndexAlias a : aliases) {
             buffer.append("<alias xml:lang=\"").append(a.getLang()).append("\">").append(a.getName()).append("</alias>");
         }
         buffer.append("<analyzer>").append(this.getType().getAnalyzer().getClass().getName()).append("</analyzer>");
@@ -542,7 +405,7 @@ public class OldIndexField implements Comparable {
                                        || language.equals(lang))) {
             return true;
         }
-        for (Alias alias: aliases) {
+        for (IndexAlias alias: aliases) {
             if (alias.isMatch(name, lang)) {
                 return true;
             }

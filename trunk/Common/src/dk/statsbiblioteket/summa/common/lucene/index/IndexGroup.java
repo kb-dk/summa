@@ -43,8 +43,8 @@ public class IndexGroup {
     private static Log log = LogFactory.getLog(IndexDescriptor.class);
 
     private final String name; // Immutable to allow for caching of lookups
-    private Set<OldIndexField.Alias> aliases =
-            new HashSet<OldIndexField.Alias>(5);
+    private Set<IndexAlias> aliases =
+            new HashSet<IndexAlias>(5);
     private TreeSet<OldIndexField> fields = new TreeSet<OldIndexField>();
 
     public IndexGroup(String name) {
@@ -63,7 +63,7 @@ public class IndexGroup {
         if (name.equals(groupName)) {
             return true;
         }
-        for (OldIndexField.Alias alias: aliases) {
+        for (IndexAlias alias: aliases) {
             if (alias.isMatch(groupName, lang)) {
                 return true;
             }
@@ -78,7 +78,7 @@ public class IndexGroup {
      * alias multiple times results in only one extra stored alias.
      * @param alias the alias to add.
      */
-    public void addAlias(OldIndexField.Alias alias) {
+    public void addAlias(IndexAlias alias) {
         //noinspection DuplicateStringLiteralInspection
         log.trace("Adding Alias '" + alias + "' to group '" + name + "'");
         aliases.add(alias);
@@ -147,7 +147,7 @@ public class IndexGroup {
     public String toXMLFragment() {
         StringWriter sw = new StringWriter(500);
         sw.append("<group name=\"").append(name).append("\">\n");
-        for (OldIndexField.Alias alias: aliases) {
+        for (IndexAlias alias: aliases) {
             sw.append(alias.toXMLFragment());
         }
         for (OldIndexField field: fields) {

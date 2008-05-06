@@ -47,6 +47,7 @@ import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.lucene.index.OldIndexField;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
 import dk.statsbiblioteket.summa.common.lucene.index.SearchDescriptor;
+import dk.statsbiblioteket.summa.common.lucene.index.IndexAlias;
 import dk.statsbiblioteket.summa.common.lucene.analysis.SummaKeywordAnalyzer;
 import dk.statsbiblioteket.summa.common.lucene.analysis.SummaRepeatAnalyzer;
 import org.apache.commons.logging.Log;
@@ -355,9 +356,9 @@ public class DocumentCreator extends ObjectFilterImpl {
             if (gruppeNavn != null) {
                 log.debug("makeGroups: generating group with name: " + groupName
                           + " and alias: " + gruppeNavn);
-                OldIndexField.Alias alias = new OldIndexField.Alias(gruppeNavn, "da");
-                ArrayList<OldIndexField.Alias> li =
-                        new ArrayList<OldIndexField.Alias>(5);
+                IndexAlias alias = new IndexAlias(gruppeNavn, "da");
+                ArrayList<IndexAlias> li =
+                        new ArrayList<IndexAlias>(5);
                 li.add(alias);
                 descriptor.createGroup(groupName, li);
                 //log.debug("done generating group");
@@ -366,7 +367,7 @@ public class DocumentCreator extends ObjectFilterImpl {
                           + groupName);
 
                 descriptor.createGroup(groupName,
-                                       new ArrayList<OldIndexField.Alias>(5));
+                                       new ArrayList<IndexAlias>(5));
                 //log.debug("done generating group");
             }
 

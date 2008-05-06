@@ -111,7 +111,7 @@ public class SearchDescriptor {
     public static class Group {
 
         private String name;
-        private Set<OldIndexField.Alias> aliases;
+        private Set<IndexAlias> aliases;
         private TreeSet<OldIndexField> fields;
 
         /**
@@ -120,7 +120,7 @@ public class SearchDescriptor {
          */
         public Group(String name) {
             this.name = name;
-            this.aliases = new HashSet<OldIndexField.Alias>();
+            this.aliases = new HashSet<IndexAlias>();
             this.fields = new TreeSet<OldIndexField>();
         }
 
@@ -128,7 +128,7 @@ public class SearchDescriptor {
          * Adds an alias fro this group, making the group seachable in the query language defined in the alias.
          * @param alias
          */
-        public void addAlias(OldIndexField.Alias alias){
+        public void addAlias(IndexAlias alias){
             this.aliases.add(alias);
         }
 
@@ -152,7 +152,7 @@ public class SearchDescriptor {
          * Gets all aliases on this group.
          * @return
          */
-        public Collection<OldIndexField.Alias> getAliases() {
+        public Collection<IndexAlias> getAliases() {
             return aliases;
         }
 
@@ -168,7 +168,7 @@ public class SearchDescriptor {
          * Adds a collection of aliases.
          * @param aliases
          */
-        public void addAliases(Collection<OldIndexField.Alias> aliases) {
+        public void addAliases(Collection<IndexAlias> aliases) {
             this.aliases.addAll(aliases);
         }
 
@@ -190,7 +190,7 @@ public class SearchDescriptor {
             StringBuffer buffer = new StringBuffer();
             buffer.append("<group name=\"").append(this.getName()).append("\">");
 
-            for (OldIndexField.Alias a : this.aliases){
+            for (IndexAlias a : this.aliases){
                 buffer.append("<alias xml:lang=\"").append(a.getLang()).append("\">").append(a.getName()).append("</alias>");
             }
             buffer.append("<fields>");
@@ -258,7 +258,7 @@ public class SearchDescriptor {
      * @param groupName the name of the group.
      * @param aliases  the list of group aliases.
      */
-    public synchronized void createGroup(final String groupName, ArrayList<OldIndexField.Alias> aliases){
+    public synchronized void createGroup(final String groupName, ArrayList<IndexAlias> aliases){
         if (!groups.containsKey(groupName)){
             Group g = new Group(groupName);
 
@@ -353,7 +353,7 @@ public class SearchDescriptor {
                           f.setRepeatExt(IndexUtils.getElementNodeValue(c));
                         } else if (childname.equals("alias")){
                             NamedNodeMap childAtt = c.getAttributes();
-                            f.addAlias(new OldIndexField.Alias(IndexUtils.getElementNodeValue(c), (n=childAtt.getNamedItemNS(XMLConstants.XML_NS_URI, "lang")) != null ? n.getNodeValue() : null));
+                            f.addAlias(new IndexAlias(IndexUtils.getElementNodeValue(c), (n=childAtt.getNamedItemNS(XMLConstants.XML_NS_URI, "lang")) != null ? n.getNodeValue() : null));
                         } else if (childname.equals("type")){
                             f.setType(FieldType.getType(IndexUtils.getElementNodeValue(c)));
                         } else if (childname.equals("boost")){
@@ -407,7 +407,7 @@ public class SearchDescriptor {
                 for (int k=0; k<aliLen; k++ ){
                     Node alias = ali.item(k);
                     NamedNodeMap attAli = alias.getAttributes();
-                    g.addAlias(new OldIndexField.Alias(IndexUtils.getElementNodeValue(alias), (n = attAli.getNamedItemNS(XMLConstants.XML_NS_URI, "lang")) != null ? n.getNodeValue(): null));
+                    g.addAlias(new IndexAlias(IndexUtils.getElementNodeValue(alias), (n = attAli.getNamedItemNS(XMLConstants.XML_NS_URI, "lang")) != null ? n.getNodeValue(): null));
                 }
                 groups.put(name,g);
                 NodeList fields = (NodeList) group.evaluate("fields/field", grp, XPathConstants.NODESET);

@@ -28,6 +28,7 @@ import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.lucene.index.SearchDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.index.OldIndexField;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexDefaults;
+import dk.statsbiblioteket.summa.common.lucene.index.IndexAlias;
 import dk.statsbiblioteket.summa.common.lucene.analysis.SummaStandardAnalyzer;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
@@ -54,24 +55,24 @@ public class SummaQueryParserTest extends TestCase {
         // add a group
 
         descriptor = new SearchDescriptor(File.createTempFile("search", "xml").getPath());
-        OldIndexField.Alias a = new OldIndexField.Alias("fo", "da");
-        ArrayList<OldIndexField.Alias> l = new ArrayList<OldIndexField.Alias>();
+        IndexAlias a = new IndexAlias("fo", "da");
+        ArrayList<IndexAlias> l = new ArrayList<IndexAlias>();
         l.add(a);
         descriptor.createGroup("au",l);
         // create a couple off fields on the group.
 
         OldIndexField f = new OldIndexField(new IndexDefaults());
-        f.setName("mainAuthor"); f.addAlias(new OldIndexField.Alias("ffo","da"));
+        f.setName("mainAuthor"); f.addAlias(new IndexAlias("ffo","da"));
         descriptor.addFieldToGroup(f, "au");
 
         OldIndexField f2 = new OldIndexField(new IndexDefaults());
-        f2.setName("secAuthor"); f2.addAlias(new OldIndexField.Alias("lfo","da"));
+        f2.setName("secAuthor"); f2.addAlias(new IndexAlias("lfo","da"));
         descriptor.addFieldToGroup(f2, "au");
 
 
         //single field:
         OldIndexField f3 = new OldIndexField(new IndexDefaults());
-        f3.setName("title"); f3.addAlias(new OldIndexField.Alias("titel","da"));
+        f3.setName("title"); f3.addAlias(new IndexAlias("titel","da"));
         descriptor.addUnGroupedField(f3);
 
         defaultFields = new String[]{"au","title"};
