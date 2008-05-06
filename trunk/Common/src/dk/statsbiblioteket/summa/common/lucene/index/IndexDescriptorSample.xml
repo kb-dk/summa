@@ -37,16 +37,13 @@
     </types>
         -->
 
-    <!-- Groups can contain other groups. Making circular references is cheating
-         and will not be accepted -->
     <groups>
         <group name="ti">
+            <alias name="titel" lang="da"/>
             <!-- Fields in group always refers to a field specified in the
                  fields-section -->
             <field name="title"/>
             <field name="titel"/>
-            <alias name="titel" lang="da"/>
-            <group name="subtitle"/>
         </group>
         <group name="subtitle">
             <field name="lessimportanttitle"/>
@@ -93,11 +90,15 @@ both match, the first appearing in the schema will be used.
     <!-- Expanded query manipulation of terms.
      When the query string has been transformed to a Query tree, the tree is
      traversed and matching terms are updated according to the attributes
-     specified. Boosts are multiplied with existing boosts. -->
-    <terms>
+     specified. Boosts are multiplied with existing boosts.
+      
+      This looks like a special case with rare uses, so we postpone
+      implementation.
+      -->
+<!--    <terms>
         <term field="title" text="nature" boost="2.0"/>
     </terms>
-
+    -->
 
     <!-- The default language us used for alias-resolving.
          Optional. Default is "en". -->
