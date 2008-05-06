@@ -35,6 +35,7 @@ import javax.xml.XMLConstants;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.summa.common.index.IndexAlias;
 
 /**
  * IndexUtils is a set of static common used methods used for manipulating or

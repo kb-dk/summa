@@ -28,6 +28,7 @@ import org.apache.commons.logging.LogFactory;
 import java.util.ArrayList;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.common.index.IndexAlias;
 
 /**
  * The IndexField is a stub class wrapping all attributes for a Field in the
