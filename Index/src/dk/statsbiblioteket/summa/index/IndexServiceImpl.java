@@ -419,15 +419,15 @@ public class IndexServiceImpl implements IndexService {
 
             if (gruppeNavn != null) {
                 //log.debug("generating group with name:" + groupName + " and alias: " + gruppeNavn);
-                OldIndexField.Alias alias = new OldIndexField.Alias(gruppeNavn, "da");
-                ArrayList<OldIndexField.Alias>  li = new ArrayList<OldIndexField.Alias>();
+                IndexAlias alias = new IndexAlias(gruppeNavn, "da");
+                ArrayList<IndexAlias>  li = new ArrayList<IndexAlias>();
                 li.add(alias);
                 descriptor.createGroup(groupName, li);
                 //log.debug("done generating group");
             } else {
                 //log.debug("generating group with name:" + groupName);
 
-                descriptor.createGroup(groupName, new ArrayList<OldIndexField.Alias>());
+                descriptor.createGroup(groupName, new ArrayList<IndexAlias>());
                 //log.debug("done generating group");
             }
 
