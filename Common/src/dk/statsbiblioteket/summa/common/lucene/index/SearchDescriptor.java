@@ -51,6 +51,7 @@ import javax.xml.namespace.NamespaceContext;
 
 import dk.statsbiblioteket.summa.common.xml.DefaultNamespaceContext;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.index.IndexAlias;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**

@@ -47,7 +47,7 @@ import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.lucene.index.OldIndexField;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
 import dk.statsbiblioteket.summa.common.lucene.index.SearchDescriptor;
-import dk.statsbiblioteket.summa.common.lucene.index.IndexAlias;
+import dk.statsbiblioteket.summa.common.index.IndexAlias;
 import dk.statsbiblioteket.summa.common.lucene.analysis.SummaKeywordAnalyzer;
 import dk.statsbiblioteket.summa.common.lucene.analysis.SummaRepeatAnalyzer;
 import org.apache.commons.logging.Log;

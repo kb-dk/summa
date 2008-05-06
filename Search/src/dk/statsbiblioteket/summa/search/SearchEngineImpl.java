@@ -35,7 +35,7 @@ import dk.statsbiblioteket.summa.storage.io.AccessRead;
 import dk.statsbiblioteket.summa.common.lucene.analysis.SummaSortKeyAnalyzer;
 import dk.statsbiblioteket.summa.common.lucene.index.OldIndexField;
 import dk.statsbiblioteket.summa.common.lucene.index.SearchDescriptor;
-import dk.statsbiblioteket.summa.common.lucene.index.IndexAlias;
+import dk.statsbiblioteket.summa.common.index.IndexAlias;
 import dk.statsbiblioteket.summa.common.lucene.AnalyzerFactory;
 import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
 import dk.statsbiblioteket.summa.common.Record;
