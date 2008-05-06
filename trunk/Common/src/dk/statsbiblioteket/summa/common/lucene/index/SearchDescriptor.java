@@ -72,7 +72,7 @@ public class SearchDescriptor {
     /**
      * List of all fields.
      */
-     TreeSet<IndexField> singleFields = new TreeSet<IndexField>();
+     TreeSet<OldIndexField> singleFields = new TreeSet<OldIndexField>();
 
                                  
      HashMap<String, Group> groups = new HashMap<String, Group>();
@@ -111,8 +111,8 @@ public class SearchDescriptor {
     public static class Group {
 
         private String name;
-        private Set<IndexField.Alias> aliases;
-        private TreeSet<IndexField> fields;
+        private Set<OldIndexField.Alias> aliases;
+        private TreeSet<OldIndexField> fields;
 
         /**
          * The name of the group, needs to be the name for the group in the default query language.
@@ -120,15 +120,15 @@ public class SearchDescriptor {
          */
         public Group(String name) {
             this.name = name;
-            this.aliases = new HashSet<IndexField.Alias>();
-            this.fields = new TreeSet<IndexField>();
+            this.aliases = new HashSet<OldIndexField.Alias>();
+            this.fields = new TreeSet<OldIndexField>();
         }
 
         /**
          * Adds an alias fro this group, making the group seachable in the query language defined in the alias.
          * @param alias
          */
-        public void addAlias(IndexField.Alias alias){
+        public void addAlias(OldIndexField.Alias alias){
             this.aliases.add(alias);
         }
 
@@ -136,7 +136,7 @@ public class SearchDescriptor {
          * Adds a Field to the group.
          * @param field
          */
-        public void addField(IndexField field){
+        public void addField(OldIndexField field){
             this.fields.add(field);
         }
 
@@ -152,7 +152,7 @@ public class SearchDescriptor {
          * Gets all aliases on this group.
          * @return
          */
-        public Collection<IndexField.Alias> getAliases() {
+        public Collection<OldIndexField.Alias> getAliases() {
             return aliases;
         }
 
@@ -160,7 +160,7 @@ public class SearchDescriptor {
          * Get all fields in the index by now in an orderd list {@link java.util.TreeSet}
          * @return
          */
-        public TreeSet<IndexField> getFields() {
+        public TreeSet<OldIndexField> getFields() {
             return fields;
         }
 
@@ -168,7 +168,7 @@ public class SearchDescriptor {
          * Adds a collection of aliases.
          * @param aliases
          */
-        public void addAliases(Collection<IndexField.Alias> aliases) {
+        public void addAliases(Collection<OldIndexField.Alias> aliases) {
             this.aliases.addAll(aliases);
         }
 
@@ -177,7 +177,7 @@ public class SearchDescriptor {
          * warning: all previous added field will be removed.
          * @param fields
          */
-        public void setFields(TreeSet<IndexField> fields) {
+        public void setFields(TreeSet<OldIndexField> fields) {
             this.fields = fields;
         }
 
@@ -190,11 +190,11 @@ public class SearchDescriptor {
             StringBuffer buffer = new StringBuffer();
             buffer.append("<group name=\"").append(this.getName()).append("\">");
 
-            for (IndexField.Alias a : this.aliases){
+            for (OldIndexField.Alias a : this.aliases){
                 buffer.append("<alias xml:lang=\"").append(a.getLang()).append("\">").append(a.getName()).append("</alias>");
             }
             buffer.append("<fields>");
-            for (IndexField f : this.fields){
+            for (OldIndexField f : this.fields){
                 buffer.append(f.toXMLFragment());
             }
             buffer.append("</fields>");
@@ -240,7 +240,7 @@ public class SearchDescriptor {
      * @param field the name of the field.
      * @param group the name of the group.
      */
-    public synchronized void addFieldToGroup(IndexField field , String group){
+    public synchronized void addFieldToGroup(OldIndexField field , String group){
         groups.get(group).addField(field);
     }
 
@@ -249,7 +249,7 @@ public class SearchDescriptor {
      * Add a stand alone field, with no reference to any group.
      * @param field the name of the field.
      */
-    public synchronized void addUnGroupedField(IndexField field){
+    public synchronized void addUnGroupedField(OldIndexField field){
         singleFields.add(field);
     }
 
@@ -258,7 +258,7 @@ public class SearchDescriptor {
      * @param groupName the name of the group.
      * @param aliases  the list of group aliases.
      */
-    public synchronized void createGroup(final String groupName, ArrayList<IndexField.Alias> aliases){
+    public synchronized void createGroup(final String groupName, ArrayList<OldIndexField.Alias> aliases){
         if (!groups.containsKey(groupName)){
             Group g = new Group(groupName);
 
@@ -328,8 +328,8 @@ public class SearchDescriptor {
     }
 
 
-    private IndexField generateField(Node field){
-          IndexField f = new IndexField(new IndexDefaults());
+    private OldIndexField generateField(Node field){
+          OldIndexField f = new OldIndexField(new IndexDefaults());
 
                 NamedNodeMap att = field.getAttributes();
                 Node n;
@@ -353,7 +353,7 @@ public class SearchDescriptor {
                           f.setRepeatExt(IndexUtils.getElementNodeValue(c));
                         } else if (childname.equals("alias")){
                             NamedNodeMap childAtt = c.getAttributes();
-                            f.addAlias(new IndexField.Alias(IndexUtils.getElementNodeValue(c), (n=childAtt.getNamedItemNS(XMLConstants.XML_NS_URI, "lang")) != null ? n.getNodeValue() : null));
+                            f.addAlias(new OldIndexField.Alias(IndexUtils.getElementNodeValue(c), (n=childAtt.getNamedItemNS(XMLConstants.XML_NS_URI, "lang")) != null ? n.getNodeValue() : null));
                         } else if (childname.equals("type")){
                             f.setType(FieldType.getType(IndexUtils.getElementNodeValue(c)));
                         } else if (childname.equals("boost")){
@@ -390,7 +390,7 @@ public class SearchDescriptor {
             NodeList singleNodes = (NodeList) singleField.evaluate("/IndexDescriptor/singleFields/field",new InputSource(new FileInputStream(file)), XPathConstants.NODESET);
             int len = singleNodes.getLength();
             for (int i = 0; i< len ; i++){
-               IndexField f = generateField(singleNodes.item(i));
+               OldIndexField f = generateField(singleNodes.item(i));
                singleFields.add(f);
             }
 
@@ -407,7 +407,7 @@ public class SearchDescriptor {
                 for (int k=0; k<aliLen; k++ ){
                     Node alias = ali.item(k);
                     NamedNodeMap attAli = alias.getAttributes();
-                    g.addAlias(new IndexField.Alias(IndexUtils.getElementNodeValue(alias), (n = attAli.getNamedItemNS(XMLConstants.XML_NS_URI, "lang")) != null ? n.getNodeValue(): null));
+                    g.addAlias(new OldIndexField.Alias(IndexUtils.getElementNodeValue(alias), (n = attAli.getNamedItemNS(XMLConstants.XML_NS_URI, "lang")) != null ? n.getNodeValue(): null));
                 }
                 groups.put(name,g);
                 NodeList fields = (NodeList) group.evaluate("fields/field", grp, XPathConstants.NODESET);
@@ -460,7 +460,7 @@ public class SearchDescriptor {
         StringBuffer buffer = new StringBuffer();
         buffer.append("<IndexDescriptor indexPath=\"").append(this.indexPath).append("\"><singleFields>");
 
-        for (IndexField f : singleFields){
+        for (OldIndexField f : singleFields){
             buffer.append(f.toXMLFragment());
         }
 
@@ -479,7 +479,7 @@ public class SearchDescriptor {
      * Get the list of fields with no group relations defined.
      * @return  an ordered list of fields.
      */
-    public TreeSet<IndexField> getSingleFields() {
+    public TreeSet<OldIndexField> getSingleFields() {
         return singleFields;
     }
 
@@ -492,7 +492,7 @@ public class SearchDescriptor {
     }
 
 
-    public void setSingleFields(TreeSet<IndexField> singleFields) {
+    public void setSingleFields(TreeSet<OldIndexField> singleFields) {
         this.singleFields = singleFields;
     }
 

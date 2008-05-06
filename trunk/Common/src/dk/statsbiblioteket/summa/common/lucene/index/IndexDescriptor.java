@@ -111,8 +111,8 @@ public class IndexDescriptor implements Configurable {
     /**
      * All Fields mapped from field name => Field object.
      */
-    private Map<String, IndexField> allFields =
-            new LinkedHashMap<String, IndexField>(20);
+    private Map<String, OldIndexField> allFields =
+            new LinkedHashMap<String, OldIndexField>(20);
     /**
      * All Groups mapped from group name => Group object. All the Fields
      * contained in the groups MUST be present in {@link #allFields}.
@@ -121,7 +121,7 @@ public class IndexDescriptor implements Configurable {
             new LinkedHashMap<String, IndexGroup>(20);
 
     // TODO: Assign this based on XML
-    private IndexField defaultField = new IndexField(new IndexDefaults());
+    private OldIndexField defaultField = new OldIndexField(new IndexDefaults());
     private String defaultLanguage = "en";
     private String uniqueKey = "id";
     private List<String> defaultFields = Arrays.asList(FREETEXT, uniqueKey);
@@ -274,7 +274,7 @@ public class IndexDescriptor implements Configurable {
         sw.append("</groups>\n");
 
         sw.append("<fields>\n");
-        for (Map.Entry<String, IndexField> entry : allFields.entrySet()){
+        for (Map.Entry<String, OldIndexField> entry : allFields.entrySet()){
             sw.append(entry.getValue().toXMLFragment());
         }
         sw.append("</fields>\n");
@@ -315,7 +315,7 @@ public class IndexDescriptor implements Configurable {
      * @return true if the Field was added, else false.
      * @see {@link #allFields}.
      */
-    public synchronized boolean addField(IndexField field) {
+    public synchronized boolean addField(OldIndexField field) {
         //noinspection DuplicateStringLiteralInspection
         log.trace("addField(" + field + ") called");
         if (allFields.get(field.getName()) != null) {
@@ -352,7 +352,7 @@ public class IndexDescriptor implements Configurable {
         log.trace("Adding " + group);
         groups.put(group.getName(), group);
         log.trace("Adding Fields contained in " + group);
-        for (IndexField field: group.getFields()) {
+        for (OldIndexField field: group.getFields()) {
             addField(field);
         }
         return true;
@@ -367,7 +367,7 @@ public class IndexDescriptor implements Configurable {
      * @param field this will be added to the group.
      */
     public synchronized void addFieldToGroup(IndexGroup group,
-                                             IndexField field) {
+                                             OldIndexField field) {
         group.addField(field);
         if (!allFields.containsKey(field.getName())) {
             addField(field);
@@ -378,14 +378,14 @@ public class IndexDescriptor implements Configurable {
     }
 
     /**
-     * Wrapper for {@link #addFieldToGroup(IndexGroup, IndexField)}. If the
+     * Wrapper for {@link #addFieldToGroup(IndexGroup, OldIndexField)}. If the
      * Group does not already exist, it is created first.
      * @param groupName the field will be added to this group, which will be
      *                  created if it is not already present.
      * @param field     this will be added to the group.
      */
     public synchronized void addFieldToGroup(String groupName,
-                                             IndexField field) {
+                                             OldIndexField field) {
         IndexGroup group = groups.get(groupName);
         if (group == null) {
             group = new IndexGroup(groupName);
@@ -399,10 +399,10 @@ public class IndexDescriptor implements Configurable {
      * @param fieldName the name of the field to get.
      * @return a field corresponding to the name or the default field.
      */
-    public IndexField getFieldForIndexing(String fieldName) {
+    public OldIndexField getFieldForIndexing(String fieldName) {
         //noinspection DuplicateStringLiteralInspection
         log.trace("getFieldForIndexing(" + fieldName + ") called");
-        IndexField field = allFields.get(fieldName);
+        OldIndexField field = allFields.get(fieldName);
         if (field != null) {
             return field;
         }

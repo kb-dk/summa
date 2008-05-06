@@ -26,7 +26,7 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.lucene.index.SearchDescriptor;
-import dk.statsbiblioteket.summa.common.lucene.index.IndexField;
+import dk.statsbiblioteket.summa.common.lucene.index.OldIndexField;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexDefaults;
 import dk.statsbiblioteket.summa.common.lucene.analysis.SummaStandardAnalyzer;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -54,24 +54,24 @@ public class SummaQueryParserTest extends TestCase {
         // add a group
 
         descriptor = new SearchDescriptor(File.createTempFile("search", "xml").getPath());
-        IndexField.Alias a = new IndexField.Alias("fo", "da");
-        ArrayList<IndexField.Alias> l = new ArrayList<IndexField.Alias>();
+        OldIndexField.Alias a = new OldIndexField.Alias("fo", "da");
+        ArrayList<OldIndexField.Alias> l = new ArrayList<OldIndexField.Alias>();
         l.add(a);
         descriptor.createGroup("au",l);
         // create a couple off fields on the group.
 
-        IndexField f = new IndexField(new IndexDefaults());
-        f.setName("mainAuthor"); f.addAlias(new IndexField.Alias("ffo","da"));
+        OldIndexField f = new OldIndexField(new IndexDefaults());
+        f.setName("mainAuthor"); f.addAlias(new OldIndexField.Alias("ffo","da"));
         descriptor.addFieldToGroup(f, "au");
 
-        IndexField f2 = new IndexField(new IndexDefaults());
-        f2.setName("secAuthor"); f2.addAlias(new IndexField.Alias("lfo","da"));
+        OldIndexField f2 = new OldIndexField(new IndexDefaults());
+        f2.setName("secAuthor"); f2.addAlias(new OldIndexField.Alias("lfo","da"));
         descriptor.addFieldToGroup(f2, "au");
 
 
         //single field:
-        IndexField f3 = new IndexField(new IndexDefaults());
-        f3.setName("title"); f3.addAlias(new IndexField.Alias("titel","da"));
+        OldIndexField f3 = new OldIndexField(new IndexDefaults());
+        f3.setName("title"); f3.addAlias(new OldIndexField.Alias("titel","da"));
         descriptor.addUnGroupedField(f3);
 
         defaultFields = new String[]{"au","title"};

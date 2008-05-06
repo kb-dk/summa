@@ -33,7 +33,7 @@ import java.util.*;
 
 import dk.statsbiblioteket.summa.storage.io.AccessRead;
 import dk.statsbiblioteket.summa.common.lucene.analysis.SummaSortKeyAnalyzer;
-import dk.statsbiblioteket.summa.common.lucene.index.IndexField;
+import dk.statsbiblioteket.summa.common.lucene.index.OldIndexField;
 import dk.statsbiblioteket.summa.common.lucene.index.SearchDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.AnalyzerFactory;
 import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
@@ -869,24 +869,24 @@ public class SearchEngineImpl implements SearchEngineImplMBean, SearchEngine, Lo
         HashMap<String, HashMap<String, Set<String>[]>> grp = new HashMap<String, HashMap<String, Set<String>[]>>();
 
         String returnVal = "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n";
-        TreeSet<IndexField> fields = descriptor.getSingleFields();
+        TreeSet<OldIndexField> fields = descriptor.getSingleFields();
         HashMap<String, SearchDescriptor.Group> groups = descriptor.getGroups();
         returnVal += "<SummaQueryDescriptor>\n";
 
         if (isDebugEnabled){ log.debug("queryLanguage, populating singleFields");}
-        for (IndexField f : fields) {
+        for (OldIndexField f : fields) {
             if (f.getType().getIndex() != Field.Index.NO  && !(f.getType().getAnalyzer() instanceof SummaSortKeyAnalyzer)){
                 if (singlefields.containsKey(f.getName())) {
                     if (isTraceEnabled) {log.trace("Adding resolver to singleField: " + f.getName() + ", " + f.getResolver());}
                     singlefields.get(f.getName())[0].add(f.getResolver());
-                    for (IndexField.Alias a : f.getAliases()) {
+                    for (OldIndexField.Alias a : f.getAliases()) {
                         singlefields.get(f.getName())[1].add(a.getLang() + ":" + a.getName());
                         if (isTraceEnabled) {log.trace("Adding alias to singleField: " + a.getLang() + ":" + a.getName());}
                     }
                 } else {
                     Set[] s = new Set[]{new HashSet<String>(), new HashSet<String>()};
                     s[0].add(f.getResolver());
-                    for (IndexField.Alias a : f.getAliases()) {
+                    for (OldIndexField.Alias a : f.getAliases()) {
                         s[1].add(a.getLang() + ":" + a.getName());
                     }
                     singlefields.put(f.getName(), s);
@@ -897,20 +897,20 @@ public class SearchEngineImpl implements SearchEngineImplMBean, SearchEngine, Lo
 
 
         for (SearchDescriptor.Group g : groups.values()) {
-            TreeSet<IndexField> grpF = g.getFields();
+            TreeSet<OldIndexField> grpF = g.getFields();
             if (grp.containsKey(g.getName())) {
                 HashMap<String, Set<String>[]> m = grp.get(g.getName());
-                for (IndexField f : grpF) {
+                for (OldIndexField f : grpF) {
                     if (f.getType().getIndex() != Field.Index.NO && !(f.getType().getAnalyzer() instanceof SummaSortKeyAnalyzer)){
                         if (m.containsKey(f.getName())) {
                             m.get(f.getName())[0].add(f.getResolver());
-                            for (IndexField.Alias a : f.getAliases()) {
+                            for (OldIndexField.Alias a : f.getAliases()) {
                                 m.get(f.getName())[1].add(a.getLang() + ":" + a.getName());
                             }
                         } else {
                             Set<String>[] s = new HashSet[]{new HashSet<String>(), new HashSet<String>()};
                             s[0].add(f.getResolver());
-                            for (IndexField.Alias a : f.getAliases()) {
+                            for (OldIndexField.Alias a : f.getAliases()) {
                                 s[1].add(a.getLang() + ":" + a.getName());
                             }
                             m.put(f.getName(), s);
@@ -922,13 +922,13 @@ public class SearchEngineImpl implements SearchEngineImplMBean, SearchEngine, Lo
                 HashMap<String, Set<String>[]> h = new HashMap<String, Set<String>[]>();
                // Set<String>[] s;
 
-                for (IndexField f : grpF) {
+                for (OldIndexField f : grpF) {
                     if (f.getType().getIndex() != Field.Index.NO && !(f.getType().getAnalyzer() instanceof SummaSortKeyAnalyzer)){
                         if (h.get(f.getName()) == null) {
                             h.put(f.getName(),  new Set[]{new HashSet<String>(), new HashSet<String>()});
                         }
                         h.get(f.getName())[0].add(f.getResolver());
-                        for (IndexField.Alias a : f.getAliases()) {
+                        for (OldIndexField.Alias a : f.getAliases()) {
                             Set set = h.get(f.getName())[1];
                             h.get(f.getName())[1].add(a.getLang() + ":" + a.getName());
                         }
@@ -959,7 +959,7 @@ public class SearchEngineImpl implements SearchEngineImplMBean, SearchEngine, Lo
         for (Map.Entry<String, HashMap<String, Set<String>[]>> g : gp) {
             returnVal += "\t<group name=\"" + g.getKey() + "\">\n";
             SearchDescriptor.Group qaz = groups.get(g.getKey());
-            for (IndexField.Alias a : qaz.getAliases()) {
+            for (OldIndexField.Alias a : qaz.getAliases()) {
                 returnVal += "\t\t<alias xml:lang=\"" + a.getLang() + "\">" + a.getName() + "</alias>\n";
             }
             if (isDebugEnabled){ log.debug("wrote group def:"  + returnVal);}

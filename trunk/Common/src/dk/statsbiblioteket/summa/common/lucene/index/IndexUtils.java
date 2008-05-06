@@ -155,14 +155,14 @@ public class IndexUtils {
      * @return  a IndexField
      * @throws IndexServiceException
      */
-    public static IndexField makeField(Node n, IndexDefaults defaults,
+    public static OldIndexField makeField(Node n, IndexDefaults defaults,
                                        String group_name,
                                        String NAMESPACE) throws
                                                          IndexServiceException {
 
 
         final NamedNodeMap fieldAtts = n.getAttributes();
-            IndexField f = new IndexField(defaults);
+            OldIndexField f = new OldIndexField(defaults);
             if (group_name != null){
                 f.setGroup(group_name);
             }
@@ -198,7 +198,7 @@ public class IndexUtils {
                     } else if ("freetext".equals(localName)) {
                         f.setFreetext(Boolean.parseBoolean(value));
                     } else if ("navn".equals(localName)){
-                        f.addAlias(new IndexField.Alias(value, "da"));
+                        f.addAlias(new OldIndexField.Alias(value, "da"));
                     } else if ("repeat".equals(localName)){
                         f.setRepeat(Boolean.parseBoolean(value));
                     }

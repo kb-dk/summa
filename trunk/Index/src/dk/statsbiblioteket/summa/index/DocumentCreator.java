@@ -44,7 +44,7 @@ import dk.statsbiblioteket.summa.common.xml.DefaultNamespaceContext;
 import dk.statsbiblioteket.summa.common.lucene.index.FieldType;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexDefaults;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
-import dk.statsbiblioteket.summa.common.lucene.index.IndexField;
+import dk.statsbiblioteket.summa.common.lucene.index.OldIndexField;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
 import dk.statsbiblioteket.summa.common.lucene.index.SearchDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.analysis.SummaKeywordAnalyzer;
@@ -242,7 +242,7 @@ public class DocumentCreator extends ObjectFilterImpl {
 
         for (int i = 0; i < len; i++) {
             Node fieldNodes = fields.item(i);
-            IndexField f = IndexUtils.makeField(fieldNodes, defaults, groupName,
+            OldIndexField f = IndexUtils.makeField(fieldNodes, defaults, groupName,
                                                 SUMMA_NAMESPACE);
             String value = IndexUtils.getElementNodeValue(fieldNodes);
             if (value == null) {
@@ -355,9 +355,9 @@ public class DocumentCreator extends ObjectFilterImpl {
             if (gruppeNavn != null) {
                 log.debug("makeGroups: generating group with name: " + groupName
                           + " and alias: " + gruppeNavn);
-                IndexField.Alias alias = new IndexField.Alias(gruppeNavn, "da");
-                ArrayList<IndexField.Alias> li =
-                        new ArrayList<IndexField.Alias>(5);
+                OldIndexField.Alias alias = new OldIndexField.Alias(gruppeNavn, "da");
+                ArrayList<OldIndexField.Alias> li =
+                        new ArrayList<OldIndexField.Alias>(5);
                 li.add(alias);
                 descriptor.createGroup(groupName, li);
                 //log.debug("done generating group");
@@ -366,7 +366,7 @@ public class DocumentCreator extends ObjectFilterImpl {
                           + groupName);
 
                 descriptor.createGroup(groupName,
-                                       new ArrayList<IndexField.Alias>(5));
+                                       new ArrayList<OldIndexField.Alias>(5));
                 //log.debug("done generating group");
             }
 

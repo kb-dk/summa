@@ -25,10 +25,8 @@ package dk.statsbiblioteket.summa.common.lucene.search;
 import java.io.StringReader;
 import java.util.*;
 
-import dk.statsbiblioteket.summa.common.lucene.index.IndexField;
+import dk.statsbiblioteket.summa.common.lucene.index.OldIndexField;
 import dk.statsbiblioteket.summa.common.lucene.index.SearchDescriptor;
-import dk.statsbiblioteket.summa.common.lucene.index.IndexConnector;
-import dk.statsbiblioteket.summa.common.lucene.analysis.SummaAnalyzer;
 import dk.statsbiblioteket.summa.common.lucene.AnalyzerFactory;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -327,7 +325,7 @@ public class SummaQueryParser {
         ArrayList<String> defF = new ArrayList<String>(confFields.size()*2);
         for (String s : confFields){
             if (descriptor.getGroups().containsKey(s)){
-                for (IndexField idf: descriptor.getGroups().get(s).getFields()){
+                for (OldIndexField idf: descriptor.getGroups().get(s).getFields()){
                     defF.add(idf.getName());
                 }
             } else {
@@ -345,7 +343,7 @@ public class SummaQueryParser {
             if (!help.containsKey(name)) {
                 help.put(name, new HashSet<String>());
             }
-            for (IndexField f : g.getFields()) {
+            for (OldIndexField f : g.getFields()) {
                 help.get(name).add(f.getName());
             }
 
@@ -426,7 +424,7 @@ public class SummaQueryParser {
 
         for (String s : defaultFields){
             if (descriptor.getGroups().containsKey(s)){
-                for (IndexField idf :  descriptor .getGroups().get(s).getFields()){
+                for (OldIndexField idf :  descriptor .getGroups().get(s).getFields()){
                     defF.add(idf.getName());
                 }
             } else {
@@ -444,7 +442,7 @@ public class SummaQueryParser {
             if (!help.containsKey(name)) {
                 help.put(name, new HashSet<String>());
             }
-            for (IndexField f : g.getFields()) {
+            for (OldIndexField f : g.getFields()) {
                 help.get(name).add(f.getName());
             }
 

@@ -43,9 +43,9 @@ public class IndexGroup {
     private static Log log = LogFactory.getLog(IndexDescriptor.class);
 
     private final String name; // Immutable to allow for caching of lookups
-    private Set<IndexField.Alias> aliases =
-            new HashSet<IndexField.Alias>(5);
-    private TreeSet<IndexField> fields = new TreeSet<IndexField>();
+    private Set<OldIndexField.Alias> aliases =
+            new HashSet<OldIndexField.Alias>(5);
+    private TreeSet<OldIndexField> fields = new TreeSet<OldIndexField>();
 
     public IndexGroup(String name) {
         log.trace("Creating group '" + name + "'");
@@ -63,7 +63,7 @@ public class IndexGroup {
         if (name.equals(groupName)) {
             return true;
         }
-        for (IndexField.Alias alias: aliases) {
+        for (OldIndexField.Alias alias: aliases) {
             if (alias.isMatch(groupName, lang)) {
                 return true;
             }
@@ -78,7 +78,7 @@ public class IndexGroup {
      * alias multiple times results in only one extra stored alias.
      * @param alias the alias to add.
      */
-    public void addAlias(IndexField.Alias alias) {
+    public void addAlias(OldIndexField.Alias alias) {
         //noinspection DuplicateStringLiteralInspection
         log.trace("Adding Alias '" + alias + "' to group '" + name + "'");
         aliases.add(alias);
@@ -94,8 +94,8 @@ public class IndexGroup {
      *         was found.
      */
     // TODO: Speed-optimize this
-    public IndexField getField(String name, String lang) {
-        for (IndexField field: fields) {
+    public OldIndexField getField(String name, String lang) {
+        for (OldIndexField field: fields) {
             if (field.isMatch(name, lang)) {
                 return field;
             }
@@ -106,10 +106,10 @@ public class IndexGroup {
     /**
      * @return a shallow copy of all Fields in this group.
      */
-    public Set<IndexField> getFields() {
+    public Set<OldIndexField> getFields() {
         log.trace("getFields called on group '" + name + "'");
         //noinspection unchecked
-        return (Set<IndexField>)fields.clone();
+        return (Set<OldIndexField>)fields.clone();
     }
 
     /**
@@ -124,7 +124,7 @@ public class IndexGroup {
      *            on Group directly.
      * @param field the field to add to the group.
      */
-    public void addField(IndexField field) {
+    public void addField(OldIndexField field) {
         //noinspection DuplicateStringLiteralInspection
         log.trace("Adding Field '" + field + "' to group '" + name + "'");
         fields.add(field);
@@ -147,10 +147,10 @@ public class IndexGroup {
     public String toXMLFragment() {
         StringWriter sw = new StringWriter(500);
         sw.append("<group name=\"").append(name).append("\">\n");
-        for (IndexField.Alias alias: aliases) {
+        for (OldIndexField.Alias alias: aliases) {
             sw.append(alias.toXMLFragment());
         }
-        for (IndexField field: fields) {
+        for (OldIndexField field: fields) {
             sw.append("<field name=\"").append(field.getName());
             sw.append("\"/>\n");
         }
