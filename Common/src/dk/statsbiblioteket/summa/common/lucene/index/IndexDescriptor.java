@@ -24,18 +24,16 @@ package dk.statsbiblioteket.summa.common.lucene.index;
 
 import java.io.IOException;
 import java.io.File;
+import java.io.StringWriter;
 import java.net.URL;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.TreeSet;
-import java.util.Collections;
 import java.util.Map;
-import java.util.HashMap;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.ResourceListener;
@@ -111,22 +109,22 @@ public class IndexDescriptor implements Configurable {
     private URL absoluteLocation;
 
     /**
-     * The free fields is all fields not explicitely attached to a group.
+     * All Fields mapped from field name => Field object.
      */
-    private IndexGroup freeFields = new IndexGroup("ungrouped");
-    private IndexGroup rootGroup = new IndexGroup("root");
+    private Map<String, IndexField> allFields =
+            new LinkedHashMap<String, IndexField>(20);
     /**
-     * IndexTerms contains query-time boosts based on terms. An example:
-     * An index-term with (title, nature, 2.0) is created. A query string is
-     * expanded to a Query. The Query is searched recursively for the term
-     * matching title, nature. If found, the boost for the query gets multiplied
-     * by 2.0.
+     * All Groups mapped from group name => Group object. All the Fields
+     * contained in the groups MUST be present in {@link #allFields}.
      */
-    private Map<String, IndexTerm> terms = new HashMap<String, IndexTerm>(20);
+    private Map<String, IndexGroup> groups =
+            new LinkedHashMap<String, IndexGroup>(20);
 
+    // TODO: Assign this based on XML
+    private IndexField defaultField = new IndexField(new IndexDefaults());
     private String defaultLanguage = "en";
     private String uniqueKey = "id";
-    private List<String> defaultFields = Arrays.asList(FREETEXT);
+    private List<String> defaultFields = Arrays.asList(FREETEXT, uniqueKey);
     private OPERATOR defaultOperator = OPERATOR.or;
 
     /**
@@ -167,6 +165,42 @@ public class IndexDescriptor implements Configurable {
         }
         int checkInterval = configuration.getInt(CONF_CHECK_INTERVAL,
                                                  DEFAULT_CHECK_INTERVAL);
+        fetchStateAndActivateListener(checkInterval);
+    }
+
+    /**
+     * Constructs a new empty IndexDescriptor. This can be used to set up an
+     * IndexDescriptor programatically, instead of XML-based.
+     */
+    public IndexDescriptor() {
+        log.debug("Empty descriptor created");
+    }
+
+    /**
+     * Constructs an IndexDescriptor based on the stated resource. The resource
+     * will only be loaded once.
+     * @param absoluteLocation the location of the XML-representation of the
+     *                         descriptor.
+     * @throws IOException if no persistent data could be loaded and parsed.
+     */
+    public IndexDescriptor(URL absoluteLocation) throws IOException {
+        log.trace("Creating descriptor based on '" + absoluteLocation + "'");
+        this.absoluteLocation = absoluteLocation;
+        fetchStateAndActivateListener(0);
+    }
+
+    /**
+     * Construct an IndexDescriptor based on the given xml.
+     * @param xml an XML-representation of an IndexDescriptor.
+     */
+    public IndexDescriptor(String xml) {
+        log.trace("Creating descriptor based on XML");
+        parse(xml);
+        log.debug("Descriptor created based on XML");
+    }
+
+    private void fetchStateAndActivateListener(
+            final int checkInterval) throws IOException {
         listener =
                 new ResourceListener(absoluteLocation, checkInterval, false) {
 
@@ -183,24 +217,6 @@ public class IndexDescriptor implements Configurable {
         if (checkInterval >= 0) {
             listener.setActive(true);
         }
-    }
-
-    /**
-     * Constructs a new empty IndexDescriptor. This can be used to set up an
-     * IndexDescriptor programatically, instead of XML-based.
-     */
-    public IndexDescriptor() {
-        log.debug("Empty descriptor created");
-    }
-
-    /**
-     * Construct an IndexDescriptor based on the given xml.
-     * @param xml an XML-representation of an IndexDescriptor.
-     */
-    public IndexDescriptor(String xml) {
-        log.trace("Creating descriptor based on XML");
-        parse(xml);
-        log.debug("Descriptor created based on XML");
     }
 
     private static URL resolveAbsoluteLocation(String locationRoot) throws
@@ -225,7 +241,8 @@ public class IndexDescriptor implements Configurable {
      * @param xml an XML representation of an IndexDescriptor.
      */
     public synchronized void parse(String xml) {
-        // TODO: Implement parsing og IndexDescriptor XML
+        // TODO: Implement parsing of IndexDescriptor XML
+        log.fatal("No parsing of XML yet: " + xml);
     }
 
     /**
@@ -235,7 +252,49 @@ public class IndexDescriptor implements Configurable {
      * @throws IOException if the representation could not be stored.
      */
     public synchronized void save(File location) throws IOException {
-        // TODO: Implement save
+        log.debug("Storing descriptor to '" + location + "'");
+        Files.saveString(toXML(), location);
+    }
+
+    /**
+     * XML-representation usable for persistence. This is the format that
+     * {@link #parse} accepts.
+     * @return a well-formed XML representation of the descriptor.
+     * @see {@link #parse(String)}.
+     */
+    public String toXML() {
+        StringWriter sw = new StringWriter(10000);
+        sw.append("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n");
+        sw.append("<IndexDescriptor version=\"1.0\">\n");
+
+        sw.append("<groups>\n");
+        for (IndexGroup g: groups.values()){
+           sw.append(g.toXMLFragment());
+        }
+        sw.append("</groups>\n");
+
+        sw.append("<fields>\n");
+        for (Map.Entry<String, IndexField> entry : allFields.entrySet()){
+            sw.append(entry.getValue().toXMLFragment());
+        }
+        sw.append("</fields>\n");
+
+        sw.append("<defaultLanguage>").append(defaultLanguage);
+        sw.append("</defaultLanguage>\n");
+
+        sw.append("<uniqueKey>").append(uniqueKey).append("</uniqueKey>\n");
+
+        sw.append("<defaultSearchFields>");
+        sw.append(Strings.join(defaultFields, " "));
+        sw.append("</defaultSearchFields>\n");
+
+        sw.append("<SummaQueryParser defaultOperator=\"");
+        sw.append(defaultOperator.toString());
+        sw.append("\"/>\n");
+
+        //noinspection DuplicateStringLiteralInspection
+        sw.append("</IndexDescriptor>");
+        return sw.toString();
     }
 
     /**
@@ -249,79 +308,141 @@ public class IndexDescriptor implements Configurable {
     }
 
     /**
-     * Adds the given IndexField to the descriptors free fields, if the
-     * Field-object is not already present and if no existing field matches
-     * the name of the new field.
+     * Adds the given IndexField to the descriptors fields, if the
+     * Field-object is not already present. Existence is defined by the
+     * existence of a Field with the same name.
      * @param field the field to add to the descriptor.
      * @return true if the Field was added, else false.
-     * @see {@link #freeFields}.
+     * @see {@link #allFields}.
      */
-    public boolean addFreeField(IndexField field) {
-        if (freeFields.getField(field.getName(), null, false) != null) {
+    public synchronized boolean addField(IndexField field) {
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("addField(" + field + ") called");
+        if (allFields.get(field.getName()) != null) {
             log.debug("A Field with name '" + field.getName() + "' is already "
-                      + "present in freeFields");
+                      + "present in allFields");
             return false;
         }
         //noinspection DuplicateStringLiteralInspection
-        log.trace("Adding " + field + " to freeFields");
-        freeFields.addField(field);
+        log.trace("Adding " + field + " to allFields");
+        allFields.put(field.getName(), field);
         return true;
     }
 
     /**
-     * Adds the given IndexTerm to the list of query-time boosting terms.
-     * @param term the term to add to the descriptor.
-     * @see {@link #terms}.
+     * Adds the given IndexGroup to the descriptor, if the group is not already
+     * present. Presence is defined by the existence of a Group with the same
+     * name.
+     * </p><p>
+     * Note: Adding a Group automatically adds all contained Fields to
+     *       {@link #allFields}.
+     * @param group the group to add to the descriptor.
+     * @return true if the Group was added, else false.
+     * @see {@link #groups}.
      */
-    public void addTerm(IndexTerm term) {
-        terms.put(term.getKey(), term);
+    public synchronized boolean addGroup(IndexGroup group) {
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("addGroup(" + group + ") called");
+        if (groups.get(group.getName()) != null) {
+            log.warn("A Group with name '" + group.getName()
+                     + "' is already present");
+            return false;
+        }
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("Adding " + group);
+        groups.put(group.getName(), group);
+        log.trace("Adding Fields contained in " + group);
+        for (IndexField field: group.getFields()) {
+            addField(field);
+        }
+        return true;
     }
 
     /**
-     * See {@link IndexDescriptor#terms} for details on this class.
+     * Add a Field to a Group. This is the preferred way of adding a Field to
+     * a Group, as it handles the updating of {@link #allFields} as a 
+     * side-effect. Also: If the Group does not already exist in
+     * {@link #groups}, it is added to that list.
+     * @param group the field will be added to this group.
+     * @param field this will be added to the group.
      */
-    public class IndexTerm {
-        private String field;
-        private String text;
-
-        private float boost;
-
-        public IndexTerm(String field, String text, float boost) {
-            log.trace("Creating IndexTerm(" + field + ", " + text + ", " + boost
-                      + ")");
-            if (field == null) {
-                throw new IllegalArgumentException("Field must never be null "
-                                                   + "for IndexTerms");
-            }
-            if (text == null) {
-                throw new IllegalArgumentException("Text for IndexTerm for "
-                                                   + "Field '" + field + "'"
-                                                   + " must never be null ");
-            }
-            this.field = field;
-            this.text = text;
-            this.boost = boost;
+    public synchronized void addFieldToGroup(IndexGroup group,
+                                             IndexField field) {
+        group.addField(field);
+        if (!allFields.containsKey(field.getName())) {
+            addField(field);
         }
-
-        public float getBoost() {
-            return boost;
-        }
-
-        public String getField() {
-            return field;
-        }
-
-        public String getText() {
-            return text;
-        }
-
-        public String getKey() {
-            return field + ":" + text;
-        }
-
-        public String toString() {
-            //noinspection DuplicateStringLiteralInspection
-            return "IndexTerm(" + field + ", " + text + ", " + boost + ")";
+        if (!groups.containsKey(group.getName())) {
+            addGroup(group);
         }
     }
+
+    /**
+     * Wrapper for {@link #addFieldToGroup(IndexGroup, IndexField)}. If the
+     * Group does not already exist, it is created first.
+     * @param groupName the field will be added to this group, which will be
+     *                  created if it is not already present.
+     * @param field     this will be added to the group.
+     */
+    public synchronized void addFieldToGroup(String groupName,
+                                             IndexField field) {
+        IndexGroup group = groups.get(groupName);
+        if (group == null) {
+            group = new IndexGroup(groupName);
+        }
+        addFieldToGroup(group, field);
+    }
+
+    /**
+     * Returns the field where the name (no alias-lookup) matches the fieldName.
+     * If no field can be found, {@link #defaultField} is returned.
+     * @param fieldName the name of the field to get.
+     * @return a field corresponding to the name or the default field.
+     */
+    public IndexField getFieldForIndexing(String fieldName) {
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("getFieldForIndexing(" + fieldName + ") called");
+        IndexField field = allFields.get(fieldName);
+        if (field != null) {
+            return field;
+        }
+        log.debug("No field with name '" + fieldName
+                  + "' found. Returning default field");
+        return defaultField;
+    }
+
+    /* Mutators */
+
+    public void setDefaultLanguage(String defaultLanguage) {
+        this.defaultLanguage = defaultLanguage;
+    }
+
+    public void setUniqueKey(String uniqueKey) {
+        this.uniqueKey = uniqueKey;
+    }
+
+    public void setDefaultFields(List<String> defaultFields) {
+        this.defaultFields = defaultFields;
+    }
+
+    public void setDefaultOperator(OPERATOR defaultOperator) {
+        this.defaultOperator = defaultOperator;
+    }
+
+    public String getUniqueKey() {
+        return uniqueKey;
+    }
+
+    public List<String> getDefaultFields() {
+        return defaultFields;
+    }
+
+    public OPERATOR getDefaultOperator() {
+        return defaultOperator;
+    }
+
+    public String getDefaultLanguage() {
+        return defaultLanguage;
+    }
+
 }

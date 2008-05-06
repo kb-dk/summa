@@ -237,6 +237,12 @@ public class IndexField implements Comparable {
                    && (this.lang == null || lang == null
                        || this.lang.equals(lang));
         }
+
+        public String toXMLFragment() {
+            return "<alias name=\"" + name + "\""
+                   + (lang == null ? "" : " lang=\"" + lang + "\"")
+                   + "/>\n";
+        }
     }
 
     /**

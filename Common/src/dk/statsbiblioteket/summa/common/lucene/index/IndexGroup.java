@@ -25,13 +25,16 @@ package dk.statsbiblioteket.summa.common.lucene.index;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.TreeSet;
+import java.io.StringWriter;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
- * A representation of IndexFields and sub-groups.
+ * A representation of IndexFields. Groups are used for Query-expansion and
+ * cannot have sub-groups. Sub-groups might be introduced at a later time,
+ * but so far there has been no requests for them.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -39,11 +42,10 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 public class IndexGroup {
     private static Log log = LogFactory.getLog(IndexDescriptor.class);
 
-    private String name;
+    private final String name; // Immutable to allow for caching of lookups
     private Set<IndexField.Alias> aliases =
             new HashSet<IndexField.Alias>(5);
     private TreeSet<IndexField> fields = new TreeSet<IndexField>();
-    private TreeSet<IndexGroup> groups = new TreeSet<IndexGroup>();
 
     public IndexGroup(String name) {
         log.trace("Creating group '" + name + "'");
@@ -71,17 +73,6 @@ public class IndexGroup {
 
     /* Mutators */
 
-    public void addGroup(IndexGroup group) {
-        log.trace("addGroup " + group + " called on group " + this);
-        // TODO: Check for circular references
-/*        if (isCircularReference(group)) {
-            throw new IllegalArgumentException("The group '" + group
-                                               + "' would introduce a"
-                                               + " circular reference");
-        }*/
-        groups.add(group);
-    }
-
     /**
      * Adds the alias to the list of aliases for this Group. Adding the same
      * alias multiple times results in only one extra stored alias.
@@ -99,93 +90,26 @@ public class IndexGroup {
      * @param name      the name to search for.
      * @param lang      the language to use for alias-match. If lang == null,
      *                  lang is ignored when matching aliases.
-     * @param recursive if true, a recursive descend into subgroups is used.
      * @return the first match for the given name and lang or null if no match
      *         was found.
      */
-    public IndexField getField(String name, String lang, boolean recursive) {
+    // TODO: Speed-optimize this
+    public IndexField getField(String name, String lang) {
         for (IndexField field: fields) {
             if (field.isMatch(name, lang)) {
                 return field;
             }
         }
-        if (recursive) {
-            for (IndexGroup subGroup: groups) {
-                IndexField field = subGroup.getField(name, lang, recursive);
-                if (field != null) {
-                    return field;
-                }
-            }
-        }
         return null;
     }
 
     /**
-     * Searches the group for a subGroup that matches the given name and lang.
-     * The order of priority is direct match first, the alias-match.
-     * @param name      the name to search for.
-     * @param lang      the language to use for alias-match. If lang == null,
-     *                  lang is ignored when matching aliases.
-     * @param recursive if true, a recursive descend into subgroups is used.
-     * @return the first match for the given name and lang.
-     */
-    public IndexGroup getGroup(String name, String lang, boolean recursive) {
-        IndexGroup group = getGroup(name, lang, recursive, true);
-        if (group == null) {
-            group = getGroup(name, lang, recursive, true);
-        }
-        return group;
-    }
-
-    /**
-     * Searches the group for a subGroup that matches the given name and lang.
-     * @param name      the name to search for.
-     * @param lang      the language to use for alias-match. If lang == null,
-     *                  lang is ignored when matching aliases.
-     * @param recursive if true, a recursive descend into subgroups is used.
-     * @param directMatch if true, only the name is matched, not aliases.
-     * @return the first match for the given name and lang.
-     */
-    protected IndexGroup getGroup(String name, String lang,
-                                  boolean recursive, boolean directMatch) {
-        for (IndexGroup group: groups) {
-            if (directMatch) {
-                if (group.getName().equals(name)) {
-                    return group;
-                }
-            } else {
-                if (group.isMatch(name, lang)) {
-                    return group;
-                }
-            }
-            if (recursive) {
-                IndexGroup subGroup =
-                        group.getGroup(name, lang, recursive, directMatch);
-                if (subGroup != null) {
-                    return subGroup;
-                }
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Performs a recursive descend and returns a set with all contained
-     * fields. The Set is a shallow copy.
-     * @return all Fields in this group with sub-groups.
+     * @return a shallow copy of all Fields in this group.
      */
     public Set<IndexField> getFields() {
         log.trace("getFields called on group '" + name + "'");
-        if (groups.size() == 0) {
-            //noinspection unchecked
-            return (Set<IndexField>)fields.clone();
-        }
-        Set<IndexField> fields = new HashSet<IndexField>(20);
-        fields.addAll(this.fields);
-        for (IndexGroup subgroup: groups) {
-            fields.addAll(subgroup.getFields());
-        }
-        return fields;
+        //noinspection unchecked
+        return (Set<IndexField>)fields.clone();
     }
 
     /**
@@ -211,7 +135,26 @@ public class IndexGroup {
     }
 
     public String toString() {
-        return "Group(name '" + name + "', " + fields.size() + " fields, "
-               + groups.size() + " subgroups)";
+        return "Group(name '" + name + "', " + fields.size()
+               + " fields) subgroups)";
+    }
+
+    /**
+     * Generate an XML fragment suitable for insertion in an IndexDescriptor
+     * XML representation. The fragment references fields by name only.
+     * @return an XML fragment representing the group.
+     */
+    public String toXMLFragment() {
+        StringWriter sw = new StringWriter(500);
+        sw.append("<group name=\"").append(name).append("\">\n");
+        for (IndexField.Alias alias: aliases) {
+            sw.append(alias.toXMLFragment());
+        }
+        for (IndexField field: fields) {
+            sw.append("<field name=\"").append(field.getName());
+            sw.append("\"/>\n");
+        }
+        sw.append("</group>\n");
+        return sw.toString();
     }
 }
