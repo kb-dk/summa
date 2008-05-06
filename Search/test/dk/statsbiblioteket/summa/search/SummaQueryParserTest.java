@@ -24,7 +24,7 @@ package dk.statsbiblioteket.summa.search;
 
 import dk.statsbiblioteket.summa.common.lucene.analysis.SummaStandardAnalyzer;
 import dk.statsbiblioteket.summa.common.lucene.analysis.FreeTextAnalyzer;
-import dk.statsbiblioteket.summa.common.lucene.index.IndexField;
+import dk.statsbiblioteket.summa.common.lucene.index.OldIndexField;
 import dk.statsbiblioteket.summa.common.lucene.index.SearchDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -101,11 +101,11 @@ public class SummaQueryParserTest extends TestCase {
         PerFieldAnalyzerWrapper analyzer = new PerFieldAnalyzerWrapper(
                 new SummaStandardAnalyzer());
         analyzer = new PerFieldAnalyzerWrapper(new SummaStandardAnalyzer());
-        for (IndexField field : descriptor.getSingleFields()) {
+        for (OldIndexField field : descriptor.getSingleFields()) {
             analyzer.addAnalyzer(field.getName(), field.getType().getAnalyzer());
         }
         for (SearchDescriptor.Group g : descriptor.getGroups().values()) {
-            for (IndexField field : g.getFields()) {
+            for (OldIndexField field : g.getFields()) {
                 analyzer.addAnalyzer(field.getName(), field.getType().getAnalyzer());
             }
         }
@@ -128,11 +128,11 @@ public class SummaQueryParserTest extends TestCase {
         PerFieldAnalyzerWrapper analyzer = new PerFieldAnalyzerWrapper(
                 new SummaStandardAnalyzer());
         analyzer = new PerFieldAnalyzerWrapper(new SummaStandardAnalyzer());
-        for (IndexField field : descriptor.getSingleFields()) {
+        for (OldIndexField field : descriptor.getSingleFields()) {
             analyzer.addAnalyzer(field.getName(), field.getType().getAnalyzer());
         }
         for (SearchDescriptor.Group g : descriptor.getGroups().values()) {
-            for (IndexField field : g.getFields()) {
+            for (OldIndexField field : g.getFields()) {
                 analyzer.addAnalyzer(field.getName(), field.getType().getAnalyzer());
             }
         }
@@ -154,11 +154,11 @@ public class SummaQueryParserTest extends TestCase {
         PerFieldAnalyzerWrapper analyzer = new PerFieldAnalyzerWrapper(
                 new SummaStandardAnalyzer());
         analyzer = new PerFieldAnalyzerWrapper(new SummaStandardAnalyzer());
-        for (IndexField field : descriptor.getSingleFields()) {
+        for (OldIndexField field : descriptor.getSingleFields()) {
             analyzer.addAnalyzer(field.getName(), field.getType().getAnalyzer());
         }
         for (SearchDescriptor.Group g : descriptor.getGroups().values()) {
-            for (IndexField field : g.getFields()) {
+            for (OldIndexField field : g.getFields()) {
                 analyzer.addAnalyzer(field.getName(), field.getType().getAnalyzer());
             }
         }
@@ -180,11 +180,11 @@ public class SummaQueryParserTest extends TestCase {
 //        PerFieldAnalyzerWrapper analyzer = new PerFieldAnalyzerWrapper(
 //                new SummaStandardAnalyzer());
 //        analyzer = new PerFieldAnalyzerWrapper(new SummaStandardAnalyzer());
-//        for (IndexField field : descriptor.getSingleFields()) {
+//        for (OldIndexField field : descriptor.getSingleFields()) {
 //            analyzer.addAnalyzer(field.getId(), field.getType().getAnalyzer());
 //        }
 //        for (SearchDescriptor.Group g : descriptor.getGroups().values()) {
-//            for (IndexField field : g.getFields()) {
+//            for (OldIndexField field : g.getFields()) {
 //                analyzer.addAnalyzer(field.getId(), field.getType().getAnalyzer());
 //            }
 //        }

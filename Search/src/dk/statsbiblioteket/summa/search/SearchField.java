@@ -24,7 +24,7 @@ package dk.statsbiblioteket.summa.search;
 
 import java.util.*;
 
-import dk.statsbiblioteket.summa.common.lucene.index.IndexField;
+import dk.statsbiblioteket.summa.common.lucene.index.OldIndexField;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -33,24 +33,24 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 public class SearchField {
     private String key;
     private Map <String, String> alias;
-    private Map <String, Set<IndexField>> subkeys;
+    private Map <String, Set<OldIndexField>> subkeys;
 
 
     public SearchField(String key){
         key = key;
         alias = new HashMap<String, String>(5);
-        subkeys = new HashMap<String, Set<IndexField>>(10);
+        subkeys = new HashMap<String, Set<OldIndexField>>(10);
     }
 
     String addAlias(String key, String lang){
         return alias.put(lang, key);
     }
 
-    boolean addSubKey(String lang, IndexField key){
+    boolean addSubKey(String lang, OldIndexField key){
         if (subkeys.containsKey(lang)){
           return  subkeys.get(lang).add(key);
         } else {
-          Set<IndexField> s = new HashSet<IndexField>();
+          Set<OldIndexField> s = new HashSet<OldIndexField>();
           s.add(key);
           subkeys.put(lang, s);
           return true;

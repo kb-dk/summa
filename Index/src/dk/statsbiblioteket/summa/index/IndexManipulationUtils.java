@@ -43,7 +43,7 @@ import java.io.FileNotFoundException;
 import java.io.File;
 import java.util.*;
 
-import dk.statsbiblioteket.summa.common.lucene.index.IndexField;
+import dk.statsbiblioteket.summa.common.lucene.index.OldIndexField;
 import dk.statsbiblioteket.summa.common.lucene.index.SearchDescriptor;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
@@ -155,7 +155,7 @@ public class IndexManipulationUtils {
      */
     public static void mergeSearchDescriptors (String[] indexDirs, String outputDir) throws IOException {
 
-        TreeSet<IndexField> singleFields = new TreeSet<IndexField>();
+        TreeSet<OldIndexField> singleFields = new TreeSet<OldIndexField>();
         HashMap<String, SearchDescriptor.Group> groups = new HashMap<String, SearchDescriptor.Group>();
 
         for (String dir : indexDirs){
@@ -172,7 +172,7 @@ public class IndexManipulationUtils {
                     for (Map.Entry<String,SearchDescriptor.Group> e : s){
                              SearchDescriptor.Group g_old =  groups.get(e.getKey());
                              if (g_old != null){
-                                 TreeSet<IndexField> old_fields = g_old.getFields();
+                                 TreeSet<OldIndexField> old_fields = g_old.getFields();
                                  old_fields.addAll(e.getValue().getFields());
                                  e.getValue().setFields(old_fields);
                              }
@@ -263,7 +263,7 @@ public class IndexManipulationUtils {
 
     private static void writeSearchDescriptor(String[] descriptorsToMerge, String writeToPath) throws IOException, TransformerException {
         int numberOfDescriptors = descriptorsToMerge.length;
-        TreeSet<IndexField> singleFields = new TreeSet<IndexField>();
+        TreeSet<OldIndexField> singleFields = new TreeSet<OldIndexField>();
         HashMap<String, SearchDescriptor.Group> groups = new HashMap<String, SearchDescriptor.Group>();
 
         for (int j= 0; j<numberOfDescriptors; j++){
@@ -276,7 +276,7 @@ public class IndexManipulationUtils {
                     for (Map.Entry<String,SearchDescriptor.Group> e : s){
                              SearchDescriptor.Group g_old =  groups.get(e.getKey());
                              if (g_old != null){
-                                 TreeSet<IndexField> old_fields = g_old.getFields();
+                                 TreeSet<OldIndexField> old_fields = g_old.getFields();
                                  old_fields.addAll(e.getValue().getFields());
                                  e.getValue().setFields(old_fields);
                              }

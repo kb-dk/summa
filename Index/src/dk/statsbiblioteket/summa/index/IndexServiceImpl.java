@@ -419,15 +419,15 @@ public class IndexServiceImpl implements IndexService {
 
             if (gruppeNavn != null) {
                 //log.debug("generating group with name:" + groupName + " and alias: " + gruppeNavn);
-                IndexField.Alias alias = new IndexField.Alias(gruppeNavn, "da");
-                ArrayList<IndexField.Alias>  li = new ArrayList<IndexField.Alias>();
+                OldIndexField.Alias alias = new OldIndexField.Alias(gruppeNavn, "da");
+                ArrayList<OldIndexField.Alias>  li = new ArrayList<OldIndexField.Alias>();
                 li.add(alias);
                 descriptor.createGroup(groupName, li);
                 //log.debug("done generating group");
             } else {
                 //log.debug("generating group with name:" + groupName);
 
-                descriptor.createGroup(groupName, new ArrayList<IndexField.Alias>());
+                descriptor.createGroup(groupName, new ArrayList<OldIndexField.Alias>());
                 //log.debug("done generating group");
             }
 
@@ -460,7 +460,7 @@ public class IndexServiceImpl implements IndexService {
 
         for (int i = 0; i < len; i++) {
             Node field = list.item(i);
-            IndexField f = IndexUtils.makeField(field, defaults, groupName, NAMESPACE);
+            OldIndexField f = IndexUtils.makeField(field, defaults, groupName, NAMESPACE);
             value = IndexUtils.getElementNodeValue(field);
 
             if (value != null && !"".equals(value.trim())) {

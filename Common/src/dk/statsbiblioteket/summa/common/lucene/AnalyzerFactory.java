@@ -32,7 +32,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.lucene.analysis.FreeTextAnalyzer;
-import dk.statsbiblioteket.summa.common.lucene.index.IndexField;
+import dk.statsbiblioteket.summa.common.lucene.index.OldIndexField;
 import dk.statsbiblioteket.summa.common.lucene.index.SearchDescriptor;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
@@ -65,12 +65,12 @@ public class AnalyzerFactory {
     public static Analyzer buildAnalyzer(SearchDescriptor descriptor) {
         PerFieldAnalyzerWrapper analyzer =
                 new PerFieldAnalyzerWrapper(new FreeTextAnalyzer());
-        for (IndexField field : descriptor.getSingleFields()) {
+        for (OldIndexField field : descriptor.getSingleFields()) {
             analyzer.addAnalyzer(field.getName(),
                                  field.getType().getAnalyzer());
         }
         for (SearchDescriptor.Group g : descriptor.getGroups().values()) {
-            for (IndexField field : g.getFields()) {
+            for (OldIndexField field : g.getFields()) {
                 analyzer.addAnalyzer(field.getName(),
                                      field.getType().getAnalyzer());
             }
