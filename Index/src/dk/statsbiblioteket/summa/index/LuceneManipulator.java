@@ -39,6 +39,8 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.index.LogDocMergePolicy;
+import org.apache.lucene.index.SerialMergeScheduler;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.LockObtainFailedException;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -171,6 +173,12 @@ public class LuceneManipulator implements IndexManipulator {
                                          new StandardAnalyzer(), true);
             }
             writer.setMaxFieldLength(Integer.MAX_VALUE-1);
+
+            // This changes from memory-based check and disables auto flush
+            writer.setMaxBufferedDocs(Integer.MAX_VALUE); // Dangerous...
+            // Old style merging to preserve order of documents
+            writer.setMergeScheduler(new SerialMergeScheduler());
+            writer.setMergePolicy(new LogDocMergePolicy());
             // TODO: Set conservative merges et al
             // TODO: Infer analyzer
         } catch (CorruptIndexException e) {
