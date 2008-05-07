@@ -37,9 +37,6 @@ import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.ResourceListener;
-import dk.statsbiblioteket.summa.common.index.IndexGroup;
-import dk.statsbiblioteket.summa.common.lucene.index.OldIndexField;
-import dk.statsbiblioteket.summa.common.lucene.index.IndexDefaults;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -50,15 +47,19 @@ import org.apache.commons.logging.LogFactory;
  * The IndexDescriptor is needed for Lucene Document building and for query
  * expansion.
  * </p><p>
+ * The generics A (Analyzer) and F (Filter) for contained IndexFields should
+ * be specified. 
+ * </p><p>
  * The IndexDescriptor has groups, which schema.xml does not, and is otherwise
  * somewhat simpler. It is envisioned that SOLR's classes for indexing and
  * querying can be used in Summa instead of raw Lucene at some point in time.
  * @see {@url http://wiki.apache.org/solr/SchemaXml}
  */
+// TODO: Avoid making new IndexFields - make a factory-method, easy to override.
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class IndexDescriptor implements Configurable {
+public class IndexDescriptor<A, F> implements Configurable {
     private static Log log = LogFactory.getLog(IndexDescriptor.class);
 
     /**
@@ -114,17 +115,17 @@ public class IndexDescriptor implements Configurable {
     /**
      * All Fields mapped from field name => Field object.
      */
-    private Map<String, OldIndexField> allFields =
-            new LinkedHashMap<String, OldIndexField>(20);
+    private Map<String, IndexField<A, F>> allFields =
+            new LinkedHashMap<String, IndexField<A, F>>(20);
     /**
      * All Groups mapped from group name => Group object. All the Fields
      * contained in the groups MUST be present in {@link #allFields}.
      */
-    private Map<String, IndexGroup> groups =
-            new LinkedHashMap<String, IndexGroup>(20);
+    private Map<String, IndexGroup<A, F>> groups =
+            new LinkedHashMap<String, IndexGroup<A, F>>(20);
 
     // TODO: Assign this based on XML
-    private OldIndexField defaultField = new OldIndexField(new IndexDefaults());
+    private IndexField<A, F> defaultField = new IndexField<A, F>();
     private String defaultLanguage = "en";
     private String uniqueKey = "id";
     private List<String> defaultFields = Arrays.asList(FREETEXT, uniqueKey);
@@ -271,13 +272,13 @@ public class IndexDescriptor implements Configurable {
         sw.append("<IndexDescriptor version=\"1.0\">\n");
 
         sw.append("<groups>\n");
-        for (IndexGroup g: groups.values()){
+        for (IndexGroup<A, F> g: groups.values()){
            sw.append(g.toXMLFragment());
         }
         sw.append("</groups>\n");
 
         sw.append("<fields>\n");
-        for (Map.Entry<String, OldIndexField> entry : allFields.entrySet()){
+        for (Map.Entry<String, IndexField<A, F>> entry : allFields.entrySet()){
             sw.append(entry.getValue().toXMLFragment());
         }
         sw.append("</fields>\n");
@@ -318,7 +319,7 @@ public class IndexDescriptor implements Configurable {
      * @return true if the Field was added, else false.
      * @see {@link #allFields}.
      */
-    public synchronized boolean addField(OldIndexField field) {
+    public synchronized boolean addField(IndexField<A, F> field) {
         //noinspection DuplicateStringLiteralInspection
         log.trace("addField(" + field + ") called");
         if (allFields.get(field.getName()) != null) {
@@ -343,7 +344,7 @@ public class IndexDescriptor implements Configurable {
      * @return true if the Group was added, else false.
      * @see {@link #groups}.
      */
-    public synchronized boolean addGroup(IndexGroup group) {
+    public synchronized boolean addGroup(IndexGroup<A, F> group) {
         //noinspection DuplicateStringLiteralInspection
         log.trace("addGroup(" + group + ") called");
         if (groups.get(group.getName()) != null) {
@@ -355,7 +356,7 @@ public class IndexDescriptor implements Configurable {
         log.trace("Adding " + group);
         groups.put(group.getName(), group);
         log.trace("Adding Fields contained in " + group);
-        for (OldIndexField field: group.getFields()) {
+        for (IndexField<A, F> field: group.getFields()) {
             addField(field);
         }
         return true;
@@ -369,8 +370,8 @@ public class IndexDescriptor implements Configurable {
      * @param group the field will be added to this group.
      * @param field this will be added to the group.
      */
-    public synchronized void addFieldToGroup(IndexGroup group,
-                                             OldIndexField field) {
+    public synchronized void addFieldToGroup(IndexGroup<A, F> group,
+                                             IndexField<A, F> field) {
         group.addField(field);
         if (!allFields.containsKey(field.getName())) {
             addField(field);
@@ -381,17 +382,17 @@ public class IndexDescriptor implements Configurable {
     }
 
     /**
-     * Wrapper for {@link #addFieldToGroup(IndexGroup, OldIndexField)}. If the
+     * Wrapper for {@link #addFieldToGroup(IndexGroup, IndexField)}. If the
      * Group does not already exist, it is created first.
      * @param groupName the field will be added to this group, which will be
      *                  created if it is not already present.
      * @param field     this will be added to the group.
      */
     public synchronized void addFieldToGroup(String groupName,
-                                             OldIndexField field) {
-        IndexGroup group = groups.get(groupName);
+                                             IndexField<A, F> field) {
+        IndexGroup<A, F> group = groups.get(groupName);
         if (group == null) {
-            group = new IndexGroup(groupName);
+            group = new IndexGroup<A, F>(groupName);
         }
         addFieldToGroup(group, field);
     }
@@ -402,10 +403,10 @@ public class IndexDescriptor implements Configurable {
      * @param fieldName the name of the field to get.
      * @return a field corresponding to the name or the default field.
      */
-    public OldIndexField getFieldForIndexing(String fieldName) {
+    public IndexField<A, F> getFieldForIndexing(String fieldName) {
         //noinspection DuplicateStringLiteralInspection
         log.trace("getFieldForIndexing(" + fieldName + ") called");
-        OldIndexField field = allFields.get(fieldName);
+        IndexField<A, F> field = allFields.get(fieldName);
         if (field != null) {
             return field;
         }

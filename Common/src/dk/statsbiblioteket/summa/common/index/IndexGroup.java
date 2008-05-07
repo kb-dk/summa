@@ -25,30 +25,29 @@ package dk.statsbiblioteket.summa.common.index;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.TreeSet;
+import java.util.Map;
 import java.io.StringWriter;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.w3c.dom.Node;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.index.IndexAlias;
-import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
-import dk.statsbiblioteket.summa.common.lucene.index.OldIndexField;
 
 /**
- * A representation of a group of fields. Groups are used for Query-expansion
- * and  cannot have sub-groups. Sub-groups might be introduced at a later time,
- * but so far there has been no requests for them.
+ * A representation of a group of fields. Groups are used for Query-expansion.
+ * </p><p>
+ * As groups represent IndexFields, A (Analyzer) and F (Filter) should be
+ * specified upon usage, in order to make the group index-specific.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class IndexGroup {
+public class IndexGroup<A, F> {
     private static Log log = LogFactory.getLog(IndexDescriptor.class);
 
     private final String name; // Immutable to allow for caching of lookups
-    private Set<IndexAlias> aliases =
-            new HashSet<IndexAlias>(5);
-    private TreeSet<OldIndexField> fields = new TreeSet<OldIndexField>();
+    private Set<IndexAlias> aliases = new HashSet<IndexAlias>(5);
+    private TreeSet<IndexField<A, F>> fields = new TreeSet<IndexField<A, F>>();
 
     public IndexGroup(String name) {
         log.trace("Creating group '" + name + "'");
@@ -88,6 +87,13 @@ public class IndexGroup {
     }
 
     /**
+     * @return the aliases for this group.
+     */
+    public Set<IndexAlias> getAliases() {
+        return aliases;
+    }
+
+    /**
      * Searches the group for a Field that matches the given name and lang.
      * The order of priority is direct match first, the alias-match.
      * @param name      the name to search for.
@@ -97,8 +103,8 @@ public class IndexGroup {
      *         was found.
      */
     // TODO: Speed-optimize this
-    public OldIndexField getField(String name, String lang) {
-        for (OldIndexField field: fields) {
+    public IndexField<A, F> getField(String name, String lang) {
+        for (IndexField<A, F> field: fields) {
             if (field.isMatch(name, lang)) {
                 return field;
             }
@@ -109,10 +115,10 @@ public class IndexGroup {
     /**
      * @return a shallow copy of all Fields in this group.
      */
-    public Set<OldIndexField> getFields() {
+    public Set<IndexField<A, F>> getFields() {
         log.trace("getFields called on group '" + name + "'");
         //noinspection unchecked
-        return (Set<OldIndexField>)fields.clone();
+        return (Set<IndexField<A, F>>)fields.clone();
     }
 
     /**
@@ -127,19 +133,10 @@ public class IndexGroup {
      *            on Group directly.
      * @param field the field to add to the group.
      */
-    public void addField(OldIndexField field) {
+    public void addField(IndexField<A, F> field) {
         //noinspection DuplicateStringLiteralInspection
         log.trace("Adding Field '" + field + "' to group '" + name + "'");
         fields.add(field);
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String toString() {
-        return "Group(name '" + name + "', " + fields.size()
-               + " fields) subgroups)";
     }
 
     /**
@@ -153,11 +150,65 @@ public class IndexGroup {
         for (IndexAlias alias: aliases) {
             sw.append(alias.toXMLFragment());
         }
-        for (OldIndexField field: fields) {
+        for (IndexField<A, F> field: fields) {
             sw.append("<field name=\"").append(field.getName());
             sw.append("\"/>\n");
         }
         sw.append("</group>\n");
         return sw.toString();
     }
+
+    /**
+     * Create a group based on the given Document Node. The Node should conform
+     * to the output from {@link #toXMLFragment()}.
+     * </p><p>
+     * @param node          a representation of a Field.
+     * @param fieldProvider if any fields are specified, the fieldProvider is
+     *                      queried for the parent.
+     */
+    public void parse(Node node, FieldProvider<A, F> fieldProvider) {
+        log.trace("parse called with node " + node);
+        // TODO: Implement this
+    }
+
+    /* Fundamental methods */
+
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null) {
+            return false;
+        }
+        if (!(o instanceof IndexGroup)) {
+            return false;
+        }
+        IndexGroup<A, F> other;
+        try {
+            // How do we check for generic types?
+            //noinspection unchecked
+            other = (IndexGroup<A, F>)o;
+        } catch (ClassCastException e) {
+            return false;
+        }
+        return name.equals(other.getName())
+               && aliases.size() == other.getAliases().size()
+               && aliases.containsAll(other.getAliases())
+               && fields.size() == other.getFields().size()
+               && fields.containsAll(other.getFields());
+    }
+
+    public int hashCode() {
+        return name.hashCode();
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String toString() {
+        return "Group(name '" + name + "', " + fields.size()
+               + " fields) subgroups)";
+    }
+
 }

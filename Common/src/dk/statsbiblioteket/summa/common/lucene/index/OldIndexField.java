@@ -49,7 +49,8 @@ import dk.statsbiblioteket.summa.common.index.IndexAlias;
  *            freetext index.<br>
  * repeat -   this is deprecated and part of the type.<br>
  * aliases -  a list a language Aliases.<br>
- * resolver - the resolver for the document.<br><br> 
+ * resolver - the resolver for the document.<br><br>
+ * @deprecated in favor of IndexField. 
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,

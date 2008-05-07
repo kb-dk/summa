@@ -56,7 +56,7 @@
     <fields>
         <!-- Valid attributes for fields (most taken from SOLR schema.xml):
           name: mandatory - the name for the field
-          type: mandatory - the name of a previously defined type from the <types> section
+          parent: mandatory - the name of a previously defined type from the <types> section or one of the build-in types
           indexed: true if this field should be indexed (searchable or sortable)
           stored: true if this field should be retrievable
           multiValued: true if this field may contain multiple values per document
@@ -66,12 +66,12 @@
           required: true/false: Should be present - used for validation of documents prior to indexing
         -->
 
-        <field name="author" type="text" indexed="true" stored="true" multiValued="true" boost="2.0" sortLocale="da" inFreeText="true" required="true">
+        <field name="author" parent="text" indexed="true" stored="true" multiValued="true" boost="2.0" sortLocale="da" inFreeText="true" required="true">
             <alias name="forfatter" lang="da"/>
         </field>
 
-        <field name="title" type="text" indexed="true" stored="true"/>
-        <field name="titel" type="text" indexed="true" stored="true"/>
+        <field name="title" parent="text" indexed="true" stored="true"/>
+        <field name="titel" parent="text" indexed="true" stored="true"/>
         <field name="lessimportanttitle" type="text" indexed="true" stored="false"/>
 
 
