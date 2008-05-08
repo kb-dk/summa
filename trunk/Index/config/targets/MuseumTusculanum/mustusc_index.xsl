@@ -38,7 +38,7 @@
                 <Index:fields>
                     <xsl:call-template name="shortformat" />
 					<xsl:for-each select="metadata">
-						<xsl:for-each select="mtp_dc:mdc">
+						<xsl:for-each select="mdc">
 								<xsl:call-template name="author" />
 									<xsl:call-template name="ma" />  
 									
