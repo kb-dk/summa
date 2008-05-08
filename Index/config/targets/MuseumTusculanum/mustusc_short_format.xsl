@@ -24,7 +24,7 @@
 								<rdf:Description>
 									
 									<xsl:for-each select="metadata">
-										<xsl:for-each select="mtp_dc:mdc">
+										<xsl:for-each select="mdc">
 											<xsl:for-each select="title">
 												<dc:title>
 													<xsl:value-of select="."/>
