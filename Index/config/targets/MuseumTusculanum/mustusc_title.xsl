@@ -13,51 +13,51 @@
 	<xsl:template name="title">
 			
 								<Index:group Index:name="ti" Index:navn="ti" Index:suggest="true">
-									<xsl:for-each select="mdc:title">
+									<xsl:for-each select="title">
 										<Index:field Index:repeat="true" Index:name="main_titel" Index:navn="ht" Index:type="token" Index:boostFactor="6">
 											
 											<xsl:value-of select="."/>
 										
 										</Index:field>
 									</xsl:for-each>
-										<xsl:for-each select="mdc:part/mdc:title">
+										<xsl:for-each select="part/title">
 										<Index:field Index:repeat="true" Index:name="main_titel" Index:navn="ht" Index:type="token" Index:boostFactor="6">
 											
 											<xsl:value-of select="."/>
 										
 										</Index:field>
 									</xsl:for-each>
-										<xsl:for-each select="mdc:subtitle">
+										<xsl:for-each select="subtitle">
 							    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="5"  Index:suggest="true">
 											
 											<xsl:value-of select="."/>
 										
 										</Index:field>
 									</xsl:for-each>
-									<xsl:for-each select="mdc:part/mdc:subtitle">
+									<xsl:for-each select="part/subtitle">
 							    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="5"  Index:suggest="true">
 											
 											<xsl:value-of select="."/>
 										
 										</Index:field>
 									</xsl:for-each>
-									<xsl:for-each select="mdc:series_title">
+									<xsl:for-each select="series_title">
                                <Index:field Index:repeat="true" Index:name="se" Index:navn="se" Index:type="token" Index:boostFactor="2">   
 															 <xsl:value-of select="."/>
-															 <xsl:if test="../mdc:year_of_publ!= '' ">
+															 <xsl:if test="../year_of_publ!= '' ">
 															 	 <xsl:text>&#32;(</xsl:text>
-															 <xsl:value-of select="../mdc:year_of_publ"/>
+															 <xsl:value-of select="../year_of_publ"/>
 															 <xsl:text>)</xsl:text>
 															 </xsl:if>
 															 <xsl:text>;&#32;</xsl:text>
-															 <xsl:if test="../mdc:volume!= '' ">
-																	 <xsl:value-of select="../mdc:volume"/>
+															 <xsl:if test="../volume!= '' ">
+																	 <xsl:value-of select="../volume"/>
 														
 															 </xsl:if>
 															 
-															 <xsl:if test="../mdc:issue!= '' ">
+															 <xsl:if test="../issue!= '' ">
 															 	 <xsl:text>&#32;(</xsl:text>
-															 <xsl:value-of select="../mdc:issue"/>
+															 <xsl:value-of select="../issue"/>
 															 <xsl:text>)</xsl:text>
 															 </xsl:if>
 															 </Index:field>
@@ -65,7 +65,7 @@
 								</Index:group>
 									<Index:field Index:name="sort_title" Index:sortLocale="da" Index:navn="sort_titel" Index:type="keyword" Index:boostFactor="6">
 									
-									<xsl:for-each select="mdc:title [position()=1]">
+									<xsl:for-each select="title [position()=1]">
 										<xsl:choose>
 											<xsl:when test="starts-with(.,'The ') ">
 												<xsl:value-of select="substring(.,5)"/>
@@ -88,24 +88,24 @@
 										</xsl:choose>
 									</xsl:for-each>
                      </Index:field>
-										 		<xsl:for-each select="mdc:series_title">
+										 		<xsl:for-each select="series_title">
 							<Index:field Index:repeat="false" Index:name="lso" Index:navn="lvp" Index:type="keyword">
 						
 															 <xsl:value-of select="."/>
-															 <xsl:if test="../mdc:year_of_publ!= '' ">
+															 <xsl:if test="../year_of_publ!= '' ">
 															 	 <xsl:text>&#32;(</xsl:text>
-															 <xsl:value-of select="../mdc:year_of_publ"/>
+															 <xsl:value-of select="../year_of_publ"/>
 															 <xsl:text>)</xsl:text>
 															 </xsl:if>
 															 <xsl:text>;&#32;</xsl:text>
-															 <xsl:if test="../mdc:volume!= '' ">
-																	 <xsl:value-of select="../mdc:volume"/>
+															 <xsl:if test="../volume!= '' ">
+																	 <xsl:value-of select="../volume"/>
 														
 															 </xsl:if>
 															 
-															 <xsl:if test="../mdc:issue!= '' ">
+															 <xsl:if test="../issue!= '' ">
 															 	 <xsl:text>&#32;(</xsl:text>
-															 <xsl:value-of select="../mdc:issue"/>
+															 <xsl:value-of select="../issue"/>
 															 <xsl:text>)</xsl:text>
 															 </xsl:if>
 															 </Index:field>

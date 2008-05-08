@@ -11,7 +11,7 @@
 				xmlns:mtp_dc="http://www.mtp.hum.ku.dk/library/uni/sta/oai2v1/">
 	<xsl:output version="1.0" encoding="UTF-8" indent="yes" method="xml"/>
 	<xsl:template name="ma">
-			<xsl:for-each select="mdc:format">
+			<xsl:for-each select="format">
 								<Index:field Index:repeat="true" Index:name="format" Index:navn="format" Index:type="token">
 									<xsl:value-of select="."/>
 								</Index:field>

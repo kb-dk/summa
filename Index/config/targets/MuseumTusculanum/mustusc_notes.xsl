@@ -11,12 +11,12 @@
 				xmlns:mtp_dc="http://www.mtp.hum.ku.dk/library/uni/sta/oai2v1/">
 	<xsl:output version="1.0" encoding="UTF-8" indent="yes" method="xml"/>
 	
-	<xsl:template match="mdc:br">
+	<xsl:template match="br">
 	<xsl:text> </xsl:text>
 	</xsl:template>
 	<xsl:template name="notes">
 
-			<xsl:for-each select="mdc:contents">
+			<xsl:for-each select="contents">
 				<xsl:if test=".!=' '">
 								<Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token" Index:boostFactor="1">
 									<xsl:apply-templates select="."/>
@@ -25,7 +25,7 @@
 							</xsl:for-each>
       
 
-							<xsl:for-each select="mdc:presswrote">
+							<xsl:for-each select="presswrote">
 								<xsl:if test=".!=' '">
 								<Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token" Index:boostFactor="1">
 									<xsl:apply-templates select="."/>
@@ -34,31 +34,31 @@
 							</xsl:for-each>
        
 
-							<xsl:for-each select="mdc:description">
+							<xsl:for-each select="description">
 								<xsl:if test=".!=' '">
 									<Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token" Index:boostFactor="1">
 										<xsl:apply-templates select="."/>
 												</Index:field>
 												</xsl:if>
 								</xsl:for-each>
-       <xsl:for-each select="mdc:part/mdc:partnr">
+       <xsl:for-each select="part/partnr">
 			 	<xsl:if test=".!=' '">
    		<Index:field Index:repeat="true" Index:name="other" Index:navn="andet" Index:type="token">
 			<xsl:value-of select="."/>
 			</Index:field>
 			</xsl:if>
 			</xsl:for-each>
-			 <xsl:for-each select="mdc:pages">
+			 <xsl:for-each select="pages">
 			 	<xsl:if test=".!=' '">
    		<Index:field Index:repeat="true" Index:name="other" Index:navn="andet" Index:type="token">
 			<xsl:value-of select="."/>
 			</Index:field>
 			</xsl:if>
 			</xsl:for-each>
-			   <xsl:for-each select="mdc:part/mdc:startpage">
+			   <xsl:for-each select="part/startpage">
 				 	<xsl:if test=".!=' '">
 			<Index:field Index:repeat="true" Index:name="other" Index:navn="andet" Index:type="token">
-			<xsl:value-of select="."/><xsl:text>-</xsl:text><xsl:value-of select="following-sibling::mdc:endpage"/>
+			<xsl:value-of select="."/><xsl:text>-</xsl:text><xsl:value-of select="following-sibling::endpage"/>
 			</Index:field>
 				</xsl:if>
 			</xsl:for-each>
