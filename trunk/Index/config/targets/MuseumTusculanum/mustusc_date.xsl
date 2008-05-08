@@ -11,7 +11,7 @@
 				xmlns:mtp_dc="http://www.mtp.hum.ku.dk/library/uni/sta/oai2v1/">
 	<xsl:output version="1.0" encoding="UTF-8" indent="yes" method="xml"/>
 	<xsl:template name="date">
-			<xsl:for-each select="mdc:year_of_publ">
+			<xsl:for-each select="year_of_publ">
 								<Index:field Index:repeat="true" Index:name="py" Index:navn="år"  Index:type="token" Index:boostFactor="2">
 									<xsl:value-of select="."/>
 								</Index:field>
@@ -20,7 +20,7 @@
       
 
                                 <Index:field Index:name="sort_year_desc" Index:navn="sort_år_desc" Index:type="keyword" Index:boostFactor="10">
-									<xsl:for-each select="mdc:year_of_publ">
+									<xsl:for-each select="year_of_publ">
 										<xsl:call-template name="getYear">
                                         <xsl:with-param name="str" select="." />
                                         <xsl:with-param name="split">
@@ -34,12 +34,12 @@
 									</xsl:for-each>
                                 
 
-                                    <xsl:if test="not(mdc:year_of_publ)">
+                                    <xsl:if test="not(year_of_publ)">
 										<xsl:text>0</xsl:text>
 									</xsl:if>
 								</Index:field>
 								<Index:field Index:name="sort_year_asc" Index:navn="sort_år_asc" Index:type="keyword" Index:boostFactor="10">
-									<xsl:for-each select="mdc:year_of_publ">
+									<xsl:for-each select="year_of_publ">
 										<xsl:call-template name="getYear">
                                         <xsl:with-param name="str" select="." />
                                         <xsl:with-param name="split">
@@ -52,7 +52,7 @@
                                        
 									</xsl:for-each>
                                   
-									<xsl:if test="not(mdc:year_of_publ) ">
+									<xsl:if test="not(year_of_publ) ">
 										<xsl:text>9999</xsl:text>
 									</xsl:if>
 								</Index:field>

@@ -12,14 +12,14 @@
 	<xsl:output version="1.0" encoding="UTF-8" indent="yes" method="xml"/>
 	<xsl:template name="su">
 			<Index:group Index:name="su" Index:navn="em">
-									<xsl:for-each select="mdc:subject">
+									<xsl:for-each select="subject">
 										<Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="2">
 											<xsl:value-of select="."/>
 										</Index:field>
 											</xsl:for-each>
     									</Index:group>
 								        <Index:group Index:suggest="true" Index:navn="lem" Index:name="lsubj">
-														<xsl:for-each select="mdc:subject">
+														<xsl:for-each select="subject">
 			<Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsu_oai" Index:name="lsu_oai" Index:repeat="false">
 
 															<xsl:value-of select="."/>

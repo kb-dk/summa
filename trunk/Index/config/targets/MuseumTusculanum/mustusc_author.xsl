@@ -13,7 +13,7 @@
 				
 				<Index:group Index:name="au" Index:navn="fo">
 						
-						<xsl:for-each select="mdc:creator">
+						<xsl:for-each select="creator">
 							<Index:field Index:name="author_person" Index:repeat="true" Index:navn="pe" Index:type="token" Index:boostFactor="6">
 										<xsl:value-of select="."/>
 								
@@ -34,97 +34,7 @@
 										</xsl:when>
 								</xsl:choose>
 						</xsl:for-each>
-						<xsl:for-each select="mdc:editor">
-							<Index:field Index:name="author_person" Index:repeat="true" Index:navn="pe" Index:type="token" Index:boostFactor="6">
-										<xsl:value-of select="."/>
-								
-								</Index:field>
-								
-								<xsl:choose>
-										<xsl:when test="contains(.,' ')">
-							<Index:field Index:name="author_person" Index:repeat="true" Index:navn="pe" Index:type="token" Index:boostFactor="6">
-														<xsl:variable name="lastSpace">
-																<xsl:call-template name="lastCharPosition">
-																		<xsl:with-param name="original" select="." />
-																		<xsl:with-param name="character" select="' '" />
-																</xsl:call-template>
-														</xsl:variable>
-															<xsl:value-of select="substring(., $lastSpace + 1)" />, <xsl:value-of select="substring(., 1, $lastSpace - 1)" />
-
-												</Index:field>
-										</xsl:when>
-								</xsl:choose>
-						</xsl:for-each>
-						
-						<xsl:for-each select="mdc:contributor">
-								
-							<Index:field Index:name="author_person" Index:repeat="true" Index:navn="pe" Index:type="token" Index:boostFactor="6">
-										<xsl:value-of select="."/>
-								
-								</Index:field>
-								<xsl:choose>
-										<xsl:when test="contains(.,' ')">
-							<Index:field Index:name="author_person" Index:repeat="true" Index:navn="pe" Index:type="token" Index:boostFactor="6">
-														<xsl:variable name="lastSpace">
-																<xsl:call-template name="lastCharPosition">
-																		<xsl:with-param name="original" select="." />
-																		<xsl:with-param name="character" select="' '" />
-																</xsl:call-template>
-														</xsl:variable>
-															<xsl:value-of select="substring(., $lastSpace + 1)" />, <xsl:value-of select="substring(., 1, $lastSpace - 1)" />
-
-												</Index:field>
-										</xsl:when>
-								</xsl:choose>
-						
-						</xsl:for-each>
-						
-						<xsl:for-each select="mdc:author">
-						
-						
-								
-							<Index:field Index:name="author_person" Index:repeat="true" Index:navn="pe" Index:type="token" Index:boostFactor="6">
-										<xsl:value-of select="."/>
-								
-								</Index:field>
-								<xsl:choose>
-										<xsl:when test="contains(.,' ')">
-							<Index:field Index:name="author_person" Index:repeat="true" Index:navn="pe" Index:type="token" Index:boostFactor="6">
-														<xsl:variable name="lastSpace">
-																<xsl:call-template name="lastCharPosition">
-																		<xsl:with-param name="original" select="." />
-																		<xsl:with-param name="character" select="' '" />
-																</xsl:call-template>
-														</xsl:variable>
-															<xsl:value-of select="substring(., $lastSpace + 1)" />, <xsl:value-of select="substring(., 1, $lastSpace - 1)" />
-
-												</Index:field>
-										</xsl:when>
-								</xsl:choose>
-						
-						</xsl:for-each>
-									<xsl:for-each select="mdc:part/mdc:creator">
-							<Index:field Index:name="author_person" Index:repeat="true" Index:navn="pe" Index:type="token" Index:boostFactor="6">
-										<xsl:value-of select="."/>
-								
-								</Index:field>
-								
-								<xsl:choose>
-										<xsl:when test="contains(.,' ')">
-							<Index:field Index:name="author_person" Index:repeat="true" Index:navn="pe" Index:type="token" Index:boostFactor="6">
-														<xsl:variable name="lastSpace">
-																<xsl:call-template name="lastCharPosition">
-																		<xsl:with-param name="original" select="." />
-																		<xsl:with-param name="character" select="' '" />
-																</xsl:call-template>
-														</xsl:variable>
-															<xsl:value-of select="substring(., $lastSpace + 1)" />, <xsl:value-of select="substring(., 1, $lastSpace - 1)" />
-
-												</Index:field>
-										</xsl:when>
-								</xsl:choose>
-						</xsl:for-each>
-						<xsl:for-each select="mdc:part/mdc:editor">
+						<xsl:for-each select="editor">
 							<Index:field Index:name="author_person" Index:repeat="true" Index:navn="pe" Index:type="token" Index:boostFactor="6">
 										<xsl:value-of select="."/>
 								
@@ -146,7 +56,7 @@
 								</xsl:choose>
 						</xsl:for-each>
 						
-						<xsl:for-each select="mdc:part/mdc:contributor">
+						<xsl:for-each select="contributor">
 								
 							<Index:field Index:name="author_person" Index:repeat="true" Index:navn="pe" Index:type="token" Index:boostFactor="6">
 										<xsl:value-of select="."/>
@@ -169,7 +79,97 @@
 						
 						</xsl:for-each>
 						
-						<xsl:for-each select="mdc:part/mdc:author">
+						<xsl:for-each select="author">
+						
+						
+								
+							<Index:field Index:name="author_person" Index:repeat="true" Index:navn="pe" Index:type="token" Index:boostFactor="6">
+										<xsl:value-of select="."/>
+								
+								</Index:field>
+								<xsl:choose>
+										<xsl:when test="contains(.,' ')">
+							<Index:field Index:name="author_person" Index:repeat="true" Index:navn="pe" Index:type="token" Index:boostFactor="6">
+														<xsl:variable name="lastSpace">
+																<xsl:call-template name="lastCharPosition">
+																		<xsl:with-param name="original" select="." />
+																		<xsl:with-param name="character" select="' '" />
+																</xsl:call-template>
+														</xsl:variable>
+															<xsl:value-of select="substring(., $lastSpace + 1)" />, <xsl:value-of select="substring(., 1, $lastSpace - 1)" />
+
+												</Index:field>
+										</xsl:when>
+								</xsl:choose>
+						
+						</xsl:for-each>
+									<xsl:for-each select="part/creator">
+							<Index:field Index:name="author_person" Index:repeat="true" Index:navn="pe" Index:type="token" Index:boostFactor="6">
+										<xsl:value-of select="."/>
+								
+								</Index:field>
+								
+								<xsl:choose>
+										<xsl:when test="contains(.,' ')">
+							<Index:field Index:name="author_person" Index:repeat="true" Index:navn="pe" Index:type="token" Index:boostFactor="6">
+														<xsl:variable name="lastSpace">
+																<xsl:call-template name="lastCharPosition">
+																		<xsl:with-param name="original" select="." />
+																		<xsl:with-param name="character" select="' '" />
+																</xsl:call-template>
+														</xsl:variable>
+															<xsl:value-of select="substring(., $lastSpace + 1)" />, <xsl:value-of select="substring(., 1, $lastSpace - 1)" />
+
+												</Index:field>
+										</xsl:when>
+								</xsl:choose>
+						</xsl:for-each>
+						<xsl:for-each select="part/editor">
+							<Index:field Index:name="author_person" Index:repeat="true" Index:navn="pe" Index:type="token" Index:boostFactor="6">
+										<xsl:value-of select="."/>
+								
+								</Index:field>
+								
+								<xsl:choose>
+										<xsl:when test="contains(.,' ')">
+							<Index:field Index:name="author_person" Index:repeat="true" Index:navn="pe" Index:type="token" Index:boostFactor="6">
+														<xsl:variable name="lastSpace">
+																<xsl:call-template name="lastCharPosition">
+																		<xsl:with-param name="original" select="." />
+																		<xsl:with-param name="character" select="' '" />
+																</xsl:call-template>
+														</xsl:variable>
+															<xsl:value-of select="substring(., $lastSpace + 1)" />, <xsl:value-of select="substring(., 1, $lastSpace - 1)" />
+
+												</Index:field>
+										</xsl:when>
+								</xsl:choose>
+						</xsl:for-each>
+						
+						<xsl:for-each select="part/contributor">
+								
+							<Index:field Index:name="author_person" Index:repeat="true" Index:navn="pe" Index:type="token" Index:boostFactor="6">
+										<xsl:value-of select="."/>
+								
+								</Index:field>
+								<xsl:choose>
+										<xsl:when test="contains(.,' ')">
+							<Index:field Index:name="author_person" Index:repeat="true" Index:navn="pe" Index:type="token" Index:boostFactor="6">
+														<xsl:variable name="lastSpace">
+																<xsl:call-template name="lastCharPosition">
+																		<xsl:with-param name="original" select="." />
+																		<xsl:with-param name="character" select="' '" />
+																</xsl:call-template>
+														</xsl:variable>
+															<xsl:value-of select="substring(., $lastSpace + 1)" />, <xsl:value-of select="substring(., 1, $lastSpace - 1)" />
+
+												</Index:field>
+										</xsl:when>
+								</xsl:choose>
+						
+						</xsl:for-each>
+						
+						<xsl:for-each select="part/author">
 						
 						
 								
@@ -201,7 +201,7 @@
 							
 								
 				
-				<xsl:for-each select="mdc:contributor">
+				<xsl:for-each select="contributor">
 						
 						<Index:field Index:repeat="false" Index:name="author_normalised" Index:navn="lfo" Index:type="keyword" Index:boostFactor="10">
 								<xsl:variable name="lastSpace">
@@ -218,7 +218,7 @@
 						
 				
 			
-				<xsl:for-each select="mdc:author">
+				<xsl:for-each select="author">
 						
 						<Index:field Index:repeat="false" Index:name="author_normalised" Index:navn="lfo" Index:type="keyword" Index:boostFactor="10">
 								<xsl:variable name="lastSpace">
@@ -232,7 +232,7 @@
 						</Index:field>
 				</xsl:for-each>
 	
-						<xsl:for-each select="mdc:editor">
+						<xsl:for-each select="editor">
 						
 						<Index:field Index:repeat="false" Index:name="author_normalised" Index:navn="lfo" Index:type="keyword" Index:boostFactor="10">
 								<xsl:variable name="lastSpace">
@@ -245,7 +245,7 @@
 
 						</Index:field>
 				</xsl:for-each>
-								<xsl:for-each select="mdc:creator">
+								<xsl:for-each select="creator">
 						
 						<Index:field Index:repeat="false" Index:name="author_normalised" Index:navn="lfo" Index:type="keyword" Index:boostFactor="10">
 								<xsl:variable name="lastSpace">
@@ -258,7 +258,7 @@
 
 						</Index:field>
 				</xsl:for-each>
-					<xsl:for-each select="mdc:part/mdc:contributor">
+					<xsl:for-each select="part/contributor">
 						
 						<Index:field Index:repeat="false" Index:name="author_normalised" Index:navn="lfo" Index:type="keyword" Index:boostFactor="10">
 								<xsl:variable name="lastSpace">
@@ -275,7 +275,7 @@
 						
 				
 			
-				<xsl:for-each select="mdc:part/mdc:author">
+				<xsl:for-each select="part/author">
 						
 						<Index:field Index:repeat="false" Index:name="author_normalised" Index:navn="lfo" Index:type="keyword" Index:boostFactor="10">
 								<xsl:variable name="lastSpace">
@@ -289,7 +289,7 @@
 						</Index:field>
 				</xsl:for-each>
 	
-						<xsl:for-each select="mdc:part/mdc:editor">
+						<xsl:for-each select="part/editor">
 						
 						<Index:field Index:repeat="false" Index:name="author_normalised" Index:navn="lfo" Index:type="keyword" Index:boostFactor="10">
 								<xsl:variable name="lastSpace">
@@ -302,7 +302,7 @@
 
 						</Index:field>
 				</xsl:for-each>
-								<xsl:for-each select="mdc:part/mdc:creator">
+								<xsl:for-each select="part/creator">
 						
 						<Index:field Index:repeat="false" Index:name="author_normalised" Index:navn="lfo" Index:type="keyword" Index:boostFactor="10">
 								<xsl:variable name="lastSpace">

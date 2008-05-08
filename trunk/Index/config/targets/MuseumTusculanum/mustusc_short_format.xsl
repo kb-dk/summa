@@ -25,23 +25,23 @@
 									
 									<xsl:for-each select="metadata">
 										<xsl:for-each select="mtp_dc:mdc">
-											<xsl:for-each select="mdc:title">
+											<xsl:for-each select="title">
 												<dc:title>
 													<xsl:value-of select="."/>
 												</dc:title>
 											</xsl:for-each>
-                                            <xsl:for-each select="mdc:author">
+                                            <xsl:for-each select="author">
 												<dc:creator>
 													<xsl:value-of select="."/>
 												</dc:creator>
 											</xsl:for-each>
                                             
-											<xsl:for-each select="mdc:date">
+											<xsl:for-each select="date">
 												<dc:date>
 													<xsl:value-of select="."/>
 												</dc:date>
 											</xsl:for-each>
-                                            <xsl:for-each select="mdc:year_of_publ">
+                                            <xsl:for-each select="year_of_publ">
                                                 <dc:date>
                                                     <xsl:value-of select="."/>
                                                 </dc:date>
