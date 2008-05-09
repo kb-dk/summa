@@ -25,12 +25,13 @@ package dk.statsbiblioteket.summa.common.index;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.TreeSet;
-import java.util.Map;
 import java.io.StringWriter;
+import java.text.ParseException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
@@ -42,16 +43,33 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class IndexGroup<A, F> {
+public class IndexGroup<F extends IndexField> {
     private static Log log = LogFactory.getLog(IndexDescriptor.class);
 
     private final String name; // Immutable to allow for caching of lookups
     private Set<IndexAlias> aliases = new HashSet<IndexAlias>(5);
-    private TreeSet<IndexField<A, F>> fields = new TreeSet<IndexField<A, F>>();
+    private TreeSet<F> fields = new TreeSet<F>();
 
+    /**
+     * Create a new empty group.
+     * @param name the name of the group.
+     */
     public IndexGroup(String name) {
         log.trace("Creating group '" + name + "'");
         this.name = name;
+    }
+
+    /**
+     * Create a new Field based on the given node.
+     * @param node          the description of the group.
+     * @param fieldProvider where to locate the fields specified in node.
+     * @throws ParseException if the group could not be created.
+     */
+    public IndexGroup(Node node, FieldProvider<F> fieldProvider) throws
+                                                                ParseException {
+        log.trace("Creating group based on node");
+        name = parse(node, fieldProvider);
+        log.trace("Created group based on node with name '" + name + "'");
     }
 
     /**
@@ -103,8 +121,8 @@ public class IndexGroup<A, F> {
      *         was found.
      */
     // TODO: Speed-optimize this
-    public IndexField<A, F> getField(String name, String lang) {
-        for (IndexField<A, F> field: fields) {
+    public F getField(String name, String lang) {
+        for (F field: fields) {
             if (field.isMatch(name, lang)) {
                 return field;
             }
@@ -115,10 +133,10 @@ public class IndexGroup<A, F> {
     /**
      * @return a shallow copy of all Fields in this group.
      */
-    public Set<IndexField<A, F>> getFields() {
+    public Set<F> getFields() {
         log.trace("getFields called on group '" + name + "'");
         //noinspection unchecked
-        return (Set<IndexField<A, F>>)fields.clone();
+        return (Set<F>)fields.clone();
     }
 
     /**
@@ -133,7 +151,7 @@ public class IndexGroup<A, F> {
      *            on Group directly.
      * @param field the field to add to the group.
      */
-    public void addField(IndexField<A, F> field) {
+    public void addField(F field) {
         //noinspection DuplicateStringLiteralInspection
         log.trace("Adding Field '" + field + "' to group '" + name + "'");
         fields.add(field);
@@ -150,7 +168,7 @@ public class IndexGroup<A, F> {
         for (IndexAlias alias: aliases) {
             sw.append(alias.toXMLFragment());
         }
-        for (IndexField<A, F> field: fields) {
+        for (F field: fields) {
             sw.append("<field name=\"").append(field.getName());
             sw.append("\"/>\n");
         }
@@ -165,10 +183,50 @@ public class IndexGroup<A, F> {
      * @param node          a representation of a Field.
      * @param fieldProvider if any fields are specified, the fieldProvider is
      *                      queried for the parent.
+     * @throws ParseException if the node could not be parsed.
+     *                        The index of the exception will normally be -1.
+     * @return the name of the newly group.
      */
-    public void parse(Node node, FieldProvider<A, F> fieldProvider) {
-        log.trace("parse called with node " + node);
-        // TODO: Implement this
+    private String parse(Node node, FieldProvider<F> fieldProvider) throws
+                                                                ParseException {
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("parse called");
+        Node nameNode = node.getAttributes().getNamedItem("name");
+        if (nameNode == null) {
+            throw new ParseException("No name specified for group", -1);
+        }
+        String name = nameNode.getNodeValue();
+        log.trace("parse: Located group name '" + name + "'");
+        aliases = IndexAlias.getAliases(node);
+
+        NodeList children =  node.getChildNodes();
+        for (int i = 0 ; i < children.getLength(); i++) {
+            Node child = children.item(i);
+            //noinspection DuplicateStringLiteralInspection
+            if (child.getLocalName().equals("field")) {
+                Node fieldNameNode = child.getAttributes().getNamedItem("name");
+                if (fieldNameNode == null
+                    || fieldNameNode.getNodeValue().equals("")) {
+                    //noinspection DuplicateStringLiteralInspection
+                    log.warn(String.format(
+                            "Undefined field name in group '%s'. Skipping",
+                            name));
+                    continue;
+                }
+                String fieldName = nameNode.getNodeValue();
+                log.trace("Found field name '" + fieldName + " in group '"
+                          + name + "'");
+                try {
+                    addField(fieldProvider.getField(fieldName));
+                } catch (IllegalArgumentException e) {
+                    throw new ParseException(String.format(
+                            "The field '%s' in group '%s' did not exist",
+                            fieldName, name), -1);
+                }
+            }
+        }
+        log.debug("Resolved " + fields.size() + " fields for group " + name);
+        return name;
     }
 
     /* Fundamental methods */
@@ -183,11 +241,11 @@ public class IndexGroup<A, F> {
         if (!(o instanceof IndexGroup)) {
             return false;
         }
-        IndexGroup<A, F> other;
+        IndexGroup<F> other;
         try {
             // How do we check for generic types?
             //noinspection unchecked
-            other = (IndexGroup<A, F>)o;
+            other = (IndexGroup<F>)o;
         } catch (ClassCastException e) {
             return false;
         }

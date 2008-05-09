@@ -22,14 +22,20 @@
  */
 package dk.statsbiblioteket.summa.common.index;
 
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.File;
 import java.io.StringWriter;
+import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.Map;
 import java.util.List;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.text.ParseException;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Files;
@@ -39,27 +45,32 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.ResourceListener;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 /**
  * A description of the layout of the index, such as default fields, groups
  * and analyzers. This is Summa's equivalent of SOLR's schema.xml.
  * </p><p>
- * The IndexDescriptor is needed for Lucene Document building and for query
- * expansion.
- * </p><p>
- * The generics A (Analyzer) and F (Filter) for contained IndexFields should
- * be specified. 
+ * The IndexDescriptor is needed for index document building and for query
+ * expansion. The IndexDescriptor is kept fairly index-implementation agnostic,
+ * although it was modelled with Lucene in mind. As long as the index
+ * implementation is field-based with stored and indexed fields et al,
+ * it should be easy to extend the IndexDescriptor.
  * </p><p>
  * The IndexDescriptor has groups, which schema.xml does not, and is otherwise
  * somewhat simpler. It is envisioned that SOLR's classes for indexing and
  * querying can be used in Summa instead of raw Lucene at some point in time.
  * @see {@url http://wiki.apache.org/solr/SchemaXml}
  */
-// TODO: Avoid making new IndexFields - make a factory-method, easy to override.
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class IndexDescriptor<A, F> implements Configurable {
+public abstract class IndexDescriptor<F extends IndexField> implements
+                                   Configurable, FieldProvider<F> {
     private static Log log = LogFactory.getLog(IndexDescriptor.class);
 
     /**
@@ -115,17 +126,16 @@ public class IndexDescriptor<A, F> implements Configurable {
     /**
      * All Fields mapped from field name => Field object.
      */
-    private Map<String, IndexField<A, F>> allFields =
-            new LinkedHashMap<String, IndexField<A, F>>(20);
+    private Map<String, F> allFields = new LinkedHashMap<String, F>(20);
     /**
      * All Groups mapped from group name => Group object. All the Fields
      * contained in the groups MUST be present in {@link #allFields}.
      */
-    private Map<String, IndexGroup<A, F>> groups =
-            new LinkedHashMap<String, IndexGroup<A, F>>(20);
+    private Map<String, IndexGroup<F>> groups =
+            new LinkedHashMap<String, IndexGroup<F>>(20);
 
     // TODO: Assign this based on XML
-    private IndexField<A, F> defaultField = new IndexField<A, F>();
+    private F defaultField = createNewField();
     private String defaultLanguage = "en";
     private String uniqueKey = "id";
     private List<String> defaultFields = Arrays.asList(FREETEXT, uniqueKey);
@@ -197,7 +207,7 @@ public class IndexDescriptor<A, F> implements Configurable {
      * Construct an IndexDescriptor based on the given xml.
      * @param xml an XML-representation of an IndexDescriptor.
      */
-    public IndexDescriptor(String xml) {
+    public IndexDescriptor(String xml) throws ParseException {
         log.trace("Creating descriptor based on XML");
         parse(xml);
         log.debug("Descriptor created based on XML");
@@ -243,10 +253,141 @@ public class IndexDescriptor<A, F> implements Configurable {
      * exception is thrown, the state is guaranteed to be the same as before
      * parse was called. See the class documentation for the format of the XML.
      * @param xml an XML representation of an IndexDescriptor.
+     * @throws ParseException if there was an error parsing the xml.
      */
-    public synchronized void parse(String xml) {
-        // TODO: Implement parsing of IndexDescriptor XML
-        log.fatal("No parsing of XML yet: " + xml);
+    public synchronized void parse(String xml) throws ParseException {
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("parse called");
+
+        DocumentBuilderFactory builderFactory =
+                DocumentBuilderFactory.newInstance();
+        builderFactory.setNamespaceAware(true);
+        builderFactory.setValidating(false);
+        DocumentBuilder builder = null;
+        try {
+            builder = builderFactory.newDocumentBuilder();
+        } catch (ParserConfigurationException e) {
+            throw (ParseException)new ParseException(
+                    "Could not create document builder", -1).initCause(e);
+        }
+        Document document;
+        try {
+            document = builder.parse(new InputSource(
+                    new ByteArrayInputStream(xml.getBytes("utf-8"))));
+        } catch (SAXException e) {
+            throw (ParseException) new ParseException(
+                    "Could not create Document from xml '"
+                    + xml + "'", -1).initCause(e);
+        } catch (UnsupportedEncodingException e) {
+            //noinspection DuplicateStringLiteralInspection
+            throw (ParseException) new ParseException(
+                    "utf-8 not supported", -1).initCause(e);
+        } catch (IOException e) {
+            throw (ParseException) new ParseException(
+                    "Could not create ByteArrayInputStream from xml '"
+                    + xml + "'", -1).initCause(e);
+        }
+
+        defaultLanguage = getSingleValue(document,
+                                         "IndexDescriptor/defaultLanguage",
+                                         "default language",
+                                         defaultLanguage);
+
+        uniqueKey = getSingleValue(document,
+                                   "IndexDescriptor/uniqueKey",
+                                   "unique key",
+                                   uniqueKey);
+        if ("".equals(uniqueKey)) {
+            throw new ParseException("Unique key specified to empty string",
+                                     -1);
+        }
+
+        String defaultSearchFields =
+                getSingleValue(document,
+                               "IndexDescriptor/defaultSearchFields",
+                               "default search fields",
+                               Strings.join(defaultFields, " "));
+        defaultFields = Arrays.asList(defaultSearchFields.trim().split(" +"));
+        if (defaultFields.size() == 0) {
+            log.warn("No default fields specified");
+        }
+
+        NodeList nodes = document.getElementsByTagName(
+                "IndexDescriptor/QueryParser/@defaultOperator");
+        Node defaultOperatorNode = null;
+        switch (nodes.getLength()) {
+            case 0:
+                log.debug("parse: No QueryParser#defaultOperator specified"
+                          + ". Using default value");
+                break;
+            case 1:
+                defaultOperatorNode = nodes.item(0);
+                break;
+            default:
+                defaultOperatorNode = nodes.item(0);
+                log.warn("parse: More than one QueryParser#defaultOperator"
+                         + " found . Using the first");
+        }
+        if (defaultOperatorNode != null) {
+            String dop = defaultOperatorNode.getNodeValue();
+            if ("or".equals(dop.toLowerCase())) {
+                defaultOperator = OPERATOR.or;
+            } else if ("and".equals(dop.toLowerCase())) {
+                defaultOperator = OPERATOR.and;
+            } else {
+                log.warn("Unexpected value '" + dop
+                         + "' found in QueryParser#defaultOperator");
+            }
+            log.debug("Default operator is " + defaultOperator);
+        }
+
+
+        NodeList fieldNodes =
+                document.getElementsByTagName("/IndexDescriptor/fields/field");
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("Located " + fieldNodes.getLength() + " field nodes");
+        for (int i = 0 ; i < fieldNodes.getLength(); i++) {
+            addField(createNewField(fieldNodes.item(i)));
+        }
+
+        NodeList groupNodes =
+                document.getElementsByTagName("/IndexDescriptor/groups/group");
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("Located " + groupNodes.getLength() + " group nodes");
+        for (int i = 0 ; i < groupNodes.getLength(); i++) {
+            addGroup(new IndexGroup<F>(groupNodes.item(i), this));
+        }
+
+        // Sanity check
+        for (String defaultField: defaultFields) {
+            if (allFields.get(defaultField) == null
+                && groups.get(defaultField) == null) {
+                log.warn("The specified default field '" + defaultField
+                         + "' did not have any corresponding field or group");
+            }
+        }
+    }
+
+    private String getSingleValue(Document document, String path,
+                                  String description, String defaultValue) {
+        NodeList nodes = document.getElementsByTagName(path);
+        String result = defaultValue;
+        switch (nodes.getLength()) {
+            case 0:
+                log.debug("getSingleValue: No " + description + "  specified in"
+                          + " XML. Using default value '" + defaultValue + "'");
+                break;
+            case 1:
+                result = nodes.item(0).getNodeValue();
+                log.warn("getSingleValue: Got " + description
+                         + " (" + result + ")");
+                break;
+            default:
+                result = nodes.item(0).getNodeValue();
+                log.warn("getSingleValue: More than one " + description
+                         + " . Using the first (" + result + ")");
+        }
+        return result;
     }
 
     /**
@@ -261,6 +402,24 @@ public class IndexDescriptor<A, F> implements Configurable {
     }
 
     /**
+     * Locates and returns a field from the internal list of all fields.
+     * @param fieldName the name of the wanted field.
+     * @return the field corresponding to the name.
+     * @throws IllegalArgumentException if the field could not be located.
+     * @see {@link #allFields}.
+     */
+    public F getField(
+            String fieldName) throws IllegalArgumentException {
+        F field = allFields.get(fieldName);
+        if (field == null) {
+            throw new IllegalArgumentException(
+                    "The field '" + fieldName + "' is not present in the "
+                    + "collection of existing fields");
+        }
+        return field;
+    }
+
+    /**
      * XML-representation usable for persistence. This is the format that
      * {@link #parse} accepts.
      * @return a well-formed XML representation of the descriptor.
@@ -272,13 +431,13 @@ public class IndexDescriptor<A, F> implements Configurable {
         sw.append("<IndexDescriptor version=\"1.0\">\n");
 
         sw.append("<groups>\n");
-        for (IndexGroup<A, F> g: groups.values()){
+        for (IndexGroup<F> g: groups.values()){
            sw.append(g.toXMLFragment());
         }
         sw.append("</groups>\n");
 
         sw.append("<fields>\n");
-        for (Map.Entry<String, IndexField<A, F>> entry : allFields.entrySet()){
+        for (Map.Entry<String, F> entry : allFields.entrySet()){
             sw.append(entry.getValue().toXMLFragment());
         }
         sw.append("</fields>\n");
@@ -292,7 +451,7 @@ public class IndexDescriptor<A, F> implements Configurable {
         sw.append(Strings.join(defaultFields, " "));
         sw.append("</defaultSearchFields>\n");
 
-        sw.append("<SummaQueryParser defaultOperator=\"");
+        sw.append("<QueryParser defaultOperator=\"");
         sw.append(defaultOperator.toString());
         sw.append("\"/>\n");
 
@@ -319,7 +478,7 @@ public class IndexDescriptor<A, F> implements Configurable {
      * @return true if the Field was added, else false.
      * @see {@link #allFields}.
      */
-    public synchronized boolean addField(IndexField<A, F> field) {
+    public synchronized boolean addField(F field) {
         //noinspection DuplicateStringLiteralInspection
         log.trace("addField(" + field + ") called");
         if (allFields.get(field.getName()) != null) {
@@ -344,7 +503,7 @@ public class IndexDescriptor<A, F> implements Configurable {
      * @return true if the Group was added, else false.
      * @see {@link #groups}.
      */
-    public synchronized boolean addGroup(IndexGroup<A, F> group) {
+    public synchronized boolean addGroup(IndexGroup<F> group) {
         //noinspection DuplicateStringLiteralInspection
         log.trace("addGroup(" + group + ") called");
         if (groups.get(group.getName()) != null) {
@@ -356,7 +515,7 @@ public class IndexDescriptor<A, F> implements Configurable {
         log.trace("Adding " + group);
         groups.put(group.getName(), group);
         log.trace("Adding Fields contained in " + group);
-        for (IndexField<A, F> field: group.getFields()) {
+        for (F field: group.getFields()) {
             addField(field);
         }
         return true;
@@ -370,8 +529,8 @@ public class IndexDescriptor<A, F> implements Configurable {
      * @param group the field will be added to this group.
      * @param field this will be added to the group.
      */
-    public synchronized void addFieldToGroup(IndexGroup<A, F> group,
-                                             IndexField<A, F> field) {
+    public synchronized void addFieldToGroup(IndexGroup<F> group,
+                                             F field) {
         group.addField(field);
         if (!allFields.containsKey(field.getName())) {
             addField(field);
@@ -389,10 +548,10 @@ public class IndexDescriptor<A, F> implements Configurable {
      * @param field     this will be added to the group.
      */
     public synchronized void addFieldToGroup(String groupName,
-                                             IndexField<A, F> field) {
-        IndexGroup<A, F> group = groups.get(groupName);
+                                             F field) {
+        IndexGroup<F> group = groups.get(groupName);
         if (group == null) {
-            group = new IndexGroup<A, F>(groupName);
+            group = new IndexGroup<F>(groupName);
         }
         addFieldToGroup(group, field);
     }
@@ -403,10 +562,10 @@ public class IndexDescriptor<A, F> implements Configurable {
      * @param fieldName the name of the field to get.
      * @return a field corresponding to the name or the default field.
      */
-    public IndexField<A, F> getFieldForIndexing(String fieldName) {
+    public F getFieldForIndexing(String fieldName) {
         //noinspection DuplicateStringLiteralInspection
         log.trace("getFieldForIndexing(" + fieldName + ") called");
-        IndexField<A, F> field = allFields.get(fieldName);
+        F field = allFields.get(fieldName);
         if (field != null) {
             return field;
         }
