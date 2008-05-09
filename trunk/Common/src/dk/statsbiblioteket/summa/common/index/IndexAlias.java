@@ -22,7 +22,17 @@
  */
 package dk.statsbiblioteket.summa.common.index;
 
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
+import java.text.ParseException;
+
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * An alias in Summa is a naming convention for naming fields and groups in
@@ -34,6 +44,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te, hal")
 public final class IndexAlias implements Comparable {
+    private static Log log = LogFactory.getLog(IndexAlias.class);
 
     private String name;
     private String lang;
@@ -45,9 +56,44 @@ public final class IndexAlias implements Comparable {
      *             in which case all langs in {@link#isMatch} matches.
      */
     public IndexAlias(String name, String lang) {
+        log.trace("Creating alias(" + name + ", " + lang + ")");
         this.name = name;
         this.lang = lang;
     }
+
+    /**
+     * Extracts aliases from the given node and returns them as a list.
+     * @param node the node containing aliases.
+     * @return a list of the aliases contained in the node.
+     * @throws ParseException if the aliases could not be parsed.
+     */
+    public static Set<IndexAlias> getAliases(Node node) throws ParseException {
+        log.trace("getAliases called");
+        NodeList children =  node.getChildNodes();
+        Set<IndexAlias> aliases = new HashSet<IndexAlias>();
+        for (int i = 0 ; i < children.getLength(); i++) {
+            Node child = children.item(i);
+            //noinspection DuplicateStringLiteralInspection
+            if (child.getLocalName().equals("alias")) {
+                Node nameNode = child.getAttributes().getNamedItem("name");
+                if (nameNode == null || nameNode.getNodeValue().equals("")) {
+                    log.trace("Undefined name in alias. Skipping");
+                    continue;
+                }
+                String name = nameNode.getNodeValue();
+                Node langNode = child.getAttributes().getNamedItem("lang");
+                String lang = langNode == null
+                              || langNode.getNodeValue().equals("")
+                              ? null : langNode.getNodeValue();
+                log.trace("Found alias(" + name + ", " + lang + ")");
+                aliases.add(new IndexAlias(name, lang));
+            }
+        }
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("Found " + aliases.size() + " aliases");
+        return aliases;
+    }
+
 
     /**
      * The name used for the associated Field in the queryparser for the

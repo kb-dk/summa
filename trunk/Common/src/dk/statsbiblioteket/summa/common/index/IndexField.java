@@ -216,7 +216,8 @@ public class IndexField<A, F> {
      * @param fieldProvider if a parent name is specified, the fieldProvider is
      *                      queried for the parent.
      */
-    public IndexField(Node node, FieldProvider<A, F> fieldProvider) {
+    public IndexField(Node node,
+                      FieldProvider<IndexField<A, F>> fieldProvider) {
         log.debug("Creating field based on node " + node);
         parse(node, fieldProvider);
     }
@@ -310,7 +311,8 @@ public class IndexField<A, F> {
      * @param fieldProvider if a parent name is specified, the fieldProvider is
      *                      queried for the parent.
      */
-    public void parse(Node node, FieldProvider<A, F> fieldProvider) {
+    public void parse(Node node,
+                      FieldProvider<IndexField<A, F>> fieldProvider) {
         log.trace("parse called");
         // TODO: Implement this
     }
