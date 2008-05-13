@@ -18,13 +18,6 @@
       <maximumHeapSize value="128" />
       <properties />
     </buildFile>
-    <buildFile url="file://$PROJECT_DIR$/Storage/build.xml">
-      <additionalClassPath />
-      <antReference projectDefault="true" />
-      <customJdkName value="" />
-      <maximumHeapSize value="128" />
-      <properties />
-    </buildFile>
     <buildFile url="file://$PROJECT_DIR$/Common/build.xml">
       <additionalClassPath />
       <antReference projectDefault="true" />
@@ -47,13 +40,6 @@
       <properties />
     </buildFile>
     <buildFile url="file://$PROJECT_DIR$/Dice/build.xml">
-      <additionalClassPath />
-      <antReference projectDefault="true" />
-      <customJdkName value="" />
-      <maximumHeapSize value="128" />
-      <properties />
-    </buildFile>
-    <buildFile url="file://$PROJECT_DIR$/Control/build.xml">
       <additionalClassPath />
       <antReference projectDefault="true" />
       <customJdkName value="" />
@@ -391,13 +377,13 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/ClusterExtractor/ClusterExtractor.iml" filepath="$PROJECT_DIR$/ClusterExtractor/ClusterExtractor.iml" />
       <module fileurl="file://$PROJECT_DIR$/Common/Common.iml" filepath="$PROJECT_DIR$/Common/Common.iml" />
-      <module fileurl="file://$PROJECT_DIR$/Control/Control.iml" filepath="$PROJECT_DIR$/Control/Control.iml" />
       <module fileurl="file://$PROJECT_DIR$/Dice/Dice.iml" filepath="$PROJECT_DIR$/Dice/Dice.iml" />
       <module fileurl="file://$PROJECT_DIR$/FacetBrowser/FacetBrowser.iml" filepath="$PROJECT_DIR$/FacetBrowser/FacetBrowser.iml" />
       <module fileurl="file://$PROJECT_DIR$/Index/Index.iml" filepath="$PROJECT_DIR$/Index/Index.iml" />
       <module fileurl="file://$PROJECT_DIR$/Ingest/Ingest.iml" filepath="$PROJECT_DIR$/Ingest/Ingest.iml" />
+      <module fileurl="file://$PROJECT_DIR$/MetadataStorage/MetadataStorage.iml" filepath="$PROJECT_DIR$/MetadataStorage/MetadataStorage.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Score/Score.iml" filepath="$PROJECT_DIR$/Score/Score.iml" />
       <module fileurl="file://$PROJECT_DIR$/Search/Search.iml" filepath="$PROJECT_DIR$/Search/Search.iml" />
-      <module fileurl="file://$PROJECT_DIR$/MetadataStorage/Storage.iml" filepath="$PROJECT_DIR$/MetadataStorage/Storage.iml" />
       <module fileurl="file://$PROJECT_DIR$/Summa.iml" filepath="$PROJECT_DIR$/Summa.iml" />
     </modules>
   </component>

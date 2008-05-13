@@ -126,13 +126,13 @@
 										<xsl:choose>
 										<xsl:when test="contains(@type,'Journal Article (aja)') or contains(pt,'Journal Article (aja)')">tidsskriftartikel</xsl:when>
 										<xsl:when test="contains(@type,'Journal Article (aja)') or contains(pt,'Journal Article ')">tidsskriftartikel</xsl:when>
-														<xsl:when test="contains(@type,'Book Review (brv)') or contains(pt,'Book Review (brv)')">boganmeldelse</xsl:when>
+														<xsl:when test="contains(@type,'Book Review (brv)') or contains(pt,'Book Review (brv)')">Tidsskriftsartikel</xsl:when>
 													<xsl:when test="contains(@type,'Book (bka)') or contains(pt,'Book (bka)')">bog</xsl:when>
 														<xsl:when test="contains(@type,'Book Chapter (bca)') or contains(pt,'Book Chapter (bca)')">artikel i bog</xsl:when>
 														<xsl:when test="contains(@type,'Dissertation (dis)') or contains(pt,'Dissertation (dis)')">tidsskriftsartikel</xsl:when>
 														<xsl:when test="contains(@type,'Conference Paper (acp)') or contains(pt,'Conference Paper (acp)')">bog</xsl:when>
-                          <xsl:when test="contains(@type,'Film Review (frv)') or contains(pt,'Film Review (frv)')">filmanmeldelse</xsl:when>
-														<xsl:when test="contains(@type,'Software Review (swr)') or contains(pt,'Software Review (swr')">softwareanmeldelse</xsl:when>
+                          <xsl:when test="contains(@type,'Film Review (frv)') or contains(pt,'Film Review (frv)')">tidsskriftsartikel</xsl:when>
+														<xsl:when test="contains(@type,'Software Review (swr)') or contains(pt,'Software Review (swr')">Tidsskriftsartikel</xsl:when>
                                                         <xsl:otherwise><xsl:value-of select="@type"/></xsl:otherwise>
 														</xsl:choose>
 										</Index:field>
