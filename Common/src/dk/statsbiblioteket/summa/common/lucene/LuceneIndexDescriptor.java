@@ -22,23 +22,28 @@
  */
 package dk.statsbiblioteket.summa.common.lucene;
 
+import java.text.ParseException;
+
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.index.IndexField;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.Tokenizer;
 import org.w3c.dom.Node;
 
 /**
  * Trivial implementation of a Lucene IndexDescriptor.
  */
 public class LuceneIndexDescriptor
-        extends IndexDescriptor<IndexField<Analyzer, IndexFilter>> {
+        extends IndexDescriptor<IndexField<Analyzer, Tokenizer, IndexFilter>> {
 
-    public IndexField<Analyzer, IndexFilter> createNewField() {
-        return new IndexField<Analyzer, IndexFilter>();
+    public IndexField<Analyzer, Tokenizer, IndexFilter> createNewField() {
+        return new IndexField<Analyzer, Tokenizer, IndexFilter>();
     }
 
-    public IndexField<Analyzer, IndexFilter> createNewField(Node node) {
-        return new IndexField<Analyzer, IndexFilter>(node, this);
+    public IndexField<Analyzer, Tokenizer, IndexFilter>
+                                                     createNewField(Node node)
+                                                         throws ParseException {
+        return new IndexField<Analyzer, Tokenizer, IndexFilter>(node, this);
     }
 
     // TODO: Create default fields (including freetext)

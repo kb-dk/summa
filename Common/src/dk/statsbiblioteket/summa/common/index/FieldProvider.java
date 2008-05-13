@@ -22,6 +22,8 @@
  */
 package dk.statsbiblioteket.summa.common.index;
 
+import java.text.ParseException;
+
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.w3c.dom.Node;
 
@@ -55,6 +57,7 @@ public interface FieldProvider<F extends IndexField> {
      * index-field (the obvious case is a Lucene-specific field).
      * @param node the Document Node containing the setup for the field.
      * @return a new field based on the given node.
+     * @throws ParseException if the node could not be parsed.
      */
-    F createNewField(Node node);
+    F createNewField(Node node) throws ParseException;
 }

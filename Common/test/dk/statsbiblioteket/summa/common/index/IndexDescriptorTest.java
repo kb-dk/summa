@@ -1,5 +1,7 @@
 package dk.statsbiblioteket.summa.common.index;
 
+import java.text.ParseException;
+
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
@@ -52,15 +54,20 @@ public class IndexDescriptorTest extends TestCase {
             + "    <QueryParser defaultOperator=\"AND\"/>\n"
             + "</IndexDescriptor>";
 
+    public static final String SIMPLE_DESCRIPTOR_EMPTY =
+            "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
+            + "<IndexDescriptor version=\"1.0\">\n"
+            + "</IndexDescriptor>";
+
     public void testParse() throws Exception {
         IndexDescriptor id = new IndexDescriptor(SIMPLE_DESCRIPTOR) {
 
             public IndexField createNewField() {
-                return new IndexField<Object, Object>();
+                return new IndexField<Object, Object, Object>();
             }
 
-            public IndexField createNewField(Node node) {
-                return new IndexField<Object, Object>(node, this);
+            public IndexField createNewField(Node node) throws ParseException {
+                return new IndexField<Object, Object, Object>(node, this);
             }
         };
         assertEquals("The default language should be as specified",
@@ -71,8 +78,22 @@ public class IndexDescriptorTest extends TestCase {
                      "superid nostore",
                      Strings.join(id.getDefaultFields(), " "));
         assertEquals("The default operator should be as specified",
-                     "superid nostore",
-                     Strings.join(id.getDefaultFields(), " "));
+                     IndexDescriptor.OPERATOR.and, id.getDefaultOperator());
+    }
+
+    public void testEmpty() throws Exception {
+        IndexDescriptor id = new IndexDescriptor(SIMPLE_DESCRIPTOR_EMPTY) {
+
+            public IndexField createNewField() {
+                return new IndexField<Object, Object, Object>();
+            }
+
+            public IndexField createNewField(Node node) throws ParseException {
+                return new IndexField<Object, Object, Object>(node, this);
+            }
+        };
+        assertEquals("The default language should be en",
+                     "en", id.getDefaultLanguage());
     }
 
     public void testGetField() throws Exception {
