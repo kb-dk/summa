@@ -20,7 +20,7 @@
     -->
     <xsl:output version="1.0" encoding="UTF-8" indent="yes" method="xml"/>
     <xsl:template match="/">
-        <xsl:apply-templates select="oai:record/oai:metadata"/>
+		<xsl:apply-templates select="oai:record/oai:metadata"/>
     </xsl:template>
 
     <xsl:template match="oai:metadata">
@@ -35,17 +35,17 @@
                             <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
                                 <rdf:Description rdf:about="{oai:digitalObject/@PID}">
                                     <dc:title><xsl:value-of select="oai:digitalObject[position()=1]/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:title"/></dc:title>
-                                    <dc:creator><xsl:value-of select="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:creator"/></dc:creator>
+                  <!--                  <dc:creator><xsl:value-of select="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:creator"/></dc:creator> -->
                                     <xsl:choose>
-                                        <xsl:when test="oai:digitalObject[position()=1]/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/oai:issued">
+                                        <xsl:when test="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/oai:issued">
                                             <!-- TODO: Check format of date -->
                                             <dc:date><xsl:value-of select="substring(oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/oai:issued, 1, 4)"/></dc:date>
                                         </xsl:when>
-                                        <xsl:when test="oai:digitalObject[position()=1]/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/oai:created">
+                                        <xsl:when test="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/oai:created">
                                             <!-- TODO: Check format of date -->
                                             <dc:date><xsl:value-of select="substring(oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/oai:created, 1, 4)"/></dc:date>
                                         </xsl:when>
-                                        <xsl:when test="oai:digitalObject[position()=1]/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:date">
+                                        <xsl:when test="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:date">
                                             <!-- TODO: Check format of date -->
                                             <dc:date><xsl:value-of select="substring(oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:date, 1, 4)"/></dc:date>
                                         </xsl:when>
@@ -64,7 +64,14 @@
                                             <dc:type xml:lang="da"><xsl:value-of select="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:type"/></dc:type>
                                         </xsl:when>
                                         <xsl:otherwise>
-                                            <dc:type xml:lang="da">Netdokument</dc:type>
+																						<xsl:choose>
+																								<xsl:when test="starts-with(oai:digitalObject/@PID, 'doms:aarbog')">
+																														<dc:type xml:lang="da">Digital &#xC5;rbog</dc:type>
+																								</xsl:when>
+																								<xsl:otherwise>
+																														<dc:type xml:lang="da">Netdokument</dc:type>
+																								</xsl:otherwise>
+																						</xsl:choose>
                                         </xsl:otherwise>
                                     </xsl:choose>
                                     <xsl:choose>
@@ -78,7 +85,14 @@
                                             <dc:type xml:lang="en"><xsl:value-of select="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:type"/></dc:type>
                                         </xsl:when>
                                         <xsl:otherwise>
-                                            <dc:type xml:lang="en">Net document</dc:type>
+																						<xsl:choose>
+																								<xsl:when test="starts-with(oai:digitalObject/@PID, 'doms:aarbog')">
+																														<dc:type xml:lang="da">Digital Yearbook</dc:type>
+																								</xsl:when>
+																								<xsl:otherwise>
+																														<dc:type xml:lang="da">Net document</dc:type>
+																								</xsl:otherwise>
+																						</xsl:choose>
                                         </xsl:otherwise>
                                     </xsl:choose>
                                     <!--TODO: Must be PID in storage-->
@@ -110,7 +124,7 @@
                     </Index:group>
 
                     <!-- Author group -->
-                    <Index:group Index:name="au" Index:navn="fo" Index:suggest="false">
+                <!--    <Index:group Index:name="au" Index:navn="fo" Index:suggest="false">
                         <xsl:for-each select="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:creator">
                             <Index:field Index:name="author_main" Index:repeat="true" Index:navn="po" Index:type="token" Index:boostFactor="10">
                                 <xsl:value-of select="."/>
@@ -125,9 +139,9 @@
                             <Index:field Index:repeat="true" Index:name="au_other" Index:navn="fo_andet" Index:type="token">
                                 <xsl:value-of select="."/>
                             </Index:field>
-                        </xsl:for-each>
+                        </xsl:for-each>  -> -->
                         <!-- Potential fields: author_person -->
-                    </Index:group>
+       <!--             </Index:group>   -->
 
                     <!-- Subject group -->
                     <Index:group Index:name="su" Index:navn="em" Index:suggest="true">
@@ -143,8 +157,14 @@
                     <!-- Material type group -->
                     <Index:group Index:name="lma" Index:navn="lma" Index:suggest="true">
                         <Index:field Index:repeat="true" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
-                            <!-- TODO: Check correctness -->
-                            <xsl:value-of select="Netdokument" />
+                            <xsl:choose>
+                                <xsl:when test="starts-with(oai:digitalObject/@PID, 'doms:aarbog')">
+                                    <xsl:value-of select="'digitalaarbog'" />
+                                </xsl:when>
+                                <xsl:otherwise>
+                                    <xsl:value-of select="'netdokument'" />
+                                </xsl:otherwise>
+                            </xsl:choose>
                         </Index:field>
                     </Index:group>
 

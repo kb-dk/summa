@@ -7,7 +7,7 @@
       <sourceFolder url="file://$MODULE_DIR$/Webcommons15/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/Index" />
       <excludeFolder url="file://$MODULE_DIR$/Ingest" />
-      <excludeFolder url="file://$MODULE_DIR$/Storage" />
+      <excludeFolder url="file://$MODULE_DIR$/MetadataStorage" />
       <excludeFolder url="file://$MODULE_DIR$/Website" />
     </content>
     <orderEntry type="inheritedJdk" />

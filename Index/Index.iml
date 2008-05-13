@@ -12,7 +12,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="Common" />
     <orderEntry type="module" module-name="Dice" />
-    <orderEntry type="module" module-name="Storage" />
+    <orderEntry type="module" module-name="MetadataStorage" />
     <orderEntry type="library" name="commons-logging-1.1" level="project" />
     <orderEntry type="library" name="junit-3.8.1" level="project" />
     <orderEntry type="library" name="log4j-1.2.14" level="project" />
