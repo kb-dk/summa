@@ -22,14 +22,20 @@
  */
 package dk.statsbiblioteket.summa.common.index;
 
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathFactory;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
 import java.util.List;
 import java.util.ArrayList;
 import java.io.StringWriter;
+import java.text.ParseException;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * IndexFields are used on several levels. From abstract to concrete, their
@@ -41,9 +47,14 @@ import org.w3c.dom.Node;
  * </p><p>
  * The class is generic. In order to use it properly, the A (Analyzer) and
  * F (Filter) must be specified. It is also strongly recommended to override
- * the methods {@link #analyzerToXMLFragment(Object)},
- * {@link #createAnalyzer(Node)}, {@link #filterToXMLFragment(Object)} and
- * {@link #createFilter(Node)}, to conform to the standards of the chosen
+ * the methods
+ * {@link #analyzerToXMLFragment(Object)},
+ * {@link #createAnalyzer(Node)},
+ * {@link #tokenizerToXMLFragment(Object)},
+ * {@link #createTokenizer(Node)},
+ * {@link #filterToXMLFragment(Object)} and
+ * {@link #createFilter(Node)},
+ * to conform to the standards of the chosen
  * index-format.
  * </p><p>
  * The IndexField is inspired heavily by Lucene Fields and partly by the SOLR
@@ -52,7 +63,7 @@ import org.w3c.dom.Node;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class IndexField<A, F> {
+public class IndexField<A, T, F> {
     private static Log log = LogFactory.getLog(IndexField.class);
 
     /**
@@ -188,6 +199,22 @@ public class IndexField<A, F> {
     private List<F> queryFilters = new ArrayList<F>(10);
 
     /**
+     * The tokenizer used for text indexing. The type of analyzer is defined
+     * by the user of this class.
+     * </p><p>
+     * This is used at index-time.
+     */
+    private T indexTokenizer = getDefaultIndexTokenizer();
+
+    /**
+     * The tokenizer used for text indexing. The type of analyzer is defined
+     * by the user of this class.
+     * </p><p>
+     * This is used at query-time.
+     */
+    private T queryTokenizer = getDefaultQueryTokenizer();
+
+    /**
      * Create a field with default values.
      */
     public IndexField() {
@@ -215,9 +242,11 @@ public class IndexField<A, F> {
      * @param node          a representation of a Field.
      * @param fieldProvider if a parent name is specified, the fieldProvider is
      *                      queried for the parent.
+     * @throws ParseException if the node could not be parsed properly.
      */
     public IndexField(Node node,
-                      FieldProvider<IndexField<A, F>> fieldProvider) {
+                      FieldProvider<IndexField<A, T, F>> fieldProvider) throws
+                                                                ParseException {
         log.debug("Creating field based on node " + node);
         parse(node, fieldProvider);
     }
@@ -227,7 +256,7 @@ public class IndexField<A, F> {
      * assigns the {@link #parent} attribute to the parent field. 
      * @param parent the field to use as template for this field.
      */
-    public IndexField(IndexField<A, F> parent) {
+    public IndexField(IndexField<A, T, F> parent) {
         log.debug("Creating field based on " + parent);
         assignFrom(parent);
         this.parent = parent;
@@ -240,7 +269,7 @@ public class IndexField<A, F> {
      * after assignment.
      * @param parent the field to get values from.
      */
-    private void assignFrom(IndexField<A, F> parent) {
+    private void assignFrom(IndexField<A, T, F> parent) {
         log.trace("Assigning from " + parent);
         name = parent.getName();
         this.parent = parent.getParent();
@@ -296,12 +325,13 @@ public class IndexField<A, F> {
         return sw.toString();
     }
 
+    private final XPath xPath = XPathFactory.newInstance().newXPath();
     /**
      * Assign attributes of this field from the  given Document Node.
      * The Node should conform to the output from {@link #toXMLFragment()}.
      * If a parent field is specified in the node, the new IndexField will be
      * based on that parent. All attributes specified in the Node will override
-     * that of the parent.
+     * that of the parent. Aliases will always be overridden.
      * </p><p>
      * If any filters are specified in the node, all filters from the parent
      * will be ignored.
@@ -310,11 +340,148 @@ public class IndexField<A, F> {
      * @param node          a representation of a Field.
      * @param fieldProvider if a parent name is specified, the fieldProvider is
      *                      queried for the parent.
+     * @throws ParseException if there was an error parsing.
      */
+    @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public void parse(Node node,
-                      FieldProvider<IndexField<A, F>> fieldProvider) {
+                      FieldProvider<IndexField<A, T, F>> fieldProvider) throws
+                                                                ParseException {
+        //noinspection DuplicateStringLiteralInspection
         log.trace("parse called");
-        // TODO: Implement this
+        String nameVal = getAttribute(node, "name", null);
+        if (nameVal == null) {
+            throw new ParseException("No name defined for field", -1);
+        }
+        String parentName = getAttribute(node, "parent", null);
+        if (parentName != null) {
+            log.trace("parse: Inheriting from parent '" + parentName + "'");
+            assignFrom(fieldProvider.getField(parentName));
+        }
+        name = nameVal;
+        aliases = new ArrayList<IndexAlias>(IndexAlias.getAliases(node));
+        doIndex = getBooleanAttribute(node, "indexed", doIndex);
+        doStore = getBooleanAttribute(node, "stored", doStore);
+        multiValued = getBooleanAttribute(node, "multiValued", doStore);
+        boost = getFloatAttribute(node, "boost", boost);
+        sortLocale = getAttribute(node, "sortLocale", sortLocale);
+        inFreetext = getBooleanAttribute(node, "inFreeText", inFreetext);
+        required = getBooleanAttribute(node, "required", required);
+
+        NodeList children = node.getChildNodes();
+        for (int i = 0 ; i < children.getLength() ; i++) {
+            Node child = children.item(i);
+            if (child.getLocalName() != null
+                && child.getLocalName().equals("analyzer")) {
+                parseAnalyzer(child);
+            }
+        }
+        log.trace("Finished parsing");
+    }
+
+    private void parseAnalyzer(Node node) throws ParseException {
+        String typeAttr = getAttribute(node, "type", null);
+        boolean parseIndex = false;
+        boolean parseQuery = false;
+        if ("index".equals(typeAttr)) {
+            log.trace("Parsing analyzer information for index");
+            parseIndex = true;
+        } else if ("query".equals(typeAttr)) {
+            log.trace("Parsing analyzer information for query");
+            parseQuery = true;
+        } else if (typeAttr == null) {
+            log.trace("Parsing analyzer information for index and query");
+            parseIndex = true;
+            parseQuery = true;
+        } else {
+            log.warn("Unknown value for attribute type in element analyzer: '"
+                     + typeAttr + "'. Assigning setup to both index and query");
+            parseIndex = true;
+            parseQuery = true;
+        }
+        /*             <analyzer type="index">
+                <analyzerClass>class="dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzerClass>
+                <tokenizer class="..."/> SOLR-style -s->
+                <filter class="someFilter" mytag="mytagvalue"/>
+            </analyzer>
+            <analyzer type="query" class="dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer">
+                <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+                <filter class="someOtherFilter" anothertag="myothertagvalue"/>
+            </analyzer>*/
+        A analyzer = createAnalyzer(node);
+        T tokenizer = null;
+        List<F> filters = null;
+        try {
+            String TOKENIZER = "tokenizer";
+            if ((Boolean)xPath.evaluate(TOKENIZER, node,
+                                        XPathConstants.BOOLEAN)) {
+                tokenizer = createTokenizer((Node)xPath.evaluate(
+                        TOKENIZER, node, XPathConstants.BOOLEAN));
+            }
+            String FILTER = "filter";
+            if ((Boolean)xPath.evaluate(
+                    FILTER, node, XPathConstants.BOOLEAN)) {
+                NodeList filterNodes = (NodeList)xPath.evaluate(
+                        FILTER, node, XPathConstants.NODESET);
+                filters = new ArrayList<F>(filterNodes.getLength());
+                for (int i = 0 ; i < filterNodes.getLength() ; i++) {
+                    F filter = createFilter(filterNodes.item(i));
+                    if (filter != null) {
+                        filters.add(filter);
+                    }
+                }
+            }
+        } catch (XPathExpressionException e) {
+            throw (ParseException)new ParseException(
+                    "Error evaluating expression 'tokenizer'", -1).initCause(e);
+        }
+        if (parseIndex) {
+            indexAnalyzer = analyzer == null ? indexAnalyzer : analyzer;
+            indexTokenizer = tokenizer == null ? indexTokenizer : tokenizer;
+            indexFilters = filters == null ? indexFilters : filters;
+        }
+        if (parseQuery) {
+            queryAnalyzer = analyzer == null ? queryAnalyzer : analyzer;
+            queryTokenizer = tokenizer == null ? queryTokenizer : tokenizer;
+            queryFilters = filters == null ? queryFilters : filters;
+        }
+    }
+
+    private float getFloatAttribute(Node node, String attribute,
+                                    float defaultBoost) throws ParseException {
+        String sVal = getAttribute(node, attribute, null);
+        try {
+            return sVal == null ? defaultBoost : Float.parseFloat(sVal);
+        } catch (NumberFormatException e) {
+            log.warn("Expected a float for attribute '" + attribute
+                     + "' but got '" + sVal + "'");
+            return defaultBoost;
+        }
+    }
+
+    private boolean getBooleanAttribute(Node node, String attribute,
+                                        boolean defaultValue) throws
+                                                              ParseException {
+        return Boolean.parseBoolean(getAttribute(
+                node, attribute, Boolean.toString(defaultValue)));
+
+    }
+
+    private String getAttribute(Node node, String attribute,
+                                String defaultValue) throws ParseException {
+        String expr = "field/@" + attribute;
+        try {
+            if (!((Boolean)xPath.evaluate(expr, node,
+                                          XPathConstants.BOOLEAN))) {
+                log.trace("getAttribute: Attribute '" + attribute
+                          + "' not found. Returning default '" + defaultValue
+                          + "'");
+                return defaultValue;
+            }
+            return xPath.evaluate(expr, node);
+        } catch (XPathExpressionException e) {
+            throw (ParseException) new ParseException(String.format(
+                    "Invalid expression '%s'", expr), -1).initCause(e);
+        }
     }
 
     /**
@@ -408,6 +575,48 @@ public class IndexField<A, F> {
         return null;
     }
 
+    /**
+     * @return the default index tokenizer (normally null).
+     */
+    public T getDefaultIndexTokenizer() {
+        return null;
+    }
+
+    /**
+     * @return the default query tokenizer (normally null).
+     */
+    public T getDefaultQueryTokenizer() {
+        return null;
+    }
+
+    /**
+     * Creates an XML fragment for the given tokenizer. The fragment _must_ be
+     * in the form of an element named tokenizer and must be a mirror of
+     * {@link #createTokenizer}.
+     * </p><p>
+     * Sample output: <tokenizer class="summa.SplitOnHyphenFactory"/>.
+     * @param tokenizer the tokenizer to create an XML fragment for.
+     * @return an XML fragment representing the tokenizer.
+     */
+    protected String tokenizerToXMLFragment(T tokenizer) {
+        throw new UnsupportedOperationException(String.format(
+                "XML fragment creation for tokenizer '%s' not supported in "
+                + "'%s'",
+                tokenizer, getClass().toString()));
+    }
+    /**
+     * Creates a tokenizer based on the given Document Node.
+     * @param node a node representing a filter as defined by
+     *             {@link #tokenizerToXMLFragment}.
+     * @return a tokenizer based on the given node.
+     */
+    private T createTokenizer(Node node) {
+        throw new UnsupportedOperationException(String.format(
+                "Creation of tokenizer based on Node '%s' not supported in "
+                + "'%s'",
+                node, getClass().toString()));
+    }
+
     /* Fundamental methods */
 
     public boolean equals(Object o) {
@@ -420,11 +629,11 @@ public class IndexField<A, F> {
         if (!(o instanceof IndexField)) {
             return false;
         }
-        IndexField<A, F> other;
+        IndexField<A, T, F> other;
         try {
             // How do we check for generic types?
             //noinspection unchecked
-            other = (IndexField<A, F>)o;
+            other = (IndexField<A, T, F>)o;
         } catch (ClassCastException e) {
             return false;
         }
@@ -438,6 +647,8 @@ public class IndexField<A, F> {
                && nullCompare(sortLocale, other.getSortLocale())
                && inFreetext == other.isInFreetext()
                && required == other.isRequired()
+               && nullCompare(indexTokenizer, other.getIndexTokenizer())
+               && nullCompare(queryTokenizer, other.getQueryTokenizer())
                && nullCompare(indexAnalyzer, other.getIndexAnalyzer())
                && nullCompare(queryAnalyzer, other.getQueryAnalyzer())
                && listCompare(aliases, other.getAliases())
@@ -525,4 +736,13 @@ public class IndexField<A, F> {
     public List<F> getQueryFilters() {
         return queryFilters;
     }
+
+    public T getQueryTokenizer() {
+        return queryTokenizer;
+    }
+
+    public T getIndexTokenizer() {
+        return indexTokenizer;
+    }
+
 }

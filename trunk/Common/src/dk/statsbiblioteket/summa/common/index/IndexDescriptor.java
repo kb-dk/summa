@@ -25,6 +25,10 @@ package dk.statsbiblioteket.summa.common.index;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPathFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
 import java.io.IOException;
 import java.io.File;
 import java.io.StringWriter;
@@ -47,7 +51,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Document;
-import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
@@ -206,6 +209,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
     /**
      * Construct an IndexDescriptor based on the given xml.
      * @param xml an XML-representation of an IndexDescriptor.
+     * @throws ParseException if the xml could not be parsed peoperly.
      */
     public IndexDescriptor(String xml) throws ParseException {
         log.trace("Creating descriptor based on XML");
@@ -263,7 +267,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
                 DocumentBuilderFactory.newInstance();
         builderFactory.setNamespaceAware(true);
         builderFactory.setValidating(false);
-        DocumentBuilder builder = null;
+        DocumentBuilder builder;
         try {
             builder = builderFactory.newDocumentBuilder();
         } catch (ParserConfigurationException e) {
@@ -312,46 +316,46 @@ public abstract class IndexDescriptor<F extends IndexField> implements
             log.warn("No default fields specified");
         }
 
-        NodeList nodes = document.getElementsByTagName(
-                "IndexDescriptor/QueryParser/@defaultOperator");
-        Node defaultOperatorNode = null;
-        switch (nodes.getLength()) {
-            case 0:
-                log.debug("parse: No QueryParser#defaultOperator specified"
-                          + ". Using default value");
-                break;
-            case 1:
-                defaultOperatorNode = nodes.item(0);
-                break;
-            default:
-                defaultOperatorNode = nodes.item(0);
-                log.warn("parse: More than one QueryParser#defaultOperator"
-                         + " found . Using the first");
-        }
-        if (defaultOperatorNode != null) {
-            String dop = defaultOperatorNode.getNodeValue();
-            if ("or".equals(dop.toLowerCase())) {
-                defaultOperator = OPERATOR.or;
-            } else if ("and".equals(dop.toLowerCase())) {
-                defaultOperator = OPERATOR.and;
-            } else {
-                log.warn("Unexpected value '" + dop
-                         + "' found in QueryParser#defaultOperator");
-            }
-            log.debug("Default operator is " + defaultOperator);
+        String dop = getSingleValue(
+                document, "IndexDescriptor/QueryParser/@defaultOperator",
+                "default operator", defaultOperator.toString());
+        if ("or".equals(dop.toLowerCase())) {
+            defaultOperator = OPERATOR.or;
+        } else if ("and".equals(dop.toLowerCase())) {
+            defaultOperator = OPERATOR.and;
+        } else {
+            log.warn("Unexpected value '" + dop
+                     + "' found in QueryParser#defaultOperator");
         }
 
 
-        NodeList fieldNodes =
-                document.getElementsByTagName("/IndexDescriptor/fields/field");
+        NodeList fieldNodes;
+        final String FIELD_EXPR = "/IndexDescriptor/fields/field";
+        try {
+            fieldNodes = (NodeList)xPath.evaluate(FIELD_EXPR, document,
+                                                 XPathConstants.NODESET);
+        } catch (XPathExpressionException e) {
+            throw new ParseException(String.format(
+                    "Expression '%s' for selecting fields was invalid",
+                    FIELD_EXPR), -1);
+        }
         //noinspection DuplicateStringLiteralInspection
         log.trace("Located " + fieldNodes.getLength() + " field nodes");
         for (int i = 0 ; i < fieldNodes.getLength(); i++) {
             addField(createNewField(fieldNodes.item(i)));
         }
 
-        NodeList groupNodes =
-                document.getElementsByTagName("/IndexDescriptor/groups/group");
+        NodeList groupNodes;
+        //noinspection DuplicateStringLiteralInspection
+        final String GROUP_EXPR = "/IndexDescriptor/groups/group";
+        try {
+            groupNodes = (NodeList)xPath.evaluate(GROUP_EXPR, document,
+                                                  XPathConstants.NODESET);
+        } catch (XPathExpressionException e) {
+            throw new ParseException(String.format(
+                    "Expression '%s' for selecting groups was invalid",
+                    GROUP_EXPR), -1);
+        }
         //noinspection DuplicateStringLiteralInspection
         log.trace("Located " + groupNodes.getLength() + " group nodes");
         for (int i = 0 ; i < groupNodes.getLength(); i++) {
@@ -368,26 +372,37 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         }
     }
 
+    private XPath xPath = XPathFactory.newInstance().newXPath();
     private String getSingleValue(Document document, String path,
-                                  String description, String defaultValue) {
-        NodeList nodes = document.getElementsByTagName(path);
-        String result = defaultValue;
-        switch (nodes.getLength()) {
-            case 0:
-                log.debug("getSingleValue: No " + description + "  specified in"
-                          + " XML. Using default value '" + defaultValue + "'");
-                break;
-            case 1:
-                result = nodes.item(0).getNodeValue();
-                log.warn("getSingleValue: Got " + description
-                         + " (" + result + ")");
-                break;
-            default:
-                result = nodes.item(0).getNodeValue();
-                log.warn("getSingleValue: More than one " + description
-                         + " . Using the first (" + result + ")");
+                                  String description, String defaultValue)
+            throws ParseException {
+        if (log.isTraceEnabled()) {
+            log.trace("Extracting '" + description + "' with path '"
+                      + path + "'");
         }
-        return result;
+        String nodeValue;
+        try {
+            if (!((Boolean) xPath.evaluate(path, document,
+                                           XPathConstants.BOOLEAN))) {
+                log.debug("No value defined for path '" + path + "' for "
+                          + description + ". Returning default value '"
+                          + defaultValue + "'");
+                return defaultValue;
+        }
+            nodeValue = xPath.evaluate(path, document);
+        } catch (XPathExpressionException e) {
+            throw new ParseException("Expression '" + path + "' was invalid",
+                                     -1);
+        }
+        if (nodeValue == null) {
+            log.debug("Got null value for " + description + " from expression '"
+                      + path + "'. Returning default value '" + defaultValue
+                      + "'");
+            return defaultValue;
+        }
+        log.debug("Got " + description + " value '" + nodeValue
+                  + "' from expression '" + path + "'");
+        return nodeValue;
     }
 
     /**
@@ -483,7 +498,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         log.trace("addField(" + field + ") called");
         if (allFields.get(field.getName()) != null) {
             log.debug("A Field with name '" + field.getName() + "' is already "
-                      + "present in allFields");
+                      + "present in allFields. Overriding field");
             return false;
         }
         //noinspection DuplicateStringLiteralInspection

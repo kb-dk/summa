@@ -44,7 +44,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class IndexGroup<F extends IndexField> {
-    private static Log log = LogFactory.getLog(IndexDescriptor.class);
+    private static Log log = LogFactory.getLog(IndexGroup.class);
 
     private final String name; // Immutable to allow for caching of lookups
     private Set<IndexAlias> aliases = new HashSet<IndexAlias>(5);
@@ -191,11 +191,11 @@ public class IndexGroup<F extends IndexField> {
                                                                 ParseException {
         //noinspection DuplicateStringLiteralInspection
         log.trace("parse called");
-        Node nameNode = node.getAttributes().getNamedItem("name");
-        if (nameNode == null) {
+        Node groupNameNode = node.getAttributes().getNamedItem("name");
+        if (groupNameNode == null) {
             throw new ParseException("No name specified for group", -1);
         }
-        String name = nameNode.getNodeValue();
+        String name = groupNameNode.getNodeValue();
         log.trace("parse: Located group name '" + name + "'");
         aliases = IndexAlias.getAliases(node);
 
@@ -203,7 +203,8 @@ public class IndexGroup<F extends IndexField> {
         for (int i = 0 ; i < children.getLength(); i++) {
             Node child = children.item(i);
             //noinspection DuplicateStringLiteralInspection
-            if (child.getLocalName().equals("field")) {
+            if (child.getLocalName() != null
+                && child.getLocalName().equals("field")) {
                 Node fieldNameNode = child.getAttributes().getNamedItem("name");
                 if (fieldNameNode == null
                     || fieldNameNode.getNodeValue().equals("")) {
@@ -213,7 +214,7 @@ public class IndexGroup<F extends IndexField> {
                             name));
                     continue;
                 }
-                String fieldName = nameNode.getNodeValue();
+                String fieldName = fieldNameNode.getNodeValue();
                 log.trace("Found field name '" + fieldName + " in group '"
                           + name + "'");
                 try {
