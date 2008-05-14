@@ -66,7 +66,7 @@
                                         <xsl:otherwise>
 																						<xsl:choose>
 																								<xsl:when test="starts-with(oai:digitalObject/@PID, 'doms:aarbog')">
-																														<dc:type xml:lang="da">Digital &#xC5;rbog</dc:type>
+																														<dc:type xml:lang="da">Digital &#xE5;rbog</dc:type>
 																								</xsl:when>
 																								<xsl:otherwise>
 																														<dc:type xml:lang="da">Netdokument</dc:type>
