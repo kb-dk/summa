@@ -92,22 +92,7 @@
 							<Index:field Index:repeat="false" Index:name="lso" Index:navn="lvp" Index:type="keyword">
 						
 															 <xsl:value-of select="."/>
-															 <xsl:if test="../year_of_publ!= '' ">
-															 	 <xsl:text>&#32;(</xsl:text>
-															 <xsl:value-of select="../year_of_publ"/>
-															 <xsl:text>)</xsl:text>
-															 </xsl:if>
-															 <xsl:text>;&#32;</xsl:text>
-															 <xsl:if test="../volume!= '' ">
-																	 <xsl:value-of select="../volume"/>
-														
-															 </xsl:if>
-															 
-															 <xsl:if test="../issue!= '' ">
-															 	 <xsl:text>&#32;(</xsl:text>
-															 <xsl:value-of select="../issue"/>
-															 <xsl:text>)</xsl:text>
-															 </xsl:if>
+															
 															 </Index:field>
 														</xsl:for-each>
 															
