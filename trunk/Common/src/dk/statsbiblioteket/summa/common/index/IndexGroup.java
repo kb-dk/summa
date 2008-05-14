@@ -48,7 +48,7 @@ public class IndexGroup<F extends IndexField> {
 
     private final String name; // Immutable to allow for caching of lookups
     private Set<IndexAlias> aliases = new HashSet<IndexAlias>(5);
-    private TreeSet<F> fields = new TreeSet<F>();
+    private Set<F> fields = new HashSet<F>();
 
     /**
      * Create a new empty group.
@@ -136,7 +136,7 @@ public class IndexGroup<F extends IndexField> {
     public Set<F> getFields() {
         log.trace("getFields called on group '" + name + "'");
         //noinspection unchecked
-        return (Set<F>)fields.clone();
+        return new HashSet<F>(fields);
     }
 
     /**

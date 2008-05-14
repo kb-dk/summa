@@ -36,6 +36,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.NamedNodeMap;
 
 /**
  * IndexFields are used on several levels. From abstract to concrete, their
@@ -468,7 +469,7 @@ public class IndexField<A, T, F> {
 
     private String getAttribute(Node node, String attribute,
                                 String defaultValue) throws ParseException {
-        String expr = "field/@" + attribute;
+        String expr = "@" + attribute;
         try {
             if (!((Boolean)xPath.evaluate(expr, node,
                                           XPathConstants.BOOLEAN))) {
