@@ -1,6 +1,10 @@
 package dk.statsbiblioteket.summa.common.index;
 
 import java.text.ParseException;
+import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -60,7 +64,9 @@ public class IndexDescriptorTest extends TestCase {
             + "</IndexDescriptor>";
 
     public void testParse() throws Exception {
-        IndexDescriptor id = new IndexDescriptor(SIMPLE_DESCRIPTOR) {
+        IndexDescriptor<IndexField<Object, Object, Object>> id =
+                new IndexDescriptor<IndexField<Object, Object, Object>>(
+                        SIMPLE_DESCRIPTOR) {
 
             public IndexField createNewField() {
                 return new IndexField<Object, Object, Object>();
@@ -79,6 +85,29 @@ public class IndexDescriptorTest extends TestCase {
                      Strings.join(id.getDefaultFields(), " "));
         assertEquals("The default operator should be as specified",
                      IndexDescriptor.OPERATOR.and, id.getDefaultOperator());
+
+        List<String> expectedGroups = Arrays.asList(new String[]{"ti", "au"});
+        List<String> gotGroups = new ArrayList<String>(expectedGroups.size());
+        for (Map.Entry<String, IndexGroup<IndexField<Object, Object, Object>>>
+                entry: id.getGroups().entrySet()) {
+            gotGroups.add(entry.getValue().getName());
+        }
+        assertTrue("All expected groups should be present",
+                   gotGroups.containsAll(expectedGroups));
+        assertTrue("No other groups should be present",
+                   expectedGroups.containsAll(gotGroups));
+
+        List<String> expectedFields = Arrays.asList(new String[]{
+                // TODO: Extend with default groups
+                "text", "author", "title", "titel", "nostore"});
+        List<String> gotFields = new ArrayList<String>(expectedFields.size());
+        for (Map.Entry<String, IndexField<Object, Object, Object>>
+                entry: id.getFields().entrySet()) {
+            gotFields.add(entry.getValue().getName());
+        }
+        assertTrue("All expected Fields should be present",
+                   gotFields.containsAll(expectedFields));
+        // It's okay to have more fields than expected (default fields)
     }
 
     public void testEmpty() throws Exception {

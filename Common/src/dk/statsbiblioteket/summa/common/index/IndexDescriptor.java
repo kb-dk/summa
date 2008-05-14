@@ -126,10 +126,12 @@ public abstract class IndexDescriptor<F extends IndexField> implements
     private ResourceListener listener;
     private URL absoluteLocation;
 
+
     /**
      * All Fields mapped from field name => Field object.
      */
     private Map<String, F> allFields = new LinkedHashMap<String, F>(20);
+
     /**
      * All Groups mapped from group name => Group object. All the Fields
      * contained in the groups MUST be present in {@link #allFields}.
@@ -498,7 +500,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         log.trace("addField(" + field + ") called");
         if (allFields.get(field.getName()) != null) {
             log.debug("A Field with name '" + field.getName() + "' is already "
-                      + "present in allFields. Overriding field");
+                      + "present in allFields. Skipping add");
             return false;
         }
         //noinspection DuplicateStringLiteralInspection
@@ -623,4 +625,11 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         return defaultLanguage;
     }
 
+    public Map<String, IndexGroup<F>> getGroups() {
+        return groups;
+    }
+
+    public Map<String, F> getFields() {
+        return allFields;
+    }
 }
