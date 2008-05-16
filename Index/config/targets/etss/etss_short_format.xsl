@@ -67,7 +67,9 @@
                                 <xsl:text>ISSN </xsl:text>
                                 <xsl:value-of select="."/>
                             </dc:identifier>
-
+                                 <xsl:for-each select=".">
+												<dc:format>todo</dc:format>
+											</xsl:for-each>
                         </xsl:for-each>
 
 

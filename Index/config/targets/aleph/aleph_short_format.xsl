@@ -982,7 +982,22 @@
 										</xsl:if>
 
 									</xsl:for-each>
-								</rdf:Description>
+
+										<xsl:for-each select=".">
+                                            <xsl:choose>
+                                                <xsl:when test="contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position()=1],'xe')">
+															<dc:format>todo</dc:format>
+														</xsl:when>
+                                                <xsl:when test="contains(/mc:record/mc:datafield[@tag='008']/mc:subfield[@code='t'],'p')">
+									               			<dc:format>journal</dc:format>
+												</xsl:when>
+												<xsl:otherwise>
+                                                           <dc:format>mono</dc:format>
+                                                </xsl:otherwise>
+                                    </xsl:choose>
+
+                                    </xsl:for-each>
+                                </rdf:Description>
 							</rdf:RDF>
 
 						</shortrecord>

@@ -27,7 +27,10 @@
                                     <dc:identifier>
 										<xsl:value-of select="email"/>
 								    </dc:identifier>
-								</rdf:Description>
+                                     <xsl:for-each select=".">
+												<dc:format>todo</dc:format>
+											</xsl:for-each>
+                                </rdf:Description>
 							</rdf:RDF>
 						</shortrecord>
 						<xsl:text disable-output-escaping="yes">]]&gt;</xsl:text>
