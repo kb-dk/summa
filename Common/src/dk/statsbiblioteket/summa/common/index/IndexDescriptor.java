@@ -533,7 +533,9 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         groups.put(group.getName(), group);
         log.trace("Adding Fields contained in " + group);
         for (F field: group.getFields()) {
-            addField(field);
+            if (!allFields.containsKey(field.getName())) {
+                addField(field);
+            }
         }
         return true;
     }

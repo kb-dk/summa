@@ -12,6 +12,7 @@ import junit.framework.TestCase;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Strings;
 import org.w3c.dom.Node;
+import org.apache.lucene.search.Similarity;
 
 @SuppressWarnings({"ALL"})
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -48,6 +49,8 @@ public class IndexDescriptorTest extends TestCase {
             + "        <field name=\"author\" parent=\"text\" indexed=\"true\" stored=\"true\" multiValued=\"true\" boost=\"2.0\" sortLocale=\"da\" inFreeText=\"true\" required=\"true\">\n"
             + "            <alias name=\"forfatter\" lang=\"da\"/>\n"
             + "        </field>\n"
+            + "        <field name=\"author_inv\" parent=\"text\" indexed=\"false\" stored=\"false\" multiValued=\"false\" boost=\"2.5\" sortLocale=\"de\" inFreeText=\"false\" required=\"false\"/>\n"
+            + "        <field name=\"author_inherit\" parent=\"author\"/>\n"
             + "        <field name=\"title\" indexed=\"false\" stored=\"true\"/>\n"
             + "        <field name=\"titel\" indexed=\"false\" stored=\"true\"/>\n"
             + "        <field name=\"nostore\" parent=\"text\" indexed=\"true\" stored=\"false\"/>\n"
@@ -105,9 +108,50 @@ public class IndexDescriptorTest extends TestCase {
                 entry: id.getFields().entrySet()) {
             gotFields.add(entry.getValue().getName());
         }
+        // It's okay to have more fields than expected (default fields)
         assertTrue("All expected Fields should be present",
                    gotFields.containsAll(expectedFields));
-        // It's okay to have more fields than expected (default fields)
+
+        IndexField a = id.getField("author");
+        assertNotNull("The field author should have a parent", a.getParent());
+        String intro = "The field author should have the correct ";
+        assertEquals(intro + "parent", "text", a.getParent().getName());
+        assertEquals(intro + "indexed", true, a.isDoIndex());
+        assertEquals(intro + "stored", true, a.isDoStore());
+        assertEquals(intro + "multiValued", true, a.isMultiValued());
+        assertEquals(intro + "boost", 2.0f, a.getBoost());
+        assertEquals(intro + "sortLocale", "da", a.getSortLocale());
+        assertEquals(intro + "inFreeText", true, a.isInFreetext());
+        assertEquals(intro + "required", true, a.isRequired());
+        // TODO: Talk to Kåre about this
+        List<IndexAlias> aliases = a.getAliases();
+        assertEquals(intro + "alias", "forfatter", aliases.get(0).getName());
+
+        IndexField i = id.getField("author_inv");
+        assertNotNull("The field author_inv should have a parent",
+                      i.getParent());
+        intro = "The field author_inv should have the correct ";
+        assertEquals(intro + "parent", "text", i.getParent().getName());
+        assertEquals(intro + "indexed", !true, i.isDoIndex());
+        assertEquals(intro + "stored", !true, i.isDoStore());
+        assertEquals(intro + "multiValued", !true, i.isMultiValued());
+        assertEquals(intro + "boost", 2.5f, i.getBoost());
+        assertEquals(intro + "sortLocale", "de", i.getSortLocale());
+        assertEquals(intro + "inFreeText", !true, i.isInFreetext());
+        assertEquals(intro + "required", !true, i.isRequired());
+
+        IndexField inh = id.getField("author_inherit");
+        assertNotNull("The field author_inherit should have a parent",
+                      inh.getParent());
+        intro = "The field author_inherit should have the correct ";
+        assertEquals(intro + "parent", "author", inh.getParent().getName());
+        assertEquals(intro + "indexed", true, inh.isDoIndex());
+        assertEquals(intro + "stored", true, inh.isDoStore());
+        assertEquals(intro + "multiValued", true, inh.isMultiValued());
+        assertEquals(intro + "boost", 2.0f, inh.getBoost());
+        assertEquals(intro + "sortLocale", "da", inh.getSortLocale());
+        assertEquals(intro + "inFreeText", true, inh.isInFreetext());
+        assertEquals(intro + "required", true, inh.isRequired());
     }
 
     public void testEmpty() throws Exception {
@@ -125,29 +169,6 @@ public class IndexDescriptorTest extends TestCase {
                      "en", id.getDefaultLanguage());
     }
 
-    public void testGetField() throws Exception {
-        //TODO: Test goes here...
-    }
-
-    public void testGetFieldForIndexing() throws Exception {
-        //TODO: Test goes here...
-    }
-
-    public void testSetGetDefaultLanguage() throws Exception {
-        //TODO: Test goes here...
-    }
-
-    public void testSetGetUniqueKey() throws Exception {
-        //TODO: Test goes here...
-    }
-
-    public void testSetGetDefaultFields() throws Exception {
-        //TODO: Test goes here...
-    }
-
-    public void testSetGetDefaultOperator() throws Exception {
-        //TODO: Test goes here...
-    }
 
     public static Test suite() {
         return new TestSuite(IndexDescriptorTest.class);
