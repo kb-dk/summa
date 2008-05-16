@@ -673,7 +673,31 @@
                         </dc:type>
                         <xsl:for-each select="mc:datafield[@tag='260']/mc:subfield[@code='c']">
                             <dc:date>
-                                <xsl:value-of select="."/>
+                                    <xsl:choose>
+                        <xsl:when test="contains(.,'@UD8')">
+                            <xsl:value-of select="translate(substring-before(.,'@UD8'),'abcdefghijklmnopqrstuvwxyzæøåABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ [](),.','')"/>
+                            <xsl:text>-</xsl:text>
+                            <xsl:value-of select="translate(substring-after(.,'@UD8'),'abcdefghijklmnopqrstuvwxyzæøåABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ [](),.','')"/>
+
+                        </xsl:when>
+                         <xsl:when test="contains(.,'{')">
+                                    <xsl:value-of select="translate(substring-after(substring-before(.,'}'),'{'),'abcdefghijklmnopqrstuvwxyzæøåABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ [](),.','')"/>
+
+                                </xsl:when>
+                          <xsl:when test="contains(.,', p')">
+                            <xsl:value-of select="translate(substring-before(.,', p'),'abcdefghijklmnopqrstuvwxyzæøåABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ [](),.','')"/>
+
+                        </xsl:when>
+                         <xsl:when test="contains(.,'-')">
+                            <xsl:value-of select="translate(substring-before(.,'-'),'abcdefghijklmnopqrstuvwxyzæøåABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ [](),.','')"/>
+                            <xsl:text>-</xsl:text>
+                             <xsl:value-of select="translate(substring-after(.,'-'),'abcdefghijklmnopqrstuvwxyzæøåABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ [](),.','')"/>
+
+                        </xsl:when>
+                        <xsl:otherwise>
+                    <xsl:value-of select="substring(translate(.,'abcdefghijklmnopqrstuvwxyzæøåABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ [](),.',''),1,4)"/>
+              </xsl:otherwise>
+               </xsl:choose>
                             </dc:date>
                         </xsl:for-each>
                         <xsl:for-each select="mc:datafield[@tag='021']/mc:subfield[@code='a' or @code='e']">
