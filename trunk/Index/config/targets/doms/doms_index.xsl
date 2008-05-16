@@ -87,10 +87,10 @@
                                         <xsl:otherwise>
 																						<xsl:choose>
 																								<xsl:when test="starts-with(oai:digitalObject/@PID, 'doms:aarbog')">
-																														<dc:type xml:lang="da">Digital Yearbook</dc:type>
+																														<dc:type xml:lang="en">Digital Yearbook</dc:type>
 																								</xsl:when>
 																								<xsl:otherwise>
-																														<dc:type xml:lang="da">Net document</dc:type>
+																														<dc:type xml:lang="en">Net document</dc:type>
 																								</xsl:otherwise>
 																						</xsl:choose>
                                         </xsl:otherwise>
@@ -245,7 +245,7 @@
 
                     <!-- Date sorting -->
                     <xsl:choose>
-                        <xsl:when test="oai:digitalObject[position()=1]/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/oai:issued">
+                        <xsl:when test="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/oai:issued">
                             <Index:field Index:name="sort_year_desc" Index:navn="sort_år_desc" Index:type="keyword" Index:boostFactor="1">
                                 <xsl:value-of select="substring(oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/oai:issued, 0, 4)"/>
                             </Index:field>
@@ -253,7 +253,7 @@
                                 <xsl:value-of select="substring(oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/oai:issued, 0, 4)"/>
                             </Index:field>
                         </xsl:when>
-                        <xsl:when test="oai:digitalObject[position()=1]/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/oai:created">
+                        <xsl:when test="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/oai:created">
                             <Index:field Index:name="sort_year_desc" Index:navn="sort_år_desc" Index:type="keyword" Index:boostFactor="1">
                                 <xsl:value-of select="substring(oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/oai:created, 0, 4)"/>
                             </Index:field>
@@ -261,7 +261,7 @@
                                 <xsl:value-of select="substring(oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/oai:created, 0, 4)"/>
                             </Index:field>
                         </xsl:when>
-                        <xsl:when test="oai:digitalObject[position()=1]/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:date">
+                        <xsl:when test="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:date">
                             <Index:field Index:name="sort_year_desc" Index:navn="sort_år_desc" Index:type="keyword" Index:boostFactor="1">
                                 <xsl:value-of select="substring(oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:date, 0, 4)"/>
                             </Index:field>
