@@ -52,12 +52,14 @@ import javax.xml.namespace.NamespaceContext;
 import dk.statsbiblioteket.summa.common.xml.DefaultNamespaceContext;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.index.IndexAlias;
+import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * The SearchDescriptor keeps track of any field defined in the index.
  * Information about name, analyzers, language, type etc. are kept here.
  * This information is needed when instantiating the search engine.
+ * @deprecated use {@link IndexDescriptor} instead.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,

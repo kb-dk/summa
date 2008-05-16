@@ -193,6 +193,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      */
     public IndexDescriptor() {
         log.debug("Empty descriptor created");
+        init();
     }
 
     /**
@@ -204,6 +205,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      */
     public IndexDescriptor(URL absoluteLocation) throws IOException {
         log.trace("Creating descriptor based on '" + absoluteLocation + "'");
+        init();
         this.absoluteLocation = absoluteLocation;
         fetchStateAndActivateListener(0);
     }
@@ -215,6 +217,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      */
     public IndexDescriptor(String xml) throws ParseException {
         log.trace("Creating descriptor based on XML");
+        init();
         parse(xml);
         log.debug("Descriptor created based on XML");
     }
@@ -251,6 +254,16 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         log.debug("fetchDescription: Got absoluteLocation '"
                   + absoluteLocation + "' from '" + indirection + "'");
         return absoluteLocation;
+    }
+
+    /**
+     * The init-method will be called before any IndexDescriptor-specific
+     * initialization takes place. Override this method to provide
+     * implementation-specific initialization, such as creating default
+     * field definitions.
+     */
+    public void init() {
+        log.trace("init for IndexDescriptor called - does nothing");
     }
 
     /**

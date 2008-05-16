@@ -749,4 +749,40 @@ public class IndexField<A, T, F> {
         return indexTokenizer;
     }
 
+    /* Setters */
+    public void setDoIndex(boolean doIndex) {
+        this.doIndex = doIndex;
+    }
+
+    public void setTokenize(boolean tokenize) {
+        this.tokenize = tokenize;
+    }
+
+    public void setDoStore(boolean doStore) {
+        this.doStore = doStore;
+    }
+
+    public void setDoCompress(boolean doCompress) {
+        this.doCompress = doCompress;
+    }
+
+    public void setMultiValued(boolean multiValued) {
+        this.multiValued = multiValued;
+    }
+
+    public void setBoost(float boost) {
+        this.boost = boost;
+    }
+
+    public void setSortLocale(String sortLocale) {
+        this.sortLocale = sortLocale;
+    }
+
+    public void setInFreetext(boolean inFreetext) {
+        this.inFreetext = inFreetext;
+    }
+
+    public void setRequired(boolean required) {
+        this.required = required;
+    }
 }
