@@ -71,7 +71,9 @@
                                                     </xsl:when>
                                                 </xsl:choose>
                                             </xsl:for-each>
-
+                                              <xsl:for-each select=".">
+												<dc:format>todo</dc:format>
+											</xsl:for-each>
 										</xsl:for-each>
 									</xsl:for-each>
 								

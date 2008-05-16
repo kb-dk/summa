@@ -86,8 +86,8 @@
                                                         <xsl:when test="contains(dc:type,'Peer-Reviewed Article') or contains(oai_dc:type,'Peer-Reviewed Article')">netdokument (artikel)</xsl:when>
                                                         <xsl:when test="contains(dc:type,'article') or contains(oai_dc:type,'article')">netdokument (artikel)</xsl:when>
                                                         <xsl:when test="contains(dc:type,'Article') or contains(oai_dc:type,'Article')">netdokument (artikel)</xsl:when>
-                                                        <xsl:when test="contains(dc:type,'journal') or contains(oai_dc:type,'journal')">netdokument (tidsskrift)</xsl:when>
-                                                        <xsl:when test="contains(dc:type,'Journal') or contains(oai_dc:type,'Journal')">netdokument (tidsskrift)</xsl:when>
+                                                        <xsl:when test="contains(dc:type,'journal') or contains(oai_dc:type,'journal')">netdokument (artikel)</xsl:when>
+                                                        <xsl:when test="contains(dc:type,'Journal') or contains(oai_dc:type,'Journal')">netdokument (artikel)</xsl:when>
                                                         <xsl:when test="contains(dc:type,'Thesis') or contains(oai_dc:type,'Thesis')">netdokument (disputats)</xsl:when>
                                                         <xsl:when test="contains(dc:type,'thesis') or contains(oai_dc:type,'thesis')">netdokument (disputats)</xsl:when>
 
@@ -99,7 +99,7 @@
 												</dc:type>
 											</xsl:for-each>
 											<xsl:for-each select=".">
-												<dc:type xml:lang="en">net document<xsl:if test="dc:type"><xsl:text> (</xsl:text><xsl:value-of select="dc:type"/><xsl:text>)</xsl:text></xsl:if>
+												<dc:type xml:lang="en">net document<xsl:if test="dc:type"><xsl:text>&#32;(</xsl:text><xsl:value-of select="dc:type"/><xsl:text>)</xsl:text></xsl:if>
 												</dc:type>
 											</xsl:for-each>
 											<xsl:for-each select="dc:identifier">
@@ -120,7 +120,9 @@
                                                     </xsl:when>
                                                 </xsl:choose>
                                             </xsl:for-each>
-
+                                           <xsl:for-each select=".">
+												<dc:format>todo</dc:format>
+											</xsl:for-each>
 										</xsl:for-each>
 									</xsl:for-each>
 								

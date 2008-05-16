@@ -143,7 +143,8 @@
 										</Index:field>
 									</xsl:if>
                                     <xsl:if test="contains(dc:type,'peer-reviewed article') or contains(dc:type,'Peer-Revied Article') or contains(dc:type,'article') or contains(dc:type,'Article')
-                                    or contains(oai_dc:type,'peer-reviewed article') or contains(oai_dc:type,'Peer-Revied Article') or contains(oai_dc:type,'article') or contains(oai_dc:type,'Article')">
+                                    or contains(oai_dc:type,'peer-reviewed article') or contains(oai_dc:type,'Peer-Revied Article') or contains(oai_dc:type,'article') or contains(oai_dc:type,'Article')
+                                    or contains(dc:type,'journal') or contains(dc:type,'Journal') or contains(oai_dc:type,'journal') or contains(oai_dc:type,'Journal')">
 											<Index:field Index:repeat="true" Index:name="ma_short" Index:navn="ma_kort" Index:type="token" Index:boostFactor="4">
 										<xsl:text>an</xsl:text>
 									</Index:field>
@@ -152,15 +153,7 @@
 											<xsl:text>te</xsl:text>
 										</Index:field>
 									</xsl:if>
-                                     <xsl:if test="contains(dc:type,'journal') or contains(dc:type,'Journal') or contains(oai_dc:type,'journal') or contains(oai_dc:type,'Journal')">
-											<Index:field Index:repeat="true" Index:name="ma_short" Index:navn="ma_kort" Index:type="token" Index:boostFactor="4">
-										<xsl:text>pe</xsl:text>
-									</Index:field>
 
-									   <Index:field Index:repeat="true" Index:name="ma_short" Index:navn="ma_kort" Index:type="token" Index:boostFactor="4">
-											<xsl:text>te</xsl:text>
-										</Index:field>
-									</xsl:if>
                                       <xsl:if test="contains(dc:type,'thesis') or contains(dc:type,'Thesis') or contains(oai_dc:type,'thesis') or contains(oai_dc:type,'Thesis')">
 											<Index:field Index:repeat="true" Index:name="ma_short" Index:navn="ma_kort" Index:type="token" Index:boostFactor="4">
 										<xsl:text>mo</xsl:text>
@@ -300,20 +293,16 @@
 													<xsl:text>film</xsl:text>
 												</Index:field>
 											</xsl:when>
-                                            <xsl:when test="contains(dc:type,'article') or contains(dc:type,'Article') or contains(oai_dc:type,'article') or contains(oai_dc:type,'Article')">
+                                            <xsl:when test="contains(dc:type,'article') or contains(dc:type,'Article') or contains(oai_dc:type,'article') or contains(oai_dc:type,'Article')
+                                            or contains(dc:type,'journal') or contains(dc:type,'Journal') or contains(oai_dc:type,'journal') or contains(oai_dc:type,'Journal')">
 												<Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
 													<xsl:text>artikel</xsl:text>
 												</Index:field>
 											</xsl:when>
-                                            <xsl:when test="contains(dc:type,'journal') or contains(dc:type,'Journal') or contains(oai_dc:type,'journal') or contains(oai_dc:type,'Journal')">
-												<Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
-													<xsl:text>peri</xsl:text>
-												</Index:field>
-											</xsl:when>
+
                                             <xsl:otherwise>
 												<xsl:if test="dc:type or oai_dc:type">
 													<Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
-														<xsl:text>oai </xsl:text>
 														<xsl:value-of select="dc:type"/>
 													</Index:field>
 												</xsl:if>

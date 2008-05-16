@@ -117,7 +117,9 @@
 										<dc:type xml:lang="da">reklamefilm</dc:type>
 										<dc:type xml:lang="en">commercial</dc:type>
                                         <dc:identifier><xsl:text>https://sedna.statsbiblioteket.dk:8280/urn/</xsl:text><xsl:value-of select="id" /></dc:identifier>
-								</rdf:Description>
+                                     	<dc:format>todo</dc:format>
+
+                                </rdf:Description>
 							</rdf:RDF>
 						</shortrecord>
 						<xsl:text disable-output-escaping="yes">]]&gt;</xsl:text>

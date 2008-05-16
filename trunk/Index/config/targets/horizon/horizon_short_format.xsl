@@ -694,11 +694,22 @@
                             </xsl:if>
 
                         </xsl:for-each>
+                      <dc:format>
+                      <xsl:for-each select=".">
+                                            <xsl:choose>
+                                                <xsl:when test="contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position()=1],'xe')">
+															<xml:text>todo</xml:text>
+														</xsl:when>
+                                                <xsl:when test="contains(/mc:record/mc:datafield[@tag='008']/mc:subfield[@code='t'],'p')">
+									               			<xml:text>journal</xml:text>
+												</xsl:when>
+												<xsl:otherwise>
+                                                           <xml:text>mono</xml:text>
+                                                </xsl:otherwise>
+                                    </xsl:choose>
 
-                        <xsl:if test="mc:datafield[@tag='015'] and mc:datafield[@tag='248']">
-                            <dc:format><xsl:text>multivolume</xsl:text></dc:format>
-                        </xsl:if>
-
+                                    </xsl:for-each>
+                               </dc:format>
 
                         <!--                  <xsl:variable name="fonogram">
                        <xsl:for-each select="mc:datafield[@tag='096']">
