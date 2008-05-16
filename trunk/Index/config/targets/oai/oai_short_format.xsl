@@ -44,16 +44,64 @@
 													<xsl:value-of select="."/>
 												</dc:creator>
 											</xsl:for-each>
-											<xsl:for-each select="dc:date">
+											<xsl:for-each select="dc:date[position()=1]">
 												<dc:date>
-													<xsl:value-of select="."/>
+
+                                                   <xsl:if test="substring(.,0)!=''">
+                                                        <xsl:choose>
+                                                        <xsl:when test="contains(.,'-') or contains(.,' - ')">
+                                                               <xsl:if test="string-length(normalize-space(substring-before(translate(.,'([{)]}',''),'-')))=4">
+                                                              <xsl:value-of select="normalize-space(substring-before(translate(.,'([{)]}',''),'-'))"/>
+                                                            </xsl:if>
+                                                            <xsl:if test="string-length(normalize-space(substring-after(translate(.,'([{)]}',''),'-')))=4">
+                                                                <xsl:text>-</xsl:text>
+                                                              <xsl:value-of select="normalize-space(substring-after(translate(.,'([{)]}',''),'-'))"/>
+                                                            </xsl:if>
+                                                            </xsl:when>
+                                                           <xsl:otherwise>
+                                                                  <xsl:if test="string-length(normalize-space(translate(.,'([{)]}','')))=4">
+                                                                  <xsl:value-of select="translate(.,'([{)]}','')"/>
+                                                               </xsl:if>
+
+                                                           </xsl:otherwise>
+                                                         </xsl:choose>
+
+                                                    </xsl:if>
+                                                     <xsl:if test="position()!=last()">
+                                                                        <xsl:text>,&#32;</xsl:text>
+                                                                    </xsl:if>
+
 												</dc:date>
 											</xsl:for-each>
-                                            <xsl:for-each select="oai_dc:date">
-                                                <dc:date>
-                                                    <xsl:value-of select="."/>
-                                                </dc:date>
-                                            </xsl:for-each>
+                                           			<xsl:for-each select="oai_dc:date[position()=1]">
+												<dc:date>
+
+                                                   <xsl:if test="substring(.,0)!=''">
+                                                        <xsl:choose>
+                                                        <xsl:when test="contains(.,'-') or contains(.,' - ')">
+                                                               <xsl:if test="string-length(normalize-space(substring-before(translate(.,'([{)]}',''),'-')))=4">
+                                                              <xsl:value-of select="normalize-space(substring-before(translate(.,'([{)]}',''),'-'))"/>
+                                                            </xsl:if>
+                                                            <xsl:if test="string-length(normalize-space(substring-after(translate(.,'([{)]}',''),'-')))=4">
+                                                                <xsl:text>-</xsl:text>
+                                                              <xsl:value-of select="normalize-space(substring-after(translate(.,'([{)]}',''),'-'))"/>
+                                                            </xsl:if>
+                                                            </xsl:when>
+                                                           <xsl:otherwise>
+                                                                      <xsl:if test="string-length(normalize-space(translate(.,'([{)]}','')))=4">
+                                                                  <xsl:value-of select="translate(.,'([{)]}','')"/>
+                                                               </xsl:if>
+
+                                                           </xsl:otherwise>
+                                                         </xsl:choose>
+
+                                                    </xsl:if>
+                                                     <xsl:if test="position()!=last()">
+                                                                        <xsl:text>,&#32;</xsl:text>
+                                                                    </xsl:if>
+
+												</dc:date>
+											</xsl:for-each>
 
 												<xsl:for-each select=".">
 												<dc:type xml:lang="da">
