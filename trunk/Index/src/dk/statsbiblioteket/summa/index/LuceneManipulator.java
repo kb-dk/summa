@@ -113,7 +113,7 @@ public class LuceneManipulator implements IndexManipulator {
     private IDMapper idMapper;
 
     @SuppressWarnings({"UnusedDeclaration", "UnusedDeclaration"})
-    private int bufferSizePayloads = DEFAULT_BUFFER_SIZE_PAYLOADS;
+    private int bufferSizePayloads = DEFAUdLT_BUFFER_SIZE_PAYLOADS;
 
     public LuceneManipulator(Configuration conf) {
         bufferSizePayloads = conf.getInt(CONF_BUFFER_SIZE_PAYLOADS,

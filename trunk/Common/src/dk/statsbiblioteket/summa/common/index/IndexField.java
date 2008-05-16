@@ -356,7 +356,10 @@ public class IndexField<A, T, F> {
         String parentName = getAttribute(node, "parent", null);
         if (parentName != null) {
             log.trace("parse: Inheriting from parent '" + parentName + "'");
-            assignFrom(fieldProvider.getField(parentName));
+            IndexField<A, T, F> parentField =
+                    fieldProvider.getField(parentName);
+            assignFrom(parentField);
+            parent = parentField;
         }
         name = nameVal;
         aliases = new ArrayList<IndexAlias>(IndexAlias.getAliases(node));
