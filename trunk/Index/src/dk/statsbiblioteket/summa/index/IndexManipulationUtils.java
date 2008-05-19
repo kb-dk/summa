@@ -51,6 +51,8 @@ import javax.xml.transform.TransformerException;
 
 /**
  * All purpose static utility methods for index jugglers
+ * @deprecated replaced by methods in the relevant classes (primarily
+ * IndexDescriptor).
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,

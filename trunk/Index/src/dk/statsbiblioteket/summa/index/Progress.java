@@ -23,10 +23,13 @@
 package dk.statsbiblioteket.summa.index;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.Profiler;
 
-
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+/**
+ * @deprecated use {@link Profiler} from sbutil instead.
+ */
+@QAInfo(level = QAInfo.Level.NOT_NEEDED,
+        state = QAInfo.State.UNDEFINED,
         author = "hal")
 public class Progress implements ProgressMBean {
 

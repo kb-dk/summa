@@ -24,16 +24,16 @@ package dk.statsbiblioteket.summa.io;
 
 import dk.statsbiblioteket.summa.index.IndexService;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
+import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.IOException;
 
 /**
- * Created by IntelliJ IDEA.
- * User: hal
- * Date: May 17, 2006
- * Time: 11:08:49 AM
- * To change this template use File | Settings | File Templates.
+ * @deprecated as part of the old workflow.
  */
+@QAInfo(level = QAInfo.Level.NOT_NEEDED,
+        state = QAInfo.State.UNDEFINED,
+        author = "hal")
 public class UpdateTask extends IOTask {
 
 
