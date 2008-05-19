@@ -100,6 +100,19 @@ public class IndexDescriptorTest extends TestCase {
         assertTrue("No other groups should be present",
                    expectedGroups.containsAll(gotGroups));
 
+        IndexGroup<IndexField<Object, Object, Object>> group =
+                id.getGroups().get("ti");
+        assertEquals("The group 'ti' should contain the right number of fields",
+                     2, group.getFields().size());
+        IndexField<Object, Object, Object> tiField =
+                group.getField("title", null);
+        assertNotNull("The field 'title' should be in group 'ti'", tiField);
+
+        assertNotNull("Group look-up should work for alias 'tit'",
+                      id.getGroup("tit"));
+        assertEquals("Field look-up should work for alias 'forfatter'",
+                     "author", id.getField("forfatter").getName());
+
         List<String> expectedFields = Arrays.asList(new String[]{
                 // TODO: Extend with default groups
                 "text", "author", "title", "titel", "nostore"});

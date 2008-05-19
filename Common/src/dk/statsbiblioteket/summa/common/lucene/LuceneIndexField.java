@@ -22,8 +22,11 @@
  */
 package dk.statsbiblioteket.summa.common.lucene;
 
+import java.text.ParseException;
+
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.Tokenizer;
+import org.apache.lucene.document.Field;
 import org.w3c.dom.Node;
 import dk.statsbiblioteket.summa.common.index.IndexField;
 import dk.statsbiblioteket.summa.common.index.FieldProvider;
@@ -33,13 +36,36 @@ import dk.statsbiblioteket.summa.common.index.FieldProvider;
  */
 public class LuceneIndexField extends
                               IndexField<Analyzer, Tokenizer, IndexFilter> {
+    private Field.TermVector termVector =
+            Field.TermVector.WITH_POSITIONS_OFFSETS;
+
     public LuceneIndexField() {
         super();
     }
 
-/*    public LuceneIndexField(Node node,
-                            FieldProvider<LuceneIndexField> provider) {
-        super(node, provider);
+    public LuceneIndexField(String name) {
+        super(name);
     }
-  */
+
+    public LuceneIndexField(Node node, FieldProvider indexFieldFieldProvider)
+                                                         throws ParseException {
+        super(node, indexFieldFieldProvider);
+    }
+
+    public LuceneIndexField(IndexField<Analyzer, Tokenizer, IndexFilter>
+            parent) {
+        super(parent);
+    }
+
+    /* Mutators */
+
+    public Field.TermVector getTermVector() {
+        return termVector;
+    }
+
+    public void setTermVector(Field.TermVector termVector) {
+        this.termVector = termVector;
+    }
+
+
 }

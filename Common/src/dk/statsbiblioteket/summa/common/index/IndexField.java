@@ -36,7 +36,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.w3c.dom.NamedNodeMap;
 
 /**
  * IndexFields are used on several levels. From abstract to concrete, their
@@ -73,6 +72,11 @@ public class IndexField<A, T, F> {
      * This is used at index- and query-time.
      */
     private String name = "Summa-class-default";
+
+    /**
+     * The name of the default-field - this is used if no parent is specified.
+     */
+    public static final String SUMMA_DEFAULT = "summa_default";
 
     /**
      * If true, the field should be indexed.
@@ -245,8 +249,7 @@ public class IndexField<A, T, F> {
      *                      queried for the parent.
      * @throws ParseException if the node could not be parsed properly.
      */
-    public IndexField(Node node,
-                      FieldProvider<IndexField<A, T, F>> fieldProvider) throws
+    public IndexField(Node node, FieldProvider fieldProvider) throws
                                                                 ParseException {
         log.debug("Creating field based on node " + node);
         parse(node, fieldProvider);
@@ -344,8 +347,7 @@ public class IndexField<A, T, F> {
      * @throws ParseException if there was an error parsing.
      */
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    public void parse(Node node,
-                      FieldProvider<IndexField<A, T, F>> fieldProvider) throws
+    public void parse(Node node, FieldProvider fieldProvider) throws
                                                                 ParseException {
         //noinspection DuplicateStringLiteralInspection
         log.trace("parse called");
@@ -353,11 +355,31 @@ public class IndexField<A, T, F> {
         if (nameVal == null) {
             throw new ParseException("No name defined for field", -1);
         }
+
         String parentName = getAttribute(node, "parent", null);
+        if (parentName == null && !nameVal.equals(SUMMA_DEFAULT)) {
+            try {
+                fieldProvider.getField(SUMMA_DEFAULT);
+                parentName = SUMMA_DEFAULT;
+            } catch (IllegalArgumentException e) {
+                log.warn("Could not locate default field '" + SUMMA_DEFAULT
+                         + "'");
+            }
+        }
+
         if (parentName != null) {
             log.trace("parse: Inheriting from parent '" + parentName + "'");
-            IndexField<A, T, F> parentField =
-                    fieldProvider.getField(parentName);
+            IndexField<A, T, F> parentField;
+            try {
+                // TODO: Generify this
+                //noinspection unchecked
+                parentField =
+                        (IndexField<A, T, F>)fieldProvider.getField(parentName);
+            } catch (ClassCastException e) {
+                throw (ParseException)new ParseException(
+                        "The FieldProvider did not provide the right type",
+                        -1).initCause(e);
+            }
             assignFrom(parentField);
             parent = parentField;
         }
@@ -784,5 +806,13 @@ public class IndexField<A, T, F> {
 
     public void setRequired(boolean required) {
         this.required = required;
+    }
+
+    public void setIndexAnalyzer(A analyzer) {
+        indexAnalyzer = analyzer;
+    }
+
+    public void setQueryAnalyzer(A analyzer) {
+        queryAnalyzer = analyzer;
     }
 }
