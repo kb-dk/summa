@@ -23,17 +23,17 @@
 package dk.statsbiblioteket.summa.io;
 
 import dk.statsbiblioteket.summa.index.IndexService;
+import dk.statsbiblioteket.util.qa.QAInfo;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * Created by IntelliJ IDEA.
- * User: hal
- * Date: May 17, 2006
- * Time: 10:52:07 AM
- * To change this template use File | Settings | File Templates.
+ * @deprecated as part of the old workflow.
  */
+@QAInfo(level = QAInfo.Level.NOT_NEEDED,
+        state = QAInfo.State.UNDEFINED,
+        author = "hal")
 public abstract class IOTask implements Runnable {
 
     IndexService service;

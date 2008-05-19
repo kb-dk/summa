@@ -24,8 +24,11 @@ package dk.statsbiblioteket.summa.index;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+/**
+ * @depreacted as part of the old workflow.
+ */
+@QAInfo(level = QAInfo.Level.NOT_NEEDED,
+        state = QAInfo.State.UNDEFINED,
         author = "hal")
 public interface ProgressMBean {
 

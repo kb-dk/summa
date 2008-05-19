@@ -64,6 +64,8 @@ import org.w3c.dom.Node;
  * Converter from SummaDocumentXML to Lucene Documents. As part of the
  * conversion, a SearchDescriptor for the single Document is created and
  * added as Payload data.
+ * </p><p>
+ * see SummaDocumentXMLSample.xml.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,

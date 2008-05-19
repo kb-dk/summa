@@ -47,8 +47,11 @@ import org.apache.lucene.queryParser.ParseException;
 
 import org.xml.sax.SAXException;
 
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+/**
+ * @deprecated as part of the old workflow.
+ */
+@QAInfo(level = QAInfo.Level.NOT_NEEDED,
+        state = QAInfo.State.UNDEFINED,
         author = "hal")
 public class Test {
 

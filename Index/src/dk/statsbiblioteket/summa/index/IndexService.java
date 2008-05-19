@@ -34,6 +34,7 @@ import java.io.IOException;
 /**
  * This interface describes the indexService component.
  * The indexService component, is a <a href="http://jakarta.apache.dk/lucene/docs/index.html">Lucene</a> based index engine for XML file repositories.
+ * @deprecated see {@link IndexManipulator} and {@link DocumentCreator} instead.
  * <p />
  */
 @QAInfo(level = QAInfo.Level.NORMAL,

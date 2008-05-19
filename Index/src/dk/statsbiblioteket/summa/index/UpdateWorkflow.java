@@ -63,8 +63,11 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import javax.management.*;
 import javax.xml.transform.TransformerException;
 
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+/**
+ * @deprecated as part of the old workflow.
+ */
+@QAInfo(level = QAInfo.Level.NOT_NEEDED,
+        state = QAInfo.State.UNDEFINED,
         author = "hal, te")
 public class UpdateWorkflow {
     private static final String CONFIG = "index.properties.xml";

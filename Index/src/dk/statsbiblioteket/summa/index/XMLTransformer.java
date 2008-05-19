@@ -45,7 +45,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * transform arbitrary XML in Payload.Record.content using XSLT. This is
+ * Transform arbitrary XML in Payload.Record.content using XSLT. This is
  * normally used to convert source-specific XML to SummaDocumentXML (ready
  * for further transformation to a Lucene Document object by CreateDocument).
  */

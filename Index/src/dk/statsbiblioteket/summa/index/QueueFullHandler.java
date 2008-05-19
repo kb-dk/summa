@@ -30,7 +30,10 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 
-@QAInfo(level = QAInfo.Level.NORMAL,
+/**
+ * @depreacted as part of the old workflow.
+ */
+@QAInfo(level = QAInfo.Level.NOT_NEEDED,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "hal")
 public class QueueFullHandler implements RejectedExecutionHandler {
