@@ -261,6 +261,11 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      * initialization takes place. Override this method to provide
      * implementation-specific initialization, such as creating default
      * field definitions.
+     * </p><p>
+     * Note: Implementations should ensure that the fields "freetext" and
+     * "summa_default" are created. Freetext will be stored in the field
+     * "freetext" and "summa_default" will be used as the base default if
+     * no parent is given in the field Node.
      */
     public void init() {
         log.trace("init for IndexDescriptor called - does nothing");
@@ -432,24 +437,6 @@ public abstract class IndexDescriptor<F extends IndexField> implements
     }
 
     /**
-     * Locates and returns a field from the internal list of all fields.
-     * @param fieldName the name of the wanted field.
-     * @return the field corresponding to the name.
-     * @throws IllegalArgumentException if the field could not be located.
-     * @see {@link #allFields}.
-     */
-    public F getField(
-            String fieldName) throws IllegalArgumentException {
-        F field = allFields.get(fieldName);
-        if (field == null) {
-            throw new IllegalArgumentException(
-                    "The field '" + fieldName + "' is not present in the "
-                    + "collection of existing fields");
-        }
-        return field;
-    }
-
-    /**
      * XML-representation usable for persistence. This is the format that
      * {@link #parse} accepts.
      * @return a well-formed XML representation of the descriptor.
@@ -513,8 +500,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         log.trace("addField(" + field + ") called");
         if (allFields.get(field.getName()) != null) {
             log.debug("A Field with name '" + field.getName() + "' is already "
-                      + "present in allFields. Skipping add");
-            return false;
+                      + "present in allFields. The old field will be replaced");
         }
         //noinspection DuplicateStringLiteralInspection
         log.trace("Adding " + field + " to allFields");
@@ -589,6 +575,46 @@ public abstract class IndexDescriptor<F extends IndexField> implements
     }
 
     /**
+     * Locates and returns a field from the internal list of all fields.
+     * The look-up is performed with alias-expansion with language null (all
+     * languages match).
+     * @param fieldName the name or alias of the wanted field.
+     * @return the field corresponding to the name or alias.
+     * @throws IllegalArgumentException if the field could not be located.
+     * @see {@link #allFields}.
+     */
+    public F getField(String fieldName) throws IllegalArgumentException {
+        return getField(fieldName, null);
+    }
+
+    /**
+     * Locates and returns a field from the internal list of all fields.
+     * The look-up is performed with alias-expansion. Name-matches takes
+     * precedence over alias-matches.
+     * @param fieldName the name or alias of the wanted field.
+     * @param language  the language for alias-lookup. If the language is null,
+     *                  it is ignored.
+     * @return the field corresponding to the name or alias.
+     * @throws IllegalArgumentException if the field could not be located.
+     * @see {@link #allFields}.
+     */
+    public F getField(String fieldName, String language) throws
+                                                      IllegalArgumentException {
+        F field = allFields.get(fieldName);
+        if (field != null) {
+            return field;
+        }
+        // TODO: Optimize alias-lookup
+        for (Map.Entry<String, F> entry: allFields.entrySet()) {
+            if (entry.getValue().isMatch(fieldName, language)) {
+                return entry.getValue();
+            }
+        }
+        throw new IllegalArgumentException(String.format(
+                "Could not locate a field based on name '%s' and language "
+                + "'%s'", fieldName, language));
+    }
+    /**
      * Returns the field where the name (no alias-lookup) matches the fieldName.
      * If no field can be found, {@link #defaultField} is returned.
      * @param fieldName the name of the field to get.
@@ -642,6 +668,47 @@ public abstract class IndexDescriptor<F extends IndexField> implements
 
     public Map<String, IndexGroup<F>> getGroups() {
         return groups;
+    }
+
+    /**
+     * Locates and returns a group from the internal list of groups.
+     * The look-up is performed with alias-expansion and language null.
+     * @param groupName the name or alias of the wanted group.
+     * @return the group corresponding to the name or alias.
+     * @throws IllegalArgumentException if the group could not be located.
+     * @see {@link #groups}.
+     */
+    public IndexGroup<F> getGroup(String groupName) throws
+                                                      IllegalArgumentException {
+        return getGroup(groupName, null);
+    }
+
+    /**
+     * Locates and returns a group from the internal list of groups.
+     * The look-up is performed with alias-expansion. Name-matches takes
+     * precedence over alias-matches.
+     * @param groupName the name or alias of the wanted group.
+     * @param language  the language for alias-lookup. If the language is null,
+     *                  it is ignored.
+     * @return the group corresponding to the name or alias.
+     * @throws IllegalArgumentException if the group could not be located.
+     * @see {@link #groups}.
+     */
+    public IndexGroup<F> getGroup(String groupName, String language) throws 
+                                                      IllegalArgumentException {
+        IndexGroup<F> group = groups.get(groupName);
+        if (group != null) {
+            return group;
+        }
+        // TODO: Optimize alias-lookup
+        for (Map.Entry<String, IndexGroup<F>> entry: groups.entrySet()) {
+            if (entry.getValue().isMatch(groupName, language)) {
+                return entry.getValue();
+            }
+        }
+        throw new IllegalArgumentException(String.format(
+                "Could not locate a group based on name '%s' and language "
+                + "'%s'", groupName, language));
     }
 
     public Map<String, F> getFields() {

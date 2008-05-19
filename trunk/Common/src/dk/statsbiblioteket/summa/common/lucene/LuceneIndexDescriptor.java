@@ -47,63 +47,70 @@ public class LuceneIndexDescriptor
     private static Log log = LogFactory.getLog(LuceneIndexDescriptor.class);
 
     public LuceneIndexField createNewField() {
+        log.trace("createNewField called");
         return new LuceneIndexField();
     }
 
     public LuceneIndexField createNewField(Node node) throws ParseException {
-        // TODO: Implement this
-        return null; //new LuceneIndexField(node, this);
+        return new LuceneIndexField(node, this);
     }
-
 
     /**
      * Creates default fields, ready to be inherited.
      */
     public void init() {
-//        makeField("storedKeyWord", Field.Index.UN_TOKENIZED, Field.Store.YES, Field.TermVector.NO, new SummaKeywordAnalyzer()),
-        /**
-         * a keyword is UN_TOKENIZED, NOT STORED, NO TERMVECTORS, uses the SummaKeywordAnalyzer
-         * @see dk.statsbiblioteket.summa.common.lucene.analysis.SummaKeywordAnalyzer
-         */
-  //      keyWord("keyword", Field.Index.TOKENIZED,Field.Store.NO, Field.TermVector.YES, new SummaKeywordAnalyzer()),
-        /**
-         * a text field is, TOKENIZED, NOT STORED, TERMVECTOR WITH_POSITION_OFFSETS, uses SummaStandardAnalyzer
-         * @see dk.statsbiblioteket.summa.common.lucene.analysis.SummaStandardAnalyzer
-         */
-    //    text("text", Field.Index.TOKENIZED, Field.Store.NO, Field.TermVector.WITH_POSITIONS_OFFSETS, new SummaStandardAnalyzer()),
-        /**
-         * sort is, TOKENIZED, NOT STORED, TERMVECTOR YES, uses SummaSortKeyAnalyzer
-         * @see dk.statsbiblioteket.summa.common.lucene.analysis.SummaSortKeyAnalyzer
-         */
-      //  sort("sortkey", Field.Index.TOKENIZED, Field.Store.NO, Field.TermVector.YES, new SummaSortKeyAnalyzer()),
-        /**
-         * stored is: INDEX NO, STORED COMPRESS, TERMVECTOR NO, uses SummaStandardAnalyzer.<br>
-         * note: the analyzer is not acctually used as the type is not indexed!!!
-         */
-//        stored("stored", Field.Index.NO, Field.Store.COMPRESS, Field.TermVector.NO, new SummaStandardAnalyzer()),
-        /**
-         * date is : TOKENIZED, STOREED NO, TERMVECTOR NO, uses SimpleAnalyzer.
-         * @see org.apache.lucene.analysis.SimpleAnalyzer
-         */
-  //      date("date", Field.Index.TOKENIZED, Field.Store.NO, Field.TermVector.NO, new SimpleAnalyzer()),
-        /**
-         * number is: TOKENIZED, STORED YES, TERMVECTOR NO, uses SummaNumberAnalyzer.
-         * @see dk.statsbiblioteket.summa.common.lucene.analysis.SummaNumberAnalyzer
-         */
-    //    number("number", Field.Index.TOKENIZED, Field.Store.YES, Field.TermVector.NO, new SummaNumberAnalyzer()),
-        /**
-         * text is: TOKENIZED, STORED NO, TERMVECTOR WITH_POSITION_OFFSET, new FreeTextAnalyzer.
-         * @see dk.statsbiblioteket.summa.common.lucene.analysis.FreeTextAnalyzer
-         */
-      //  freetext("freetext", Field.Index.TOKENIZED, Field.Store.NO, Field.TermVector.WITH_POSITIONS_OFFSETS, new FreeTextAnalyzer());
-
+        addField(makeField("freetext",
+                           Field.Index.TOKENIZED,
+                           Field.Store.NO,
+                           Field.TermVector.WITH_POSITIONS_OFFSETS,
+                           new FreeTextAnalyzer()));
+        addField(makeField("summa_default",
+                           Field.Index.TOKENIZED,
+                           Field.Store.YES,
+                           Field.TermVector.WITH_POSITIONS_OFFSETS,
+                           new SummaStandardAnalyzer()));
+        addField(makeField("storedKeyWord",
+                           Field.Index.UN_TOKENIZED,
+                           Field.Store.YES,
+                           Field.TermVector.NO,
+                           new SummaKeywordAnalyzer()));
+        addField(makeField("keyword",
+                           Field.Index.TOKENIZED,
+                           Field.Store.NO,
+                           Field.TermVector.YES,
+                           new SummaKeywordAnalyzer()));
+        addField(makeField("text",
+                           Field.Index.TOKENIZED,
+                           Field.Store.NO,
+                           Field.TermVector.WITH_POSITIONS_OFFSETS,
+                           new SummaStandardAnalyzer()));
+        addField(makeField("sortkey",
+                           Field.Index.TOKENIZED,
+                           Field.Store.NO,
+                           Field.TermVector.YES,
+                           new SummaSortKeyAnalyzer()));
+        addField(makeField("stored",
+                           Field.Index.NO,
+                           Field.Store.COMPRESS,
+                           Field.TermVector.NO,
+                           new SummaStandardAnalyzer()));
+        addField(makeField("date",
+                           Field.Index.TOKENIZED,
+                           Field.Store.NO,
+                           Field.TermVector.NO,
+                           new SimpleAnalyzer()));
+        addField(makeField("number",
+                           Field.Index.TOKENIZED,
+                           Field.Store.YES,
+                           Field.TermVector.NO,
+                           new SummaNumberAnalyzer()));
     }
 
-    private IndexField<Analyzer, Tokenizer, IndexFilter> makeField(
-            String name, Field.Index index, Field.Store store,
-            Field.TermVector termVector, Analyzer analyzer) {
-        IndexField<Analyzer, Tokenizer, IndexFilter> field =
-                new IndexField<Analyzer, Tokenizer, IndexFilter>(name);
+    private LuceneIndexField makeField(String name, Field.Index index,
+                                       Field.Store store,
+                                       Field.TermVector termVector,
+                                       Analyzer analyzer) {
+        LuceneIndexField field = new LuceneIndexField(name);
         if (index.equals(Field.Index.NO)) {
             field.setDoIndex(false);
             field.setTokenize(false);
@@ -128,10 +135,9 @@ public class LuceneIndexDescriptor
             field.setDoStore(true);
             field.setDoCompress(false);
         }
-        if (termVector.equals(Field.TermVector.NO)) {
-//            field
-        }
+        field.setTermVector(termVector);
+        field.setIndexAnalyzer(analyzer);
+        field.setQueryAnalyzer(analyzer);
         return field;
     }
-    // TODO: Create default fields (including freetext)
 }
