@@ -33,6 +33,7 @@
                      <xsl:call-template name="materials"/>
                     <xsl:call-template name="id"/>
                      <xsl:call-template name="subject"/>
+                    <xsl:call-template name="classification"/>
                        <xsl:call-template name="date"/>
                      <xsl:call-template name="notes"/>
                    <Index:field Index:repeat="true" Index:name="lang" Index:navn="sp" Index:type="token">

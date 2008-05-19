@@ -8,10 +8,11 @@
 
 	<xsl:output version="1.0" encoding="UTF-8" indent="yes" method="xml"/>
 	<xsl:template name="notes">
-		  <Index:field Index:repeat="true" Index:name="rt" Index:navn="rt" Index:type="token">
+	<xsl:if test="substring(description,0)!=''">
+		  <Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token">
 						<xsl:value-of select="description"/>
 				    </Index:field>
-
+</xsl:if>
     </xsl:template>
 
 </xsl:stylesheet>

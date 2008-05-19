@@ -8,13 +8,17 @@
     
 	<xsl:output version="1.0" encoding="UTF-8" indent="yes" method="xml"/>
 	<xsl:template name="date">
-
+<xsl:if test="substring(censor/date,0)!=''"> 
         <Index:field Index:repeat="true" Index:name="py" Index:navn="år"  Index:type="token" Index:boostFactor="2">
-             <xsl:value-of select="censor"/>
+             <xsl:value-of select="censor/date"/>
         </Index:field>
+				 </xsl:if>
+				 <xsl:if test="substring(premiereDate,0)!=''"> 
         <Index:field Index:repeat="true" Index:name="py" Index:navn="år"  Index:type="token" Index:boostFactor="2">
              <xsl:value-of select="premiereDate"/>
         </Index:field>
+				</xsl:if>
+			
 		
 
     </xsl:template>

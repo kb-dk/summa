@@ -9,16 +9,43 @@
 	<xsl:output version="1.0" encoding="UTF-8" indent="yes" method="xml"/>
 	<xsl:template name="author">
         <Index:group Index:name="au" Index:navn="fo" Index:suggest="false">
-            <Index:field Index:name="author_person" Index:repeat="true" Index:navn="pe" Index:type="token" Index:boostFactor="10">
-                <xsl:value-of select="contributor[@role='Tekniske arbejder']" />
-            </Index:field>
-            <Index:field Index:repeat="true" Index:name="author_corporation" Index:navn="ko" Index:type="token" Index:boostFactor="10">
-                 <xsl:value-of select="contributor[@role='Producent']" />
-            </Index:field>
-            <Index:field Index:repeat="true" Index:name="author_corporation" Index:navn="ko" Index:type="token" Index:boostFactor="10">
-                 <xsl:value-of select="contributor[@role='Bureau']" />
-            </Index:field>
+				<xsl:for-each select="contributor">
+				<xsl:if test="substring(.,0)!='' and substring(.,0)!='N/A'">
+          								<Index:field Index:name="au_other" Index:navn="fo_andet" Index:repeat="true" Index:type="token" Index:boostFactor="6">
+									<xsl:value-of select="."/>
+								
+								</Index:field>
+
+       </xsl:if>
+			 </xsl:for-each>
+			 
+			 				<xsl:for-each select="creator">
+				<xsl:if test="substring(.,0)!='' and substring(.,0)!='N/A'">
+            								<Index:field Index:name="au_other" Index:navn="fo_andet" Index:repeat="true" Index:type="token" Index:boostFactor="6">
+									<xsl:value-of select="."/>
+								
+								</Index:field>
+
+       </xsl:if>
+			 </xsl:for-each>
+
         </Index:group>
+				<xsl:for-each select="contributor">
+					<xsl:if test="substring(.,0)!='' and substring(.,0)!='N/A'">
+						<Index:field Index:repeat="false" Index:name="author_normalised" Index:navn="lfo" Index:type="keyword" Index:boostFactor="2">
+									<xsl:value-of select="."/>
+								
+						</Index:field>
+						</xsl:if>
+						</xsl:for-each>
+				<xsl:for-each select="creator">
+					<xsl:if test="substring(.,0)!='' and substring(.,0)!='N/A'">
+						<Index:field Index:repeat="false" Index:name="author_normalised" Index:navn="lfo" Index:type="keyword" Index:boostFactor="2">
+									<xsl:value-of select="."/>
+								
+						</Index:field>
+						</xsl:if>
+						</xsl:for-each>
 		
     </xsl:template>
 
