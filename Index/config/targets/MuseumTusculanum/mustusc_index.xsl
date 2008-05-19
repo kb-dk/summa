@@ -45,6 +45,7 @@
 																	<xsl:call-template name="su" />
 							<xsl:call-template name="date" />
 							<xsl:call-template name="title" />
+							
 									<xsl:call-template name="notes" />
 										<xsl:call-template name="publisher" />
 										<xsl:call-template name="identifiers" />   

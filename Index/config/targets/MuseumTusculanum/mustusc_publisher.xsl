@@ -12,7 +12,7 @@
 	<xsl:output version="1.0" encoding="UTF-8" indent="yes" method="xml"/>
 	<xsl:template name="publisher">
 				
-								<xsl:for-each select="publisher">
+								<xsl:for-each select=".">
 									<Index:field Index:repeat="true" Index:name="pu" Index:navn="fl" Index:type="token" Index:boostFactor="2">
 									<xsl:text>Museum Tusculanum</xsl:text>
 									</Index:field>

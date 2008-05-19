@@ -20,13 +20,7 @@
 										
 										</Index:field>
 									</xsl:for-each>
-										<xsl:for-each select="part/title">
-										<Index:field Index:repeat="true" Index:name="main_titel" Index:navn="ht" Index:type="token" Index:boostFactor="6">
-											
-											<xsl:value-of select="."/>
 										
-										</Index:field>
-									</xsl:for-each>
 										<xsl:for-each select="subtitle">
 							    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="5"  Index:suggest="true">
 											
@@ -34,13 +28,7 @@
 										
 										</Index:field>
 									</xsl:for-each>
-									<xsl:for-each select="part/subtitle">
-							    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="5"  Index:suggest="true">
-											
-											<xsl:value-of select="."/>
-										
-										</Index:field>
-									</xsl:for-each>
+									
 									<xsl:for-each select="series_title">
                                <Index:field Index:repeat="true" Index:name="se" Index:navn="se" Index:type="token" Index:boostFactor="2">   
 															 <xsl:value-of select="."/>
@@ -87,6 +75,17 @@
 											</xsl:otherwise>
 										</xsl:choose>
 									</xsl:for-each>
+									<xsl:if test="volume!= '' ">
+									<xsl:text>&#32;</xsl:text>
+																	 <xsl:value-of select="volume"/>
+														
+															 </xsl:if>
+															 
+															 <xsl:if test="issue!= '' ">
+															 	 <xsl:text>&#32;(</xsl:text>
+															 <xsl:value-of select="issue"/>
+															 <xsl:text>)</xsl:text>
+															 </xsl:if>
                      </Index:field>
 										 		<xsl:for-each select="series_title">
 							<Index:field Index:repeat="false" Index:name="lso" Index:navn="lvp" Index:type="keyword">

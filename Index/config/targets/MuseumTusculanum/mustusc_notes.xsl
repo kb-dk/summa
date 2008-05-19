@@ -41,13 +41,7 @@
 												</Index:field>
 												</xsl:if>
 								</xsl:for-each>
-       <xsl:for-each select="part/partnr">
-			 	<xsl:if test=".!=' '">
-   		<Index:field Index:repeat="true" Index:name="other" Index:navn="andet" Index:type="token">
-			<xsl:value-of select="."/>
-			</Index:field>
-			</xsl:if>
-			</xsl:for-each>
+     
 			 <xsl:for-each select="pages">
 			 	<xsl:if test=".!=' '">
    		<Index:field Index:repeat="true" Index:name="other" Index:navn="andet" Index:type="token">
@@ -55,13 +49,7 @@
 			</Index:field>
 			</xsl:if>
 			</xsl:for-each>
-			   <xsl:for-each select="part/startpage">
-				 	<xsl:if test=".!=' '">
-			<Index:field Index:repeat="true" Index:name="other" Index:navn="andet" Index:type="token">
-			<xsl:value-of select="."/><xsl:text>-</xsl:text><xsl:value-of select="following-sibling::endpage"/>
-			</Index:field>
-				</xsl:if>
-			</xsl:for-each>
+			 
 			
 	</xsl:template>
 </xsl:stylesheet>
