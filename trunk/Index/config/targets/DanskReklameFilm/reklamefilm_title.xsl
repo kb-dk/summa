@@ -12,11 +12,29 @@
         <Index:group Index:name="ti" Index:navn="ti" Index:suggest="true">
                                <xsl:for-each select="title">
                                    <Index:field Index:repeat="true" Index:name="main_titel" Index:navn="ht" Index:type="token" Index:boostFactor="10">
-                                       <xsl:value-of select="mainTitle"/>
+                                         <xsl:choose>
+                                                                        <xsl:when test="substring(mainTitle,0)!=''">
+                                                                    <xsl:value-of select="mainTitle"/>
+                                                                       </xsl:when>
+                                                                    <xsl:when test="substring(/mdcs/subject/productName,0)!=''">
+                                                                    <xsl:value-of select="/mdcs/subject/productName"/>
+                                                                                   </xsl:when>
+                                                             <xsl:when test="substring(alternativeTitle,0)!=''">
+                                                                    <xsl:value-of select="alternativeTitle"/>
+                                                                    </xsl:when>
+                                                                    <xsl:otherwise>
+                                                                    <xml:text>Uden titel</xml:text>
+                                                                     </xsl:otherwise>
+
+                                                                    </xsl:choose>
                                    </Index:field>
-                                   <Index:field Index:repeat="true" Index:name="se" Index:navn="se" Index:type="token" Index:boostFactor="8">
-                                       <xsl:value-of select="alternativeTitle" />
+																	 <xsl:for-each select="alternativeTitle">
+																	 <xsl:if test="substring(.,0)!=''">
+                                   <Index:field Index:repeat="true" Index:name="title" Index:navn="title" Index:type="token" Index:boostFactor="8">
+                                       <xsl:value-of select="." />
                                    </Index:field>
+</xsl:if>
+																	 </xsl:for-each>
                                </xsl:for-each>
                            </Index:group>
 
