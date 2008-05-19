@@ -50,7 +50,7 @@
 																			
 																		</xsl:choose>													
 											
-				</dc:creator>
+				                                                    </dc:creator>
 																</xsl:for-each>
 														</xsl:for-each>
 														<xsl:for-each select="py">
@@ -97,10 +97,10 @@
 																		</xsl:choose>
 																</dc:type>
 														</xsl:for-each>
-										
-														
-												</xsl:for-each>
-												
+	                                             <xsl:for-each select=".">
+												<dc:format>todo</dc:format>
+											</xsl:for-each>
+										</xsl:for-each>
 										</rdf:Description>
 								</rdf:RDF>
 								

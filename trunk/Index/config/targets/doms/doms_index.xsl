@@ -52,7 +52,9 @@
                                         <xsl:otherwise>
                                             <dc:date></dc:date>
                                         </xsl:otherwise>
+
                                     </xsl:choose>
+
                                     <xsl:choose>
                                         <xsl:when test="oai:digitalObject[position()=1]/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:type[@xml:lang='da']">
                                             <dc:type xml:lang="da"><xsl:value-of select="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:type[@xml:lang='da']"/></dc:type>
@@ -74,6 +76,9 @@
 																						</xsl:choose>
                                         </xsl:otherwise>
                                     </xsl:choose>
+                                                  												    <xsl:for-each select=".">
+												<dc:format>todo</dc:format>
+											</xsl:for-each>
                                     <xsl:choose>
                                         <xsl:when test="oai:digitalObject[position()=1]/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:type[@xml:lang='en']">
                                             <dc:type xml:lang="en"><xsl:value-of select="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:type[@xml:lang='en']"/></dc:type>
@@ -95,10 +100,12 @@
 																						</xsl:choose>
                                         </xsl:otherwise>
                                     </xsl:choose>
+
                                     <!--TODO: Must be PID in storage-->
                                     <dc:identifier><xsl:value-of select="oai:digitalObject/@PID"/></dc:identifier>
+
                                 </rdf:Description>
-                            </rdf:RDF>
+                               </rdf:RDF>
                         </shortrecord>
                         <xsl:text disable-output-escaping="yes">]]&gt;</xsl:text>
                     </Index:field>
