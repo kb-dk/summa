@@ -28,14 +28,35 @@
 											<xsl:for-each select="title">
 												<dc:title>
 													<xsl:value-of select="."/>
+													<xsl:if test="substring(normalize-space(../subtitle[position()=1]),0)!=''">
+													<xsl:text>&#32;:&#32;</xsl:text>
+													<xsl:value-of select="../subtitle [position()=1]"/>
+													</xsl:if>
+												
+															 <xsl:text>;&#32;</xsl:text>
+															 <xsl:if test="../volume!= '' ">
+																	 <xsl:value-of select="../volume"/>
+														
+															 </xsl:if>
+															 
+															 <xsl:if test="../issue!= '' ">
+															 	 <xsl:text>&#32;(</xsl:text>
+															 <xsl:value-of select="../issue"/>
+															 <xsl:text>)</xsl:text>
+															 </xsl:if>
 												</dc:title>
 											</xsl:for-each>
-                                            <xsl:for-each select="author">
-												<dc:creator>
-													<xsl:value-of select="."/>
-												</dc:creator>
-											</xsl:for-each>
-                                            
+											<dc:creator>
+											<xsl:choose>
+										<xsl:when test="substring(author,0)!=''">
+										<xsl:value-of select="author[position()=1]"/>
+										</xsl:when>
+											<xsl:when test="substring(editor,0)!=''">
+										<xsl:value-of select="editor[position()=1]"/>
+										</xsl:when>
+											</xsl:choose>
+                                           
+                              		</dc:creator>              
 											<xsl:for-each select="date">
 												<dc:date>
 													<xsl:value-of select="."/>
@@ -53,7 +74,7 @@
 											<xsl:for-each select=".">
 												<dc:type xml:lang="en">net document</dc:type>
 											</xsl:for-each>
-											<xsl:for-each select="dc:identifier">
+											<xsl:for-each select="identifier">
 												<xsl:choose>
 													<xsl:when test="starts-with(.,'http://')">
 														<dc:identifier>

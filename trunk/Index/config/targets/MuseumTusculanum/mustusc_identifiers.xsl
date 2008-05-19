@@ -20,14 +20,7 @@
 							<xsl:value-of select="."/>
 							</Index:field>
 							</xsl:for-each>
-							<xsl:for-each select="part/issn">
-								<Index:field Index:name="issn" Index:navn="in" Index:type="number" Index:boostFactor="10">
-								<xsl:value-of select="."/>
-							</Index:field>
-								<Index:field Index:name="standard_number" Index:navn="is" Index:type="number" Index:boostFactor="10">
-							<xsl:value-of select="."/>
-							</Index:field>
-							</xsl:for-each>
+							
 									<xsl:for-each select="identifier">
 										<Index:field Index:repeat="true" Index:name="id" Index:navn="id" Index:type="number" Index:boostFactor="8">
 											<xsl:value-of select="."/>
@@ -40,18 +33,7 @@
 											</xsl:when>
 										</xsl:choose>
 									</xsl:for-each>
-										<xsl:for-each select="part/identifier">
-										<Index:field Index:repeat="true" Index:name="id" Index:navn="id" Index:type="number" Index:boostFactor="8">
-											<xsl:value-of select="."/>
-										</Index:field>
-										<xsl:choose>
-											<xsl:when test="starts-with(.,'http://')">
-												<Index:field Index:repeat="true" Index:name="ww" Index:navn="ww" Index:type="token">
-													<xsl:value-of select="."/>
-												</Index:field>
-											</xsl:when>
-										</xsl:choose>
-									</xsl:for-each>
+										
                    <xsl:for-each select="isbn">
 							<Index:field Index:name="isbn" Index:navn="ib" Index:type="number" Index:boostFactor="10">
 								<xsl:value-of select="translate(.,'- ','')"/>
@@ -60,14 +42,7 @@
 								<xsl:value-of select="translate(.,'- ','')"/>
 							</Index:field>
 							</xsl:for-each>
-						     <xsl:for-each select="part/isbn">
-							<Index:field Index:name="isbn" Index:navn="ib" Index:type="number" Index:boostFactor="10">
-								<xsl:value-of select="translate(.,'- ','')"/>
-							</Index:field>
-									<Index:field Index:name="standard_number" Index:navn="is" Index:type="number" Index:boostFactor="10">
-								<xsl:value-of select="translate(.,'- ','')"/>
-							</Index:field>
-									</xsl:for-each>
+						    
 						       <xsl:for-each select="isbn">
 						
 								<Index:field Index:name="isbn" Index:navn="ib" Index:type="number" Index:boostFactor="10">
@@ -78,16 +53,7 @@
 								<xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.ISBN.isbnNorm(.)"/>
 							</Index:field>
 						</xsl:for-each>
-						     <xsl:for-each select="part/isbn">
-					
-								<Index:field Index:name="isbn" Index:navn="ib" Index:type="number" Index:boostFactor="10">
-								<xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.ISBN.isbnNorm(.)"/>
-							</Index:field>
-							
-								<Index:field Index:name="isbn" Index:navn="ib" Index:type="number" Index:boostFactor="10">
-								<xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.ISBN.isbnNorm(.)"/>
-							</Index:field>
-						</xsl:for-each>
+						   
 						 
 								</Index:group>
 								
