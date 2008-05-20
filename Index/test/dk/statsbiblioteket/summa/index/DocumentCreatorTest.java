@@ -20,6 +20,7 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -104,6 +105,9 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
         Document doc = (Document)processed.getData(Payload.LUCENE_DOCUMENT);
         assertTrue("The document should have some fields",
                    doc.getFields().size() > 0);
+        for (Object fieldObject: doc.getFields()) {
+            System.out.println(((Field)fieldObject).stringValue());
+        }
         for (String fieldName: new String[]{"mystored", "freetext",
                                             IndexUtils.RECORD_FIELD}) {
             assertNotNull("The document should contain the field " + fieldName,
