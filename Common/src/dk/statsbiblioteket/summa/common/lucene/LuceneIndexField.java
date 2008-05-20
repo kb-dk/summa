@@ -33,6 +33,7 @@ import dk.statsbiblioteket.summa.common.index.FieldProvider;
 
 /**
  * Extension of IndexField to support Lucene-specific behaviour.
+ * TODO: Migrate the building of Analyzer from IndexServiceImpl.
  */
 public class LuceneIndexField extends
                               IndexField<Analyzer, Tokenizer, IndexFilter> {
@@ -57,6 +58,13 @@ public class LuceneIndexField extends
         super(parent);
     }
 
+    protected void assignFrom(LuceneIndexField parent) {
+        super.assignFrom(parent);
+        setTermVector(parent.getTermVector());
+    }
+
+    // TODO: Implement clone
+
     /* Mutators */
 
     public Field.TermVector getTermVector() {
@@ -67,5 +75,36 @@ public class LuceneIndexField extends
         this.termVector = termVector;
     }
 
+    /**
+     * Convenience method for translating doStore and doCompress to Lucene
+     * Store.
+     * @return how to store a term based on this field.
+     */
+    public Field.Store getStore() {
+        if (isDoStore()) {
+            if (isDoCompress()) {
+                return Field.Store.COMPRESS;
+            } else {
+                return Field.Store.YES;
+            }
+        } else {
+            return Field.Store.NO;
+        }
+    }
 
+    /**
+     * Convenience method for translating index and tokenize to Lucene Index.
+     * @return how to index a term based on this field.
+     */
+    public Field.Index getIndex() {
+        if (isDoIndex()) {
+            if (isTokenize()) {
+                return Field.Index.TOKENIZED;
+            } else {
+                return Field.Index.UN_TOKENIZED;
+            }
+        } else {
+            return Field.Index.NO;
+        }
+    }
 }

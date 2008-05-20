@@ -23,6 +23,8 @@
 package dk.statsbiblioteket.summa.common.lucene;
 
 import java.text.ParseException;
+import java.io.IOException;
+import java.net.URL;
 
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.index.IndexField;
@@ -31,6 +33,7 @@ import dk.statsbiblioteket.summa.common.lucene.analysis.SummaStandardAnalyzer;
 import dk.statsbiblioteket.summa.common.lucene.analysis.SummaSortKeyAnalyzer;
 import dk.statsbiblioteket.summa.common.lucene.analysis.SummaNumberAnalyzer;
 import dk.statsbiblioteket.summa.common.lucene.analysis.FreeTextAnalyzer;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.SimpleAnalyzer;
@@ -46,6 +49,22 @@ public class LuceneIndexDescriptor
         extends IndexDescriptor<LuceneIndexField> {
     private static Log log = LogFactory.getLog(LuceneIndexDescriptor.class);
 
+    public LuceneIndexDescriptor(Configuration configuration) throws IOException {
+        super(configuration);
+    }
+
+    public LuceneIndexDescriptor() {
+        super();
+    }
+
+    public LuceneIndexDescriptor(URL absoluteLocation) throws IOException {
+        super(absoluteLocation);
+    }
+
+    public LuceneIndexDescriptor(String xml) throws ParseException {
+        super(xml);
+    }
+
     public LuceneIndexField createNewField() {
         log.trace("createNewField called");
         return new LuceneIndexField();
@@ -59,12 +78,12 @@ public class LuceneIndexDescriptor
      * Creates default fields, ready to be inherited.
      */
     public void init() {
-        addField(makeField("freetext",
+        addField(makeField(IndexField.FREETEXT,
                            Field.Index.TOKENIZED,
                            Field.Store.NO,
                            Field.TermVector.WITH_POSITIONS_OFFSETS,
                            new FreeTextAnalyzer()));
-        addField(makeField("summa_default",
+        addField(makeField(IndexField.SUMMA_DEFAULT,
                            Field.Index.TOKENIZED,
                            Field.Store.YES,
                            Field.TermVector.WITH_POSITIONS_OFFSETS,
