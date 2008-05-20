@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<SummaDocument version="1.0">
+<SummaDocument version="1.0" id="mybase:grimme_aellinger" xmlns="http://statsbiblioteket.dk/2008/Index">
     <fields>
         <!-- Valid attributes for fields:
           name: mandatory - the name for the field (aliases are not allowed)
