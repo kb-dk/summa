@@ -32,6 +32,7 @@ import java.io.StringWriter;
 import java.text.ParseException;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.common.util.ParseUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Node;
@@ -77,6 +78,12 @@ public class IndexField<A, T, F> {
      * The name of the default-field - this is used if no parent is specified.
      */
     public static final String SUMMA_DEFAULT = "summa_default";
+
+    /**
+     * The name of the Field containing unordered freely searchable terms.
+     */
+    @SuppressWarnings({"DuplicateStringLiteralInspection"})
+    public static final String FREETEXT = "freetext";
 
     /**
      * If true, the field should be indexed.
@@ -273,7 +280,7 @@ public class IndexField<A, T, F> {
      * after assignment.
      * @param parent the field to get values from.
      */
-    private void assignFrom(IndexField<A, T, F> parent) {
+    protected void assignFrom(IndexField<A, T, F> parent) {
         log.trace("Assigning from " + parent);
         name = parent.getName();
         this.parent = parent.getParent();
@@ -351,12 +358,13 @@ public class IndexField<A, T, F> {
                                                                 ParseException {
         //noinspection DuplicateStringLiteralInspection
         log.trace("parse called");
-        String nameVal = getAttribute(node, "name", null);
+        String nameVal = ParseUtil.getValue(xPath, node, "@name", (String)null);
         if (nameVal == null) {
             throw new ParseException("No name defined for field", -1);
         }
 
-        String parentName = getAttribute(node, "parent", null);
+        String parentName = ParseUtil.getValue(xPath, node, "@parent",
+                                               (String)null);
         if (parentName == null && !nameVal.equals(SUMMA_DEFAULT)) {
             try {
                 fieldProvider.getField(SUMMA_DEFAULT);
@@ -384,14 +392,16 @@ public class IndexField<A, T, F> {
             parent = parentField;
         }
         name = nameVal;
-        aliases = new ArrayList<IndexAlias>(IndexAlias.getAliases(node));
-        doIndex = getBooleanAttribute(node, "indexed", doIndex);
-        doStore = getBooleanAttribute(node, "stored", doStore);
-        multiValued = getBooleanAttribute(node, "multiValued", doStore);
-        boost = getFloatAttribute(node, "boost", boost);
-        sortLocale = getAttribute(node, "sortLocale", sortLocale);
-        inFreetext = getBooleanAttribute(node, "inFreeText", inFreetext);
-        required = getBooleanAttribute(node, "required", required);
+        aliases =     new ArrayList<IndexAlias>(IndexAlias.getAliases(node));
+        doIndex =     ParseUtil.getValue(xPath, node, "@indexed", doIndex);
+        doStore =     ParseUtil.getValue(xPath, node, "@stored", doStore);
+        multiValued = ParseUtil.getValue(xPath, node, "@multiValued", doStore);
+        boost =       ParseUtil.getValue(xPath, node, "@boost", boost);
+        sortLocale =  ParseUtil.getValue(xPath, node, "@sortLocale",
+                                         sortLocale);
+        inFreetext =  ParseUtil.getValue(xPath, node, "@inFreeText",
+                                         inFreetext);
+        required =    ParseUtil.getValue(xPath, node, "@required", required);
 
         NodeList children = node.getChildNodes();
         for (int i = 0 ; i < children.getLength() ; i++) {
@@ -405,9 +415,11 @@ public class IndexField<A, T, F> {
     }
 
     private void parseAnalyzer(Node node) throws ParseException {
-        String typeAttr = getAttribute(node, "type", null);
+        String typeAttr = ParseUtil.getValue(xPath, node, "@type",
+                                             (String)null);
         boolean parseIndex = false;
         boolean parseQuery = false;
+        //noinspection DuplicateStringLiteralInspection
         if ("index".equals(typeAttr)) {
             log.trace("Parsing analyzer information for index");
             parseIndex = true;
@@ -424,15 +436,7 @@ public class IndexField<A, T, F> {
             parseIndex = true;
             parseQuery = true;
         }
-        /*             <analyzer type="index">
-                <analyzerClass>class="dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzerClass>
-                <tokenizer class="..."/> SOLR-style -s->
-                <filter class="someFilter" mytag="mytagvalue"/>
-            </analyzer>
-            <analyzer type="query" class="dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer">
-                <tokenizer class="solr.WhitespaceTokenizerFactory"/>
-                <filter class="someOtherFilter" anothertag="myothertagvalue"/>
-            </analyzer>*/
+
         A analyzer = createAnalyzer(node);
         T tokenizer = null;
         List<F> filters = null;
@@ -469,44 +473,6 @@ public class IndexField<A, T, F> {
             queryAnalyzer = analyzer == null ? queryAnalyzer : analyzer;
             queryTokenizer = tokenizer == null ? queryTokenizer : tokenizer;
             queryFilters = filters == null ? queryFilters : filters;
-        }
-    }
-
-    private float getFloatAttribute(Node node, String attribute,
-                                    float defaultBoost) throws ParseException {
-        String sVal = getAttribute(node, attribute, null);
-        try {
-            return sVal == null ? defaultBoost : Float.parseFloat(sVal);
-        } catch (NumberFormatException e) {
-            log.warn("Expected a float for attribute '" + attribute
-                     + "' but got '" + sVal + "'");
-            return defaultBoost;
-        }
-    }
-
-    private boolean getBooleanAttribute(Node node, String attribute,
-                                        boolean defaultValue) throws
-                                                              ParseException {
-        return Boolean.parseBoolean(getAttribute(
-                node, attribute, Boolean.toString(defaultValue)));
-
-    }
-
-    private String getAttribute(Node node, String attribute,
-                                String defaultValue) throws ParseException {
-        String expr = "@" + attribute;
-        try {
-            if (!((Boolean)xPath.evaluate(expr, node,
-                                          XPathConstants.BOOLEAN))) {
-                log.trace("getAttribute: Attribute '" + attribute
-                          + "' not found. Returning default '" + defaultValue
-                          + "'");
-                return defaultValue;
-            }
-            return xPath.evaluate(expr, node);
-        } catch (XPathExpressionException e) {
-            throw (ParseException) new ParseException(String.format(
-                    "Invalid expression '%s'", expr), -1).initCause(e);
         }
     }
 

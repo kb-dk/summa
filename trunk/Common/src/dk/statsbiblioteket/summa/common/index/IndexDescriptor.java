@@ -47,6 +47,7 @@ import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.ResourceListener;
+import dk.statsbiblioteket.summa.common.util.ParseUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.NodeList;
@@ -115,12 +116,6 @@ public abstract class IndexDescriptor<F extends IndexField> implements
             "summa.common.index.check-interval";
     public static final int DEFAULT_CHECK_INTERVAL = 5*60*1000; // 5 minutes
 
-    /**
-     * The name of the Field containing unordered freely searchable terms.
-     */
-    @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    public static final String FREETEXT = "freetext";
-
     public static enum OPERATOR {and, or}
 
     private ResourceListener listener;
@@ -143,7 +138,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
     private F defaultField = createNewField();
     private String defaultLanguage = "en";
     private String uniqueKey = "id";
-    private List<String> defaultFields = Arrays.asList(FREETEXT, uniqueKey);
+    private List<String> defaultFields = Arrays.asList(IndexField.FREETEXT, uniqueKey);
     private OPERATOR defaultOperator = OPERATOR.or;
 
     /**
@@ -312,14 +307,12 @@ public abstract class IndexDescriptor<F extends IndexField> implements
                     + xml + "'", -1).initCause(e);
         }
 
-        defaultLanguage = getSingleValue(document,
+        defaultLanguage = ParseUtil.getValue(xPath, document,
                                          "IndexDescriptor/defaultLanguage",
-                                         "default language",
                                          defaultLanguage);
 
-        uniqueKey = getSingleValue(document,
+        uniqueKey = ParseUtil.getValue(xPath, document,
                                    "IndexDescriptor/uniqueKey",
-                                   "unique key",
                                    uniqueKey);
         if ("".equals(uniqueKey)) {
             throw new ParseException("Unique key specified to empty string",
@@ -327,18 +320,17 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         }
 
         String defaultSearchFields =
-                getSingleValue(document,
+                ParseUtil.getValue(xPath, document,
                                "IndexDescriptor/defaultSearchFields",
-                               "default search fields",
                                Strings.join(defaultFields, " "));
         defaultFields = Arrays.asList(defaultSearchFields.trim().split(" +"));
         if (defaultFields.size() == 0) {
             log.warn("No default fields specified");
         }
 
-        String dop = getSingleValue(
-                document, "IndexDescriptor/QueryParser/@defaultOperator",
-                "default operator", defaultOperator.toString());
+        String dop = ParseUtil.getValue(xPath, document,
+                "IndexDescriptor/QueryParser/@defaultOperator",
+                defaultOperator.toString());
         if ("or".equals(dop.toLowerCase())) {
             defaultOperator = OPERATOR.or;
         } else if ("and".equals(dop.toLowerCase())) {
@@ -393,37 +385,6 @@ public abstract class IndexDescriptor<F extends IndexField> implements
     }
 
     private XPath xPath = XPathFactory.newInstance().newXPath();
-    private String getSingleValue(Document document, String path,
-                                  String description, String defaultValue)
-            throws ParseException {
-        if (log.isTraceEnabled()) {
-            log.trace("Extracting '" + description + "' with path '"
-                      + path + "'");
-        }
-        String nodeValue;
-        try {
-            if (!((Boolean) xPath.evaluate(path, document,
-                                           XPathConstants.BOOLEAN))) {
-                log.debug("No value defined for path '" + path + "' for "
-                          + description + ". Returning default value '"
-                          + defaultValue + "'");
-                return defaultValue;
-        }
-            nodeValue = xPath.evaluate(path, document);
-        } catch (XPathExpressionException e) {
-            throw new ParseException("Expression '" + path + "' was invalid",
-                                     -1);
-        }
-        if (nodeValue == null) {
-            log.debug("Got null value for " + description + " from expression '"
-                      + path + "'. Returning default value '" + defaultValue
-                      + "'");
-            return defaultValue;
-        }
-        log.debug("Got " + description + " value '" + nodeValue
-                  + "' from expression '" + path + "'");
-        return nodeValue;
-    }
 
     /**
      * Stores an XML representation of this IndexDescriptor to the given
@@ -491,6 +452,9 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      * Adds the given IndexField to the descriptors fields, if the
      * Field-object is not already present. Existence is defined by the
      * existence of a Field with the same name.
+     * </p><p>
+     * Note: Id a field with the name {@link IndexField#SUMMA_DEFAULT} is
+     *       added, it will be the new {@link #defaultField}.
      * @param field the field to add to the descriptor.
      * @return true if the Field was added, else false.
      * @see {@link #allFields}.
@@ -505,6 +469,10 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         //noinspection DuplicateStringLiteralInspection
         log.trace("Adding " + field + " to allFields");
         allFields.put(field.getName(), field);
+        if (field.getName().equals(IndexField.SUMMA_DEFAULT)) {
+            log.debug("Assigning new default field");
+            defaultField = field;
+        }
         return true;
     }
 

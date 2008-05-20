@@ -12,9 +12,8 @@ import junit.framework.TestCase;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Strings;
 import org.w3c.dom.Node;
-import org.apache.lucene.search.Similarity;
 
-@SuppressWarnings({"ALL"})
+@SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
@@ -71,11 +70,12 @@ public class IndexDescriptorTest extends TestCase {
                 new IndexDescriptor<IndexField<Object, Object, Object>>(
                         SIMPLE_DESCRIPTOR) {
 
-            public IndexField createNewField() {
+            public IndexField<Object, Object, Object> createNewField() {
                 return new IndexField<Object, Object, Object>();
             }
 
-            public IndexField createNewField(Node node) throws ParseException {
+            public IndexField<Object, Object, Object> createNewField(Node node)
+                    throws ParseException {
                 return new IndexField<Object, Object, Object>(node, this);
             }
         };
@@ -89,7 +89,7 @@ public class IndexDescriptorTest extends TestCase {
         assertEquals("The default operator should be as specified",
                      IndexDescriptor.OPERATOR.and, id.getDefaultOperator());
 
-        List<String> expectedGroups = Arrays.asList(new String[]{"ti", "au"});
+        List<String> expectedGroups = Arrays.asList("ti", "au");
         List<String> gotGroups = new ArrayList<String>(expectedGroups.size());
         for (Map.Entry<String, IndexGroup<IndexField<Object, Object, Object>>>
                 entry: id.getGroups().entrySet()) {
@@ -113,9 +113,9 @@ public class IndexDescriptorTest extends TestCase {
         assertEquals("Field look-up should work for alias 'forfatter'",
                      "author", id.getField("forfatter").getName());
 
-        List<String> expectedFields = Arrays.asList(new String[]{
-                // TODO: Extend with default groups
-                "text", "author", "title", "titel", "nostore"});
+        // TODO: Extend with default groups
+        List<String> expectedFields = Arrays.asList("text", "author", "title",
+                                                    "titel", "nostore");
         List<String> gotFields = new ArrayList<String>(expectedFields.size());
         for (Map.Entry<String, IndexField<Object, Object, Object>>
                 entry: id.getFields().entrySet()) {
@@ -145,13 +145,13 @@ public class IndexDescriptorTest extends TestCase {
                       i.getParent());
         intro = "The field author_inv should have the correct ";
         assertEquals(intro + "parent", "text", i.getParent().getName());
-        assertEquals(intro + "indexed", !true, i.isDoIndex());
-        assertEquals(intro + "stored", !true, i.isDoStore());
-        assertEquals(intro + "multiValued", !true, i.isMultiValued());
+        assertEquals(intro + "indexed", false, i.isDoIndex());
+        assertEquals(intro + "stored", false, i.isDoStore());
+        assertEquals(intro + "multiValued", false, i.isMultiValued());
         assertEquals(intro + "boost", 2.5f, i.getBoost());
         assertEquals(intro + "sortLocale", "de", i.getSortLocale());
-        assertEquals(intro + "inFreeText", !true, i.isInFreetext());
-        assertEquals(intro + "required", !true, i.isRequired());
+        assertEquals(intro + "inFreeText", false, i.isInFreetext());
+        assertEquals(intro + "required", false, i.isRequired());
 
         IndexField inh = id.getField("author_inherit");
         assertNotNull("The field author_inherit should have a parent",

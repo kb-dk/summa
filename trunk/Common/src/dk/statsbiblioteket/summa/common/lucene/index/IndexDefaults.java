@@ -23,6 +23,8 @@
 package dk.statsbiblioteket.summa.common.lucene.index;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
+import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 
 
 /**
@@ -34,6 +36,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
  * <code>group = false</code> - no automated grouping defined.<br>
  * <code>boost = 1.0F</code>   - default boost.<br>
  * <code>fieldType = FieldType.text</code> - indexed, tokenized, FreeTextAnalyzer, termVectors with offset and position.<br>
+ * @deprecated default are now created in {@link LuceneIndexDescriptor} or
+ *             other implementations of {@link IndexDescriptor}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
