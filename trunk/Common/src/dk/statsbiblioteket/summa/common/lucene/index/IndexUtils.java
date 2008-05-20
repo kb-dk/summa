@@ -36,6 +36,9 @@ import javax.xml.XMLConstants;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.summa.common.index.IndexAlias;
+import dk.statsbiblioteket.summa.common.index.IndexField;
+import dk.statsbiblioteket.summa.common.util.ParseUtil;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 
 /**
  * IndexUtils is a set of static common used methods used for manipulating or
@@ -155,6 +158,7 @@ public class IndexUtils {
      * @param NAMESPACE the SummaIndexDefinition namespace URI.
      * @return  a IndexField
      * @throws IndexServiceException
+     * @deprecated in favor of {@link IndexField}.
      */
     public static OldIndexField makeField(Node n, IndexDefaults defaults,
                                        String group_name,
@@ -220,6 +224,7 @@ public class IndexUtils {
      * @param att
      * @param Namespace the SummaIndexDefintion namespace URI
      * @return IndexDefaults for this index.
+     * @deprecated in favor of {@link LuceneIndexDescriptor}.
      */
     public static IndexDefaults getDefaults(NamedNodeMap att, String Namespace){
 
@@ -277,6 +282,7 @@ public class IndexUtils {
      * @return all text from child text nodes of the element, if no text nodes are found an empty string is returned
      *
      * @throws IllegalArgumentException runtime error thrown if the argument is not a ELEMENT_NODE
+     * @deprecated in favor of {@link ParseUtil#getElementNodeValue}.
      */
    public static String getElementNodeValue(final Node e) throws
                                                       IllegalArgumentException {
