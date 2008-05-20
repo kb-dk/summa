@@ -18,6 +18,8 @@ import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
+import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
+import org.apache.lucene.document.Document;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -55,7 +57,6 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
             + "    <fields>\n"
             + "        <field name=\"mystored\" boost=\"2.0\">Foo bar</field>\n"
             + "        <field name=\"mystored\" boost=\"2.0\">Kazam</field>\n"
-            + "        <field name=\"freetext\">Zoo</field>\n"
             + "        <field name=\"keyword\">Flim flam</field>\n"
             + "        <field name=\"nonexisting\">Should be default</field>\n"
             + "    </fields>\n"
@@ -78,8 +79,10 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
 
     public void testSimpleTransformation() throws Exception {
         File descriptorLocation = File.createTempFile("descriptor", ".xml");
+        descriptorLocation.deleteOnExit();
         Files.saveString(SIMPLE_DESCRIPTOR, descriptorLocation);
         File confLocation = File.createTempFile("configuration", ".xml");
+        confLocation.deleteOnExit();
         Files.saveString(String.format(
                CREATOR_SETUP,
                "file://" + descriptorLocation.getAbsoluteFile().toString()),
@@ -89,14 +92,8 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
 
         Configuration conf = new Configuration(new XStorage(confLocation));
 
-        LuceneIndexDescriptor id = null;
-        try {
-            id = new LuceneIndexDescriptor(
+        LuceneIndexDescriptor id = new LuceneIndexDescriptor(
                     conf.getSubConfiguration(DocumentCreator.CONF_DESCRIPTOR));
-        } catch (IOException e) {
-            e.printStackTrace();
-            fail("It should be possible to create an index descriptor");
-        }
         assertNotNull("A descriptor should be created", id);
 
         DocumentCreator creator = new DocumentCreator(conf);
@@ -104,6 +101,14 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
         Payload processed = creator.next();
         assertNotNull("Payload should have a document", 
                       processed.getData(Payload.LUCENE_DOCUMENT));
+        Document doc = (Document)processed.getData(Payload.LUCENE_DOCUMENT);
+        assertTrue("The document should have some fields",
+                   doc.getFields().size() > 0);
+        for (String fieldName: new String[]{"mystored", "freetext",
+                                            IndexUtils.RECORD_FIELD}) {
+            assertNotNull("The document should contain the field " + fieldName,
+                          doc.getField(fieldName));
+        }
     }
 
     /* ObjectFilter implementation */
