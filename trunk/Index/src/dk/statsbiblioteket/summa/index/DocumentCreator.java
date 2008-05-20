@@ -138,9 +138,7 @@ public class DocumentCreator extends ObjectFilterImpl {
         try {
             //noinspection DuplicateStringLiteralInspection
             singleFieldXPathExpression = singleFields.compile(
-                    "/" + SUMMA_NAMESPACE_PREFIX + ":SummaDocument/"
-                    + SUMMA_NAMESPACE_PREFIX + ":fields/"
-                    + SUMMA_NAMESPACE_PREFIX + ":field");
+                    "/SummaDocument/fields/field");
         } catch (XPathExpressionException e) {
             throw new IllegalArgumentException("Could not compile XPaths", e);
         }
@@ -230,7 +228,7 @@ public class DocumentCreator extends ObjectFilterImpl {
                                                    throws IndexServiceException{
         long startTime = System.currentTimeMillis();
         int len = fields.getLength();
-        log.trace("makeIndexFields called with " + len + " fields");
+        log.trace("makeIndexFields called with " + len + " field nodes");
 
         for (int i = 0; i < len; i++) {
             Node fieldNode = fields.item(i);
