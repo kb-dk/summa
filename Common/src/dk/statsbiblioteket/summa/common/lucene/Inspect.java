@@ -45,8 +45,10 @@ import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.ExtendedFieldCache;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.LucenePackage;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
@@ -63,13 +65,17 @@ public class Inspect {
     private static final long MAXSPEEDTIME = 1000 * 30;
     private List<String> fieldnames;
     private static final String COMMANDS =
-            "STATS [field divider], SPEED, HITS, TOPDOCS, QUIT, docID or "
-            + "FieldName\n\n"
+            "STATS [field divider], SPEED, HITS, TOPDOCS, QUIT, CACHE field, "
+            + "docID or FieldName\n\n"
             + "STATS field divider example:\n"
             + "=> STATS recordID :\n"
             + "will extract all fields with the name 'recordID', then split "
             + "the content of the field at : and count the frequency of the"
             + "first token in the split.\n"
+            + "CACHE field example:\n"
+            + "=> CACHE sort_title :\n"
+            + "will populate a FieldCacheImpl with the content of sort_title "
+            + "in the form of plain strings.\n"
             + "=> ";
 
     public static void main(String[] args) throws Exception {
@@ -84,6 +90,7 @@ public class Inspect {
     }
 
     public static final String STATS = "STATS";
+    public static final String CACHE = "CACHE";
     public Inspect(String indexLocation) throws Exception {
         openIndex(indexLocation);
         System.out.println("Simple Lucene Index inspection tool. Commands:");
@@ -94,6 +101,8 @@ public class Inspect {
                 stats();
             } else if (command.startsWith(STATS)) {
                     stats(command.substring(STATS.length() + 1).split(" "));
+            } else if (command.startsWith(CACHE)) {
+                    cache(command.substring(CACHE.length() + 1));
             } else if ("SPEED".equals(command)) {
                 speed();
             } else if ("HITS".equals(command)) {
@@ -113,6 +122,29 @@ public class Inspect {
             }
             System.out.print(COMMANDS);
         }
+    }
+
+    private void cache(String field) throws IOException {
+        System.out.println("Populating cache for field '" + field + "'");
+        Profiler profiler = new Profiler();
+        String[] result = ExtendedFieldCache.EXT_DEFAULT.getStrings(ir, field);
+        
+        String time = profiler.getSpendTime();
+        long size = 0;
+        int defined = 0;
+        int nulls = 0;
+        for (String t: result) {
+            if (t != null) {
+                size += t.length();
+                defined++;
+            } else {
+                nulls++;
+            }
+        }
+        System.out.println("Cached " + defined + " terms for field '"
+                           + field + "' of average size "
+                           + size * 1.0 / defined
+                           + "chars (" + nulls + " nulls) in " + time);
     }
 
     private void stats(String[] strings) throws IOException {
