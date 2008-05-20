@@ -22,6 +22,9 @@ public class IndexDescriptorTest extends TestCase {
         super(name);
     }
 
+    // TODO: Test configuration of freetext and summa_default
+    // TODO: Test fall-back to summa_default on inheritance
+
     public void setUp() throws Exception {
         super.setUp();
     }

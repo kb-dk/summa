@@ -62,7 +62,11 @@
 
 
     <logger name="dk.statsbiblioteket.summa.index">
-        <level value="DEBUG" />
+        <level value="TRACE" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
+    <logger name="dk.statsbiblioteket.summa.common">
+        <level value="TRACE" />
         <appender-ref ref="CONSOLE" />
     </logger>
 

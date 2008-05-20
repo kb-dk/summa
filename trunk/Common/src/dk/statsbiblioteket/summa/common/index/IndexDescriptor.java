@@ -162,6 +162,9 @@ public abstract class IndexDescriptor<F extends IndexField> implements
                                              + " must be present in the "
                                              + "configuration");
         }
+        if (absoluteLocationString != null) {
+            absoluteLocation = new URL(absoluteLocationString);
+        }
         if (locationRoot != null && absoluteLocationString != null) {
             log.debug("Both " + CONF_LOCATION_ROOT + "(" + locationRoot
                      + ") and " + CONF_ABSOLUTE_LOCATION + "("
