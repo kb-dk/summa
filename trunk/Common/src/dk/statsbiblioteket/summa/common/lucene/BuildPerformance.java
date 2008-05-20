@@ -47,6 +47,7 @@ import org.apache.lucene.document.Field;
         author = "te")
 public class BuildPerformance {
     static Random random = new Random();
+    static long uniqueCounter = 0;
 
     /**
      * Builds an index with the given number of documents, the given number
@@ -62,9 +63,12 @@ public class BuildPerformance {
         int documents = Integer.parseInt(args[0]);
         int fieldCount = Integer.parseInt(args[1]);
         String[] fields = new String[fieldCount];
+        System.out.print("Fields:");
         for (int i = 0 ; i < fieldCount ; i++) {
-            fields[i] = randomWord(10);
+            fields[i] = "field" + i;
+            System.out.print(" " + fields[i]);
         }
+        System.out.println("");
         int maxTermLength = Integer.parseInt(args[2]);
         boolean noindex = false;
         if (args.length > 3) {
@@ -119,13 +123,13 @@ public class BuildPerformance {
     }
 
     private static String randomWords(int maxTermLength) {
-        int numWords = maxTermLength / 5;
-        StringBuilder sb = new StringBuilder(numWords*maxTermLength);
-        for (int i = 0 ; i < numWords ; i++) {
-            randomWord(sb, 5);
+        int size = random.nextInt(maxTermLength)+1;
+        StringBuilder sb = new StringBuilder(maxTermLength + 20);
+        while (sb.length() < size) {
+            randomWord(sb, 10);
             sb.append(" ");
         }
-        return sb.toString();
+        return sb.toString().substring(0, size);
     }
 
     private static String randomWord(int length) {
@@ -136,7 +140,7 @@ public class BuildPerformance {
     private static void randomWord(StringBuilder sb, int length) {
 //        for (int i = 0 ; i < length ; i++) {
 //            sb.append((char)(65 + random.nextInt(26)));
-            sb.append(Integer.toString(random.nextInt(10000)));
+            sb.append(Long.toString(uniqueCounter++));
 //        }
     }
 

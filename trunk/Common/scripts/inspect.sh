@@ -54,7 +54,7 @@ DEPLOY=`dirname $0`/..
 #
 
 MAINJAR=summa-common-build-5009.jar
-MAINCLASS=dk.statsbiblioteket.summa.common.lucene.BuildPerformance
+MAINCLASS=dk.statsbiblioteket.summa.common.lucene.Inspect
 
 PRINT_CONFIG=true
 ###LIBDIRS=
