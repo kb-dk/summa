@@ -78,6 +78,7 @@ public class LuceneIndexDescriptor
      * Creates default fields, ready to be inherited.
      */
     public void init() {
+        log.trace("init() called");
         addField(makeField(IndexField.FREETEXT,
                            Field.Index.TOKENIZED,
                            Field.Store.NO,

@@ -110,11 +110,11 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      * How often the IndexDescriptor should be re-read from the resolved
      * absolute location, in milliseconds. A value of -1 turns off re-reading.
      * </p><p>
-     * This property is optional. Default is
+     * This property is optional. Default is -1.
      */
     public static final String CONF_CHECK_INTERVAL =
             "summa.common.index.check-interval";
-    public static final int DEFAULT_CHECK_INTERVAL = 5*60*1000; // 5 minutes
+    public static final int DEFAULT_CHECK_INTERVAL = -1;
 
     public static enum OPERATOR {and, or}
 
@@ -152,6 +152,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      * @throws IOException if no persistent data could be loaded and parsed.
      */
     public IndexDescriptor(Configuration configuration) throws IOException {
+        init();
         String locationRoot = configuration.getString(CONF_LOCATION_ROOT, null);
         String absoluteLocationString =
                 configuration.getString(CONF_ABSOLUTE_LOCATION, null);

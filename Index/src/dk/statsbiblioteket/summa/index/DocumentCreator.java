@@ -138,7 +138,9 @@ public class DocumentCreator extends ObjectFilterImpl {
         try {
             //noinspection DuplicateStringLiteralInspection
             singleFieldXPathExpression = singleFields.compile(
-                    "/in:SummaDocument/in:fields/in:field");
+                    "/" + SUMMA_NAMESPACE_PREFIX + ":SummaDocument/"
+                    + SUMMA_NAMESPACE_PREFIX + ":fields/"
+                    + SUMMA_NAMESPACE_PREFIX + ":field");
         } catch (XPathExpressionException e) {
             throw new IllegalArgumentException("Could not compile XPaths", e);
         }
