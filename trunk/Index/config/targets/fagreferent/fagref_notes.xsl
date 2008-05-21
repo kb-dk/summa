@@ -13,7 +13,10 @@
 
                 <Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token" Index:boostFactor="7">
                     <xsl:value-of select="beskrivelse"/>
-                </Index:field>      
+                </Index:field>    
+								 <Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token" Index:boostFactor="7">
+                    <xsl:value-of select="titel"/>
+                </Index:field>  
 
 
 
