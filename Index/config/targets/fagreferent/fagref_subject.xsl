@@ -10,13 +10,22 @@
 		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchiv">
 	<xsl:output version="1.0" encoding="UTF-8" indent="yes" method="xml"/>
 	<xsl:template name="subject">
-			<Index:group Index:name="su" Index:navn="em" Index:suggest="true">
-                <xsl:for-each select="emner/emne">
-                    <Index:field Index:boostFactor="10" Index:type="keyword" Index:navn="lsu_oai" Index:name="lsu_oai" Index:repeat="false">
+				<Index:group Index:name="su" Index:navn="em">
+									<xsl:for-each select="emneord">
+										<Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="2">
+
+
 					<xsl:value-of select="."/>
 				    </Index:field>
                 </xsl:for-each>
              </Index:group>
+         <Index:group Index:suggest="true" Index:navn="lem" Index:name="lsubj">
+             <xsl:for-each select="emneord">
+         <Index:field Index:boostFactor="10" Index:type="keyword" Index:navn="lsu_oai" Index:name="lsu_oai" Index:repeat="false">
+					<xsl:value-of select="."/>
+				    </Index:field>
+             </xsl:for-each>
+        </Index:group>
     </xsl:template>
    </xsl:stylesheet>
 

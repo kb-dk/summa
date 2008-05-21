@@ -13,7 +13,13 @@
                     <Index:field Index:name="author_person" Index:repeat="true" Index:navn="pe" Index:type="token" Index:boostFactor="10">
                         <xsl:value-of select="navn" />
                     </Index:field>
+                 <Index:field Index:name="author_person" Index:repeat="true" Index:navn="pe" Index:type="token" Index:boostFactor="10">
+                        <xsl:value-of select="navn_sort" />
+                    </Index:field>
               </Index:group>
-             
+                     <Index:field Index:repeat="false" Index:name="author_normalised" Index:navn="lfo"  Index:type="keyword" Index:boostFactor="10">
+                <xsl:value-of select="navn_sort"/>
+
+            </Index:field>
         </xsl:template>
 </xsl:stylesheet>

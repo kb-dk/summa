@@ -31,9 +31,10 @@
                     <xsl:call-template name="notes" />
 				</Index:fields>
                 <Index:field Index:repeat="true" Index:name="ma_long" Index:navn="ma_lang" Index:type="token">person</Index:field>
+								    <Index:field Index:repeat="true" Index:name="ma_long" Index:navn="ma_lang" Index:type="token">fagekspert</Index:field>
 
                 <Index:group Index:freetext="false" Index:navn="lma" Index:name="lma">
-                    <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">fagekspert</Index:field>
+                   <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">fagekspert</Index:field>
                 </Index:group>
 
             </xsl:for-each>
