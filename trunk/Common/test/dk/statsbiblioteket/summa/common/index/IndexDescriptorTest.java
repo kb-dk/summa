@@ -48,10 +48,10 @@ public class IndexDescriptorTest extends TestCase {
             + "    </groups>\n"
             + "    <fields>\n"
             + "        <field name=\"text\" indexed=\"true\" stored=\"true\"/>\n"
-            + "        <field name=\"author\" parent=\"text\" indexed=\"true\" stored=\"true\" multiValued=\"true\" boost=\"2.0\" sortLocale=\"da\" inFreeText=\"true\" required=\"true\">\n"
+            + "        <field name=\"author\" parent=\"text\" indexed=\"true\" stored=\"true\" multiValued=\"true\" indexBoost=\"2.0\" queryBoost=\"1.5\" sortLocale=\"da\" inFreeText=\"true\" required=\"true\">\n"
             + "            <alias name=\"forfatter\" lang=\"da\"/>\n"
             + "        </field>\n"
-            + "        <field name=\"author_inv\" parent=\"text\" indexed=\"false\" stored=\"false\" multiValued=\"false\" boost=\"2.5\" sortLocale=\"de\" inFreeText=\"false\" required=\"false\"/>\n"
+            + "        <field name=\"author_inv\" parent=\"text\" indexed=\"false\" stored=\"false\" multiValued=\"false\" indexBoost=\"2.5\" sortLocale=\"de\" inFreeText=\"false\" required=\"false\"/>\n"
             + "        <field name=\"author_inherit\" parent=\"author\"/>\n"
             + "        <field name=\"title\" indexed=\"false\" stored=\"true\"/>\n"
             + "        <field name=\"titel\" indexed=\"false\" stored=\"true\"/>\n"
@@ -135,7 +135,8 @@ public class IndexDescriptorTest extends TestCase {
         assertEquals(intro + "indexed", true, a.isDoIndex());
         assertEquals(intro + "stored", true, a.isDoStore());
         assertEquals(intro + "multiValued", true, a.isMultiValued());
-        assertEquals(intro + "boost", 2.0f, a.getBoost());
+        assertEquals(intro + "indexBoost", 2.0f, a.getIndexBoost());
+        assertEquals(intro + "queryBoost", 1.5f, a.getQueryBoost());
         assertEquals(intro + "sortLocale", "da", a.getSortLocale());
         assertEquals(intro + "inFreeText", true, a.isInFreetext());
         assertEquals(intro + "required", true, a.isRequired());
@@ -151,7 +152,7 @@ public class IndexDescriptorTest extends TestCase {
         assertEquals(intro + "indexed", false, i.isDoIndex());
         assertEquals(intro + "stored", false, i.isDoStore());
         assertEquals(intro + "multiValued", false, i.isMultiValued());
-        assertEquals(intro + "boost", 2.5f, i.getBoost());
+        assertEquals(intro + "indexBoost", 2.5f, i.getIndexBoost());
         assertEquals(intro + "sortLocale", "de", i.getSortLocale());
         assertEquals(intro + "inFreeText", false, i.isInFreetext());
         assertEquals(intro + "required", false, i.isRequired());
@@ -164,7 +165,7 @@ public class IndexDescriptorTest extends TestCase {
         assertEquals(intro + "indexed", true, inh.isDoIndex());
         assertEquals(intro + "stored", true, inh.isDoStore());
         assertEquals(intro + "multiValued", true, inh.isMultiValued());
-        assertEquals(intro + "boost", 2.0f, inh.getBoost());
+        assertEquals(intro + "indexBoost", 2.0f, inh.getIndexBoost());
         assertEquals(intro + "sortLocale", "da", inh.getSortLocale());
         assertEquals(intro + "inFreeText", true, inh.isInFreetext());
         assertEquals(intro + "required", true, inh.isRequired());
