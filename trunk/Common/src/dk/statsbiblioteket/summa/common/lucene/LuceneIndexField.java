@@ -30,6 +30,7 @@ import org.apache.lucene.document.Field;
 import org.w3c.dom.Node;
 import dk.statsbiblioteket.summa.common.index.IndexField;
 import dk.statsbiblioteket.summa.common.index.FieldProvider;
+import dk.statsbiblioteket.summa.common.lucene.analysis.SummaRepeatAnalyzer;
 
 /**
  * Extension of IndexField to support Lucene-specific behaviour.
@@ -58,12 +59,23 @@ public class LuceneIndexField extends
         super(parent);
     }
 
+    public Analyzer getIndexAnalyzer() {
+        if (isMultiValued()) {
+            // TODO: Consider sanity-check for non-text analyzers
+            return new SummaRepeatAnalyzer(super.getIndexAnalyzer());
+        }
+        return super.getIndexAnalyzer();
+    }
+
     protected void assignFrom(LuceneIndexField parent) {
         super.assignFrom(parent);
         setTermVector(parent.getTermVector());
     }
 
     // TODO: Implement clone
+    // TODO: Make getAnalyzer wrap in case of multi value
+
+
 
     /* Mutators */
 

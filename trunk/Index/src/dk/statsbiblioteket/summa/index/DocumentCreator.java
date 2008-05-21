@@ -81,12 +81,6 @@ public class DocumentCreator extends ObjectFilterImpl {
     /* Where to locate fields in the SummaDocumentXML */
     private XPathExpression singleFieldXPathExpression;
 
-    /**
-     * The property-key for the substorage containing the setup for the
-     * LuceneIndexDescriptor.
-     */
-    public static final String CONF_DESCRIPTOR = "summa.index.descriptor-setup";
-
     private LuceneIndexDescriptor descriptor;
 
     /**
@@ -97,28 +91,7 @@ public class DocumentCreator extends ObjectFilterImpl {
      *                                configuration.
      */
     public DocumentCreator(Configuration conf) throws ConfigurationException {
-        Configuration descConf = null;
-        try {
-            descConf = conf.getSubConfiguration(CONF_DESCRIPTOR);
-        } catch (IOException e) {
-            //noinspection DuplicateStringLiteralInspection
-            log.error("Exception requesting '" + CONF_DESCRIPTOR
-                      + "' from properties");
-        }
-        if (descConf == null) {
-            log.warn("No '" + CONF_DESCRIPTOR + "' specified in properties. "
-                     + "Using default LuceneIndexDescriptor");
-            descriptor = new LuceneIndexDescriptor();
-        } else {
-            log.trace("Creating LuceneIndexDescriptor based on properties");
-            try {
-                descriptor = new LuceneIndexDescriptor(descConf);
-            } catch (IOException e) {
-                throw new ConfigurationException(
-                        "Exception creating LuceneIndexDescriptor based "
-                        + "on properties", e);
-            }
-        }
+        descriptor = LuceneUtils.getDescriptor(conf);
         initXPaths();
         createDocumentBuilder();
     }
@@ -221,7 +194,7 @@ public class DocumentCreator extends ObjectFilterImpl {
     }
 
     private static final Float DEFAULT_BOOST = 1.0f;
-    /* Taken and modified from IndexServiceImpl */
+
     private void makeIndexFields(NodeList fields,
                                  LuceneIndexDescriptor descriptor,
                                  org.apache.lucene.document.Document luceneDoc)
@@ -267,61 +240,78 @@ public class DocumentCreator extends ObjectFilterImpl {
                 continue;
             }
 
-            LuceneIndexField indexField = descriptor.getFieldForIndexing(name);
-            if (indexField == null) {
-                throw new IndexServiceException(String.format(
-                        "The field name '%s' could not be resolved. This should"
-                        + " never happen (fallback should be the default "
-                        + "field)", name
-                ));
-            }
-            if (!name.equals(indexField.getName())) {
-                log.debug("The field name '" + name
-                          + "' resolved to index field '"
-                          + indexField.getName() + "'");
-            }
-            log.trace("Creating field '" + name + "' with boost " + boost);
-            Field field = new Field(name, content, indexField.getStore(),
-                                    indexField.getIndex(),
-                                    indexField.getTermVector());
-            if (!boost.equals(DEFAULT_BOOST)) {
-                field.setBoost(indexField.getIndexBoost() * boost);
-            }
-
-            if (log.isTraceEnabled()) {
-                log.trace("Adding field '" + name + "' with " + content.length()
-                          + " characters and boost " + field.getBoost() 
-                          + " to Lucene Document");
-            }
-            luceneDoc.add(field);
+            LuceneIndexField indexField =
+                    addFieldToDocument(descriptor, luceneDoc,
+                                       name, content, boost);
 
             if (indexField.isInFreetext()) {
-                LuceneIndexField freetext =
-                        descriptor.getFieldForIndexing(IndexField.FREETEXT);
-                if (freetext == null) {
-                    throw new IndexServiceException(String.format(
-                            "The field freetext with name '%s' could not be "
-                            + "resolved. This should never happen (fallback "
-                            + "should be the default field)",
-                            IndexField.FREETEXT));
-                }
-                if (!IndexField.FREETEXT.equals(freetext.getName())) {
-                    log.warn("The field '" + IndexField.FREETEXT + "' could not"
-                             + " be located, so the content of field '" + name
-                             + "' is not added to freetext");
-                } else {
-                    Field freeField = new Field(freetext.getName(), content,
-                                                freetext.getStore(),
-                                                freetext.getIndex(),
-                                                freetext.getTermVector());
-                    freeField.setBoost(freetext.getIndexBoost());
-                    log.trace("Adding content from '" + name + "' to freetext");
-                    luceneDoc.add(freeField);
-                }
+                addToFreetext(descriptor, luceneDoc, name, content);
             }
         }
         log.trace("Finished document creation (" + luceneDoc.getFields().size()
                   + " fields was added) in "
                   + (System.currentTimeMillis() - startTime) + " ms");
+    }
+
+    private LuceneIndexField addFieldToDocument(
+            LuceneIndexDescriptor descriptor,
+            org.apache.lucene.document.Document luceneDoc, String fieldName,
+            String content, Float boost) throws IndexServiceException {
+        LuceneIndexField indexField = descriptor.getFieldForIndexing(fieldName);
+        if (indexField == null) {
+            throw new IndexServiceException(String.format(
+                    "The field name '%s' could not be resolved. This should"
+                    + " never happen (fallback should be the default "
+                    + "field)", fieldName
+            ));
+        }
+        if (!fieldName.equals(indexField.getName())) {
+            log.debug("The field name '" + fieldName
+                      + "' resolved to index field '"
+                      + indexField.getName() + "'");
+        }
+        log.trace("Creating field '" + fieldName + "' with boost " + boost);
+        Field field = new Field(fieldName, content, indexField.getStore(),
+                                indexField.getIndex(),
+                                indexField.getTermVector());
+        if (!boost.equals(DEFAULT_BOOST)) {
+            field.setBoost(indexField.getIndexBoost() * boost);
+        }
+
+        if (log.isTraceEnabled()) {
+            log.trace("Adding field '" + fieldName + "' with " + content.length()
+                      + " characters and boost " + field.getBoost()
+                      + " to Lucene Document");
+        }
+        luceneDoc.add(field);
+        return indexField;
+    }
+
+    private void addToFreetext(LuceneIndexDescriptor descriptor,
+                               org.apache.lucene.document.Document luceneDoc,
+                               String fieldName,
+                               String content) throws IndexServiceException {
+        LuceneIndexField freetext =
+                descriptor.getFieldForIndexing(IndexField.FREETEXT);
+        if (freetext == null) {
+            throw new IndexServiceException(String.format(
+                    "The field freetext with name '%s' could not be "
+                    + "resolved. This should never happen (fallback "
+                    + "should be the default field)",
+                    IndexField.FREETEXT));
+        }
+        if (!IndexField.FREETEXT.equals(freetext.getName())) {
+            log.warn("The field '" + IndexField.FREETEXT + "' could not"
+                     + " be located, so the content of field '" + fieldName
+                     + "' is not added to freetext");
+        } else {
+            Field freeField = new Field(freetext.getName(), content,
+                                        freetext.getStore(),
+                                        freetext.getIndex(),
+                                        freetext.getTermVector());
+            freeField.setBoost(freetext.getIndexBoost());
+            log.trace("Adding content from '" + fieldName + "' to freetext");
+            luceneDoc.add(freeField);
+        }
     }
 }

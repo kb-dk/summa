@@ -54,7 +54,6 @@ public class XMLTransformerTest extends TestCase {
         return url;
     }
 
-
     public void setUp() throws Exception {
         super.setUp();
     }
@@ -93,5 +92,12 @@ public class XMLTransformerTest extends TestCase {
             assertTrue("The result must contain " + must,
                        transformed.contains(must));
         }
+    }
+
+    /*
+     * Tests old index XML => SummaDocumentXML conversion.
+     */
+    public void testLegacyConvert() throws Exception {
+        
     }
 }

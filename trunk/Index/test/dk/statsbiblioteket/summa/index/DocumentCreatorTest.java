@@ -5,7 +5,6 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.DocumentBuilder;
 import java.io.File;
 import java.io.IOException;
@@ -18,7 +17,6 @@ import junit.framework.TestCase;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
 import dk.statsbiblioteket.summa.common.configuration.storage.XStorage;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
@@ -29,7 +27,6 @@ import dk.statsbiblioteket.summa.common.xml.DefaultNamespaceContext;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
 import org.w3c.dom.NodeList;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
@@ -77,7 +74,7 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
             "<xproperties>\n"
             + "    <xproperties>\n"
             + "        <entry>\n"
-            + "            <key>" + DocumentCreator.CONF_DESCRIPTOR + "</key>\n"
+            + "            <key>" + LuceneUtils.CONF_DESCRIPTOR + "</key>\n"
             + "            <value class=\"xproperties\">\n"
             + "                <entry>\n"
             + "                    <key>" + IndexDescriptor.CONF_ABSOLUTE_LOCATION + "</key>\n"
@@ -130,7 +127,7 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
         Configuration conf = new Configuration(new XStorage(confLocation));
 
         LuceneIndexDescriptor id = new LuceneIndexDescriptor(
-                    conf.getSubConfiguration(DocumentCreator.CONF_DESCRIPTOR));
+                    conf.getSubConfiguration(LuceneUtils.CONF_DESCRIPTOR));
         assertNotNull("A descriptor should be created", id);
 
         DocumentCreator creator = new DocumentCreator(conf);
