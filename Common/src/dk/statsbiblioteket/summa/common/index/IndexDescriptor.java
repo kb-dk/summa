@@ -135,10 +135,11 @@ public abstract class IndexDescriptor<F extends IndexField> implements
             new LinkedHashMap<String, IndexGroup<F>>(20);
 
     // TODO: Assign this based on XML
-    private F defaultField = createNewField();
+    protected F defaultField = createNewField();
     private String defaultLanguage = "en";
     private String uniqueKey = "id";
-    private List<String> defaultFields = Arrays.asList(IndexField.FREETEXT, uniqueKey);
+    private List<String> defaultFields = Arrays.asList(IndexField.FREETEXT,
+                                                       uniqueKey);
     private OPERATOR defaultOperator = OPERATOR.or;
 
     /**
@@ -158,10 +159,13 @@ public abstract class IndexDescriptor<F extends IndexField> implements
                 configuration.getString(CONF_ABSOLUTE_LOCATION, null);
         if (locationRoot == null && absoluteLocationString == null) {
             //noinspection DuplicateStringLiteralInspection
-            throw new ConfigurationException("Either " + CONF_LOCATION_ROOT
-                                             + " or " + CONF_ABSOLUTE_LOCATION
-                                             + " must be present in the "
-                                             + "configuration");
+            log.error("Either " + CONF_LOCATION_ROOT
+                      + " or " + CONF_ABSOLUTE_LOCATION
+                      + " should be present in the "
+                      + "configuration. Using default index descriptor. "
+                      + "It is highly recommended to specify the location of "
+                      + "a descriptor setup");
+            return;
         }
         if (absoluteLocationString != null) {
             absoluteLocation = new URL(absoluteLocationString);

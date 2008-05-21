@@ -33,6 +33,7 @@ import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.IndexWriter;
@@ -83,13 +84,16 @@ public class LuceneManipulator implements IndexManipulator {
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public static final String LUCENE_FOLDER = "lucene";
 
-    /* The location of the index */
+    /** The index descriptor, used for providing Analyzers et al. */
+    private LuceneIndexDescriptor descriptor;
+    /** The general index folder, which contains the concrete index-parts. */
     private File indexRoot;
-    /* The Lucene Directory with the index */
+    /** The directory with the Lucene index. This will be a sub-folder to
+     * indexRoot. */
     private FSDirectory indexDirectory;
-    /* The writer is used for additions */
+    /** The writer is used for additions */
     private IndexWriter writer;
-    /* The reader is used for deletions */
+    /** The reader is used for deletions */
     private IndexReader reader;
     /**
      * An ordered collections of the deletions that should be performed upon
@@ -118,6 +122,7 @@ public class LuceneManipulator implements IndexManipulator {
     public LuceneManipulator(Configuration conf) {
         bufferSizePayloads = conf.getInt(CONF_BUFFER_SIZE_PAYLOADS,
                                          DEFAULT_BUFFER_SIZE_PAYLOADS);
+        descriptor = LuceneUtils.getDescriptor(conf);
         log.debug("LuceneManipulator created. bufferSizePayloads is "
                   + bufferSizePayloads);
     }
@@ -305,7 +310,8 @@ public class LuceneManipulator implements IndexManipulator {
             checkWriter();
             Document document =
                     (Document)payload.getData(Payload.LUCENE_DOCUMENT);
-            writer.addDocument(document);
+            // TODO: Add support for Tokenizer and Filters
+            writer.addDocument(document, descriptor.getIndexAnalyzer());
             idMapper.put(id, writer.docCount());
         } else {
             if (deletions.containsKey(id)) {

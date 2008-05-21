@@ -25,6 +25,7 @@ package dk.statsbiblioteket.summa.common.lucene;
 import java.text.ParseException;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Map;
 
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.index.IndexField;
@@ -33,10 +34,11 @@ import dk.statsbiblioteket.summa.common.lucene.analysis.SummaStandardAnalyzer;
 import dk.statsbiblioteket.summa.common.lucene.analysis.SummaSortKeyAnalyzer;
 import dk.statsbiblioteket.summa.common.lucene.analysis.SummaNumberAnalyzer;
 import dk.statsbiblioteket.summa.common.lucene.analysis.FreeTextAnalyzer;
+import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.SimpleAnalyzer;
+import org.apache.lucene.analysis.PerFieldAnalyzerWrapper;
 import org.apache.lucene.document.Field;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -48,6 +50,8 @@ import org.w3c.dom.Node;
 public class LuceneIndexDescriptor
         extends IndexDescriptor<LuceneIndexField> {
     private static Log log = LogFactory.getLog(LuceneIndexDescriptor.class);
+    private Analyzer indexAnalyzer;
+    private Analyzer queryAnalyzer;
 
     public LuceneIndexDescriptor(Configuration configuration) throws IOException {
         super(configuration);
@@ -126,6 +130,11 @@ public class LuceneIndexDescriptor
                            new SummaNumberAnalyzer()));
     }
 
+    public void parse(String xml) throws ParseException {
+        super.parse(xml);
+        createAnalyzers();
+    }
+
     private LuceneIndexField makeField(String name, Field.Index index,
                                        Field.Store store,
                                        Field.TermVector termVector,
@@ -159,5 +168,50 @@ public class LuceneIndexDescriptor
         field.setIndexAnalyzer(analyzer);
         field.setQueryAnalyzer(analyzer);
         return field;
+    }
+
+    /**
+     * Returns analyzer used for indexing. The analyzer represents the
+     * analyzers for the separate fields, which means that it will normally
+     * be a {@link PerFieldAnalyzerWrapper}.
+     * @return an analyzer for indexing (use with
+     * <code>writer.add(someDocument, theAnalyzer)</code>).
+     */
+    public Analyzer getIndexAnalyzer() {
+        if (indexAnalyzer == null) {
+            createAnalyzers();
+        }
+        return indexAnalyzer;
+    }
+
+    /**
+     * Returns an analyzer for querying. The analyzer represents the
+     * analyzers for the separate fields, which means that it will normally
+     * be a {@link PerFieldAnalyzerWrapper}.
+     * @return an analyzer for building a Lucene Query tree.
+     * @see {@link SummaQueryParser}.
+     */
+    public Analyzer getQueryAnalyzer() {
+        if (queryAnalyzer == null) {
+            createAnalyzers();
+        }
+        return queryAnalyzer;
+    }
+
+    private void createAnalyzers() {
+        log.debug("createAnalyzers called");
+        PerFieldAnalyzerWrapper indexWrapper =
+                new PerFieldAnalyzerWrapper(defaultField.getIndexAnalyzer());
+        PerFieldAnalyzerWrapper queryWrapper =
+                new PerFieldAnalyzerWrapper(defaultField.getQueryAnalyzer());
+        for (Map.Entry<String, LuceneIndexField> entry:
+                getFields().entrySet()) {
+            indexWrapper.addAnalyzer(entry.getKey(),
+                                     entry.getValue().getIndexAnalyzer());
+            queryWrapper.addAnalyzer(entry.getKey(),
+                                     entry.getValue().getQueryAnalyzer());
+        }
+        indexAnalyzer = indexWrapper;
+        queryAnalyzer = queryWrapper;
     }
 }
