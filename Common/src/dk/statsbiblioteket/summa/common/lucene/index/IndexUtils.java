@@ -194,7 +194,7 @@ public class IndexUtils {
                                                 + "field using 1.0");
                             f.setBoost(1.0f);
                         }
-                        //log.debug("boostFactor: " + f.getBoost());
+                        //log.debug("boostFactor: " + f.getQueryBoost());
                     } else if ("suggest".equals(localName)) {
                         f.setSuggest(Boolean.parseBoolean(value));
                         //log.debug("suggest: " + f.isSuggest());

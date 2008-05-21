@@ -70,9 +70,9 @@ public class DocumentCreator extends ObjectFilterImpl {
 
     // TODO: Reconsider this namespace
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    private static final String SUMMA_NAMESPACE =
-            "http://statsbiblioteket.dk/2004/Index";
-    private static final String SUMMA_NAMESPACE_PREFIX = "Index";
+    public static final String SUMMA_NAMESPACE =
+            "http://statsbiblioteket.dk/2008/Index";
+    public static final String SUMMA_NAMESPACE_PREFIX = "Index";
     /**
      * Builder for building DOM objects out of SummaDocumentXML.
      */
@@ -133,12 +133,12 @@ public class DocumentCreator extends ObjectFilterImpl {
         XPath singleFields = xpfac.newXPath();
         singleFields.setNamespaceContext(nsCon);
 
-        XPath xPath = xpfac.newXPath();
+        xPath = xpfac.newXPath();
         xPath.setNamespaceContext(nsCon);
         try {
             //noinspection DuplicateStringLiteralInspection
             singleFieldXPathExpression = singleFields.compile(
-                    "/SummaDocument/fields/field");
+                    "/Index:SummaDocument/Index:fields/Index:field");
         } catch (XPathExpressionException e) {
             throw new IllegalArgumentException("Could not compile XPaths", e);
         }
@@ -228,6 +228,7 @@ public class DocumentCreator extends ObjectFilterImpl {
                                                    throws IndexServiceException{
         long startTime = System.currentTimeMillis();
         int len = fields.getLength();
+        //noinspection DuplicateStringLiteralInspection
         log.trace("makeIndexFields called with " + len + " field nodes");
 
         for (int i = 0; i < len; i++) {
@@ -248,7 +249,7 @@ public class DocumentCreator extends ObjectFilterImpl {
             }
             Float boost;
             try {
-                boost = ParseUtil.getValue(xPath, fieldNode, "@name",
+                boost = ParseUtil.getValue(xPath, fieldNode, "@boost",
                                            DEFAULT_BOOST);
             } catch (ParseException e) {
                 log.debug("makeIndexField: Could not extract boost from field '"
@@ -284,11 +285,14 @@ public class DocumentCreator extends ObjectFilterImpl {
                                     indexField.getIndex(),
                                     indexField.getTermVector());
             if (!boost.equals(DEFAULT_BOOST)) {
-                field.setBoost(boost);
+                field.setBoost(indexField.getIndexBoost() * boost);
             }
 
-            log.trace("Adding field '" + name + "' with " + content.length()
-                      + " characters to Lucene Document");
+            if (log.isTraceEnabled()) {
+                log.trace("Adding field '" + name + "' with " + content.length()
+                          + " characters and boost " + field.getBoost() 
+                          + " to Lucene Document");
+            }
             luceneDoc.add(field);
 
             if (indexField.isInFreetext()) {
@@ -310,7 +314,7 @@ public class DocumentCreator extends ObjectFilterImpl {
                                                 freetext.getStore(),
                                                 freetext.getIndex(),
                                                 freetext.getTermVector());
-                    freeField.setBoost(freetext.getBoost());
+                    freeField.setBoost(freetext.getIndexBoost());
                     log.trace("Adding content from '" + name + "' to freetext");
                     luceneDoc.add(freeField);
                 }

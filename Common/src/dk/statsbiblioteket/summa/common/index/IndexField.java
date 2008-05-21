@@ -130,19 +130,29 @@ public class IndexField<A, T, F> {
      * This is used at index-time.
      */
     private boolean multiValued = true;
+
     /**
-     * The boost for the index. Boosts defined on all other levels than
+     * The boost used when querying. This boost will be applied to every part
+     * of the query that uses the field. Boosts defined on all other levels than
      * instantiated field should be used at query-time, making them easy to
      * modify. When an instantiated field is created by building on another
-     * field, the boost should thus be reset to 1.0, so as not to boost the
-     * field both at index-time and query-time.
+     * field, queryBoost is not used.
      * </p><p>
-     * It is still possible to set the boost for instantiated fields, but the
-     * boost will thus be multiplied with the query-time boost.
-     * </p><p>
-     * This is used at index-time and at query-time.
+     * This is used at query-time.
+     * @see {@link #indexBoost}.
      */
-    private float boost = 1.0f;
+    private float queryBoost = 1.0f;
+
+    /**
+     * The boost used when indexing. This boost will be applied to any
+     * instantiated field. Boosts specified explicitely for a given instantiated
+     * field, will be multiplied to this boost.
+     * </p><p>
+     * This is used at index-time.
+     * @see {@link #queryBoost}.
+     */
+    private float indexBoost = 1.0f;
+
     /**
      * A ISO 639-1 code specifying which locale that should be used for sorting.
      * Note that sorting with locale is a lot heavier than sorting without.
@@ -289,7 +299,8 @@ public class IndexField<A, T, F> {
         doStore = parent.isDoStore();
         doCompress = parent.isDoCompress();
         multiValued = parent.isMultiValued();
-        boost = parent.getBoost();
+        queryBoost = parent.getQueryBoost();
+        indexBoost = parent.getIndexBoost();
         sortLocale = parent.getSortLocale();
         inFreetext = parent.isInFreetext();
         required = parent.isRequired();
@@ -314,11 +325,11 @@ public class IndexField<A, T, F> {
         sw.append(String.format(
                 "<field name=\"%s\" parent=\"%s\" indexed=\"%s\" "
                 + "tokenized=\"%s\" stored=\"%s\" compressed=\"%s\" "
-                + "multiValued=\"%s\" boost=\"%s\" sortLocale=\"%s\" "
-                + "inFreeText=\"%s\" required=\"%s\">\n",
+                + "multiValued=\"%s\" queryBoost=\"%s\" indexBoost=\"%s\" "
+                + "sortLocale=\"%s\" " + "inFreeText=\"%s\" required=\"%s\">\n",
                 name, parent == null ? "" : parent.getName(), doIndex,
                 tokenize, doStore, doCompress,
-                multiValued, boost, sortLocale,
+                multiValued, queryBoost, indexBoost, sortLocale,
                 inFreetext, required));
         for (IndexAlias alias: aliases) {
             sw.append(alias.toXMLFragment());
@@ -396,7 +407,8 @@ public class IndexField<A, T, F> {
         doIndex =     ParseUtil.getValue(xPath, node, "@indexed", doIndex);
         doStore =     ParseUtil.getValue(xPath, node, "@stored", doStore);
         multiValued = ParseUtil.getValue(xPath, node, "@multiValued", doStore);
-        boost =       ParseUtil.getValue(xPath, node, "@boost", boost);
+        queryBoost =  ParseUtil.getValue(xPath, node, "@queryBoost", queryBoost);
+        indexBoost =  ParseUtil.getValue(xPath, node, "@indexBoost", indexBoost);
         sortLocale =  ParseUtil.getValue(xPath, node, "@sortLocale",
                                          sortLocale);
         inFreetext =  ParseUtil.getValue(xPath, node, "@inFreeText",
@@ -635,7 +647,8 @@ public class IndexField<A, T, F> {
                && doStore == other.doStore
                && doCompress == other.isDoCompress()
                && multiValued == other.isMultiValued()
-               && boost == other.getBoost() // Consider window
+               && queryBoost == other.getQueryBoost() // Consider window
+               && indexBoost == other.getIndexBoost() // Consider window
                && nullCompare(sortLocale, other.getSortLocale())
                && inFreetext == other.isInFreetext()
                && required == other.isRequired()
@@ -693,8 +706,12 @@ public class IndexField<A, T, F> {
         return multiValued;
     }
 
-    public float getBoost() {
-        return boost;
+    public float getQueryBoost() {
+        return queryBoost;
+    }
+
+    public float getIndexBoost() {
+        return indexBoost;
     }
 
     public String getSortLocale() {
@@ -758,8 +775,12 @@ public class IndexField<A, T, F> {
         this.multiValued = multiValued;
     }
 
-    public void setBoost(float boost) {
-        this.boost = boost;
+    public void setQueryBoost(float queryBoost) {
+        this.queryBoost = queryBoost;
+    }
+
+    public void setIndexBoost(float indexBoost) {
+        this.indexBoost = indexBoost;
     }
 
     public void setSortLocale(String sortLocale) {

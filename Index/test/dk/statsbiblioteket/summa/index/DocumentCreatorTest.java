@@ -1,8 +1,16 @@
 package dk.statsbiblioteket.summa.index;
 
+import javax.xml.xpath.XPathFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.DocumentBuilder;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.io.ByteArrayInputStream;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -17,10 +25,12 @@ import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.xml.DefaultNamespaceContext;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.w3c.dom.NodeList;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -78,6 +88,32 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
             + "    </xproperties>\n"
             + "</xproperties>";
 
+    public void testXPath() throws Exception {
+        DefaultNamespaceContext nsCon = new DefaultNamespaceContext();
+        nsCon.setNameSpace(DocumentCreator.SUMMA_NAMESPACE,
+                           DocumentCreator.SUMMA_NAMESPACE_PREFIX);
+        XPath xPath = XPathFactory.newInstance().newXPath();
+        xPath.setNamespaceContext(nsCon);
+        XPathExpression singleFieldXPathExpression =
+                xPath.compile("/Index:SummaDocument/Index:fields/Index:field");
+
+        DocumentBuilderFactory builderFactory =
+                DocumentBuilderFactory.newInstance();
+
+        builderFactory.setNamespaceAware(true);
+        builderFactory.setValidating(false);
+        DocumentBuilder domBuilder = builderFactory.newDocumentBuilder();
+
+        org.w3c.dom.Document dom = domBuilder.parse(
+                new ByteArrayInputStream(SIMPLE_RECORD.getBytes("utf-8")));
+
+        NodeList singleFields = (NodeList)
+                singleFieldXPathExpression.evaluate(dom,
+                                                    XPathConstants.NODESET);
+        assertEquals("There should be the correct number of fields",
+                     4, singleFields.getLength());
+    }
+
     public void testSimpleTransformation() throws Exception {
         File descriptorLocation = File.createTempFile("descriptor", ".xml");
         descriptorLocation.deleteOnExit();
@@ -105,10 +141,8 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
         Document doc = (Document)processed.getData(Payload.LUCENE_DOCUMENT);
         assertTrue("The document should have some fields",
                    doc.getFields().size() > 0);
-        for (Object fieldObject: doc.getFields()) {
-            System.out.println(((Field)fieldObject).stringValue());
-        }
         for (String fieldName: new String[]{"mystored", "freetext",
+                                            "nonexisting",
                                             IndexUtils.RECORD_FIELD}) {
             assertNotNull("The document should contain the field " + fieldName,
                           doc.getField(fieldName));
