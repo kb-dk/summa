@@ -35,7 +35,7 @@ public class IndexDescriptorTest extends TestCase {
 
     public static final String SIMPLE_DESCRIPTOR =
             "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
-            + "<IndexDescriptor version=\"1.0\">\n"
+            + "<IndexDescriptor version=\"1.0\" xmlns=\"http://statsbiblioteket.dk/2008/Descriptor\">\n"
             + "    <groups>\n"
             + "        <group name=\"ti\">\n"
             + "            <alias name=\"tit\" lang=\"da\"/>\n"
@@ -128,7 +128,7 @@ public class IndexDescriptorTest extends TestCase {
         assertTrue("All expected Fields should be present",
                    gotFields.containsAll(expectedFields));
 
-        IndexField a = id.getField("author");
+        IndexField<Object, Object, Object> a = id.getField("author");
         assertNotNull("The field author should have a parent", a.getParent());
         String intro = "The field author should have the correct ";
         assertEquals(intro + "parent", "text", a.getParent().getName());
@@ -140,9 +140,8 @@ public class IndexDescriptorTest extends TestCase {
         assertEquals(intro + "sortLocale", "da", a.getSortLocale());
         assertEquals(intro + "inFreeText", true, a.isInFreetext());
         assertEquals(intro + "required", true, a.isRequired());
-        // TODO: Talk to Kåre about this
-        List<IndexAlias> aliases = a.getAliases();
-        assertEquals(intro + "alias", "forfatter", aliases.get(0).getName());
+        assertEquals(intro + "alias", "forfatter",
+                     a.getAliases().get(0).getName());
 
         IndexField i = id.getField("author_inv");
         assertNotNull("The field author_inv should have a parent",

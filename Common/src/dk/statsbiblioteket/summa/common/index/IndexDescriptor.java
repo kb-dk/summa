@@ -48,6 +48,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.ResourceListener;
 import dk.statsbiblioteket.summa.common.util.ParseUtil;
+import dk.statsbiblioteket.summa.common.xml.DefaultNamespaceContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.NodeList;
@@ -76,6 +77,10 @@ import org.xml.sax.SAXException;
 public abstract class IndexDescriptor<F extends IndexField> implements
                                    Configurable, FieldProvider<F> {
     private static Log log = LogFactory.getLog(IndexDescriptor.class);
+
+    public static final String DESCRIPTOR_NAMESPACE =
+            "http://statsbiblioteket.dk/2008/Descriptor";
+    public static final String DESCRIPTOR_NAMESPACE_PREFIX = "id";
 
     /**
      * If a location root is specified, the resource locationRoot+current.txt
@@ -315,29 +320,28 @@ public abstract class IndexDescriptor<F extends IndexField> implements
                     + xml + "'", -1).initCause(e);
         }
 
-        defaultLanguage = ParseUtil.getValue(xPath, document,
-                                         "IndexDescriptor/defaultLanguage",
-                                         defaultLanguage);
+        defaultLanguage = ParseUtil.getValue(
+                xPath, document, "id:IndexDescriptor/id:defaultLanguage",
+                defaultLanguage);
 
-        uniqueKey = ParseUtil.getValue(xPath, document,
-                                   "IndexDescriptor/uniqueKey",
-                                   uniqueKey);
+        uniqueKey = ParseUtil.getValue(
+                xPath, document, "id:IndexDescriptor/id:uniqueKey",
+                uniqueKey);
         if ("".equals(uniqueKey)) {
             throw new ParseException("Unique key specified to empty string",
                                      -1);
         }
 
-        String defaultSearchFields =
-                ParseUtil.getValue(xPath, document,
-                               "IndexDescriptor/defaultSearchFields",
-                               Strings.join(defaultFields, " "));
+        String defaultSearchFields = ParseUtil.getValue(
+                xPath, document, "id:IndexDescriptor/id:defaultSearchFields",
+                Strings.join(defaultFields, " "));
         defaultFields = Arrays.asList(defaultSearchFields.trim().split(" +"));
         if (defaultFields.size() == 0) {
             log.warn("No default fields specified");
         }
 
         String dop = ParseUtil.getValue(xPath, document,
-                "IndexDescriptor/QueryParser/@defaultOperator",
+                "id:IndexDescriptor/id:QueryParser/@defaultOperator",
                 defaultOperator.toString());
         if ("or".equals(dop.toLowerCase())) {
             defaultOperator = OPERATOR.or;
@@ -350,7 +354,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
 
 
         NodeList fieldNodes;
-        final String FIELD_EXPR = "/IndexDescriptor/fields/field";
+        final String FIELD_EXPR = "/id:IndexDescriptor/id:fields/id:field";
         try {
             fieldNodes = (NodeList)xPath.evaluate(FIELD_EXPR, document,
                                                  XPathConstants.NODESET);
@@ -367,7 +371,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
 
         NodeList groupNodes;
         //noinspection DuplicateStringLiteralInspection
-        final String GROUP_EXPR = "/IndexDescriptor/groups/group";
+        final String GROUP_EXPR = "/id:IndexDescriptor/id:groups/id:group";
         try {
             groupNodes = (NodeList)xPath.evaluate(GROUP_EXPR, document,
                                                   XPathConstants.NODESET);
@@ -392,7 +396,15 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         }
     }
 
-    private XPath xPath = XPathFactory.newInstance().newXPath();
+    private XPath xPath = createXPath();
+    private XPath createXPath() {
+        DefaultNamespaceContext nsCon = new DefaultNamespaceContext();
+        nsCon.setNameSpace(DESCRIPTOR_NAMESPACE, DESCRIPTOR_NAMESPACE_PREFIX);
+        XPathFactory factory = XPathFactory.newInstance();
+        XPath xPath = factory.newXPath();
+        xPath.setNamespaceContext(nsCon);
+        return xPath;
+    }
 
     /**
      * Stores an XML representation of this IndexDescriptor to the given

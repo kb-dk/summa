@@ -404,16 +404,23 @@ public class IndexField<A, T, F> {
         }
         name = nameVal;
         aliases =     new ArrayList<IndexAlias>(IndexAlias.getAliases(node));
-        doIndex =     ParseUtil.getValue(xPath, node, "@indexed", doIndex);
-        doStore =     ParseUtil.getValue(xPath, node, "@stored", doStore);
-        multiValued = ParseUtil.getValue(xPath, node, "@multiValued", doStore);
-        queryBoost =  ParseUtil.getValue(xPath, node, "@queryBoost", queryBoost);
-        indexBoost =  ParseUtil.getValue(xPath, node, "@indexBoost", indexBoost);
+        doIndex =     ParseUtil.getValue(xPath, node, "@indexed",
+                                         doIndex);
+        // TODO: Consider makin compression an option
+        doStore =     ParseUtil.getValue(xPath, node, "@stored",
+                                         doStore);
+        multiValued = ParseUtil.getValue(xPath, node, "@multiValued",
+                                         multiValued);
+        queryBoost =  ParseUtil.getValue(xPath, node, "@queryBoost",
+                                         queryBoost);
+        indexBoost =  ParseUtil.getValue(xPath, node, "@indexBoost",
+                                         indexBoost);
         sortLocale =  ParseUtil.getValue(xPath, node, "@sortLocale",
                                          sortLocale);
         inFreetext =  ParseUtil.getValue(xPath, node, "@inFreeText",
                                          inFreetext);
-        required =    ParseUtil.getValue(xPath, node, "@required", required);
+        required =    ParseUtil.getValue(xPath, node, "@required",
+                                         required);
 
         NodeList children = node.getChildNodes();
         for (int i = 0 ; i < children.getLength() ; i++) {
@@ -566,7 +573,7 @@ public class IndexField<A, T, F> {
     /**
      * @return the default index analyzer.
      */
-    private A getDefaultIndexAnalyzer() {
+    protected A getDefaultIndexAnalyzer() {
         log.warn("No default index analyzer assigned");
         return null;
     }
@@ -574,7 +581,7 @@ public class IndexField<A, T, F> {
     /**
      * @return the default query analyzer.
      */
-    private A getDefaultQueryAnalyzer() {
+    protected A getDefaultQueryAnalyzer() {
         log.warn("No default query analyzer assigned");
         return null;
     }

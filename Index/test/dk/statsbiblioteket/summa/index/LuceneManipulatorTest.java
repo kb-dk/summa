@@ -2,6 +2,7 @@ package dk.statsbiblioteket.summa.index;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Random;
 
 import junit.framework.Test;
@@ -9,11 +10,17 @@ import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Profiler;
+import dk.statsbiblioteket.util.Streams;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.storage.XStorage;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.filter.Filter;
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.common.unittest.LuceneUtils;
+import dk.statsbiblioteket.summa.common.index.IndexField;
+import dk.statsbiblioteket.summa.common.unittest.LuceneTestHelper;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
@@ -21,7 +28,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
-public class LuceneManipulatorTest extends TestCase {
+public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
     private static Log log = LogFactory.getLog(LuceneManipulatorTest.class);
     public LuceneManipulatorTest(String name) {
         super(name);
@@ -64,7 +71,7 @@ public class LuceneManipulatorTest extends TestCase {
         }
         manipulator.close();
         logIndex();
-        LuceneUtils.verifyContent(
+        LuceneTestHelper.verifyContent(
                 new File(location, LuceneManipulator.LUCENE_FOLDER), ids);
     }
 
@@ -86,7 +93,7 @@ public class LuceneManipulatorTest extends TestCase {
             profiler.beat();
         }
         manipulator.close();
-        LuceneUtils.verifyContent(
+        LuceneTestHelper.verifyContent(
                 new File(location, LuceneManipulator.LUCENE_FOLDER), ids);
         System.out.println("Spend " + profiler.getSpendTime() + " on "
                            + docCount + " additions. Mean speed: "
@@ -100,7 +107,7 @@ public class LuceneManipulatorTest extends TestCase {
             profiler.beat();
         }
         manipulator.close();
-        LuceneUtils.verifyContent(
+        LuceneTestHelper.verifyContent(
                 new File(location, LuceneManipulator.LUCENE_FOLDER), ids);
         System.out.println("Spend " + profiler.getSpendTime() + " on "
                            + docCount + " updates. Mean speed: "
@@ -120,7 +127,7 @@ public class LuceneManipulatorTest extends TestCase {
 
         manipulator.close();
         logIndex();
-        LuceneUtils.verifyContent(
+        LuceneTestHelper.verifyContent(
                 new File(location, LuceneManipulator.LUCENE_FOLDER), expected);
     }
 
@@ -161,5 +168,84 @@ public class LuceneManipulatorTest extends TestCase {
         Payload payload = new Payload(record);
         payload.getData().put(Payload.LUCENE_DOCUMENT, document);
         return payload;
+    }
+
+    public void testProperIndexCreation() throws Exception {
+        String descLocation =
+                "file://"
+                + Thread.currentThread().getContextClassLoader().getResource(
+                        "data/fagref/fagref_IndexDescriptor.xml").getFile();
+        File manConfLocation = File.createTempFile("configuration", ".xml");
+        manConfLocation.deleteOnExit();
+        Files.saveString(String.format(
+                DocumentCreatorTest.CREATOR_SETUP, descLocation),
+                         manConfLocation);
+        Configuration conf = new Configuration(new XStorage(manConfLocation));
+
+        LuceneManipulator manipulator = new LuceneManipulator(conf);
+        manipulator.open(location);
+
+        DocumentCreator creator = new DocumentCreator(conf);
+        creator.setSource(this);
+
+        while (creator.hasNext()) {
+            manipulator.update(creator.next());
+        }
+        manipulator.close();
+        log.info("Index created at '" + location + "'. Opening index...");
+
+        logIndex();        
+        IndexReader reader = IndexReader.open(
+                new File(location, LuceneManipulator.LUCENE_FOLDER));
+        assertEquals("The number of documents in the index should match",
+                     1, reader.maxDoc());
+        assertEquals("The recordID of the single indexed document should match",
+                     DOC_ID, reader.document(0).getField(
+                IndexUtils.RECORD_FIELD).stringValue());
+        // Check for analyzer
+        // Search for Jens with default / different prefixes
+    }
+
+    public boolean hasNext() {
+        return hasMore;
+    }
+
+    private boolean hasMore = true;
+    private String jens = null;
+    private String DOC_ID = "fagref:jh@statsbiblioteket.invalid";
+    public Payload next() {
+        if (!hasMore) {
+            return null;
+        }
+        if (jens == null) {
+            try {
+                jens = Streams.getUTF8Resource(
+                        "data/fagref/jens.hansen.newstyle.xml");
+            } catch (IOException e) {
+                throw new RuntimeException("Could not load jens hansen data",
+                                           e);
+            }
+        }
+        hasMore = false;
+        try {
+            return new Payload(new Record(DOC_ID,
+                                       "dummy", jens.getBytes("utf-8")));
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException("UTF-8 not supported", e);
+        }
+    }
+
+    public void remove() {
+    }
+
+    public void setSource(Filter filter) {
+    }
+
+    public boolean pump() throws IOException {
+        return next() != null;
+    }
+
+    public void close(boolean success) {
+        hasMore = false;
     }
 }

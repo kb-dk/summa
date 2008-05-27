@@ -31,6 +31,8 @@ import org.w3c.dom.Node;
 import dk.statsbiblioteket.summa.common.index.IndexField;
 import dk.statsbiblioteket.summa.common.index.FieldProvider;
 import dk.statsbiblioteket.summa.common.lucene.analysis.SummaRepeatAnalyzer;
+import dk.statsbiblioteket.summa.common.lucene.analysis.SummaAnalyzer;
+import dk.statsbiblioteket.summa.common.lucene.analysis.SummaStandardAnalyzer;
 
 /**
  * Extension of IndexField to support Lucene-specific behaviour.
@@ -57,6 +59,14 @@ public class LuceneIndexField extends
     public LuceneIndexField(IndexField<Analyzer, Tokenizer, IndexFilter>
             parent) {
         super(parent);
+    }
+
+    protected Analyzer getDefaultIndexAnalyzer() {
+        return new SummaStandardAnalyzer();
+    }
+
+    protected Analyzer getDefaultQueryAnalyzer() {
+        return new SummaStandardAnalyzer();
     }
 
     public Analyzer getIndexAnalyzer() {

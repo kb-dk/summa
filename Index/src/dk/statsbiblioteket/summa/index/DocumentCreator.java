@@ -54,9 +54,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 /**
- * Converter from SummaDocumentXML to Lucene Documents. As part of the
- * conversion, a SearchDescriptor for the single Document is created and
- * added as Payload data.
+ * Converter from SummaDocumentXML to Lucene Documents. The generated Document
+ * is added to the Payload's data under the key {@link Payload#LUCENE_DOCUMENT}.
  * </p><p>
  * see SummaDocumentXMLSample.xml.
  */
@@ -91,7 +90,7 @@ public class DocumentCreator extends ObjectFilterImpl {
      *                                configuration.
      */
     public DocumentCreator(Configuration conf) throws ConfigurationException {
-        descriptor = LuceneUtils.getDescriptor(conf);
+        descriptor = LuceneIndexUtils.getDescriptor(conf);
         initXPaths();
         createDocumentBuilder();
     }
@@ -166,6 +165,15 @@ public class DocumentCreator extends ObjectFilterImpl {
         org.apache.lucene.document.Document luceneDoc =
                 new org.apache.lucene.document.Document();
         // TODO: Check whether resolver is used for anything
+        Float docBoost = DEFAULT_BOOST;
+        try {
+            docBoost = ParseUtil.getValue(xPath, dom, "@boost",
+                                          DEFAULT_BOOST);
+        } catch (ParseException e) {
+            log.debug("processPayload: Could not extract boost from document '"
+            + "' with XPath-expression '@boost'", e);
+        }
+
         log.trace("Adding fields to Lucene Document for " + payload);
         try {
             NodeList singleFields = (NodeList)
@@ -185,7 +193,16 @@ public class DocumentCreator extends ObjectFilterImpl {
         log.trace("Setting " + IndexUtils.RECORD_FIELD + " to '"
                   + payload.getId() + "'");
         IndexUtils.assignID(payload.getId(), luceneDoc);
-        
+
+        //noinspection NumberEquality
+        if (docBoost != DEFAULT_BOOST) {
+            // Document-boost for Lucene means that all Field-boosts are
+            // multiplied with the docBoost.
+            log.trace("Setting document boost to " + docBoost + " for "
+                      + payload.getId());
+            luceneDoc.setBoost(docBoost);
+        }
+
         payload.getData().put(Payload.LUCENE_DOCUMENT, luceneDoc);
         payload.getData().put(Payload.SEARCH_DESCRIPTOR, luceneDoc);
         log.debug("Added Lucene Document and SearchDescriptor to payload "
