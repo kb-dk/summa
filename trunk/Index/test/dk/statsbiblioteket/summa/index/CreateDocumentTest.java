@@ -46,7 +46,7 @@ public class CreateDocumentTest extends TestCase implements ObjectFilter {
         initcontent(GURLI, HANS, JENS);
 
         Configuration conf = Configuration.newMemoryBased();
-        conf.set(XMLTransformer.CONF_XSLT, XMLTransformerTest.xsltEntryURL);
+        conf.set(XMLTransformer.CONF_XSLT, XMLTransformerTest.xsltFagrefEntryURL);
         XMLTransformer transformer = new XMLTransformer(conf);
         transformer.setSource(this);
 

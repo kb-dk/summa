@@ -185,6 +185,7 @@
             <classpath refid="lib.path"/>
             <classpath refid="lib.internal"/>
         </javac>
+        <!-- TODO: Copy content of data to destination -->
     </target>
 
 
