@@ -22,7 +22,6 @@
  */
 package dk.statsbiblioteket.summa.index;
 
-import javax.xml.transform.Transformer;
 import java.net.URL;
 
 import junit.framework.Test;
@@ -43,8 +42,8 @@ public class XMLTransformerTest extends TestCase {
         super(name);
     }
 
-    private static final String XSLT_ENTRY = "data/fagref/fagref_index.xsl";
-    public static URL xsltEntryURL = getURL(XSLT_ENTRY);
+    public static final String FAGREF_XSLT_ENTRY = "data/fagref/fagref_index.xsl";
+    public static final URL xsltFagrefEntryURL = getURL(FAGREF_XSLT_ENTRY);
 
     public static URL getURL(String resource) {
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
@@ -68,7 +67,7 @@ public class XMLTransformerTest extends TestCase {
 
     public void testTransformerSetup() throws Exception {
         Configuration conf = Configuration.newMemoryBased();
-        conf.set(XMLTransformer.CONF_XSLT, xsltEntryURL);
+        conf.set(XMLTransformer.CONF_XSLT, xsltFagrefEntryURL);
         new XMLTransformer(conf);
         // Throws exception by itself in case of error
     }
@@ -81,7 +80,7 @@ public class XMLTransformerTest extends TestCase {
         Payload payload = new Payload(record);
 
         Configuration conf = Configuration.newMemoryBased();
-        conf.set(XMLTransformer.CONF_XSLT, xsltEntryURL);
+        conf.set(XMLTransformer.CONF_XSLT, xsltFagrefEntryURL);
         XMLTransformer transformer = new XMLTransformer(conf);
 
         transformer.processPayload(payload);

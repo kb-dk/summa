@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sd:SummaDocument version="1.0" sd:id="jh@example.com" sd:boost="1" xmlns:sd="http://statsbiblioteket.dk/2008/Index">
+<sd:fields>
+<sd:field sd:name="shortformat"><![CDATA[<shortrecord><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description><dc:title>Fagekspert i urukaisk</dc:title><dc:creator>Jens Hansen</dc:creator><dc:type xml:lang="da">person</dc:type><dc:type xml:lang="en">person</dc:type><dc:identifier>jh@example.com</dc:identifier></rdf:Description></rdf:RDF></shortrecord>]]></sd:field>
+<sd:field sd:name="sort_title">Fagekspert i urukaisk</sd:field>
+<sd:field sd:name="no" sd:boost="7">Jeg er cand. phil. i urukaisk og besvarer spørgsmål og hjælper med at finde bøger, kumpolumpos, deep-pan-humus og  andre informationskilder indenfor fagområderne ukuraisk og kaslafnisk myrtologi.
+</sd:field>
+<sd:field sd:name="author_person" sd:boost="10">Jens Hansen</sd:field>
+<sd:field sd:name="main_titel" sd:boost="10">Fagekspert i urukaisk</sd:field>
+<sd:field sd:name="lsu_oai" sd:boost="10">Urukai</sd:field>
+<sd:field sd:name="lsu_oai" sd:boost="10">urukaisk</sd:field>
+<sd:field sd:name="lsu_oai" sd:boost="10">Kaslafniansk myrtologi</sd:field>
+<sd:field sd:name="lsu_oai" sd:boost="10">palæontofantisme</sd:field>
+<sd:field sd:name="lsu_oai" sd:boost="10">humus</sd:field>
+</sd:fields>
+</sd:SummaDocument>
