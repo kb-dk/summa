@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-        <!-- boost: optional - index-time boost for the document -->
+<!--
+  boost: optional - index-time boost for the document.
+  id: optional - stating this is good form as it eases debugging.
+                 However, the authoritative id is taken from Record.
+-->
 <SummaDocument version="1.0" id="mybase:grimme_aellinger" boost="2.0" xmlns="http://statsbiblioteket.dk/2008/Index">
     <fields>
         <!-- Valid attributes for fields:

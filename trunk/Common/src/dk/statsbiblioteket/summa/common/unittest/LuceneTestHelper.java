@@ -32,7 +32,7 @@ import junit.framework.TestCase;
 /**
  * te forgot to document this class.
  */
-public class LuceneUtils extends TestCase {
+public class LuceneTestHelper extends TestCase {
     /**
      * Verifies that the given ids are present in the given order in the index.
      * @param location     the location of a Lucene index.

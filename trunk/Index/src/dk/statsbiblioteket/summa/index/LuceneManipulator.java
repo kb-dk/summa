@@ -123,7 +123,7 @@ public class LuceneManipulator implements IndexManipulator {
     public LuceneManipulator(Configuration conf) {
         bufferSizePayloads = conf.getInt(CONF_BUFFER_SIZE_PAYLOADS,
                                          DEFAULT_BUFFER_SIZE_PAYLOADS);
-        descriptor = LuceneUtils.getDescriptor(conf);
+        descriptor = LuceneIndexUtils.getDescriptor(conf);
         log.debug("LuceneManipulator created. bufferSizePayloads is "
                   + bufferSizePayloads);
     }

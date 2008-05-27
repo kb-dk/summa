@@ -74,7 +74,7 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
             "<xproperties>\n"
             + "    <xproperties>\n"
             + "        <entry>\n"
-            + "            <key>" + LuceneUtils.CONF_DESCRIPTOR + "</key>\n"
+            + "            <key>" + LuceneIndexUtils.CONF_DESCRIPTOR + "</key>\n"
             + "            <value class=\"xproperties\">\n"
             + "                <entry>\n"
             + "                    <key>" + IndexDescriptor.CONF_ABSOLUTE_LOCATION + "</key>\n"
@@ -127,7 +127,7 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
         Configuration conf = new Configuration(new XStorage(confLocation));
 
         LuceneIndexDescriptor id = new LuceneIndexDescriptor(
-                    conf.getSubConfiguration(LuceneUtils.CONF_DESCRIPTOR));
+                    conf.getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR));
         assertNotNull("A descriptor should be created", id);
 
         DocumentCreator creator = new DocumentCreator(conf);

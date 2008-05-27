@@ -35,7 +35,7 @@ import dk.statsbiblioteket.summa.common.filter.FilterControl;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
-import dk.statsbiblioteket.summa.common.unittest.LuceneUtils;
+import dk.statsbiblioteket.summa.common.unittest.LuceneTestHelper;
 import dk.statsbiblioteket.summa.control.service.StorageService;
 import dk.statsbiblioteket.summa.control.service.FilterService;
 import dk.statsbiblioteket.summa.control.api.Status;
@@ -117,7 +117,7 @@ public class IndexTest extends NoExitTestCase {
         String[] EXPECTED_IDS = new String[] {"fagref:gm@example.com",
                                               "fagref:hj@example.com",
                                               "fagref:jh@example.com"};
-        LuceneUtils.verifyContent(
+        LuceneTestHelper.verifyContent(
                 new File(indexLocation, LuceneManipulator.LUCENE_FOLDER),
                 EXPECTED_IDS);
 
