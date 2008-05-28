@@ -24,11 +24,9 @@ package dk.statsbiblioteket.summa.common.util;
 
 import java.net.URL;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.ByteArrayOutputStream;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Streams;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -89,7 +87,7 @@ public abstract class ResourceListener implements Runnable {
         log.trace("performCheck() called");
         String newContent;
         try {
-            newContent = getUTF8Content(location);
+            newContent = Resolver.getUTF8Content(location);
         } catch (IOException e) {
             lastException = new IOException("Exception fetching '" + location
                                             + "'", e);
@@ -118,21 +116,6 @@ public abstract class ResourceListener implements Runnable {
      * @throws Exception if there was a problem handling the content.
      */
     public abstract void resourceChanged(String newContent) throws Exception;
-
-    /**
-     * Retrieve an UTF-8 test file from the given location.
-     * @param location where to fetch the resource.
-     * @return the UTF-8 string at the location.
-     * @throws IOException if the string could not be requested.
-     */
-    public static String getUTF8Content(URL location) throws IOException {
-        //noinspection DuplicateStringLiteralInspection
-        log.trace("getUTF8Content(" + location + ") called");
-        InputStream in = location.openStream();
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream(1000);
-        Streams.pipe(in, bytes);
-        return bytes.toString("utf-8");
-    }
 
     /* Mutators */
 

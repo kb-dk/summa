@@ -1,2 +1,2 @@
-This folder contains 3 XML-files with fake fagref-profiles ans the XSLTs to
-transform the XML to SummaDocumentXML.
+This folder contains 3 test-files for the target "fagref". The files are
+mirrored from the Index-module, which should be considered authoritative.

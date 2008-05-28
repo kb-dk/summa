@@ -61,7 +61,7 @@
                             <value class="string">dk.statsbiblioteket.summa.index.XMLTransformer</value>
                         </entry>
                         <entry>
-                            <key>summa.index.create-summa-document-xml.xslt</key>
+                            <key>summa.xmltransformer.xslt</key>
                             <value class="string">/tmp/summatest/data/fagref/fagref_index.xsl</value>
                         </entry>
                     </value>
@@ -72,6 +72,15 @@
                         <entry>
                             <key>FilterPump.FilterClass</key>
                             <value class="string">dk.statsbiblioteket.summa.index.DocumentCreator</value>
+                        </entry>
+                        <entry>
+                            <key>summa.index.descriptor-setup</key>
+                            <value class="xproperties">
+                                <entry>
+                                    <key>summa.common.index-descriptor.absolute-location</key>
+                                    <value class="string">/tmp/summatest/data/fagref/fagref_IndexDescriptor.xml</value>
+                                </entry>
+                            </value>
                         </entry>
                     </value>
                 </entry>
@@ -100,6 +109,15 @@
                                 <entry>
                                     <key>summa.index.manipulator-class</key>
                                     <value class="string">dk.statsbiblioteket.summa.index.LuceneManipulator</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.index.descriptor-setup</key>
+                                    <value class="xproperties">
+                                        <entry>
+                                            <key>summa.common.index-descriptor.absolute-location</key>
+                                            <value class="string">/tmp/summatest/data/fagref/fagref_IndexDescriptor.xml</value>
+                                        </entry>
+                                    </value>
                                 </entry>
                             </value>
                         </entry>

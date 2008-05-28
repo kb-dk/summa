@@ -23,10 +23,18 @@
 package dk.statsbiblioteket.summa.common.configuration;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ByteArrayOutputStream;
+import java.net.URL;
+import java.net.MalformedURLException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.Streams;
+import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.summa.common.util.ResourceListener;
 
 /**
  * Resolves paths relative to System properties.
@@ -90,4 +98,103 @@ public class Resolver {
             return file;
         }
     }
+
+
+    /**
+     * Catch-all URL resolver. Handles:<br />
+     * HTTP-URLs: http://example.org/resource.xml<br />
+     * File-URLs: file:///tmp/resource.txt<br />
+     * Relative files: subdir/resource.xml<br />
+     * Absolute paths: /tmp/resource.txt<br />
+     * Class-loader resolvable: resource.xml<br />
+     * The resource resolving is done in the order above.
+     * @param resource the resource to locate.
+     * @return the URL for the resource, if possible, else null.
+     */
+    public static URL getURL(String resource) {
+        if (resource == null) {
+            log.debug("getURL: got null");
+            return null;
+        }
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("getURL(" + resource + ") called");
+        try {
+            return new URL(resource);
+        } catch (MalformedURLException e) {
+            //noinspection DuplicateStringLiteralInspection
+            log.trace("Malformed URL '" + resource
+                      + "'. Attempting file resolving");
+        }
+        File file = new File(resource);
+        if (file.exists() && file.canRead()) {
+            try {
+                return file.toURI().toURL();
+            } catch (MalformedURLException e) {
+                log.debug("Could not convert the file '" + file
+                          + "' to URL. Attempting class-loader", e);
+            }
+        } else {
+            log.trace("File(" + resource + ") cannot be accesses. "
+                      + "Attempting class-loader resolving");
+        }
+        return Thread.currentThread().getContextClassLoader().getResource(
+                resource);
+    }
+
+    /**
+     * Catch-all resource getter. Handles:<br />
+     * HTTP-URLs: http://example.org/resource.xml<br />
+     * File-URLs: file:///tmp/resource.txt<br />
+     * Relative files: subdir/resource.xml<br />
+     * Absolute paths: /tmp/resource.txt<br />
+     * Class-loader resolvable: resource.xml<br />
+     * The resource resolving is done in the order above.
+     * @param resource the resource to get, in a format as specified above.
+     * @return the content of the resource, read as UTF8.
+     * @throws IOException if the resource could not be retrieved.
+     */
+    public static String getUTF8Content(String resource) throws IOException {
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("getUTF8Resource(" + resource + ") called");
+        try {
+            URL url = new URL(resource);
+            return getUTF8Content(url);
+        } catch (MalformedURLException e) {
+            //noinspection DuplicateStringLiteralInspection
+            log.trace("Malformed URL '" + resource
+                      + "'. Attempting file loading");
+        } catch (IOException e) {
+            log.debug("Could not get '" + resource + "' as an URL. "
+                      + "Attempting file loading", e);
+        }
+        try {
+            File file = new File(resource);
+            if (file.exists() && file.canRead()) {
+                return Files.loadString(file);
+            } else {
+                //noinspection DuplicateStringLiteralInspection
+                log.trace("File(" + resource + ") can not be accesses. "
+                          + "Attempting class-loader");
+            }
+        } catch (IOException e) {
+            log.debug("Error accessing File(" + resource + "). Attempting "
+                      + "class-loader", e);
+        }
+        return Streams.getUTF8Resource(resource);
+    }
+
+    /**
+     * Retrieve an UTF-8 test file from the given location.
+     * @param location where to fetch the resource.
+     * @return the UTF-8 string at the location.
+     * @throws IOException if the string could not be requested.
+     */
+    public static String getUTF8Content(URL location) throws IOException {
+        log.trace("getUTF8Content(URL(" + location + ")) called");
+        InputStream in = location.openStream();
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream(1000);
+        Streams.pipe(in, bytes);
+        return bytes.toString("utf-8");
+    }
+
 }

@@ -23,6 +23,7 @@
 package dk.statsbiblioteket.summa.index;
 
 import java.net.URL;
+import java.net.MalformedURLException;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -70,6 +71,22 @@ public class XMLTransformerTest extends TestCase {
         conf.set(XMLTransformer.CONF_XSLT, xsltFagrefEntryURL);
         new XMLTransformer(conf);
         // Throws exception by itself in case of error
+    }
+
+    public void testTransformerSetupWithResource() throws Exception {
+        Configuration conf = Configuration.newMemoryBased();
+        conf.set(XMLTransformer.CONF_XSLT, FAGREF_XSLT_ENTRY);
+        new XMLTransformer(conf);
+        // Throws exception by itself in case of error
+    }
+
+    public void testURL() throws Exception {
+        try {
+            new URL("foo.bar");
+            fail("The URL 'foo.bar' should not be valid");
+        } catch (MalformedURLException e) {
+            // Expected
+        }
     }
 
     public static final String GURLI = "data/fagref/gurli.margrethe.xml";
