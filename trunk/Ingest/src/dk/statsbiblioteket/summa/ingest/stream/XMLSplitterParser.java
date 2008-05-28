@@ -291,7 +291,7 @@ public class XMLSplitterParser extends DefaultHandler2 implements
     public void startPrefixMapping (String prefix, String uri) throws
                                                                   SAXException {
         checkRunning();
-        String expanded = ("".equals(prefix) ? "xmlns" : "xmlsn:" + prefix)
+        String expanded = ("".equals(prefix) ? "xmlns" : "xmlns:" + prefix)
                           + "=\"" + uri + "\"";
         if (log.isTraceEnabled()) {
             log.trace("Prefix: " + expanded);
