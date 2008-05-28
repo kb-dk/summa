@@ -166,14 +166,15 @@ public class DocumentCreator extends ObjectFilterImpl {
                 new org.apache.lucene.document.Document();
         // TODO: Check whether resolver is used for anything
         Float docBoost = DEFAULT_BOOST;
+        String boostExpr = "/" + SUMMA_NAMESPACE_PREFIX
+                           + ":SummaDocument/@boost";
         try {
-            docBoost = ParseUtil.getValue(xPath, dom, "@boost",
+            docBoost = ParseUtil.getValue(xPath, dom, boostExpr,
                                           DEFAULT_BOOST);
         } catch (ParseException e) {
             log.debug("processPayload: Could not extract boost from document '"
-            + "' with XPath-expression '@boost'", e);
+            + "' with XPath-expression '" + boostExpr + "'", e);
         }
-
         log.trace("Adding fields to Lucene Document for " + payload);
         try {
             NodeList singleFields = (NodeList)

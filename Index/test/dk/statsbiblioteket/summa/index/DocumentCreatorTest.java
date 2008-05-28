@@ -54,14 +54,18 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
             "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
             + "<IndexDescriptor version=\"1.0\">\n"
             + "    <fields>\n"
-            + "        <field name=\"mystored\" parent=\"stored\" indexed=\"true\"/>\n"
+            + "        <field name=\"mystored\" parent=\"stored\" "
+            + "indexed=\"true\"/>\n"
             + "    </fields>\n"
-            + "    <defaultSearchFields>freetext mystored</defaultSearchFields>\n"
+            + "    <defaultSearchFields>freetext mystored"
+            + "</defaultSearchFields>\n"
             + "</IndexDescriptor>";
 
     public static final String SIMPLE_RECORD =
             "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
-            + "<SummaDocument version=\"1.0\" id=\"mybase:grimme_aellinger\" xmlns=\"http://statsbiblioteket.dk/2008/Index\">\n"
+            + "<SummaDocument version=\"1.0\" boost=\"1.5\" "
+            + "id=\"mybase:grimme_aellinger\" xmlns=\""
+            + DocumentCreator.SUMMA_NAMESPACE + "\">\n"
             + "    <fields>\n"
             + "        <field name=\"mystored\" boost=\"2.0\">Foo bar</field>\n"
             + "        <field name=\"mystored\" boost=\"2.0\">Kazam</field>\n"
@@ -74,10 +78,12 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
             "<xproperties>\n"
             + "    <xproperties>\n"
             + "        <entry>\n"
-            + "            <key>" + LuceneIndexUtils.CONF_DESCRIPTOR + "</key>\n"
+            + "            <key>" + LuceneIndexUtils.CONF_DESCRIPTOR
+            + "</key>\n"
             + "            <value class=\"xproperties\">\n"
             + "                <entry>\n"
-            + "                    <key>" + IndexDescriptor.CONF_ABSOLUTE_LOCATION + "</key>\n"
+            + "                    <key>"
+            + IndexDescriptor.CONF_ABSOLUTE_LOCATION + "</key>\n"
             + "                    <value class=\"string\">%s</value>\n"
             + "                </entry>\n"
             + "            </value>\n"
@@ -144,6 +150,8 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
             assertNotNull("The document should contain the field " + fieldName,
                           doc.getField(fieldName));
         }
+        assertEquals("The document boost should be correct",
+                     1.5f, doc.getBoost());
     }
 
     /* ObjectFilter implementation */
