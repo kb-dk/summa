@@ -32,6 +32,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.DocumentBuilder;
 import java.io.IOException;
 import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -62,7 +63,6 @@ import org.w3c.dom.Node;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-// TODO: Port boost from stable
 public class DocumentCreator extends ObjectFilterImpl {
     private static Log log = LogFactory.getLog(DocumentCreator.class);
 
@@ -72,6 +72,7 @@ public class DocumentCreator extends ObjectFilterImpl {
     public static final String SUMMA_NAMESPACE =
             "http://statsbiblioteket.dk/2008/Index";
     public static final String SUMMA_NAMESPACE_PREFIX = "Index";
+    // TODO: Make DocumentCreator support namespace qualified attributes
     /**
      * Builder for building DOM objects out of SummaDocumentXML.
      */
@@ -180,7 +181,7 @@ public class DocumentCreator extends ObjectFilterImpl {
             NodeList singleFields = (NodeList)
                     singleFieldXPathExpression.evaluate(dom,
                                                         XPathConstants.NODESET);
-            makeIndexFields(singleFields, descriptor, luceneDoc);
+            makeIndexFields(payload, singleFields, descriptor, luceneDoc);
         } catch (XPathExpressionException e) {
             //noinspection DuplicateStringLiteralInspection
             log.warn("Could not make single fields for " + payload
@@ -213,7 +214,8 @@ public class DocumentCreator extends ObjectFilterImpl {
 
     private static final Float DEFAULT_BOOST = 1.0f;
 
-    private void makeIndexFields(NodeList fields,
+    private static final String FIELD_NAME_PATH = "@name";
+    private void makeIndexFields(Payload payload, NodeList fields,
                                  LuceneIndexDescriptor descriptor,
                                  org.apache.lucene.document.Document luceneDoc)
                                                    throws IndexServiceException{
@@ -226,16 +228,18 @@ public class DocumentCreator extends ObjectFilterImpl {
             Node fieldNode = fields.item(i);
             String name;
             try {
-                name = ParseUtil.getValue(xPath, fieldNode, "@name",
+                name = ParseUtil.getValue(xPath, fieldNode, FIELD_NAME_PATH,
                                           (String)null);
             } catch (ParseException e) {
                 log.warn("makeIndexField: Could not extract name from field '"
-                + fieldNode.getLocalName() + "' with expression '@name'", e);
+                + fieldNode.getLocalName() + "' with expression '"
+                + FIELD_NAME_PATH + "'", e);
                 continue;
             }
             if (name == null || "".equals(name)) {
                 log.warn("makeIndexField: Name not specified for field '"
-                         + fieldNode.getLocalName() + "'. Skipping field");
+                         + fieldNode.getLocalName() + "' from "
+                         + payload + ". Skipping field");
                 continue;
             }
             Float boost;

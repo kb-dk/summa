@@ -110,10 +110,4 @@ public class XMLTransformerTest extends TestCase {
         }
     }
 
-    /*
-     * Tests old index XML => SummaDocumentXML conversion.
-     */
-    public void testLegacyConvert() throws Exception {
-        
-    }
 }

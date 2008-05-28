@@ -185,7 +185,7 @@
             <classpath refid="lib.path"/>
             <classpath refid="lib.internal"/>
         </javac>
-        <!-- TODO: Copy content of data to destination -->
+        <copy file="${basedir}/data/LegacyToSummaDocumentXML.xslt" tofile="${build.dir}/LegacyToSummaDocumentXML.xslt"/>
     </target>
 
 
@@ -257,7 +257,6 @@
         </zip>
 
         <unzip src="${dist.dir}/${release}.zip" dest="${dist.dir}"/>
-
     </target>
 
     <target name="all" depends="release"/>

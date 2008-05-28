@@ -74,6 +74,21 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
             + "    </fields>\n"
             + "</SummaDocument>";
 
+    public static final String NAMESPACED_RECORD =
+            "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
+            + "<SummaDocument version=\"1.0\" boost=\"1.5\" "
+            + "id=\"mybase:grimme_aellinger\""
+            + " xmlns:Index=\"" + DocumentCreator.SUMMA_NAMESPACE + "\""
+            + " xmlns=\"" + DocumentCreator.SUMMA_NAMESPACE + "\">\n"
+            + "    <fields>\n"
+            + "        <field name=\"mystored\" boost=\"2.0\">Foo bar</field>\n"
+            + "        <field name=\"mystored\" boost=\"2.0\">Kazam</field>\n"
+            + "        <Index:field name=\"keyword\">Flim flam</Index:field>\n"
+            + "        <field name=\"nonexisting\">Should be default"
+            + "</field>\n"
+            + "    </fields>\n"
+            + "</SummaDocument>";
+
     public static final String CREATOR_SETUP =
             "<xproperties>\n"
             + "    <xproperties>\n"
@@ -163,7 +178,8 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
     public Payload next() {
         try {
             return new Payload(new Record("dummy", "fooBase",
-                                          SIMPLE_RECORD.getBytes("utf-8")));
+//                                          SIMPLE_RECORD.getBytes("utf-8")));
+            NAMESPACED_RECORD.getBytes("utf-8")));
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }

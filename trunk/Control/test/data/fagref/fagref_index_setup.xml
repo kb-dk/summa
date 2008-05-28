@@ -2,7 +2,7 @@
     <xproperties>
         <entry>
             <key>summa.control.service.port</key>
-            <value class="int">2774</value>
+            <value class="int">2784</value>
         </entry>
         <entry>
             <key>summa.control.service.registry.port</key>

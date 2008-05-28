@@ -14,12 +14,14 @@
     <xsl:output version="1.0" encoding="UTF-8" indent="yes" method="xml"/>
     <xsl:template match="Index:document">
         <sd:SummaDocument version="1.0" xmlns:sd="http://statsbiblioteket.dk/2008/Index">
-            <xsl:attribute name="sd:id">
+            <xsl:attribute name="id">
                 <xsl:value-of select="@Index:id" />
             </xsl:attribute>
-            <xsl:attribute name="sd:boost">
-                <xsl:value-of select="@Index:defaultBoost" />
-            </xsl:attribute>
+            <xsl:for-each select="@Index:defaultBoost">
+                <xsl:attribute name="boost">
+                    <xsl:value-of select="." />
+                </xsl:attribute>
+            </xsl:for-each>
             <sd:fields>
                 <xsl:for-each select="Index:fields">
                     <xsl:call-template name="fields" />
@@ -38,11 +40,11 @@
     <xsl:template name="fields">
         <xsl:for-each select="Index:field">
             <sd:field>
-                <xsl:attribute name="sd:name">
+                <xsl:attribute name="name">
                     <xsl:value-of select="@Index:name" />
                 </xsl:attribute>
                 <xsl:for-each select="@Index:boostFactor">
-                    <xsl:attribute name="sd:boost">
+                    <xsl:attribute name="boost">
                         <xsl:value-of select="." />
                     </xsl:attribute>
                 </xsl:for-each>
@@ -59,5 +61,4 @@
             </sd:field>
         </xsl:for-each>
     </xsl:template>
-
 </xsl:stylesheet>
