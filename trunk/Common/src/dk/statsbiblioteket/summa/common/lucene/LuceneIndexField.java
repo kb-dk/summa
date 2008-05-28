@@ -77,6 +77,14 @@ public class LuceneIndexField extends
         return super.getIndexAnalyzer();
     }
 
+    public Analyzer getQueryAnalyzer() {
+        if (isMultiValued()) { // TODO: Does multi-value make sense here?
+            // TODO: Consider sanity-check for non-text analyzers
+            return new SummaRepeatAnalyzer(super.getQueryAnalyzer());
+        }
+        return super.getQueryAnalyzer();
+    }
+
     protected void assignFrom(LuceneIndexField parent) {
         super.assignFrom(parent);
         setTermVector(parent.getTermVector());
@@ -84,8 +92,6 @@ public class LuceneIndexField extends
 
     // TODO: Implement clone
     // TODO: Make getAnalyzer wrap in case of multi value
-
-
 
     /* Mutators */
 
@@ -128,5 +134,31 @@ public class LuceneIndexField extends
         } else {
             return Field.Index.NO;
         }
+    }
+
+    // TODO: Implement methods below to get custom A/T/I in the descriptor
+
+    protected Analyzer createAnalyzer(Node node) {
+        return super.createAnalyzer(node);
+    }
+
+    protected Tokenizer createTokenizer(Node node) {
+        return super.createTokenizer(node);
+    }
+
+    protected IndexFilter createFilter(Node node) {
+        return super.createFilter(node);
+    }
+
+    protected String analyzerToXMLFragment(Analyzer analyzer) {
+        return super.analyzerToXMLFragment(analyzer);
+    }
+
+    protected String tokenizerToXMLFragment(Tokenizer tokenizer) {
+        return super.tokenizerToXMLFragment(tokenizer);
+    }
+
+    protected String filterToXMLFragment(IndexFilter filter) {
+        return super.filterToXMLFragment(filter);
     }
 }

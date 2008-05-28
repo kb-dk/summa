@@ -621,7 +621,7 @@ public class IndexField<A, T, F> {
      *             {@link #tokenizerToXMLFragment}.
      * @return a tokenizer based on the given node.
      */
-    private T createTokenizer(Node node) {
+    protected T createTokenizer(Node node) {
         throw new UnsupportedOperationException(String.format(
                 "Creation of tokenizer based on Node '%s' not supported in "
                 + "'%s'",
