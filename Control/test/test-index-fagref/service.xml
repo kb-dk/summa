@@ -4,8 +4,8 @@
 	<mainClass>dk.statsbiblioteket.summa.control.service.Launcher</mainClass>
     <property name="com.sun.management.jmxremote.port" value="2773"/>
     <property name="com.sun.management.jmxremote.ssl" value="false"/>
-    <description>Test ingest module 1</description>
-	<bundleId>storage</bundleId>
+    <description>Test index fagref module</description>
+	<bundleId>test-index-fagref</bundleId>
 	<fileList>
 		<file>lib/summa-storage-@summa.version@.jar</file>
         <file>lib/summa-common-@summa.version@.jar</file>

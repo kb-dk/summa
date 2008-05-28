@@ -112,22 +112,9 @@ public class XMLTransformer extends ObjectFilterImpl {
                                                          IndexServiceException {
 
         log.debug("Requesting and compiling XSLT from '" + xsltLocation + "'");
-        String xslt;
-        try {
-            xslt = Resolver.getUTF8Content(xsltLocation);
-        } catch (IOException e) {
-            throw new IndexServiceException("Could not get XSLT from '"
-                                            + xsltLocation + "'", e);
-        }
 
         TransformerFactory tfactory = TransformerFactory.newInstance();
-
         InputStream in = null;
-        try {
-            in = new ByteArrayInputStream(xslt.getBytes("utf-8"));
-        } catch (UnsupportedEncodingException e) {
-            throw new IndexServiceException("Utf-8 not supported", e);
-        }
         try {
             URL url = Resolver.getURL(xsltLocation);
             in = url.openStream();
@@ -180,7 +167,12 @@ public class XMLTransformer extends ObjectFilterImpl {
             Source so = new StreamSource(
                     new ByteArrayInputStream(payload.getRecord().getContent()));
             transformer.transform(so, input);
+            System.out.println("************************************");
+            System.out.println(payload.getRecord().getContentAsUTF8());
             payload.getRecord().setContent(out.toByteArray());
+            System.out.println("------------------------------------");
+            System.out.println(payload.getRecord().getContentAsUTF8());
+            System.out.println("************************************");
             log.debug("Finished transformation of " + payload);
             if (log.isTraceEnabled()) {
                 log.trace("Transformed content for " + payload + ": "
