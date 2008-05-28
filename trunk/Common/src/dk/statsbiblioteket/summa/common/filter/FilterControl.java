@@ -75,7 +75,8 @@ public class FilterControl extends StateThread implements Configurable,
      * @param configuration setup for the FilterControl's underlying filter chains.
      */
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    public FilterControl(Configuration configuration) {
+    public FilterControl(Configuration configuration) throws
+                                                      ConfigurationException {
         log.trace("Creating FilterControl");
         List<String> chains = configuration.getStrings(CONF_CHAINS);
         pumps = new ArrayList<FilterPump>(chains.size());
@@ -91,8 +92,8 @@ public class FilterControl extends StateThread implements Configurable,
                 log.error("IOException while creating chain '" + chain
                           + "'. Skipping", e);
             } catch (Exception e) {
-                log.error("Could not create chain '" + chain + "'. Skipping",
-                          e);
+                throw new ConfigurationException(String.format(
+                        "Could not create chain '%s'", chain), e);
             }
         }
         try {

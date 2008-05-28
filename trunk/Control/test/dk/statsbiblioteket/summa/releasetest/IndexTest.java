@@ -60,14 +60,14 @@ public class IndexTest extends NoExitTestCase {
         IngestTest.deleteOldStorages();
     }
 
-    public void testIngestAndIndex() throws Exception {
-        StorageService storage = fillStorage();
+    public void testIngest() throws Exception {
+        fillStorage();
     }
 
     // TODO: Implement proper shutdown of single tests
 
     /**
-     * Tests the workflow from filed on disk to finished index.
+     * Tests the workflow from files on disk to finished index.
      * @throws Exception if the workflow failed.
      */
     public void testWorkflow() throws Exception {
@@ -82,15 +82,31 @@ public class IndexTest extends NoExitTestCase {
                         "data/fagref/fagref_index.xsl");
         assertNotNull("The original xslt location should not be null",
                       xsltLocation);
+        String descriptorLocation =
+                "file://"
+                + Thread.currentThread().getContextClassLoader().getResource(
+                        "data/fagref/fagref_IndexDescriptor.xml").getFile();
+        System.out.println(descriptorLocation);
 
         String filterConfString =
                 Streams.getUTF8Resource("data/fagref/fagref_index_setup.xml");
+
         filterConfString = filterConfString.replace("/tmp/summatest/data/"
                                                     + "fagref/fagref_index.xsl",
                                                     xsltLocation.toString());
         filterConfString =
-                filterConfString.replace("/tmp/summatest/data/fagref",
-                                         INDEX_ROOT.toString());
+                filterConfString.replace(">/tmp/summatest/data/fagref<",
+                                         ">" + INDEX_ROOT.toString() + "<");
+        filterConfString =
+                filterConfString.replace("/tmp/summatest/data/fagref/"
+                                         + "fagref_IndexDescriptor.xml",
+                                         descriptorLocation);
+        // Yes, two replaces
+        filterConfString =
+                filterConfString.replace("/tmp/summatest/data/fagref/"
+                                         + "fagref_IndexDescriptor.xml",
+                                         descriptorLocation);
+
         assertFalse("Replace should work",
                     filterConfString.contains("/tmp/summatest/data/fagref/"
                                               + "fagref_index.xsl"));

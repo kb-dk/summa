@@ -46,6 +46,7 @@ import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.util.ResourceListener;
 import dk.statsbiblioteket.summa.common.util.ParseUtil;
 import dk.statsbiblioteket.summa.common.xml.DefaultNamespaceContext;
@@ -97,7 +98,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      * Either this property or {@link #CONF_ABSOLUTE_LOCATION} must be present.
      */
     public static final String CONF_LOCATION_ROOT =
-            "summa.common.index.location-root";
+            "summa.common.index-descriptor.location-root";
     public static final String CURRENT = "current.txt";
 
     /**
@@ -109,7 +110,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      * Either this property or {@link #CONF_LOCATION_ROOT} must be present.
      */
     public static final String CONF_ABSOLUTE_LOCATION =
-            "summa.common.index.absolute-location";
+            "summa.common.index-descriptor.absolute-location";
 
     /**
      * How often the IndexDescriptor should be re-read from the resolved
@@ -173,7 +174,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
             return;
         }
         if (absoluteLocationString != null) {
-            absoluteLocation = new URL(absoluteLocationString);
+            absoluteLocation = Resolver.getURL(absoluteLocationString);
         }
         if (locationRoot != null && absoluteLocationString != null) {
             log.debug("Both " + CONF_LOCATION_ROOT + "(" + locationRoot
@@ -255,10 +256,10 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         log.debug("Resolving " + CURRENT + " in location root '"
                   + locationRoot + "'");
         String indirection = locationRoot + CURRENT;
-        URL url = new URL(indirection);
-        String content = ResourceListener.getUTF8Content(url);
+        URL url = Resolver.getURL(indirection);
+        String content = Resolver.getUTF8Content(url);
         String tokens[] = content.split("\n");
-        URL absoluteLocation = new URL(tokens[0].trim());
+        URL absoluteLocation = Resolver.getURL(tokens[0].trim());
         log.debug("fetchDescription: Got absoluteLocation '"
                   + absoluteLocation + "' from '" + indirection + "'");
         return absoluteLocation;

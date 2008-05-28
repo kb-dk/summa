@@ -33,6 +33,7 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.MalformedURLException;
 
@@ -40,6 +41,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -61,8 +63,7 @@ public class XMLTransformer extends ObjectFilterImpl {
      * </p><p>
      * This property is mandatory.
      */
-    public static final String CONF_XSLT =
-            "summa.index.create-summa-document-xml.xslt";
+    public static final String CONF_XSLT = "summa.xmltransformer.xslt";
 
     private Transformer transformer;
 
@@ -86,6 +87,7 @@ public class XMLTransformer extends ObjectFilterImpl {
             throw new ConfigurationException("Property " + CONF_XSLT
                                              + " is not defined");
         }
+        //noinspection DuplicateStringLiteralInspection
         log.debug("Extracted XSLT location '" + xsltLocation
                   + "' from properties");
         try {
@@ -110,10 +112,24 @@ public class XMLTransformer extends ObjectFilterImpl {
                                                          IndexServiceException {
 
         log.debug("Requesting and compiling XSLT from '" + xsltLocation + "'");
+        String xslt;
+        try {
+            xslt = Resolver.getUTF8Content(xsltLocation);
+        } catch (IOException e) {
+            throw new IndexServiceException("Could not get XSLT from '"
+                                            + xsltLocation + "'", e);
+        }
+
         TransformerFactory tfactory = TransformerFactory.newInstance();
+
         InputStream in = null;
         try {
-            URL url = new URL(xsltLocation);
+            in = new ByteArrayInputStream(xslt.getBytes("utf-8"));
+        } catch (UnsupportedEncodingException e) {
+            throw new IndexServiceException("Utf-8 not supported", e);
+        }
+        try {
+            URL url = Resolver.getURL(xsltLocation);
             in = url.openStream();
             transformer = tfactory.newTransformer(
                     new StreamSource(in, url.toString()));
