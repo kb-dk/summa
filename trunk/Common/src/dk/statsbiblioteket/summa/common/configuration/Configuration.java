@@ -267,13 +267,59 @@ public class Configuration implements Serializable,
     /**
      * Look up an integer property. If it is not defined or does not parse
      * as an integer, return {@code defaultValue}.
-     * @param key
-     * @param defaultValue
-     * @return
+     * @param key          the name of the property to look up
+     * @param defaultValue the value to return if the value for the key could
+     *                     not be extracted.
+     * @return the value for key as an int.
      */
     public int getInt (String key, int defaultValue) {
         try {
             return getInt(key);
+        } catch (NullPointerException e) {
+            log.debug("Unable to find property '" + key + "', using default "
+                      + defaultValue);
+            return defaultValue;
+        } catch (NumberFormatException e) {
+            log.warn("Bad number format for property '" + key + "': "
+                     + e.getMessage() + ". Using default " + defaultValue);
+            return defaultValue;
+        }
+    }
+
+    /**
+     * Look up a long property
+     * @param key the name of the property to look up
+     * @return value as a long
+     * @throws NullPointerException          if the property is not found
+     * @throws IllegalArgumentException      if the property is found but does
+     *                                       not parse as a long.
+     * @throws ConfigurationStorageException if there is an error communicating
+     *                                       with the storage backend.
+     */
+    public long getLong (String key) {
+        Object val = get(key);
+        if (val == null) {
+            throw new NullPointerException ("No such property: " + key);
+        }
+        try {
+            return Long.parseLong(val.toString());
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Bad number format for '" + key
+                                               + "': " + e.getMessage());
+        }
+    }
+
+    /**
+     * Look up a long property. If it is not defined or does not parse
+     * as a long, return {@code defaultValue}.
+     * @param key          the name of the property to look up
+     * @param defaultValue the value to return if the value for the key could
+     *                     not be extracted.
+     * @return the value for key as a long.
+     */
+    public long getLong(String key, int defaultValue) {
+        try {
+            return getLong(key);
         } catch (NullPointerException e) {
             log.debug("Unable to find property '" + key + "', using default "
                       + defaultValue);
