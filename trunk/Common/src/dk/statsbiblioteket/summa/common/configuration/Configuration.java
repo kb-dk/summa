@@ -317,7 +317,7 @@ public class Configuration implements Serializable,
      *                     not be extracted.
      * @return the value for key as a long.
      */
-    public long getLong(String key, int defaultValue) {
+    public long getLong(String key, long defaultValue) {
         try {
             return getLong(key);
         } catch (NullPointerException e) {
