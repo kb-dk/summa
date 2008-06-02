@@ -25,9 +25,11 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.xml.DefaultNamespaceContext;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import org.apache.lucene.document.Document;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.Node;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -105,6 +107,28 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
             + "        </entry>\n"
             + "    </xproperties>\n"
             + "</xproperties>";
+
+    public void testEntityHandling() throws Exception {
+        DocumentBuilderFactory builderFactory =
+                DocumentBuilderFactory.newInstance();
+        DocumentBuilder domBuilder = builderFactory.newDocumentBuilder();
+
+        String XML = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
+                     + "<outer>\n"
+                     + "<entitied>&lt;</entitied>\n"
+                     + "<cdataed><![CDATA[<]]></cdataed>\n"
+                     + "</outer>";
+        org.w3c.dom.Document dom = domBuilder.parse(
+                new ByteArrayInputStream(XML.getBytes("utf-8")));
+
+        XPath xPath = XPathFactory.newInstance().newXPath();
+        assertEquals("The content of entitied should be unencoded",
+                     "<", ((Node) xPath.compile("outer/entitied").
+                evaluate(dom, XPathConstants.NODE)).getTextContent());
+        assertEquals("The content of cdataed should be unencoded",
+                     "<", ((Node) xPath.compile("outer/cdataed").
+                evaluate(dom, XPathConstants.NODE)).getTextContent());
+    }
 
     public void testXPath() throws Exception {
         DefaultNamespaceContext nsCon = new DefaultNamespaceContext();

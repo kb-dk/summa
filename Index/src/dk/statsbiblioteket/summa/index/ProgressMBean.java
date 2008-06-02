@@ -25,7 +25,7 @@ package dk.statsbiblioteket.summa.index;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
- * @depreacted as part of the old workflow.
+ * @deprecated as part of the old workflow.
  */
 @QAInfo(level = QAInfo.Level.NOT_NEEDED,
         state = QAInfo.State.UNDEFINED,

@@ -1,6 +1,6 @@
 /**
  * Created: te 30-05-2008 16:30:28
- * CVS:     $Id:$
+ * CVS:     $Id$
  */
 package dk.statsbiblioteket.summa.search;
 
@@ -26,6 +26,16 @@ public abstract class SummaSearcherImpl implements SummaSearcher, Configurable {
     private String[] defaultResultFields = DEFAULT_RESULT_FIELDS;
     private String[] defaultFallbackValues = DEFAULT_FALLBACK_VALUES;
     private long maxRecords = DEFAULT_MAX_NUMBER_OF_RECORDS;
+    private int indexCheckInterval = DEFAULT_CHECK_INTERVAL;
+    private int indexMinRetention = DEFAULT_MIN_RETENTION;
+    private String warmupData = DEFAULT_WARMUP_DATA;
+    private int warmupMaxTime =DEFAULT_WARMUP_MAXTIME;
+    private int numberOfSearchers = DEFAULT_NUMBER_OF_SEARCHERS;
+    private int numberOfConcurrentSearches =
+            DEFAULT_NUMBER_OF_CONCURRENT_SEARCHES;
+    private int searchQueueMaxSize = DEFAULT_SEARCH_QUEUE_MAX_SIZE;
+
+    
 
     /**
      * Extracts basic settings from the configuration.
@@ -55,6 +65,7 @@ public abstract class SummaSearcherImpl implements SummaSearcher, Configurable {
                     DEFAULT_MAX_NUMBER_OF_RECORDS));
             maxRecords = DEFAULT_MAX_NUMBER_OF_RECORDS;
         }
+
     }
 
     private String[] getStrings(Configuration conf, String key,
@@ -77,4 +88,6 @@ public abstract class SummaSearcherImpl implements SummaSearcher, Configurable {
         }
         return defaultValues;
     }
+
+    // TODO: Pool of requests (futures)
 }
