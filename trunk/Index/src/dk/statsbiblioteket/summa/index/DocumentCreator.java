@@ -32,7 +32,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.DocumentBuilder;
 import java.io.IOException;
 import java.io.ByteArrayInputStream;
-import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -45,6 +44,7 @@ import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
 import dk.statsbiblioteket.summa.common.index.IndexField;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexField;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.util.ParseUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -66,6 +66,7 @@ import org.w3c.dom.Node;
 public class DocumentCreator extends ObjectFilterImpl {
     private static Log log = LogFactory.getLog(DocumentCreator.class);
 
+    // TODO: Entity-encode fields
 
     // TODO: Reconsider this namespace
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
