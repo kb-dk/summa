@@ -102,7 +102,7 @@ public class SearchEngineImpl implements SearchEngineImplMBean, SearchEngine, Lo
     private int retries;
 
     //private static final String DEFAULT_FIELD = "freetext"; // TODO: What?
-    public final SummaQueryParser summaQueryParser;
+    public SummaQueryParser summaQueryParser;
     private final String storageURL;
     private Analyzer analyzer;
 
@@ -170,7 +170,8 @@ public class SearchEngineImpl implements SearchEngineImplMBean, SearchEngine, Lo
         reinitSearcher();
         log.info("Searcher initialized");
 
-        summaQueryParser = new SummaQueryParser(new String[]{}, analyzer, descriptor);
+        // TODO: Create the query parser here
+//        summaQueryParser = new SummaQueryParser(new String[]{}, analyzer, descriptor);
         log.info("SummaQueryParser created");
 
 /*        StringTokenizer defaultToken = new StringTokenizer(p.getProperty(dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser.DEFAULT_FIELDS), " ", false);
@@ -184,10 +185,6 @@ public class SearchEngineImpl implements SearchEngineImplMBean, SearchEngine, Lo
         String[] trimed = new String[k];
         System.arraycopy(defaultFields, 0, trimed, 0, k);
         summaQueryParser.setDefaultFields(trimed);*/
-        defaultFields = p.getProperty(
-                dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser.
-                        DEFAULT_FIELDS).split(" ");
-        summaQueryParser.setDefaultFields(defaultFields);
 
         if (isInfoEnabled) {log.info("default fields ok"
                                      + defaultFields.length

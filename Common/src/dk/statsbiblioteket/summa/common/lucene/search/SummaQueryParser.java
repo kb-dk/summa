@@ -23,12 +23,20 @@
 package dk.statsbiblioteket.summa.common.lucene.search;
 
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.*;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 import dk.statsbiblioteket.summa.common.lucene.index.OldIndexField;
 import dk.statsbiblioteket.summa.common.lucene.index.SearchDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.AnalyzerFactory;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexField;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.index.IndexField;
+import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
+import dk.statsbiblioteket.summa.common.index.IndexGroup;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import org.apache.commons.logging.Log;
@@ -43,321 +51,22 @@ import org.apache.lucene.queryParser.QueryParserTokenManager;
 import org.apache.lucene.queryParser.Token;
 import org.apache.lucene.search.*;
 
-/**
- * The SummaQueryParser is an autoexpanding query parser where an array of
- * defaultfields can be given. This QueryParser is also aware of the
- * SearchDescriptor indirect SummaConfiguration mechanism, making it aware of
- * the fieldGroup principle in Summa.
- */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "hal")
+        author = "te, hal",
+        comment="Needs class JavaDoc")
 public class SummaQueryParser {
+    private static Log log = LogFactory.getLog(SummaQueryParser.class);
 
     private static final String START_GROUP = "(";
     private static final String END_GROUP = ")";
-    private String[] defaultFields;
-
-    private static final QueryParser.Operator defaultOperator
-            = QueryParser.AND_OPERATOR;
-
 
     private DisjunctionQueryParser _q;
-    private QueryParser _p;
 
-    private Analyzer analyzer;
-
-    private static Log log = LogFactory.getLog(SummaQueryParser.class);
-
-    private Map<String, String[]> expandTag;
-    /** Property name for the default fields to query, the value is a comma
-     * separated list of field names. */
-    public static final String DEFAULT_FIELDS =
-            "common.lucene.search.defaultFields";
-//    public static final String DEFAULT_FIELDS = "search.fields.default";
-
-    private static final class DisjunctionQueryParser extends QueryParser {
-        private String[] fields;
-        private  float tieBreakerMultiplier = 0.0f;
-
-        /**
-         * Creates a MultiFieldQueryParser.
-         *
-         * <p>It will, when parse(String query)
-         * is called, construct a query like this (assuming the query consists of
-         * two terms and you specify the two fields <code>title</code> and <code>body</code>):</p>
-         *
-         * <code>
-         * (title:term1 body:term1) (title:term2 body:term2)
-         * </code>
-         *
-         * <p>When setDefaultOperator(AND_OPERATOR) is set, the result will be:</p>
-         *
-         * <code>
-         * +(title:term1 body:term1) +(title:term2 body:term2)
-         * </code>
-         *
-         * <p>In other words, all the query's terms must appear, but it doesn't matter in
-         * what fields they appear.</p>
-         */
-
-
-        public DisjunctionQueryParser(String[] fields, Analyzer analyzer) {
-            super(null, analyzer);
-            this.fields = fields;
-        }
-
-        protected Query getFieldQuery(String field, String queryText, int slop) throws ParseException {
-            if (field == null) {
-                Collection<Query> subQueries = new Vector<Query>();
-                for (int i = 0; i < fields.length; i++) {
-                    Query q = super.getFieldQuery(fields[i], queryText);
-                    if (q != null) {
-                        if (q instanceof PhraseQuery) {
-                            ((PhraseQuery) q).setSlop(slop);
-                        }
-                        if (q instanceof MultiPhraseQuery) {
-                            ((MultiPhraseQuery) q).setSlop(slop);
-                        }
-                        subQueries.add(q);
-                    }
-                }
-                if (subQueries.size() == 0)  // happens for stopwords
-                    return null;
-                return   new DisjunctionMaxQuery(subQueries,tieBreakerMultiplier);
-            }
-            return super.getFieldQuery(field, queryText);
-        }
-
-        protected Query getFieldQuery(String field, String queryText) throws ParseException {
-            return getFieldQuery(field, queryText, 0);
-        }
-
-
-        protected Query getFuzzyQuery(String field, String termStr, float minSimilarity) throws ParseException
-        {
-            if (field == null) {
-                Vector clauses = new Vector();
-                for (int i = 0; i < fields.length; i++) {
-                    clauses.add(new BooleanClause(super.getFuzzyQuery(fields[i], termStr, minSimilarity),
-                                                  BooleanClause.Occur.SHOULD));
-                }
-                return getBooleanQuery(clauses, true);
-            }
-            return super.getFuzzyQuery(field, termStr, minSimilarity);
-        }
-
-        protected Query getPrefixQuery(String field, String termStr) throws ParseException
-        {
-            if (field == null) {
-                Vector clauses = new Vector();
-                for (int i = 0; i < fields.length; i++) {
-                    clauses.add(new BooleanClause(super.getPrefixQuery(fields[i], termStr),
-                                                  BooleanClause.Occur.SHOULD));
-                }
-                return getBooleanQuery(clauses, true);
-            }
-            return super.getPrefixQuery(field, termStr);
-        }
-
-        protected Query getWildcardQuery(String field, String termStr) throws ParseException {
-            if (field == null) {
-                Vector clauses = new Vector();
-                for (int i = 0; i < fields.length; i++) {
-                    clauses.add(new BooleanClause(super.getWildcardQuery(fields[i], termStr),
-                                                  BooleanClause.Occur.SHOULD));
-                }
-                return getBooleanQuery(clauses, true);
-            }
-            return super.getWildcardQuery(field, termStr);
-        }
-
-
-        protected Query getRangeQuery(String field, String part1, String part2, boolean inclusive) throws ParseException {
-            if (field == null) {
-                Vector clauses = new Vector();
-                for (int i = 0; i < fields.length; i++) {
-                    clauses.add(new BooleanClause(super.getRangeQuery(fields[i], part1, part2, inclusive),
-                                                  BooleanClause.Occur.SHOULD));
-                }
-                return getBooleanQuery(clauses, true);
-            }
-            return super.getRangeQuery(field, part1, part2, inclusive);
-        }
-
-
-
-
-        /**
-         * Parses a query which searches on the fields specified.
-         * <p>
-         * If x fields are specified, this effectively constructs:
-         * <pre>
-         * <code>
-         * (field1:query1) (field2:query2) (field3:query3)...(fieldx:queryx)
-         * </code>
-         * </pre>
-         * @param queries Queries strings to parse
-         * @param fields Fields to search on
-         * @param analyzer Analyzer to use
-         * @throws ParseException if query parsing fails
-         * @throws IllegalArgumentException if the length of the queries array differs
-         *  from the length of the fields array
-         */
-        public Query parse(String[] queries, String[] fields,
-                           Analyzer analyzer) throws ParseException
-        {
-            if (queries.length != fields.length)
-                throw new IllegalArgumentException("queries.length != fields.length");
-            DisjunctionMaxQuery dQuery = new DisjunctionMaxQuery(tieBreakerMultiplier);
-            for (int i = 0; i < fields.length; i++)
-            {
-                QueryParser qp = new QueryParser(fields[i], analyzer);
-                Query q = qp.parse(queries[i]);
-                dQuery.add(q);
-            }
-            return dQuery;
-        }
-
-
-        /**
-         * Parses a query, searching on the fields specified.
-         * Use this if you need to specify certain fields as required,
-         * and others as prohibited.
-         * <p><pre>
-         * Usage:
-         * <code>
-         * String[] fields = {"filename", "contents", "description"};
-         * BooleanClause.Occur[] flags = {BooleanClause.Occur.SHOULD,
-         *                BooleanClause.Occur.MUST,
-         *                BooleanClause.Occur.MUST_NOT};
-         * MultiFieldQueryParser.parse("query", fields, flags, analyzer);
-         * </code>
-         * </pre>
-         *<p>
-         * The code above would construct a query:
-         * <pre>
-         * <code>
-         * (filename:query) +(contents:query) -(description:query)
-         * </code>
-         * </pre>
-         *
-         * @param query Query string to parse
-         * @param fields Fields to search on
-         * @param flags Flags describing the fields
-         * @param analyzer Analyzer to use
-         * @throws ParseException if query parsing fails
-         * @throws IllegalArgumentException if the length of the fields array differs
-         *  from the length of the flags array
-         */
-        public  Query parse(String query, String[] fields,
-                            BooleanClause.Occur[] flags, Analyzer analyzer) throws ParseException {
-            if (fields.length != flags.length)
-                throw new IllegalArgumentException("fields.length != flags.length");
-            DisjunctionMaxQuery dQuery = new DisjunctionMaxQuery(tieBreakerMultiplier);
-            //BooleanQuery bQuery = new BooleanQuery();
-            for (String field1 : fields) {
-                QueryParser qp = new QueryParser(field1, analyzer);
-                Query q = qp.parse(query);
-                dQuery.add(q);
-            }
-            return dQuery;
-        }
-
-
-        /**
-         * Parses a query, searching on the fields specified.
-         * Use this if you need to specify certain fields as required,
-         * and others as prohibited.
-         * <p><pre>
-         * Usage:
-         * <code>
-         * String[] query = {"query1", "query2", "query3"};
-         * String[] fields = {"filename", "contents", "description"};
-         * BooleanClause.Occur[] flags = {BooleanClause.Occur.SHOULD,
-         *                BooleanClause.Occur.MUST,
-         *                BooleanClause.Occur.MUST_NOT};
-         * MultiFieldQueryParser.parse(query, fields, flags, analyzer);
-         * </code>
-         * </pre>
-         *<p>
-         * The code above would construct a query:
-         * <pre>
-         * <code>
-         * (filename:query1) +(contents:query2) -(description:query3)
-         * </code>
-         * </pre>
-         *
-         * @param queries Queries string to parse
-         * @param fields Fields to search on
-         * @param flags Flags describing the fields
-         * @param analyzer Analyzer to use
-         * @throws ParseException if query parsing fails
-         * @throws IllegalArgumentException if the length of the queries, fields,
-         *  and flags array differ
-         */
-        public Query parse(String[] queries, String[] fields, BooleanClause.Occur[] flags,
-                           Analyzer analyzer) throws ParseException
-        {
-            if (!(queries.length == fields.length && queries.length == flags.length))
-                throw new IllegalArgumentException("queries, fields, and flags array have have different length");
-            BooleanQuery bQuery = new BooleanQuery();
-            for (int i = 0; i < fields.length; i++)
-            {
-                QueryParser qp = new QueryParser(fields[i], analyzer);
-                Query q = qp.parse(queries[i]);
-                bQuery.add(q, flags[i]);
-            }
-            return bQuery;
-        }
-
-
-
-    }
-
-    public SummaQueryParser(Configuration configuration) {
-        //String[] defaultFields,
-        //                    Analyzer analyzer, SearchDescriptor descriptor) {
-        SearchDescriptor descriptor = new SearchDescriptor(configuration);
-        analyzer = AnalyzerFactory.buildAnalyzer(configuration);
-        
-        List<String> confFields = configuration.getStrings(DEFAULT_FIELDS);
-        ArrayList<String> defF = new ArrayList<String>(confFields.size()*2);
-        for (String s : confFields){
-            if (descriptor.getGroups().containsKey(s)){
-                for (OldIndexField idf: descriptor.getGroups().get(s).getFields()){
-                    defF.add(idf.getName());
-                }
-            } else {
-                defF.add(s);
-            }
-        }
-        defaultFields = defF.toArray(new String[]{});
-        setDefaultFields(defaultFields);
-
-        expandTag = new HashMap<String, String[]>();
-        HashMap<String, Set<String>> help = new HashMap<String, Set<String>>();
-
-        for (SearchDescriptor.Group g : descriptor.getGroups().values()) {
-            String name = g.getName();
-            if (!help.containsKey(name)) {
-                help.put(name, new HashSet<String>());
-            }
-            for (OldIndexField f : g.getFields()) {
-                help.get(name).add(f.getName());
-            }
-
-        }
-
-        for (Map.Entry<String, Set<String>> me : help.entrySet()) {
-            expandTag.put(me.getKey(), me.getValue().toArray(new String[]{}));
-        }
-    }
-
-
+    private IndexDescriptor descriptor;
 
     // needds to handle unbalanced queries bug # 2
-    private static final class QueryBalancer {
+    static final class QueryBalancer {
 
         private Stack<Integer> balance;
 
@@ -366,28 +75,26 @@ public class SummaQueryParser {
         }
 
         void addToken(Token t) throws ParseException {
-
             switch (t.kind) {
-                case QueryParserConstants.LPAREN:
+                case QueryParserConstants.LPAREN:       // (
                     balance.add(t.kind);
                     break;
-                case QueryParserConstants.RANGEIN_START:
+                case QueryParserConstants.RANGEIN_START: // [
                     balance.add(t.kind);
                     break;
-                case QueryParserConstants.RANGEEX_START:
+                case QueryParserConstants.RANGEEX_START: // {
                     balance.add(t.kind);
                     break;
-                case QueryParserConstants.RANGEIN_END:
-                    if (balance.isEmpty() || balance.peek()
-                                             != QueryParserConstants
-                            .RANGEIN_START) {
+                case QueryParserConstants.RANGEIN_END: // ]
+                    if (balance.isEmpty() ||
+                        balance.peek() != QueryParserConstants.RANGEIN_START) {
                         throw new ParseException("Unbalanced query near: "
                                                  + t.image + "<" + t
                                 .beginColumn + "," + t.beginLine + ">");
                     }
                     balance.pop();
                     break;
-                case QueryParserConstants.RANGEEX_END:
+                case QueryParserConstants.RANGEEX_END: // }
                     if (balance.isEmpty() || balance.peek()
                                              != QueryParserConstants
                             .RANGEEX_START) {
@@ -397,7 +104,7 @@ public class SummaQueryParser {
                     }
                     balance.pop();
                     break;
-                case QueryParserConstants.RPAREN:
+                case QueryParserConstants.RPAREN: // )
                     if (balance.isEmpty()
                         || balance.peek() != QueryParserConstants.LPAREN) {
                         throw new ParseException("Unbalanced query near: "
@@ -408,6 +115,8 @@ public class SummaQueryParser {
                     break;
                 default:
             }
+
+
         }
 
         boolean isBalanced() {
@@ -415,89 +124,105 @@ public class SummaQueryParser {
         }
     }
 
+    private boolean supportQueryTimeBoosts = false;
 
-    public SummaQueryParser(String[] defaultFields,
-                            Analyzer analyzer, SearchDescriptor descriptor) {
+    public SummaQueryParser(IndexDescriptor descriptor) {
+        // TODO: Add option for query time boosts
+        log.debug("Creating query parser with given descriptor " + descriptor);
+        this.descriptor = descriptor;
+    }
 
-        this.analyzer = analyzer;
-        ArrayList<String> defF = new ArrayList<String>();
-
-        for (String s : defaultFields){
-            if (descriptor.getGroups().containsKey(s)){
-                for (OldIndexField idf :  descriptor .getGroups().get(s).getFields()){
-                    defF.add(idf.getName());
-                }
-            } else {
-                defF.add(s);
-            }
-        }
-
-        this.defaultFields = defF.toArray(new String[]{});
-
-        expandTag = new HashMap<String, String[]>();
-        HashMap<String, Set<String>> help = new HashMap<String, Set<String>>();
-
-        for (SearchDescriptor.Group g : descriptor.getGroups().values()) {
-            String name = g.getName();
-            if (!help.containsKey(name)) {
-                help.put(name, new HashSet<String>());
-            }
-            for (OldIndexField f : g.getFields()) {
-                help.get(name).add(f.getName());
-            }
-
-        }
-
-        for (Map.Entry<String, Set<String>> me : help.entrySet()) {
-            expandTag.put(me.getKey(), me.getValue().toArray(new String[]{}));
-        }
-        setDefaultFields(this.defaultFields);
+    public SummaQueryParser(Configuration conf) {
+        log.debug("Creating query parser with descriptor specified "
+                  + "in configuration");
+        descriptor = LuceneIndexUtils.getDescriptor(conf);
     }
 
 
     /**
-     * @param queryString
-     * @return the query Object
-     * @throws ParseException
+     * Parse the given String and return a Lucene Query from it.
+     * </p><p>
+     * see http://lucene.apache.org/java/docs/queryparsersyntax.html for syntax.
+     * @param queryString       a String with Lucene query syntax.
+     * @return the expanded query.
+     * @throws ParseException if the query could not be parsed.
      */
     public synchronized Query parse(String queryString) throws ParseException {
-        try{
-            String qstr = expandQueryString(queryString);
-            log.info("expanded query: " + qstr);
-
-            Query a = _q.parse(qstr);
-
-
-            log.info("query: " + a.toString());
-            return a;
-        } catch (Exception e){
-            log.warn("Exception in SummaQueryParser.parse:" + e);
-            throw new ParseException();
+        String boosts = null;
+        if (supportQueryTimeBoosts) {
+            try {
+                String[] tokens = splitQuery(queryString);
+                queryString = tokens[0];
+                boosts = tokens[1];
+            } catch (Exception e) {
+                log.error("Exception handling query-time boost", e);
+            }
         }
+        String qstr = expandQueryString(queryString);
+        log.info("expanded query: " + qstr);
+        Query a = _q.parse(queryString);
+//        Query a = _q.parse(qstr);
+        log.info("query: " + a.toString());
+        if (supportQueryTimeBoosts) {
+            try {
+                applyBoost(a, boosts, descriptor);
+            } catch (Exception e) {
+                log.error("Exception applying query-time boost", e);
+            }
+        }
+        if (log.isDebugEnabled()) {
+            try {
+                log.debug("Parsed query: " + queryToString(a));
+            } catch (Exception e) {
+                log.error("Could not dump parsed query to String", e);
+            }
+        }
+        return a;
     }
+    // TODO: Fix boosting of unqualified fields
 
-
-    public synchronized Query parse(String queryString,
-                                    QueryParser.Operator operator)
+    public synchronized Query parse(String queryString, QueryParser.Operator operator)
             throws ParseException {
         String qstr;
         try {
+            String boosts = null;
+            if (supportQueryTimeBoosts) {
+                try {
+                    String[] tokens = splitQuery(queryString);
+                    queryString = tokens[0];
+                    boosts = tokens[1];
+                } catch (Exception e) {
+                    log.error("Exception handling query-time boost", e);
+                }
+            }
             qstr = expandQueryString(queryString);
             _q.setDefaultOperator(operator);
-            Query q = _q.parse(qstr);
+            Query q = _q.parse(queryString);
+//            Query q = _q.parse(qstr);
             log.info("query: " + q.toString());
-            _q.setDefaultOperator(defaultOperator);
+            if (supportQueryTimeBoosts) {
+                try {
+                    applyBoost(q, boosts, descriptor);
+                } catch (Exception e) {
+                    log.error("Exception applying query-time boost", e);
+                }
+            }
+            if (log.isDebugEnabled()) {
+                try {
+                    log.debug("Parsed query: " + queryToString(q));
+                } catch (Exception e) {
+                    log.error("Could not dump parsed query to String", e);
+                }
+            }
             return q;
-        } catch (Exception e) {
-            log.warn("Exception in SummaQueryParser.parse:" + e);
-            throw new ParseException();
-        } finally {
-            _q.setDefaultOperator(defaultOperator);
+        } catch (Throwable t) {
+            throw (ParseException)
+                    new ParseException("Exception during parse").initCause(t);
         }
     }
 
 
-    private String expandQueryString(String query) throws ParseException {
+    protected String expandQueryString(String query) throws ParseException {
 
         QueryParserTokenManager TokenManager = new QueryParserTokenManager(
                 new FastCharStream(new StringReader(query)));
@@ -515,11 +240,9 @@ public class SummaQueryParser {
 
         QueryBalancer balance = new QueryBalancer();
         QueryBalancer fieldBalance = null;
-
         //this is equal to while(true);
         while ((lookahead = TokenManager.getNextToken()) != null) {
             balance.addToken(lookahead);
-
             //Start of fields
             if (lookahead.kind == QueryParserConstants.COLON) {
                 //We have found a colon, and start a new balancer to check this field
@@ -532,7 +255,8 @@ public class SummaQueryParser {
                 fieldBalance = new QueryBalancer();
                 returnval += START_GROUP;
                 if (value != null) {
-                    currentFields = getFields(value.image);
+                       // TODO: Implement this
+                    // currentFields = getFields(value.image);
                 } else {
                     //  currentFields = new String[]{defaultField};
                     currentFields = new String[]{};
@@ -540,10 +264,13 @@ public class SummaQueryParser {
             } else if (!infield) {
                 if (value != null) {
                     returnval += " " + value.image;
+//                    returnval += " " + value.image;
                 }
             } else {
                 //add to field value
-                currentFieldValue += value.image;
+                if (value != null) {
+                    currentFieldValue += value.image;
+                }
                 //copy spaces between elements
                 if (lookahead.beginColumn > lastEnd) {
                     currentFieldValue += " ";
@@ -573,6 +300,7 @@ public class SummaQueryParser {
             }
         }
         //Will never reach this point
+        log.error("expandQueryString: Unexpected while-loop exit");
         return null;
     }
 
@@ -592,17 +320,238 @@ public class SummaQueryParser {
     }
 
 
-    private String[] getFields(String field) {
-        String [] a;
-        return (a = expandTag.get(field)) != null ? a : new String[]{field};
+    /* Query time boosts */
+
+    /**
+     * @see {@link #splitQuery}
+     * @return true if query-time field-level boosts is supported.
+     */
+    public boolean isSupportQueryTimeBoosts() {
+        return supportQueryTimeBoosts;
     }
 
-    public void setDefaultFields(String[] defaultFields) {
-        this.defaultFields = defaultFields;
-        _q = new DisjunctionQueryParser(this.defaultFields, analyzer);
-        _q.setDefaultOperator(defaultOperator);
+    /**
+     * @see {@link #splitQuery}
+     * @param supportQueryTimeBoosts set to true if query-time field-level
+     *                               boosts should be supported.
+     */
+    public void setSupportQueryTimeBoosts(boolean supportQueryTimeBoosts) {
+        this.supportQueryTimeBoosts = supportQueryTimeBoosts;
     }
 
+
+    public static final Pattern boostPattern =
+            Pattern.compile("^(.+)boost\\((.+)\\)$");
+    /**
+     * Splits the given query into the standard query and any field-boost
+     * parameters.
+     * </p><p>
+     * The format for field-boost parameters is<br />
+     * normalquery "boost("(fieldname"^"boostfactor)*")"
+     * </p><p>
+     * Example 1: "heste boost(title^3.5)" => " heste"<br />
+     * Example 1: "heste boost(title^0.5 emne^4)" => " heste"<br />
+     * Example 2: "galimafry foglio" => " galimafry foglio"<br />
+     * @param query a query as provided by the end-user
+     * @return the query and the field-boosts. The query is always something,
+     *         the field-boosts is null if they are not defined in the input.
+     */
+    public static String[] splitQuery(String query) {
+        if (log.isTraceEnabled()) {
+            log.trace("splitQuery(" + query + ") called");
+        }
+        Matcher matcher = boostPattern.matcher(query);
+        if (matcher.matches()) {
+            return new String[]{matcher.group(1), matcher.group(2)};
+        }
+        return new String[]{query, null};
+    }
+
+    public static final Pattern singleBoost =
+            Pattern.compile("^(.+)\\^([0-9]+(\\.[0-9]+)?)$");
+    /**
+     * Extract field-specific boosts from boost and apply them recursively to
+     * Query, thereby turning field-boosts into term-boosts.
+     * </p><p>
+     * The format for boost is<br />
+     * {@code (field"^"boost )*(field"^"boost)?}
+     * </p><p>
+     * Example 1: "title^2.9"<br />
+     * Example 2: "title^0.5 emne^4"
+     * @param query       a standard query.
+     * @param boostString boost-specific parameters.
+     * @param descriptor  the descriptor used for group-expansion.
+     * @return true if at least one boost was applied.
+     */
+    public static boolean applyBoost(Query query, String boostString,
+                                     IndexDescriptor descriptor) {
+        log.trace("applyBoost(" + query + ", " + boostString + ") entered");
+        if (boostString == null) {
+            return false;
+        }
+        String[] boostTokens = boostString.split("\\s+");
+        if (boostTokens.length == 0) {
+            log.debug("No boosts defined in '" + boostString + "'. Returning");
+            return false;
+        }
+        Map<String, Float> boosts =
+                new HashMap<String, Float>(boostTokens.length);
+        for (String boost: boostTokens) {
+            Matcher matcher = singleBoost.matcher(boost);
+            if (!matcher.matches()) {
+                log.warn("Illegal boost '" + boost + "' in '" + query
+                         + boostString + "'. Aborting boosting");
+                return false;
+            }
+            try {
+                boosts.put(matcher.group(1), Float.valueOf(matcher.group(2)));
+            } catch (NumberFormatException e) {
+                log.warn("Illegal float-value in '" + boost + "'. Aborting");
+                return false;
+            }
+        }
+        if (boosts.size() == 0) {
+            log.debug("No boosts detected in " + boostString);
+            return false;
+        }
+        return applyBoost(query, boosts, descriptor);
+    }
+
+    private static boolean applyBoost(Query query, Map<String, Float> boosts,
+                                      IndexDescriptor descriptor) {
+        log.trace("applyBoost(Query, Map) entered");
+        expandBoosts(boosts, descriptor);
+        boolean applied = false;
+        if (query instanceof BooleanQuery) {
+            log.trace("applyBoost: BooleanQuery found");
+            for (BooleanClause clause: ((BooleanQuery)query).getClauses()) {
+                applied = applied | applyBoost(clause.getQuery(), boosts,
+                                               descriptor);
+            }
+        } else if (query instanceof TermQuery) {
+            log.trace("applyBoost: termQuery found");
+            TermQuery termQuery = (TermQuery)query;
+            if (boosts.containsKey(termQuery.getTerm().field())) {
+                Float boost = boosts.get(termQuery.getTerm().field());
+                log.debug("applyBoost: Assigning boost " + boost
+                          + " to TermQuery " + termQuery.getTerm());
+                termQuery.setBoost(termQuery.getBoost() * boost);
+                applied = true;
+            }
+        } else if (query instanceof DisjunctionMaxQuery) {
+            log.trace("applyBoost: DisjunctionMaxQuery found");
+            Iterator iterator = ((DisjunctionMaxQuery)query).iterator();
+            while (iterator.hasNext()) {
+                applied = applied | applyBoost((Query)iterator.next(), boosts,
+                                               descriptor);
+            }
+        } else if (query instanceof ConstantScoreQuery) {
+            log.trace("applyBoost: ConstantScoreQuery ignored");
+        } else if (query instanceof ConstantScoreRangeQuery) {
+            log.trace("applyBoost: ConstantScoreRangeQuery ignored");
+        } else if (query instanceof RangeQuery) {
+            log.trace("applyBoost: RangeQuery ignored");
+        } else {
+            log.warn("applyBoost: Unexpected Query '" + query.getClass()
+                     + "' ignored");
+        }
+        log.trace("applyBoost(Query, Map) exited");
+        return applied;
+    }
+
+    /**
+     * Expand groups with boosts so that fields in the group gets the boost.
+     * Note: Boosts on groups have lower priority that field-specific boosts.
+     * @param boosts     a map with boosts for fields.
+     * @param descriptor description of the index-view.
+     */
+    public static void expandBoosts(Map<String, Float> boosts,
+                                    IndexDescriptor descriptor) {
+        Map<String, Float> extras = new HashMap<String, Float>(boosts.size()*2);
+        for (Map.Entry<String, Float> entry: boosts.entrySet()) {
+            expandBoosts(entry.getKey(), entry.getValue(), extras, descriptor);
+        }
+        for (Map.Entry<String, Float> entry: extras.entrySet()) {
+            if (!boosts.containsKey(entry.getKey())) {
+                boosts.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+    }
+
+    private static void expandBoosts(String fieldOrGroup, Float boost,
+                                     Map<String, Float> extras,
+                                     IndexDescriptor descriptor) {
+        // TODO: Implement this
+        if (descriptor.getGroups().containsKey(fieldOrGroup)) {
+/*            IndexGroup group = descriptor.getGroups().get(fieldOrGroup);
+            for (IndexField field: group.getFields()) {
+                log.trace("expandBoost: added boost " + boost + " to "
+                          + field.getName() + " in group " + fieldOrGroup);
+                extras.put(field.getName(), boost);
+            }*/
+        }
+    }
+
+    /**
+     * Parses a Query-tree and returns it as a human-readable String. This
+     * dumper writes custom boosts. Not suitable to feed back into a parser!
+     * @param query the query to dump as a String.
+     * @return the query as a human-redable String.
+     */
+    // TODO: Make this dumper more solid - let it handle all known Queries
+    public static String queryToString(Query query) {
+        StringWriter sw = new StringWriter(100);
+        if (query instanceof BooleanQuery) {
+            sw.append("(");
+            boolean first = true;
+            for (BooleanClause clause: ((BooleanQuery)query).getClauses()) {
+                if (!first) {
+                    sw.append(" ");
+                }
+                sw.append(clause.getOccur().toString());
+                sw.append(queryToString(clause.getQuery()));
+                first = false;
+            }
+            sw.append(")");
+        } else if (query instanceof TermQuery) {
+            TermQuery termQuery = (TermQuery)query;
+            sw.append(termQuery.toString()).append("[");
+            sw.append(Float.toString(query.getBoost())).append("]");
+        } else if (query instanceof RangeQuery) {
+            sw.append(query.toString()).append("[");
+            sw.append(Float.toString(query.getBoost())).append("]");
+        } else if (query instanceof WildcardQuery) {
+            sw.append(query.toString()).append("[");
+            sw.append(Float.toString(query.getBoost())).append("]");
+        } else if (query instanceof FuzzyQuery) {
+            sw.append(query.toString()).append("[");
+            sw.append(Float.toString(query.getBoost())).append("]");
+        } else if (query instanceof PrefixQuery) {
+            sw.append(query.toString()).append("[");
+            sw.append(Float.toString(query.getBoost())).append("]");
+        } else if (query instanceof PhraseQuery) {
+            sw.append(query.toString()).append("[");
+            sw.append(Float.toString(query.getBoost())).append("]");
+        } else if (query instanceof DisjunctionMaxQuery) {
+            Iterator iterator = ((DisjunctionMaxQuery)query).iterator();
+            sw.append("<");
+            boolean first = true;
+            while (iterator.hasNext()) {
+                if (!first) {
+                    sw.append(" ");
+                }
+                sw.append(queryToString((Query)iterator.next()));
+                first = false;
+            }
+            sw.append(">");
+        } else {
+            sw.append(query.getClass().toString());
+            sw.append(query.toString()).append("[");
+            sw.append(Float.toString(query.getBoost())).append("]");
+        }
+        return sw.toString();
+    }
 
 
 }

@@ -70,15 +70,16 @@ public class QueryPerformance {
             new BufferedReader(new InputStreamReader(System.in));
 
     public QueryPerformance(File indexLocation, boolean useRAMIndex) {
-        try {
+        // TODO: Re-implement this
+/*        try {
             descriptor = new SearchDescriptor(indexLocation.toString());
             descriptor.loadDescription(indexLocation.toString());
 
             queryParser = new SummaQueryParser(new String[]{},
                                               new SimpleAnalyzer(), descriptor);
-/*        String defaultFields = p.getProperty(
-                dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser.
-                        DEFAULT_FIELDS).split(" ");*/
+//        String defaultFields = p.getProperty(
+//                dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser.
+//                        DEFAULT_FIELDS).split(" ");
             queryParser.setDefaultFields(("au author_normalized su lsubj ti "
                                           + "freetext sort_title").split(" "));
 
@@ -97,7 +98,7 @@ public class QueryPerformance {
         } catch (Exception e) {
             throw new RuntimeException("Could not connect to index at '"
                                        + indexLocation + "'", e);
-        }
+        }*/
         }
 
     public static String round(double v) {

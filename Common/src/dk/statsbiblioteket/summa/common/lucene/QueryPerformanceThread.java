@@ -44,6 +44,9 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.store.RAMDirectory;
 
+/**
+ * @deprecated until updated to the new IndexDescriptor
+ */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
@@ -76,7 +79,8 @@ public class QueryPerformanceThread extends Thread {
 
         IndexSearcher searcher = null;
         for (int i = 0 ; i < threadCount ; i++) {
-            SummaQueryParser queryParser = new SummaQueryParser(new String[]{},
+            // TOD: Re-implement this
+/*            SummaQueryParser queryParser = new SummaQueryParser(new String[]{},
                                               new SimpleAnalyzer(), descriptor);
             queryParser.setDefaultFields(("au author_normalized su lsubj ti "
                                           + "freetext sort_title").split(" "));
@@ -96,6 +100,7 @@ public class QueryPerformanceThread extends Thread {
             QueryPerformanceThread performanceThread =
                     new QueryPerformanceThread(searcher, queryParser);
             performanceThreads.add(performanceThread);
+            */
         }
 
         feedback = Math.min(Math.max(10, queries.length / 100), 100);
