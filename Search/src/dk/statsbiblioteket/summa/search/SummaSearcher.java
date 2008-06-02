@@ -25,8 +25,8 @@ package dk.statsbiblioteket.summa.search;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.rmi.RemoteException;
-import java.util.Arrays;
 
+// TODO: Add setters and getters for all tweakables
 /**
  * The interface that all searchers in Summa should implement. The interface is
  * expected to be implemented by classes that are used with RMI or a similar
@@ -65,11 +65,94 @@ public interface SummaSearcher {
     public static final String[] DEFAULT_FALLBACK_VALUES = null;
 
     /**
+     * How often, in milliseconds, the searcher should check for a new index.
+     * </p><p>
+     * This is optional. Default is 30 seconds (30,000 milliseconds).
+     * @see {@link #CONF_INDEX_MIN_RETENTION}.
+     */
+    public static final String CONF_INDEX_CHECK_INTERVAL =
+            "summa.search.index.check-interval";
+    public static final int DEFAULT_CHECK_INTERVAL = 1000 * 30; // Every 30 sec.
+
+    /**
+     * The minimum retention time for opened indexes. Depending on hardware and
+     * index complexity, this can range from a few seconds to hours or days.
+     * Setting this value very low on an often-changing index can lead to low
+     * performance as (re)opening indexes takes a non-trivial amount of
+     * resources, especially if warm-up is specified.
+     * </p><p>
+     * This is optional. Default is 5 minutes (300,000 milliseconds).
+     *
+     */
+    public static final String CONF_INDEX_MIN_RETENTION =
+            "summa.search.index.min-retention";
+    public static final int DEFAULT_MIN_RETENTION = 1000 * 60 * 5; // 5 min.
+
+    /**
+     * A resource with queries (newline-delimited) that should be expanded
+     * and searched every time an index is (re)opened.
+     * </p><p>
+     * This is optional. If not specified, no warm-up is performed.
+     * @see {@link #CONF_WARMUP_MAXTIME}.
+     */
+    public static final String CONF_WARMUP_DATA =
+            "summa.search.warmup.data";
+    public static final String DEFAULT_WARMUP_DATA = null;
+
+    /**
+     * The maximum number of milliseconds to spend on warm-up. If all queries
+     * specified in {@link #CONF_WARMUP_DATA} has been processed before this
+     * time limit, the warmup-phase is exited.
+     * </p><p>
+     * This is optional. Default is 30 seconds (30,000 milliseconds).
+     */
+    public static final String CONF_WARMUP_MAXTIME =
+            "summa.search.warmup.maxtime";
+    public static final int DEFAULT_WARMUP_MAXTIME = 1000 * 30;
+
+    /**
      * The maximum number of records to return, as a long. This takes precedence
      * over the value specified in the method {@link #fullSearch}.
      */
     public static final String CONF_MAX_RECORDS = "summa.search.maxRecords";
     public long DEFAULT_MAX_NUMBER_OF_RECORDS = Long.MAX_VALUE;
+
+    /**
+     * The number of underlying searchers to instantiate. Experiments with
+     * Lucene suggests that the best value is around 1½ * the number of
+     * CPUs, but as always YMMW. Note that the official recommendation from
+     * the Lucene people is to have a single searcher, no matter the number
+     * of CPUs.
+     * </p><p>
+     * This is optional. The default is 2.
+     */
+    public static final String CONF_NUMBER_OF_SEARCHERS =
+            "summa.search.number-of-searchers";
+    public static final int DEFAULT_NUMBER_OF_SEARCHERS = 2;
+
+    /**
+     * The maximum number of concurrent searches, shared between
+     * {@link #CONF_NUMBER_OF_SEARCHERS}. The searcher with the least
+     * amount of active searches will be picked first when a new search
+     * is requested.
+     * </p><p>
+     * This is optional. Default is 2.
+     */
+    public static final String CONF_NUMBER_OF_CONCURRENT_SEARCHES =
+            "summa.search.number-of-concurrent-searches";
+    public static final int DEFAULT_NUMBER_OF_CONCURRENT_SEARCHES = 2;
+
+    /**
+     * If a new search is requested and there are already
+     * {@link #CONF_NUMBER_OF_CONCURRENT_SEARCHES} running, the search is
+     * queued. If the queue reaches its max-size, the request is not queued
+     * and an exception is thrown.
+     * </p><p>
+     * This is optional. Default is 2.
+     */
+    public static final String CONF_SEARCH_QUEUE_MAX_SIZE =
+            "summa.search.search-queue.max-size";
+    public static final int DEFAULT_SEARCH_QUEUE_MAX_SIZE = 50;
 
     /**
      * The special sortKey signifying that sorting should be done on score,
