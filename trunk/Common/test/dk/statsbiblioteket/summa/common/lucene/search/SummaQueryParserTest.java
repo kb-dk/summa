@@ -35,6 +35,9 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import java.io.File;
 import java.util.ArrayList;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * SummaQueryParser Tester.
  */
@@ -42,6 +45,7 @@ import java.util.ArrayList;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class SummaQueryParserTest extends TestCase {
+    private static Log log = LogFactory.getLog(SummaQueryParserTest.class);
 
 
     SearchDescriptor descriptor;
@@ -84,12 +88,6 @@ public class SummaQueryParserTest extends TestCase {
         super.tearDown();
     }
 
-
-    public void testParse() throws Exception{
-        SummaQueryParser p = new SummaQueryParser(defaultFields, new SummaStandardAnalyzer(), descriptor);
-        System.out.println(p.parse("Test search"));
-
-    }
 
 
     public static Test suite() {
