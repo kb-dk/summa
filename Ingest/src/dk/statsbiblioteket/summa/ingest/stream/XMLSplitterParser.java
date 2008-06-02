@@ -28,16 +28,20 @@ import javax.xml.parsers.SAXParserFactory;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.io.ByteArrayOutputStream;
+import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Arrays;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.Streams;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.xml.sax.Attributes;
@@ -124,8 +128,7 @@ public class XMLSplitterParser extends DefaultHandler2 implements
             // TODO: Can we reuse a SAXParser?
             parser = factory.newSAXParser();
             // Enable comment preservation
-            parser.setProperty (LEXICAL_HANDLER,
-                                this);
+            parser.setProperty(LEXICAL_HANDLER, this);
 
             // TODO: Handle non-namespaceaware saxparsers better
         } catch (ParserConfigurationException e) {
@@ -166,6 +169,11 @@ public class XMLSplitterParser extends DefaultHandler2 implements
         running = true;
         try {
             prepareScanForNextRecord();
+/*            ByteArrayOutputStream out = new ByteArrayOutputStream(5000);
+            Streams.pipe(payload.getStream(), out);
+            byte[] bytes = out.toByteArray();
+            System.out.println(new String(bytes, "utf-8"));
+            parser.parse(new ByteArrayInputStream(bytes), this);*/
             parser.parse(payload.getStream(), this);
         } catch (IOException e) {
             //noinspection DuplicateStringLiteralInspection
@@ -280,11 +288,14 @@ public class XMLSplitterParser extends DefaultHandler2 implements
     private StringWriter id;
 
     private void prepareScanForNextRecord() {
+        parser.reset();
         inRecord = false;
         inId = false;
         sw = new StringWriter(10000);
         id = new StringWriter(100);
         insideRecordPrefixStack.clear();
+        outsideRecordPrefixStack.clear();
+        insideRecordElementStack.clear();
     }
 
 

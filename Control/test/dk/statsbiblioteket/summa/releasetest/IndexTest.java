@@ -31,6 +31,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Streams;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.Record;
@@ -191,6 +192,14 @@ public class IndexTest extends NoExitTestCase {
         }
         assertFalse("After " + NUM_RECORDS + " Records, iterator should finish",
                     recordIterator.hasNext());
+
+        recordIterator = storage.getRecordsModifiedAfter(0, TESTBASE);
+        Record gurli = recordIterator.next();
+        String fileContent =
+                Resolver.getUTF8Content("data/fagref/gurli.margrethe.xml");
+        assertEquals("The stored content should match the file-content",
+                     fileContent.trim(), gurli.getContentAsUTF8().trim());
+
         return storage;
     }
 

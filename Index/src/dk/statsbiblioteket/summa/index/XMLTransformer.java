@@ -167,12 +167,12 @@ public class XMLTransformer extends ObjectFilterImpl {
             Source so = new StreamSource(
                     new ByteArrayInputStream(payload.getRecord().getContent()));
             transformer.transform(so, input);
-            System.out.println("************************************");
-            System.out.println(payload.getRecord().getContentAsUTF8());
+/*            System.out.println("************************************");
+            System.out.println(payload.getRecord().getContentAsUTF8());*/
             payload.getRecord().setContent(out.toByteArray());
-            System.out.println("------------------------------------");
+/*            System.out.println("------------------------------------");
             System.out.println(payload.getRecord().getContentAsUTF8());
-            System.out.println("************************************");
+            System.out.println("************************************");*/
             log.debug("Finished transformation of " + payload);
             if (log.isTraceEnabled()) {
                 log.trace("Transformed content for " + payload + ": "
