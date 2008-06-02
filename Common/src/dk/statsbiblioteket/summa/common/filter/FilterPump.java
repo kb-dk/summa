@@ -117,11 +117,18 @@ public class FilterPump extends StateThread implements Configurable {
                 }
             }
         } catch (IOException e) {
-            log.error("IOException caught running FilterPump", e);
-            setError();
+            String error = "IOException caught running FilterPump";
+            log.error(error, e);
+            setError(error, e);
         } catch (Throwable t) {
-            log.error("Throwable caught running FilterPump", t);
-            setError();
+            String error = "Throwable caught running FilterPump";
+            log.error(error, t);
+            setError(error, t);
+        }
+        log.debug("Finished run with status " + getStatus());
+        if (STATUS.error.equals(getStatus())) {
+            log.warn("The run was finished with error '" + getErrorMessage(),
+                     getErrorCause());
         }
     }
 

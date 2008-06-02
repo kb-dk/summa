@@ -52,6 +52,10 @@ public abstract class StateThread implements Runnable {
 
     // TODO: Consider reusing the Status from the Control framework
     private STATUS status = STATUS.ready;
+
+    private String errorMessage;
+
+    private Throwable errorThrowable;
     private Thread thread;
 
     public STATUS getStatus() {
@@ -66,8 +70,12 @@ public abstract class StateThread implements Runnable {
     /**
      * Set the status to error. Start cannot be called on StateThreads with
      * status error.
+     * @param message a description of the error.
+     * @param cause   the cause of the error or null.
      */
-    protected void setError() {
+    protected void setError(String message, Throwable cause) {
+        //noinspection DuplicateStringLiteralInspection
+        log.debug("setError(" + message + ", ...) called", cause);
         status = STATUS.error;
     }
 
@@ -85,7 +93,14 @@ public abstract class StateThread implements Runnable {
             if (!status.equals(STATUS.error)) {
                 status = STATUS.stopped;
             }
-            log.debug("run stopped. Status " + status);
+            if (STATUS.error.equals(getStatus())) {
+                //noinspection DuplicateStringLiteralInspection
+                log.debug("run stopped. Status " + status);
+            } else {
+                //noinspection DuplicateStringLiteralInspection
+                log.warn("run stopped. Status " + status
+                         + " (" + getErrorMessage() + ")", getErrorCause());
+            }
         } catch (Throwable t) {
             log.error("Exception during run" , t);
             status = STATUS.error;
@@ -220,4 +235,19 @@ public abstract class StateThread implements Runnable {
      * processing should be done then.
      */
     protected void finishedCallback() { }
+
+    /**
+     * @return a description of the last error encountered.
+     */
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
+    /**
+     * @return the last cause of an error, if any cause was given.
+     */
+    public Throwable getErrorCause() {
+        return errorThrowable;
+    }
+
 }
