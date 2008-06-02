@@ -96,7 +96,12 @@ public class LuceneIndexField extends
     /* Mutators */
 
     public Field.TermVector getTermVector() {
-        return termVector;
+        if (!isDoIndex()) {
+            // It is illegal to attempt to create term vectors for non-indexed
+            return Field.TermVector.NO;
+        } else {
+            return termVector;
+        }
     }
 
     public void setTermVector(Field.TermVector termVector) {
