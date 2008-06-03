@@ -23,7 +23,6 @@
 package dk.statsbiblioteket.summa.search;
 
 import java.io.IOException;
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -31,7 +30,6 @@ import java.rmi.RemoteException;
 import java.net.URL;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Streams;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import org.apache.commons.logging.Log;
@@ -122,6 +120,7 @@ public class SearchNodeWrapper implements SearchNode {
         long startTime = System.currentTimeMillis();
         long endTime = startTime + warmupMaxTime;
         try {
+            long searchCount = 0;
             URL warmupDataURL = Resolver.getURL(warmupData);
             if (warmupDataURL == null) {
                 log.warn("Could not resolve '" + warmupDataURL
@@ -131,10 +130,22 @@ public class SearchNodeWrapper implements SearchNode {
             BufferedReader in = new BufferedReader(
                     new InputStreamReader(warmupDataURL.openStream()),
                     BUFFER_SIZE);
-            String line;
-            while ((line = in.readLine()) != null) {
-
+            String query;
+            while ((query = in.readLine()) != null &&
+                   System.currentTimeMillis() < endTime) {
+                // TODO: Disable logging for warmup
+                // TODO: Add sorting-calls to warmup
+                fullSearch(null, query, 0, 50, null, false, null, null);
+                searchCount++;
             }
+            log.debug("Warmup finished for location '" + location
+                      + "' with warm-up data from '" + warmupData
+                      + "' in " + (System.currentTimeMillis() - startTime)
+                      + " ms and " + searchCount + " searches");
+        } catch (RemoteException e) {
+            log.error(String.format(
+                    "RemoteException performing warmup for index at '%s' with "
+                    + "data from '%s'", location, warmupData));
         } catch (IOException e) {
             log.warn("Exception reading the content from '" + warmupData
                      + "' for warmup for location '" + location + "'");
@@ -170,7 +181,8 @@ public class SearchNodeWrapper implements SearchNode {
     }
 
     public void warmup(String query, String sortKey, String[] fields) {
-        // TODO: Implement this
+        log.warn("The warmup(String, String, String[]) method should not be "
+                 + "called directly on the wrapper");
     }
 
     /**
@@ -189,10 +201,23 @@ public class SearchNodeWrapper implements SearchNode {
         return activeSearches.get();
     }
 
-    /*
-     * Throws a RemoteException if the wrapper is not ready and keepe track of
+    /**
+     * Throws a RemoteException if the wrapper is not ready and keeps track of
      * concurrent searches. This method is expected to be called by different
      * threads.
+     * @param filter      a query that narrows the search.
+     * @param query       a query as entered by a user.
+     * @param startIndex  the starting index for the result, counting from 0.
+     * @param maxRecords  the maximum number of records to return.
+     * @param sortKey     specifies how to sort.
+     * @param reverseSort if true, the sort is performed in reverse order.
+     * @param fields      the fields to extract content from.
+     * @param fallbacks   if the value of a given field cannot be extracted,
+     *                    the corresponding value from fallbacks is returned.
+     * @return the result of a search in XML.
+     * @throws RemoteException if there was an exception during search.
+     * @see {@link SummaSearcher#fullSearch(String, String, long, long, String,
+     * boolean, String[], String[])} for full syntax.
      */
     public String fullSearch(String filter, String query, long startIndex,
                              long maxRecords, String sortKey,
