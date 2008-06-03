@@ -223,6 +223,7 @@ public class SearchNodeWrapper implements SearchNode {
                              boolean reverseSort, String[] fields,
                              String[] fallbacks) throws RemoteException {
         if (!ready) {
+            // TODO: Not good! Block instead until ready
             throw new RemoteException("Not ready for searching");
         }
         activeSearches.incrementAndGet();
