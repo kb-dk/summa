@@ -119,7 +119,7 @@ public interface SummaSearcher {
 
     /**
      * The number of underlying searchers to instantiate. Experiments with
-     * Lucene suggests that the best value is around 1½ * the number of
+     * Lucene suggests that the best value is around 1ï¿½ * the number of
      * CPUs, but as always YMMW. Note that the official recommendation from
      * the Lucene people is to have a single searcher, no matter the number
      * of CPUs.
@@ -178,8 +178,8 @@ public interface SummaSearcher {
      *               sortKey="..." reverseSort="..."
      *               fields="..." searchTime="...">
      *   <record score="..." sortValue="...">
-     *     <field="recordID">...</field>
-     *     <field="shortformat">...</field>
+     *     <field name="recordID">...</field>
+     *     <field name="shortformat">...</field>
      *   </record>
      *   ...
      * </searchresult>
@@ -216,7 +216,7 @@ public interface SummaSearcher {
      *                    Specifying null is the same as specifying
      *                    {@link #SORT_ON_SCORE}.
      * @param reverseSort if true, the sort is performed in reverse order.
-     * @param fields      the fields to extract content from.
+     * @param resultFields the fields to extract content from.
      *                    This parameter is optional. Default is specified
      *                    in the conf. at {@link #CONF_RESULT_FIELDS}.
      * @param fallbacks   if the value of a given field cannot be extracted,
@@ -229,6 +229,6 @@ public interface SummaSearcher {
     public String fullSearch(String filter, String query,
                              long startIndex, long maxRecords,
                              String sortKey, boolean reverseSort,
-                             String[] fields, String[] fallbacks)
+                             String[] resultFields, String[] fallbacks)
             throws RemoteException;
 }
