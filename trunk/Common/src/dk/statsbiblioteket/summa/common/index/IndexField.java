@@ -349,7 +349,7 @@ public class IndexField<A, T, F> {
 
     private final XPath xPath = XPathFactory.newInstance().newXPath();
     /**
-     * Assign attributes of this field from the  given Document Node.
+     * Assign attributes of this field from the given Document Node.
      * The Node should conform to the output from {@link #toXMLFragment()}.
      * If a parent field is specified in the node, the new IndexField will be
      * based on that parent. All attributes specified in the Node will override
@@ -374,19 +374,16 @@ public class IndexField<A, T, F> {
             throw new ParseException("No name defined for field", -1);
         }
 
-        String parentName = ParseUtil.getValue(xPath, node, "@parent",
-                                               (String)null);
-        if (parentName == null && !nameVal.equals(SUMMA_DEFAULT)) {
-            try {
-                fieldProvider.getField(SUMMA_DEFAULT);
+        if (!nameVal.equals(SUMMA_DEFAULT)) {
+            String parentName = ParseUtil.getValue(xPath, node, "@parent",
+                                                   (String)null);
+            if (parentName == null) {
                 parentName = SUMMA_DEFAULT;
-            } catch (IllegalArgumentException e) {
-                log.warn("Could not locate default field '" + SUMMA_DEFAULT
-                         + "'");
+                if (fieldProvider.getField(SUMMA_DEFAULT) == null) {
+                    log.warn("Could not locate default field '" + SUMMA_DEFAULT
+                             + "'");
+                }
             }
-        }
-
-        if (parentName != null) {
             log.trace("parse: Inheriting from parent '" + parentName + "'");
             IndexField<A, T, F> parentField;
             try {
@@ -399,8 +396,13 @@ public class IndexField<A, T, F> {
                         "The FieldProvider did not provide the right type",
                         -1).initCause(e);
             }
-            assignFrom(parentField);
-            parent = parentField;
+            if (parentField == null) {
+                log.warn("parse: Could not locate parent '" + parentName
+                          + "'");
+            } else {
+                assignFrom(parentField);
+                parent = parentField;
+            }
         }
         name = nameVal;
         aliases =     new ArrayList<IndexAlias>(IndexAlias.getAliases(node));
