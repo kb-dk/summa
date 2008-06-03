@@ -34,6 +34,9 @@ import dk.statsbiblioteket.util.qa.QAInfo;
  * Nodes are not responsible for keeping track of running searches when open
  * or close is called. This is the responsibility of the user and is
  * implemented in {@link SearchNodeWrapper}.
+ * </p><p>
+ * Nodes are not responsible for checking for sizes of fileds and fallbacks and
+ * the size of maxRecords. Again, this is the responsibility of the caller.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -52,4 +55,21 @@ public interface SearchNode extends SummaSearcher {
      * Closes all connections to index resources.
      */
     public void close();
+
+    /**
+     * Perform a warmup-search. This normally means no logging of queries.
+     * @param query       the query string to use for search.
+     * @param sortKey     specifies how to sort. If this is null or
+     *                    {@link #SORT_ON_SCORE}, sorting will be done on the
+     *                    scores for the hits. If a field-name is specified,
+     *                    sorting will be done on that field.<br />
+     *                    This parameter is optional.
+     *                    Default is {@link #SORT_ON_SCORE}.
+     *                    Specifying null is the same as specifying
+     *                    {@link #SORT_ON_SCORE}.
+     * @param fields      the fields to extract content from.
+     *                    This parameter is optional. Default is specified
+     *                    in the conf. at {@link #CONF_RESULT_FIELDS}.
+     */
+    public void warmup(String query, String sortKey, String[] fields);
 }

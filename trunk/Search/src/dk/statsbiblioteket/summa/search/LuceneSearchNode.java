@@ -83,6 +83,10 @@ public class LuceneSearchNode implements SearchNode, Configurable {
         }
     }
 
+    public void warmup(String query, String sortKey, String[] fields) {
+        // TODO: Implement this
+    }
+
 
     public String fullSearch(String filter, String query, long startIndex,
                              long maxRecords, String sortKey,
