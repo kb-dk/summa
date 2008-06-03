@@ -464,7 +464,9 @@ public class SearchEngineImpl implements SearchEngineImplMBean, SearchEngine, Lo
         if (isDebugEnabled) {log.debug("Performing filteredsearch on '" + query + "'");}
         try {
             luceneQuery = summaQueryParser.parse(query);
-            luceneFilterQuery = summaQueryParser.parse(filterQuery, QueryParser.OR_OPERATOR);
+            // TODO: Implement this
+            luceneFilterQuery = summaQueryParser.parse(filterQuery);
+//            luceneFilterQuery = summaQueryParser.parse(filterQuery, QueryParser.OR_OPERATOR);
         } catch (ParseException e) {
             if (isWarnEnabled) {log.warn("Cannot parse query: '" + query + "'", e);}
             return "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><searchresult totalhits=\"0\" firstRecord=\"0\"  error=\"forstår ikke søgningen\" />";
@@ -511,7 +513,9 @@ public class SearchEngineImpl implements SearchEngineImplMBean, SearchEngine, Lo
         if (isDebugEnabled){log.debug("Performing filteredsearchsorted on '" + query + "'");}
         try {
             luceneQuery = summaQueryParser.parse(query);
-            luceneFilterQuery = summaQueryParser.parse(filterQuery, QueryParser.OR_OPERATOR);
+            // TODO: Implement this
+            luceneFilterQuery = summaQueryParser.parse(filterQuery);
+//            luceneFilterQuery = summaQueryParser.parse(filterQuery, QueryParser.OR_OPERATOR);
         } catch (ParseException e) {
             log.warn("Cannot parse query: '" + query + "'", e);
             return makeError("forstår ikke søgningen").toString();

@@ -28,11 +28,14 @@ package dk.statsbiblioteket.summa.search;
  */
 
 import java.lang.reflect.Field;
+import java.util.List;
+import java.util.ArrayList;
 
 import junit.framework.TestCase;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.search.Query;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.XProperties;
 
 
 @QAInfo(level = QAInfo.Level.NORMAL,
