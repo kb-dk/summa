@@ -568,11 +568,11 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      * The look-up is performed with alias-expansion with language null (all
      * languages match).
      * @param fieldName the name or alias of the wanted field.
-     * @return the field corresponding to the name or alias.
-     * @throws IllegalArgumentException if the field could not be located.
+     * @return the field corresponding to the name or alias or null if a field
+     *         could not be found.
      * @see {@link #allFields}.
      */
-    public F getField(String fieldName) throws IllegalArgumentException {
+    public F getField(String fieldName) {
         return getField(fieldName, null);
     }
 
@@ -583,12 +583,11 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      * @param fieldName the name or alias of the wanted field.
      * @param language  the language for alias-lookup. If the language is null,
      *                  it is ignored.
-     * @return the field corresponding to the name or alias.
-     * @throws IllegalArgumentException if the field could not be located.
+     * @return the field corresponding to the name or alias or null if a field
+     *         could not be found.
      * @see {@link #allFields}.
      */
-    public F getField(String fieldName, String language) throws
-                                                      IllegalArgumentException {
+    public F getField(String fieldName, String language) {
         F field = allFields.get(fieldName);
         if (field != null) {
             return field;
@@ -663,12 +662,11 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      * Locates and returns a group from the internal list of groups.
      * The look-up is performed with alias-expansion and language null.
      * @param groupName the name or alias of the wanted group.
-     * @return the group corresponding to the name or alias.
-     * @throws IllegalArgumentException if the group could not be located.
+     * @return the group corresponding to the name or alias or null if no group
+     *         could be found.
      * @see {@link #groups}.
      */
-    public IndexGroup<F> getGroup(String groupName) throws
-                                                      IllegalArgumentException {
+    public IndexGroup<F> getGroup(String groupName) {
         return getGroup(groupName, null);
     }
 
@@ -679,12 +677,11 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      * @param groupName the name or alias of the wanted group.
      * @param language  the language for alias-lookup. If the language is null,
      *                  it is ignored.
-     * @return the group corresponding to the name or alias.
-     * @throws IllegalArgumentException if the group could not be located.
+     * @return the group corresponding to the name or alias or null if no group
+     *         could be found.
      * @see {@link #groups}.
      */
-    public IndexGroup<F> getGroup(String groupName, String language) throws 
-                                                      IllegalArgumentException {
+    public IndexGroup<F> getGroup(String groupName, String language) {
         IndexGroup<F> group = groups.get(groupName);
         if (group != null) {
             return group;

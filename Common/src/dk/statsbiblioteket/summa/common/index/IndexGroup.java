@@ -217,13 +217,13 @@ public class IndexGroup<F extends IndexField> {
                 String fieldName = fieldNameNode.getNodeValue();
                 log.trace("Found field name '" + fieldName + " in group '"
                           + name + "'");
-                try {
-                    addField(fieldProvider.getField(fieldName));
-                } catch (IllegalArgumentException e) {
+                F field = fieldProvider.getField(fieldName);
+                if (field == null) {
                     throw new ParseException(String.format(
                             "The field '%s' in group '%s' did not exist",
                             fieldName, name), -1);
                 }
+                addField(field);
             }
         }
         log.debug("Resolved " + fields.size() + " fields for group " + name);

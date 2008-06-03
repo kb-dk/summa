@@ -125,12 +125,12 @@ public class DisjunctionQueryParser extends QueryParser {
             }
             return makeMulti(queries, disjunctGroups);
         }
-        try {
-            return inner.getFinalQuery(descriptor.getField(field).getName());
-        } catch (IllegalArgumentException e) {
+        IndexField resolvedField = descriptor.getField(field);
+        if (resolvedField == null) {
             // TODO: The field is unknown in the descriptor but might be indexed
             return inner.getFinalQuery(field);
         }
+        return inner.getFinalQuery(resolvedField.getName());
     }
 
     private abstract interface InnerQueryMaker {

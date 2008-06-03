@@ -23,29 +23,19 @@
 package dk.statsbiblioteket.summa.common.lucene.search;
 
 import java.io.StringReader;
-import java.io.StringWriter;
 import java.util.*;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
 
-import dk.statsbiblioteket.summa.common.lucene.index.OldIndexField;
-import dk.statsbiblioteket.summa.common.lucene.index.SearchDescriptor;
-import dk.statsbiblioteket.summa.common.lucene.AnalyzerFactory;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
-import dk.statsbiblioteket.summa.common.lucene.LuceneIndexField;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.index.IndexField;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
-import dk.statsbiblioteket.summa.common.index.IndexGroup;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryParser.FastCharStream;
 import org.apache.lucene.queryParser.ParseException;
-import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.queryParser.QueryParserConstants;
 import org.apache.lucene.queryParser.QueryParserTokenManager;
 import org.apache.lucene.queryParser.Token;
@@ -54,18 +44,32 @@ import org.apache.lucene.search.*;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te, hal",
-        comment="Needs class JavaDoc")
+        comment = "Needs class JavaDoc")
 public class SummaQueryParser {
     private static Log log = LogFactory.getLog(SummaQueryParser.class);
+
+    /**
+     * If true, query time boosts on fields are enabled. Field-boosts are
+     * given in the query-string as defined by the class {@link LuceneBooster}.
+     */
+    public static final String CONF_QUERY_TIME_FIELD_BOOSTS =
+            "summa.common.query-parser.query-time-field-boosts";
+    public static final boolean DEFAULT_QUERY_TIME_FIELD_BOOSTS = false;
+    private boolean supportQueryTimeBoosts = DEFAULT_QUERY_TIME_FIELD_BOOSTS;
 
     private static final String START_GROUP = "(";
     private static final String END_GROUP = ")";
 
-    private DisjunctionQueryParser _q;
+    private DisjunctionQueryParser parser;
+    private LuceneBooster booster;
+    private LuceneIndexDescriptor descriptor;
 
-    private IndexDescriptor descriptor;
 
     // needds to handle unbalanced queries bug # 2
+
+    @QAInfo(level = QAInfo.Level.FINE,
+            state = QAInfo.State.QA_NEEDED,
+            author = "hal")
     static final class QueryBalancer {
 
         private Stack<Integer> balance;
@@ -73,7 +77,7 @@ public class SummaQueryParser {
         QueryBalancer() {
             balance = new Stack<Integer>();
         }
-
+        String UNBALANCED = "Unbalanced query near: ";
         void addToken(Token t) throws ParseException {
             switch (t.kind) {
                 case QueryParserConstants.LPAREN:       // (
@@ -88,7 +92,7 @@ public class SummaQueryParser {
                 case QueryParserConstants.RANGEIN_END: // ]
                     if (balance.isEmpty() ||
                         balance.peek() != QueryParserConstants.RANGEIN_START) {
-                        throw new ParseException("Unbalanced query near: "
+                        throw new ParseException(UNBALANCED
                                                  + t.image + "<" + t
                                 .beginColumn + "," + t.beginLine + ">");
                     }
@@ -98,7 +102,7 @@ public class SummaQueryParser {
                     if (balance.isEmpty() || balance.peek()
                                              != QueryParserConstants
                             .RANGEEX_START) {
-                        throw new ParseException("Unbalanced query near: "
+                        throw new ParseException(UNBALANCED
                                                  + t.image + "<" + t
                                 .beginColumn + "," + t.beginLine + ">");
                     }
@@ -107,7 +111,7 @@ public class SummaQueryParser {
                 case QueryParserConstants.RPAREN: // )
                     if (balance.isEmpty()
                         || balance.peek() != QueryParserConstants.LPAREN) {
-                        throw new ParseException("Unbalanced query near: "
+                        throw new ParseException(UNBALANCED
                                                  + t.image + "<" + t
                                 .beginColumn + "," + t.beginLine + ">");
                     }
@@ -124,26 +128,65 @@ public class SummaQueryParser {
         }
     }
 
-    private boolean supportQueryTimeBoosts = false;
-
-    public SummaQueryParser(IndexDescriptor descriptor) {
-        // TODO: Add option for query time boosts
+    /**
+     * Create a parser based on the given descriptor. It is recommended to use
+     * the constructor {@link SummaQueryParser(Configuration, IndexDescriptor)}
+     * instead as it allows for customization of the parser.
+     * @param descriptor the index descriptor.
+     */
+    public SummaQueryParser(LuceneIndexDescriptor descriptor) {
         log.debug("Creating query parser with given descriptor " + descriptor);
-        this.descriptor = descriptor;
+        init(descriptor);
     }
 
+    /**
+     * Create a query parser from the given configuration. This includes the
+     * construction of an {@link IndexDescriptor}. For performance and
+     * stability reasons, it is recommended to share index descriptors, so it
+     * is recommended to use the constructor
+     * {@link SummaQueryParser(Configuration, IndexDescriptor)} instead.
+     * @param conf the configuration for the parser and corresponding index
+     *             descriptor.
+     */
     public SummaQueryParser(Configuration conf) {
         log.debug("Creating query parser with descriptor specified "
                   + "in configuration");
-        descriptor = LuceneIndexUtils.getDescriptor(conf);
+        init(LuceneIndexUtils.getDescriptor(conf));
+        extractSetup(conf);
     }
 
+    /**
+     * Create a query parser with the given configuration and descriptor.
+     * This is the recommended way of constructing the parser as is allows for
+     * reuse and customizability.
+     * @param conf       the configuration for the parser.
+     * @param descriptor the index descriptor.
+     */
+    public SummaQueryParser(Configuration conf,
+                            LuceneIndexDescriptor descriptor) {
+        log.debug("Creating query parser with configuration and descriptor");
+        init(descriptor);
+        extractSetup(conf);
+    }
+
+    private void extractSetup(Configuration conf) {
+        supportQueryTimeBoosts = conf.getBoolean(CONF_QUERY_TIME_FIELD_BOOSTS,
+                                                 supportQueryTimeBoosts);
+        log.debug("Query time boosts are "
+                  + (supportQueryTimeBoosts ? "enabled" : "disabled"));
+    }
+
+    public void init(LuceneIndexDescriptor descriptor) {
+        this.descriptor = descriptor;
+        booster = new LuceneBooster(descriptor);
+        parser = new DisjunctionQueryParser(descriptor);
+    }
 
     /**
      * Parse the given String and return a Lucene Query from it.
      * </p><p>
      * see http://lucene.apache.org/java/docs/queryparsersyntax.html for syntax.
-     * @param queryString       a String with Lucene query syntax.
+     * @param queryString a String with Lucene query syntax.
      * @return the expanded query.
      * @throws ParseException if the query could not be parsed.
      */
@@ -151,7 +194,7 @@ public class SummaQueryParser {
         String boosts = null;
         if (supportQueryTimeBoosts) {
             try {
-                String[] tokens = splitQuery(queryString);
+                String[] tokens = booster.splitQuery(queryString);
                 queryString = tokens[0];
                 boosts = tokens[1];
             } catch (Exception e) {
@@ -160,67 +203,25 @@ public class SummaQueryParser {
         }
         String qstr = expandQueryString(queryString);
         log.info("expanded query: " + qstr);
-        Query a = _q.parse(queryString);
-//        Query a = _q.parse(qstr);
+        Query a = parser.parse(queryString);
+//        Query a = parser.parse(qstr);
         log.info("query: " + a.toString());
         if (supportQueryTimeBoosts) {
             try {
-                applyBoost(a, boosts, descriptor);
+                booster.applyBoost(a, boosts);
             } catch (Exception e) {
                 log.error("Exception applying query-time boost", e);
             }
         }
         if (log.isDebugEnabled()) {
             try {
-                log.debug("Parsed query: " + queryToString(a));
+                log.debug("Parsed query: " + LuceneIndexUtils.queryToString(a));
             } catch (Exception e) {
                 log.error("Could not dump parsed query to String", e);
             }
         }
         return a;
     }
-    // TODO: Fix boosting of unqualified fields
-
-    public synchronized Query parse(String queryString, QueryParser.Operator operator)
-            throws ParseException {
-        String qstr;
-        try {
-            String boosts = null;
-            if (supportQueryTimeBoosts) {
-                try {
-                    String[] tokens = splitQuery(queryString);
-                    queryString = tokens[0];
-                    boosts = tokens[1];
-                } catch (Exception e) {
-                    log.error("Exception handling query-time boost", e);
-                }
-            }
-            qstr = expandQueryString(queryString);
-            _q.setDefaultOperator(operator);
-            Query q = _q.parse(queryString);
-//            Query q = _q.parse(qstr);
-            log.info("query: " + q.toString());
-            if (supportQueryTimeBoosts) {
-                try {
-                    applyBoost(q, boosts, descriptor);
-                } catch (Exception e) {
-                    log.error("Exception applying query-time boost", e);
-                }
-            }
-            if (log.isDebugEnabled()) {
-                try {
-                    log.debug("Parsed query: " + queryToString(q));
-                } catch (Exception e) {
-                    log.error("Could not dump parsed query to String", e);
-                }
-            }
-            return q;
-        } catch (Throwable t) {
-            throw (ParseException)
-                    new ParseException("Exception during parse").initCause(t);
-        }
-    }
-
 
     protected String expandQueryString(String query) throws ParseException {
 
@@ -275,7 +276,8 @@ public class SummaQueryParser {
                 if (lookahead.beginColumn > lastEnd) {
                     currentFieldValue += " ";
                 }
-                if (fieldBalance.isBalanced() && value.kind != QueryParserConstants.COLON) {
+                if (fieldBalance.isBalanced() &&
+                    value.kind != QueryParserConstants.COLON) {
                     //end of field
                     infield = false;
                     returnval += expgrp(currentFields, currentFieldValue)
@@ -319,11 +321,8 @@ public class SummaQueryParser {
         return r;
     }
 
-
-    /* Query time boosts */
-
     /**
-     * @see {@link #splitQuery}
+     * @see {@link LuceneBooster#splitQuery(String)}.
      * @return true if query-time field-level boosts is supported.
      */
     public boolean isSupportQueryTimeBoosts() {
@@ -331,227 +330,11 @@ public class SummaQueryParser {
     }
 
     /**
-     * @see {@link #splitQuery}
+     * @see {@link LuceneBooster#splitQuery(String)}.
      * @param supportQueryTimeBoosts set to true if query-time field-level
      *                               boosts should be supported.
      */
     public void setSupportQueryTimeBoosts(boolean supportQueryTimeBoosts) {
         this.supportQueryTimeBoosts = supportQueryTimeBoosts;
     }
-
-
-    public static final Pattern boostPattern =
-            Pattern.compile("^(.+)boost\\((.+)\\)$");
-    /**
-     * Splits the given query into the standard query and any field-boost
-     * parameters.
-     * </p><p>
-     * The format for field-boost parameters is<br />
-     * normalquery "boost("(fieldname"^"boostfactor)*")"
-     * </p><p>
-     * Example 1: "heste boost(title^3.5)" => " heste"<br />
-     * Example 1: "heste boost(title^0.5 emne^4)" => " heste"<br />
-     * Example 2: "galimafry foglio" => " galimafry foglio"<br />
-     * @param query a query as provided by the end-user
-     * @return the query and the field-boosts. The query is always something,
-     *         the field-boosts is null if they are not defined in the input.
-     */
-    public static String[] splitQuery(String query) {
-        if (log.isTraceEnabled()) {
-            log.trace("splitQuery(" + query + ") called");
-        }
-        Matcher matcher = boostPattern.matcher(query);
-        if (matcher.matches()) {
-            return new String[]{matcher.group(1), matcher.group(2)};
-        }
-        return new String[]{query, null};
-    }
-
-    public static final Pattern singleBoost =
-            Pattern.compile("^(.+)\\^([0-9]+(\\.[0-9]+)?)$");
-    /**
-     * Extract field-specific boosts from boost and apply them recursively to
-     * Query, thereby turning field-boosts into term-boosts.
-     * </p><p>
-     * The format for boost is<br />
-     * {@code (field"^"boost )*(field"^"boost)?}
-     * </p><p>
-     * Example 1: "title^2.9"<br />
-     * Example 2: "title^0.5 emne^4"
-     * @param query       a standard query.
-     * @param boostString boost-specific parameters.
-     * @param descriptor  the descriptor used for group-expansion.
-     * @return true if at least one boost was applied.
-     */
-    public static boolean applyBoost(Query query, String boostString,
-                                     IndexDescriptor descriptor) {
-        log.trace("applyBoost(" + query + ", " + boostString + ") entered");
-        if (boostString == null) {
-            return false;
-        }
-        String[] boostTokens = boostString.split("\\s+");
-        if (boostTokens.length == 0) {
-            log.debug("No boosts defined in '" + boostString + "'. Returning");
-            return false;
-        }
-        Map<String, Float> boosts =
-                new HashMap<String, Float>(boostTokens.length);
-        for (String boost: boostTokens) {
-            Matcher matcher = singleBoost.matcher(boost);
-            if (!matcher.matches()) {
-                log.warn("Illegal boost '" + boost + "' in '" + query
-                         + boostString + "'. Aborting boosting");
-                return false;
-            }
-            try {
-                boosts.put(matcher.group(1), Float.valueOf(matcher.group(2)));
-            } catch (NumberFormatException e) {
-                log.warn("Illegal float-value in '" + boost + "'. Aborting");
-                return false;
-            }
-        }
-        if (boosts.size() == 0) {
-            log.debug("No boosts detected in " + boostString);
-            return false;
-        }
-        return applyBoost(query, boosts, descriptor);
-    }
-
-    private static boolean applyBoost(Query query, Map<String, Float> boosts,
-                                      IndexDescriptor descriptor) {
-        log.trace("applyBoost(Query, Map) entered");
-        expandBoosts(boosts, descriptor);
-        boolean applied = false;
-        if (query instanceof BooleanQuery) {
-            log.trace("applyBoost: BooleanQuery found");
-            for (BooleanClause clause: ((BooleanQuery)query).getClauses()) {
-                applied = applied | applyBoost(clause.getQuery(), boosts,
-                                               descriptor);
-            }
-        } else if (query instanceof TermQuery) {
-            log.trace("applyBoost: termQuery found");
-            TermQuery termQuery = (TermQuery)query;
-            if (boosts.containsKey(termQuery.getTerm().field())) {
-                Float boost = boosts.get(termQuery.getTerm().field());
-                log.debug("applyBoost: Assigning boost " + boost
-                          + " to TermQuery " + termQuery.getTerm());
-                termQuery.setBoost(termQuery.getBoost() * boost);
-                applied = true;
-            }
-        } else if (query instanceof DisjunctionMaxQuery) {
-            log.trace("applyBoost: DisjunctionMaxQuery found");
-            Iterator iterator = ((DisjunctionMaxQuery)query).iterator();
-            while (iterator.hasNext()) {
-                applied = applied | applyBoost((Query)iterator.next(), boosts,
-                                               descriptor);
-            }
-        } else if (query instanceof ConstantScoreQuery) {
-            log.trace("applyBoost: ConstantScoreQuery ignored");
-        } else if (query instanceof ConstantScoreRangeQuery) {
-            log.trace("applyBoost: ConstantScoreRangeQuery ignored");
-        } else if (query instanceof RangeQuery) {
-            log.trace("applyBoost: RangeQuery ignored");
-        } else {
-            log.warn("applyBoost: Unexpected Query '" + query.getClass()
-                     + "' ignored");
-        }
-        log.trace("applyBoost(Query, Map) exited");
-        return applied;
-    }
-
-    /**
-     * Expand groups with boosts so that fields in the group gets the boost.
-     * Note: Boosts on groups have lower priority that field-specific boosts.
-     * @param boosts     a map with boosts for fields.
-     * @param descriptor description of the index-view.
-     */
-    public static void expandBoosts(Map<String, Float> boosts,
-                                    IndexDescriptor descriptor) {
-        Map<String, Float> extras = new HashMap<String, Float>(boosts.size()*2);
-        for (Map.Entry<String, Float> entry: boosts.entrySet()) {
-            expandBoosts(entry.getKey(), entry.getValue(), extras, descriptor);
-        }
-        for (Map.Entry<String, Float> entry: extras.entrySet()) {
-            if (!boosts.containsKey(entry.getKey())) {
-                boosts.put(entry.getKey(), entry.getValue());
-            }
-        }
-
-    }
-
-    private static void expandBoosts(String fieldOrGroup, Float boost,
-                                     Map<String, Float> extras,
-                                     IndexDescriptor descriptor) {
-        // TODO: Implement this
-        if (descriptor.getGroups().containsKey(fieldOrGroup)) {
-/*            IndexGroup group = descriptor.getGroups().get(fieldOrGroup);
-            for (IndexField field: group.getFields()) {
-                log.trace("expandBoost: added boost " + boost + " to "
-                          + field.getName() + " in group " + fieldOrGroup);
-                extras.put(field.getName(), boost);
-            }*/
-        }
-    }
-
-    /**
-     * Parses a Query-tree and returns it as a human-readable String. This
-     * dumper writes custom boosts. Not suitable to feed back into a parser!
-     * @param query the query to dump as a String.
-     * @return the query as a human-redable String.
-     */
-    // TODO: Make this dumper more solid - let it handle all known Queries
-    public static String queryToString(Query query) {
-        StringWriter sw = new StringWriter(100);
-        if (query instanceof BooleanQuery) {
-            sw.append("(");
-            boolean first = true;
-            for (BooleanClause clause: ((BooleanQuery)query).getClauses()) {
-                if (!first) {
-                    sw.append(" ");
-                }
-                sw.append(clause.getOccur().toString());
-                sw.append(queryToString(clause.getQuery()));
-                first = false;
-            }
-            sw.append(")");
-        } else if (query instanceof TermQuery) {
-            TermQuery termQuery = (TermQuery)query;
-            sw.append(termQuery.toString()).append("[");
-            sw.append(Float.toString(query.getBoost())).append("]");
-        } else if (query instanceof RangeQuery) {
-            sw.append(query.toString()).append("[");
-            sw.append(Float.toString(query.getBoost())).append("]");
-        } else if (query instanceof WildcardQuery) {
-            sw.append(query.toString()).append("[");
-            sw.append(Float.toString(query.getBoost())).append("]");
-        } else if (query instanceof FuzzyQuery) {
-            sw.append(query.toString()).append("[");
-            sw.append(Float.toString(query.getBoost())).append("]");
-        } else if (query instanceof PrefixQuery) {
-            sw.append(query.toString()).append("[");
-            sw.append(Float.toString(query.getBoost())).append("]");
-        } else if (query instanceof PhraseQuery) {
-            sw.append(query.toString()).append("[");
-            sw.append(Float.toString(query.getBoost())).append("]");
-        } else if (query instanceof DisjunctionMaxQuery) {
-            Iterator iterator = ((DisjunctionMaxQuery)query).iterator();
-            sw.append("<");
-            boolean first = true;
-            while (iterator.hasNext()) {
-                if (!first) {
-                    sw.append(" ");
-                }
-                sw.append(queryToString((Query)iterator.next()));
-                first = false;
-            }
-            sw.append(">");
-        } else {
-            sw.append(query.getClass().toString());
-            sw.append(query.toString()).append("[");
-            sw.append(Float.toString(query.getBoost())).append("]");
-        }
-        return sw.toString();
-    }
-
-
 }
