@@ -133,9 +133,8 @@ public class SearchNodeWrapper implements SearchNode {
             String query;
             while ((query = in.readLine()) != null &&
                    System.currentTimeMillis() < endTime) {
-                // TODO: Disable logging for warmup
                 // TODO: Add sorting-calls to warmup
-                fullSearch(null, query, 0, 50, null, false, null, null);
+                node.warmup(query, null, null);
                 searchCount++;
             }
             log.debug("Warmup finished for location '" + location
