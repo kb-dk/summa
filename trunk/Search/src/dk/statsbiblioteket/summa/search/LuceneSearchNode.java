@@ -31,8 +31,6 @@ import java.util.List;
 import java.util.HashSet;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Strings;
-import dk.statsbiblioteket.util.Streams;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
@@ -43,7 +41,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Filter;
-import org.apache.lucene.search.QueryFilter;
 import org.apache.lucene.search.QueryWrapperFilter;
 import org.apache.lucene.search.TopFieldDocs;
 import org.apache.lucene.search.Query;
