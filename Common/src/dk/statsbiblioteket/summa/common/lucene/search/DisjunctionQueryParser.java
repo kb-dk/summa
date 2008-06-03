@@ -24,9 +24,7 @@ package dk.statsbiblioteket.summa.common.lucene.search;
 
 import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.queryParser.ParseException;
-import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.search.*;
-import org.apache.log4j.Logger;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -126,7 +124,11 @@ public class DisjunctionQueryParser extends QueryParser {
                 }
             }
             return makeMulti(queries, disjunctGroups);
-        } else {
+        }
+        try {
+            return inner.getFinalQuery(descriptor.getField(field).getName());
+        } catch (IllegalArgumentException e) {
+            // TODO: The field is unknown in the descriptor but might be indexed
             return inner.getFinalQuery(field);
         }
     }
