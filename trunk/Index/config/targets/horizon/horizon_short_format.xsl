@@ -722,13 +722,13 @@
                       <xsl:for-each select=".">
                                             <xsl:choose>
                                                 <xsl:when test="contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position()=1],'xe')">
-															<xml:text>todo</xml:text>
+															<xsl:text>todo</xsl:text>
 														</xsl:when>
                                                 <xsl:when test="contains(/mc:record/mc:datafield[@tag='008']/mc:subfield[@code='t'],'p')">
-									               			<xml:text>journal</xml:text>
+									               			<xsl:text>journal</xsl:text>
 												</xsl:when>
 												<xsl:otherwise>
-                                                           <xml:text>mono</xml:text>
+                                                           <xsl:text>mono</xsl:text>
                                                 </xsl:otherwise>
                                     </xsl:choose>
 
