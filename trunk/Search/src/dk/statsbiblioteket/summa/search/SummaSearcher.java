@@ -65,30 +65,6 @@ public interface SummaSearcher {
     public static final String[] DEFAULT_FALLBACK_VALUES = null;
 
     /**
-     * How often, in milliseconds, the searcher should check for a new index.
-     * </p><p>
-     * This is optional. Default is 30 seconds (30,000 milliseconds).
-     * @see {@link #CONF_INDEX_MIN_RETENTION}.
-     */
-    public static final String CONF_INDEX_CHECK_INTERVAL =
-            "summa.search.index.check-interval";
-    public static final int DEFAULT_CHECK_INTERVAL = 1000 * 30; // Every 30 sec.
-
-    /**
-     * The minimum retention time for opened indexes. Depending on hardware and
-     * index complexity, this can range from a few seconds to hours or days.
-     * Setting this value very low on an often-changing index can lead to low
-     * performance as (re)opening indexes takes a non-trivial amount of
-     * resources, especially if warm-up is specified.
-     * </p><p>
-     * This is optional. Default is 5 minutes (300,000 milliseconds).
-     *
-     */
-    public static final String CONF_INDEX_MIN_RETENTION =
-            "summa.search.index.min-retention";
-    public static final int DEFAULT_MIN_RETENTION = 1000 * 60 * 5; // 5 min.
-
-    /**
      * A resource with queries (newline-delimited) that should be expanded
      * and searched every time an index is (re)opened.
      * </p><p>
@@ -153,6 +129,15 @@ public interface SummaSearcher {
     public static final String CONF_SEARCH_QUEUE_MAX_SIZE =
             "summa.search.search-queue.max-size";
     public static final int DEFAULT_SEARCH_QUEUE_MAX_SIZE = 50;
+
+    /**
+     * If no searchers are ready upon search, wait up to this number of
+     * milliseconds for a searcher to become ready. If no searchers are ready
+     * at that time, an exception will be thrown.
+     */
+    public static final String CONF_SEARCHER_AVAILABILITY_TIMEOUT =
+            "summa.search.searcher-availability.timeout";
+    public static final int DEFAULT_SEARCHER_AVAILABILITY_TIMEOUT = 5 * 60000;
 
     /**
      * The special sortKey signifying that sorting should be done on score,

@@ -9,6 +9,8 @@ import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 
 import java.util.concurrent.Semaphore;
+import java.util.List;
+import java.util.ArrayList;
 import java.rmi.RemoteException;
 
 import org.apache.commons.logging.Log;
@@ -23,30 +25,66 @@ import org.apache.commons.logging.LogFactory;
 public abstract class SummaSearcherImpl implements SummaSearcher, Configurable {
     private static Log log = LogFactory.getLog(SummaSearcherImpl.class);
 
-    private int indexCheckInterval = DEFAULT_CHECK_INTERVAL;
-    private int indexMinRetention = DEFAULT_MIN_RETENTION;
     private int numberOfSearchers = DEFAULT_NUMBER_OF_SEARCHERS;
     private int maxNumberOfConcurrentSearches =
             DEFAULT_NUMBER_OF_CONCURRENT_SEARCHES;
     private int searchQueueMaxSize = DEFAULT_SEARCH_QUEUE_MAX_SIZE;
+    private int searcherAvailabilityTimeout =
+            DEFAULT_SEARCHER_AVAILABILITY_TIMEOUT;
 
     private Semaphore searchQueueSemaphore;
     private Semaphore searchActiveSemaphore;
+    private List<SearchNodeWrapper> searchNodes;
 
     /**
      * Extracts basic settings from the configuration.
      * @param conf the configuration for the searcher.
      */
     public SummaSearcherImpl(Configuration conf) {
+        log.trace("Constructor(Configuration) called");
         searchQueueMaxSize =
                 conf.getInt(CONF_SEARCH_QUEUE_MAX_SIZE, searchQueueMaxSize);
-        searchQueueSemaphore = new Semaphore(searchQueueMaxSize, true);
         maxNumberOfConcurrentSearches =
                 conf.getInt(CONF_NUMBER_OF_CONCURRENT_SEARCHES,
                             maxNumberOfConcurrentSearches);
-        searchActiveSemaphore =
-                new Semaphore(maxNumberOfConcurrentSearches, true);
+        numberOfSearchers = conf.getInt(CONF_NUMBER_OF_SEARCHERS,
+                                        numberOfSearchers);
+        if (numberOfSearchers < 1) {
+            throw new ConfigurationException(String.format(
+                    "The number of searchers must be 1 or more. It was %s",
+                    numberOfSearchers));
+        }
+        searcherAvailabilityTimeout =
+                conf.getInt(CONF_SEARCHER_AVAILABILITY_TIMEOUT,
+                            searcherAvailabilityTimeout);
+        log.debug(String.format(
+                "Constructing with %s=%d, %s=%d, %s=%d, %s=%d",
+                CONF_SEARCH_QUEUE_MAX_SIZE, searchQueueMaxSize,
+              CONF_NUMBER_OF_CONCURRENT_SEARCHES, maxNumberOfConcurrentSearches,
+                CONF_NUMBER_OF_SEARCHERS, numberOfSearchers,
+                CONF_SEARCHER_AVAILABILITY_TIMEOUT, searcherAvailabilityTimeout
+                ));
+        searchQueueSemaphore = new Semaphore(searchQueueMaxSize, true);
+        searchActiveSemaphore = new Semaphore(maxNumberOfConcurrentSearches, 
+                                              true);
+        searchNodes = new ArrayList<SearchNodeWrapper>(numberOfSearchers);
+        log.trace("Constructing search nodes");
+        for (int i = 0 ; i < numberOfSearchers ; i++) {
+            searchNodes.add(constructSearchNode(conf));
+        }
+        // TODO: Open indexes, activate timer
     }
+
+    /**
+     * Construct a search node based on the given configuration. Note that nodes
+     * does not open indexes before {@link SearchNode#open(String)} is called.
+     * </p><p>
+     * The search node must be wrapped in a SearchNodeWrapper and will be
+     * search-engine-specific (e.g. a Lucene searcher).
+     * @param conf the setup for the node.
+     * @return a node ready to open an index.
+     */
+    public abstract SearchNodeWrapper constructSearchNode(Configuration conf);
 
     public String fullSearch(String filter, String query, long startIndex,
                              long maxRecords, String sortKey,
@@ -66,8 +104,43 @@ public abstract class SummaSearcherImpl implements SummaSearcher, Configurable {
         try {
             try {
                 searchActiveSemaphore.acquire();
-                // TODO: Find the one with the least load, which is ready
-                return null;
+                int minLoad = Integer.MAX_VALUE;
+                SearchNodeWrapper usable = null;
+                for (SearchNodeWrapper wrapper : searchNodes) {
+                    if (wrapper.isReady()) {
+                        if (wrapper.getActive() < minLoad) {
+                            minLoad = wrapper.getActive();
+                            usable = wrapper;
+                        }
+                    }
+                }
+                if (usable == null) {
+                    log.debug("None of the " + searchNodes.size()
+                              + " search nodes were ready. Waiting for "
+                              + "readyness.");
+                    long startTime = System.currentTimeMillis();
+                    long endTime = startTime + searcherAvailabilityTimeout;
+                    out:
+                    while (System.currentTimeMillis() < endTime) {
+                        for (SearchNodeWrapper searchNode : searchNodes) {
+                            if (searchNode.isReady()) {
+                                usable = searchNode;
+                                break out;
+                            }
+                        }
+                        Thread.sleep(10);
+                    }
+                    if (usable == null) {
+                        throw new RemoteException(
+                                "Waited " + (endTime - startTime) + " ms for an"
+                                + " available searcher out of "
+                                + searchNodes.size() + ", but got none");
+                    }
+                }
+                // TODO: Fix the race-condition on open vs. search
+                return usable.fullSearch(filter, query, startIndex, maxRecords,
+                                         sortKey, reverseSort,
+                                         resultFields, fallbacks);
             } catch (InterruptedException e) {
                 throw new RemoteException("Interrupted while waiting for active"
                                           + " search queue access", e);
