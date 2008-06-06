@@ -77,6 +77,8 @@ public abstract class StateThread implements Runnable {
         //noinspection DuplicateStringLiteralInspection
         log.debug("setError(" + message + ", ...) called", cause);
         status = STATUS.error;
+        errorMessage = message;
+        errorThrowable = cause;
     }
 
     /**
@@ -185,6 +187,7 @@ public abstract class StateThread implements Runnable {
                 break;
             }
             case running: {
+                //noinspection DuplicateStringLiteralInspection
                 log.debug("Signalling stop");
                 status = STATUS.stopping;
                 break;
