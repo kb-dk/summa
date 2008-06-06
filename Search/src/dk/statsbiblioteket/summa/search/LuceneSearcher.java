@@ -1,6 +1,6 @@
 /**
  * Created: te 30-05-2008 16:01:36
- * CVS:     $Id:$
+ * CVS:     $Id$
  */
 package dk.statsbiblioteket.summa.search;
 
@@ -28,7 +28,11 @@ public class LuceneSearcher extends SummaSearcherImpl {
         // TODO: Warm-up (no logging of searches during warm-up)
         //
     }
-    
+
+    public SearchNodeWrapper constructSearchNode(Configuration conf) {
+        return null;  // TODO: Implement this
+    }
+
     // TODO: Add Profiler to LuceneSearche
 
     public String fullSearch(String filter, String query,

@@ -35,6 +35,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
+import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.util.StateThread;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
@@ -44,7 +45,7 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * The default implementation of IndexUpdater. It is basically an aggregator
- * for IndexManipulators, which also contains a timer that calls commit and
+ * for IndexManipulators, which contains a timer that calls commit and
  * consolidate at configurable intervals. It is also a standard ObjectFilter,
  * so further chaining is possible.
  */
@@ -79,6 +80,7 @@ public class IndexController extends StateThread implements ObjectFilter,
      */
     public static final String CONF_INDEX_ROOT_LOCATION =
             "summa.index.index-root-location";
+    @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public static final String DEFAULT_INDEX_ROOT_LOCATION = "index";
 
     /**
