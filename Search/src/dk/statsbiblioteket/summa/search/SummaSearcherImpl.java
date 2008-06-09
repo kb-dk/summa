@@ -7,6 +7,7 @@ package dk.statsbiblioteket.summa.search;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 
 import java.util.concurrent.Semaphore;
 import java.util.List;
@@ -20,6 +21,8 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * Convenience base class for SummaSearchers, taking care of basic setup.
+ * Relevant properties from {@link SummaSearcher}, {@link IndexWatcher},
+ * {@link SearchNodeWrapper} and {@link LuceneIndexUtils} needs to be specified.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -39,6 +42,7 @@ public abstract class SummaSearcherImpl implements SummaSearcher, Configurable,
     private Semaphore searchActiveSemaphore;
     protected List<SearchNodeWrapper> searchNodes;
     private IndexWatcher watcher;
+    // TODO: Are default resultFields extracted properly? 
 
     /**
      * Extracts basic settings from the configuration.
@@ -189,7 +193,9 @@ public abstract class SummaSearcherImpl implements SummaSearcher, Configurable,
         log.debug("indexChanged(" + indexFolder + ") called");
         try {
             for (SearchNodeWrapper wrapper: searchNodes) {
-                wrapper.open(indexFolder.getAbsolutePath());
+                wrapper.open(indexFolder == null
+                             ? null
+                             : indexFolder.getAbsolutePath());
             }
         } catch (IOException e) {
             // TODO: Consider to make this a fatal

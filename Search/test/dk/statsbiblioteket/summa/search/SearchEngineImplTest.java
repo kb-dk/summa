@@ -37,7 +37,9 @@ import org.apache.lucene.search.Query;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.XProperties;
 
-
+/**
+ * @deprecated as {@link SearchEngineImpl} is deprecated.
+ */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "hal, kfc")
