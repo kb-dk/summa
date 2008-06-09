@@ -28,6 +28,9 @@ import java.rmi.RemoteException;
 import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
+/**
+ * @deprecated in favor of {@link SummaSearcher}.
+ */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "hal")
