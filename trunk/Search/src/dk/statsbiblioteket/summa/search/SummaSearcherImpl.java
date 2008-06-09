@@ -12,6 +12,8 @@ import java.util.concurrent.Semaphore;
 import java.util.List;
 import java.util.ArrayList;
 import java.rmi.RemoteException;
+import java.io.File;
+import java.io.IOException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -22,7 +24,8 @@ import org.apache.commons.logging.LogFactory;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public abstract class SummaSearcherImpl implements SummaSearcher, Configurable {
+public abstract class SummaSearcherImpl implements SummaSearcher, Configurable,
+                                                   IndexListener {
     private static Log log = LogFactory.getLog(SummaSearcherImpl.class);
 
     private int numberOfSearchers = DEFAULT_NUMBER_OF_SEARCHERS;
@@ -34,7 +37,8 @@ public abstract class SummaSearcherImpl implements SummaSearcher, Configurable {
 
     private Semaphore searchQueueSemaphore;
     private Semaphore searchActiveSemaphore;
-    private List<SearchNodeWrapper> searchNodes;
+    protected List<SearchNodeWrapper> searchNodes;
+    private IndexWatcher watcher;
 
     /**
      * Extracts basic settings from the configuration.
@@ -70,9 +74,19 @@ public abstract class SummaSearcherImpl implements SummaSearcher, Configurable {
         searchNodes = new ArrayList<SearchNodeWrapper>(numberOfSearchers);
         log.trace("Constructing search nodes");
         for (int i = 0 ; i < numberOfSearchers ; i++) {
-            searchNodes.add(constructSearchNode(conf));
+            try {
+                searchNodes.add(constructSearchNode(conf));
+            } catch (IOException e) {
+                throw new ConfigurationException(String.format(
+                        "Unable to construch searcher %d", i)
+                );
+            }
         }
-        // TODO: Open indexes, activate timer
+
+        // Ready for open
+        watcher = new IndexWatcher(conf);
+        watcher.addIndexListener(this);
+        watcher.startWatching(); // This fires an open to the indexes
     }
 
     /**
@@ -83,8 +97,10 @@ public abstract class SummaSearcherImpl implements SummaSearcher, Configurable {
      * search-engine-specific (e.g. a Lucene searcher).
      * @param conf the setup for the node.
      * @return a node ready to open an index.
+     * @throws IOException if there was an error constructing the node.
      */
-    public abstract SearchNodeWrapper constructSearchNode(Configuration conf);
+    public abstract SearchNodeWrapper constructSearchNode(Configuration conf)
+                                                             throws IOException;
 
     public String fullSearch(String filter, String query, long startIndex,
                              long maxRecords, String sortKey,
@@ -149,6 +165,35 @@ public abstract class SummaSearcherImpl implements SummaSearcher, Configurable {
             }
         } finally {
             searchQueueSemaphore.release();
+        }
+    }
+
+    /**
+     * Shut down the searcher and free all resources. The searcher cannot be
+     * used after close() has been called.
+     */
+    public void close() {
+        watcher.stopWatching();
+        for (SearchNodeWrapper wrapper: searchNodes) {
+            wrapper.close();
+        }
+    }
+
+    /**
+     * Inform all underlying search nodes that they should open indexes at the
+     * given location.
+     * @param indexFolder where the index is located.
+     */
+    public void indexChanged(File indexFolder) {
+        //noinspection DuplicateStringLiteralInspection
+        log.debug("indexChanged(" + indexFolder + ") called");
+        try {
+            for (SearchNodeWrapper wrapper: searchNodes) {
+                wrapper.open(indexFolder.getAbsolutePath());
+            }
+        } catch (IOException e) {
+            // TODO: Consider to make this a fatal
+            log.error("Exception received while opening '" + indexFolder + "'");
         }
     }
 }

@@ -27,6 +27,9 @@ import java.util.*;
 import dk.statsbiblioteket.summa.common.lucene.index.OldIndexField;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
+/**
+ * @deprecated with no obvious replacement (what did this one do anyway?).
+ */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "hal")

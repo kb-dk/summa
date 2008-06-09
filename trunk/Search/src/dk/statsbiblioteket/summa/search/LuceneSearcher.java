@@ -4,10 +4,11 @@
  */
 package dk.statsbiblioteket.summa.search;
 
-import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 
-import java.rmi.RemoteException;
+import java.io.IOException;
 
 /**
  *
@@ -19,27 +20,23 @@ public class LuceneSearcher extends SummaSearcherImpl {
     public static final String CONF_MAX_BOOLEAN_CLAUSES = "search.clauses.max";
     public static final int DEFAULT_MAX_BOOLEAN_CLAUSES = 10000;
     private int maxBooleanClauses = DEFAULT_MAX_BOOLEAN_CLAUSES;
+    private LuceneIndexDescriptor descriptor = null;
 
     public LuceneSearcher(Configuration conf) {
         super(conf);
         maxBooleanClauses =
                 conf.getInt(CONF_MAX_BOOLEAN_CLAUSES, maxBooleanClauses);
         // TODO: Connect to index
-        // TODO: Warm-up (no logging of searches during warm-up)
-        //
     }
 
-    public SearchNodeWrapper constructSearchNode(Configuration conf) {
-        return null;  // TODO: Implement this
-    }
-
-    // TODO: Add Profiler to LuceneSearche
-
-    public String fullSearch(String filter, String query,
-                             long startIndex, long maxRecords,
-                             String sortKey, boolean reverseSort, 
-                             String[] fields, String[] fallbacks) throws
-                                                               RemoteException {
-        return null;  // TODO: Implement this
+    public SearchNodeWrapper constructSearchNode(Configuration conf) throws
+                                                                   IOException {
+        if (descriptor == null) { // Bit of a hack
+            descriptor = LuceneIndexUtils.getDescriptor(conf);
+            maxBooleanClauses =
+                    conf.getInt(CONF_MAX_BOOLEAN_CLAUSES, maxBooleanClauses);
+        }
+        return new SearchNodeWrapper(conf,
+                                     new LuceneSearchNode(conf, descriptor));
     }
 }

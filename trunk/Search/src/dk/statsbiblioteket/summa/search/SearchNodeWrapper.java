@@ -92,6 +92,8 @@ public class SearchNodeWrapper implements SearchNode {
      * opens the index at the stated location and marks the node as ready.
      * As opening an index might involve warming up, this method might take
      * some time to finish.
+     * </p><p>
+     * If is not necessary to call close() before open().
      * @param location     where the index can be found.
      * @throws IOException if the index could not be opened.
      */

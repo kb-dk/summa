@@ -31,6 +31,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 /**
  * LowLevelSearchEngine.
  * User: bam. Date: Jun 9, 2006.
+ * @deprecated superseded by {@link SummaSearcher}. 
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,

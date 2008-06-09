@@ -66,6 +66,9 @@ import org.apache.lucene.store.FSDirectory;
 
 import org.xml.sax.InputSource;
 
+/**
+ * @deprecated in favor of {@link LuceneSearcher}.
+ */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "hal")
