@@ -24,22 +24,20 @@ package dk.statsbiblioteket.summa.index;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
-import java.util.regex.Pattern;
 import java.io.IOException;
 import java.io.File;
-import java.io.FilenameFilter;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Profiler;
+import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
-import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.util.StateThread;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
+import dk.statsbiblioteket.summa.common.index.IndexCommon;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -425,18 +423,6 @@ public class IndexController extends StateThread implements ObjectFilter,
         log.trace("Finished open()");
     }
 
-    public static final Pattern TIMESTAMP_PATTERN =
-            Pattern.compile("[0-9]{8}-[0-9]{4}");
-    public static final String TIMESTAMP_FORMAT = "%1$tY%1$tm%1$td-%1$tH%1$tM";
-    public static final FilenameFilter SUBFOLDER_FILTER =
-            new FilenameFilter() {
-                public boolean accept(File dir, String name) {
-                    File full = new File(dir, name);
-                    return full.isDirectory() && full.canWrite() &&
-                      IndexController.TIMESTAMP_PATTERN.matcher(name).matches();
-                }
-            };
-
     /*
     * The location of the index files is a subfolder to indexRoot.
     * The name of the subfolder is a timestamp for the construction time of the
@@ -461,10 +447,9 @@ public class IndexController extends StateThread implements ObjectFilter,
         // Locate existing folders
         if (!createNewIndex) {
             log.trace("Attempting to locate existing index root");
-            File[] subs = indexRoot.listFiles(SUBFOLDER_FILTER);
-            Arrays.sort(subs);
-            if (subs.length > 0) {
-                File concreteRoot = subs[subs.length-1];
+            File concreteRoot =
+                    IndexCommon.getCurrentIndexLocation(indexRoot, true);
+            if (concreteRoot != null) {
                 log.debug("Located index root '" + concreteRoot + "'");
                 return concreteRoot;
             }
@@ -472,7 +457,7 @@ public class IndexController extends StateThread implements ObjectFilter,
         // Create new folder
         log.trace("Attempting to create new index root");
         Calendar now = Calendar.getInstance();
-        String folderName = String.format(TIMESTAMP_FORMAT, now);
+        String folderName = String.format(IndexCommon.TIMESTAMP_FORMAT, now);
         File concreteRoot = new File(indexRoot, folderName);
         log.debug("Got new root '" + concreteRoot + "'. Creating folder");
         if (!concreteRoot.mkdirs()) {
@@ -546,12 +531,24 @@ public class IndexController extends StateThread implements ObjectFilter,
             manipulator.consolidate();
         }
         lastCommit = System.currentTimeMillis(); // Consolidate includes commit
+        markAsUpdated(lastCommit);
         updatesSinceLastCommit =      0;
         lastConsolidate =             System.currentTimeMillis();
         updatesSinceLastConsolidate = 0;
         commitsSinceLastConsolidate = 0;
         log.trace("consolidate() finished in "
                   + (System.currentTimeMillis() - startTime) + " ms");
+    }
+
+    private void markAsUpdated(long timestamp) {
+        File currentFile = new File(indexLocation, IndexCommon.VERSION_FILE);
+        try {
+            Files.saveString(Long.toString(timestamp), currentFile);
+        } catch (IOException e) {
+            log.error("Could not mark '" + currentFile + "' with timestamp " +
+                      timestamp + ". Index-watchers will not recognize the"
+                      + " indexes at '" + indexLocation + "' as being updated");
+        }
     }
 
     public synchronized void close() throws IOException {

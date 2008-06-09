@@ -11,6 +11,7 @@ import java.util.GregorianCalendar;
 
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.common.index.IndexCommon;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -48,7 +49,7 @@ public class IndexControllerTest extends TestCase {
         new File(root, "20080417-2125").mkdir();
         new File(root, "20080417-2130-foo").mkdir();
 
-        File[] subs = root.listFiles(IndexController.SUBFOLDER_FILTER);
+        File[] subs = root.listFiles(IndexCommon.SUBFOLDER_FILTER);
         Arrays.sort(subs);
         assertEquals("The number of valid folders should match",
                      3, subs.length);
@@ -60,6 +61,6 @@ public class IndexControllerTest extends TestCase {
         Calendar t = new GregorianCalendar(2008, 3, 17, 21, 50);
         assertEquals("The timestamp should be properly formatted",
                      "20080417-2150", 
-                     String.format(IndexController.TIMESTAMP_FORMAT, t));
+                     String.format(IndexCommon.TIMESTAMP_FORMAT, t));
     }
 }
