@@ -29,17 +29,23 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
+import dk.statsbiblioteket.summa.common.index.IndexCommon;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
  * Watches for changes to a Summa index, triggering an update to listeners.
+ * Indexes are placed under a root, in folders made up of timestamps. A file
+ * with the name {@link IndexCommon#VERSION_FILE}, containing the time the
+ * index was consolidated, must be present in the folder. The folders are used
+ * in natural sorted order, with preference for the last matching folder.
  */
 // TODO: Consider moving this to Common as Facets can also use it
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class IndexWatcher extends Observable implements Configurable, Runnable {
+public class IndexWatcher extends Observable<IndexListener> implements
+                                                        Configurable, Runnable {
     private static Log log = LogFactory.getLog(IndexWatcher.class);
 
     /**
@@ -83,9 +89,11 @@ public class IndexWatcher extends Observable implements Configurable, Runnable {
     private int indexMinRetention = DEFAULT_MIN_RETENTION;
     private String indexRoot = DEFAULT_INDEX_ROOT;
     private File absoluteIndexRoot;
+    private File lastCheckedLocation = null;
 
+    private boolean checkHasBeenPerformed = false;
     private boolean continueWatching = false;
-    private Thread thisThread = null;
+    private long lastNotification = 0;
 
     /**
      * Set up an IndexWatcher based on the given configuration. The watcher
@@ -109,17 +117,90 @@ public class IndexWatcher extends Observable implements Configurable, Runnable {
                 ));
     }
 
+    /**
+     * Start watching for changes to the watched index. Note that a call to this
+     * method will always result in an immediate notification of indexChanged,
+     * except in the case where a watch is already running. If this method is
+     * called on an already running watcher, nothing will happen.
+     */
     public synchronized void startWatching() {
-        // TODO: Implement this
-
+        log.trace("startWatching called");
+        if (continueWatching) {
+            log.trace("Already watching");
+            return;
+        }
+        updateAndReturnCurrentState();
+        Thread thisThread = new Thread(this);
+        thisThread.start();
     }
 
+    /**
+     * Stop watching for changes to the index. This method can be called safely
+     * multiple times.
+     */
     public synchronized void stopWatching() {
-        // TODO: Implement this
-
+        log.trace("Stopping watch");
+        continueWatching = false;
     }
 
     public void run() {
-        // TODO: Implement this
+        log.debug("Starting watch for index changes");
+        continueWatching = true;
+        checkHasBeenPerformed = false;
+        while (continueWatching) {
+            updateAndReturnCurrentState();
+            long sleepTime = Math.max(
+                    indexCheckInterval,
+                    lastNotification + indexMinRetention
+                    - System.currentTimeMillis());
+            try {
+                Thread.sleep(sleepTime);
+            } catch (InterruptedException e) {
+                log.warn("Received InterruptedException while sleeping between"
+                         + " index-checks. Ignoring");
+            }
+        }
+        log.debug("Stopping watch for index changes");
+    }
+
+    private File updateAndReturnCurrentState() {
+        log.trace("updateAndReturnCurrentState called");
+        File newChecked = getCurrentIndexLocation();
+        if (checkHasBeenPerformed && equals(lastCheckedLocation, newChecked)) {
+            return lastCheckedLocation;
+        }
+        checkHasBeenPerformed = true;
+        lastCheckedLocation = newChecked;
+        notifyListeners();
+        return lastCheckedLocation;
+    }
+
+    private boolean equals(File f1, File f2) {
+        return f1 == null && f2 == null || f1 != null && f1.equals(f2);
+    }
+
+    /**
+     * @return the current index location, as described in the JavaDoc for the
+     *         class or null, if no index could be located.
+     */
+    protected File getCurrentIndexLocation() {
+        return IndexCommon.getCurrentIndexLocation(absoluteIndexRoot, false);
+    }
+
+    /* Observer pattern */
+
+    private void notifyListeners() {
+        log.trace("notifying listeners with index location '"
+                  + lastCheckedLocation + "'");
+        for (IndexListener listener: getListeners()) {
+            listener.indexChanged(lastCheckedLocation);
+        }
+        lastNotification = System.currentTimeMillis();
+    }
+    public void addIndexListener(IndexListener listener) {
+        addListener(listener);
+    }
+    public void removeIndexListener(IndexListener listener) {
+        removeListener(listener);
     }
 }
