@@ -26,10 +26,10 @@
 
     <appender name="FILE" class="org.apache.log4j.ConsoleAppender">
         <param name="Threshold" value="DEBUG"/><!-- or DEBUG or INFO -->
-        //<param name="File" value="/home/summa/logs/search_engine_log.log"/>
-        <param name="Append" value="true"/>
+    <!--    //<param name="File" value="/home/summa/logs/search_engine_log.log"/>-->
+        <!--<param name="Append" value="true"/>
         //<param name="MaxFileSize" value="100MB"/>
-      //  <param name="MaxBackupIndex" value="5"/>
+      //  <param name="MaxBackupIndex" value="5"/>-->
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
         </layout>
@@ -37,10 +37,10 @@
 
     <appender name="CLUSTER" class="org.apache.log4j.ConsoleAppender">
         <param name="Threshold" value="DEBUG"/><!-- or DEBUG or INFO -->
-       // <param name="File" value="/home/summa/logs/cluster_log.log"/>
-        <param name="Append" value="true"/>
+    <!--   // <param name="File" value="/home/summa/logs/cluster_log.log"/>-->
+       <!-- <param name="Append" value="true"/>
        // <param name="MaxFileSize" value="100MB"/>
-      //  <param name="MaxBackupIndex" value="5"/>
+      //  <param name="MaxBackupIndex" value="5"/>-->
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
         </layout>
@@ -50,10 +50,10 @@
     <!-- The full log appender uses a extremely slow pattern, on production systems use only this appender with a threshold of fatal -->
     <appender name="FULL_LOG" class="org.apache.log4j.ConsoleAppender">
         <param name="Threshold" value="FATAL"/>
-        <param name="File" value="/home/summa/logs/search_engine_fatal.log"/>
+<!--        <param name="File" value="/home/summa/logs/search_engine_fatal.log"/>
         <param name="Append" value="true"/>
         <param name="MaxFileSize" value="1MB"/>
-        <param name="MaxBackupIndex" value="1"/>
+        <param name="MaxBackupIndex" value="1"/>-->
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] - %l [LINENUMBER: %L] [METHOD: %M] [%X]  %m%n"/>
         </layout>

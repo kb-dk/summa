@@ -11,7 +11,9 @@ import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import java.io.IOException;
 
 /**
- *
+ * Lucene-specic searcher. Relevant properties from {@link SummaSearcher},
+ * {@link IndexWatcher}, {@link SearchNodeWrapper} , {@link LuceneSearchNode}
+ * and {@link LuceneIndexUtils} needs to be specified.
  */
 public class LuceneSearcher extends SummaSearcherImpl {
     /**
