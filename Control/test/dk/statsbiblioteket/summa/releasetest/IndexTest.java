@@ -177,7 +177,6 @@ public class IndexTest extends NoExitTestCase {
 
         FilterService ingester = new FilterService(filterConf);
         ingester.start();
-
         waitForService(ingester);
 
         RecordIterator recordIterator =
@@ -209,7 +208,7 @@ public class IndexTest extends NoExitTestCase {
         long endTime = System.currentTimeMillis() + TIMEOUT;
         while (!service.getStatus().getCode().equals(Status.CODE.stopped) &&
                System.currentTimeMillis() < endTime) {
-            log.debug("Sleeping a bit");
+            log.trace("Sleeping a bit");
             Thread.sleep(100);
         }
         assertTrue("The service '" + service + "' should have stopped by now",
