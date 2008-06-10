@@ -20,6 +20,7 @@
     <orderEntry type="module" module-name="Storage" />
     <orderEntry type="module" module-name="Ingest" />
     <orderEntry type="module" module-name="Index" />
+    <orderEntry type="module" module-name="Search" />
     <orderEntryProperties />
   </component>
 </module>

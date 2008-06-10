@@ -91,7 +91,7 @@ public class IndexTest extends NoExitTestCase {
 
         String filterConfString =
                 Streams.getUTF8Resource("data/fagref/fagref_index_setup.xml");
-
+        // TODO: Update this test to handle the new style with SummaDocument
         filterConfString = filterConfString.replace("/tmp/summatest/data/"
                                                     + "fagref/fagref_index.xsl",
                                                     xsltLocation.toString());
@@ -203,8 +203,8 @@ public class IndexTest extends NoExitTestCase {
         return storage;
     }
 
-    private void waitForService(FilterService service) throws RemoteException,
-                                                          InterruptedException {
+    public static void waitForService(FilterService service) 
+                                  throws RemoteException, InterruptedException {
         int TIMEOUT = 10000;
         long endTime = System.currentTimeMillis() + TIMEOUT;
         while (!service.getStatus().getCode().equals(Status.CODE.stopped) &&
