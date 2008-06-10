@@ -182,6 +182,11 @@ public class XStorage implements ConfigurationStorage {
     }
 
     private void syncStorageFile () throws IOException {
+        if (storageFile == null) {
+            log.trace("No sync as the XStorage is memory-based");
+            return;
+        }
+        log.trace("Syncing XStorage to '" + storageFile + "'");
         xprops.store (new BufferedOutputStream(
                               new FileOutputStream (storageFile)), null);
     }
