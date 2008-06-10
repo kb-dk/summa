@@ -117,6 +117,10 @@
                             <value class="string">/tmp/summatest/testindex</value>
                         </entry>
                         <entry>
+                            <key>summa.index.consolidate-timeout</key>
+                            <value class="int">1000</value>
+                        </entry>
+                        <entry>
                             <key>LuceneUpdater</key>
                             <value class="xproperties">
                                 <entry>

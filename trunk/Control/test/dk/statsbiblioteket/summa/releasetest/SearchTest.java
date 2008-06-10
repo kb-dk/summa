@@ -200,7 +200,7 @@ public class SearchTest extends NoExitTestCase {
 
         Configuration indexConf = Configuration.load(
                 "data/search/SearchTest_IndexConfiguration.xml");
-        Configuration chain = indexConf.getSubConfiguration("Singlechain");
+        Configuration chain = indexConf.getSubConfiguration("SingleChain");
         chain.getSubConfiguration("FagrefTransformer").
                 set(XMLTransformer.CONF_XSLT, xsltLocation.getFile());
         chain.getSubConfiguration("DocumentCreator").getSubConfiguration(
@@ -252,9 +252,11 @@ public class SearchTest extends NoExitTestCase {
         }
         StorageService storage = startStorage();
         updateIndex();
+        Thread.sleep(2000); // Indexing takes a little while
         assertNotNull("Searching should provide a result (we don't care what)",
                       searcher.fullSearch(null, "dummy", 0, 1, null, false,
                                           null, null));
-        
+        log.debug("Calling stop on Storage");
+        storage.stop();
     }
 }
