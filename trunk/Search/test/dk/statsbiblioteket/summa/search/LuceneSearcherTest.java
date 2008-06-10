@@ -38,7 +38,7 @@ public class LuceneSearcherTest extends TestCase {
     public void tearDown() throws Exception {
         super.tearDown();
         if (testRoot.exists()) {
-//            Files.delete(testRoot); 
+            Files.delete(testRoot);
         }
     }
 

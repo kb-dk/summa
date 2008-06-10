@@ -76,16 +76,23 @@ public class FilterPump extends StateThread implements Configurable {
             for (String filterName: filterNames) {
                 log.debug("Adding Filter '" + filterName
                           + "' to chain");
-                Configuration filterConfiguration =
-                        configuration.getSubConfiguration(filterName);
-                Filter filter = createFilter(filterConfiguration);
-                if (lastFilter != null) {
-                    log.trace("Chaining '" + filter + "' to the end of '"
-                              + lastFilter + "'");
-                    filter.setSource(lastFilter);
+                //noinspection OverlyBroadCatchBlock
+                try {
+                    Configuration filterConfiguration =
+                            configuration.getSubConfiguration(filterName);
+                    Filter filter = createFilter(filterConfiguration);
+                    if (lastFilter != null) {
+                        log.trace("Chaining '" + filter + "' to the end of '"
+                                  + lastFilter + "'");
+                        filter.setSource(lastFilter);
+                    }
+                    lastFilter = filter;
+                    filters.add(lastFilter);
+                } catch (Exception e) {
+                    throw new IOException(String.format(
+                            "Could not create and create filter '%s' to chain",
+                            filterName), e);
                 }
-                lastFilter = filter;
-                filters.add(lastFilter);
             }
         }
         log.trace("Exiting buildChain for '" + chainName + "'");

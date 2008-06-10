@@ -257,7 +257,7 @@ public class FileReader implements ObjectFilter {
             Payload payload = new Payload(in);
             payload.getData().put(ORIGIN, current.getPath());
             log.debug("File '" + current + "' opened successfully");
-            System.out.println(delivered + " " + payload);
+//            System.out.println(delivered + " " + payload);
             delivered.add(payload);
             return payload;
         } catch (FileNotFoundException e) {
