@@ -101,6 +101,9 @@
       <entry name="?*.xsl" />
       <entry name="?*.xslt" />
       <entry name="?*.txt" />
+      <entry name="*.cfs" />
+      <entry name="*.gen" />
+      <entry name="*_4" />
     </wildcardResourcePatterns>
   </component>
   <component name="CppTools.Loader" reportImplicitCastToBool="false" version="1" />

@@ -385,6 +385,17 @@ public class Configuration implements Serializable,
      */
     public List<String> getStrings(String key) {
         Object val = get (key);
+        if (val instanceof List) {
+            ArrayList<String> result =
+                    new ArrayList<String>(((List)val).size());
+            for (Object o: (List)val) {
+                result.add(o.toString());
+            }
+            return result;
+        }
+        if (val instanceof String[]) {
+            return Arrays.asList((String[]) val);
+        }
         if (val == null) {
             throw new NullPointerException ("No such property: " + key);
         }

@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.MalformedURLException;
 
@@ -191,10 +192,19 @@ public class Resolver {
      */
     public static String getUTF8Content(URL location) throws IOException {
         log.trace("getUTF8Content(URL(" + location + ")) called");
-        InputStream in = location.openStream();
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream(1000);
-        Streams.pipe(in, bytes);
-        return bytes.toString("utf-8");
+        if (location == null) {
+            throw new IOException("Cannot get content from null");
+        }
+        //noinspection OverlyBroadCatchBlock
+        try {
+            InputStream in = location.openStream();
+            ByteArrayOutputStream bytes = new ByteArrayOutputStream(1000);
+            Streams.pipe(in, bytes);
+            return bytes.toString("utf-8");
+        } catch (IOException e) {
+            throw new IOException("Could not get content of '" + location + "'",
+                                  e);
+        }
     }
 
 }

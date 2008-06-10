@@ -41,6 +41,7 @@ import org.apache.commons.logging.LogFactory;
  * in natural sorted order, with preference for the last matching folder.
  */
 // TODO: Consider moving this to Common as Facets can also use it
+    // TODO: Support changes versions
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
@@ -129,6 +130,7 @@ public class IndexWatcher extends Observable<IndexListener> implements
             log.trace("Already watching");
             return;
         }
+        checkHasBeenPerformed = false;
         updateAndReturnCurrentState();
         Thread thisThread = new Thread(this);
         thisThread.start();
@@ -146,7 +148,6 @@ public class IndexWatcher extends Observable<IndexListener> implements
     public void run() {
         log.debug("Starting watch for index changes");
         continueWatching = true;
-        checkHasBeenPerformed = false;
         while (continueWatching) {
             updateAndReturnCurrentState();
             long sleepTime = Math.max(
@@ -193,7 +194,12 @@ public class IndexWatcher extends Observable<IndexListener> implements
         log.trace("notifying listeners with index location '"
                   + lastCheckedLocation + "'");
         for (IndexListener listener: getListeners()) {
-            listener.indexChanged(lastCheckedLocation);
+            try {
+                listener.indexChanged(lastCheckedLocation);
+            } catch (Exception e) {
+                log.error("Encountered exception during notify with location '"
+                         + lastCheckedLocation + "'");
+            }
         }
         lastNotification = System.currentTimeMillis();
     }

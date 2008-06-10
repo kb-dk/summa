@@ -114,7 +114,7 @@ public class SearchNodeWrapper implements SearchNode {
     }
 
     private void warmup() {
-        if (warmupData != null && !"".equals(warmupData)) {
+        if (warmupData == null || "".equals(warmupData)) {
             log.trace("No warmup-data defined. Skipping warmup");
             return;
         }

@@ -51,7 +51,7 @@
         <!-- IndexWatcher -->
         <entry>
             <key>summa.index-watcher.check-interval</key>
-            <value class="int">10000</value>
+            <value class="int">1000</value>
         </entry>
         <entry>
             <key>summa.index-watcher.index-root</key>
@@ -59,7 +59,8 @@
         </entry>
         <entry>
             <key>summa.index-watcher.min-retention</key>
-            <value class="int">60000</value>
+            <!-- Very aggressive value - probably too low for production -->
+            <value class="int">1000</value>
         </entry>
         <!-- LuceneIndexUtils -->
         <entry>
