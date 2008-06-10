@@ -86,7 +86,7 @@ public class LuceneIndexDescriptor
         addField(makeField(IndexField.FREETEXT,
                            Field.Index.TOKENIZED,
                            Field.Store.NO,
-                           Field.TermVector.WITH_POSITIONS_OFFSETS,
+                           Field.TermVector.WITH_POSITIONS_OFFSETS, // ?
                            new FreeTextAnalyzer()));
         addField(makeField(IndexField.SUMMA_DEFAULT,
                            Field.Index.TOKENIZED,

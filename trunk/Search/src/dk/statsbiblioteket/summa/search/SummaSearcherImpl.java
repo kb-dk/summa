@@ -176,7 +176,7 @@ public abstract class SummaSearcherImpl implements SummaSearcher, Configurable,
      * Shut down the searcher and free all resources. The searcher cannot be
      * used after close() has been called.
      */
-    public void close() {
+    public synchronized void close() {
         watcher.stopWatching();
         for (SearchNodeWrapper wrapper: searchNodes) {
             wrapper.close();
@@ -188,7 +188,8 @@ public abstract class SummaSearcherImpl implements SummaSearcher, Configurable,
      * given location.
      * @param indexFolder where the index is located.
      */
-    public void indexChanged(File indexFolder) {
+    public synchronized void indexChanged(File indexFolder) {
+        long startTime = System.currentTimeMillis();
         //noinspection DuplicateStringLiteralInspection
         log.debug("indexChanged(" + indexFolder + ") called");
         try {
@@ -199,7 +200,10 @@ public abstract class SummaSearcherImpl implements SummaSearcher, Configurable,
             }
         } catch (IOException e) {
             // TODO: Consider to make this a fatal
-            log.error("Exception received while opening '" + indexFolder + "'");
+            log.error("Exception received while opening '" + indexFolder + "'",
+                      e);
         }
+        log.debug("Finished indexChanged(" + indexFolder + ") in " +
+                  (System.currentTimeMillis() - startTime) + " ms");
     }
 }

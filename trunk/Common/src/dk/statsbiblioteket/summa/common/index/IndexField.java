@@ -268,7 +268,7 @@ public class IndexField<A, T, F> {
      */
     public IndexField(Node node, FieldProvider fieldProvider) throws
                                                                 ParseException {
-        log.debug("Creating field based on node " + node);
+        log.trace("Creating field based on node " + node);
         parse(node, fieldProvider);
     }
 
@@ -432,7 +432,7 @@ public class IndexField<A, T, F> {
                 parseAnalyzer(child);
             }
         }
-        log.trace("Finished parsing");
+        log.debug("Finished parsing node to construct field " + this);
     }
 
     private void parseAnalyzer(Node node) throws ParseException {

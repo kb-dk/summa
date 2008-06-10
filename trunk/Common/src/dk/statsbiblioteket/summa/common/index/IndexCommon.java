@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.util.regex.Pattern;
 import java.util.Arrays;
+import java.util.Calendar;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -49,12 +50,22 @@ public class IndexCommon {
      * further index-files.
      */
     public static final Pattern TIMESTAMP_PATTERN =
-            Pattern.compile("[0-9]{8}-[0-9]{4}");
+            Pattern.compile("[0-9]{8}-[0-9]{6}");
     /**
      * The reverse of {@link #TIMESTAMP_PATTERN}. Used for creating sub-folders
      * to an index-root.
      */
-    public static final String TIMESTAMP_FORMAT = "%1$tY%1$tm%1$td-%1$tH%1$tM";
+    public static final String TIMESTAMP_FORMAT =
+            "%1$tY%1$tm%1$td-%1$tH%1$tM%1$tS";
+
+    /**
+     * @return the timestamp for the current time.
+     */
+    public static String getTimestamp() {
+        return String.format(IndexCommon.TIMESTAMP_FORMAT,
+                             Calendar.getInstance());
+    }
+
 
     /**
      * A matcher for folders using the {@link #TIMESTAMP_PATTERN}.

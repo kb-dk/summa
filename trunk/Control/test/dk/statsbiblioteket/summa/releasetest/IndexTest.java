@@ -35,13 +35,13 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.common.unittest.LuceneTestHelper;
 import dk.statsbiblioteket.summa.control.service.StorageService;
 import dk.statsbiblioteket.summa.control.service.FilterService;
 import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.storage.io.RecordIterator;
-import dk.statsbiblioteket.summa.index.LuceneManipulator;
 import dk.statsbiblioteket.summa.index.IndexController;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -135,7 +135,7 @@ public class IndexTest extends NoExitTestCase {
                                               "fagref:hj@example.com",
                                               "fagref:jh@example.com"};
         LuceneTestHelper.verifyContent(
-                new File(indexLocation, LuceneManipulator.LUCENE_FOLDER),
+                new File(indexLocation, LuceneIndexUtils.LUCENE_FOLDER),
                 EXPECTED_IDS);
 
         storage.stop();

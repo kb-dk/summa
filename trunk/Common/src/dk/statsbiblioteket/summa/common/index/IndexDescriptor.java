@@ -167,7 +167,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
             //noinspection DuplicateStringLiteralInspection
             log.error("Either " + CONF_LOCATION_ROOT
                       + " or " + CONF_ABSOLUTE_LOCATION
-                      + " should be present in the "
+                      + " must be present in the "
                       + "configuration. Using default index descriptor. "
                       + "It is highly recommended to specify the location of "
                       + "a descriptor setup");
@@ -175,6 +175,11 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         }
         if (absoluteLocationString != null) {
             absoluteLocation = Resolver.getURL(absoluteLocationString);
+            if (absoluteLocation == null) {
+                throw new IOException(String.format(
+                        "Could not resolve property %s with value '%s'",
+                        CONF_ABSOLUTE_LOCATION, absoluteLocationString));
+            }
         }
         if (locationRoot != null && absoluteLocationString != null) {
             log.debug("Both " + CONF_LOCATION_ROOT + "(" + locationRoot
@@ -186,7 +191,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
             try {
                 absoluteLocation = resolveAbsoluteLocation(locationRoot);
             } catch (IOException e) {
-                throw new IOException("Exception resolving location root "
+                throw new IOException("Cannot resolve location root "
                                       + locationRoot + "' to absolute location",
                                       e);
             }
@@ -255,6 +260,9 @@ public abstract class IndexDescriptor<F extends IndexField> implements
                                                                    IOException {
         log.debug("Resolving " + CURRENT + " in location root '"
                   + locationRoot + "'");
+        if (locationRoot == null) {
+            throw new IOException("The locationRoot is null");
+        }
         String indirection = locationRoot + CURRENT;
         URL url = Resolver.getURL(indirection);
         String content = Resolver.getUTF8Content(url);
@@ -692,9 +700,12 @@ public abstract class IndexDescriptor<F extends IndexField> implements
                 return entry.getValue();
             }
         }
-        throw new IllegalArgumentException(String.format(
-                "Could not locate a group based on name '%s' and language "
-                + "'%s'", groupName, language));
+        if (log.isTraceEnabled()) {
+            log.trace(String.format(
+                "Could not locate a group based on name '%s' and language '%s'",
+                groupName, language));
+        }
+        return null;
     }
 
     public Map<String, F> getFields() {

@@ -79,13 +79,6 @@ public class LuceneManipulator implements IndexManipulator {
             "summa.index.lucene.BUFFER_SIZE_PAYLOADS";
     public static final int DEFAULT_BUFFER_SIZE_PAYLOADS = -1;
 
-    /**
-     * The subfolder in the index root containing the lucene index.
-     * This will be appended to {@link #indexRoot}.
-     */
-    @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    public static final String LUCENE_FOLDER = "lucene";
-
     /** The index descriptor, used for providing Analyzers et al. */
     private LuceneIndexDescriptor descriptor;
     /** The general index folder, which contains the concrete index-parts. */
@@ -131,10 +124,10 @@ public class LuceneManipulator implements IndexManipulator {
 
     public synchronized void open(File indexRoot) throws IOException {
         log.info("Opening Lucene index at '" + indexRoot + "/"
-                 + LUCENE_FOLDER + "'");
+                 + LuceneIndexUtils.LUCENE_FOLDER + "'");
         close(false);
         this.indexRoot = indexRoot;
-        File concrete = new File(indexRoot, LUCENE_FOLDER);
+        File concrete = new File(indexRoot, LuceneIndexUtils.LUCENE_FOLDER);
         if (!concrete.exists()) {
             log.debug("Creating folder '" + concrete + "' for Lucene index");
             if (!concrete.mkdirs()) {
@@ -143,7 +136,7 @@ public class LuceneManipulator implements IndexManipulator {
             }
         }
         indexDirectory = FSDirectory.getDirectory(new File(indexRoot,
-                                                           LUCENE_FOLDER));
+                                                           LuceneIndexUtils.LUCENE_FOLDER));
         if (IndexReader.indexExists(indexDirectory)) {
             log.debug("Extracting existing RecordIDs from index at '"
                       + indexDirectory.getFile() + "'");

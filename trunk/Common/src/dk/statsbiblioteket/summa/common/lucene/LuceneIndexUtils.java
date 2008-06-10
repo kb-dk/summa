@@ -56,6 +56,12 @@ public class LuceneIndexUtils {
      * LuceneIndexDescriptor.
      */
     public static final String CONF_DESCRIPTOR = "summa.index.descriptor-setup";
+    /**
+     * The subfolder in the index root containing the lucene index.
+     * This will be appended to {@link #indexRoot}.
+     */
+    @SuppressWarnings({"DuplicateStringLiteralInspection"})
+    public static final String LUCENE_FOLDER = "lucene";
 
     /**
      * Get the sub-properties {@link #CONF_DESCRIPTOR} and create a descriptor

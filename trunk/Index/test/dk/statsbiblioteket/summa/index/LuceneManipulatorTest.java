@@ -19,6 +19,7 @@ import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.unittest.LuceneTestHelper;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
@@ -70,7 +71,7 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
         manipulator.close();
         logIndex();
         LuceneTestHelper.verifyContent(
-                new File(location, LuceneManipulator.LUCENE_FOLDER), ids);
+                new File(location, LuceneIndexUtils.LUCENE_FOLDER), ids);
     }
 
     // TODO: Randomized deletions, additions and updated
@@ -92,7 +93,7 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
         }
         manipulator.close();
         LuceneTestHelper.verifyContent(
-                new File(location, LuceneManipulator.LUCENE_FOLDER), ids);
+                new File(location, LuceneIndexUtils.LUCENE_FOLDER), ids);
         System.out.println("Spend " + profiler.getSpendTime() + " on "
                            + docCount + " additions. Mean speed: "
                            + profiler.getBps() + " additions/second");
@@ -106,7 +107,7 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
         }
         manipulator.close();
         LuceneTestHelper.verifyContent(
-                new File(location, LuceneManipulator.LUCENE_FOLDER), ids);
+                new File(location, LuceneIndexUtils.LUCENE_FOLDER), ids);
         System.out.println("Spend " + profiler.getSpendTime() + " on "
                            + docCount + " updates. Mean speed: "
                            + profiler.getBps() + " updates/second");
@@ -126,14 +127,14 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
         manipulator.close();
         logIndex();
         LuceneTestHelper.verifyContent(
-                new File(location, LuceneManipulator.LUCENE_FOLDER), expected);
+                new File(location, LuceneIndexUtils.LUCENE_FOLDER), expected);
     }
 
     @SuppressWarnings({"OverlyBroadCatchBlock"})
     private void logIndex() throws Exception {
         try {
             IndexReader reader = IndexReader.open(
-                    new File(location, LuceneManipulator.LUCENE_FOLDER));
+                    new File(location, LuceneIndexUtils.LUCENE_FOLDER));
             for (int i = 0 ; i < reader.maxDoc() ; i++) {
                 if (!reader.isDeleted(i)) {
                     try {
@@ -194,7 +195,7 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
 
         logIndex();        
         IndexReader reader = IndexReader.open(
-                new File(location, LuceneManipulator.LUCENE_FOLDER));
+                new File(location, LuceneIndexUtils.LUCENE_FOLDER));
         assertEquals("The number of documents in the index should match",
                      1, reader.maxDoc());
         assertEquals("The recordID of the single indexed document should match",

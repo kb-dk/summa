@@ -25,6 +25,7 @@ package dk.statsbiblioteket.summa.common.index;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.TreeSet;
+import java.util.Arrays;
 import java.io.StringWriter;
 import java.text.ParseException;
 
@@ -33,6 +34,7 @@ import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.Strings;
 
 /**
  * A representation of a group of fields. Groups are used for Query-expansion.
@@ -226,7 +228,8 @@ public class IndexGroup<F extends IndexField> {
                 addField(field);
             }
         }
-        log.debug("Resolved " + fields.size() + " fields for group " + name);
+        log.debug("Resolved " + fields.size() + " fields for group " + name
+                  + ": " + Strings.join(fields, ", "));
         return name;
     }
 

@@ -39,28 +39,29 @@ public class IndexControllerTest extends TestCase {
     }
 
     public void testLocateFiles() throws Exception {
-        new File(root, "20080417-2128").mkdir();
-        File lastValid = new File(root, "20080417-2134");
+        new File(root, "20080417-212800").mkdir();
+        File lastValid = new File(root, "20080417-213400");
         lastValid.mkdir();
-        new File(root, "20080417-2129").mkdir();
-        new File(root, "20080417-2129").setWritable(false);
-        new File(root, "20080417-2132").createNewFile();
-        new File(root, "0080417-2128").mkdir();
-        new File(root, "20080417-2125").mkdir();
-        new File(root, "20080417-2130-foo").mkdir();
+        new File(root, "20080417-212900").mkdir();
+        new File(root, "20080417-212900").setWritable(false);
+        new File(root, "20080417-213200").createNewFile();
+        new File(root, "0080417-212800").mkdir();
+        new File(root, "20080417-212500").mkdir();
+        new File(root, "20080417-213000-foo").mkdir();
 
-        File[] subs = root.listFiles(IndexCommon.SUBFOLDER_FILTER);
+        File[] subs = root.listFiles(IndexCommon.SUBFOLDER_FILTER_WRITE);
         Arrays.sort(subs);
-        assertEquals("The number of valid folders should match",
+        assertEquals("The number of valid folders should match. Got "
+                     + Arrays.toString(subs),
                      3, subs.length);
         assertEquals("The last folder should be the right one",
                      lastValid, subs[subs.length-1]);
     }
 
     public void testTimestampFormatting() throws Exception {
-        Calendar t = new GregorianCalendar(2008, 3, 17, 21, 50);
+        Calendar t = new GregorianCalendar(2008, 3, 17, 21, 50, 54);
         assertEquals("The timestamp should be properly formatted",
-                     "20080417-2150", 
+                     "20080417-215054", 
                      String.format(IndexCommon.TIMESTAMP_FORMAT, t));
     }
 }

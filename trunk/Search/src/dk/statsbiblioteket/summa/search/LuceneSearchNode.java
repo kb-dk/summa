@@ -111,6 +111,8 @@ public class LuceneSearchNode implements SearchNode, Configurable {
         defaultFallbackValues = getStrings(conf, CONF_FALLBACK_VALUES,
                                            defaultFallbackValues,
                                            "fallback-values");
+        log.debug("init with defaultResultFields "
+                  + Arrays.toString(defaultResultFields));
         if (defaultFallbackValues != null
             && defaultResultFields.length != defaultFallbackValues.length) {
             throw new IllegalArgumentException(String.format(
@@ -121,7 +123,9 @@ public class LuceneSearchNode implements SearchNode, Configurable {
     }
 
     public void open(String location) throws IOException {
-        log.debug("Open called for location '" + location + "'");
+        log.debug("Open called for location '" + location
+                  + "'. Appending /" + LuceneIndexUtils.LUCENE_FOLDER);
+        location +=  "/" + LuceneIndexUtils.LUCENE_FOLDER;
         this.location = location;
         close();
         if (location == null || "".equals(location)) {
@@ -129,6 +133,11 @@ public class LuceneSearchNode implements SearchNode, Configurable {
             return;
         }
         URL urlLocation = Resolver.getURL(location);
+        if (urlLocation == null) {
+            log.warn("Could not resolve URL for location '" + location
+                     + "', no index available");
+            return;
+        }
         if ("".equals(urlLocation.getFile())) {
             throw new IOException(String.format(
                     // TODO: Consider if the exception should be eaten
@@ -229,6 +238,9 @@ public class LuceneSearchNode implements SearchNode, Configurable {
             sw.append("\"");
             sw.append(" searchTime=\"");
             sw.append(Long.toString(System.currentTimeMillis()-startTime));
+            sw.append("\"");
+            sw.append(" hitCount=\"");
+            sw.append(Integer.toString(topDocs.totalHits));
             sw.append("\">\n");
             for (int i = 0 ; i < topDocs.scoreDocs.length ; i++) {
                 ScoreDoc scoreDoc = topDocs.scoreDocs[i];
@@ -241,9 +253,10 @@ public class LuceneSearchNode implements SearchNode, Configurable {
                 for (int f = 0 ; f < fields.length ; f++) {
                     sw.append("<field name=\"").append(fields[f]).append("\">");
                     Field iField = doc.getField(fields[f]);
-                    sw.append(encode(iField == null ?
+                    String value = iField.stringValue();
+                    sw.append(encode(value != null ? value :
                                      fallbacks == null || fallbacks.length == 0
-                                     ? "" : fallbacks[f] : fields[f]));
+                                     ? "" : fallbacks[f]));
                     sw.append("</field>\n");
                 }
                 sw.append("</record>\n");

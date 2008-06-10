@@ -456,8 +456,7 @@ public class IndexController extends StateThread implements ObjectFilter,
         }
         // Create new folder
         log.trace("Attempting to create new index root");
-        Calendar now = Calendar.getInstance();
-        String folderName = String.format(IndexCommon.TIMESTAMP_FORMAT, now);
+        String folderName = IndexCommon.getTimestamp();
         File concreteRoot = new File(indexRoot, folderName);
         log.debug("Got new root '" + concreteRoot + "'. Creating folder");
         if (!concreteRoot.mkdirs()) {

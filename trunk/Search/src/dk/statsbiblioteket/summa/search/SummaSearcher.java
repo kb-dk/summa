@@ -161,7 +161,7 @@ public interface SummaSearcher {
      * <searchresult filter="..." query="..."
      *               startIndex="..." maxRecords="..."
      *               sortKey="..." reverseSort="..."
-     *               fields="..." searchTime="...">
+     *               fields="..." searchTime="..." hitCount="...">
      *   <record score="..." sortValue="...">
      *     <field name="recordID">...</field>
      *     <field name="shortformat">...</field>
