@@ -72,7 +72,10 @@ public class FilterControl extends StateThread implements Configurable,
     /**
      * The FilterControl sets up the Filter Chains defines by the configuration.
      * The chains aren't pumped before {@link #start} is called.
-     * @param configuration setup for the FilterControl's underlying filter chains.
+     * @param configuration setup for the FilterControl's underlying filter
+     *                      chains.
+     * @throws ConfigurationException if the construction could not be
+     *                      completed.
      */
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public FilterControl(Configuration configuration) throws
@@ -89,8 +92,8 @@ public class FilterControl extends StateThread implements Configurable,
                 FilterPump pump = new FilterPump(subConfiguration);
                 pumps.add(pump);
             } catch (IOException e) {
-                log.error("IOException while creating chain '" + chain
-                          + "'. Skipping", e);
+                throw new ConfigurationException(String.format(
+                        "IOException while creating chain '%s'", chain), e);
             } catch (Exception e) {
                 throw new ConfigurationException(String.format(
                         "Could not create chain '%s'", chain), e);

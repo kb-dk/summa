@@ -64,7 +64,13 @@ public class RecordWriter extends ObjectFilterImpl {
      */
     public RecordWriter(Configuration configuration) {
         log.trace("Constructing RecordWriter");
-        access = FilterCommons.getAccess(configuration, CONF_STORAGE);
+        try {
+            access = FilterCommons.getAccess(configuration, CONF_STORAGE);
+        } catch (Exception e) {
+            throw new ConfigurationException(
+                    "Could not get access for Filtercommons with property key '"
+                    + CONF_STORAGE + "'", e);
+        }
         // TODO: Perform a check to see if the Storage is alive
     }
 
