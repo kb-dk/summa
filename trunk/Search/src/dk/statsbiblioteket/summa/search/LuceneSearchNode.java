@@ -189,6 +189,23 @@ public class LuceneSearchNode implements SearchNode, Configurable {
         if (searcher == null) {
             throw new IndexException("No searcher available", location, null);
         }
+        if (startIndex > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException(
+                    "The Lucene search node does not support start indexes "
+                    + "above Integer.MAX_VALUE. startIndex was " + startIndex);
+        }
+        if (maxRecords > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException(
+                    "The Lucene search node does not support max records "
+                    + "above Integer.MAX_VALUE. max records was " + maxRecords);
+        }
+        if (startIndex + maxRecords > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException(
+                    "The Lucene search node does not support that start index +"
+                    + " max records is above Integer.MAX_VALUE. "
+                    + "start index was" + startIndex + " and max records was "
+                    + maxRecords);
+        }
         try {
             if (log.isTraceEnabled() && doLog) {
                 //noinspection DuplicateStringLiteralInspection
@@ -250,7 +267,10 @@ public class LuceneSearchNode implements SearchNode, Configurable {
                 sw.append(" sortValue=\"NA\">\n");
                 Document doc =
                      searcher.getIndexReader().document(scoreDoc.doc, selector);
-                for (int f = 0 ; f < fields.length ; f++) {
+                // TODO: Make this go from startIndex
+                for (int f = (int)startIndex ;
+                     f < fields.length && f < (int)(startIndex + maxRecords) ;
+                     f++) {
                     sw.append("<field name=\"").append(fields[f]).append("\">");
                     Field iField = doc.getField(fields[f]);
                     String value = iField.stringValue();
