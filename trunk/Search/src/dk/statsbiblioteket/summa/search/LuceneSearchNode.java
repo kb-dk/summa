@@ -37,6 +37,7 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
+import dk.statsbiblioteket.summa.common.index.IndexException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.search.IndexSearcher;
@@ -123,9 +124,14 @@ public class LuceneSearchNode implements SearchNode, Configurable {
         log.debug("Open called for location '" + location + "'");
         this.location = location;
         close();
+        if (location == null || "".equals(location)) {
+            log.warn("open(null) called, no index available");
+            return;
+        }
         URL urlLocation = Resolver.getURL(location);
         if ("".equals(urlLocation.getFile())) {
             throw new IOException(String.format(
+                    // TODO: Consider if the exception should be eaten
                     "Could not resolve file from location '%s'", location));
         }
         searcher = new IndexSearcher(
@@ -166,11 +172,14 @@ public class LuceneSearchNode implements SearchNode, Configurable {
                           sortKey, reverseSort, fields, fallbacks, true);
     }
 
-    public String fullSearch(String filter, String query, long startIndex,
-                             long maxRecords, String sortKey,
-                             boolean reverseSort, String[] fields,
-                             String[] fallbacks, boolean doLog) throws
+    private String fullSearch(String filter, String query, long startIndex,
+                              long maxRecords, String sortKey,
+                              boolean reverseSort, String[] fields,
+                              String[] fallbacks, boolean doLog) throws
                                                                RemoteException {
+        if (searcher == null) {
+            throw new IndexException("No searcher available", location, null);
+        }
         try {
             if (log.isTraceEnabled() && doLog) {
                 //noinspection DuplicateStringLiteralInspection
@@ -246,15 +255,17 @@ public class LuceneSearchNode implements SearchNode, Configurable {
             }
             return sw.toString();
         } catch (ParseException e) {
-            throw new RemoteException(String.format(
-                    "ParseException during search for query '%s'", query), e);
+            throw new IndexException(String.format(
+                    "ParseException during search for query '%s'", query),
+                                     location, e);
         } catch (CorruptIndexException e) {
-            throw new RemoteException(String.format(
+            throw new IndexException(String.format(
                     "CorruptIndexException during search for query '%s'",
-                    query), e);
+                    query), location, e);
         } catch (IOException e) {
-            throw new RemoteException(String.format(
-                    "IOException during search for query '%s'", query), e);
+            throw new IndexException(String.format(
+                    "IOException during search for query '%s'", query),
+                                     location, e);
         } catch (Throwable t) {
             throw new RemoteException(String.format(
                     "Exception during search for query '%s'", query), t);
