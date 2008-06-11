@@ -48,6 +48,7 @@ public class SummaQueryParserTest extends TestCase {
     private static Log log = LogFactory.getLog(SummaQueryParserTest.class);
 
 
+    // TODO: "a:b:c"-query handling
     SearchDescriptor descriptor;
     String[]  defaultFields;
     public SummaQueryParserTest(String name) {

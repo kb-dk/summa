@@ -49,7 +49,7 @@ public class XStorage implements ConfigurationStorage {
     private XProperties xprops;
     private Log log = LogFactory.getLog(XStorage.class);
 
-    /**
+    /*
      * Creates a XStorage around a XProperties.
      * @paramproperties the properties to wrap around.
      */
@@ -154,7 +154,7 @@ public class XStorage implements ConfigurationStorage {
             }
 
             // TODO: Solve https://gforge.statsbiblioteket.dk/tracker/index.php?aid=1186
-            log.warn("Unclear cemantics. " 
+            log.warn("Unclear semantics. "
                      + "See https://gforge.statsbiblioteket.dk/"
                      + "tracker/index.php?aid=1186");
             return new XStorage((XProperties)sub);

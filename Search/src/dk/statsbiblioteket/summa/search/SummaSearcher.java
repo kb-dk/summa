@@ -27,6 +27,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import java.rmi.RemoteException;
 
 // TODO: Add setters and getters for all tweakables
+// TODO: Add actions, such as reloading index
 /**
  * The interface that all searchers in Summa should implement. The interface is
  * expected to be implemented by classes that are used with RMI or a similar

@@ -30,6 +30,7 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.storage.io.Access;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.rpc.ConnectionContext;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -55,6 +56,7 @@ public class RecordWriter extends ObjectFilterImpl {
     public static final String CONF_STORAGE =
             "summa.storage.RecordWriter.Storage";
 
+    private ConnectionContext<Access> accessContext;
     private Access access;
 
     /**
@@ -65,7 +67,10 @@ public class RecordWriter extends ObjectFilterImpl {
     public RecordWriter(Configuration configuration) {
         log.trace("Constructing RecordWriter");
         try {
-            access = FilterCommons.getAccess(configuration, CONF_STORAGE);
+            accessContext =
+                    FilterCommons.getAccess(configuration, CONF_STORAGE);
+            // TODO: Consider if this should be requested for every Access-use
+            access = accessContext.getConnection();
         } catch (Exception e) {
             throw new ConfigurationException(
                     "Could not get access for Filtercommons with property key '"
@@ -96,6 +101,11 @@ public class RecordWriter extends ObjectFilterImpl {
             log.error("Exception flushing " + record, e);
             // TODO: Consider checking for fatal errors (the connection is down)
         }
+    }
+
+    public synchronized void close(boolean success) {
+        super.close(success);
+        FilterCommons.releaseAccess(accessContext);
     }
 
     // TODO: Close connection on EOF

@@ -23,6 +23,10 @@
 package dk.statsbiblioteket.summa.storage.filter;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.rpc.ConnectionFactory;
+import dk.statsbiblioteket.util.rpc.RMIConnectionFactory;
+import dk.statsbiblioteket.util.rpc.ConnectionManager;
+import dk.statsbiblioteket.util.rpc.ConnectionContext;
 import dk.statsbiblioteket.summa.storage.io.Access;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
@@ -33,6 +37,7 @@ import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.net.MalformedURLException;
+import java.util.Map;
 
 /**
  * Utility class for Storage-related filters.
@@ -43,16 +48,23 @@ import java.net.MalformedURLException;
 public class FilterCommons {
     private static final Log log = LogFactory.getLog(FilterCommons.class);
 
+    private static ConnectionFactory<Access> accessConnectionFactory =
+            new RMIConnectionFactory<Access>();
+    private static ConnectionManager<Access> accessConnectionManager =
+            new ConnectionManager<Access>(accessConnectionFactory);
+
     /**
-     * Connects to the Access specified in accessKey, if possible.
+     * Creates a ConnectionContext for the Access specified in accessKey.
+     * After use, resources are released with {@link #releaseAccess}.
      * @param configuration contains the Access address.
      * @param accessKey     the key for the Access address. The Access address
      *                      is an standard RMI address, such as
      *                      "//localhost:6789/storage".
-     * @return an opened Access to the given Storage.
+     * @return a Connection Context to access.
+     *         See {@link ConnectionContext} for usage.
      */
-    public static Access getAccess(Configuration configuration,
-                                   String accessKey) {
+    public static synchronized ConnectionContext<Access> getAccess(
+            Configuration configuration, String accessKey) {
         //noinspection DuplicateStringLiteralInspection
         log.trace("getAccess(..., " + accessKey + ") called");
         String accessPoint;
@@ -65,28 +77,16 @@ public class FilterCommons {
                     + accessKey + "'");
         }
         log.debug("Connecting to the access point '" + accessPoint + "'");
-        Access access;
-        try {
-            // TODO: Use the proper framework for RMI connections
-            access = (Access) Naming.lookup(accessPoint);
-        } catch (NotBoundException e) {
-            throw new Configurable.ConfigurationException(
-                    "NotBoundException for RMI lookup for '"
-                    + accessPoint + "'", e);
-        } catch (MalformedURLException e) {
-            throw new Configurable.ConfigurationException(
-                    "MalformedURLException for RMI lookup for '"
-                    + accessPoint + "'", e);
-        } catch (RemoteException e) {
-            throw new Configurable.ConfigurationException(
-                    "RemoteException performing RMI lookup for '"
-                    + accessPoint + "'", e);
-        } catch (Exception e) {
-            throw new Configurable.ConfigurationException(
-                    "Exception performing RMI lookup for '"
-                    + accessPoint + "'", e);
-        }
-        log.debug("Connected to Storage at '" + accessPoint + "'");
-        return access;
+        return accessConnectionManager.get(accessPoint);
+    }
+
+    /**
+     * Release the resources taken by the Access-context. Call this when the
+     * context aren't used anymore.
+     * @param context the context for Access.
+     */
+    public static synchronized void releaseAccess(
+            ConnectionContext<Access> context) {
+        accessConnectionManager.release(context);
     }
 }

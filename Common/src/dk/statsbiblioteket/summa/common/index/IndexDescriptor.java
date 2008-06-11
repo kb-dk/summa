@@ -606,9 +606,12 @@ public abstract class IndexDescriptor<F extends IndexField> implements
                 return entry.getValue();
             }
         }
-        throw new IllegalArgumentException(String.format(
-                "Could not locate a field based on name '%s' and language "
-                + "'%s'", fieldName, language));
+        log.debug("getField: No field with name '" + fieldName
+                  + "' found. Returning null");
+        return null;
+//        throw new IllegalArgumentException(String.format(
+//                "Could not locate a field based on name '%s' and language "
+//                + "'%s'", fieldName, language));
     }
     /**
      * Returns the field where the name (no alias-lookup) matches the fieldName.

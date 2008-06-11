@@ -556,6 +556,7 @@ public class IndexController extends StateThread implements ObjectFilter,
             return;
         }
         indexIsOpen = false;
+        consolidate(); // TODO: Always do this upon close?
         log.debug("Closing down IndexController");
         for (IndexManipulator manipulator: manipulators) {
             manipulator.close();

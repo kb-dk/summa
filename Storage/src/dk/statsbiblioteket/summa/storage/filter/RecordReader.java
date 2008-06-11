@@ -24,6 +24,7 @@ package dk.statsbiblioteket.summa.storage.filter;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.rpc.ConnectionContext;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
@@ -129,6 +130,7 @@ public class RecordReader implements ObjectFilter {
     public static final String DEFAULT_BASE = "";
 
     @SuppressWarnings({"FieldCanBeLocal"})
+    private ConnectionContext<Access> accessContext;
     private Access access;
     @SuppressWarnings({"FieldCanBeLocal"})
     private String base = DEFAULT_BASE;
@@ -159,7 +161,10 @@ public class RecordReader implements ObjectFilter {
      */
     public RecordReader(Configuration configuration) {
         log.trace("Constructing RecordReader");
-        access = FilterCommons.getAccess(configuration, CONF_METADATA_STORAGE);
+        accessContext =
+                FilterCommons.getAccess(configuration, CONF_METADATA_STORAGE);
+         // TODO: Consider if this should be requested for every call to Access
+        access = accessContext.getConnection();
         base = configuration.getString(CONF_BASE, DEFAULT_BASE);
         String progressFileString =
                 configuration.getString(CONF_PROGRESS_FILE, null);
@@ -337,7 +342,7 @@ public class RecordReader implements ObjectFilter {
         if (success) {
             writeProgress();
         }
-        // TODO: Close down Access-connection
+        FilterCommons.releaseAccess(accessContext);
     }
 
     private void writeProgress() {

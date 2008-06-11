@@ -68,6 +68,7 @@ public class IndexUtils {
             state = QAInfo.State.QA_NEEDED,
             author = "te")
     public static void assignID(String id, Document document) {
+        //noinspection DuplicateStringLiteralInspection
         log.trace("assignID(" + id + ", ...) called");
         String[] ids = document.getValues(RECORD_FIELD);
         if (ids != null && ids.length == 1 && ids[0].equals(id)) {

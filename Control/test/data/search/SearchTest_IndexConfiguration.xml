@@ -6,7 +6,7 @@
         </entry>
         <entry>
             <key>summa.control.service.registry.port</key>
-            <value class="int">2767</value>
+            <value class="int">27000</value>
         </entry>
 
         <entry>
