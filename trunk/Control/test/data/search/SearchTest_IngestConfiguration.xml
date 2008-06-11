@@ -2,11 +2,11 @@
     <xproperties>
         <entry>
             <key>summa.control.service.port</key>
-            <value class="int">2777</value>
+            <value class="int">2779</value>
         </entry>
         <entry>
             <key>summa.control.service.registry.port</key>
-            <value class="int">2767</value>
+            <value class="int">27000</value>
         </entry>
 
         <!-- The class implementing the Service interface -->

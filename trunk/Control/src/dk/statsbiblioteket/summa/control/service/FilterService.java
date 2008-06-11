@@ -112,6 +112,7 @@ public class FilterService extends ServiceBase implements FilterChainHandler {
         log.trace("Recieved request to stop FilterControl service");
         if (!filterControl.isRunning()) {
             log.warn("Attempting to stop FilterControl when not started");
+            unexportRemoteInterfaces();
             return;
         }
         try {

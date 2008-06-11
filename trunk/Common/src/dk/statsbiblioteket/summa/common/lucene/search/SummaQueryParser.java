@@ -280,8 +280,13 @@ public class SummaQueryParser {
                     value.kind != QueryParserConstants.COLON) {
                     //end of field
                     infield = false;
-                    returnval += expgrp(currentFields, currentFieldValue)
-                                 + END_GROUP;
+                    if (currentFields != null) {
+                        returnval += expgrp(currentFields, currentFieldValue)
+                                     + END_GROUP;
+                    } else {
+                        log.debug("expandQueryString: currentFields == null at"
+                                  + " EOField");
+                    }
                     currentFields = null;
                     currentFieldValue = "";
                 } else {
@@ -295,8 +300,13 @@ public class SummaQueryParser {
             //At end of file, add rest
             if (lookahead.kind == QueryParserConstants.EOF) {
                 if (infield) {
-                    returnval += expgrp(currentFields, currentFieldValue)
-                                 + END_GROUP;
+                    if (currentFields != null) {
+                        returnval += expgrp(currentFields, currentFieldValue)
+                                     + END_GROUP;
+                    } else {
+                        log.debug("expandQueryString: currentFields == null at"
+                                  + " EOFile");
+                    }
                 }
                 return returnval;
             }

@@ -111,7 +111,6 @@ public class SearchTest extends NoExitTestCase {
     /* ingest the data in the given folder to Storage, assuming that Storage
      * is running. */
     private void ingest(File folder) throws Exception {
-        final int TIMEOUT = 10000;
 
         Configuration conf = Configuration.load(
                 "data/search/SearchTest_IngestConfiguration.xml");
@@ -120,15 +119,7 @@ public class SearchTest extends NoExitTestCase {
 
         FilterService ingester = new FilterService(conf);
         ingester.start();
-
-        long endTime = System.currentTimeMillis() + TIMEOUT;
-        while (!ingester.getStatus().getCode().equals(Status.CODE.stopped) &&
-               System.currentTimeMillis() < endTime) {
-            log.trace("Sleeping a bit");
-            Thread.sleep(100);
-        }
-        assertTrue("The ingester should have stopped by now",
-                   ingester.getStatus().getCode().equals(Status.CODE.stopped));
+        IndexTest.waitForService(ingester);
         ingester.stop();
     }
 
@@ -153,6 +144,8 @@ public class SearchTest extends NoExitTestCase {
         StorageService storage = startStorage();
         ingest(new File(Resolver.getURL("data/search/input/part1").getFile()));
         verifyStorage(storage, "fagref:hj@example.com");
+        ingest(new File(Resolver.getURL("data/search/input/part2").getFile()));
+        verifyStorage(storage, "fagref:jh@example.com");
         storage.stop();
     }
 
@@ -222,13 +215,16 @@ public class SearchTest extends NoExitTestCase {
         indexService.stop();
     }
 
-    private void verifySearch(SummaSearcher searcher, String recordID) throws
-                                                                     Exception {
-        String result = searcher.fullSearch(
-                null, IndexUtils.RECORD_FIELD + recordID, 0, 10, null, false,
-                null, null);
-        assertTrue("The result should contain a hit for '" + recordID  + "'",
-                   result.contains("<field name=\"recordID\">" + recordID));
+    private void verifySearch(SummaSearcher searcher, String query,
+                              int results) throws Exception {
+        log.debug("Verifying existence of " + results
+                  + " documents with query '" + query + "'");
+        String result = searcher.fullSearch(null, query, 0, 10,
+                                            null, false, null, null);
+        // TODO: Verify count
+        assertTrue("The result should contain " + results + " hits for '"
+                   + query  + "'",
+                   result.contains("hitCount=\"" + results + "\""));
     }
 
     // Set up searcher, check for null
@@ -252,10 +248,39 @@ public class SearchTest extends NoExitTestCase {
         }
         StorageService storage = startStorage();
         updateIndex();
-        Thread.sleep(2000); // Indexing takes a little while
         assertNotNull("Searching should provide a result (we don't care what)",
                       searcher.fullSearch(null, "dummy", 0, 1, null, false,
                                           null, null));
+        ingest(new File(Resolver.getURL("data/search/input/part1").getFile()));
+        verifyStorage(storage, "fagref:hj@example.com");
+        updateIndex();
+        log.debug("Finished updating of index. It should now contain 1 doc");
+        Thread.sleep(2000); // Wait for searcher to discover new content
+        try {
+            verifySearch(searcher, "Hans", 1);
+        } catch (IndexException e) {
+            fail("Failed search 1 for Hans: " + e.getMessage());
+        }
+        try {
+            verifySearch(searcher, "Gurli", 0);
+        } catch (IndexException e) {
+            fail("Failed search 1 for Gurli: " + e.getMessage());
+        }
+        log.debug("Adding new material");
+        ingest(new File(Resolver.getURL("data/search/input/part2").getFile()));
+        updateIndex();
+        log.debug("Finished updating of index. It should now contain 3 docs");
+        Thread.sleep(2000); // Wait for searcher to discover new content
+        try {
+            verifySearch(searcher, "Hans", 1);
+        } catch (IndexException e) {
+            fail("Failed search 2 for Hans: " + e.getMessage());
+        }
+        try {
+            verifySearch(searcher, "Gurli", 1);
+        } catch (IndexException e) {
+            fail("Failed search 2 for Gurli: " + e.getMessage());
+        }
         log.debug("Calling stop on Storage");
         storage.stop();
     }
