@@ -26,6 +26,8 @@ import java.io.File;
 import java.rmi.RMISecurityManager;
 import java.security.Permission;
 import java.net.URL;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Files;
@@ -221,11 +223,33 @@ public class SearchTest extends NoExitTestCase {
                   + " documents with query '" + query + "'");
         String result = searcher.fullSearch(null, query, 0, 10,
                                             null, false, null, null);
-        // TODO: Verify count
-        assertTrue("The result should contain " + results + " hits for '"
-                   + query  + "'",
-                   result.contains("hitCount=\"" + results + "\""));
+        assertEquals("The result should for query '" + query
+                     + "' should match the expected count",
+                     results, getHits(searcher, query));
     }
+
+    private Pattern hitPattern =
+            Pattern.compile(".*hitCount\\=\\\"([0-9]+)\\\".*", Pattern.DOTALL);
+    private int getHits(SummaSearcher searcher, String query) throws Exception {
+        String result = searcher.fullSearch(null, query, 0, 10,
+                                            null, false, null, null);
+        Matcher matcher = hitPattern.matcher(result);
+        if (!matcher.matches()) {
+            throw new NullPointerException("Could not locate hitcount in " 
+                                           + result);
+        }
+        return Integer.parseInt(matcher.group(1));
+    }
+
+    public void testHitPattern() throws Exception {
+        String TEST = " searchTime=\"42\" hitCount=\"3\">\n";
+        Matcher matcher = hitPattern.matcher(TEST);
+        assertTrue("hitPattern should match",
+                   matcher.matches());
+        assertEquals("hitPattern should match 3",
+                     "3", matcher.group(1));
+    }
+
 
     // Set up searcher, check for null
      // Set up storage
@@ -248,6 +272,7 @@ public class SearchTest extends NoExitTestCase {
         }
         StorageService storage = startStorage();
         updateIndex();
+        Thread.sleep(2000); // Wait for searcher to discover new content
         assertNotNull("Searching should provide a result (we don't care what)",
                       searcher.fullSearch(null, "dummy", 0, 1, null, false,
                                           null, null));
