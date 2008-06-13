@@ -97,7 +97,7 @@ public abstract class StateThread implements Runnable {
             }
             if (STATUS.error.equals(getStatus())) {
                 //noinspection DuplicateStringLiteralInspection
-                log.debug("run stopped. Status " + status);
+                log.debug("run stopped with error. Status " + status);
             } else {
                 //noinspection DuplicateStringLiteralInspection
                 log.warn("run stopped. Status " + status

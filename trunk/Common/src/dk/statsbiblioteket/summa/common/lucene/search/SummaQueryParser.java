@@ -202,10 +202,10 @@ public class SummaQueryParser {
             }
         }
         String qstr = expandQueryString(queryString);
-        log.info("expanded query: " + qstr);
+        log.debug("expanded query: " + qstr);
         Query a = parser.parse(queryString);
 //        Query a = parser.parse(qstr);
-        log.info("query: " + a.toString());
+        log.debug("query: " + a.toString());
         if (supportQueryTimeBoosts) {
             try {
                 booster.applyBoost(a, boosts);

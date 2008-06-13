@@ -546,7 +546,8 @@ public class IndexController extends StateThread implements ObjectFilter,
         } catch (IOException e) {
             log.error("Could not mark '" + currentFile + "' with timestamp " +
                       timestamp + ". Index-watchers will not recognize the"
-                      + " indexes at '" + indexLocation + "' as being updated");
+                      + " indexes at '" + indexLocation + "' as being updated",
+                      e);
         }
     }
 

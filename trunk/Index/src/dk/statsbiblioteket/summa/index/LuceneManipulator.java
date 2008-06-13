@@ -447,9 +447,12 @@ public class LuceneManipulator implements IndexManipulator {
         log.trace("consolidate() called. Calling commit()");
         long startTime = System.currentTimeMillis();
         commit();
+        closeWriter();
+        // TODO: Consider optimize
+/*
         checkWriter();
         writer.optimize();
-        writer.flush();
+        writer.flush();*/
         log.debug("Consolidate finished in "
                   + (System.currentTimeMillis()- startTime) + " ms");
     }
