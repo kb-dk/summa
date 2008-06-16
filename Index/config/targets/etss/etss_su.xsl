@@ -38,6 +38,10 @@
 
 															<xsl:value-of select="."/>
 															</Index:field>
+                                                                 <Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsubject" Index:name="lsubject" Index:repeat="false">
+
+															<xsl:value-of select="."/>
+															</Index:field>
                                                                  </xsl:for-each>
 															
 							</xsl:for-each>
@@ -49,6 +53,7 @@
 															<xsl:value-of select="."/>
 
                                                                      </Index:field>
+
                                              </xsl:if>
                                                            <xsl:if test="position()>1">
                                                             <Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsu_ulrichs_2" Index:name="lsu_ulrichs" Index:repeat="false">
@@ -56,11 +61,20 @@
 															<xsl:value-of select="."/>
 
                                                                      </Index:field>
+
                                              </xsl:if>
 
                                             </xsl:for-each>
 
                                                <Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsu_ulrichs_hier" Index:name="lsu_ulrichs_hier" Index:repeat="false">
+                                                  <xsl:for-each select="keyword">
+                                               <xsl:value-of select="."/>
+                                                      <xsl:if test="position()!=last()">
+                                    <xsl:text> - </xsl:text>
+                                </xsl:if>
+                                                   </xsl:for-each>
+                                               </Index:field>
+                                                 <Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsubject" Index:name="lsubject" Index:repeat="false">
                                                   <xsl:for-each select="keyword">
                                                <xsl:value-of select="."/>
                                                       <xsl:if test="position()!=last()">

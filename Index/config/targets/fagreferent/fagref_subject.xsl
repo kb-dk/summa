@@ -24,6 +24,9 @@
          <Index:field Index:boostFactor="10" Index:type="keyword" Index:navn="lsu_oai" Index:name="lsu_oai" Index:repeat="false">
 					<xsl:value-of select="."/>
 				    </Index:field>
+                  <Index:field Index:boostFactor="10" Index:type="keyword" Index:navn="lsubject" Index:name="lsubject" Index:repeat="false">
+					<xsl:value-of select="."/>
+				    </Index:field>
              </xsl:for-each>
         </Index:group>
     </xsl:template>

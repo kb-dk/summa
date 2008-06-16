@@ -722,7 +722,26 @@
                       <xsl:for-each select=".">
                                             <xsl:choose>
                                                 <xsl:when test="contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position()=1],'xe')">
-															<xsl:text>todo</xsl:text>
+                                                    <xsl:choose>
+                                                        <xsl:when test="contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position() >1],'xx')
+                                                        or contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position() >1],'xa')
+                                                         or contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position() >1],'xc')
+                                                           or contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position() >1],'xd')
+                                                             or contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position() >1],'xh')
+                                                               or contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position() >1],'mj')
+                                                                 or contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position() >1],'nh')
+                                                                   or contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position() >1],'np')
+                                                                     or contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position() >1],'tb')
+                                                                       or contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position() >1],'th')
+                                                          or contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position() >1],'tg')">
+                                                              <xsl:text>mono</xsl:text>
+                                                        </xsl:when>
+
+                                                        <xsl:otherwise>
+                                                                <xsl:text>todo</xsl:text>
+                                                        </xsl:otherwise>
+                                                    </xsl:choose>
+                                                           
 														</xsl:when>
                                                 <xsl:when test="contains(/mc:record/mc:datafield[@tag='008']/mc:subfield[@code='t'],'p')">
 									               			<xsl:text>journal</xsl:text>

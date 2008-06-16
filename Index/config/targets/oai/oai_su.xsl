@@ -90,7 +90,11 @@
 
 															<xsl:value-of select="."/>
 															</Index:field>
-												</xsl:otherwise>
+                                                <Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsubject" Index:name="lsubject" Index:repeat="false">
+
+															<xsl:value-of select="."/>
+															</Index:field>
+                                                </xsl:otherwise>
 										</xsl:choose>
 															
 							</xsl:for-each>
@@ -120,6 +124,10 @@
 
                                                 <xsl:value-of select="."/>
                                                 </Index:field>
+                                     <Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsubject" Index:name="lsubject" Index:repeat="false">
+
+                                                <xsl:value-of select="."/>
+                                                </Index:field>
                                     </xsl:otherwise>
                             </xsl:choose>
 
@@ -135,7 +143,8 @@
 				<Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="2">
 					<xsl:value-of select="normalize-space(substring-before($subjects, $sep))"/>
 				</Index:field>
-			</xsl:when>
+
+            </xsl:when>
 			<xsl:otherwise>
 				<Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="2">
 					<xsl:value-of select="normalize-space($subjects)"/>
@@ -158,12 +167,18 @@
 			<Index:field Index:boostFactor="4" Index:type="keyword" Index:navn="lsu_oai" Index:name="lsu_oai" Index:repeat="false">
 					<xsl:value-of select="normalize-space(substring-before($lsubjects, $lsep))"/>
 				</Index:field>
-			</xsl:when>
+                <Index:field Index:boostFactor="4" Index:type="keyword" Index:navn="lsubject" Index:name="lsubject" Index:repeat="false">
+					<xsl:value-of select="normalize-space(substring-before($lsubjects, $lsep))"/>
+				</Index:field>
+            </xsl:when>
 			<xsl:otherwise>
 			<Index:field Index:boostFactor="4" Index:type="keyword" Index:navn="lsu_oai" Index:name="lsu_oai" Index:repeat="false">
 					<xsl:value-of select="normalize-space($lsubjects)"/>
 				</Index:field>
-			</xsl:otherwise>
+                <Index:field Index:boostFactor="4" Index:type="keyword" Index:navn="lsubject" Index:name="lsubject" Index:repeat="false">
+					<xsl:value-of select="normalize-space($lsubjects)"/>
+				</Index:field>
+            </xsl:otherwise>
 		</xsl:choose>
 		
 		<xsl:if test="contains($lsubjects, $lsep)">

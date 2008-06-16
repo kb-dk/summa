@@ -13,225 +13,29 @@
 							<xsl:when test="mc:datafield[@tag='100']">
 								<xsl:for-each select="mc:datafield[@tag='100']">
 									<Index:field Index:name="author_person" Index:repeat="true" Index:navn="pe" Index:type="token" Index:boostFactor="10">
-										<xsl:for-each select="mc:subfield[@code='h']">
-											<xsl:value-of select="."/>
-											<xsl:text> </xsl:text>
-										</xsl:for-each>
-										<xsl:for-each select="mc:subfield[@code='a']">
-											<xsl:value-of select="."/>
-										</xsl:for-each>
-										<xsl:for-each select="mc:subfield[@code='e']">
-											<xsl:text> </xsl:text>
-											<xsl:value-of select="."/>
-										</xsl:for-each>
-										<xsl:for-each select="mc:subfield[@code='f']">
-											<xsl:text> (</xsl:text>
-											<xsl:value-of select="."/>
-											<xsl:text>)</xsl:text>
-										</xsl:for-each>
-										<xsl:if test="mc:subfield[@code='c']">
-											<xsl:choose>
-												<xsl:when test="contains (.,'f. ')">
-													<xsl:text> </xsl:text>
-													<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f. ')" />
-													<xsl:text>-</xsl:text>
-												</xsl:when>
-												<xsl:when test="contains (.,'f.')">
-													<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f.')" />
-													<xsl:text>-</xsl:text>
-												</xsl:when>
-												<xsl:otherwise>
-													<xsl:text> </xsl:text>
-													<xsl:value-of select="mc:subfield[@code='c']" />
-												</xsl:otherwise>
-											</xsl:choose>
-										</xsl:if>
+									<xsl:call-template name="person"/>
 									</Index:field>
 
                                     <Index:field Index:repeat="true" Index:name="author_person" Index:navn="pe" Index:type="token" Index:boostFactor="10">
-										<xsl:for-each select="mc:subfield[@code='a']">
-											<xsl:value-of select="."/>
-										</xsl:for-each>
-										<xsl:for-each select="mc:subfield[@code='h']">
-											<xsl:text>, </xsl:text>
-											<xsl:value-of select="."/>
-										</xsl:for-each>
-										<xsl:for-each select="mc:subfield[@code='e']">
-											<xsl:text> </xsl:text>
-											<xsl:value-of select="."/>
-										</xsl:for-each>
-										<xsl:for-each select="mc:subfield[@code='f']">
-											<xsl:text> (</xsl:text>
-											<xsl:value-of select="."/>
-											<xsl:text>)</xsl:text>
-										</xsl:for-each>
-										<xsl:if test="mc:subfield[@code='c']">
-											<xsl:choose>
-												<xsl:when test="contains (.,'f. ')">
-													<xsl:text> </xsl:text>
-													<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f. ')" />
-													<xsl:text>-</xsl:text>
-												</xsl:when>
-												<xsl:when test="contains (.,'f.')">
-													<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f.')" />
-													<xsl:text>-</xsl:text>
-												</xsl:when>
-												<xsl:otherwise>
-													<xsl:text> </xsl:text>
-													<xsl:value-of select="mc:subfield[@code='c']" />
-												</xsl:otherwise>
-											</xsl:choose>
-										</xsl:if>
+								<xsl:call-template name="person_inverted"/>
 									</Index:field>
 								</xsl:for-each>
 								<xsl:for-each select="mc:datafield[@tag='700']">
 									<xsl:choose>
 										<xsl:when test="position ()&lt;3">
 											<Index:field Index:repeat="true" Index:name="author_person" Index:navn="pe" Index:type="token" Index:boostFactor="10">
-												<xsl:for-each select="mc:subfield[@code='h']">
-													<xsl:value-of select="."/>
-													<xsl:text> </xsl:text>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='a']">
-													<xsl:value-of select="."/>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='e']">
-													<xsl:text> </xsl:text>
-													<xsl:value-of select="."/>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='f']">
-													<xsl:text> (</xsl:text>
-													<xsl:value-of select="."/>
-													<xsl:text>)</xsl:text>
-												</xsl:for-each>
-												<xsl:if test="mc:subfield[@code='c']">
-													<xsl:choose>
-														<xsl:when test="contains (.,'f. ')">
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f. ')" />
-															<xsl:text>-</xsl:text>
-														</xsl:when>
-														<xsl:when test="contains (.,'f.')">
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f.')" />
-															<xsl:text>-</xsl:text>
-														</xsl:when>
-														<xsl:otherwise>
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="mc:subfield[@code='c']" />
-														</xsl:otherwise>
-													</xsl:choose>
-												</xsl:if>
+											<xsl:call-template name="person"/>
 											</Index:field>
 											<Index:field Index:repeat="true" Index:name="author_person" Index:navn="pe" Index:type="token" Index:boostFactor="10">
-												<xsl:for-each select="mc:subfield[@code='a']">
-													<xsl:value-of select="."/>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='h']">
-													<xsl:text>, </xsl:text>
-													<xsl:value-of select="."/>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='e']">
-													<xsl:text> </xsl:text>
-													<xsl:value-of select="."/>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='f']">
-													<xsl:text> (</xsl:text>
-													<xsl:value-of select="."/>
-													<xsl:text>)</xsl:text>
-												</xsl:for-each>
-												<xsl:if test="mc:subfield[@code='c']">
-													<xsl:choose>
-														<xsl:when test="contains (.,'f. ')">
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f. ')" />
-															<xsl:text>-</xsl:text>
-														</xsl:when>
-														<xsl:when test="contains (.,'f.')">
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f.')" />
-															<xsl:text>-</xsl:text>
-														</xsl:when>
-														<xsl:otherwise>
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="mc:subfield[@code='c']" />
-														</xsl:otherwise>
-													</xsl:choose>
-												</xsl:if>
+											<xsl:call-template name="person_inverted"/>
 											</Index:field>
 										</xsl:when>
 										<xsl:otherwise>
 											<Index:field Index:repeat="true" Index:name="author_person" Index:navn="pe" Index:type="token" Index:boostFactor="8">
-												<xsl:for-each select="mc:subfield[@code='h']">
-													<xsl:value-of select="."/>
-													<xsl:text> </xsl:text>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='a']">
-													<xsl:value-of select="."/>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='e']">
-													<xsl:text> </xsl:text>
-													<xsl:value-of select="."/>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='f']">
-													<xsl:text> (</xsl:text>
-													<xsl:value-of select="."/>
-													<xsl:text>)</xsl:text>
-												</xsl:for-each>
-												<xsl:if test="mc:subfield[@code='c']">
-													<xsl:choose>
-														<xsl:when test="contains (.,'f. ')">
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f. ')" />
-															<xsl:text>-</xsl:text>
-														</xsl:when>
-														<xsl:when test="contains (.,'f.')">
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f.')" />
-															<xsl:text>-</xsl:text>
-														</xsl:when>
-														<xsl:otherwise>
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="mc:subfield[@code='c']" />
-														</xsl:otherwise>
-													</xsl:choose>
-												</xsl:if>
+									<xsl:call-template name="person"/>
 											</Index:field>
 											<Index:field Index:repeat="true" Index:name="author_person" Index:navn="pe" Index:type="token" Index:boostFactor="8">
-												<xsl:for-each select="mc:subfield[@code='a']">
-													<xsl:value-of select="."/>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='h']">
-													<xsl:text>, </xsl:text>
-													<xsl:value-of select="."/>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='e']">
-													<xsl:text> </xsl:text>
-													<xsl:value-of select="."/>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='f']">
-													<xsl:text> (</xsl:text>
-													<xsl:value-of select="."/>
-													<xsl:text>)</xsl:text>
-												</xsl:for-each>
-												<xsl:if test="mc:subfield[@code='c']">
-													<xsl:choose>
-														<xsl:when test="contains (.,'f. ')">
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f. ')" />
-															<xsl:text>-</xsl:text>
-														</xsl:when>
-														<xsl:when test="contains (.,'f.')">
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f.')" />
-															<xsl:text>-</xsl:text>
-														</xsl:when>
-														<xsl:otherwise>
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="mc:subfield[@code='c']" />
-														</xsl:otherwise>
-													</xsl:choose>
-												</xsl:if>
+										<xsl:call-template name="person_inverted"/>
 											</Index:field>
 										</xsl:otherwise>
 									</xsl:choose>
@@ -241,192 +45,25 @@
 							<xsl:when test="mc:datafield[@tag='110']">
 								<xsl:for-each select="mc:datafield[@tag='110']">
 									<Index:field Index:repeat="true" Index:name="author_corporation" Index:navn="ko" Index:type="token" Index:boostFactor="10">
-										<xsl:if test="mc:subfield[@code='a'or @code='s' or @code='e' or @code='c' or @code='i' or @code='k' or @code='j']">
-											<xsl:for-each select="mc:subfield">
-												<xsl:choose>
-													<xsl:when test="@code='a'">
-														<xsl:value-of select="."/>
-													</xsl:when>
-													<xsl:when test="@code='s'">
-														<xsl:value-of select="." />
-													</xsl:when>
-													<xsl:when test="@code='e'">
-														<xsl:text> (</xsl:text>
-														<xsl:value-of select="." />
-														<xsl:text>) </xsl:text>
-													</xsl:when>
-
-													<xsl:when test="@code='c'">
-														<xsl:if test="position&gt;1">
-															<xsl:text>. </xsl:text>
-														</xsl:if>
-														<xsl:value-of select="."/>
-													</xsl:when>
-													<xsl:when test="@code='i'">
-														<xsl:text> ; </xsl:text>
-														<xsl:value-of select="." />
-													</xsl:when>
-													<xsl:when test="@code='k'">
-														<xsl:text>, </xsl:text>
-														<xsl:value-of select="." />
-													</xsl:when>
-													<xsl:when test="@code='j'">
-														<xsl:text>, </xsl:text>
-														<xsl:value-of select="." />
-													</xsl:when>
-												</xsl:choose>
-											</xsl:for-each>
-										</xsl:if>
+										<xsl:call-template name="corp"/>
 									</Index:field>
 								</xsl:for-each>
 								<xsl:for-each select="mc:datafield[@tag='700']">
 									<xsl:choose>
 										<xsl:when test="position ()&lt;3">
 											<Index:field Index:repeat="true" Index:name="author_person" Index:navn="pe" Index:type="token" Index:boostFactor="10">
-												<xsl:for-each select="mc:subfield[@code='h']">
-													<xsl:value-of select="."/>
-													<xsl:text> </xsl:text>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='a']">
-													<xsl:value-of select="."/>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='e']">
-													<xsl:text> </xsl:text>
-													<xsl:value-of select="."/>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='f']">
-													<xsl:text> (</xsl:text>
-													<xsl:value-of select="."/>
-													<xsl:text>) </xsl:text>
-												</xsl:for-each>
-												<xsl:if test="mc:subfield[@code='c']">
-													<xsl:choose>
-														<xsl:when test="contains (.,'f. ')">
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f. ')" />
-															<xsl:text>-</xsl:text>
-														</xsl:when>
-														<xsl:when test="contains (.,'f.')">
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f.')" />
-															<xsl:text>-</xsl:text>
-														</xsl:when>
-														<xsl:otherwise>
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="mc:subfield[@code='c']" />
-														</xsl:otherwise>
-													</xsl:choose>
-												</xsl:if>
+								<xsl:call-template name="person"/>
 											</Index:field>
 											<Index:field Index:repeat="true" Index:name="author_person" Index:navn="pe" Index:type="token" Index:boostFactor="10">
-												<xsl:for-each select="mc:subfield[@code='a']">
-													<xsl:value-of select="."/>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='h']">
-													<xsl:text>, </xsl:text>
-													<xsl:value-of select="."/>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='e']">
-													<xsl:text> </xsl:text>
-													<xsl:value-of select="."/>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='f']">
-													<xsl:text> (</xsl:text>
-													<xsl:value-of select="."/>
-													<xsl:text>) </xsl:text>
-												</xsl:for-each>
-												<xsl:if test="mc:subfield[@code='c']">
-													<xsl:choose>
-														<xsl:when test="contains (.,'f. ')">
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f. ')" />
-															<xsl:text>-</xsl:text>
-														</xsl:when>
-														<xsl:when test="contains (.,'f.')">
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f.')" />
-															<xsl:text>-</xsl:text>
-														</xsl:when>
-														<xsl:otherwise>
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="mc:subfield[@code='c']" />
-														</xsl:otherwise>
-													</xsl:choose>
-												</xsl:if>
+										<xsl:call-template name="person_inverted"/>
 											</Index:field>
 										</xsl:when>
 										<xsl:otherwise>
 											<Index:field Index:repeat="true" Index:name="author_person" Index:navn="pe" Index:type="token" Index:boostFactor="8">
-												<xsl:for-each select="mc:subfield[@code='h']">
-													<xsl:value-of select="."/>
-													<xsl:text> </xsl:text>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='a']">
-													<xsl:value-of select="."/>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='e']">
-													<xsl:text> </xsl:text>
-													<xsl:value-of select="."/>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='f']">
-													<xsl:text> (</xsl:text>
-													<xsl:value-of select="."/>
-													<xsl:text>)</xsl:text>
-												</xsl:for-each>
-												<xsl:if test="mc:subfield[@code='c']">
-													<xsl:choose>
-														<xsl:when test="contains (.,'f. ')">
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f. ')" />
-															<xsl:text>-</xsl:text>
-														</xsl:when>
-														<xsl:when test="contains (.,'f.')">
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f.')" />
-															<xsl:text>-</xsl:text>
-														</xsl:when>
-														<xsl:otherwise>
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="mc:subfield[@code='c']" />
-														</xsl:otherwise>
-													</xsl:choose>
-												</xsl:if>
+											<xsl:call-template name="person"/>
 											</Index:field>
 											<Index:field Index:repeat="true" Index:name="author_person" Index:navn="pe" Index:type="token" Index:boostFactor="8">
-												<xsl:for-each select="mc:subfield[@code='a']">
-													<xsl:value-of select="."/>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='h']">
-													<xsl:text>, </xsl:text>
-													<xsl:value-of select="."/>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='e']">
-													<xsl:text> </xsl:text>
-													<xsl:value-of select="."/>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='f']">
-													<xsl:text> (</xsl:text>
-													<xsl:value-of select="."/>
-													<xsl:text>)</xsl:text>
-												</xsl:for-each>
-												<xsl:if test="mc:subfield[@code='c']">
-													<xsl:choose>
-														<xsl:when test="contains (.,'f. ')">
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f. ')" />
-															<xsl:text>-</xsl:text>
-														</xsl:when>
-														<xsl:when test="contains (.,'f.')">
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f.')" />
-															<xsl:text>-</xsl:text>
-														</xsl:when>
-														<xsl:otherwise>
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="mc:subfield[@code='c']" />
-														</xsl:otherwise>
-													</xsl:choose>
-												</xsl:if>
+											<xsl:call-template name="person_inverted"/>
 											</Index:field>
 										</xsl:otherwise>
 									</xsl:choose>
@@ -437,150 +74,18 @@
 									<xsl:choose>
 										<xsl:when test="position ()&lt;4">
 											<Index:field Index:repeat="true" Index:name="author_person" Index:navn="pe" Index:type="token" Index:boostFactor="10">
-												<xsl:for-each select="mc:subfield[@code='h']">
-													<xsl:value-of select="."/>
-													<xsl:text> </xsl:text>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='a']">
-													<xsl:value-of select="."/>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='e']">
-													<xsl:text> </xsl:text>
-													<xsl:value-of select="."/>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='f']">
-													<xsl:text> (</xsl:text>
-													<xsl:value-of select="."/>
-													<xsl:text>)</xsl:text>
-												</xsl:for-each>
-												<xsl:if test="mc:subfield[@code='c']">
-													<xsl:choose>
-														<xsl:when test="contains (.,'f. ')">
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f. ')" />
-															<xsl:text>-</xsl:text>
-														</xsl:when>
-														<xsl:when test="contains (.,'f.')">
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f.')" />
-															<xsl:text>-</xsl:text>
-														</xsl:when>
-														<xsl:otherwise>
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="mc:subfield[@code='c']" />
-														</xsl:otherwise>
-													</xsl:choose>
-												</xsl:if>
+											<xsl:call-template name="person"/>
 											</Index:field>
 											<Index:field Index:repeat="true" Index:name="author_person" Index:navn="pe" Index:type="token" Index:boostFactor="10">
-												<xsl:for-each select="mc:subfield[@code='a']">
-													<xsl:value-of select="."/>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='h']">
-													<xsl:text>, </xsl:text>
-													<xsl:value-of select="."/>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='e']">
-													<xsl:text> </xsl:text>
-													<xsl:value-of select="."/>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='f']">
-													<xsl:text> (</xsl:text>
-													<xsl:value-of select="."/>
-													<xsl:text>)</xsl:text>
-												</xsl:for-each>
-												<xsl:if test="mc:subfield[@code='c']">
-													<xsl:choose>
-														<xsl:when test="contains (.,'f. ')">
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f. ')" />
-															<xsl:text>-</xsl:text>
-														</xsl:when>
-														<xsl:when test="contains (.,'f.')">
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f.')" />
-															<xsl:text>-</xsl:text>
-														</xsl:when>
-														<xsl:otherwise>
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="mc:subfield[@code='c']" />
-														</xsl:otherwise>
-													</xsl:choose>
-												</xsl:if>
+												<xsl:call-template name="person_inverted"/>
 											</Index:field>
 										</xsl:when>
 										<xsl:otherwise>
 											<Index:field Index:repeat="true" Index:name="author_person" Index:navn="pe" Index:type="token" Index:boostFactor="8">
-												<xsl:for-each select="mc:subfield[@code='h']">
-													<xsl:value-of select="."/>
-													<xsl:text> </xsl:text>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='a']">
-													<xsl:value-of select="."/>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='e']">
-													<xsl:text> </xsl:text>
-													<xsl:value-of select="."/>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='f']">
-													<xsl:text> (</xsl:text>
-													<xsl:value-of select="."/>
-													<xsl:text>)</xsl:text>
-												</xsl:for-each>
-												<xsl:if test="mc:subfield[@code='c']">
-													<xsl:choose>
-														<xsl:when test="contains (.,'f. ')">
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f. ')" />
-															<xsl:text>-</xsl:text>
-														</xsl:when>
-														<xsl:when test="contains (.,'f.')">
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f.')" />
-															<xsl:text>-</xsl:text>
-														</xsl:when>
-														<xsl:otherwise>
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="mc:subfield[@code='c']" />
-														</xsl:otherwise>
-													</xsl:choose>
-												</xsl:if>
+								<xsl:call-template name="person"/>
 											</Index:field>
 											<Index:field Index:repeat="true" Index:name="author_person" Index:navn="pe" Index:type="token" Index:boostFactor="8">
-												<xsl:for-each select="mc:subfield[@code='a']">
-													<xsl:value-of select="."/>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='h']">
-													<xsl:text>, </xsl:text>
-													<xsl:value-of select="."/>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='e']">
-													<xsl:text> </xsl:text>
-													<xsl:value-of select="."/>
-												</xsl:for-each>
-												<xsl:for-each select="mc:subfield[@code='f']">
-													<xsl:text> (</xsl:text>
-													<xsl:value-of select="."/>
-													<xsl:text>)</xsl:text>
-												</xsl:for-each>
-												<xsl:if test="mc:subfield[@code='c']">
-													<xsl:choose>
-														<xsl:when test="contains (.,'f. ')">
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f. ')" />
-															<xsl:text>-</xsl:text>
-														</xsl:when>
-														<xsl:when test="contains (.,'f.')">
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f.')" />
-															<xsl:text>-</xsl:text>
-														</xsl:when>
-														<xsl:otherwise>
-															<xsl:text> </xsl:text>
-															<xsl:value-of select="mc:subfield[@code='c']" />
-														</xsl:otherwise>
-													</xsl:choose>
-												</xsl:if>
+												<xsl:call-template name="person_inverted"/>
 											</Index:field>
 										</xsl:otherwise>
 									</xsl:choose>
@@ -591,455 +96,60 @@
 							<xsl:choose>
 								<xsl:when test="position ()=1">
 									<Index:field Index:repeat="true" Index:name="author_corporation" Index:navn="ko" Index:type="token" Index:boostFactor="10">
-										<xsl:if test="mc:subfield[@code='a'or @code='s' or @code='e' or @code='c' or @code='i' or @code='k' or @code='j']">
-											<xsl:for-each select="mc:subfield">
-												<xsl:choose>
-													<xsl:when test="@code='a'">
-														<xsl:value-of select="."/>
-													</xsl:when>
-													<xsl:when test="@code='s'">
-														<xsl:value-of select="." />
-													</xsl:when>
-													<xsl:when test="@code='e'">
-														<xsl:text> (</xsl:text>
-														<xsl:value-of select="." />
-														<xsl:text>)</xsl:text>
-													</xsl:when>
-													<xsl:when test="@code='c'">
-														<xsl:if test="position()&gt;1">
-															<xsl:text>. </xsl:text>
-														</xsl:if>
-														<xsl:value-of select="."/>
-													</xsl:when>
-													<xsl:when test="@code='i'">
-														<xsl:text> ; </xsl:text>
-														<xsl:value-of select="." />
-													</xsl:when>
-													<xsl:when test="@code='k'">
-														<xsl:text>, </xsl:text>
-														<xsl:value-of select="." />
-													</xsl:when>
-													<xsl:when test="@code='j'">
-														<xsl:text>, </xsl:text>
-														<xsl:value-of select="." />
-													</xsl:when>
-												</xsl:choose>
-											</xsl:for-each>
-										</xsl:if>
+																		<xsl:call-template name="corp"/>
 									</Index:field>
 								</xsl:when>
 								<xsl:otherwise>
 									<Index:field Index:repeat="true" Index:name="author_corporation" Index:navn="ko" Index:type="token" Index:boostFactor="8">
-										<xsl:if test="mc:subfield[@code='a'or @code='s' or @code='e' or @code='c' or @code='i' or @code='k' or @code='j']">
-											<xsl:for-each select="mc:subfield">
-												<xsl:choose>
-													<xsl:when test="@code='a'">
-														<xsl:value-of select="."/>
-													</xsl:when>
-													<xsl:when test="@code='s'">
-														<xsl:value-of select="." />
-													</xsl:when>
-													<xsl:when test="@code='e'">
-														<xsl:text> (</xsl:text>
-														<xsl:value-of select="." />
-														<xsl:text>)</xsl:text>
-													</xsl:when>
-													<xsl:when test="@code='c'">
-														<xsl:if test="position()&gt;1">
-															<xsl:text>. </xsl:text>
-														</xsl:if>
-														<xsl:value-of select="."/>
-													</xsl:when>
-													<xsl:when test="@code='i'">
-														<xsl:text> ; </xsl:text>
-														<xsl:value-of select="." />
-													</xsl:when>
-													<xsl:when test="@code='k'">
-														<xsl:text>, </xsl:text>
-														<xsl:value-of select="." />
-													</xsl:when>
-													<xsl:when test="@code='j'">
-														<xsl:text>, </xsl:text>
-														<xsl:value-of select="." />
-													</xsl:when>
-												</xsl:choose>
-											</xsl:for-each>
-										</xsl:if>
+										<xsl:call-template name="corp"/>
 									</Index:field>
 								</xsl:otherwise>
 							</xsl:choose>
 						</xsl:for-each>
 						<xsl:for-each select="mc:datafield[@tag='239']">
 							<Index:field Index:repeat="true" Index:name="author_person" Index:navn="pe" Index:type="token" Index:boostFactor="10">
-								<xsl:for-each select="mc:subfield[@code='h']">
-									<xsl:value-of select="."/>
-									<xsl:text> </xsl:text>
-								</xsl:for-each>
-								<xsl:for-each select="mc:subfield[@code='a']">
-									<xsl:value-of select="."/>
-								</xsl:for-each>
-								<xsl:for-each select="mc:subfield[@code='e']">
-									<xsl:text> </xsl:text>
-									<xsl:value-of select="."/>
-								</xsl:for-each>
-								<xsl:for-each select="mc:subfield[@code='f']">
-									<xsl:text> (</xsl:text>
-									<xsl:value-of select="."/>
-									<xsl:text>)</xsl:text>
-								</xsl:for-each>
-								<xsl:if test="mc:subfield[@code='c']">
-									<xsl:choose>
-										<xsl:when test="contains (.,'f. ')">
-											<xsl:text> </xsl:text>
-											<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f. ')" />
-											<xsl:text>-</xsl:text>
-										</xsl:when>
-										<xsl:when test="contains (.,'f.')">
-											<xsl:text> </xsl:text>
-											<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f.')" />
-											<xsl:text>-</xsl:text>
-										</xsl:when>
-										<xsl:otherwise>
-											<xsl:text> </xsl:text>
-											<xsl:value-of select="mc:subfield[@code='c']" />
-										</xsl:otherwise>
-									</xsl:choose>
-								</xsl:if>
+								<xsl:call-template name="person"/>
 							</Index:field>
 							<Index:field Index:repeat="true" Index:name="author_person" Index:navn="pe" Index:type="token" Index:boostFactor="10">
-								<xsl:for-each select="mc:subfield[@code='a']">
-									<xsl:value-of select="."/>
-								</xsl:for-each>
-								<xsl:for-each select="mc:subfield[@code='h']">
-									<xsl:text>, </xsl:text>
-									<xsl:value-of select="."/>
-								</xsl:for-each>
-								<xsl:for-each select="mc:subfield[@code='e']">
-									<xsl:text> </xsl:text>
-									<xsl:value-of select="."/>
-								</xsl:for-each>
-								<xsl:for-each select="mc:subfield[@code='f']">
-									<xsl:text> (</xsl:text>
-									<xsl:value-of select="."/>
-									<xsl:text>)</xsl:text>
-								</xsl:for-each>
-								<xsl:if test="mc:subfield[@code='c']">
-									<xsl:choose>
-										<xsl:when test="contains (.,'f. ')">
-											<xsl:text> </xsl:text>
-											<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f. ')" />
-											<xsl:text>-</xsl:text>
-										</xsl:when>
-										<xsl:when test="contains (.,'f.')">
-											<xsl:text> </xsl:text>
-											<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f.')" />
-											<xsl:text>-</xsl:text>
-										</xsl:when>
-										<xsl:otherwise>
-											<xsl:text> </xsl:text>
-											<xsl:value-of select="mc:subfield[@code='c']" />
-										</xsl:otherwise>
-									</xsl:choose>
-								</xsl:if>
+								<xsl:call-template name="person_inverted"/>
 							</Index:field>
 						</xsl:for-each>
 						<xsl:for-each select="mc:datafield[@tag='770']">
 							<Index:field Index:repeat="true" Index:name="author_person" Index:navn="pe" Index:type="token" Index:boostFactor="6">
-								<xsl:for-each select="mc:subfield[@code='h']">
-									<xsl:value-of select="."/>
-									<xsl:text> </xsl:text>
-								</xsl:for-each>
-								<xsl:for-each select="mc:subfield[@code='a']">
-									<xsl:value-of select="."/>
-								</xsl:for-each>
-								<xsl:for-each select="mc:subfield[@code='e']">
-									<xsl:text> </xsl:text>
-									<xsl:value-of select="."/>
-								</xsl:for-each>
-								<xsl:for-each select="mc:subfield[@code='f']">
-									<xsl:text> (</xsl:text>
-									<xsl:value-of select="."/>
-									<xsl:text>)</xsl:text>
-								</xsl:for-each>
-								<xsl:if test="mc:subfield[@code='c']">
-									<xsl:choose>
-										<xsl:when test="contains (.,'f. ')">
-											<xsl:text> </xsl:text>
-											<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f. ')" />
-											<xsl:text>-</xsl:text>
-										</xsl:when>
-										<xsl:when test="contains (.,'f.')">
-											<xsl:text> </xsl:text>
-											<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f.')" />
-											<xsl:text>-</xsl:text>
-										</xsl:when>
-										<xsl:otherwise>
-											<xsl:text> </xsl:text>
-											<xsl:value-of select="mc:subfield[@code='c']" />
-										</xsl:otherwise>
-									</xsl:choose>
-								</xsl:if>
+								<xsl:call-template name="person"/>
 							</Index:field>
 							<Index:field Index:repeat="true" Index:name="author_person" Index:navn="pe" Index:type="token" Index:boostFactor="6">
-								<xsl:for-each select="mc:subfield[@code='a']">
-									<xsl:value-of select="."/>
-								</xsl:for-each>
-								<xsl:for-each select="mc:subfield[@code='h']">
-									<xsl:text>, </xsl:text>
-									<xsl:value-of select="."/>
-								</xsl:for-each>
-								<xsl:for-each select="mc:subfield[@code='e']">
-									<xsl:text> </xsl:text>
-									<xsl:value-of select="."/>
-								</xsl:for-each>
-								<xsl:for-each select="mc:subfield[@code='f']">
-									<xsl:text> (</xsl:text>
-									<xsl:value-of select="."/>
-									<xsl:text>)</xsl:text>
-								</xsl:for-each>
-								<xsl:if test="mc:subfield[@code='c']">
-									<xsl:choose>
-										<xsl:when test="contains (.,'f. ')">
-											<xsl:text> </xsl:text>
-											<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f. ')" />
-											<xsl:text>-</xsl:text>
-										</xsl:when>
-										<xsl:when test="contains (.,'f.')">
-											<xsl:text> </xsl:text>
-											<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f.')" />
-											<xsl:text>-</xsl:text>
-										</xsl:when>
-										<xsl:otherwise>
-											<xsl:text> </xsl:text>
-											<xsl:value-of select="mc:subfield[@code='c']" />
-										</xsl:otherwise>
-									</xsl:choose>
-								</xsl:if>
+								<xsl:call-template name="person_inverted"/>
 							</Index:field>
 						</xsl:for-each>
 						<xsl:for-each select="mc:datafield[@tag='780']">
 							<Index:field Index:repeat="true" Index:name="author_corporation" Index:navn="ko" Index:type="token" Index:boostFactor="6">
 								<xsl:if test="mc:subfield[@code='a'or @code='s' or @code='e' or @code='c' or @code='i' or @code='k' or @code='j']">
-									<xsl:for-each select="mc:subfield">
-										<xsl:choose>
-											<xsl:when test="@code='a'">
-												<xsl:value-of select="."/>
-											</xsl:when>
-											<xsl:when test="@code='s'">
-												<xsl:value-of select="." />
-											</xsl:when>
-											<xsl:when test="@code='e'">
-												<xsl:text> (</xsl:text>
-												<xsl:value-of select="." />
-												<xsl:text>) </xsl:text>
-											</xsl:when>
-											<xsl:when test="@code='c'">
-												<xsl:if test="position&gt;1">
-													<xsl:text>. </xsl:text>
-												</xsl:if>
-												<xsl:value-of select="."/>
-											</xsl:when>
-											<xsl:when test="@code='i'">
-												<xsl:text> ; </xsl:text>
-												<xsl:value-of select="." />
-											</xsl:when>
-											<xsl:when test="@code='k'">
-												<xsl:text>, </xsl:text>
-												<xsl:value-of select="." />
-											</xsl:when>
-											<xsl:when test="@code='j'">
-												<xsl:text>, </xsl:text>
-												<xsl:value-of select="." />
-											</xsl:when>
-										</xsl:choose>
-									</xsl:for-each>
+									<xsl:call-template name="corp"/>
 								</xsl:if>
 							</Index:field>
 						</xsl:for-each>
 						<xsl:for-each select="mc:datafield[@tag='100']">
 							<Index:field Index:repeat="true" Index:name="author_main" Index:navn="po" Index:type="token">
-								<xsl:for-each select="mc:subfield[@code='h']">
-									<xsl:value-of select="."/>
-									<xsl:text> </xsl:text>
-								</xsl:for-each>
-								<xsl:for-each select="mc:subfield[@code='a']">
-									<xsl:value-of select="."/>
-								</xsl:for-each>
-								<xsl:for-each select="mc:subfield[@code='e']">
-									<xsl:text> </xsl:text>
-									<xsl:value-of select="."/>
-								</xsl:for-each>
-								<xsl:for-each select="mc:subfield[@code='f']">
-									<xsl:text> (</xsl:text>
-									<xsl:value-of select="."/>
-									<xsl:text>)</xsl:text>
-								</xsl:for-each>
-								<xsl:if test="mc:subfield[@code='c']">
-									<xsl:choose>
-										<xsl:when test="contains (.,'f. ')">
-											<xsl:text> </xsl:text>
-											<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f. ')" />
-											<xsl:text>-</xsl:text>
-										</xsl:when>
-										<xsl:when test="contains (.,'f.')">
-											<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f.')" />
-											<xsl:text>-</xsl:text>
-										</xsl:when>
-										<xsl:otherwise>
-											<xsl:text> </xsl:text>
-											<xsl:value-of select="mc:subfield[@code='c']" />
-										</xsl:otherwise>
-									</xsl:choose>
-								</xsl:if>
+								<xsl:call-template name="person"/>
 							</Index:field>
 							<Index:field Index:repeat="true" Index:name="author_main" Index:navn="po" Index:type="token">
-								<xsl:for-each select="mc:subfield[@code='a']">
-									<xsl:value-of select="."/>
-								</xsl:for-each>
-								<xsl:for-each select="mc:subfield[@code='h']">
-									<xsl:text>, </xsl:text>
-									<xsl:value-of select="."/>
-								</xsl:for-each>
-								<xsl:for-each select="mc:subfield[@code='e']">
-									<xsl:text> </xsl:text>
-									<xsl:value-of select="."/>
-								</xsl:for-each>
-								<xsl:for-each select="mc:subfield[@code='f']">
-									<xsl:text> (</xsl:text>
-									<xsl:value-of select="."/>
-									<xsl:text>)</xsl:text>
-								</xsl:for-each>
-								<xsl:if test="mc:subfield[@code='c']">
-									<xsl:choose>
-										<xsl:when test="contains (.,'f. ')">
-											<xsl:text> </xsl:text>
-											<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f. ')" />
-											<xsl:text>-</xsl:text>
-										</xsl:when>
-										<xsl:when test="contains (.,'f.')">
-											<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f.')" />
-											<xsl:text>-</xsl:text>
-										</xsl:when>
-										<xsl:otherwise>
-											<xsl:text> </xsl:text>
-											<xsl:value-of select="mc:subfield[@code='c']" />
-										</xsl:otherwise>
-									</xsl:choose>
-								</xsl:if>
+								<xsl:call-template name="person_inverted"/>
 							</Index:field>
 						</xsl:for-each>
 						<xsl:for-each select="mc:datafield[@tag='110']">
 							<Index:field Index:repeat="true" Index:name="author_main" Index:navn="po" Index:type="token">
 								<xsl:if test="mc:subfield[@code='a'or @code='s' or @code='e' or @code='c' or @code='i' or @code='k' or @code='j']">
-									<xsl:for-each select="mc:subfield">
-										<xsl:choose>
-											<xsl:when test="@code='a'">
-												<xsl:value-of select="."/>
-											</xsl:when>
-											<xsl:when test="@code='s'">
-												<xsl:value-of select="." />
-											</xsl:when>
-											<xsl:when test="@code='e'">
-												<xsl:text> (</xsl:text>
-												<xsl:value-of select="." />
-												<xsl:text>) </xsl:text>
-											</xsl:when>
-
-											<xsl:when test="@code='c'">
-												<xsl:if test="position&gt;1">
-													<xsl:text>. </xsl:text>
-												</xsl:if>
-												<xsl:value-of select="."/>
-											</xsl:when>
-											<xsl:when test="@code='i'">
-												<xsl:text> ; </xsl:text>
-												<xsl:value-of select="." />
-											</xsl:when>
-											<xsl:when test="@code='k'">
-												<xsl:text>, </xsl:text>
-												<xsl:value-of select="." />
-											</xsl:when>
-											<xsl:when test="@code='j'">
-												<xsl:text>, </xsl:text>
-												<xsl:value-of select="." />
-											</xsl:when>
-										</xsl:choose>
-									</xsl:for-each>
+									<xsl:call-template name="corp"/>
 								</xsl:if>
 							</Index:field>
 						</xsl:for-each>
 						<xsl:for-each select="mc:datafield[@tag='239']">
 							<Index:field Index:repeat="true" Index:name="author_main" Index:navn="po" Index:type="token">
-								<xsl:for-each select="mc:subfield[@code='h']">
-									<xsl:value-of select="."/>
-									<xsl:text> </xsl:text>
-								</xsl:for-each>
-								<xsl:for-each select="mc:subfield[@code='a']">
-									<xsl:value-of select="."/>
-								</xsl:for-each>
-								<xsl:for-each select="mc:subfield[@code='e']">
-									<xsl:text> </xsl:text>
-									<xsl:value-of select="."/>
-								</xsl:for-each>
-								<xsl:for-each select="mc:subfield[@code='f']">
-									<xsl:text> (</xsl:text>
-									<xsl:value-of select="."/>
-									<xsl:text>)</xsl:text>
-								</xsl:for-each>
-								<xsl:if test="mc:subfield[@code='c']">
-									<xsl:choose>
-										<xsl:when test="contains (.,'f. ')">
-											<xsl:text> </xsl:text>
-											<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f. ')" />
-											<xsl:text>-</xsl:text>
-										</xsl:when>
-										<xsl:when test="contains (.,'f.')">
-											<xsl:text> </xsl:text>
-											<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f.')" />
-											<xsl:text>-</xsl:text>
-										</xsl:when>
-										<xsl:otherwise>
-											<xsl:text> </xsl:text>
-											<xsl:value-of select="mc:subfield[@code='c']" />
-										</xsl:otherwise>
-									</xsl:choose>
-								</xsl:if>
+								<xsl:call-template name="person"/>
 							</Index:field>
 							<Index:field Index:repeat="true" Index:name="author_main" Index:navn="po" Index:type="token">
-								<xsl:for-each select="mc:subfield[@code='a']">
-									<xsl:value-of select="."/>
-								</xsl:for-each>
-								<xsl:for-each select="mc:subfield[@code='h']">
-									<xsl:text>, </xsl:text>
-									<xsl:value-of select="."/>
-								</xsl:for-each>
-								<xsl:for-each select="mc:subfield[@code='e']">
-									<xsl:text> </xsl:text>
-									<xsl:value-of select="."/>
-								</xsl:for-each>
-								<xsl:for-each select="mc:subfield[@code='f']">
-									<xsl:text> (</xsl:text>
-									<xsl:value-of select="."/>
-									<xsl:text>)</xsl:text>
-								</xsl:for-each>
-								<xsl:if test="mc:subfield[@code='c']">
-									<xsl:choose>
-										<xsl:when test="contains (.,'f. ')">
-											<xsl:text> </xsl:text>
-											<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f. ')" />
-											<xsl:text>-</xsl:text>
-										</xsl:when>
-										<xsl:when test="contains (.,'f.')">
-											<xsl:text> </xsl:text>
-											<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f.')" />
-											<xsl:text>-</xsl:text>
-										</xsl:when>
-										<xsl:otherwise>
-											<xsl:text> </xsl:text>
-											<xsl:value-of select="mc:subfield[@code='c']" />
-										</xsl:otherwise>
-									</xsl:choose>
-								</xsl:if>
+								<xsl:call-template name="person_inverted"/>
 							</Index:field>
 						</xsl:for-each>
 					</Index:group>
@@ -1138,155 +248,27 @@
 
             <xsl:for-each select="mc:datafield[@tag='100']">
 						<Index:field Index:repeat="false" Index:name="author_normalised" Index:navn="lfo"  Index:type="keyword" Index:boostFactor="10">
-							<xsl:for-each select="mc:subfield[@code='a']">
-								<xsl:value-of select="."/>
-							</xsl:for-each>
-							<xsl:for-each select="mc:subfield[@code='h']">
-								<xsl:text>, </xsl:text>
-								<xsl:value-of select="."/>
-							</xsl:for-each>
-							<xsl:for-each select="mc:subfield[@code='e']">
-								<xsl:text> </xsl:text>
-								<xsl:value-of select="."/>
-							</xsl:for-each>
-							<xsl:for-each select="mc:subfield[@code='f']">
-								<xsl:text> (</xsl:text>
-								<xsl:value-of select="."/>
-								<xsl:text>)</xsl:text>
-							</xsl:for-each>
-							<xsl:if test="mc:subfield[@code='c']">
-								<xsl:choose>
-									<xsl:when test="contains (.,'f. ')">
-										<xsl:text> </xsl:text>
-										<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f. ')" />
-										<xsl:text>-</xsl:text>
-									</xsl:when>
-									<xsl:when test="contains (.,'f.')">
-										<xsl:text> </xsl:text>
-										<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f.')" />
-										<xsl:text>-</xsl:text>
-									</xsl:when>
-									<xsl:otherwise>
-										<xsl:text> </xsl:text>
-										<xsl:value-of select="mc:subfield[@code='c']" />
-									</xsl:otherwise>
-								</xsl:choose>
-							</xsl:if>
+							<xsl:call-template name="person_inverted"/>
 						</Index:field>
 					</xsl:for-each>
 					<xsl:for-each select="mc:datafield[@tag='700']">
 							<Index:field Index:repeat="false" Index:name="author_normalised" Index:navn="lfo"  Index:type="keyword" Index:boostFactor="10">
-							<xsl:for-each select="mc:subfield[@code='a']">
-								<xsl:value-of select="."/>
-							</xsl:for-each>
-							<xsl:for-each select="mc:subfield[@code='h']">
-								<xsl:text>, </xsl:text>
-								<xsl:value-of select="."/>
-							</xsl:for-each>
-							<xsl:for-each select="mc:subfield[@code='e']">
-								<xsl:text> </xsl:text>
-								<xsl:value-of select="."/>
-							</xsl:for-each>
-							<xsl:for-each select="mc:subfield[@code='f']">
-								<xsl:text> (</xsl:text>
-								<xsl:value-of select="."/>
-								<xsl:text>)</xsl:text>
-							</xsl:for-each>
-							<xsl:if test="mc:subfield[@code='c']">
-								<xsl:choose>
-									<xsl:when test="contains (.,'f. ')">
-										<xsl:text> </xsl:text>
-										<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f. ')" />
-										<xsl:text>-</xsl:text>
-									</xsl:when>
-									<xsl:when test="contains (.,'f.')">
-										<xsl:text> </xsl:text>
-										<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f.')" />
-										<xsl:text>-</xsl:text>
-									</xsl:when>
-									<xsl:otherwise>
-										<xsl:text> </xsl:text>
-										<xsl:value-of select="mc:subfield[@code='c']" />
-									</xsl:otherwise>
-								</xsl:choose>
-							</xsl:if>
+							<xsl:call-template name="person_inverted"/>
 						</Index:field>
 					</xsl:for-each>
 					<xsl:for-each select="mc:datafield[@tag='770']">
 												<Index:field Index:repeat="false" Index:name="author_normalised" Index:navn="lfo"  Index:type="keyword" Index:boostFactor="10">
-							<xsl:for-each select="mc:subfield[@code='a']">
-								<xsl:value-of select="."/>
-							</xsl:for-each>
-							<xsl:for-each select="mc:subfield[@code='h']">
-								<xsl:text>, </xsl:text>
-								<xsl:value-of select="."/>
-							</xsl:for-each>
-							<xsl:for-each select="mc:subfield[@code='e']">
-								<xsl:text> </xsl:text>
-								<xsl:value-of select="."/>
-							</xsl:for-each>
-							<xsl:for-each select="mc:subfield[@code='f']">
-								<xsl:text> (</xsl:text>
-								<xsl:value-of select="."/>
-								<xsl:text>)</xsl:text>
-							</xsl:for-each>
-							<xsl:if test="mc:subfield[@code='c']">
-								<xsl:choose>
-									<xsl:when test="contains (.,'f. ')">
-										<xsl:text> </xsl:text>
-										<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f. ')" />
-										<xsl:text>-</xsl:text>
-									</xsl:when>
-									<xsl:when test="contains (.,'f.')">
-										<xsl:text> </xsl:text>
-										<xsl:value-of select="substring-after(mc:subfield[@code='c'],'f.')" />
-										<xsl:text>-</xsl:text>
-									</xsl:when>
-									<xsl:otherwise>
-										<xsl:text> </xsl:text>
-										<xsl:value-of select="mc:subfield[@code='c']" />
-									</xsl:otherwise>
-								</xsl:choose>
-							</xsl:if>
+							<xsl:call-template name="person_inverted"/>
 						</Index:field>
 					</xsl:for-each>
-					<xsl:for-each select="mc:datafield[@tag='110' or @tag='710'or @tag='780']">
-						<Index:field Index:repeat="true" Index:name="author_normalised" Index:navn="lfo"  Index:type="keyword" Index:boostFactor="10">
-							<xsl:if test="mc:subfield[@code='a'or @code='s' or @code='e' or @code='c' or @code='i' or @code='k' or @code='j']">
-								<xsl:for-each select="mc:subfield">
-									<xsl:choose>
-										<xsl:when test="@code='a'">
-											<xsl:value-of select="."/>
-										</xsl:when>
-										<xsl:when test="@code='s'">
-											<xsl:value-of select="." />
-										</xsl:when>
-										<xsl:when test="@code='e'">
-											<xsl:text> (</xsl:text>
-											<xsl:value-of select="." />
-											<xsl:text>)</xsl:text>
-										</xsl:when>
-										<xsl:when test="@code='c'">
-											<xsl:if test="position()&gt;1">
-												<xsl:text>. </xsl:text>
-											</xsl:if>
-											<xsl:value-of select="."/>
-										</xsl:when>
-										<xsl:when test="@code='i'">
-											<xsl:text> ; </xsl:text>
-											<xsl:value-of select="." />
-										</xsl:when>
-										<xsl:when test="@code='k'">
-											<xsl:text>, </xsl:text>
-											<xsl:value-of select="." />
-										</xsl:when>
-										<xsl:when test="@code='j'">
-											<xsl:text>, </xsl:text>
-											<xsl:value-of select="." />
-										</xsl:when>
-									</xsl:choose>
-								</xsl:for-each>
-							</xsl:if>
+            <xsl:for-each select="mc:datafield[@tag='239']">
+												<Index:field Index:repeat="false" Index:name="author_normalised" Index:navn="lfo"  Index:type="keyword" Index:boostFactor="10">
+							<xsl:call-template name="person_inverted"/>
+						</Index:field>
+					</xsl:for-each>
+                    <xsl:for-each select="mc:datafield[@tag='110' or @tag='710'or @tag='780']">
+						<Index:field Index:repeat="false" Index:name="author_normalised" Index:navn="lfo"  Index:type="keyword" Index:boostFactor="10">
+							<xsl:call-template name="corp"/>
 						</Index:field>
 					</xsl:for-each>
 
