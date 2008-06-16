@@ -24,8 +24,12 @@
 
 															<xsl:value-of select="."/>
 															</Index:field>
-									
-							</xsl:for-each>
+                                                            <Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsubject" Index:name="lsubject" Index:repeat="false">
+
+															<xsl:value-of select="."/>
+															</Index:field>
+
+                            </xsl:for-each>
                                             
 												</Index:group>
 

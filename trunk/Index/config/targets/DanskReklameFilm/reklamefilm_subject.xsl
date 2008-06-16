@@ -32,12 +32,45 @@
                                 
                                 </xsl:for-each>
 																</xsl:if>
-
+                            <Index:field Index:repeat="true" Index:name="subject_controlled" Index:navn="ke" Index:type="token" Index:boostFactor="6">
+                                    <xsl:text>reklamefilm</xsl:text>
+                                </Index:field>
                         </Index:group>
-												  <Index:field Index:repeat="false" Index:name="su_dk" Index:navn="ldb" Index:type="keyword" Index:boostFactor="10">
+        <Index:group Index:suggest="true" Index:navn="lem" Index:name="lsubj">
+                                                  <Index:field Index:repeat="false" Index:name="su_dk" Index:navn="ldb" Index:type="keyword" Index:boostFactor="10">
                                     <xsl:text>reklamefilm</xsl:text>
                                 </Index:field>
 
+            <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="10">
+                                    <xsl:text>reklamefilm</xsl:text>
+                                </Index:field>
+
+            <xsl:for-each select="subject/keyword">
+                              <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="6">
+                                    <xsl:value-of select="."/>
+                                </Index:field>
+                            </xsl:for-each>
+														<xsl:if test="substring(subject/productName,0)!=''">
+                            <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="6">
+                                <xsl:value-of select="subject/productName"/>
+                            </Index:field>
+</xsl:if>
+<xsl:if test="substring(subject/restrictedTerm,0)!=''">
+                                <xsl:for-each select="subject/restrictedTerm">
+                                      <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="6">
+                                        <xsl:value-of select="./text()" />
+																				<xsl:for-each select="childTerm">
+																				<xsl:if test="substring(.,0)!='' and substring(.,0)!='N/A'">
+																						<xsl:text> - </xsl:text><xsl:value-of select="." />
+																				</xsl:if>
+																				</xsl:for-each>
+                                   </Index:field>
+
+                                </xsl:for-each>
+																</xsl:if>
+
+
+                                 </Index:group>
     </xsl:template>
 
 </xsl:stylesheet>
