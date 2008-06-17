@@ -408,6 +408,41 @@ public class Configuration implements Serializable,
         return result;
     }
 
+    /**
+     * Look up a list of Strings, previously stored with {@link #setStrings}.
+     * @param key the name of the property to look up.
+     * @param defaultValues the values to return if there is no list of Strings
+     *                      specified for the given key.
+     * @return value as a list of Strings.
+     */
+    public List<String> getStrings(String key, List<String> defaultValues) {
+        try {
+            return getStrings(key);
+        } catch (NullPointerException e) {
+            return defaultValues;
+        } catch (IllegalArgumentException e) {
+            log.warn(String.format(
+                    "The property %s was expected to be a list of Strings, but "
+                    + "it was not. Using default %s instead",
+                    key, defaultValues));
+            return defaultValues;
+        }
+    }
+
+    /**
+     * Wrapper for the list-baset {@link #getStrings(String, List)} method.
+     * @param key the name of the property to look up.
+     * @param defaultValues the values to return if there is no list of Strings
+     *                      specified for the given key.
+     * @return value as an array of Strings.
+     */
+    public String[] getStrings(String key, String[] defaultValues) {
+        List<String> result = getStrings(key, Arrays.asList(defaultValues));
+        return result == null ? null :
+               result.toArray(new String[result.size()]);
+    }
+
+
     public static class Pair<T, U> {
         private T t;
         private U u;
