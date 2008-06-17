@@ -19,12 +19,12 @@
 									<xsl:when test="starts-with(.,'*')">
 									<xsl:choose>
 									<xsl:when test="contains(.,'(')">
-							<Index:field Index:repeat="true" Index:name="subject_controlled" Index:navn="ke" Index:type="token" Index:boostFactor="10">
+							<Index:field Index:repeat="true" Index:name="subject_controlled" Index:navn="ke" Index:type="token" Index:boostFactor="2">
 											<xsl:value-of select="substring-after(substring-before(.,' ('),'*')"/>
 										</Index:field>
 										</xsl:when>
 										<xsl:otherwise>
-											<Index:field Index:repeat="true" Index:name="subject_controlled" Index:navn="ke" Index:type="token" Index:boostFactor="10">
+											<Index:field Index:repeat="true" Index:name="subject_controlled" Index:navn="ke" Index:type="token" Index:boostFactor="2">
 											<xsl:value-of select="substring-after(.,'*')"/>
 										</Index:field>
 										</xsl:otherwise>
@@ -33,12 +33,12 @@
 											<xsl:when test="not(starts-with(.,'*'))">
 									<xsl:choose>
 									<xsl:when test="contains(.,'(')">
-							<Index:field Index:repeat="true" Index:name="subject_controlled" Index:navn="ke" Index:type="token" Index:boostFactor="10">
+							<Index:field Index:repeat="true" Index:name="subject_controlled" Index:navn="ke" Index:type="token" Index:boostFactor="2">
 							  	<xsl:value-of select="substring-before(.,' (')"/>
 										</Index:field>
 										</xsl:when>
 										<xsl:otherwise>
-											<Index:field Index:repeat="true" Index:name="subject_controlled" Index:navn="ke" Index:type="token" Index:boostFactor="10">
+											<Index:field Index:repeat="true" Index:name="subject_controlled" Index:navn="ke" Index:type="token" Index:boostFactor="2">
 											<xsl:value-of select="."/>
 										</Index:field>
 										</xsl:otherwise>
@@ -55,12 +55,12 @@
 									<xsl:when test="starts-with(.,'*')">
 									<xsl:choose>
 									<xsl:when test="contains(.,'(')">
-							<Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="6">
+							<Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="2">
 											<xsl:value-of select="substring-after(substring-before(.,' ('),'*')"/>
 										</Index:field>
 										</xsl:when>
 										<xsl:otherwise>
-											<Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="6">
+											<Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="2">
 											<xsl:value-of select="substring-after(.,'*')"/>
 										</Index:field>
 										</xsl:otherwise>
@@ -69,12 +69,12 @@
 											<xsl:when test="not(starts-with(.,'*'))">
 									<xsl:choose>
 									<xsl:when test="contains(.,'(')">
-							<Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="6">
+							<Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="2">
 							  	<xsl:value-of select="substring-before(.,' (')"/>
 										</Index:field>
 										</xsl:when>
 										<xsl:otherwise>
-											<Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="6">
+											<Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="2">
 											<xsl:value-of select="."/>
 										</Index:field>
 										</xsl:otherwise>
@@ -92,12 +92,12 @@
 									<xsl:when test="starts-with(.,'*')">
 									<xsl:choose>
 									<xsl:when test="contains(.,'(')">
-							<Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="6">
+							<Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="2">
 											<xsl:value-of select="substring-after(substring-before(.,' ('),'*')"/>
 										</Index:field>
 										</xsl:when>
 										<xsl:otherwise>
-											<Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="6">
+											<Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="2">
 											<xsl:value-of select="substring-after(.,'*')"/>
 										</Index:field>
 										</xsl:otherwise>
@@ -106,12 +106,12 @@
 											<xsl:when test="not(starts-with(.,'*'))">
 									<xsl:choose>
 									<xsl:when test="contains(.,'(')">
-							<Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="6">
+							<Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="2">
 							  	<xsl:value-of select="substring-before(.,' (')"/>
 										</Index:field>
 										</xsl:when>
 										<xsl:otherwise>
-											<Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="6">
+											<Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="2">
 											<xsl:value-of select="."/>
 										</Index:field>
 										</xsl:otherwise>
@@ -133,29 +133,45 @@
 									<xsl:when test="starts-with(.,'*')">
 									<xsl:choose>
 									<xsl:when test="contains(.,'(')">
-							<Index:field Index:boostFactor="6" Index:type="keyword" Index:navn="lsu_oai" Index:name="lsu_oai" Index:repeat="false">
+							<Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsu_oai" Index:name="lsu_oai" Index:repeat="false">
 											<xsl:value-of select="substring-after(substring-before(.,' ('),'*')"/>
 										</Index:field>
-										</xsl:when>
+                                              <Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsubject" Index:name="lsubject" Index:repeat="false">
+                                             <xsl:value-of select="substring-after(substring-before(.,' ('),'*')"/>
+
+											</Index:field>
+                                        </xsl:when>
 										<xsl:otherwise>
-											<Index:field Index:boostFactor="6" Index:type="keyword" Index:navn="lsu_oai" Index:name="lsu_oai" Index:repeat="false">
+											<Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsu_oai" Index:name="lsu_oai" Index:repeat="false">
 											<xsl:value-of select="substring-after(.,'*')"/>
 										</Index:field>
-										</xsl:otherwise>
+                                             <Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsubject" Index:name="lsubject" Index:repeat="false">
+                                              <xsl:value-of select="substring-after(.,'*')"/>
+
+															</Index:field>
+                                        </xsl:otherwise>
 										</xsl:choose>
 										</xsl:when>
 											<xsl:when test="not(starts-with(.,'*'))">
 									<xsl:choose>
 									<xsl:when test="contains(.,'(')">
-								<Index:field Index:boostFactor="6" Index:type="keyword" Index:navn="lsu_oai" Index:name="lsu_oai" Index:repeat="false">
+								<Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsu_oai" Index:name="lsu_oai" Index:repeat="false">
 											<xsl:value-of select="substring-before(.,' (')"/>
 										</Index:field>
-										</xsl:when>
+                                                   <Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsubject" Index:name="lsubject" Index:repeat="false">
+                                             <xsl:value-of select="substring-before(.,' (')"/>
+
+															</Index:field>
+                                        </xsl:when>
 										<xsl:otherwise>
-												<Index:field Index:boostFactor="6" Index:type="keyword" Index:navn="lsu_oai" Index:name="lsu_oai" Index:repeat="false">
+												<Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsu_oai" Index:name="lsu_oai" Index:repeat="false">
 											<xsl:value-of select="."/>
 										</Index:field>
-										</xsl:otherwise>
+                                                      <Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsubject" Index:name="lsubject" Index:repeat="false">
+                                             
+															<xsl:value-of select="."/>
+															</Index:field>
+                                        </xsl:otherwise>
 										</xsl:choose>
 										</xsl:when>
 									
@@ -163,7 +179,9 @@
 										</xsl:for-each>
 										</xsl:for-each>
 										</Index:group>
-				      
-	</xsl:template>
+
+        
+
+    </xsl:template>
 </xsl:stylesheet>
 
