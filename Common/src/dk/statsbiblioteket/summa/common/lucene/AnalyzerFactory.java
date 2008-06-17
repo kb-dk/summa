@@ -38,6 +38,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * Builds Analyzers for Summa.
+ * @deprecated in favor og {@link LuceneIndexDescriptor}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,

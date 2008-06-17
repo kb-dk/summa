@@ -29,6 +29,7 @@ import dk.statsbiblioteket.summa.common.lucene.index.SearchDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.index.OldIndexField;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexDefaults;
 import dk.statsbiblioteket.summa.common.index.IndexAlias;
+import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.analysis.SummaStandardAnalyzer;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
@@ -40,6 +41,8 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * SummaQueryParser Tester.
+ * @deprecated as SearchDescriptor is deprecated in favor of
+ *            {@link IndexDescriptor}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
