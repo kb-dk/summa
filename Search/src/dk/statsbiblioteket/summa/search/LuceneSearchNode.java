@@ -294,11 +294,15 @@ public class LuceneSearchNode implements SearchNode, Configurable {
                 ScoreDoc scoreDoc = topDocs.scoreDocs[i];
                 sw.append("<record score=\"");
                 sw.append(Float.toString(scoreDoc.score)).append("\"");
-                // TODO: Get the sortValue - how? To require stored is bad
-                sw.append(" sortValue=\"NA\">\n");
+                // TODO: Get the sortValue - how? It is bad to require stored
+                if (SORT_ON_SCORE.equals(sortKey)) {
+                    sw.append(" sortValue=\"");
+                    sw.append(Float.toString(scoreDoc.score)).append("\">\n");
+                } else {
+                    sw.append(" sortValue=\"NA\">\n");
+                }
                 Document doc =
                      searcher.getIndexReader().document(scoreDoc.doc, selector);
-                // TODO: Make this go from startIndex
                 for (int f = (int)startIndex ;
                      f < fields.length && f < (int)(startIndex + maxRecords) ;
                      f++) {
