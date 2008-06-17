@@ -19,8 +19,10 @@ public class LuceneSearcher extends SummaSearcherImpl {
     /**
      * The maximum number of boolean clauses that a query can be expanded to.
      */
+    @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public static final String CONF_MAX_BOOLEAN_CLAUSES = "search.clauses.max";
     public static final int DEFAULT_MAX_BOOLEAN_CLAUSES = 10000;
+    // TODO: Use maxBooleanClauses
     private int maxBooleanClauses = DEFAULT_MAX_BOOLEAN_CLAUSES;
     private LuceneIndexDescriptor descriptor = null;
 
@@ -28,7 +30,6 @@ public class LuceneSearcher extends SummaSearcherImpl {
         super(conf);
         maxBooleanClauses =
                 conf.getInt(CONF_MAX_BOOLEAN_CLAUSES, maxBooleanClauses);
-        // TODO: Connect to index
     }
 
     public SearchNodeWrapper constructSearchNode(Configuration conf) throws
@@ -38,7 +39,7 @@ public class LuceneSearcher extends SummaSearcherImpl {
             maxBooleanClauses =
                     conf.getInt(CONF_MAX_BOOLEAN_CLAUSES, maxBooleanClauses);
         }
-        return new SearchNodeWrapper(conf,
-                                     new LuceneSearchNode(conf, descriptor));
+        return new SearchNodeWrapper(this, conf,
+                new LuceneSearchNode(this, conf, descriptor));
     }
 }

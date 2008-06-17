@@ -645,7 +645,7 @@ public abstract class DatabaseControl extends Control {
          try {
 //             longConn.setAutoCommit(false);
              resultSet = statement.executeQuery();
-             log.info("Got resultSet from '" + statement.toString() + "'");
+             log.debug("Got resultSet from '" + statement.toString() + "'");
          } catch (SQLException e) {
              log.error("SQLException in getResult", e);
              throw new RemoteException("SQLException", e);
