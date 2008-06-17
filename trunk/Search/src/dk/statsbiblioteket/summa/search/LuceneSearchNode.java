@@ -27,7 +27,6 @@ import java.io.StringWriter;
 import java.net.URL;
 import java.rmi.RemoteException;
 import java.util.Arrays;
-import java.util.List;
 import java.util.HashSet;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -67,9 +66,11 @@ public class LuceneSearchNode implements SearchNode, Configurable {
     public static final String XML_HEADER =
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
 
-    private String[] defaultResultFields = DEFAULT_RESULT_FIELDS;
-    private String[] defaultFallbackValues = DEFAULT_FALLBACK_VALUES;
+    private String[] resultFields = DEFAULT_RESULT_FIELDS;
+    private String[] fallbackValues = DEFAULT_FALLBACK_VALUES;
+    private String sortKey = DEFAULT_DEFAULT_SORTKEY;
 
+    private SummaSearcherMBean master = null;
     private LuceneIndexDescriptor descriptor;
     private SummaQueryParser parser;
     private IndexSearcher searcher;
@@ -105,20 +106,41 @@ public class LuceneSearchNode implements SearchNode, Configurable {
         init(conf);
     }
 
+    /**
+     * Constructs a Lucene search node from the given configuration. It uses the
+     * given descriptor and relies on master for default values. This is the
+     * recommended constructor as it enables Java Bean based tweaks of the
+     * default values.
+     * @param master     the holder for default values.
+     * @param conf         the setup for the node.
+     * @param descriptor   the description of the index.
+     * @throws IOException if the node could not be initialized.
+     */
+    public LuceneSearchNode(SummaSearcherMBean master, Configuration conf,
+                            LuceneIndexDescriptor descriptor) throws
+                                                              IOException {
+        this.descriptor = descriptor;
+        parser = new SummaQueryParser(descriptor);
+        this.master = master;
+        if (master == null) {
+            init(conf);
+        }
+    }
+
     private void init(Configuration conf) {
-        defaultResultFields = getStrings(conf, CONF_RESULT_FIELDS,
-                                         defaultResultFields, "result-fields");
-        defaultFallbackValues = getStrings(conf, CONF_FALLBACK_VALUES,
-                                           defaultFallbackValues,
-                                           "fallback-values");
-        log.debug("init with defaultResultFields "
-                  + Arrays.toString(defaultResultFields));
-        if (defaultFallbackValues != null
-            && defaultResultFields.length != defaultFallbackValues.length) {
+        resultFields = conf.getStrings(CONF_RESULT_FIELDS, resultFields);
+        fallbackValues = conf.getStrings(CONF_FALLBACK_VALUES, fallbackValues);
+        sortKey = conf.getString(CONF_DEFAULT_SORTKEY, sortKey);
+        log.debug("init with resultFields "
+                  + Arrays.toString(resultFields)
+                  + " and sort '" + sortKey + "'");
+        if (fallbackValues != null
+            && resultFields.length != fallbackValues.length) {
+            //noinspection DuplicateStringLiteralInspection
             throw new IllegalArgumentException(String.format(
                     "The number of fallback-values(%s) was not equal to the "
-                    + "number of fields(%s)", defaultFallbackValues.length,
-                                              defaultResultFields.length));
+                    + "number of result fields(%s)", fallbackValues.length,
+                                              resultFields.length));
         }
     }
 
@@ -167,7 +189,7 @@ public class LuceneSearchNode implements SearchNode, Configurable {
         //noinspection OverlyBroadCatchBlock
         try {
             fullSearch(null, query, 0, WARMUP_MAX_HITS, sortKey, false,
-                       fields, defaultFallbackValues);
+                       fields, getFallbackValues());
         } catch (Throwable t) {
             log.warn("Throwable caught in warmup", t);
         }
@@ -179,6 +201,12 @@ public class LuceneSearchNode implements SearchNode, Configurable {
                              String[] fallbacks) throws RemoteException {
         return fullSearch(filter, query, startIndex, maxRecords,
                           sortKey, reverseSort, fields, fallbacks, true);
+    }
+
+    public String simpleSearch(String query, long startIndex,
+                               long maxRecords) throws RemoteException {
+        return fullSearch(null, query, startIndex, maxRecords,
+                          null, false, null, null, true);
     }
 
     private String fullSearch(String filter, String query, long startIndex,
@@ -206,6 +234,9 @@ public class LuceneSearchNode implements SearchNode, Configurable {
                     + "start index was" + startIndex + " and max records was "
                     + maxRecords);
         }
+        if (sortKey == null) {
+            sortKey = getSortKey();
+        }
         try {
             if (log.isTraceEnabled() && doLog) {
                 //noinspection DuplicateStringLiteralInspection
@@ -216,8 +247,8 @@ public class LuceneSearchNode implements SearchNode, Configurable {
             }
             long startTime = System.currentTimeMillis();
             if (fields == null) {
-                fields = defaultResultFields;
-                fallbacks = defaultFallbackValues;        
+                fields = getResultFields();
+                fallbacks = getFallbackValues();
             }
             Filter filterO = filter == null || "".equals(filter) ? null :
                              new QueryWrapperFilter(parser.parse(filter));
@@ -295,6 +326,10 @@ public class LuceneSearchNode implements SearchNode, Configurable {
             throw new IndexException(String.format(
                     "CorruptIndexException during search for query '%s'",
                     query), location, e);
+        } catch (RemoteException e) {
+            throw new RemoteException(String.format(
+                    "Inner RemoteException during search for query '%s'",
+                    query), e);
         } catch (IOException e) {
             throw new IndexException(String.format(
                     "IOException during search for query '%s'", query),
@@ -312,26 +347,26 @@ public class LuceneSearchNode implements SearchNode, Configurable {
         return in.replaceAll(">", "&gt;");
     }
 
-    // TODO: Consider moving this to Configuration
-    private String[] getStrings(Configuration conf, String key,
-                                String[] defaultValues, String type) {
-        String[] result;
-        try {
-            List<String> fields = conf.getStrings(key);
-            result = fields.toArray(new String[fields.size()]);
-            log.debug("Assigning " + type + " " + Arrays.toString(result));
-            return result;
-        } catch (NullPointerException e) {
-            log.debug("Result-fields not specified in configuration. "
-                      + "Using default " + type + " "
-                      + Arrays.toString(defaultValues));
-        } catch (IllegalArgumentException e) {
-            log.warn(String.format(
-                    "The property %s was expected to be a list of Strings, but "
-                    + "it was not. Using default %s %s instead",
-                    key, type, Arrays.toString(defaultValues)));
+
+    /* Getters */
+
+    public String[] getResultFields() throws RemoteException {
+        if (master == null) {
+            return resultFields;
         }
-        return defaultValues;
+        return master.getResultFields();
+    }
+    public String[] getFallbackValues() throws RemoteException {
+        if (master == null) {
+            return fallbackValues;
+        }
+        return master.getFallbackValues();
+    }
+    public String getSortKey() throws RemoteException {
+        if (master == null) {
+            return sortKey;
+        }
+        return master.getSortKey();
     }
 
 }

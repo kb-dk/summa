@@ -437,7 +437,8 @@ public class Configuration implements Serializable,
      * @return value as an array of Strings.
      */
     public String[] getStrings(String key, String[] defaultValues) {
-        List<String> result = getStrings(key, Arrays.asList(defaultValues));
+        List<String> result = getStrings(key, defaultValues == null ? null :
+                                              Arrays.asList(defaultValues));
         return result == null ? null :
                result.toArray(new String[result.size()]);
     }

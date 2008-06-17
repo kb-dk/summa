@@ -25,6 +25,7 @@ package dk.statsbiblioteket.summa.search;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.rmi.RemoteException;
+import java.rmi.Remote;
 
 // TODO: Add setters and getters for all tweakables
 // TODO: Add actions, such as reloading index
@@ -36,7 +37,7 @@ import java.rmi.RemoteException;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public interface SummaSearcher {
+public interface SummaSearcher extends Remote {
     /**
      * When a search has been performed by the underlying index searcher,
      * the content of these fields should be returned.
@@ -95,11 +96,12 @@ public interface SummaSearcher {
     public long DEFAULT_MAX_NUMBER_OF_RECORDS = Long.MAX_VALUE;
 
     /**
-     * The number of underlying searchers to instantiate. Experiments with
-     * Lucene suggests that the best value is around 1� * the number of
-     * CPUs, but as always YMMW. Note that the official recommendation from
-     * the Lucene people is to have a single searcher, no matter the number
-     * of CPUs.
+     * The number of underlying searchers to instantiate. The optimum number is
+     * highly depending on the underlying search engine and the hardware.
+     * Experiments with Lucene at Statsbiblioteket suggests that the best value
+     * for this searcher is around 1½ * the number of CPUs, but as always YMMW.
+     * Note that the official recommendation from the Lucene people is to have
+     * a single searcher, no matter the number of CPUs.
      * </p><p>
      * This is optional. The default is 2.
      */
@@ -114,6 +116,7 @@ public interface SummaSearcher {
      * is requested.
      * </p><p>
      * This is optional. Default is 2.
+     * @see #CONF_SEARCH_QUEUE_MAX_SIZE
      */
     public static final String CONF_NUMBER_OF_CONCURRENT_SEARCHES =
             "summa.search.number-of-concurrent-searches";
@@ -126,6 +129,7 @@ public interface SummaSearcher {
      * and an exception is thrown.
      * </p><p>
      * This is optional. Default is 2.
+     * @see #CONF_NUMBER_OF_CONCURRENT_SEARCHES
      */
     public static final String CONF_SEARCH_QUEUE_MAX_SIZE =
             "summa.search.search-queue.max-size";
@@ -145,6 +149,18 @@ public interface SummaSearcher {
      * thus making the search return records in order of relevance.
      */
     public static final String SORT_ON_SCORE = "summa-score";
+
+    /**
+     * The default sort option. This can either be the name of a field or
+     * the string {@link #SORT_ON_SCORE} ("summa-score") which signifies that
+     * sorting should be done according to ranking.
+     * </p><p>
+     * This is optional. Default is {@link #SORT_ON_SCORE}.
+     */
+    public static final String CONF_DEFAULT_SORTKEY =
+            "summa.search.default-sortkey";
+    public static final String DEFAULT_DEFAULT_SORTKEY = SORT_ON_SCORE;
+
 
     /**
      * The complete search with all possible parameters. The filterQuery
@@ -217,4 +233,27 @@ public interface SummaSearcher {
                              String sortKey, boolean reverseSort,
                              String[] resultFields, String[] fallbacks)
             throws RemoteException;
+
+    /**
+     * Simple shortcut for fullSearch. Equivalent to {@code
+     * fullSearch(null, query, startIndex, maxRecords, null, false, null, null);
+     * }
+     * @param query       a query as entered by a user. This is expanded to
+     *                    the underlying index query-system, normally with
+     *                    the use of
+     *           {@link dk.statsbiblioteket.summa.common.index.IndexDescriptor}.
+     * @param startIndex  the starting index for the result, counting from 0.
+     *                    If the result is to be merged with the result from
+     *                    other searchers, this needs to be 0 in order to
+     *                    ensure proper merging.
+     * @param maxRecords  the maximum number of records to return.<br />
+     *                    this parameter is mandatory and is rounded down to
+     *                    the value specified in properties, using the key
+     *                    {link #CONF_MAX_NUMBER_OF_RECORDS}.
+     * @return the search-result in XML, as specified in {@link #fullSearch}.
+     * @throws RemoteException if there was an exception during search.
+     */
+    public String simpleSearch(String query, long startIndex, long maxRecords)
+                                                         throws RemoteException;
+
 }

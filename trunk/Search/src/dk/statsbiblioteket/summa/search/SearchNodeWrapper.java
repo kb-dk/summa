@@ -56,34 +56,18 @@ public class SearchNodeWrapper implements SearchNode {
      */
     private static final int BUFFER_SIZE = 8192;
 
-    private long maxRecords = DEFAULT_MAX_NUMBER_OF_RECORDS;
-    private String warmupData = DEFAULT_WARMUP_DATA;
-    private int warmupMaxTime = DEFAULT_WARMUP_MAXTIME;
-
+    private SummaSearcherMBean master;
     private boolean ready = false;
     private SearchNode node;
     private String location;
     private AtomicInteger activeSearches = new AtomicInteger();
 
-    public SearchNodeWrapper(Configuration conf, SearchNode node) {
+    @SuppressWarnings({"UnusedDeclaration"})
+    public SearchNodeWrapper(SummaSearcherMBean master, Configuration conf,
+                             SearchNode node) {
         log.trace("Constructing SearchNodeWrapper for " + node);
+        this.master = master;
         this.node = node;
-        maxRecords = conf.getLong(CONF_MAX_RECORDS, maxRecords);
-        if (maxRecords <= 0) {
-            log.warn(String.format(
-                    "The property %s must be >0. It was %s. Resetting to "
-                    + "default %s",
-                    CONF_MAX_RECORDS, maxRecords,
-                    DEFAULT_MAX_NUMBER_OF_RECORDS == Long.MAX_VALUE ?
-                    "Long.MAX_VALUE" :
-                    DEFAULT_MAX_NUMBER_OF_RECORDS));
-            maxRecords = DEFAULT_MAX_NUMBER_OF_RECORDS;
-        }
-        warmupData = conf.getString(CONF_WARMUP_DATA, warmupData);
-        warmupMaxTime = conf.getInt(CONF_WARMUP_MAXTIME, warmupMaxTime);
-        log.debug("Warmup-data is '" + warmupData + "' with max warmup-time "
-                  + (warmupMaxTime == Integer.MAX_VALUE ?
-                     "Integer.MAX_VALUE" : warmupMaxTime) + " ms");
         ready = true;
     }
 
@@ -113,14 +97,16 @@ public class SearchNodeWrapper implements SearchNode {
         log.trace("open finished for location '" + location + "'");
     }
 
-    private void warmup() {
+    public synchronized void warmup() throws RemoteException {
+        String warmupData = master.getWarmupData();
         if (warmupData == null || "".equals(warmupData)) {
             log.trace("No warmup-data defined. Skipping warmup");
             return;
         }
-        log.trace("Warming up '" + location + "'");
+        log.trace("Warming up '" + location + "' with data from '"
+                  + warmupData + "'");
         long startTime = System.currentTimeMillis();
-        long endTime = startTime + warmupMaxTime;
+        long endTime = startTime + master.getWarmupMaxTime();
         try {
             long searchCount = 0;
             URL warmupDataURL = Resolver.getURL(warmupData);
@@ -230,16 +216,23 @@ public class SearchNodeWrapper implements SearchNode {
         }
         activeSearches.incrementAndGet();
         try {
-            if (maxRecords > this.maxRecords) {
+            if (maxRecords > master.getMaxRecords()) {
                 log.warn("fullSearch requested " + maxRecords
-                         + " max records, with only " + this.maxRecords
-                         + " allowed. Delivering a max of " + this.maxRecords);
-                maxRecords = this.maxRecords;
+                         + " max records, with only " + master.getMaxRecords()
+                         + " allowed. Delivering a max of "
+                         + master.getMaxRecords());
+                maxRecords = master.getMaxRecords();
             }
             return node.fullSearch(filter, query, startIndex, maxRecords,
                                    sortKey, reverseSort, fields, fallbacks);
         } finally {
             activeSearches.decrementAndGet();
         }
+    }
+
+    public String simpleSearch(String query, long startIndex,
+                               long maxRecords) throws RemoteException {
+        return fullSearch(null, query, startIndex, maxRecords,
+                          null, false, null, null);
     }
 }

@@ -60,6 +60,7 @@ import org.apache.commons.logging.LogFactory;
  * </p><p>
  * The method {@link #testFull} is the big test.
  */
+// TODO: Fix shutdown problem, so that all unit-tests can run sequentially
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -176,7 +177,7 @@ public class SearchTest extends NoExitTestCase {
         SummaSearcher searcher = createSearcher();
         try {
             searcher.fullSearch(null, "hans", 0, 10, null, false, null, null);
-            fail("An IndexException should be throws as not index data are"
+            fail("An IndexException should be thrown as no index data are"
                  + " present yet");
         } catch (IndexException e) {
             // Expected
@@ -221,9 +222,7 @@ public class SearchTest extends NoExitTestCase {
                               int results) throws Exception {
         log.debug("Verifying existence of " + results
                   + " documents with query '" + query + "'");
-        String result = searcher.fullSearch(null, query, 0, 10,
-                                            null, false, null, null);
-        assertEquals("The result should for query '" + query
+        assertEquals("The result for query '" + query
                      + "' should match the expected count",
                      results, getHits(searcher, query));
     }

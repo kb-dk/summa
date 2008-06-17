@@ -195,7 +195,7 @@ public class RecordReader implements ObjectFilter {
             throw new ConfigurationException("RemoteException while getting "
                                              + "recordIterator for time "
                                              + getStartTime() + " and base '"
-                                             + base +"'");
+                                             + base +"'", e);
         }
         startTime = 0;
         log.trace("RecordReader constructed, ready for pumping");

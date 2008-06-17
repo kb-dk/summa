@@ -26,6 +26,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * Monitor registry settings and response time statistics over JMX.
+ * @deprecated in favor of {@link SummaSearcher}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
