@@ -41,7 +41,7 @@ import java.util.List;
 /**
  * Wrapper for Metadata Storage. The underlying type of storage (Lucene,
  * PostgreSQL, JavaDB, Fedora...) is specified in the bundle configuration.
- *
+ * </p><p>
  * The setup-configuration should conform to the standard defined by
  * {@link StorageFactory} and requirements specific for the chosen storage.
  */
