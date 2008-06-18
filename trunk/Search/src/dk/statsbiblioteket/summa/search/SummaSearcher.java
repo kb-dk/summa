@@ -256,4 +256,13 @@ public interface SummaSearcher extends Remote {
     public String simpleSearch(String query, long startIndex, long maxRecords)
                                                          throws RemoteException;
 
+    /**
+     * Shut down the searcher and free all associated resources. The searcher
+     * cannot be used after close.
+     * @throws RemoteException if an error occured during close. Implementers
+     *                         of the interface are urged to free as many
+     *                         resources as possible, even in the event of an
+     *                         exception.
+     */
+    void close() throws RemoteException;
 }

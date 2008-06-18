@@ -263,6 +263,7 @@ public abstract class SummaSearcherImpl implements SummaSearcherMBean,
      * used after close() has been called.
      */
     public synchronized void close() {
+        // TODO: Free as many resources as possible, even on exception
         watcher.stopWatching();
         for (SearchNodeWrapper wrapper: searchNodes) {
             wrapper.close();
