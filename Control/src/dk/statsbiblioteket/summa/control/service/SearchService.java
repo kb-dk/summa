@@ -43,10 +43,22 @@ import org.apache.commons.logging.LogFactory;
 public class SearchService extends ServiceBase implements SummaSearcher {
     private Log log = LogFactory.getLog(SearchService.class);
 
+    /**
+     * The class to instantiate and use for searching.
+     * </p><p>
+     * This is optional. Default is the {@link LuceneSearcher} class.
+     */
+    public static final String CONF_SEARCHER_CLASS =
+            "summa.search.searcher-class";
+    public static final Class<? extends SummaSearcher> DEFAULT_SEARCHER_CLASS =
+            LuceneSearcher.class;
+
+    private Configuration conf;
     private SummaSearcher searcher;
 
     public SearchService(Configuration conf) throws RemoteException {
          super(conf);
+        this.conf = conf;
          exportRemoteInterfaces();
         setStatus(Status.CODE.constructed,
                   "Created SearchService object",
@@ -57,12 +69,78 @@ public class SearchService extends ServiceBase implements SummaSearcher {
                    Logging.LogLevel.DEBUG);
      }
 
-    public void start() throws RemoteException {
-        // TODO: Implement this
+    public synchronized void start() throws RemoteException {
+        log.debug("Starting SearchService");
+        if (searcher != null) {
+            log.debug("Start called on an already running searcher");
+            stop();
+        }
+        Class<? extends SummaSearcher> searcherClass;
+        try {
+            searcherClass = conf.getClass(CONF_SEARCHER_CLASS,
+                                          SummaSearcher.class);
+        } catch (NullPointerException e) {
+            log.warn(String.format(
+                    "The property '%s' was not defined. Defaulting to '%s'",
+                    CONF_SEARCHER_CLASS, DEFAULT_SEARCHER_CLASS));
+            searcherClass = DEFAULT_SEARCHER_CLASS;
+        } catch (IllegalArgumentException e) {
+            String message = String.format(
+                    "The property '%s' with content '%s' could not be resolved "
+                    + "to a proper class",
+                    CONF_SEARCHER_CLASS, conf.getString(CONF_SEARCHER_CLASS));
+            setStatus(Status.CODE.crashed, message, Logging.LogLevel.ERROR, e);
+            throw new RemoteException(message, e);
+        } catch (Exception e) {
+            String message = String.format(
+                    "Exception constructing SummaSearcher class from the "
+                    + "property '%s' with content '%s'",
+                    CONF_SEARCHER_CLASS, conf.getString(CONF_SEARCHER_CLASS));
+            setStatus(Status.CODE.crashed, message, Logging.LogLevel.ERROR, e);
+            throw new RemoteException(message, e);
+        }
+        log.debug(String.format(
+                "Got SummaSearcher class '%s'. Commencing creation",
+                searcherClass));
+        try {
+            searcher = Configuration.create(searcherClass, conf);
+        } catch (IllegalArgumentException e) {
+            String message = String.format(
+                    "The SummaSearcher-class '%s' was not a Configurable",
+                    searcherClass);
+            setStatus(Status.CODE.crashed, message, Logging.LogLevel.ERROR, e);
+            throw new RemoteException(message, e);
+        } catch (Exception e) {
+            String message = String.format(
+                    "Exception creating instance of SummaSearcher class '%s'",
+                    searcherClass);
+            setStatus(Status.CODE.crashed, message, Logging.LogLevel.ERROR, e);
+            throw new RemoteException(message, e);
+        }
+        setStatus(Status.CODE.running, String.format(
+                "Created and started the SummaSearcher '%s'", searcher),
+                  Logging.LogLevel.INFO);
     }
 
-    public void stop() throws RemoteException {
-        // TODO: Implement this
+    public synchronized void stop() throws RemoteException {
+        if (searcher == null) {
+            log.debug("stop called, but status is already stopped");
+            return;
+        }
+        //noinspection OverlyBroadCatchBlock
+        try {
+            searcher.close();
+            setStatus(Status.CODE.stopped, "Searcher closed successfully",
+                      Logging.LogLevel.DEBUG);
+        } catch (Exception e) {
+            setStatus(Status.CODE.crashed, "Searcher closed with error",
+                      Logging.LogLevel.WARN, e);
+            throw new RemoteException(String.format(
+                    "Unable to close searcher '%s'", searcher), e);
+        } finally {
+            //noinspection AssignmentToNull
+            searcher = null;
+        }
     }
 
     /* Simple pass-through to the underlying searcher */
@@ -136,5 +214,14 @@ public class SearchService extends ServiceBase implements SummaSearcher {
     public String simpleSearch(String query, long startIndex,
                                long maxRecords) throws RemoteException {
         return searcher.simpleSearch(query, startIndex, maxRecords);
+    }
+
+
+    /**
+     * Alias for {@link #stop}.
+     * @throws RemoteException if an error occured during close.
+     */
+    public void close() throws RemoteException {
+        stop();
     }
 }
