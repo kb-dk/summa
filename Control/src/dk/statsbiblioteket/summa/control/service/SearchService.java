@@ -239,158 +239,128 @@ public class SearchService extends ServiceBase implements SummaSearcher,
         checkSearcher();
         searcher.clearStatistics();
     }
-
     public double getAverageResponseTime() throws RemoteException {
         checkSearcher();
         return searcher.getAverageResponseTime();
     }
-
     public int getCurrentSearches() throws RemoteException {
         checkSearcher();
         return searcher.getCurrentSearches();
     }
-
     public String[] getFallbackValues() throws RemoteException {
         checkSearcher();
         return searcher.getFallbackValues();
     }
-
     public String getIndexLocation() throws RemoteException {
         checkSearcher();
         return searcher.getIndexLocation();
     }
-
     public String getLastQuery() throws RemoteException {
         checkSearcher();
         return searcher.getLastQuery();
     }
-
     public long getLastResponseTime() throws RemoteException {
         checkSearcher();
         return searcher.getLastResponseTime();
     }
-
     public int getMaxConcurrentSearches() throws RemoteException {
         checkSearcher();
         return searcher.getMaxConcurrentSearches();
     }
-
     public long getMaxRecords() throws RemoteException {
         checkSearcher();
         return searcher.getMaxRecords();
     }
-
     public long getQueryCount() throws RemoteException {
         checkSearcher();
         return searcher.getQueryCount();
     }
-
     public int getQueueLength() throws RemoteException {
         checkSearcher();
         return searcher.getQueueLength();
     }
-
     public String[] getResultFields() throws RemoteException {
         checkSearcher();
         return searcher.getResultFields();
     }
-
     public int getSearcherAvailabilityTimeout() throws RemoteException {
         checkSearcher();
         return searcher.getSearcherAvailabilityTimeout();
     }
-
     public int getSearchers() throws RemoteException {
         checkSearcher();
         return searcher.getSearchers();
     }
-
     public int getSearchQueueMaxSize() throws RemoteException {
         checkSearcher();
         return searcher.getSearchQueueMaxSize();
     }
-
     public String getSortKey() throws RemoteException {
         checkSearcher();
         return searcher.getSortKey();
     }
-
     public long getTotalResponseTime() throws RemoteException {
         checkSearcher();
         return searcher.getTotalResponseTime();
     }
-
     public String getWarmupData() throws RemoteException {
         checkSearcher();
         return searcher.getWarmupData();
     }
-
     public int getWarmupMaxTime() throws RemoteException {
         checkSearcher();
         return searcher.getWarmupMaxTime();
     }
-
     public long performWarmup() throws RemoteException {
         checkSearcher();
         return searcher.performWarmup();
     }
-
     public void reloadIndex() throws RemoteException {
         checkSearcher();
         searcher.reloadIndex();
     }
-
     public void setFallbackValues(
             String[] fallbackValues) throws RemoteException {
         checkSearcher();
         searcher.setFallbackValues(fallbackValues);
     }
-
-    public void setMaxConcurrentSearches(int maxSearches) throws RemoteException {
+    public void setMaxConcurrentSearches(int maxSearches) throws
+                                                          RemoteException {
         checkSearcher();
         searcher.setMaxConcurrentSearches(maxSearches);
     }
-
     public void setMaxRecords(long maxRecords) throws RemoteException {
         checkSearcher();
         searcher.setMaxRecords(maxRecords);
     }
-
     public void setResultFields(String[] fieldNames) throws RemoteException {
         checkSearcher();
         searcher.setResultFields(fieldNames);
     }
-
     public void setSearcherAvailabilityTimeout(int ms) throws RemoteException {
         checkSearcher();
         searcher.setSearcherAvailabilityTimeout(ms);
     }
-
     public void setSearchers(int searchers) throws RemoteException {
         checkSearcher();
         searcher.setSearchers(searchers);
     }
-
     public void setSearchQueueMaxSize(int maxSize) throws RemoteException {
         checkSearcher();
         searcher.setSearchQueueMaxSize(maxSize);
     }
-
     public void setSortKey(String sortKey) throws RemoteException {
         checkSearcher();
         searcher.setSortKey(sortKey);
     }
-
     public void setWarmupData(String location) throws RemoteException {
         checkSearcher();
         searcher.setWarmupData(location);
     }
-
     public void setWarmupMaxTime(int maxTime) throws RemoteException {
         checkSearcher();
         searcher.setWarmupMaxTime(maxTime);
     }
-
     private void checkSearcher() throws RemoteException {
         if (searcher == null) {
             throw new RemoteException("SearchService not started");
