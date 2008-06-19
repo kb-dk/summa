@@ -22,7 +22,14 @@
  */
 package dk.statsbiblioteket.summa.control.service;
 
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+import javax.management.InstanceAlreadyExistsException;
+import javax.management.MBeanRegistrationException;
+import javax.management.NotCompliantMBeanException;
+import javax.management.MalformedObjectNameException;
 import java.rmi.RemoteException;
+import java.lang.management.ManagementFactory;
 
 import dk.statsbiblioteket.summa.search.SummaSearcher;
 import dk.statsbiblioteket.summa.search.LuceneSearcher;
@@ -40,7 +47,8 @@ import org.apache.commons.logging.LogFactory;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class SearchService extends ServiceBase implements SummaSearcher {
+public class SearchService extends ServiceBase implements SummaSearcher,
+                                                          SearchServiceMBean {
     private Log log = LogFactory.getLog(SearchService.class);
 
     /**
@@ -57,17 +65,17 @@ public class SearchService extends ServiceBase implements SummaSearcher {
     private SummaSearcher searcher;
 
     public SearchService(Configuration conf) throws RemoteException {
-         super(conf);
+        super(conf);
         this.conf = conf;
-         exportRemoteInterfaces();
+        exportRemoteInterfaces();
         setStatus(Status.CODE.constructed,
                   "Created SearchService object",
                   Logging.LogLevel.DEBUG);
 
-         setStatus(Status.CODE.constructed,
-                   "Remote interfaces are up for SearchService",
-                   Logging.LogLevel.DEBUG);
-     }
+        setStatus(Status.CODE.constructed,
+                  "Remote interfaces are up for SearchService",
+                  Logging.LogLevel.DEBUG);
+    }
 
     public synchronized void start() throws RemoteException {
         log.debug("Starting SearchService");
@@ -223,5 +231,169 @@ public class SearchService extends ServiceBase implements SummaSearcher {
      */
     public void close() throws RemoteException {
         stop();
+    }
+
+    /* Delegation of SummaSearcher methods */
+
+    public void clearStatistics() throws RemoteException {
+        checkSearcher();
+        searcher.clearStatistics();
+    }
+
+    public double getAverageResponseTime() throws RemoteException {
+        checkSearcher();
+        return searcher.getAverageResponseTime();
+    }
+
+    public int getCurrentSearches() throws RemoteException {
+        checkSearcher();
+        return searcher.getCurrentSearches();
+    }
+
+    public String[] getFallbackValues() throws RemoteException {
+        checkSearcher();
+        return searcher.getFallbackValues();
+    }
+
+    public String getIndexLocation() throws RemoteException {
+        checkSearcher();
+        return searcher.getIndexLocation();
+    }
+
+    public String getLastQuery() throws RemoteException {
+        checkSearcher();
+        return searcher.getLastQuery();
+    }
+
+    public long getLastResponseTime() throws RemoteException {
+        checkSearcher();
+        return searcher.getLastResponseTime();
+    }
+
+    public int getMaxConcurrentSearches() throws RemoteException {
+        checkSearcher();
+        return searcher.getMaxConcurrentSearches();
+    }
+
+    public long getMaxRecords() throws RemoteException {
+        checkSearcher();
+        return searcher.getMaxRecords();
+    }
+
+    public long getQueryCount() throws RemoteException {
+        checkSearcher();
+        return searcher.getQueryCount();
+    }
+
+    public int getQueueLength() throws RemoteException {
+        checkSearcher();
+        return searcher.getQueueLength();
+    }
+
+    public String[] getResultFields() throws RemoteException {
+        checkSearcher();
+        return searcher.getResultFields();
+    }
+
+    public int getSearcherAvailabilityTimeout() throws RemoteException {
+        checkSearcher();
+        return searcher.getSearcherAvailabilityTimeout();
+    }
+
+    public int getSearchers() throws RemoteException {
+        checkSearcher();
+        return searcher.getSearchers();
+    }
+
+    public int getSearchQueueMaxSize() throws RemoteException {
+        checkSearcher();
+        return searcher.getSearchQueueMaxSize();
+    }
+
+    public String getSortKey() throws RemoteException {
+        checkSearcher();
+        return searcher.getSortKey();
+    }
+
+    public long getTotalResponseTime() throws RemoteException {
+        checkSearcher();
+        return searcher.getTotalResponseTime();
+    }
+
+    public String getWarmupData() throws RemoteException {
+        checkSearcher();
+        return searcher.getWarmupData();
+    }
+
+    public int getWarmupMaxTime() throws RemoteException {
+        checkSearcher();
+        return searcher.getWarmupMaxTime();
+    }
+
+    public long performWarmup() throws RemoteException {
+        checkSearcher();
+        return searcher.performWarmup();
+    }
+
+    public void reloadIndex() throws RemoteException {
+        checkSearcher();
+        searcher.reloadIndex();
+    }
+
+    public void setFallbackValues(
+            String[] fallbackValues) throws RemoteException {
+        checkSearcher();
+        searcher.setFallbackValues(fallbackValues);
+    }
+
+    public void setMaxConcurrentSearches(int maxSearches) throws RemoteException {
+        checkSearcher();
+        searcher.setMaxConcurrentSearches(maxSearches);
+    }
+
+    public void setMaxRecords(long maxRecords) throws RemoteException {
+        checkSearcher();
+        searcher.setMaxRecords(maxRecords);
+    }
+
+    public void setResultFields(String[] fieldNames) throws RemoteException {
+        checkSearcher();
+        searcher.setResultFields(fieldNames);
+    }
+
+    public void setSearcherAvailabilityTimeout(int ms) throws RemoteException {
+        checkSearcher();
+        searcher.setSearcherAvailabilityTimeout(ms);
+    }
+
+    public void setSearchers(int searchers) throws RemoteException {
+        checkSearcher();
+        searcher.setSearchers(searchers);
+    }
+
+    public void setSearchQueueMaxSize(int maxSize) throws RemoteException {
+        checkSearcher();
+        searcher.setSearchQueueMaxSize(maxSize);
+    }
+
+    public void setSortKey(String sortKey) throws RemoteException {
+        checkSearcher();
+        searcher.setSortKey(sortKey);
+    }
+
+    public void setWarmupData(String location) throws RemoteException {
+        checkSearcher();
+        searcher.setWarmupData(location);
+    }
+
+    public void setWarmupMaxTime(int maxTime) throws RemoteException {
+        checkSearcher();
+        searcher.setWarmupMaxTime(maxTime);
+    }
+
+    private void checkSearcher() throws RemoteException {
+        if (searcher == null) {
+            throw new RemoteException("SearchService not started");
+        }
     }
 }

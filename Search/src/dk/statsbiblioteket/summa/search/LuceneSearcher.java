@@ -15,7 +15,8 @@ import java.io.IOException;
  * {@link IndexWatcher}, {@link SearchNodeWrapper} , {@link LuceneSearchNode}
  * and {@link LuceneIndexUtils} needs to be specified.
  */
-public class LuceneSearcher extends SummaSearcherImpl {
+public class LuceneSearcher extends SummaSearcherImpl implements
+                                                      LuceneSearcherMBean {
     /**
      * The maximum number of boolean clauses that a query can be expanded to.
      */

@@ -41,7 +41,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public interface SearchNode extends SummaSearcher {
+public interface SearchNode extends BasicSearcher {
+
     /**
      * Opens the index at the given location. Implementations should ensure that
      * previously opened connections are closed before opening new.
@@ -50,11 +51,6 @@ public interface SearchNode extends SummaSearcher {
      * @throws IOException if the index could not be opened.
      */
     public void open(String location) throws IOException;
-
-    /**
-     * Closes all connections to index resources.
-     */
-    public void close();
 
     /**
      * Perform a warmup-search. This normally means no logging of queries.

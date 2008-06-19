@@ -22,21 +22,14 @@
  */
 package dk.statsbiblioteket.summa.search;
 
-import java.rmi.RemoteException;
-
 import dk.statsbiblioteket.util.qa.QAInfo;
 
-/* TODO: consider adding notification on queries/response time if not too costly
-http://java.sun.com/j2se/1.5.0/docs/guide/jmx/tutorial/essential.html#wp1053109
-    */
-
 /**
- * Exposes the underlying {@link SummaSearcher} as an MBean and extends with
- * several control and statistic mechanisms.
- * @see SummaSearcher
+ * Trivial extension of {@link SummaSearcherMBean} to make standard compliant
+ * MBean implementation og the {@link LuceneSearcher}. 
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+@QAInfo(level = QAInfo.Level.NOT_NEEDED,
+        state = QAInfo.State.UNDEFINED,
         author = "te")
-public interface SummaSearcherMBean extends SummaSearcher {
+public interface LuceneSearcherMBean extends SummaSearcher {
 }

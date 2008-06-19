@@ -20,23 +20,15 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.summa.search;
-
-import java.rmi.RemoteException;
+package dk.statsbiblioteket.summa.control.service;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-
-/* TODO: consider adding notification on queries/response time if not too costly
-http://java.sun.com/j2se/1.5.0/docs/guide/jmx/tutorial/essential.html#wp1053109
-    */
+import dk.statsbiblioteket.summa.search.SummaSearcherMBean;
 
 /**
- * Exposes the underlying {@link SummaSearcher} as an MBean and extends with
- * several control and statistic mechanisms.
- * @see SummaSearcher
+ * Plain exposure of SummaSearcher methods..
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+@QAInfo(level = QAInfo.Level.NOT_NEEDED,
         author = "te")
-public interface SummaSearcherMBean extends SummaSearcher {
+public interface SearchServiceMBean extends SummaSearcherMBean {
 }
