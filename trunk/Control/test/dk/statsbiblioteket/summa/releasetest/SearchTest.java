@@ -22,6 +22,12 @@
  */
 package dk.statsbiblioteket.summa.releasetest;
 
+import javax.management.NotificationListener;
+import javax.management.Notification;
+import javax.management.AttributeChangeNotification;
+import javax.management.remote.JMXServiceURL;
+import javax.management.remote.JMXConnector;
+import javax.management.remote.JMXConnectorFactory;
 import java.io.File;
 import java.io.IOException;
 import java.rmi.RMISecurityManager;
@@ -206,9 +212,33 @@ public class SearchTest extends NoExitTestCase {
         } catch (IndexException e) {
             // Expected
         }
+        JMXServiceURL url = new JMXServiceURL(
+                "service:jmx:rmi:///jndi/rmi://:2783/dk.statsbiblioteket.summa.control.service.SearchService:type=Service");     // 2783
+        JMXConnector jmxc = JMXConnectorFactory.connect(url, null);
+
         Thread.sleep(Integer.MAX_VALUE);
         searcher.stop();
     }
+
+    private static class ClientListener implements NotificationListener {
+            public void handleNotification(Notification notification,
+                                           Object handback) {
+                log.debug("\nReceived notification:");
+                log.debug("\tClassName: " + notification.getClass().getName());
+                log.debug("\tSource: " + notification.getSource());
+                log.debug("\tType: " + notification.getType());
+                log.debug("\tMessage: " + notification.getMessage());
+                if (notification instanceof AttributeChangeNotification) {
+                    AttributeChangeNotification acn =
+                        (AttributeChangeNotification) notification;
+                    log.debug("\tAttributeName: " + acn.getAttributeName());
+                    log.debug("\tAttributeType: " + acn.getAttributeType());
+                    log.debug("\tNewValue: " + acn.getNewValue());
+                    log.debug("\tOldValue: " + acn.getOldValue());
+                }
+            }
+        }
+
 
     private void updateIndex() throws Exception {
         URL xsltLocation = Resolver.getURL(
