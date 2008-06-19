@@ -262,7 +262,7 @@ public abstract class SummaSearcherImpl implements SummaSearcherMBean,
      * Shut down the searcher and free all resources. The searcher cannot be
      * used after close() has been called.
      */
-    public synchronized void close() {
+    public synchronized void close() throws RemoteException {
         // TODO: Free as many resources as possible, even on exception
         watcher.stopWatching();
         for (SearchNodeWrapper wrapper: searchNodes) {

@@ -37,232 +37,316 @@ import java.rmi.Remote;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public interface SummaSearcher extends Remote {
+public interface SummaSearcher extends Remote, BasicSearcher {
+
     /**
-     * When a search has been performed by the underlying index searcher,
-     * the content of these fields should be returned.
-     * Note that this can be overrided by the {@link #fullSearch}-method.
+     * The result fields are the fields extracted from each hit from a search.
+     * @return The result fields for the searcher.
+     * @throws RemoteException if the fields could not be retrieved.
+     * @see SummaSearcher#CONF_RESULT_FIELDS
+     */
+    public String[] getResultFields() throws RemoteException;
+
+    /**
+     * The result fields are the fields extracted from each hit from a search.
      * </p><p>
-     * This value is extracted by calling
-     * {@link dk.statsbiblioteket.summa.common.configuration.Configuration#getStrings(String)}.
+     * This value should only be tweaked manually for experimental purposes, as
+     * it is not persistent across instantiations of searchers. In order to make
+     * the change persistent, the underlying configuration for the searcher must
+     * be updated - this is normally done through the Control module.
+     * @param fieldNames the result fields to use in the searcher.
+     * @throws RemoteException if the fields could not be set.
+     * @see SummaSearcher#CONF_RESULT_FIELDS
      */
-    public static final String CONF_RESULT_FIELDS =
-            "summa.search.result-fields";
-    public static final String[] DEFAULT_RESULT_FIELDS =
-            "recordID shortformat".split(" ");
+    // TODO: consider merging this setter with the fallback value setter
+    public void setResultFields(String[] fieldNames) throws RemoteException;
+
 
     /**
-     * If a result-field is not present in a given hit, the fallback-value
-     * at the same array-position is returned. If no fallback-values are
-     * defined, null is returned.
+     * If a the content of a result field cannot be extracted from a document,
+     * the value at the same array position is returned.
+     * @return The fallback values for the searcher.
+     * @throws RemoteException if the values could not be retrieved.
+     * @see SummaSearcher#CONF_FALLBACK_VALUES
+     */
+    public String[] getFallbackValues() throws RemoteException;
+
+    /**
+     * If a the content of a result field cannot be extracted from a document,
+     * the value at the same array position is returned.
      * </p><p>
-     * This value is extracted by calling
-     * {@link dk.statsbiblioteket.summa.common.configuration.Configuration#getStrings(String)}.
+     * This value should only be tweaked manually for experimental purposes, as
+     * it is not persistent across instantiations of searchers. In order to make
+     * the change persistent, the underlying configuration for the searcher must
+     * be updated - this is normally done through the Control module.
+     * @param fallbackValues the new fallback values. Null is an acceptable
+     *                       value and will result in null being used as
+     *                       default value for all result fields.
+     * @throws RemoteException if the values could not be set.
+     * @see SummaSearcher#CONF_FALLBACK_VALUES
+     */
+    public void setFallbackValues(String[] fallbackValues) throws
+                                                           RemoteException;
+
+    /**
+     * Warmup data are used for warming the search engine after a persistent
+     * index has been opened. Warmup significantly reduces response time on
+     * subsequent searches for some search engines, with Lucene being one.
+     * @return the location of the data used for warmup or null if no location
+     *         is specified.
+     * @throws RemoteException if the location could not be retrieved.
+     * @see SummaSearcher#CONF_WARMUP_DATA
+     */
+    public String getWarmupData() throws RemoteException;
+
+    /**
+     * Warmup data are used for warming the search engine after a persistent
+     * index has been opened. Warmup significantly reduces response time on
+     * subsequent searches for some search engines, with Lucene being one.
      * </p><p>
-     * Note: The number of fallback-values must either be null or the same
-     *       as the number of result-fields.
+     * This value should only be tweaked manually for experimental purposes, as
+     * it is not persistent across instantiations of searchers. In order to make
+     * the change persistent, the underlying configuration for the searcher must
+     * be updated - this is normally done through the Control module.
+     * @param location where the warmup-data can be retrieved or null if no
+     *                 warmup should be performed.
+     * @throws RemoteException if the location could not be changed.
+     * @see SummaSearcher#CONF_WARMUP_DATA
      */
-    public static final String CONF_FALLBACK_VALUES =
-            "summa.search.fallback-values";
-    public static final String[] DEFAULT_FALLBACK_VALUES = null;
+    public void setWarmupData(String location) throws RemoteException;
 
     /**
-     * A resource with queries (newline-delimited) that should be expanded
-     * and searched every time an index is (re)opened.
+     * @return the maximum amount of milliseconds used on warming the searcher.
+     * @throws RemoteException if the time could not be retrieved.
+     * @see SummaSearcher#CONF_WARMUP_MAXTIME
+     * @see SummaSearcher#CONF_WARMUP_DATA
+     */
+    public int getWarmupMaxTime() throws RemoteException;
+
+    /**
+     * This value should only be tweaked manually for experimental purposes, as
+     * it is not persistent across instantiations of searchers. In order to make
+     * the change persistent, the underlying configuration for the searcher must
+     * be updated - this is normally done through the Control module.
+     * @param maxTime the maximum amount of milliseconds to use on warmup.
+     *        If Integer.MAX_VALUE is specified, the warming stops when all
+     *        queries specified in the warmup data has been used.
+     * @throws RemoteException if the value could not be retrieved.
+     * @see SummaSearcher#CONF_WARMUP_MAXTIME
+     * @see SummaSearcher#CONF_WARMUP_DATA
+     */
+    public void setWarmupMaxTime(int maxTime) throws RemoteException;
+
+    /**
+     * @return the maximum number of records (hits) this searcher is willing to
+     *         return, providing a limit on the number explicitely requested
+     *         when a search is invoked.
+     * @throws RemoteException if the value could not be retrieved.
+     * @see SummaSearcher#CONF_MAX_RECORDS
+     */
+    public long getMaxRecords() throws RemoteException;
+
+    /**
+     * This value should only be tweaked manually for experimental purposes, as
+     * it is not persistent across instantiations of searchers. In order to make
+     * the change persistent, the underlying configuration for the searcher must
+     * be updated - this is normally done through the Control module.
+     * @param maxRecords the maximum number of records (hits) this searcher is
+     *                   willing to return, providing a limit on the number
+     *                   explicitely requested when a search is invoked.
+     * @throws RemoteException if the value could not be changed.
+     * @see SummaSearcher#CONF_MAX_RECORDS
+     */
+    public void setMaxRecords(long maxRecords) throws RemoteException;
+
+    /**
+     * @return the number of underlying searchers used by this searcher.
+     * @throws RemoteException if the value could not be retrieved.
+     * @see SummaSearcher#CONF_NUMBER_OF_SEARCHERS
+     * @see SummaSearcher#CONF_NUMBER_OF_CONCURRENT_SEARCHES
+     */
+    public int getSearchers() throws RemoteException;
+
+    /**
+     * This value should only be tweaked manually for experimental purposes, as
+     * it is not persistent across instantiations of searchers. In order to make
+     * the change persistent, the underlying configuration for the searcher must
+     * be updated - this is normally done through the Control module.
+     * @param searchers the number of underlying searchers to use.
+     *                  This must be 1 or more.
+     * @throws RemoteException if the number could not be changes.
+     * @see SummaSearcher#CONF_NUMBER_OF_SEARCHERS
+     * @see SummaSearcher#CONF_NUMBER_OF_CONCURRENT_SEARCHES
+     */
+    public void setSearchers(int searchers) throws RemoteException;
+
+    /**
+     * @return the maximum number of concurrent searches allowed.
+     * @throws RemoteException if the value could not be retrieved.
+     * @see SummaSearcher#CONF_NUMBER_OF_CONCURRENT_SEARCHES
+     * @see SummaSearcher#CONF_SEARCH_QUEUE_MAX_SIZE
+     * @see SummaSearcher#CONF_NUMBER_OF_SEARCHERS
+     */
+    public int getMaxConcurrentSearches() throws RemoteException;
+
+    /**
+     * Changing the number of concurrent searches will only affect new searches.
+     * This value should only be tweaked manually for experimental purposes, as
+     * it is not persistent across instantiations of searchers. In order to make
+     * the change persistent, the underlying configuration for the searcher must
+     * be updated - this is normally done through the Control module.
+     * @param maxSearches the maximum number of concurrent searches allowed.
+     * @throws RemoteException if the value could not be changed.
+     * @see SummaSearcher#CONF_NUMBER_OF_CONCURRENT_SEARCHES
+     * @see SummaSearcher#CONF_SEARCH_QUEUE_MAX_SIZE
+     * @see SummaSearcher#CONF_NUMBER_OF_SEARCHERS
+     */
+    public void setMaxConcurrentSearches(int maxSearches) throws
+                                                          RemoteException;
+
+    /**
+     * @return the maximum number of queued queries.
+     * @throws RemoteException if the value could not be retrieved.
+     * @see SummaSearcher#CONF_SEARCH_QUEUE_MAX_SIZE
+     * @see SummaSearcher#CONF_NUMBER_OF_CONCURRENT_SEARCHES
+     */
+    public int getSearchQueueMaxSize() throws RemoteException;
+
+    /**
+     * Changing the queue max size will only affect new searches.
      * </p><p>
-     * This is optional. If not specified, no warm-up is performed.
-     * @see {@link #CONF_WARMUP_MAXTIME}.
+     * This value should only be tweaked manually for experimental purposes, as
+     * it is not persistent across instantiations of searchers. In order to make
+     * the change persistent, the underlying configuration for the searcher must
+     * be updated - this is normally done through the Control module.
+     * @param maxSize the maximum number of queued queries.
+     * @throws RemoteException if the value could not be changed.
+     * @see SummaSearcher#CONF_SEARCH_QUEUE_MAX_SIZE
+     * @see SummaSearcher#CONF_NUMBER_OF_CONCURRENT_SEARCHES
      */
-    public static final String CONF_WARMUP_DATA =
-            "summa.search.warmup.data";
-    public static final String DEFAULT_WARMUP_DATA = null;
+    public void setSearchQueueMaxSize(int maxSize) throws RemoteException;
 
     /**
-     * The maximum number of milliseconds to spend on warm-up. If all queries
-     * specified in {@link #CONF_WARMUP_DATA} has been processed before this
-     * time limit, the warmup-phase is exited.
+     * @return the timeout in milliseconds before a search is dropped.
+     * @throws RemoteException if the value could not be retrieved.
+     * @see SummaSearcher#CONF_SEARCHER_AVAILABILITY_TIMEOUT
+     * @see SummaSearcher#CONF_SEARCHER_AVAILABILITY_TIMEOUT
+     */
+    public int getSearcherAvailabilityTimeout() throws RemoteException;
+
+    /**
+     * Changing the timeout only affect new searches.
      * </p><p>
-     * This is optional. Default is 30 seconds (30,000 milliseconds).
+     * This value should only be tweaked manually for experimental purposes, as
+     * it is not persistent across instantiations of searchers. In order to make
+     * the change persistent, the underlying configuration for the searcher must
+     * be updated - this is normally done through the Control module.
+     * @param ms the timeout in milliseconds before a search is dropped.
+     * @throws RemoteException if the value could not be changed.
+     * @see SummaSearcher#CONF_SEARCHER_AVAILABILITY_TIMEOUT
      */
-    public static final String CONF_WARMUP_MAXTIME =
-            "summa.search.warmup.maxtime";
-    public static final int DEFAULT_WARMUP_MAXTIME = 1000 * 30;
+    public void setSearcherAvailabilityTimeout(int ms) throws RemoteException;
 
     /**
-     * The maximum number of records to return, as a long. This takes precedence
-     * over the value specified in the method {@link #fullSearch}.
+     * @return the default sort key for searches.
+     * @throws RemoteException if the key could not be determined.
+     * @see SummaSearcher#CONF_DEFAULT_SORTKEY
      */
-    public static final String CONF_MAX_RECORDS = "summa.search.maxRecords";
-    public long DEFAULT_MAX_NUMBER_OF_RECORDS = Long.MAX_VALUE;
+    public String getSortKey() throws RemoteException;
 
     /**
-     * The number of underlying searchers to instantiate. The optimum number is
-     * highly depending on the underlying search engine and the hardware.
-     * Experiments with Lucene at Statsbiblioteket suggests that the best value
-     * for this searcher is around 1½ * the number of CPUs, but as always YMMW.
-     * Note that the official recommendation from the Lucene people is to have
-     * a single searcher, no matter the number of CPUs.
-     * </p><p>
-     * This is optional. The default is 2.
+     * This value should only be tweaked manually for experimental purposes, as
+     * it is not persistent across instantiations of searchers. In order to make
+     * the change persistent, the underlying configuration for the searcher must
+     * be updated - this is normally done through the Control module.
+     * @param sortKey the default sort key for searches.
+     * @throws RemoteException if the value could not be changed.
+     * @see SummaSearcher#CONF_DEFAULT_SORTKEY
      */
-    public static final String CONF_NUMBER_OF_SEARCHERS =
-            "summa.search.number-of-searchers";
-    public static final int DEFAULT_NUMBER_OF_SEARCHERS = 2;
+    public void setSortKey(String sortKey) throws RemoteException;
+
+
+    /* Index manipulation */
 
     /**
-     * The maximum number of concurrent searches, shared between
-     * {@link #CONF_NUMBER_OF_SEARCHERS}. The searcher with the least
-     * amount of active searches will be picked first when a new search
-     * is requested.
-     * </p><p>
-     * This is optional. Default is 2.
-     * @see #CONF_SEARCH_QUEUE_MAX_SIZE
+     * Force an explicit warmup of the searchers.
+     * @return the number of nanoseconds used on warmup.
+     * @throws RemoteException if warmup could not be performed.
+     * @see SummaSearcher#CONF_WARMUP_DATA
+     * @see SummaSearcher#CONF_WARMUP_MAXTIME
      */
-    public static final String CONF_NUMBER_OF_CONCURRENT_SEARCHES =
-            "summa.search.number-of-concurrent-searches";
-    public static final int DEFAULT_NUMBER_OF_CONCURRENT_SEARCHES = 2;
+    public long performWarmup() throws RemoteException;
 
     /**
-     * If a new search is requested and there are already
-     * {@link #CONF_NUMBER_OF_CONCURRENT_SEARCHES} running, the search is
-     * queued. If the queue reaches its max-size, the request is not queued
-     * and an exception is thrown.
-     * </p><p>
-     * This is optional. Default is 2.
-     * @see #CONF_NUMBER_OF_CONCURRENT_SEARCHES
+     * Force reload of the underlying index. When the method returns, the reload
+     * is finished and the underlying searchers are ready.
+     * @throws RemoteException if the reload failed. If an exception is thrown,
+     *                         the status of the underlying searchers might be
+     *                         compromised.
      */
-    public static final String CONF_SEARCH_QUEUE_MAX_SIZE =
-            "summa.search.search-queue.max-size";
-    public static final int DEFAULT_SEARCH_QUEUE_MAX_SIZE = 50;
+    public void reloadIndex() throws RemoteException;
 
     /**
-     * If no searchers are ready upon search, wait up to this number of
-     * milliseconds for a searcher to become ready. If no searchers are ready
-     * at that time, an exception will be thrown.
+     * @return the location of the current index or null if no index is opened.
+     * @throws RemoteException if the location could not be retrieved.
      */
-    public static final String CONF_SEARCHER_AVAILABILITY_TIMEOUT =
-            "summa.search.searcher-availability.timeout";
-    public static final int DEFAULT_SEARCHER_AVAILABILITY_TIMEOUT = 5 * 60000;
+    public String getIndexLocation() throws RemoteException;
+
+
+    /* Statistics */
 
     /**
-     * The special sortKey signifying that sorting should be done on score,
-     * thus making the search return records in order of relevance.
+     * @return the length of the queue with queries waiting to be resolved.
+     *         This number includes currently running searches.
+     * @throws RemoteException if the length could not be determined.
+     * @see #getCurrentSearches
      */
-    public static final String SORT_ON_SCORE = "summa-score";
+    public int getQueueLength() throws RemoteException;
 
     /**
-     * The default sort option. This can either be the name of a field or
-     * the string {@link #SORT_ON_SCORE} ("summa-score") which signifies that
-     * sorting should be done according to ranking.
-     * </p><p>
-     * This is optional. Default is {@link #SORT_ON_SCORE}.
+     * @return the number of currently running searches.
+     * @throws RemoteException if the value could not be extracted.
+     * @see #getQueueLength
      */
-    public static final String CONF_DEFAULT_SORTKEY =
-            "summa.search.default-sortkey";
-    public static final String DEFAULT_DEFAULT_SORTKEY = SORT_ON_SCORE;
-
+    public int getCurrentSearches() throws RemoteException;
 
     /**
-     * The complete search with all possible parameters. The filterQuery
-     * narrows the search-field, using the exact same syntax as a query.
-     * The query matches documents aka records and a maximum of maxRecords
-     * record-representations are returned, starting from position startIndex,
-     * counting from 0.<br />
-     * If sortKey is defined, the matches are sorted by the given key, in
-     * reverse order if reverseSort is true. fields and defaultValues define
-     * how the records should be represented.
-     * </p><p>
-     * The result is returned in XML:<br />
-     * {@code
-     * <?xml version="1.0" encoding="UTF-8"?>
-     * <searchresult filter="..." query="..."
-     *               startIndex="..." maxRecords="..."
-     *               sortKey="..." reverseSort="..."
-     *               fields="..." searchTime="..." hitCount="...">
-     *   <record score="..." sortValue="...">
-     *     <field name="recordID">...</field>
-     *     <field name="shortformat">...</field>
-     *   </record>
-     *   ...
-     * </searchresult>
-     * }
-     * sortValue is the value that the sort was performed on. If the result from
-     * several searchers are to be merged, merge-ordering should be dictated by
-     * this value.<br />
-     * score is the score-value returned by the index implementation.<br />
-     * searchTime is the number of milliseconds it took to perform the search.
-     * </p><p>
-     * Optional parameters can be null, signifying that they are not defined.
-     * The content in the XML is entity-escaped.
-     * @param filter      a query that narrows the search. A filter does not
-     *                    affect scores.<br />
-     *                    This parameter is optional. Default is null.
-     * @param query       a query as entered by a user. This is expanded to
-     *                    the underlying index query-system, normally with
-     *                    the use of
-     *           {@link dk.statsbiblioteket.summa.common.index.IndexDescriptor}.
-     * @param startIndex  the starting index for the result, counting from 0.
-     *                    If the result is to be merged with the result from
-     *                    other searchers, this needs to be 0 in order to
-     *                    ensure proper merging.
-     * @param maxRecords  the maximum number of records to return.<br />
-     *                    this parameter is mandatory and is rounded down to
-     *                    the value specified in properties, using the key
-     *                    {link #CONF_MAX_NUMBER_OF_RECORDS}.
-     * @param sortKey     specifies how to sort. If this is null or
-     *                    {@link #SORT_ON_SCORE}, sorting will be done on the
-     *                    scores for the hits. If a field-name is specified,
-     *                    sorting will be done on that field.<br />
-     *                    This parameter is optional.
-     *                    Default is {@link #SORT_ON_SCORE}.
-     *                    Specifying null is the same as specifying
-     *                    {@link #SORT_ON_SCORE}.
-     * @param reverseSort if true, the sort is performed in reverse order.
-     * @param resultFields the fields to extract content from.
-     *                    This parameter is optional. Default is specified
-     *                    in the conf. at {@link #CONF_RESULT_FIELDS}.
-     * @param fallbacks   if the value of a given field cannot be extracted,
-     *                    the corresponding value from fallbacks is returned.
-     *                    Note that the length of fallbacks and fields must
-     *                    be the same.
-     * @return the result of a search in XML, as specified above.
-     * @throws RemoteException if there was an exception during search.
+     * @return the last received query. This is null, if no query has been
+     *         received yet.
+     * @throws RemoteException if the query could not be received. This should
+     *                         never happen under normal circumstances.
      */
-    public String fullSearch(String filter, String query,
-                             long startIndex, long maxRecords,
-                             String sortKey, boolean reverseSort,
-                             String[] resultFields, String[] fallbacks)
-            throws RemoteException;
+    public String getLastQuery() throws RemoteException;
 
     /**
-     * Simple shortcut for fullSearch. Equivalent to {@code
-     * fullSearch(null, query, startIndex, maxRecords, null, false, null, null);
-     * }
-     * @param query       a query as entered by a user. This is expanded to
-     *                    the underlying index query-system, normally with
-     *                    the use of
-     *           {@link dk.statsbiblioteket.summa.common.index.IndexDescriptor}.
-     * @param startIndex  the starting index for the result, counting from 0.
-     *                    If the result is to be merged with the result from
-     *                    other searchers, this needs to be 0 in order to
-     *                    ensure proper merging.
-     * @param maxRecords  the maximum number of records to return.<br />
-     *                    this parameter is mandatory and is rounded down to
-     *                    the value specified in properties, using the key
-     *                    {link #CONF_MAX_NUMBER_OF_RECORDS}.
-     * @return the search-result in XML, as specified in {@link #fullSearch}.
-     * @throws RemoteException if there was an exception during search.
+     * @return the last response time in nanoseconds or -1 if no search has
+     *         been performed yet.
+     * @throws RemoteException if the last response time could not be retrieved.
      */
-    public String simpleSearch(String query, long startIndex, long maxRecords)
-                                                         throws RemoteException;
+    public long getLastResponseTime() throws RemoteException;
 
     /**
-     * Shut down the searcher and free all associated resources. The searcher
-     * cannot be used after close.
-     * @throws RemoteException if an error occured during close. Implementers
-     *                         of the interface are urged to free as many
-     *                         resources as possible, even in the event of an
-     *                         exception.
+     * @return the number of queries used for searches.
+     * @throws RemoteException if the number could not be retrieved.
      */
-    void close() throws RemoteException;
+    public long getQueryCount() throws RemoteException;
+
+    /**
+     * @return the total number of nanoseconds spend on searching.
+     * @throws RemoteException if the number could not be retrieved.
+     */
+    public long getTotalResponseTime() throws RemoteException;
+
+    /**
+     * @return the average number of nanoseconds spend on a search.
+     *         If the number cannot be calculated, Double.NaN is returned.
+     * @throws RemoteException if the number could not be retrieved.
+     */
+    public double getAverageResponseTime() throws RemoteException;
+
+    /**
+     * Clear all statistics on query strings and response time.
+     * @throws RemoteException if the data could not be cleared.
+     */
+    public void clearStatistics() throws RemoteException;
 }

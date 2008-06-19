@@ -3,6 +3,24 @@
 <xproperties>
     <xproperties>
         <entry>
+            <key>summa.control.service.port</key>
+            <value class="int">2783</value>
+        </entry>
+        <entry>
+            <key>summa.control.service.registry.port</key>
+            <value class="int">27000</value>
+        </entry>
+        <entry>
+            <key>summa.control.service.id</key>
+            <value class="string">Search</value>
+        </entry>
+
+        <entry>
+            <key>summa.search.searcher-class</key>
+            <value class="string">dk.statsbiblioteket.summa.search.LuceneSearcher</value>
+        </entry>
+
+        <entry>
             <key>search.clauses.max</key>
             <value class="int">20000</value>
         </entry>

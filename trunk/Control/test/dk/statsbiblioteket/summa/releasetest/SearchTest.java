@@ -23,6 +23,7 @@
 package dk.statsbiblioteket.summa.releasetest;
 
 import java.io.File;
+import java.io.IOException;
 import java.rmi.RMISecurityManager;
 import java.security.Permission;
 import java.net.URL;
@@ -43,6 +44,7 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.storage.io.RecordIterator;
 import dk.statsbiblioteket.summa.control.service.StorageService;
 import dk.statsbiblioteket.summa.control.service.FilterService;
+import dk.statsbiblioteket.summa.control.service.SearchService;
 import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.ingest.stream.FileReader;
 import dk.statsbiblioteket.summa.search.SummaSearcher;
@@ -155,7 +157,18 @@ public class SearchTest extends NoExitTestCase {
     File INDEX_ROOT = new File(System.getProperty("java.io.tmpdir"),
                                "testindex");
 
+    private SearchService createSearchService() throws Exception {
+        SearchService searchService =
+                new SearchService(getSearcherConfiguration());
+        searchService.start();
+        return searchService;
+    }
+
     private SummaSearcher createSearcher() throws Exception {
+        return new LuceneSearcher(getSearcherConfiguration());
+    }
+
+    private Configuration getSearcherConfiguration() throws IOException {
         URL descriptorLocation = Resolver.getURL(
                 "data/search/SearchTest_IndexDescriptor.xml");
         assertNotNull("The descriptor location should not be null",
@@ -170,7 +183,7 @@ public class SearchTest extends NoExitTestCase {
                     descriptorLocation.getFile());
         searcherConf.set(IndexWatcher.CONF_INDEX_WATCHER_INDEX_ROOT,
                          INDEX_ROOT.toString());
-        return new LuceneSearcher(searcherConf);
+        return searcherConf;
     }
 
     public void testSearcher() throws Exception {
@@ -182,6 +195,19 @@ public class SearchTest extends NoExitTestCase {
         } catch (IndexException e) {
             // Expected
         }
+    }
+
+    public void testSearchService() throws Exception {
+        SearchService searcher = createSearchService();
+        try {
+            searcher.fullSearch(null, "hans", 0, 10, null, false, null, null);
+            fail("An IndexException should be thrown as no index data are"
+                 + " present yet");
+        } catch (IndexException e) {
+            // Expected
+        }
+        Thread.sleep(Integer.MAX_VALUE);
+        searcher.stop();
     }
 
     private void updateIndex() throws Exception {

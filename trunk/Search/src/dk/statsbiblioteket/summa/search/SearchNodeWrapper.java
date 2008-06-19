@@ -159,7 +159,7 @@ public class SearchNodeWrapper implements SearchNode {
      * and closes any open connection to index resources. When this method
      * returns, it should be safe to remove the search node from the collection.
      */
-    public synchronized void close() {
+    public synchronized void close() throws RemoteException {
         ready = false;
         log.trace("close() called for location '" + location + "'");
         waitForSearches();

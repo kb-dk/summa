@@ -75,6 +75,15 @@ public abstract class ServiceBase extends UnicastRemoteObject
         super (getServicePort(conf));
 
         id = System.getProperty(SERVICE_ID);
+        if (id == null) {
+            id = conf.getString(Service.SERVICE_ID, null);
+        }
+        if (id == null) {
+            log.warn(String.format(
+                    "The property '%s' was not present and no service id was"
+                    + " specified in system properties '%s'. id could not be"
+                    + " determined", Service.SERVICE_ID, SERVICE_ID));
+        }
         if (System.getSecurityManager() == null) {
             log.info ("No security manager found. "
                       + "Setting RMI security manager");
@@ -135,6 +144,7 @@ public abstract class ServiceBase extends UnicastRemoteObject
 
         try {
             reg.rebind(id, this);
+            log.trace("Registry rebind of '" + id + "' completed");
         } catch (AccessException e) {
             String error = "Failed to access registry at port " + registryPort
                            + " with id '" + id + "'";
