@@ -47,7 +47,7 @@ import org.apache.commons.logging.LogFactory;
  * consolidate at configurable intervals. It is also a standard ObjectFilter,
  * so further chaining is possible.
  */
-// TODO: Mark update on commit, consolidate, eof, meta-key-value-pattern
+// TODO: Mark update on eof, meta-key-value-pattern
 // TODO: Consider write-lock
 // TODO: Handle deletions without documents
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -518,6 +518,7 @@ public class IndexController extends StateThread implements ObjectFilter,
         }
         commitsSinceLastConsolidate++;
         lastCommit = System.currentTimeMillis();
+        markAsUpdated(lastCommit);
         updatesSinceLastCommit =      0;
         log.trace("commit() finished in "
                   + (System.currentTimeMillis() - startTime) + " ms");
@@ -539,6 +540,11 @@ public class IndexController extends StateThread implements ObjectFilter,
                   + (System.currentTimeMillis() - startTime) + " ms");
     }
 
+    /**
+     * Mark the underlying index as being updated at the given timestamp. Marks
+     * are used to inform readers of changes.
+     * @param timestamp the time the update occured.
+     */
     private void markAsUpdated(long timestamp) {
         File currentFile = new File(indexLocation, IndexCommon.VERSION_FILE);
         try {
