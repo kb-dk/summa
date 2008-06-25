@@ -170,18 +170,18 @@ public interface BasicSearcher {
      * </p><p>
      * The result is returned in XML:<br />
      * {@code
-     * <?xml version="1.0" encoding="UTF-8"?>
-     * <searchresult filter="..." query="..."
-     *               startIndex="..." maxRecords="..."
-     *               sortKey="..." reverseSort="..."
-     *               fields="..." searchTime="..." hitCount="...">
-     *   <record score="..." sortValue="...">
-     *     <field name="recordID">...</field>
-     *     <field name="shortformat">...</field>
-     *   </record>
-     *   ...
-     * </searchresult>
-     * }
+       <?xml version="1.0" encoding="UTF-8"?>
+       <searchresult filter="..." query="..."
+                     startIndex="..." maxRecords="..."
+                     sortKey="..." reverseSort="..."
+                     fields="..." searchTime="..." hitCount="...">
+         <record score="..." sortValue="...">
+           <field name="recordID">...</field>
+           <field name="shortformat">...</field>
+         </record>
+         ...
+       </searchresult>
+       }
      * sortValue is the value that the sort was performed on. If the result from
      * several searchers are to be merged, merge-ordering should be dictated by
      * this value.<br />
