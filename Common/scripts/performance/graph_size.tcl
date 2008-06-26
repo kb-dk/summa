@@ -42,14 +42,14 @@ if { [lindex $argv $logstart] == "-xmax" } {
     set xmax [lindex $argv $logstart]
     incr logstart
 }
-if { [lindex $argv $logstart] == "-ymax" } {
-    incr logstart
-    set ymax [lindex $argv $logstart]
-    incr logstart
-}
 if { [lindex $argv $logstart] == "-ymin" } {
     incr logstart
     set ymin [lindex $argv $logstart]
+    incr logstart
+}
+if { [lindex $argv $logstart] == "-ymax" } {
+    incr logstart
+    set ymax [lindex $argv $logstart]
     incr logstart
 }
 if { [lindex $argv $logstart] == "-xlogscale" } {
