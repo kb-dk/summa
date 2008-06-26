@@ -37,6 +37,7 @@ import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
 import dk.statsbiblioteket.summa.common.index.IndexException;
+import dk.statsbiblioteket.summa.common.util.ParseUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.search.IndexSearcher;
@@ -62,9 +63,6 @@ import org.apache.lucene.index.CorruptIndexException;
         author = "te")
 public class LuceneSearchNode implements SearchNode, Configurable {
     private static Log log = LogFactory.getLog(LuceneSearchNode.class);
-
-    public static final String XML_HEADER =
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
 
     private String[] resultFields = DEFAULT_RESULT_FIELDS;
     private String[] fallbackValues = DEFAULT_FALLBACK_VALUES;
@@ -263,7 +261,7 @@ public class LuceneSearchNode implements SearchNode, Configurable {
                     new HashSet(5));
 
             StringWriter sw = new StringWriter(500);
-            sw.append(XML_HEADER + "\n");
+            sw.append(ParseUtil.XML_HEADER + "\n");
             sw.append("<searchresult");
             sw.append(filterO == null ? "" :
                       " filter=\"" + encode(filter) + "\"");

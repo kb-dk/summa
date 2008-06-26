@@ -25,9 +25,12 @@ package dk.statsbiblioteket.summa.search;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Collections;
+import java.util.Comparator;
 import java.text.Collator;
+import java.io.StringWriter;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.common.util.ParseUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -58,6 +61,7 @@ public class SearchResult {
                         String sortKey, boolean reverseSort,
                         String[] resultFields, long searchTime,
                         long hitCount) {
+        log.debug("Creating search result for query '" + query + "'");
         this.filter = filter;
         this.query = query;
         this.startIndex = startIndex;
@@ -98,8 +102,26 @@ public class SearchResult {
             this.score = score;
             this.sortValue = sortValue;
         }
+
         public void addField(Field field) {
             fields.add(field);
+        }
+
+        public void toXML(StringWriter sw) {
+            sw.append("  <record score=\"").append(Float.toString(score));
+            sw.append("\"");
+            appendIfDefined(sw, "sortValue", sortValue);
+            appendIfDefined(sw, "id", id);
+            appendIfDefined(sw, "source", source);
+            sw.append(">\n");
+            for (Field field: fields) {
+                field.toXML(sw);
+            }
+            sw.append("  </record>\n");
+        }
+
+        public float getScore() {
+            return score;
         }
     }
 
@@ -114,6 +136,22 @@ public class SearchResult {
             this.name = name;
             this.content = content;
         }
+
+        public void toXML(StringWriter sw) {
+            if (content == null || "".equals(content)) {
+                return;
+            }
+            sw.append("    <field name=\"").append(name).append("\">");
+            sw.append(ParseUtil.encode(content)).append("</field>\n");
+        }
+    }
+
+    private void appendIfDefined(StringWriter sw, String name, String value) {
+        if (value == null) {
+            return;
+        }
+        sw.append(" ").append(name).append("=\"");
+        sw.append(ParseUtil.encode(value)).append("\"");
     }
 
     /**
@@ -139,33 +177,62 @@ public class SearchResult {
      * warning is returned.
      * @param other the search result that should be merged into this.
      * @param collator determines the order of Records, based on their
-     *                 sortValue. If no collator is given, the values of
-     *                 {@link Record#score} are compared in natural order.<br />
+     *                 sortValue. If no collator is given or sortKey equals
+     *                 {@link BasicSearcher#SORT_ON_SCORE} or sortKey equals
+     *                 null, the values of {@link Record#score} are compared in
+     *                 natural order.<br />
      *                 Note that the collator should ignore the property
-     *                 {@link #reverseSort} as the merge method will take care
+     *                 {@link #reverseSort}, as the merge method will take care
      *                 of this if needed.
      * @return null if no conflicts, else a human-readable descriptions of the
      *              encountered conflicts.
      */
-    public String merge(SearchResult other, Collator collator) {
-        // TODO: Implement this
+    public String merge(SearchResult other, final Collator collator) {
+        log.trace("merge called");
+        // TODO: Check for differences in basic attributes and warn if needed
+        records.addAll(other.getRecords());
+        if (collator == null || sortKey == null
+            || BasicSearcher.SORT_ON_SCORE.equals(sortKey)) {
+            Collections.sort(records, scoreComparator);
+        } else {
+            Comparator<Record> collatorComparator = new Comparator<Record>() {
+                public int compare(Record o1, Record o2) {
+//                    if (o1.get)
+  //                  collator.compare(o1.get)
+                    throw new UnsupportedOperationException("Not finished!");
+//                    float diff = o1.getScore() - o2.getScore();
+//                    return diff < 0 ? -1 : diff > 0 ? 1 : 0;
+                }
+            };
+
+        }
         return null;
+    }
+    private Comparator<Record> scoreComparator = new Comparator<Record>() {
+        public int compare(Record o1, Record o2) {
+            float diff = o1.getScore() - o2.getScore();
+            return diff < 0 ? -1 : diff > 0 ? 1 : 0;
+        }
+    };
+
+    private boolean equals(String s1, String s2) {
+        return s1 == null && s2 == null || s1 != null && s1.equals(s2);
     }
 
     /**
      * {@code
-     * <?xml version="1.0" encoding="UTF-8"?>
-     * <searchresult filter="..." query="..."
-     *               startIndex="..." maxRecords="..."
-     *               sortKey="..." reverseSort="..."
-     *               fields="..." searchTime="..." hitCount="...">
-     *   <record score="..." sortValue="...">
-     *     <field name="recordID">...</field>
-     *     <field name="shortformat">...</field>
-     *   </record>
-     *   ...
-     * </searchresult>
-     * }
+       <?xml version="1.0" encoding="UTF-8"?>
+       <searchresult filter="..." query="..."
+                     startIndex="..." maxRecords="..."
+                     sortKey="..." reverseSort="..."
+                     fields="..." searchTime="..." hitCount="...">
+         <record score="..." sortValue="...">
+           <field name="recordID">...</field>
+           <field name="shortformat">...</field>
+         </record>
+         ...
+       </searchresult>
+       }
      * sortValue is the value that the sort was performed on. If the XML-result
      * from several searchers are to be merged, merge-ordering should be
      * dictated by this value.<br />
@@ -174,7 +241,44 @@ public class SearchResult {
      * @return the search-result as XML, suitable for web-services et al.
      */
     public String toXML() {
-        // TODO: Implement this
-        return null;
+        log.trace("toXML() called");
+        StringWriter sw = new StringWriter(2000);
+        sw.append(ParseUtil.XML_HEADER).append("\n");
+        sw.append("<searchresult");
+        appendIfDefined(sw, "filter", filter);
+        appendIfDefined(sw, "query", query);
+        sw.append(" startIndex=\"");
+        sw.append(Long.toString(startIndex)).append("\"");
+        sw.append(" maxRecords=\"");
+        sw.append(Long.toString(maxRecords)).append("\"");
+        appendIfDefined(sw, "sortKey", sortKey);
+        sw.append(" reverseSort=\"");
+        sw.append(Boolean.toString(reverseSort)).append("\"");
+        if (resultFields != null) {
+            sw.append(" fields=\"");
+            for (int i = 0 ; i < resultFields.length ; i++) {
+                sw.append(ParseUtil.encode(resultFields[i]));
+                if (i < resultFields.length-1) {
+                    sw.append(", ");
+                }
+            }
+            sw.append("\"");
+        }
+        sw.append(" searchTime=\"");
+        sw.append(Long.toString(searchTime)).append("\"");
+        sw.append(" hitcount=\"");
+        sw.append(Long.toString(hitCount)).append("\">\n");
+        for (Record record: records) {
+            record.toXML(sw);
+        }
+        sw.append("</searchresult>\n");
+        log.trace("Returning XML from toXML()");
+        return sw.toString();
+    }
+
+    /* Getters and setters */
+
+    public List<Record> getRecords() {
+        return records;
     }
 }

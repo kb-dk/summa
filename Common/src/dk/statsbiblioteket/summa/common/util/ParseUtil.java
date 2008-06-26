@@ -42,6 +42,8 @@ import org.apache.commons.logging.LogFactory;
         author = "te")
 public class ParseUtil {
     private static final Log log = LogFactory.getLog(ParseUtil.class);
+    public static final String XML_HEADER =
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
 
     /**
      * Wrapper for {@link #getValue} that uses Floats.
@@ -159,5 +161,18 @@ public class ParseUtil {
          }
          return sw.toString();
      }
+
+    /**
+     * Performs a simple entity-encoding of input, maing it safe to include in
+     * XML.
+     * @param input the text to encode.
+     * @return the text with &, ", < and > encoded.
+     */
+    public static String encode(String input) {
+        input = input.replaceAll("&", "&amp;");
+        input = input.replaceAll("\"", "&quot;");
+        input = input.replaceAll("<", "&lt;");
+        return input.replaceAll(">", "&gt;");
+    }
 
 }
