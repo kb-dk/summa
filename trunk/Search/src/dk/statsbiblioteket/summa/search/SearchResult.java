@@ -44,6 +44,24 @@ import org.apache.commons.logging.LogFactory;
 public class SearchResult {
     private static Log log = LogFactory.getLog(SearchResult.class);
 
+    /**
+     * If true, records with missing sort-field will be put either at the
+     * beginning of the results or at the end, no matter the collator and
+     * the sort-direction.<br />
+     * If false, the order is up to the collator.
+     * @see {@link #NON_DEFINED_FIELDS_ARE_SORTED_LAST}.
+     * @see {@link #merge(SearchResult, Collator)}.
+     */
+    private static final boolean NON_DEFINED_FIELDS_ARE_SPECIAL_SORTED = true;
+    /**
+     * If true, sorting on field X will put all records without field X after
+     * the records with field X, no matter if the search is reversed or not.
+     * If false, the records without the sort-field will be put first.
+     * @see {@link #NON_DEFINED_FIELDS_ARE_SPECIAL_SORTED}.
+     * @see {@link #merge(SearchResult, Collator)}.
+     */
+    private static final boolean NON_DEFINED_FIELDS_ARE_SORTED_LAST = true;
+
     private String filter;
     private String query;
     private long startIndex;
@@ -77,7 +95,7 @@ public class SearchResult {
     /**
      * Contains a representation of each hit from a search.
      */
-    public class Record {
+    public static class Record {
         private float score;
         private String sortValue;
         private String id;
@@ -123,12 +141,16 @@ public class SearchResult {
         public float getScore() {
             return score;
         }
+
+        public String getSortValue() {
+            return sortValue;
+        }
     }
 
     /**
      * Containt content from a requested Field for a Record.
      */
-    public class Field {
+    public static class Field {
         private String name;
         private String content;
 
@@ -146,7 +168,8 @@ public class SearchResult {
         }
     }
 
-    private void appendIfDefined(StringWriter sw, String name, String value) {
+    private static void appendIfDefined(StringWriter sw,
+                                        String name, String value) {
         if (value == null) {
             return;
         }
@@ -159,6 +182,7 @@ public class SearchResult {
      * @param record a record that should belong to the search result.
      */
     public void addRecord(Record record) {
+        System.err.println("Adding " + record);
         if (record == null) {
             throw new IllegalArgumentException(
                     "Expected a Record, got null");
@@ -197,14 +221,25 @@ public class SearchResult {
         } else {
             Comparator<Record> collatorComparator = new Comparator<Record>() {
                 public int compare(Record o1, Record o2) {
-//                    if (o1.get)
-  //                  collator.compare(o1.get)
-                    throw new UnsupportedOperationException("Not finished!");
-//                    float diff = o1.getScore() - o2.getScore();
-//                    return diff < 0 ? -1 : diff > 0 ? 1 : 0;
+                    String s1 =
+                            o1.getSortValue() == null ? "" : o1.getSortValue();
+                    String s2 =
+                            o2.getSortValue() == null ? "" : o2.getSortValue();
+                    if (NON_DEFINED_FIELDS_ARE_SPECIAL_SORTED) {
+                        // Handle empty cases
+                        if ("".equals(s1)) {
+                            return "".equals(s2) ?
+                                   scoreComparator.compare(o1, o2) :
+                                   NON_DEFINED_FIELDS_ARE_SORTED_LAST ? -1 : 1;
+                        } else if ("".equals(s2)) {
+                            return NON_DEFINED_FIELDS_ARE_SORTED_LAST ? 1 : -1;
+                        }
+                    }
+                    // TODO: Port sorting from Stable
+                    return collator.compare(s1, s2);
                 }
             };
-
+            Collections.sort(records, collatorComparator);
         }
         return null;
     }
@@ -214,10 +249,6 @@ public class SearchResult {
             return diff < 0 ? -1 : diff > 0 ? 1 : 0;
         }
     };
-
-    private boolean equals(String s1, String s2) {
-        return s1 == null && s2 == null || s1 != null && s1.equals(s2);
-    }
 
     /**
      * {@code
@@ -233,6 +264,7 @@ public class SearchResult {
          ...
        </searchresult>
        }
+     * The content in the XML is entity-escaped.<br />
      * sortValue is the value that the sort was performed on. If the XML-result
      * from several searchers are to be merged, merge-ordering should be
      * dictated by this value.<br />
@@ -266,7 +298,7 @@ public class SearchResult {
         }
         sw.append(" searchTime=\"");
         sw.append(Long.toString(searchTime)).append("\"");
-        sw.append(" hitcount=\"");
+        sw.append(" hitCount=\"");
         sw.append(Long.toString(hitCount)).append("\">\n");
         for (Record record: records) {
             record.toXML(sw);
@@ -280,5 +312,9 @@ public class SearchResult {
 
     public List<Record> getRecords() {
         return records;
+    }
+    // Because building the SearchResult takes time
+    public void setSearchTime(long searchTime) {
+        this.searchTime = searchTime;
     }
 }

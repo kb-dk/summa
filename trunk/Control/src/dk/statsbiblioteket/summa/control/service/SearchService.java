@@ -33,6 +33,7 @@ import java.lang.management.ManagementFactory;
 
 import dk.statsbiblioteket.summa.search.SummaSearcher;
 import dk.statsbiblioteket.summa.search.LuceneSearcher;
+import dk.statsbiblioteket.summa.search.SearchResult;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.control.api.Status;
@@ -188,10 +189,10 @@ public class SearchService extends ServiceBase implements SummaSearcher,
      *                    the corresponding value from fallbacks is returned.
      *                    Note that the length of fallbacks and fields must
      *                    be the same.
-     * @return the result of a search in XML, as specified above.
+     * @return the result of a search, suitable for merging or XML construction.
      * @throws RemoteException if there was an exception during search.
      */
-    public String fullSearch(String filter, String query, long startIndex,
+    public SearchResult fullSearch(String filter, String query, long startIndex,
                              long maxRecords, String sortKey,
                              boolean reverseSort, String[] resultFields,
                              String[] fallbacks) throws RemoteException {

@@ -193,10 +193,10 @@ public class LuceneSearchNode implements SearchNode, Configurable {
         }
     }
 
-    public String fullSearch(String filter, String query, long startIndex,
-                             long maxRecords, String sortKey,
-                             boolean reverseSort, String[] fields,
-                             String[] fallbacks) throws RemoteException {
+    public SearchResult fullSearch(String filter, String query, long startIndex,
+                                   long maxRecords, String sortKey,
+                                   boolean reverseSort, String[] fields,
+                                   String[] fallbacks) throws RemoteException {
         return fullSearch(filter, query, startIndex, maxRecords,
                           sortKey, reverseSort, fields, fallbacks, true);
     }
@@ -204,13 +204,14 @@ public class LuceneSearchNode implements SearchNode, Configurable {
     public String simpleSearch(String query, long startIndex,
                                long maxRecords) throws RemoteException {
         return fullSearch(null, query, startIndex, maxRecords,
-                          null, false, null, null, true);
+                          null, false, null, null, true).toXML();
     }
 
-    private String fullSearch(String filter, String query, long startIndex,
-                              long maxRecords, String sortKey,
-                              boolean reverseSort, String[] fields,
-                              String[] fallbacks, boolean doLog) throws
+    private SearchResult fullSearch(String filter, String query,
+                                    long startIndex, long maxRecords,
+                                    String sortKey, boolean reverseSort,
+                                    String[] fields, String[] fallbacks,
+                                    boolean doLog) throws
                                                                RemoteException {
         if (searcher == null) {
             throw new IndexException("No searcher available", location, null);
@@ -251,7 +252,6 @@ public class LuceneSearchNode implements SearchNode, Configurable {
             Filter filterO = filter == null || "".equals(filter) ? null :
                              new QueryWrapperFilter(parser.parse(filter));
             Query queryO = parser.parse(query);
-            // TODO: Port sorting from Stable
             TopFieldDocs topDocs = searcher.search(
                     queryO, filterO,
                     (int)(startIndex + maxRecords), Sort.RELEVANCE);
@@ -260,66 +260,41 @@ public class LuceneSearchNode implements SearchNode, Configurable {
                     new HashSet<String>(Arrays.asList(fields)),
                     new HashSet(5));
 
-            StringWriter sw = new StringWriter(500);
-            sw.append(ParseUtil.XML_HEADER + "\n");
-            sw.append("<searchresult");
-            sw.append(filterO == null ? "" :
-                      " filter=\"" + encode(filter) + "\"");
-            sw.append(" query=\"").append(encode(query)).append("\"");
-            sw.append(" startIndex=\"").append(Long.toString(startIndex));
-            sw.append("\"");
-            sw.append(" maxRecords=\"").append(Long.toString(maxRecords));
-            sw.append("\"");
-            sw.append(sortKey == null || "".equals(sortKey) ? "" :
-                      " sortKey=\"" + encode(sortKey) + "\"");
-            sw.append(" reverseSort=\"").append(Boolean.toString(reverseSort));
-            sw.append("\"");
-            sw.append(" fields=\"");
-            for (int i = 0 ; i < fields.length ; i++) {
-                sw.append(encode(fields[i]));
-                if (i < fields.length-1) {
-                    sw.append(", ");
-                }
-            }
-            sw.append("\"");
-            sw.append(" searchTime=\"");
-            sw.append(Long.toString(System.currentTimeMillis()-startTime));
-            sw.append("\"");
-            sw.append(" hitCount=\"");
-            sw.append(Integer.toString(topDocs.totalHits));
-            sw.append("\">\n");
+            SearchResult result =
+                    new SearchResult(filter, query, startIndex, maxRecords,
+                                     sortKey, reverseSort, resultFields, 0,
+                                     topDocs.totalHits);
+
             for (int i = 0 ; i < topDocs.scoreDocs.length ; i++) {
                 ScoreDoc scoreDoc = topDocs.scoreDocs[i];
-                sw.append("<record score=\"");
-                sw.append(Float.toString(scoreDoc.score)).append("\"");
-                // TODO: Get the sortValue - how? It is bad to require stored
-                if (SORT_ON_SCORE.equals(sortKey)) {
-                    sw.append(" sortValue=\"");
-                    sw.append(Float.toString(scoreDoc.score)).append("\">\n");
-                } else {
-                    sw.append(" sortValue=\"NA\">\n");
-                }
+                // TODO: Get a service id and the sort value
+                SearchResult.Record record =
+                        new SearchResult.Record(Integer.toString(scoreDoc.doc),
+                                                "NA", scoreDoc.score, null);
                 Document doc =
                      searcher.getIndexReader().document(scoreDoc.doc, selector);
                 for (int f = (int)startIndex ;
                      f < fields.length && f < (int)(startIndex + maxRecords) ;
                      f++) {
-                    sw.append("<field name=\"").append(fields[f]).append("\">");
                     Field iField = doc.getField(fields[f]);
-                    String value = iField.stringValue();
-                    sw.append(encode(value != null ? value :
-                                     fallbacks == null || fallbacks.length == 0
-                                     ? "" : fallbacks[f]));
-                    sw.append("</field>\n");
+                    if (iField == null || iField.stringValue() == null ||
+                        "".equals(iField.stringValue())) {
+                        if (fallbacks != null && fallbacks.length != 0) {
+                            record.addField(new SearchResult.Field(
+                                    fields[i], fallbacks[i]));
+                        }
+                    } else {
+                        record.addField(new SearchResult.Field(
+                                fields[i], encode(iField.stringValue())));
+                    }
                 }
-                sw.append("</record>\n");
             }
-            sw.append("</searchresult>\n");
+            result.setSearchTime(System.currentTimeMillis()-startTime);
             if (doLog) {
                 log.debug("fullSearch(..., '" + query + "', ...) done in "
                           + (System.currentTimeMillis()-startTime) + " ms");
             }
-            return sw.toString();
+            return result;
         } catch (ParseException e) {
             throw new IndexException(String.format(
                     "ParseException during search for query '%s'", query),

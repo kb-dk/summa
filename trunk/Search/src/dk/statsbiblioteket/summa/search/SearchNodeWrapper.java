@@ -206,10 +206,10 @@ public class SearchNodeWrapper implements SearchNode {
      * @see {@link SummaSearcher#fullSearch(String, String, long, long, String,
      * boolean, String[], String[])} for full syntax.
      */
-    public String fullSearch(String filter, String query, long startIndex,
-                             long maxRecords, String sortKey,
-                             boolean reverseSort, String[] fields,
-                             String[] fallbacks) throws RemoteException {
+    public SearchResult fullSearch(String filter, String query, long startIndex,
+                                   long maxRecords, String sortKey,
+                                   boolean reverseSort, String[] fields,
+                                   String[] fallbacks) throws RemoteException {
         if (!ready) {
             // TODO: Not good! Block instead until ready
             throw new RemoteException("Not ready for searching");
@@ -233,6 +233,6 @@ public class SearchNodeWrapper implements SearchNode {
     public String simpleSearch(String query, long startIndex,
                                long maxRecords) throws RemoteException {
         return fullSearch(null, query, startIndex, maxRecords,
-                          null, false, null, null);
+                          null, false, null, null).toXML();
     }
 }
