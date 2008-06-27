@@ -166,30 +166,8 @@ public interface BasicSearcher {
      * counting from 0.<br />
      * If sortKey is defined, the matches are sorted by the given key, in
      * reverse order if reverseSort is true. fields and defaultValues define
-     * how the records should be represented.
-     * </p><p>
-     * The result is returned in XML:<br />
-     * {@code
-       <?xml version="1.0" encoding="UTF-8"?>
-       <searchresult filter="..." query="..."
-                     startIndex="..." maxRecords="..."
-                     sortKey="..." reverseSort="..."
-                     fields="..." searchTime="..." hitCount="...">
-         <record score="..." sortValue="...">
-           <field name="recordID">...</field>
-           <field name="shortformat">...</field>
-         </record>
-         ...
-       </searchresult>
-       }
-     * sortValue is the value that the sort was performed on. If the result from
-     * several searchers are to be merged, merge-ordering should be dictated by
-     * this value.<br />
-     * score is the score-value returned by the index implementation.<br />
-     * searchTime is the number of milliseconds it took to perform the search.
-     * </p><p>
+     * how the records should be represented.<br />
      * Optional parameters can be null, signifying that they are not defined.
-     * The content in the XML is entity-escaped.
      * @param filter      a query that narrows the search. A filter does not
      *                    affect scores.<br />
      *                    This parameter is optional. Default is null.
@@ -221,13 +199,13 @@ public interface BasicSearcher {
      *                    the corresponding value from fallbacks is returned.
      *                    Note that the length of fallbacks and fields must
      *                    be the same.
-     * @return the result of a search in XML, as specified above.
+     * @return the result of a search, suitable for merging and XML generation.
      * @throws RemoteException if there was an exception during search.
      */
-    public String fullSearch(String filter, String query,
-                             long startIndex, long maxRecords,
-                             String sortKey, boolean reverseSort,
-                             String[] resultFields, String[] fallbacks)
+    public SearchResult fullSearch(String filter, String query,
+                                   long startIndex, long maxRecords,
+                                   String sortKey, boolean reverseSort,
+                                   String[] resultFields, String[] fallbacks)
             throws RemoteException;
 
     /**

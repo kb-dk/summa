@@ -176,10 +176,10 @@ public abstract class SummaSearcherImpl implements SummaSearcherMBean,
     public abstract SearchNodeWrapper constructSearchNode(Configuration conf)
                                                              throws IOException;
 
-    public String fullSearch(String filter, String query, long startIndex,
-                             long maxRecords, String sortKey,
-                             boolean reverseSort, String[] resultFields,
-                             String[] fallbacks) throws RemoteException {
+    public SearchResult fullSearch(String filter, String query, long startIndex,
+                                   long maxRecords, String sortKey,
+                                   boolean reverseSort, String[] resultFields,
+                                   String[] fallbacks) throws RemoteException {
         long fullStartTime = System.nanoTime();
         if (searchQueueSemaphore.availablePermits() == 0) {
             throw new RemoteException(
@@ -229,7 +229,7 @@ public abstract class SummaSearcherImpl implements SummaSearcherMBean,
                     }
                 }
                 // TODO: Fix the race-condition on open vs. search
-                String result =
+                SearchResult result =
                         usable.fullSearch(filter, query, startIndex, maxRecords,
                                           sortKey, reverseSort,
                                           resultFields, fallbacks);
@@ -255,7 +255,7 @@ public abstract class SummaSearcherImpl implements SummaSearcherMBean,
     public String simpleSearch(String query, long startIndex, long maxRecords) 
                                                         throws RemoteException {
         return fullSearch(null, query, startIndex, maxRecords,
-                          null, false, null, null);
+                          null, false, null, null).toXML();
     }
 
     /**
