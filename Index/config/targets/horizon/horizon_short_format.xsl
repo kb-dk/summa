@@ -555,7 +555,7 @@
                                                                          or contains(/mc:record/mc:datafield[@tag='009'][position() >1]/mc:subfield[@code='g'],'ik')
                                                                          or contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position() >1],'ip')
                                                                          or contains(/mc:record/mc:datafield[@tag='009'][position() >1]/mc:subfield[@code='g'],'is')
-                                                                         or contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position() >1],'it')">">
+                                                                         or contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position() >1],'it')">
                                                                 <xsl:text>book and microform</xsl:text>
                                                             </xsl:when>
                                                             <xsl:when test="contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position() >1],'tb')">
