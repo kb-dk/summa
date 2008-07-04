@@ -43,7 +43,10 @@
 																						<Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
 																								<xsl:text>bog</xsl:text>
 																						</Index:field>
-																				</xsl:when>
+                                                                                     <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
+														<xsl:text>bog_mikroform</xsl:text>
+													</Index:field>
+                                                                                </xsl:when>
 																		</xsl:choose>
 																</xsl:when>
 																<xsl:otherwise>

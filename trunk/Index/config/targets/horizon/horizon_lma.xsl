@@ -31,7 +31,7 @@
 														<xsl:text>e_bog</xsl:text>
 													</Index:field>
 												</xsl:when>
-												<xsl:when test="contains(.,'xa')">
+												<xsl:when test="contains(.,'xa') or contains(.,'ia') or contains(.,'ic') or contains(.,'if') or contains(.,'ih') or contains(.,'ik') or contains(.,'ip') or contains (.,'is') or contains(.,'it')">
 													<Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
 														<xsl:text>bog</xsl:text>
 													</Index:field>
