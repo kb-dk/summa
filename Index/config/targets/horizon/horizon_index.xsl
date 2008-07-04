@@ -41,7 +41,7 @@
                     <xsl:call-template name="notes" />
                     <xsl:call-template name="relations" />
                     <xsl:call-template name="classification" />
-                    <xsl:call-template name="identifiers" />
+
                     <xsl:call-template name="material" />
                     <xsl:call-template name="lcl" />
                     <xsl:call-template name="lma" />
@@ -625,6 +625,16 @@
                             <xsl:value-of select="."/>
                         </Index:field>
                     </xsl:for-each>
+                      <xsl:for-each select="mc:datafield[@tag='096' or @tag='x96']/mc:subfield[@code='a']">
+                        <Index:field Index:repeat="false" Index:name="call" Index:navn="opst" Index:type="token" Index:boostFactor="4">
+                            <xsl:value-of select="."/>
+                        </Index:field>
+                    </xsl:for-each>
+                     <xsl:for-each select="mc:datafield[@tag='096' or @tag='x96']/mc:subfield[@code='i']">
+                        <Index:field Index:repeat="false" Index:name="itype" Index:navn="matkat" Index:type="token" Index:boostFactor="4">
+                            <xsl:value-of select="."/>
+                        </Index:field>
+                    </xsl:for-each>
 
 
                     <xsl:for-each select="mc:datafield[@tag='008']">
@@ -755,8 +765,15 @@
 
                         </xsl:for-each>
                     </Index:field>
+                      <xsl:for-each select="mc:datafield[@tag='001']/mc:subfield[@code='d']">
+            <Index:field Index:repeat="true" Index:name="op" Index:navn="op" Index:type="token" Index:boostFactor="2" Index:freetext="false">
 
+                   <xsl:value-of select="."/>
 
+            </Index:field>
+
+                    </xsl:for-each>
+                     <xsl:call-template name="identifiers" />
                 </Index:fields>
             </xsl:for-each>
         </Index:document>
