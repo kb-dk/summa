@@ -371,7 +371,15 @@
 						
 						</xsl:for-each>
 					</Index:field>
+                    <xsl:for-each select="mc:datafield[@tag='001']/mc:subfield[@code='d']">
+                                <Index:field Index:repeat="true" Index:name="op" Index:navn="op" Index:type="token" Index:boostFactor="2" Index:freetext="false">
 
+                                       <xsl:value-of select="."/>
+
+                                </Index:field>
+
+                                        </xsl:for-each>
+                    
 				
 				</Index:fields>
 			</xsl:for-each>

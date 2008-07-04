@@ -61,5 +61,16 @@
 						</Index:field>
 					</xsl:for-each>
 
+               <xsl:for-each select="mc:datafield[@tag='008']/mc:subfield[@code='b']">
+                             <Index:field Index:repeat="true" Index:name="country" Index:navn="ul" Index:type="token">
+							<xsl:value-of select="."/>
+						</Index:field>
+                   </xsl:for-each>
+
+               <xsl:for-each select="mc:datafield[@tag='020']/mc:subfield[@code='a']">
+                             <Index:field Index:repeat="true" Index:name="country" Index:navn="ul" Index:type="token">
+							<xsl:value-of select="."/>
+						</Index:field>
+                   </xsl:for-each>
     </xsl:template>
 </xsl:stylesheet>

@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+<?xml version="1.0" encoding="UTF-8"?><xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 xmlns:Index="http://statsbiblioteket.dk/2004/Index"
                 xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
                 xmlns:xalan="http://xml.apache.org/xalan"
@@ -49,7 +48,7 @@
 
 					<xsl:for-each select="mc:datafield[@tag='260']/mc:subfield[@code='a' or @code='f']">
 						<Index:field Index:repeat="true" Index:name="place" Index:navn="pu" Index:type="token">
-							<xsl:for-each select="mc:subfield">
+							<xsl:for-each select=".">
 								<xsl:value-of select="."/>
 								<xsl:text> </xsl:text>
 							</xsl:for-each>
@@ -60,6 +59,18 @@
 							<xsl:value-of select="."/>
 						</Index:field>
 					</xsl:for-each>
+
+               <xsl:for-each select="mc:datafield[@tag='008']/mc:subfield[@code='b']">
+                             <Index:field Index:repeat="true" Index:name="country" Index:navn="ul" Index:type="token">
+							<xsl:value-of select="."/>
+						</Index:field>
+                   </xsl:for-each>
+
+               <xsl:for-each select="mc:datafield[@tag='020']/mc:subfield[@code='a']">
+                             <Index:field Index:repeat="true" Index:name="country" Index:navn="ul" Index:type="token">
+							<xsl:value-of select="."/>
+						</Index:field>
+                   </xsl:for-each>
 
     </xsl:template>
 </xsl:stylesheet>

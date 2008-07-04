@@ -474,6 +474,9 @@
                                             <xsl:when test="contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='a'],'v')">
                                                 <xsl:text>sammensat</xsl:text>
                                             </xsl:when>
+                                            <xsl:otherwise>
+                                                 <xsl:text>bog</xsl:text>
+                                            </xsl:otherwise>
                                         </xsl:choose>
                                     </xsl:otherwise>
                                 </xsl:choose>
@@ -666,6 +669,9 @@
                                             <xsl:when test="contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='a'],'v')">
                                                 <xsl:text>composite</xsl:text>
                                             </xsl:when>
+                                            <xsl:otherwise>
+                                                 <xsl:text>book</xsl:text>
+                                            </xsl:otherwise>
                                         </xsl:choose>
                                     </xsl:otherwise>
                                 </xsl:choose>
