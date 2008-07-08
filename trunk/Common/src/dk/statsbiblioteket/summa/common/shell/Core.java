@@ -27,17 +27,20 @@ import org.apache.commons.cli.*;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.StringTokenizer;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
 
 import dk.statsbiblioteket.summa.common.shell.notifications.AbortNotification;
 import dk.statsbiblioteket.summa.common.shell.notifications.BadCommandLineNotification;
 import dk.statsbiblioteket.summa.common.shell.notifications.Notification;
 import dk.statsbiblioteket.summa.common.shell.notifications.HelpNotification;
 import dk.statsbiblioteket.summa.common.shell.notifications.TraceNotification;
+import dk.statsbiblioteket.summa.common.shell.notifications.SyntaxErrorNotification;
 import dk.statsbiblioteket.summa.common.shell.commands.Help;
 import dk.statsbiblioteket.summa.common.shell.commands.Quit;
 import dk.statsbiblioteket.summa.common.shell.commands.Trace;
@@ -60,52 +63,79 @@ public class Core {
     private CommandLineParser cliParser;
 
     /**
-     * Create a new shell {@code Core}.
+     * Create a new shell {@code Core} outputting to a custom
+     * {@link ShellContext}.
+     *
+     * @param shellCtx the {@link ShellContext} to write output to. If this
+     *                 parameter is {@code null} a default shell context will
+     *                 be used. 
      * @param withDefaultCommands if {@code true} install the default commands
      *                            found in the
      *                            {@link dk.statsbiblioteket.summa.common.shell.commands}
      *                            package.
      */
-    public Core(boolean withDefaultCommands) {
-        in = new BufferedReader (new InputStreamReader(System.in));
+    public Core (ShellContext shellCtx, boolean withDefaultCommands) {
         cliParser = new PosixParser();
         commands = new HashMap<String,Command>();
         lastTrace = null;
         header = "Summa Generic Shell $Id: Core.java,v 1.7 2007/10/04 13:28:20 te Exp $";
         prompt = "summa-shell> ";
 
-        shellCtx = new ShellContext () {
+        if (shellCtx != null) {
+            this.shellCtx = shellCtx;
+        } else {
+            this.shellCtx = new ShellContext () {
+                private BufferedReader in = new BufferedReader (new InputStreamReader(System.in));
 
-            public void error(String msg) {
-                System.out.println ("[ERROR] " + msg);
-            }
+                public void error(String msg) {
+                    System.out.println ("[ERROR] " + msg);
+                }
 
-            public void info(String msg) {
-                System.out.println (msg);
-            }
+                public void info(String msg) {
+                    System.out.println (msg);
+                }
 
-            public void warn(String msg) {
-                System.out.println ("[WARNING] " + msg);
-            }
+                public void warn(String msg) {
+                    System.out.println ("[WARNING] " + msg);
+                }
 
-            public void debug(String msg) {
-                System.out.println ("[DEBUG] " + msg);
-            }
+                public void debug(String msg) {
+                    System.out.println ("[DEBUG] " + msg);
+                }
 
-            public String readLine() {
-                return waitForInput();
-            }
+                public String readLine() {
+                    try {
+                        return in.readLine().trim();
+                    } catch (IOException e) {
+                        throw new RuntimeException("Failed to read input", e);
+                    }
+                }
 
-            public void prompt (String prompt) {
-                System.out.print(prompt);
-            }
-        };
+                public void prompt (String prompt) {
+                    System.out.print(prompt);
+                }
+            };
+
+        }
 
         if (withDefaultCommands) {
             installCommand(new Help());
             installCommand(new Quit());
             installCommand(new Trace());
         }
+    }
+
+    /**
+     * Create a new shell {@code Core} outputting to a default
+     * {@link ShellContext}.
+     *
+     * @param withDefaultCommands if {@code true} install the default commands
+     *                            found in the
+     *                            {@link dk.statsbiblioteket.summa.common.shell.commands}
+     *                            package.
+     */
+    public Core(boolean withDefaultCommands) {
+        this (null, withDefaultCommands);
     }
 
     /**
@@ -132,14 +162,6 @@ public class Core {
         return shellCtx;
     }
 
-    private String waitForInput () {
-        try {
-            return in.readLine().trim();
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to read input", e);
-        }
-    }
-
     public String getPrompt () {
         return prompt;
     }
@@ -161,7 +183,8 @@ public class Core {
 
         shellCtx.prompt(getPrompt());
 
-        cmdString = waitForInput ();
+        /* This call will block until we have input */
+        cmdString = shellCtx.readLine();
         if ("".equals(cmdString)) {
             return;
         }
@@ -185,21 +208,57 @@ public class Core {
     }
 
     /**
-     * Return the string tokized by white space
-     *
-     * FIXME: Handle quoted string with spaces as one token
+     * Return the string tokized by white space respecting phrases enclosed
+     * by double-quotes.
      *
      * @param in the string to tokenize
-     * @return the string tokens as separated by white space
+     * @throws SyntaxErrorNotification if there are improperly formatted
+     *                                 double-quoted substrings
+     * @return the string tokens as separated by white space with double-quoted
+     *         substrings treated as one token
      */
-    private String[] tokenize (String in) {
-        StringTokenizer tknzr = new StringTokenizer(in, " ");
-        String[] tokens = new String[tknzr.countTokens()];
-        for (int i = 0; i < tokens.length; i++) {
-            tokens[i] = tknzr.nextToken();
+    public String[] tokenize (String in) {
+        StringTokenizer tok = new StringTokenizer(in, "\"", true);
+        List<String> result = new ArrayList<String> (tok.countTokens());
+
+        while (tok.hasMoreElements()) {
+            String s = tok.nextToken();
+
+            /* If this is the start of a phrase read the whole phrase in
+             * one go */
+            if (s.equals("\"")) {
+                if (tok.hasMoreElements()) {
+                    s = tok.nextToken().trim();
+                    result.add(s);
+                    if (tok.hasMoreElements()) {
+                        s = tok.nextToken();
+                        if (!s.equals("\"")) {
+                            throw new SyntaxErrorNotification
+                                    ("Unexpected token '" + s + "' when "
+                                     +"tokenizing phrase. Expected '\"'");
+                        }
+                        continue;
+                    } else {
+                        throw new SyntaxErrorNotification ("Unclosed phrase "
+                                                           +"near token "
+                                                           + "'" + s + "'");
+                    }
+                } else {
+                    throw new SyntaxErrorNotification ("Stray '\"' at line "
+                                                       + "end");
+                }
+
+            }
+
+            /* A normal token, split by spaces */
+            for (String ss : s.split(" ")) {
+                if (!ss.equals("")) {
+                    result.add(ss.trim());
+                }
+            }
         }
 
-        return tokens;
+        return result.toArray(new String[result.size()]);
     }
 
     private void handleHelpNotification (HelpNotification help) {
@@ -225,6 +284,12 @@ public class Core {
         }
 
         shellCtx.info ("Last recorded stack trace:\n\n\t" + lastTrace + "\n");
+    }
+
+    private void handleSyntaxErrorNotification(
+            SyntaxErrorNotification syntaxErrorNotification) {
+        shellCtx.error("Syntax error: " + syntaxErrorNotification.getMessage());
+
     }
 
     /**
@@ -278,6 +343,8 @@ public class Core {
                     handleHelpNotification((HelpNotification)e);
                 } else if (e instanceof TraceNotification) {
                     handleTraceNotification((TraceNotification)e);
+                } else if (e instanceof SyntaxErrorNotification) {
+                    handleSyntaxErrorNotification((SyntaxErrorNotification)e);
                 } else {
                     // This is a bug in the shell core
                     shellCtx.error ("Shell Core encountered an unknown "

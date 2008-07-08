@@ -35,14 +35,17 @@ public class Notification extends RuntimeException {
 
     private Command cmd;
 
-    public Notification (Command cmd) {
-        super("");
-        this.cmd = cmd;
-    }
-
     public Notification (Command cmd, String msg) {
         super(msg);
         this.cmd = cmd;
+    }
+
+    public Notification (Command cmd) {
+        this(cmd, "");
+    }
+
+    public Notification (String msg) {
+        this (null, msg);
     }
 
     public Command getCommand () {
