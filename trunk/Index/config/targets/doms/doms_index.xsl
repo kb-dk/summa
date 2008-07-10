@@ -50,7 +50,7 @@
                                             <dc:date><xsl:value-of select="substring(oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:date, 1, 4)"/></dc:date>
                                         </xsl:when>
                                         <xsl:otherwise>
-                                            <dc:date></dc:date>
+                                            <dc:date> </dc:date>
                                         </xsl:otherwise>
 
                                     </xsl:choose>
@@ -157,6 +157,19 @@
                             <Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="10">
                                 <xsl:value-of select="."/>
                             </Index:field>
+                        </xsl:for-each>
+                        <!-- Potential fields: su_dk, lsu_oai, subject_controlled, subject_dk5, subject_serial_solutions, subject_ulrichs, commercials_subject -->
+                    </Index:group>
+										
+					<Index:group Index:name="lsubj" Index:navn="lem" Index:suggest="true">
+                        <!-- TODO: Check for qualified -->
+                        <xsl:for-each select="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:subject" >
+             		<Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsu_oai" Index:name="lsu_oai" Index:repeat="false">
+                                <xsl:value-of select="."/>
+                            </Index:field>
+							<Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsubject" Index:name="lsubject" Index:repeat="false">
+                            <xsl:value-of select="."/>
+							</Index:field>
                         </xsl:for-each>
                         <!-- Potential fields: su_dk, lsu_oai, subject_controlled, subject_dk5, subject_serial_solutions, subject_ulrichs, commercials_subject -->
                     </Index:group>
