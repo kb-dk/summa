@@ -85,7 +85,7 @@
 										</xsl:for-each>
 										</xsl:for-each>
 
-																		<xsl:for-each select="id">
+									<xsl:for-each select="id">
 									<xsl:for-each select="term">
 									<xsl:choose>
 		
@@ -138,7 +138,6 @@
 										</Index:field>
                                               <Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsubject" Index:name="lsubject" Index:repeat="false">
                                              <xsl:value-of select="substring-after(substring-before(.,' ('),'*')"/>
-
 											</Index:field>
                                         </xsl:when>
 										<xsl:otherwise>
@@ -147,30 +146,27 @@
 										</Index:field>
                                              <Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsubject" Index:name="lsubject" Index:repeat="false">
                                               <xsl:value-of select="substring-after(.,'*')"/>
-
-															</Index:field>
+                                             </Index:field>
                                         </xsl:otherwise>
 										</xsl:choose>
 										</xsl:when>
 											<xsl:when test="not(starts-with(.,'*'))">
 									<xsl:choose>
 									<xsl:when test="contains(.,'(')">
-								<Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsu_oai" Index:name="lsu_oai" Index:repeat="false">
+								    <Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsu_oai" Index:name="lsu_oai" Index:repeat="false">
 											<xsl:value-of select="substring-before(.,' (')"/>
-										</Index:field>
-                                                   <Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsubject" Index:name="lsubject" Index:repeat="false">
-                                             <xsl:value-of select="substring-before(.,' (')"/>
-
-															</Index:field>
+									</Index:field>
+                                     <Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsubject" Index:name="lsubject" Index:repeat="false">
+                                     <xsl:value-of select="substring-before(.,' (')"/>
+									</Index:field>
                                         </xsl:when>
 										<xsl:otherwise>
 												<Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsu_oai" Index:name="lsu_oai" Index:repeat="false">
 											<xsl:value-of select="."/>
 										</Index:field>
-                                                      <Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsubject" Index:name="lsubject" Index:repeat="false">
-                                             
-															<xsl:value-of select="."/>
-															</Index:field>
+                                         <Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsubject" Index:name="lsubject" Index:repeat="false">
+										<xsl:value-of select="."/>
+										</Index:field>
                                         </xsl:otherwise>
 										</xsl:choose>
 										</xsl:when>
@@ -178,9 +174,104 @@
 										</xsl:choose>
 										</xsl:for-each>
 										</xsl:for-each>
-										</Index:group>
 
-        
+                                   	<xsl:for-each select="ak">
+									<xsl:for-each select="term">
+									<xsl:choose>
+									<xsl:when test="starts-with(.,'*')">
+									<xsl:choose>
+									<xsl:when test="contains(.,'(')">
+							<Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsu_oai" Index:name="lsu_oai" Index:repeat="false">
+											<xsl:value-of select="substring-after(substring-before(.,' ('),'*')"/>
+										</Index:field>
+                                         <Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsubject" Index:name="lsubject" Index:repeat="false">
+                                          <xsl:value-of select="substring-after(substring-before(.,' ('),'*')"/>
+                                         </Index:field>
+                                        </xsl:when>
+										<xsl:otherwise>
+											<Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsu_oai" Index:name="lsu_oai" Index:repeat="false">
+											<xsl:value-of select="substring-after(.,'*')"/>
+										</Index:field>
+                                        <Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsubject" Index:name="lsubject" Index:repeat="false">
+                                         <xsl:value-of select="substring-after(.,'*')"/>
+										</Index:field>
+                                        </xsl:otherwise>
+										</xsl:choose>
+										</xsl:when>
+											<xsl:when test="not(starts-with(.,'*'))">
+									<xsl:choose>
+									<xsl:when test="contains(.,'(')">
+							<Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsu_oai" Index:name="lsu_oai" Index:repeat="false">
+							  	<xsl:value-of select="substring-before(.,' (')"/>
+										</Index:field>
+                                        <Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsubject" Index:name="lsubject" Index:repeat="false">
+                                          <xsl:value-of select="substring-before(.,' (')"/>
+                                        </Index:field>
+                                        </xsl:when>
+										<xsl:otherwise>
+												<Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsu_oai" Index:name="lsu_oai" Index:repeat="false">
+											<xsl:value-of select="."/>
+										</Index:field>
+                                                      <Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsubject" Index:name="lsubject" Index:repeat="false">
+
+															<xsl:value-of select="."/>
+															</Index:field>
+										</xsl:otherwise>
+										</xsl:choose>
+										</xsl:when>
+
+		  						</xsl:choose>
+										</xsl:for-each>
+                                        </xsl:for-each>
+                                            <xsl:for-each select="id">
+                                            <xsl:for-each select="term">
+                                            <xsl:choose>
+
+                                            <xsl:when test="starts-with(.,'*')">
+                                            <xsl:choose>
+                                            <xsl:when test="contains(.,'(')">
+                                   <Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsu_oai" Index:name="lsu_oai" Index:repeat="false">
+                                                    <xsl:value-of select="substring-after(substring-before(.,' ('),'*')"/>
+                                                </Index:field>
+                                              <Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsubject" Index:name="lsubject" Index:repeat="false">
+                                             <xsl:value-of select="substring-after(substring-before(.,' ('),'*')"/>
+											</Index:field>
+                                                </xsl:when>
+                                                <xsl:otherwise>
+											<Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsu_oai" Index:name="lsu_oai" Index:repeat="false">
+											<xsl:value-of select="substring-after(.,'*')"/>
+										</Index:field>
+                                             <Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsubject" Index:name="lsubject" Index:repeat="false">
+                                              <xsl:value-of select="substring-after(.,'*')"/>
+												</Index:field>
+                                                </xsl:otherwise>
+                                                </xsl:choose>
+                                                </xsl:when>
+                                                    <xsl:when test="not(starts-with(.,'*'))">
+                                            <xsl:choose>
+                                            <xsl:when test="contains(.,'(')">
+							<Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsu_oai" Index:name="lsu_oai" Index:repeat="false">
+											<xsl:value-of select="substring-before(.,' (')"/>
+										</Index:field>
+                                                   <Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsubject" Index:name="lsubject" Index:repeat="false">
+                                             <xsl:value-of select="substring-before(.,' (')"/>
+												</Index:field>
+                                                </xsl:when>
+                                                <xsl:otherwise>
+												<Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsu_oai" Index:name="lsu_oai" Index:repeat="false">
+											<xsl:value-of select="."/>
+										</Index:field>
+                                                <Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsubject" Index:name="lsubject" Index:repeat="false">
+												<xsl:value-of select="."/>
+												</Index:field>
+                                                </xsl:otherwise>
+                                                </xsl:choose>
+                                                </xsl:when>
+                                                </xsl:choose>
+                                                </xsl:for-each>
+                                                </xsl:for-each>
+
+                                        </Index:group>       
 
     </xsl:template>
 </xsl:stylesheet>
