@@ -70,7 +70,7 @@
                                                                                     <xsl:when test="contains(@type,'Book (bka)') or contains(pt,'Book (bka)')">bog</xsl:when>
 																				<xsl:when test="contains(@type,'Book Chapter (bca)') or contains(pt,'Book Chapter (bca)')">artikel i bog</xsl:when>
 																				<xsl:when test="contains(@type,'Dissertation (dis)') or contains(pt,'Dissertation (dis)')">tidsskriftsartikel</xsl:when>
-																				<xsl:when test="contains(@type,'Conference Paper (acp)') or contains(pt,'Conference Paper (acp)')">bog</xsl:when>
+																				<xsl:when test="contains(@type,'Conference Paper (acp)') or contains(pt,'Conference Paper (acp)')">konference papirer</xsl:when>
 																				<xsl:otherwise>
 																						<xsl:value-of select="@type"/>
 																				</xsl:otherwise>
@@ -89,7 +89,7 @@
 																				<xsl:when test="contains(@type,'Book (bka)') or contains(pt,'Book (bka)')">book</xsl:when>
 																				<xsl:when test="contains(@type,'Book Chapter (bca)') or contains(pt,'Book Chapter (bca)')">book article</xsl:when>
 																				<xsl:when test="contains(@type,'Dissertation (dis)') or contains(pt,'Dissertation (dis)')">journal article</xsl:when>
-																				<xsl:when test="contains(@type,'Conference Paper (acp') or contains(pt,'Conference Paper (acp')">book</xsl:when>
+																				<xsl:when test="contains(@type,'Conference Paper (acp') or contains(pt,'Conference Paper (acp')">conference paper</xsl:when>
 																				<xsl:otherwise>
 																						<xsl:value-of select="@type"/>
 																				</xsl:otherwise>
