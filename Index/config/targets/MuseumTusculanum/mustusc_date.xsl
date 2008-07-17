@@ -15,8 +15,11 @@
 								<Index:field Index:repeat="true" Index:name="py" Index:navn="år"  Index:type="token" Index:boostFactor="2">
 									<xsl:value-of select="."/>
 								</Index:field>
-						
-							</xsl:for-each>
+                <Index:field Index:repeat="true" Index:name="year" Index:navn="year"  Index:type="number" Index:boostFactor="2">
+									<xsl:value-of select="."/>
+								</Index:field>
+
+                            </xsl:for-each>
       
 
                                 <Index:field Index:name="sort_year_desc" Index:navn="sort_år_desc" Index:type="keyword" Index:boostFactor="10">

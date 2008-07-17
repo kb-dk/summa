@@ -12,14 +12,26 @@
         <Index:field Index:repeat="true" Index:name="py" Index:navn="år"  Index:type="token" Index:boostFactor="2">
              <xsl:value-of select="censor/date"/>
         </Index:field>
-				 </xsl:if>
+
+                 </xsl:if>
 				 <xsl:if test="substring(premiereDate,0)!=''"> 
         <Index:field Index:repeat="true" Index:name="py" Index:navn="år"  Index:type="token" Index:boostFactor="2">
              <xsl:value-of select="premiereDate"/>
         </Index:field>
-				</xsl:if>
+                </xsl:if>
 			
-		
+		   <xsl:choose>
+                 <xsl:when test="substring(permiereDate/date,0)!=''">
+                      <Index:field Index:repeat="true" Index:name="year" Index:navn="year"  Index:type="number" Index:boostFactor="2">
+             <xsl:value-of select="premiereDate/date"/>
+        </Index:field>
+               </xsl:when>
+               <xsl:when test="substring(censor/date,0)!=''">
+                      <Index:field Index:repeat="true" Index:name="year" Index:navn="year"  Index:type="number" Index:boostFactor="2">
+             <xsl:value-of select="censor/date"/>
+        </Index:field>
+               </xsl:when>
+           </xsl:choose>
 
     </xsl:template>
 

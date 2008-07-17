@@ -30,12 +30,13 @@
                         </Index:group>            
 	
 									<Index:group Index:freetext="false" Index:navn="lma" Index:name="lma">
-										<Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
+									    <Index:field Index:repeat="false" Index:name="target" Index:navn="datakilde" Index:type="keyword" Index:freetext="false">
+                      <xsl:text>MuseumTusculanum</xsl:text>
+                      </Index:field>
+											<Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
 											<xsl:text>netdokument</xsl:text>
 										</Index:field>
-										<Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
-											<xsl:text>MuseumTusculanum</xsl:text>
-										</Index:field>
+										
 									
 									</Index:group>
 								</xsl:for-each>

@@ -118,12 +118,12 @@
                             </Index:field>
                         </xsl:for-each>
                         <xsl:for-each select="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:title">
-                            <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="10">
+                            <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="10" Index:suggest="true">
                                 <xsl:value-of select="."/>
                             </Index:field>
                         </xsl:for-each>
                         <xsl:for-each select="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:alternative">
-                            <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="10">
+                            <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="10" Index:suggest="true">
                                 <xsl:value-of select="."/>
                             </Index:field>
                         </xsl:for-each>
@@ -176,6 +176,9 @@
 
                     <!-- Material type group -->
                     <Index:group Index:name="lma" Index:navn="lma" Index:suggest="true">
+                        <Index:field Index:repeat="false" Index:name="target" Index:navn="datakilde" Index:type="keyword" Index:freetext="false">
+                      <xsl:text>doms</xsl:text>
+                      </Index:field>
                         <Index:field Index:repeat="true" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
                             <xsl:choose>
                                 <xsl:when test="starts-with(oai:digitalObject/@PID, 'doms:aarbog')">
@@ -289,6 +292,24 @@
                                 <xsl:value-of select="substring(oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:date, 0, 4)"/>
                             </Index:field>
                         </xsl:when>
+                    </xsl:choose>
+                    <!-- Date limiting -->
+                    <xsl:choose>
+                        <xsl:when test="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/oai:issued">
+                            <Index:field Index:name="year" Index:navn="year" Index:type="number" Index:boostFactor="1">
+                                <xsl:value-of select="substring(oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/oai:issued, 0, 4)"/>
+                            </Index:field>
+                         </xsl:when>
+                        <xsl:when test="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/oai:created">
+                            <Index:field Index:name="year" Index:navn="year" Index:type="number" Index:boostFactor="1">
+                                <xsl:value-of select="substring(oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/oai:created, 0, 4)"/>
+                            </Index:field>
+                           </xsl:when>
+                        <xsl:when test="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:date">
+                            <Index:field Index:name="year" Index:navn="year" Index:type="number" Index:boostFactor="1">
+                                <xsl:value-of select="substring(oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:date, 0, 4)"/>
+                            </Index:field>
+                          </xsl:when>
                     </xsl:choose>
 
                     <!-- Format -->

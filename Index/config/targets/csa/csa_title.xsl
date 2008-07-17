@@ -21,7 +21,7 @@
 									</xsl:for-each>
 									
 																		<xsl:for-each select="ot">
-										<Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="6">
+										<Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="6" Index:suggest="true">
 											<xsl:value-of select="."/>
 											</Index:field>
 									</xsl:for-each>

@@ -10,9 +10,9 @@
 		<xsl:template name="lma">
 				<Index:group Index:freetext="false" Index:navn="lma" Index:name="lma">
 						<xsl:for-each select="../mc:record">
-								<Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
-										<xsl:text>aleph</xsl:text>
-								</Index:field>
+								 <Index:field Index:repeat="false" Index:name="target" Index:navn="datakilde" Index:type="keyword" Index:freetext="false">
+                      <xsl:text>Aleph</xsl:text>
+                      </Index:field>
 						</xsl:for-each>
 						<xsl:for-each select="mc:datafield[@tag='009']/mc:subfield[@code='a' or @code='b']">
 								<xsl:if test="contains(.,'a')">

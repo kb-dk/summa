@@ -14,12 +14,16 @@
 							<Index:field Index:repeat="false" Index:name="lddc" Index:navn="lddc" Index:type="keyword" Index:boostFactor="10">
 									<xsl:value-of select="."/>
 								</Index:field>
-						</xsl:for-each>
+                        <Index:field Index:repeat="false" Index:name="lcl_all" Index:navn="lcl_all" Index:type="keyword" Index:boostFactor="10">
+                                            <xsl:value-of select="."/>
+                                        </Index:field>
+
+								</xsl:for-each>
 						</Index:group>
                          <Index:group Index:name="cl" Index:navn="cl" Index:suggest="true">
 
                              <xsl:for-each select="dewey">
-							<Index:field Index:repeat="true" Index:name="DDC_kw" Index:navn="DDC_kw" Index:type="token" Index:boostFactor="10">
+							<Index:field Index:repeat="true" Index:name="ddc_kw" Index:navn="ddc_kw" Index:type="token" Index:boostFactor="10">
 										<xsl:value-of select="."/>
 							</Index:field>
                              </xsl:for-each>

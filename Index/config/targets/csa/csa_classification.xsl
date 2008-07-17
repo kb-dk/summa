@@ -24,7 +24,10 @@
 									<Index:field Index:repeat="false" Index:name="lcl_csa" Index:navn="lcl_csa" Index:type="keyword" Index:boostFactor="10">
 									<xsl:value-of select="."/>
 									</Index:field>
-									</xsl:for-each>
+                                        <Index:field Index:repeat="false" Index:name="lcl_all" Index:navn="lcl_all" Index:type="keyword" Index:boostFactor="10">
+									<xsl:value-of select="."/>
+									</Index:field>
+                                    </xsl:for-each>
 							
 								</Index:group>
 																						

@@ -171,12 +171,13 @@
 					
 		<xsl:for-each select=".">
 									<Index:group Index:freetext="false" Index:navn="lma" Index:name="lma">
-										<Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
+                                       <Index:field Index:repeat="false" Index:name="target" Index:navn="datakilde" Index:type="keyword" Index:freetext="false">
+                      <xsl:text>oai</xsl:text>
+                      </Index:field>
+                                        <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
 											<xsl:text>netdokument</xsl:text>
 										</Index:field>
-										<Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
-											<xsl:text>oai</xsl:text>
-										</Index:field>
+										
 										<xsl:choose>
 											<xsl:when test="contains(dc:type,'collection') or contains(oai_dc:type,'collection')">
 												<Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">

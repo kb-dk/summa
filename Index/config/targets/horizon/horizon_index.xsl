@@ -205,6 +205,15 @@
                                 <xsl:when test="substring(.,1)='DJM'">
                                     <xsl:text>Det Jyske Musikkonservatorium</xsl:text>
                                 </xsl:when>
+                                 <xsl:when test="substring(.,1)='DMUKAL'">
+                                    <xsl:text>DMU, Kalø, AU</xsl:text>
+                                </xsl:when>
+                                <xsl:when test="substring(.,1)='DMUSIL'">
+                                    <xsl:text>DMU, Silkeborg, AU</xsl:text>
+                                </xsl:when>
+                                 <xsl:when test="substring(.,1)='DMUSIL'">
+                                    <xsl:text>DMU, Roskilde, AU</xsl:text>
+                                </xsl:when>
                                 <xsl:when test="substring(.,1)='DsHAA'">
                                     <xsl:text>Den Sociale Højskole i Århus</xsl:text>
                                 </xsl:when>
@@ -271,9 +280,9 @@
                                 <xsl:when test="substring(.,1)='Info'">
                                     <xsl:text>IT-Biblioteket, AU</xsl:text>
                                 </xsl:when>
-                                <xsl:when test="substring(.,1)='Int-fri'">
+                            <!-- Not relevant   <xsl:when test="substring(.,1)='Int-fri'">
                                     <xsl:text>Internetpublikation uden adgangsbegrænsning</xsl:text>
-                                </xsl:when>
+                                </xsl:when>-->
                                 <xsl:when test="substring(.,1)='J'">
                                     <xsl:text>Peter Skautrup Centret (Jysk), AU</xsl:text>
                                 </xsl:when>
@@ -523,9 +532,9 @@
                                 <xsl:when test="substring(.,1)='SB-vid'">
                                     <xsl:text>Statsbiblioteket</xsl:text>
                                 </xsl:when>
-                                <xsl:when test="substring(.,1)='SBAU-e'">
+                               <!--Not relevant <xsl:when test="substring(.,1)='SBAU-e'">
                                     <xsl:text>Internetværker (begrænset adgang)</xsl:text>
-                                </xsl:when>
+                                </xsl:when>-->
                                 <xsl:when test="substring(.,1)='SBDB'">
                                     <xsl:text>Statsbiblioteket</xsl:text>
                                 </xsl:when>
@@ -644,7 +653,13 @@
                                     <xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.YearRange.makeRange(mc:subfield[@code='a'], mc:subfield[@code='z'])"/>
                                 </Index:field>
                             </xsl:when>
-                            <xsl:when test="contains(mc:subfield[@code='u'],'o')">
+
+                             <xsl:when test="contains(mc:subfield[@code='u'],'o')">
+                                <Index:field Index:name="py" Index:navn="år" Index:type="token" Index:boostFactor="10">
+                                    <xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.YearRange.makeRange(mc:subfield[@code='a'],'2030')"/>
+                                </Index:field>
+                            </xsl:when>
+                             <xsl:when test="contains(mc:subfield[@code='u'],'r')">
                                 <Index:field Index:name="py" Index:navn="år" Index:type="token" Index:boostFactor="10">
                                     <xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.YearRange.makeRange(mc:subfield[@code='a'],'2030')"/>
                                 </Index:field>
@@ -667,6 +682,17 @@
                             </xsl:otherwise>
                         </xsl:choose>
                     </xsl:for-each>
+                    <xsl:for-each select="mc:datafield[@tag='008']">
+
+                                          <xsl:for-each select="mc:subfield[@code='a' or @code='z']">
+                                              <xsl:if test="substring(.,0)!='9999'">
+                                                      <Index:field Index:name="year" Index:navn="year" Index:type="number" Index:boostFactor="10">
+                                                          <xsl:value-of select="translate(.,'0123456789?','01234567890')"/>
+                                                      </Index:field>
+                                                </xsl:if>
+                                          </xsl:for-each>
+
+                              </xsl:for-each>
 
                     <xsl:for-each select="mc:datafield[@tag='008']/mc:subfield[@code='a' or @code='z']">
                         <xsl:choose>
@@ -773,6 +799,7 @@
             </Index:field>
 
                     </xsl:for-each>
+                   
                      <xsl:call-template name="identifiers" />
                 </Index:fields>
             </xsl:for-each>

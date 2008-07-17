@@ -9,7 +9,12 @@
 
         <xsl:template name="lma">
            <Index:group Index:freetext="false" Index:navn="lma" Index:name="lma">
-						<xsl:for-each select="mc:datafield[@tag='009']/mc:subfield[@code='a' or @code='b']">
+               <xsl:for-each select=".">
+                <Index:field Index:repeat="false" Index:name="target" Index:navn="datakilde" Index:type="keyword" Index:freetext="false">
+                      <xsl:text>Horizon</xsl:text>
+                      </Index:field>
+               </xsl:for-each>
+                        <xsl:for-each select="mc:datafield[@tag='009']/mc:subfield[@code='a' or @code='b']">
 							<xsl:if test="contains(.,'a')">
 								<xsl:choose>
 									<xsl:when test="contains(/mc:record/mc:datafield[@tag='008']/mc:subfield[@code='t'],'m') or contains(/mc:record/mc:datafield[@tag='008']/mc:subfield[@code='t'],'s')">

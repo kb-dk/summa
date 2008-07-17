@@ -139,7 +139,18 @@
                                                         <xsl:when test="contains(dc:type,'Thesis') or contains(oai_dc:type,'Thesis')">netdokument (disputats)</xsl:when>
                                                         <xsl:when test="contains(dc:type,'thesis') or contains(oai_dc:type,'thesis')">netdokument (disputats)</xsl:when>
 
-                                                        <xsl:otherwise>netdokument<xsl:if test="dc:type or oai_dc:type"><xsl:text> (</xsl:text><xsl:value-of select="dc:type or oai_dc:type"/><xsl:text>)</xsl:text></xsl:if>
+                                                        <xsl:otherwise>netdokument<xsl:choose>
+																												<xsl:when test="dc:type!=''">
+																												<xsl:text>&#32;(</xsl:text>
+																												<xsl:value-of select="dc:type"/>
+																												<xsl:text>)</xsl:text>
+																												</xsl:when>
+																												<xsl:when test="oai_dc:type!=''">
+																												<xsl:text>&#32;(</xsl:text>
+																												<xsl:value-of select="oai_dc:type"/>
+																												<xsl:text>)</xsl:text>
+																												</xsl:when>
+																												</xsl:choose>
 														</xsl:otherwise>
 													
 													
