@@ -123,7 +123,7 @@
 		<xsl:for-each select=".">
 									<Index:group Index:freetext="false" Index:navn="lma" Index:name="lma">
                                          <xsl:for-each select=".">
-                <Index:field Index:repeat="false" Index:name="target" Index:navn="datakilde" Index:type="keyword" Index:freetext="false">
+                <Index:field Index:repeat="false" Index:name="ltarget" Index:navn="datakilde" Index:type="keyword" Index:freetext="false">
                       <xsl:text>CSA bibliografier</xsl:text>
                       </Index:field>
                </xsl:for-each>

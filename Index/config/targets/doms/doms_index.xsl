@@ -176,7 +176,7 @@
 
                     <!-- Material type group -->
                     <Index:group Index:name="lma" Index:navn="lma" Index:suggest="true">
-                        <Index:field Index:repeat="false" Index:name="target" Index:navn="datakilde" Index:type="keyword" Index:freetext="false">
+                        <Index:field Index:repeat="false" Index:name="ltarget" Index:navn="datakilde" Index:type="keyword" Index:freetext="false">
                       <xsl:text>doms</xsl:text>
                       </Index:field>
                         <Index:field Index:repeat="true" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
