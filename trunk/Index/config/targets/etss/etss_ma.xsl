@@ -41,7 +41,7 @@
 
                                     <Index:group Index:freetext="false" Index:navn="lma" Index:name="lma">
 
-										    <Index:field Index:repeat="false" Index:name="target" Index:navn="datakilde" Index:type="keyword" Index:freetext="false">
+										    <Index:field Index:repeat="false" Index:name="ltarget" Index:navn="datakilde" Index:type="keyword" Index:freetext="false">
                       <xsl:text>eperi</xsl:text>
                       </Index:field>
 												<Index:field Index:repeat="true" Index:name="lma_long" Index:navn="lma_lang" Index:type="token">
