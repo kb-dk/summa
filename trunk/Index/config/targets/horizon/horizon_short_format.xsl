@@ -30,25 +30,25 @@
                                             </xsl:if>
                                             <xsl:if test="@code='a'">
                                                 <xsl:if test="not(preceding-sibling::mc:subfield[@code='a'])">
-                                                    <xsl:text> : </xsl:text>
+                                                    <xsl:text>&#32;:&#32;</xsl:text>
                                                     <xsl:value-of select="."/>
                                                 </xsl:if>
                                                 <xsl:if test="(preceding-sibling::mc:subfield[@code='a'])">
-                                                    <xsl:text>;</xsl:text>
+                                                    <xsl:text>&#32;;&#32;</xsl:text>
                                                     <xsl:value-of select="."/>
                                                 </xsl:if>
                                             </xsl:if>
                                             <xsl:if test="@code='b'">
-                                                <xsl:text> </xsl:text>
+                                                <xsl:text>&#32;</xsl:text>
                                                 <xsl:value-of select="."/>
                                             </xsl:if>
                                             <xsl:if test="@code='m'">
-                                                <xsl:text> [</xsl:text>
+                                                <xsl:text>&#32;[</xsl:text>
                                                 <xsl:value-of select="."/>
                                                 <xsl:text>]</xsl:text>
                                             </xsl:if>
                                             <xsl:if test="@code='4'">
-                                                <xsl:text> [</xsl:text>
+                                                <xsl:text>&#32;[</xsl:text>
                                                 <xsl:value-of select="."/>
                                                 <xsl:text>]</xsl:text>
                                             </xsl:if>
@@ -131,8 +131,14 @@
                         </xsl:for-each>
                         <xsl:for-each select="mc:datafield[@tag='110']">
                             <dc:creator>
-                                <xsl:if test="mc:subfield[@code='a'or @code='s' or @code='e' or @code='c' or @code='i' or @code='k' or @code='j']">
-                                    <xsl:for-each select="mc:subfield">
+                               <xsl:if test="mc:subfield[@code='a'or @code='s' or @code='e' or @code='c' or @code='i' or @code='k' or @code='j']">
+                                    <xsl:for-each select="mc:subfield[@code='a'or @code='s' or @code='e' or @code='c' or @code='i' or @code='k' or @code='j']">
+                                        <xsl:choose>
+                                            <xsl:when test="position()=1">
+                                                <xsl:value-of select="."/>
+                                            </xsl:when>
+                                            <xsl:otherwise>
+
                                         <xsl:choose>
                                             <xsl:when test="@code='a'">
                                                 <xsl:value-of select="."/>
@@ -141,28 +147,31 @@
                                                 <xsl:value-of select="."/>
                                             </xsl:when>
                                             <xsl:when test="@code='e'">
-                                                <xsl:text> (</xsl:text>
+                                                <xsl:text>&#32;(</xsl:text>
                                                 <xsl:value-of select="."/>
                                                 <xsl:text>)</xsl:text>
                                             </xsl:when>
                                             <xsl:when test="@code='c'">
                                                 <xsl:if test="position()&gt;1">
-                                                    <xsl:text>. </xsl:text>
+                                                    <xsl:text>.&#32;</xsl:text>
                                                 </xsl:if>
                                                 <xsl:value-of select="."/>
                                             </xsl:when>
                                             <xsl:when test="@code='i'">
-                                                <xsl:text>; </xsl:text>
+                                                <xsl:text>;&#32;</xsl:text>
                                                 <xsl:value-of select="."/>
                                             </xsl:when>
                                             <xsl:when test="@code='k'">
-                                                <xsl:text>, </xsl:text>
+                                                <xsl:text>,&#32;</xsl:text>
                                                 <xsl:value-of select="."/>
                                             </xsl:when>
                                             <xsl:when test="@code='j'">
-                                                <xsl:text>, </xsl:text>
+                                                <xsl:text>,&#32;</xsl:text>
                                                 <xsl:value-of select="."/>
                                             </xsl:when>
+                                        </xsl:choose>
+
+                                            </xsl:otherwise>
                                         </xsl:choose>
                                     </xsl:for-each>
 
@@ -249,7 +258,13 @@
                         <xsl:for-each select="mc:datafield[@tag='710']">
                             <dc:creator>
                                 <xsl:if test="mc:subfield[@code='a'or @code='s' or @code='e' or @code='c' or @code='i' or @code='k' or @code='j']">
-                                    <xsl:for-each select="mc:subfield">
+                                    <xsl:for-each select="mc:subfield[@code='a'or @code='s' or @code='e' or @code='c' or @code='i' or @code='k' or @code='j']">
+                                        <xsl:choose>
+                                            <xsl:when test="position()=1">
+                                                <xsl:value-of select="."/>
+                                            </xsl:when>
+                                            <xsl:otherwise>
+
                                         <xsl:choose>
                                             <xsl:when test="@code='a'">
                                                 <xsl:value-of select="."/>
@@ -258,28 +273,31 @@
                                                 <xsl:value-of select="."/>
                                             </xsl:when>
                                             <xsl:when test="@code='e'">
-                                                <xsl:text>(</xsl:text>
+                                                <xsl:text>&#32;(</xsl:text>
                                                 <xsl:value-of select="."/>
                                                 <xsl:text>)</xsl:text>
                                             </xsl:when>
                                             <xsl:when test="@code='c'">
                                                 <xsl:if test="position()&gt;1">
-                                                    <xsl:text>.</xsl:text>
+                                                    <xsl:text>.&#32;</xsl:text>
                                                 </xsl:if>
                                                 <xsl:value-of select="."/>
                                             </xsl:when>
                                             <xsl:when test="@code='i'">
-                                                <xsl:text>;</xsl:text>
+                                                <xsl:text>;&#32;</xsl:text>
                                                 <xsl:value-of select="."/>
                                             </xsl:when>
                                             <xsl:when test="@code='k'">
-                                                <xsl:text>,</xsl:text>
+                                                <xsl:text>,&#32;</xsl:text>
                                                 <xsl:value-of select="."/>
                                             </xsl:when>
                                             <xsl:when test="@code='j'">
-                                                <xsl:text>,</xsl:text>
+                                                <xsl:text>,&#32;</xsl:text>
                                                 <xsl:value-of select="."/>
                                             </xsl:when>
+                                        </xsl:choose>
+
+                                            </xsl:otherwise>
                                         </xsl:choose>
                                     </xsl:for-each>
 

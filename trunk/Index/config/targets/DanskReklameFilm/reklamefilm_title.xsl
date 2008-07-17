@@ -30,7 +30,7 @@
                                    </Index:field>
 																	 <xsl:for-each select="alternativeTitle">
 																	 <xsl:if test="substring(.,0)!=''">
-                                   <Index:field Index:repeat="true" Index:name="title" Index:navn="title" Index:type="token" Index:boostFactor="8">
+                                   <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="8"  Index:suggest="true">
                                        <xsl:value-of select="." />
                                    </Index:field>
 </xsl:if>

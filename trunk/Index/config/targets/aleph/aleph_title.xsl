@@ -83,7 +83,7 @@
                     </Index:field>
                 </xsl:for-each>
                 <xsl:for-each select="mc:datafield[@tag='245']/mc:subfield[@code='u']">
-                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="10">
+                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="10" Index:suggest="true">
                         <xsl:for-each select=".">
                             <xsl:value-of select="."/>
                         </xsl:for-each>
@@ -92,7 +92,7 @@
 
                 <xsl:for-each select="mc:datafield[@tag='239']/mc:subfield[@code='t' or @code='u']">
                     <xsl:variable name="titel" select="."/>
-                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="8">
+                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="8" Index:suggest="true">
                         <xsl:for-each select="$titel">
                             <xsl:value-of select="."/>
                         </xsl:for-each>
@@ -375,68 +375,68 @@
                     </Index:field>
                 </xsl:for-each>
                 <xsl:for-each select="mc:datafield[@tag='795']/mc:subfield[@code='p' or @code='u' or @code='v'] ">
-                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="6">
+                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="6" Index:suggest="true">
                         <xsl:value-of select="."/>
                     </Index:field>
                 </xsl:for-each>
                 <xsl:for-each select="mc:datafield[@tag='795']/mc:subfield[@code='æ' or @code='ø' or @code='c' or @code='r' or @code ='s']">
-                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="4">
+                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="4" Index:suggest="true">
                         <xsl:value-of select="."/>
                     </Index:field>
                 </xsl:for-each>
                 <xsl:for-each select="mc:datafield[@tag='534']/mc:subfield[@code='t' or @code='x']">
-                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="6">
+                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="6" Index:suggest="true">
                         <xsl:value-of select="."/>
                         <xsl:text> </xsl:text>
                     </Index:field>
                 </xsl:for-each>
                 <xsl:for-each select="mc:datafield[@tag='245']/mc:subfield[@code='b' or @code='c' or @code='y']">
-                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="4">
+                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="4" Index:suggest="true">
                         <xsl:value-of select="."/>
                     </Index:field>
                 </xsl:for-each>
                 <xsl:for-each select="mc:datafield[@tag='245']/mc:subfield[@code='g']">
-                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="4">
+                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="4" Index:suggest="true">
                         <xsl:value-of select="."/>
                     </Index:field>
                 </xsl:for-each>
                 <xsl:for-each select="mc:datafield[@tag='247']/mc:subfield[@code='g' or @code='c' or @code='p'or @code='x']">
-                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="4">
+                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="4" Index:suggest="true">
                         <xsl:value-of select="."/>
                     </Index:field>
                 </xsl:for-each>
                 <xsl:for-each select="mc:datafield[@tag='248']/mc:subfield[@code='g' or @code='c' or @code='p'or @code='x']">
-                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="4">
+                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="4" Index:suggest="true">
                         <xsl:value-of select="."/>
                     </Index:field>
                 </xsl:for-each>
                 <xsl:for-each select="mc:datafield[@tag='526']/mc:subfield[@code='t' or @code='x']">
-                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="4">
+                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="4" Index:suggest="true">
                         <xsl:value-of select="."/>
                     </Index:field>
                 </xsl:for-each>
                 <xsl:for-each select="mc:datafield[@tag='530']/mc:subfield[@code='a' or @code='t' or @code='x']">
-                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="4">
+                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="4" Index:suggest="true">
                         <xsl:value-of select="."/>
                     </Index:field>
                 </xsl:for-each>
                 <xsl:for-each select="mc:datafield[@tag='575']/mc:subfield[@code='t']">
-                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="4">
+                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="4" Index:suggest="true">
                         <xsl:value-of select="."/>
                     </Index:field>
                 </xsl:for-each>
                 <xsl:for-each select="mc:datafield[@tag='700']/mc:subfield[@code='t']">
-                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="8">
+                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="8" Index:suggest="true">
                         <xsl:value-of select="translate(.,'&lt;&gt;','')"/>
                     </Index:field>
                 </xsl:for-each>
                 <xsl:for-each select="mc:datafield[@tag='710']/mc:subfield[@code='t']">
-                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="8">
+                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="8" Index:suggest="true">
                         <xsl:value-of select="translate(.,'&lt;&gt;','')"/>
                     </Index:field>
                 </xsl:for-each>
                 <xsl:for-each select="mc:datafield[@tag='210']">
-                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="8">
+                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="8" Index:suggest="true">
                         <xsl:for-each select="mc:subfield[@code='a']">
                             <xsl:value-of select="."/>
                         </xsl:for-each>
@@ -451,7 +451,7 @@
                     </Index:field>
                 </xsl:for-each>
                 <xsl:for-each select="mc:datafield[@tag='222']">
-                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="8">
+                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="8" Index:suggest="true">
                         <xsl:for-each select="mc:subfield[@code='a']">
                             <xsl:value-of select="."/>
                         </xsl:for-each>
@@ -462,17 +462,17 @@
                     </Index:field>
                 </xsl:for-each>
                 <xsl:for-each select="mc:datafield[@tag='512']/mc:subfield[@code='t' or @code='x']">
-                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="4">
+                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="4" Index:suggest="true">
                         <xsl:value-of select="."/>
                     </Index:field>
                 </xsl:for-each>
                 <xsl:for-each select="mc:datafield[@tag='520']/mc:subfield[@code='t' or @code='x']">
-                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="4">
+                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="4" Index:suggest="true">
                         <xsl:value-of select="."/>
                     </Index:field>
                 </xsl:for-each>
                 <xsl:for-each select="mc:datafield[@tag='557']">
-                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="4">
+                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="4" Index:suggest="true">
                         <xsl:for-each select="mc:subfield[@code='a']">
                             <xsl:value-of select="."/>
                         </xsl:for-each>
@@ -492,7 +492,7 @@
                     </Index:field>
                 </xsl:for-each>
                 <xsl:for-each select="mc:datafield[@tag='558']/mc:subfield[@code='a']">
-                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="4">
+                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="4" Index:suggest="true">
                         <xsl:value-of select="."/>
                     </Index:field>
                 </xsl:for-each>

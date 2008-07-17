@@ -24,7 +24,18 @@
                                         </xsl:with-param>
                                     </xsl:call-template>
 								</Index:field>
-							</xsl:for-each>
+                <Index:field Index:repeat="true" Index:name="year" Index:navn="year"  Index:type="number" Index:boostFactor="2">
+                                                    <xsl:call-template name="getYear">
+                                                        <xsl:with-param name="str" select="." />
+                                                        <xsl:with-param name="split">
+                                                            <xsl:call-template name="getNumericSplit">
+                                                                <xsl:with-param name="org_str" select="." />
+                                                            </xsl:call-template>
+                                                        </xsl:with-param>
+                                                    </xsl:call-template>
+                                                </Index:field>
+
+            </xsl:for-each>
         <xsl:for-each select="oai_dc:date">
                             <Index:field Index:repeat="true" Index:name="py" Index:navn="år"  Index:type="token" Index:boostFactor="2">
                                 <xsl:value-of select="."/>
@@ -39,6 +50,17 @@
                                     </xsl:with-param>
                                 </xsl:call-template>
                             </Index:field>
+            <Index:field Index:repeat="true" Index:name="year" Index:navn="year"  Index:type="number" Index:boostFactor="2">
+                                  <xsl:call-template name="getYear">
+                                      <xsl:with-param name="str" select="." />
+                                      <xsl:with-param name="split">
+                                          <xsl:call-template name="getNumericSplit">
+                                              <xsl:with-param name="org_str" select="." />
+                                          </xsl:call-template>
+                                      </xsl:with-param>
+                                  </xsl:call-template>
+                              </Index:field>
+
                         </xsl:for-each>
 
                                 <Index:field Index:name="sort_year_desc" Index:navn="sort_år_desc" Index:type="keyword" Index:boostFactor="10">

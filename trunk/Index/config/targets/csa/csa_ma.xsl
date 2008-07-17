@@ -122,7 +122,12 @@
 					
 		<xsl:for-each select=".">
 									<Index:group Index:freetext="false" Index:navn="lma" Index:name="lma">
-										<Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
+                                         <xsl:for-each select=".">
+                <Index:field Index:repeat="false" Index:name="target" Index:navn="datakilde" Index:type="keyword" Index:freetext="false">
+                      <xsl:text>CSA bibliografier</xsl:text>
+                      </Index:field>
+               </xsl:for-each>
+                                        <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
 										<xsl:choose>
 										<xsl:when test="contains(@type,'Journal Article (aja)') or contains(pt,'Journal Article (aja)')">tidsskriftartikel</xsl:when>
 										<xsl:when test="contains(@type,'Journal Article (aja)') or contains(pt,'Journal Article ')">tidsskriftartikel</xsl:when>

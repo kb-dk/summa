@@ -38,7 +38,7 @@
 							</Index:field>
 						</xsl:for-each>
 						<xsl:for-each select="mc:datafield[@tag='082' or @tag='089']">
-							<Index:field Index:repeat="true" Index:name="DDC_kw" Index:navn="DDC_kw" Index:type="token" Index:boostFactor="10">
+							<Index:field Index:repeat="true" Index:name="ddc_kw" Index:navn="ddc_kw" Index:type="token" Index:boostFactor="10">
 								<xsl:for-each select="mc:subfield[@code='a']">
 									<xsl:value-of select="."/>
 								</xsl:for-each>

@@ -42,7 +42,7 @@
                     <xsl:call-template name="notes" />
                     <xsl:call-template name="relations" />
                  <xsl:call-template name="classification" /> 
-                   <xsl:call-template name="identificers" /> 
+
                     <xsl:call-template name="material" />
                     <xsl:call-template name="lcl" /> 
                     <xsl:call-template name="lma" />
@@ -228,7 +228,12 @@
 									<xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.YearRange.makeRange(mc:subfield[@code='a'],'2030')"/>
 								</Index:field>
 							</xsl:when>
-							<xsl:otherwise>
+                            <xsl:when test="contains(mc:subfield[@code='u'],'r')">
+								<Index:field Index:name="py" Index:navn="år" Index:type="token" Index:boostFactor="10">
+									<xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.YearRange.makeRange(mc:subfield[@code='a'],'2030')"/>
+								</Index:field>
+							</xsl:when>
+                            <xsl:otherwise>
 								<xsl:for-each select="mc:subfield[@code='a' or @code='z']">
 									<xsl:choose>
 										<xsl:when test="contains(.,'?')">
@@ -245,8 +250,19 @@
 								</xsl:for-each>
 							</xsl:otherwise>
 						</xsl:choose>
-					</xsl:for-each>   
-					<xsl:for-each select="mc:datafield[@tag='008']/mc:subfield[@code='a' or @code='z']">
+					</xsl:for-each>
+                       <xsl:for-each select="mc:datafield[@tag='008']">
+
+                                          <xsl:for-each select="mc:subfield[@code='a' or @code='z']">
+                                              <xsl:if test="substring(.,0)!='9999'">
+                                                      <Index:field Index:name="year" Index:navn="year" Index:type="number" Index:boostFactor="10">
+                                                          <xsl:value-of select="translate(.,'0123456789?','01234567890')"/>
+                                                      </Index:field>
+                                                </xsl:if>
+                                          </xsl:for-each>
+
+                              </xsl:for-each>
+                    <xsl:for-each select="mc:datafield[@tag='008']/mc:subfield[@code='a' or @code='z']">
 						<xsl:choose>
 							<xsl:when test="@code='z'">
 								<Index:field Index:name="sort_year_desc" Index:navn="sort_år_desc" Index:type="keyword" Index:boostFactor="10">
@@ -380,7 +396,7 @@
 
                                         </xsl:for-each>
                     
-				
+				      <xsl:call-template name="identificers" /> 
 				</Index:fields>
 			</xsl:for-each>
 		</Index:document>

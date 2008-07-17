@@ -38,8 +38,7 @@
 			</xsl:attribute>
 			<xsl:for-each select="oai:record">
                 <Index:fields>
-         <Index:field Index:name="openUrl" Index:navn="openUrl"  Index:type="stored" Index:freetext="false">id=<xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.OpenUrlEscape.escape(oai:header/oai:identifier)" /></Index:field>
-                    <xsl:call-template name="shortformat" />
+                     <xsl:call-template name="shortformat" />
 					<xsl:for-each select="oai:metadata">
 						<xsl:for-each select="oai_dc:dc">
 								<xsl:call-template name="author" />
@@ -54,7 +53,8 @@
 							</xsl:for-each>
 								
 								</xsl:for-each>
-
+  <Index:field Index:name="openUrl" Index:navn="openUrl"  Index:type="stored" Index:freetext="false">id=<xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.OpenUrlEscape.escape(oai:header/oai:identifier)" /></Index:field>
+      
 				</Index:fields>
 			</xsl:for-each>
 		
