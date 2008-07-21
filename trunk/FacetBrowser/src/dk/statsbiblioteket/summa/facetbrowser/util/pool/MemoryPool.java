@@ -246,7 +246,7 @@ public abstract class MemoryPool<E extends Comparable<? super E>> extends
         int high = valueCount-1;
         while (low <= high) {
             int mid = (low + high) / 2;
-            int diff = values[mid].compareTo(value);
+            int diff = compare(values[mid], value);
             if (diff > 0) {
                 high = mid - 1;
             } else if (diff < 0) {

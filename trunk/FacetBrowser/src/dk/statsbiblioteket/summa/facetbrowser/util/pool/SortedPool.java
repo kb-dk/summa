@@ -24,6 +24,7 @@ package dk.statsbiblioteket.summa.facetbrowser.util.pool;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Comparator;
 
 /*
 * The State and University Library of Denmark
@@ -33,7 +34,7 @@ import java.io.IOException;
 * and lookup based on value. Additions and removals from the pool shifts
 * positions in a deterministic manner.
 */
-public interface SortedPool<E extends Comparable> {
+public interface SortedPool<E extends Comparable> extends Comparator<E> {
     /**
      * Load the pool from disk. The format of the pool is as follows:
      * </p><p>
@@ -131,4 +132,6 @@ public interface SortedPool<E extends Comparable> {
      * Clear the pool of all values.
      */
     public void clear();
+
+
 }
