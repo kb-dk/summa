@@ -28,14 +28,25 @@ package dk.statsbiblioteket.summa.facetbrowser.util.pool;
 
 import java.io.IOException;
 import java.io.File;
+import java.text.Collator;
+
+import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Simple implementation of Strings with DiskPool.
  * The persistent files used by this implementation are compatible with those
  * from {@link MemoryStringPool}.
  */
-public class DiskStringPool extends DiskPool<String> {
-//    private Log log = LogFactory.getLog(DiskStringPool.class);
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.QA_NEEDED,
+        author = "te")
+public class DiskStringPool extends DiskPool<String> implements
+                                                     CollatorSortedPool {
+    private Log log = LogFactory.getLog(DiskStringPool.class);
+
+    private Collator collator = null;
 
     public DiskStringPool() throws IOException {
         super();
@@ -44,6 +55,8 @@ public class DiskStringPool extends DiskPool<String> {
     public DiskStringPool(File location, String poolName,
                           boolean newPool) throws IOException {
         super(location, poolName, newPool);
+        log.debug(String.format(
+                "Constructed pool '%s' for location '%s'", poolName, location));
     }
 
     protected byte[] valueToBytes(String value) {
@@ -53,4 +66,19 @@ public class DiskStringPool extends DiskPool<String> {
     protected String bytesToValue(byte[] buffer, int length) {
         return StringConverter.bytesToValue(buffer, length);
     }
+
+    public int compare(String o1, String o2) {
+        return collator == null? o1.compareTo(o2) : collator.compare(o1, o2);
+    }
+
+    /* Mutators */
+
+    public Collator getCollator() {
+        return collator;
+    }
+    public void setCollator(Collator collator) {
+        this.collator = collator;
+    }
+
+
 }

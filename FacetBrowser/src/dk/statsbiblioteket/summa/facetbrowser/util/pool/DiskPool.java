@@ -467,7 +467,7 @@ public abstract class DiskPool<E extends Comparable<? super E>>
         int high = valueCount-1;
         while (low <= high) {
             int mid = (low + high) / 2;
-            int diff = getValue(mid).compareTo(value);
+            int diff = compare(getValue(mid), value);
             if (diff > 0) {
                 high = mid - 1;
             } else if (diff < 0) {

@@ -26,13 +26,17 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.util.pool;
 
+import java.text.Collator;
+
 /**
  * Simple implementation of Strings with MemoryPool.
  * The persistent files used by this implementation are compatible with those
  * from {@link DiskStringPool}.
  */
-public class MemoryStringPool extends MemoryPool<String> {
+public class MemoryStringPool extends MemoryPool<String> implements
+                                                          CollatorSortedPool {
 //    private Log log = LogFactory.getLog(MemoryStringPool.class);
+    private Collator collator = null;
 
     protected byte[] valueToBytes(String value) {
         return StringConverter.valueToBytes(value);
@@ -40,5 +44,18 @@ public class MemoryStringPool extends MemoryPool<String> {
 
     protected String bytesToValue(byte[] buffer, int length) {
         return StringConverter.bytesToValue(buffer, length);
+    }
+
+    public int compare(String o1, String o2) {
+        return collator == null? o1.compareTo(o2) : collator.compare(o1, o2);
+    }
+
+    /* Mutators */
+
+    public Collator getCollator() {
+        return collator;
+    }
+    public void setCollator(Collator collator) {
+        this.collator = collator;
     }
 }
