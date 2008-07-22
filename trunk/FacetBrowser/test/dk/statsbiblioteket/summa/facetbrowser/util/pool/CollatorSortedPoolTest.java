@@ -53,22 +53,68 @@ public class CollatorSortedPoolTest extends TestCase {
         for (String term: terms) {
             pool.add(term);
         }
-        assertEquals("The number of terms hould match",
-                     terms.length, pool.size());
         Arrays.sort(terms, collator);
-        for (int i = 0 ; i < pool.size() ; i++) {
-            assertEquals("Terms at position " + i + " should match",
-                         terms[i], pool.getValue(i));
-        }
+        assertEquals(terms, pool);
     }
-
-    public void testMemoryBased() throws Exception {
+    public void testMemoryBasedSorting() throws Exception {
         MemoryStringPool pool = new MemoryStringPool();
         testSorting(pool);
     }
-
-    public void testDiskBased() throws Exception {
+    public void testDiskBasedSorting() throws Exception {
         DiskStringPool pool = new DiskStringPool();
         testSorting(pool);
     }
+
+    public void assertEquals(String[] expectedTerms, SortedPool pool) {
+        assertEquals("The number of terms hould match",
+                     expectedTerms.length, pool.size());
+        for (int i = 0 ; i < pool.size() ; i++) {
+            assertEquals("Terms at position " + i + " should match",
+                         expectedTerms[i], pool.getValue(i));
+        }
+    }
+
+    public void testMutation(CollatorSortedPool pool) {
+        pool.clear();
+        pool.setCollator(null);
+        assertEquals(new String[0], pool);
+        pool.add("b");
+        pool.add("c");
+        pool.add("a");
+        assertEquals(new String[]{"a", "b", "c"}, pool);
+        pool.remove(0);
+        assertEquals(new String[]{"b", "c"}, pool);
+        pool.remove(1);
+        assertEquals(new String[]{"b"}, pool);
+        pool.add("b");
+        assertEquals(new String[]{"b"}, pool);
+        pool.add("b");
+        pool.add("c");
+        assertEquals(new String[]{"b", "c"}, pool);
+        pool.remove(1);
+        assertEquals(new String[]{"b"}, pool);
+        pool.remove(0);
+        assertEquals(new String[0], pool);
+        pool.add("b");
+        pool.add("c");
+        pool.add("a");
+        try {
+            pool.remove(10);
+            fail("Removing a non-existing entry should throw an exception");
+        } catch(IndexOutOfBoundsException e) {
+            // Expected
+        }
+        pool.clear();
+        assertEquals(new String[0], pool);
+    }
+    public void testMemoryBasedMutation() throws Exception {
+        MemoryStringPool pool = new MemoryStringPool();
+        testMutation(pool);
+    }
+    public void testDiskBasedMutation() throws Exception {
+        DiskStringPool pool = new DiskStringPool();
+        testMutation(pool);
+    }
+
+    // TODO: Save with disk, load with mem - check order
 }

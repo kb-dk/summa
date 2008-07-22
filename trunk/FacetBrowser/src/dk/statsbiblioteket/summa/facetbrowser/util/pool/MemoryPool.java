@@ -57,6 +57,7 @@ public abstract class MemoryPool<E extends Comparable<? super E>> extends
         values = getArray(DEFAULT_SIZE);
     }
 
+    // Remove assumption of sorted strings and use index instead
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public void load(File location, String poolName) throws IOException {
         log.debug("Loading indexes and data for pool '" + poolName
@@ -76,8 +77,8 @@ public abstract class MemoryPool<E extends Comparable<? super E>> extends
         Profiler profiler = new Profiler();
         profiler.setExpectedTotal(size());
         for (int i = 0 ; i < size() ; i++) {
-            if (i % feedback == 0) {
-                log.debug("Loaded " + i + "/" + valueCount + " values. ETA: "
+            if (log.isTraceEnabled() && i % feedback == 0) {
+                log.trace("Loaded " + i + "/" + valueCount + " values. ETA: "
                           + profiler.getETAAsString(true));
             }
             values[i] = readValue(dataBuf, (int)(index[i+1]-index[i]));
@@ -87,8 +88,8 @@ public abstract class MemoryPool<E extends Comparable<? super E>> extends
                   + "', closing streams");
         dataBuf.close();
         dataIn.close();
-        log.debug("Finished loading values from pool '" + poolName
-                  + "' at location '" + location + "'");
+        log.debug("Finished loading " + valueCount + " values from pool '"
+                  + poolName + "' at location '" + location + "'");
     }
 
     private byte[] buffer = new byte[1024];
@@ -161,33 +162,6 @@ public abstract class MemoryPool<E extends Comparable<? super E>> extends
     }
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    protected void removeDuplicates() {
-        log.trace("Removing duplicates");
-        int initial = valueCount;
-        E last = null;
-        int index = 0;
-        while (index < valueCount) {
-            E current = values[index];
-            if (last != null && last.equals(current)) {
-                if (log.isTraceEnabled()) {
-                    log.trace("Removing duplicate '" + current + "'");
-                }
-                if (index < valueCount - 1) {
-                    System.arraycopy(values, index + 1, values, index,
-                                     valueCount - index - 1);
-                }
-                valueCount--;
-            } else {
-                index++;
-            }
-            last = current;
-        }
-        log.debug("Removed " + (valueCount-initial)
-                  + " duplicates from a total of " + initial + " values");
-    }
-
-
-    @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public void remove(int position) {
         log.trace("Removing value at position " + position);
          if (position < 0 || position >= valueCount) {
@@ -224,7 +198,8 @@ public abstract class MemoryPool<E extends Comparable<? super E>> extends
     }
 
     /**
-     * This hack is taken from ArrayList.
+     * This hack is taken from ArrayList and demonstrates one of the problems
+     * with generics.
      * @param arraysize the size of the wanted array.
      * @return an array which can hold values of the type specified in the
      *         creation of the generified MemoryPool.
