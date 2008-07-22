@@ -104,6 +104,8 @@ public abstract class SortedPoolImpl<E extends Comparable>
         return indexData;
     }
 
+    // TODO: Handle storing on existing file: Store with new name, then replace?
+
     public void store(File location, String poolName) throws IOException {
         log.debug("Storing pool '" + poolName + "' to location '"
                  + location + "'");
@@ -152,6 +154,38 @@ public abstract class SortedPoolImpl<E extends Comparable>
         log.debug("Finished storing pool '" + poolName + "' to location '"
                   + location + "'");
     }
+
+    /**
+     * Removes duplicates from the index. This requires the index to be sorted.
+     * It is not guaranteed that the duplicates are removed from memory or
+     * storage, only that they appear to the caller as removed.
+     * </p><p>
+     * Note: Implementations should avoid populating with duplicates during
+     *       normal adds. This method is only meant for cleanup after bulk
+     *       operations, that does not guarantee consistency.
+     */
+    protected void removeDuplicates() {
+        log.trace("Removing duplicated");
+        int initial = size();
+        E last = null;
+        int index = 0;
+        while (index < size()) {
+            E current = getValue(index);
+            if (last != null && last.equals(current)) {
+                if (log.isTraceEnabled()) {
+                    log.trace("Removing duplicate '" + current + "'");
+                }
+                remove(index);
+            } else {
+                index++;
+            }
+            last = current;
+        }
+        log.debug("Removed " + (initial - size())
+                  + " duplicates from a total of " + initial + " values");
+
+    }
+
 
     /**
      * Write the given value to the stream and return the number of bytes that

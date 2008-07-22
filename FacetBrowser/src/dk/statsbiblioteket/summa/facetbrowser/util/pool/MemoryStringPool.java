@@ -27,6 +27,10 @@
 package dk.statsbiblioteket.summa.facetbrowser.util.pool;
 
 import java.text.Collator;
+import java.util.Arrays;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Simple implementation of Strings with MemoryPool.
@@ -35,7 +39,7 @@ import java.text.Collator;
  */
 public class MemoryStringPool extends MemoryPool<String> implements
                                                           CollatorSortedPool {
-//    private Log log = LogFactory.getLog(MemoryStringPool.class);
+    private Log log = LogFactory.getLog(MemoryStringPool.class);
     private Collator collator = null;
 
     protected byte[] valueToBytes(String value) {
@@ -48,6 +52,19 @@ public class MemoryStringPool extends MemoryPool<String> implements
 
     public int compare(String o1, String o2) {
         return collator == null? o1.compareTo(o2) : collator.compare(o1, o2);
+    }
+
+    public void cleanup() {
+        //noinspection DuplicateStringLiteralInspection
+        log.debug("Cleaning up dirty added values (" + valueCount + ")");
+        if (collator == null) {
+            Arrays.sort(values, 0, valueCount);
+        } else {
+            Arrays.sort(values, 0, valueCount, collator);
+        }
+        removeDuplicates();
+        //noinspection DuplicateStringLiteralInspection
+        log.debug("Finished cleanup. Resulting value-count: " + valueCount);
     }
 
     /* Mutators */

@@ -133,5 +133,5 @@ public interface SortedPool<E extends Comparable> extends Comparator<E> {
      */
     public void clear();
 
-
+    // TODO: Add fast save, use indexes upon load
 }

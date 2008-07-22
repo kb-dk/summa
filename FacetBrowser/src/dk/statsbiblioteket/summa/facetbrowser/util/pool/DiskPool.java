@@ -254,37 +254,6 @@ public abstract class DiskPool<E extends Comparable<? super E>>
     }
 
     /**
-     * Removes duplicates from the pool, assuming that the pool is sorted.
-     */
-    @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    protected void removeDuplicates() {
-        log.trace("Removing duplicated");
-        int initial = valueCount;
-        E last = null;
-        int index = 0;
-        while (index < valueCount) {
-            E current = getValue(index);
-            if (last != null && last.equals(current)) {
-                if (log.isTraceEnabled()) {
-                    log.trace("Removing duplicate '" + current + "'");
-                }
-                if (index < valueCount - 1) {
-//                    System.out.println("values.length " + values.length + ", index " + index + ", valueCount " + valueCount);
-                    System.arraycopy(indexes, index + 1, indexes, index,
-                                     valueCount - index - 1);
-                }
-                valueCount--;
-            } else {
-                index++;
-            }
-            last = current;
-        }
-        log.debug("Removed " + (initial - valueCount)
-                  + " duplicates from a total of " + initial + " values");
-
-    }
-
-    /**
      * The sorter needs to look up the values from the indexes and should not
      * use too much memory, as the DiskPool are geared towards low memory usage.
      * A HeapSort is used, which takes O(n*log(n)) time and n space.
@@ -302,10 +271,13 @@ public abstract class DiskPool<E extends Comparable<? super E>>
         for (int position = valueCount / 2 - 1 ; position >= 0 ; position--) {
             if (log.isDebugEnabled() && position % every == 0) {
                 siftProfiler.beat();
-                log.debug("sortIndexes: sifted down "
-                          + (valueCount / 2 - position) * 100 / (valueCount / 2)
-                          + "%. ETA: "
-                          + siftProfiler.getETAAsString(true));
+                if (log.isTraceEnabled()) {
+                    log.trace("sortIndexes: sifted down "
+                              + (valueCount / 2 - position) * 100 /
+                                (valueCount / 2)
+                              + "%. ETA: "
+                              + siftProfiler.getETAAsString(true));
+                }
             }
             siftDown(position, valueCount);
         }
@@ -337,10 +309,10 @@ public abstract class DiskPool<E extends Comparable<? super E>>
         while (firstChild(position) < heapSize) {
             int kid = firstChild(position);
             if (kid < heapSize-1 &&
-                getValue(kid).compareTo(getValue(kid+1)) < 0) {
+                compare(getValue(kid), getValue(kid+1)) < 0) {
                 kid++;
             }
-            if (getValue(position).compareTo(getValue(kid)) > 0) {
+            if (compare(getValue(position), getValue(kid)) > 0) {
                 break;
             } else {
                 swap(kid, position);
