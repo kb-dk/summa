@@ -119,6 +119,10 @@ public class DiskTagHandler implements TagHandler {
         return structure.getFacetNames();
     }
 
+    public Facet[] getFacets() {
+        throw new UnsupportedOperationException("This class is deprecated");
+    }
+
     public void store(File folder) throws IOException {
         throw new RuntimeException("Store not supported for DiskTagHandler");
     }

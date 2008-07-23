@@ -28,17 +28,18 @@ package dk.statsbiblioteket.summa.facetbrowser.core.tags;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Set;
 
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
 import org.apache.log4j.Logger;
-import dk.statsbiblioteket.summa.facetbrowser.util.pool.SortedPool;
-import dk.statsbiblioteket.summa.facetbrowser.util.pool.DiskStringPool;
-import dk.statsbiblioteket.summa.facetbrowser.util.pool.MemoryStringPool;
 import dk.statsbiblioteket.summa.facetbrowser.core.StructureDescription;
+import dk.statsbiblioteket.summa.facetbrowser.util.pool.SortedPool;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexConnector;
+import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
+import dk.statsbiblioteket.summa.common.index.IndexField;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
@@ -110,7 +111,7 @@ public class TagHandlerFactory {
      * @param structure description of wanted facets et al.
      * @return a TagHandler, ready for use.
      * @throws IOException if stored data could not be read.
-     * @deprecated use {@link #getTagHandler(Configuration, IndexConnector)}.
+     * @deprecated use {@link #getTagHandler}.
      */
     @SuppressWarnings({"UnusedDeclaration"})
     public static TagHandler getTagHandler(File folder,
@@ -121,9 +122,24 @@ public class TagHandlerFactory {
                                                 + "IndexConnector) instead");
     }
 
+    /**
+     * Construct and potentially fill a TagHandler.
+     * @param configuration setup for the TagHandler.
+     * @param descriptor    a description of the index used for group-expansion.
+     *                      If the descriptor is null, group-expansion is
+     *                      disabled.
+     * @param connector     a connection to a Lucene index.
+     * @return a TagHandler ready for use.
+     * @throws IOException if an I/O error occured.
+     */
     public static TagHandler getTagHandler(Configuration configuration,
+                                           IndexDescriptor descriptor,
                                            IndexConnector connector)
                                                             throws IOException {
+        if (descriptor == null) {
+            log.warn("No IndexDescriptor specified for getTagHandler. "
+                     + "Group-expansion is disabled");
+        }
         StructureDescription structure =
                 new StructureDescription(configuration);
         boolean forceRebuild =
@@ -163,82 +179,91 @@ public class TagHandlerFactory {
                                    + "\" cannot be accessed");
         }
 
-        SortedPool<String>[] pools;
+        Facet[] facets = new Facet[structure.getFacetNames().size()];
         int position = 0;
-        switch (tagHandler) {
-            case DiskTagHandler:
-                pools = new DiskStringPool[structure.getFacetNames().size()];
-                for (String facetName: structure.getFacetNames()) {
-                    pools[position++] =
-                            new DiskStringPool(dataLocation,
-                                               TagHandlerImpl.PERSISTENCE_PREFIX
-                                               + facetName,
-                                               forceRebuild);
+        // TODO: Handle missing persistent data by signalling need for rebuild
+        for (String facetName: structure.getFacetNames()) {
+            String[] fieldNames;
+            if (descriptor != null && descriptor.getGroup(facetName) != null) {
+                // FIXME: Tweak this so the warning dissapears
+                //noinspection unchecked
+                Set<IndexField> fields =
+                        descriptor.getGroup(facetName).getFields();
+                fieldNames = new String[fields.size()];
+                int counter = 0;
+                for (IndexField field: fields) {
+                    fieldNames[counter++] = field.getName();
                 }
-                break;
-            case MemoryTagHandler:
-                pools = new MemoryStringPool[structure.getFacetNames().size()];
-                for (String facetName: structure.getFacetNames()) {
-                    pools[position++] = new MemoryStringPool();
-                    if (!forceRebuild) {
-                        pools[position-1].load(dataLocation,
-                                               TagHandlerImpl.PERSISTENCE_PREFIX
-                                               + facetName);
-                    }
-                }
-                break;
-            default:
-                throw new IllegalArgumentException("Unknown tag handler \""
-                                                   + tagHandler + "\"");
+            } else {
+                fieldNames = new String[]{facetName};
+            }
+            facets[position++] =
+                    new Facet(dataLocation, facetName, null, fieldNames,
+                              forceRebuild,
+                              tagHandler == TAGHANDLERS.MemoryTagHandler);
         }
-        TagHandlerImpl handler = new TagHandlerImpl(structure, pools);
+        TagHandlerImpl handler = new TagHandlerImpl(structure, facets);
         if (forceRebuild) {
             fill(handler, connector);
         }
         return handler;
     }
 
+    /**
+     * Clear and fill the given TagHandler from a Lucene index. This takes
+     * a fair amount of time and resets the state of all underlying Facets.
+     * @param tagHandler the structure of tags to fill.
+     * @param connector a connection to a Lucene Index.
+     * @throws IOException if an I/O error happened.
+     */
     public static void fill(TagHandler tagHandler,
                             IndexConnector connector) throws IOException {
+        // TODO: Implement fill
+        /*
         log.debug("Filling tag handler from index");
         Profiler profiler = new Profiler();
         tagHandler.clearTags();
         IndexReader ir = connector.getReader();
         long termCount = 0;
         int counter = 0;
-        for (String facet: tagHandler.getFacetNames()) {
-            log.debug("Filling " + facet
+        for (SortedPool<String> facet: tagHandler.getFacets()) {
+            String facetName = facet.getName();
+            log.debug("Filling " + facetName
                       + " (" + ++counter + "/"
                       + tagHandler.getFacetNames().size() + ")");
-            Term searchTerm = new Term(facet, "");
-            TermEnum terms = ir.terms(searchTerm);
-            while (true) {
-                Term term = terms.term();
-                if (term == null) {
-                    break;
-                }
-                if (!term.field().equals(facet)) {
-                    break;
-                }
-                String shortTerm = term.text().replaceAll("\n", " ");
-                if (log.isTraceEnabled()) {
-                    log.trace("Adding tag '" + shortTerm
-                              + "' to facet '" + facet + "'");
-                }
-                tagHandler.dirtyAddTag(counter-1, shortTerm);
-                termCount++;
-                if (!terms.next()) {
-                    break;
+            for (String fieldName: facet.getFields()) {
+                Term searchTerm = new Term(fieldName, "");
+                TermEnum terms = ir.terms(searchTerm);
+                while (true) {
+                    Term term = terms.term();
+                    if (term == null) {
+                        break;
+                    }
+                    if (!term.field().equals(fieldName)) {
+                        break;
+                    }
+                    String shortTerm = term.text().replaceAll("\n", " ");
+                    if (log.isTraceEnabled()) {
+                        log.trace("Adding tag '" + shortTerm
+                                  + "' from field '" + fieldName
+                                  + "' to facet '" + facetName + "'");
+                    }
+                    tagHandler.dirtyAddTag(counter-1, shortTerm);
+                    termCount++;
+                    if (!terms.next()) {
+                        break;
+                    }
                 }
             }
-            log.debug("Facet \"" + facet + "\" filled with " +
-                      tagHandler.getTagCount(facet) + " tags");
+            log.debug("Facet \"" + facetName + "\" filled with " +
+                      tagHandler.getTagCount(facetName) + " tags");
         }
         log.trace("Cleaning up tag handler");
         tagHandler.cleanup();
-        log.info("Finished filling tag handler with " + termCount
-                 + " tags in " + tagHandler.getFacetNames().size()
-                 + " facets from te index of " + ir.numDocs() 
-                 + " documents in " + profiler.getSpendTime());
+        log.info(String.format(
+                "Finished filling tag handler with %d tags in %d facets from "
+                + "the index with %d documents in %s",
+                termCount, tagHandler.getFacetNames().size(), ir.numDocs(),
+                 profiler.getSpendTime()));*/
     }
 }
