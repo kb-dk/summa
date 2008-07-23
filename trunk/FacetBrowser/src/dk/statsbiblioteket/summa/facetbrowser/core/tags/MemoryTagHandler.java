@@ -152,6 +152,10 @@ public class MemoryTagHandler implements TagHandler {
         return structure.getFacetNames();
     }
 
+    public Facet[] getFacets() {
+        throw new UnsupportedOperationException("This class is deprecated");
+    }
+
     /**
      * Fill the internal representation with tagnames from the Lucene index.
      * @param ir           a Lucene index reader.

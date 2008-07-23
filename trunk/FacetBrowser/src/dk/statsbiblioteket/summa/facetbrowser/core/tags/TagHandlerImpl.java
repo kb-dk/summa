@@ -34,6 +34,7 @@ import java.io.StringWriter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import dk.statsbiblioteket.summa.facetbrowser.util.pool.SortedPool;
+import dk.statsbiblioteket.summa.facetbrowser.util.pool.CollatorSortedPool;
 import dk.statsbiblioteket.summa.facetbrowser.core.StructureDescription;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
@@ -47,7 +48,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 public class TagHandlerImpl implements TagHandler {
     private Log log = LogFactory.getLog(TagHandlerImpl.class);
 
-    private SortedPool<String>[] tagPools;
+    private SortedPool<String>[] facets;
     private StructureDescription structure;
     private boolean dirty = false;
     public static final String PERSISTENCE_PREFIX = "tags_";
@@ -55,13 +56,13 @@ public class TagHandlerImpl implements TagHandler {
     /**
      * Constructs a tag handler around the given pools.
      * @param structure the description of the setup.
-     * @param tagPools pools to hold tags. There must be a pool for each facet
-     *                 specified in structure.
+     * @param facets pools to hold tags. There must be a pool for each facet
+     *               specified in structure.
      */
     public TagHandlerImpl(StructureDescription structure,
-                          SortedPool<String>[] tagPools) {
+                          SortedPool<String>[] facets) {
         this.structure = structure;
-        this.tagPools = tagPools;
+        this.facets = facets;
     }
 
     /**
@@ -76,14 +77,24 @@ public class TagHandlerImpl implements TagHandler {
         }
     }
 
+    /**
+     * @return the list of Facets making up the TagHandler. Normally used for
+     *         batch-oriented updates.
+     */
+    public SortedPool<String>[] getFacets() {
+        return facets;
+    }
+
+    /* Interface implementation */
+
     public int getTagID(int facetID, String tagName) {
         failIfDirty();
-        return tagPools[facetID].getPosition(tagName);
+        return facets[facetID].getPosition(tagName);
     }
 
     public String getTagName(int facetID, int tagID) {
         failIfDirty();
-        return tagPools[facetID].getValue(tagID);
+        return facets[facetID].getValue(tagID);
     }
 
     public int getFacetID(String facetName) {
@@ -93,13 +104,13 @@ public class TagHandlerImpl implements TagHandler {
 
     public int getFacetSize(int facetID) {
         failIfDirty();
-        return tagPools[facetID].size();
+        return facets[facetID].size();
     }
 
     public int getMaxTagCount() {
         failIfDirty();
         int max = 0;
-        for (SortedPool<String> tagPool: tagPools) {
+        for (SortedPool<String> tagPool: facets) {
             max = Math.max(max, tagPool.size());
         }
         log.trace("Extracted max tag count: " + max);
@@ -108,13 +119,13 @@ public class TagHandlerImpl implements TagHandler {
 
     public int getTagCount(String facetName) {
         failIfDirty();
-        return tagPools[structure.getFacetID(facetName)].size();
+        return facets[structure.getFacetID(facetName)].size();
     }
 
     public int getTagCount() {
         failIfDirty();
         int count = 0;
-        for (SortedPool<String> tagPool: tagPools) {
+        for (SortedPool<String> tagPool: facets) {
             count += tagPool.size();
         }
         log.trace("Extracted total tag count: " + count);
@@ -129,36 +140,36 @@ public class TagHandlerImpl implements TagHandler {
         dirty = false;
         log.debug("Loading tag handler data from folder \"" + folder + "\"");
         int facetID = 0;
-        for (SortedPool<String> tagPool: tagPools) {
+        for (SortedPool<String> tagPool: facets) {
             String facetName = structure.getFacetName(facetID++);
             log.debug("Loading tags \"" + facetName + "\"");
             tagPool.load(folder, PERSISTENCE_PREFIX + facetName);
         }
         //noinspection DuplicateStringLiteralInspection
-        log.debug("Finished loading tags for " + tagPools.length + " facets");
+        log.debug("Finished loading tags for " + facets.length + " facets");
     }
 
     public void store(File folder) throws IOException {
         failIfDirty();
         log.debug("Storing tag handler data to folder \"" + folder + "\"");
         int facetID = 0;
-        for (SortedPool<String> tagPool: tagPools) {
+        for (SortedPool<String> tagPool: facets) {
             String facetName = structure.getFacetName(facetID++);
             log.debug("Storing tags \"" + facetName + "\"");
             tagPool.store(folder, PERSISTENCE_PREFIX + facetName);
         }
         //noinspection DuplicateStringLiteralInspection
-        log.debug("Finished storing tags for " + tagPools.length + " facets");
+        log.debug("Finished storing tags for " + facets.length + " facets");
     }
 
     public void close() {
         //noinspection DuplicateStringLiteralInspection
-        log.debug("Closing " + tagPools.length + " tagPools");
-        for (SortedPool<String> tagPool: tagPools) {
+        log.debug("Closing " + facets.length + " facets");
+        for (SortedPool<String> tagPool: facets) {
             tagPool.clear();
         }
         //noinspection AssignmentToNull
-        tagPools = null;
+        facets = null;
         log.trace("Finished closing tag pools. Tag handler state is now"
                   + " unstable");
     }
@@ -168,7 +179,7 @@ public class TagHandlerImpl implements TagHandler {
         StringWriter sw = new StringWriter(1000);
         for (int i = 0 ; i < structure.getFacetNames().size() ; i++) {
             sw.append(structure.getFacetNames().get(i)).append(" (").
-                    append(String.valueOf(tagPools[i].size())).append(")\n");
+                    append(String.valueOf(facets[i].size())).append(")\n");
         }
         if (log.isTraceEnabled()) {
             log.trace("Extracted stats: " + sw.toString());
@@ -177,14 +188,14 @@ public class TagHandlerImpl implements TagHandler {
     }
 
     public void dirtyAddTag(int facetID, String tagName) {
-        tagPools[facetID].dirtyAdd(tagName);
+        facets[facetID].dirtyAdd(tagName);
     }
 
     public void cleanup() {
         //noinspection DuplicateStringLiteralInspection
-        log.debug("Cleaning " + tagPools.length + " tagPools");
+        log.debug("Cleaning " + facets.length + " facets");
         int facetID = 0;
-        for (SortedPool<String> tagPool: tagPools) {
+        for (SortedPool<String> tagPool: facets) {
             log.debug("Cleaning tagPool " + structure.getFacetName(facetID++)
                       + " with " + tagPool.size() + " tags");
             tagPool.cleanup();
@@ -198,23 +209,23 @@ public class TagHandlerImpl implements TagHandler {
             log.trace("Adding \"" + tagName + " to facet "
                       + structure.getFacetName(facetID));
         }
-        return tagPools[facetID].add(tagName);
+        return facets[facetID].add(tagName);
     }
 
     public void removeTag(int facetID, int tagID) {
         failIfDirty();
         if (log.isTraceEnabled()) {
             //noinspection DuplicateStringLiteralInspection
-            log.trace("Removing tag \"" + tagPools[facetID].getValue(tagID)
+            log.trace("Removing tag \"" + facets[facetID].getValue(tagID)
                       + "\" with ID " + tagID + " from facet "
                       + structure.getFacetName(facetID));
         }
-        tagPools[facetID].remove(tagID);
+        facets[facetID].remove(tagID);
     }
 
     public void clearTags() {
         log.debug("Clearing all tags");
-        for (SortedPool<String> tagPool: tagPools) {
+        for (SortedPool<String> tagPool: facets) {
             tagPool.clear();
         }
     }

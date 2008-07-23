@@ -38,10 +38,10 @@ import java.io.IOException;
  * The TagHandler is responsible for mapping between integer and String
  * representations of tags.
  * </p><p>
- * The tags are guaranteed to be in natural sorting order (alpha-numeric),
- * so order of the id of two tags is equal to comparing their String
- * representation. This is especially relevant for the methods {@link #addTag}
- * and {@link #removeTag}, as they shift the underlying structure.
+ * The tags are guaranteed to be in consistent order, so order of the id of two
+ * tags is equal to comparing their String representation. This is especially
+ * relevant for the methods {@link #addTag} and {@link #removeTag}, as they
+ * might shift the underlying structure.
  */
 @QAInfo(state=QAInfo.State.QA_NEEDED,
         level=QAInfo.Level.NORMAL)
@@ -110,6 +110,13 @@ public interface TagHandler {
      * @return the Facet names.
      */
     public List<String> getFacetNames();
+
+    /**
+     * @return the list of Facets making up the TagHandler. Normally used for
+     *         batch-oriented updates.
+     */
+    // TODO: Does this belong here? Isn't Facet a tad too specific?
+    public SortedPool<String>[] getFacets();
 
     /**
      * Load the structure from disk.

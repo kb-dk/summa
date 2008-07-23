@@ -77,7 +77,9 @@ public class FacetBrowser implements IndexChangeListener { // implements Browser
         structure = new StructureDescription(configuration);
 
         // TODO: Implement logic for reuse, iterated build and clean start
-        tagHandler = TagHandlerFactory.getTagHandler(configuration, connector);
+        // TODO: Use IndexDescriptor
+        tagHandler =
+                TagHandlerFactory.getTagHandler(configuration, null, connector);
 //        coreMap = CoreMapFactory.getCoreMap(configuration, connector);
         browser = new BrowserImpl(configuration, searcher, queryParser,
                                   tagHandler, structure, coreMap);
