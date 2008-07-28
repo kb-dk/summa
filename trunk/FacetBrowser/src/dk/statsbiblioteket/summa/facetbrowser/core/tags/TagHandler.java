@@ -115,8 +115,7 @@ public interface TagHandler {
      * @return the list of Facets making up the TagHandler. Normally used for
      *         batch-oriented updates.
      */
-    // TODO: Does this belong here? Isn't Facet a tad too specific?
-    public SortedPool<String>[] getFacets();
+    public List<Facet> getFacets();
 
     /**
      * Load the structure from disk.

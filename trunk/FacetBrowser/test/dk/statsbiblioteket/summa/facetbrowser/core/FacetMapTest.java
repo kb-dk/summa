@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Arrays;
 import java.io.StringWriter;
+import java.io.File;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -35,6 +36,7 @@ import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMap;
 import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMapBitStuffed;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandlerImpl;
+import dk.statsbiblioteket.summa.facetbrowser.core.tags.Facet;
 import dk.statsbiblioteket.summa.facetbrowser.util.pool.SortedPool;
 import dk.statsbiblioteket.summa.facetbrowser.util.pool.MemoryStringPool;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -64,12 +66,14 @@ public class FacetMapTest extends TestCase {
         memStore.put(StructureDescription.FACETS, "A, B, C");
         Configuration config = new Configuration(memStore);
         StructureDescription structure = new StructureDescription(config);
-        SortedPool<String>[] pools =
-                new MemoryStringPool[structure.getFacetNames().size()];
+        Facet[] pools = new Facet[structure.getFacetNames().size()];
         int position = 0;
         //noinspection UnusedDeclaration
         for (String facetName: structure.getFacetNames()) {
-            pools[position++] = new MemoryStringPool();
+            //noinspection DuplicateStringLiteralInspection
+            pools[position++] = new Facet(
+                    new File(System.getProperty("java.io.tmpdir")), 
+                    "facettest" + position, null, null, true, true);
         }
         handler = new TagHandlerImpl(structure, pools);
         map = new FacetMap(config, core, handler);

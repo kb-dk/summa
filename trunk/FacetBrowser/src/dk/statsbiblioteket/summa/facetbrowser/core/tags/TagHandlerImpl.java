@@ -27,6 +27,7 @@
 package dk.statsbiblioteket.summa.facetbrowser.core.tags;
 
 import java.util.List;
+import java.util.Arrays;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -34,7 +35,6 @@ import java.io.StringWriter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import dk.statsbiblioteket.summa.facetbrowser.util.pool.SortedPool;
-import dk.statsbiblioteket.summa.facetbrowser.util.pool.CollatorSortedPool;
 import dk.statsbiblioteket.summa.facetbrowser.core.StructureDescription;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
@@ -48,7 +48,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 public class TagHandlerImpl implements TagHandler {
     private Log log = LogFactory.getLog(TagHandlerImpl.class);
 
-    private SortedPool<String>[] facets;
+    private Facet[] facets;
     private StructureDescription structure;
     private boolean dirty = false;
     public static final String PERSISTENCE_PREFIX = "tags_";
@@ -60,7 +60,7 @@ public class TagHandlerImpl implements TagHandler {
      *               specified in structure.
      */
     public TagHandlerImpl(StructureDescription structure,
-                          SortedPool<String>[] facets) {
+                          Facet[] facets) {
         this.structure = structure;
         this.facets = facets;
     }
@@ -81,8 +81,8 @@ public class TagHandlerImpl implements TagHandler {
      * @return the list of Facets making up the TagHandler. Normally used for
      *         batch-oriented updates.
      */
-    public SortedPool<String>[] getFacets() {
-        return facets;
+    public List<Facet> getFacets() {
+        return Arrays.asList(facets);
     }
 
     /* Interface implementation */
