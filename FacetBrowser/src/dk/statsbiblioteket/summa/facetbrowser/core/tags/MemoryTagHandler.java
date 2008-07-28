@@ -152,7 +152,7 @@ public class MemoryTagHandler implements TagHandler {
         return structure.getFacetNames();
     }
 
-    public Facet[] getFacets() {
+    public List<Facet> getFacets() {
         throw new UnsupportedOperationException("This class is deprecated");
     }
 

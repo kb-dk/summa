@@ -219,14 +219,13 @@ public class TagHandlerFactory {
     public static void fill(TagHandler tagHandler,
                             IndexConnector connector) throws IOException {
         // TODO: Implement fill
-        /*
         log.debug("Filling tag handler from index");
         Profiler profiler = new Profiler();
         tagHandler.clearTags();
         IndexReader ir = connector.getReader();
         long termCount = 0;
         int counter = 0;
-        for (SortedPool<String> facet: tagHandler.getFacets()) {
+        for (Facet facet: tagHandler.getFacets()) {
             String facetName = facet.getName();
             log.debug("Filling " + facetName
                       + " (" + ++counter + "/"
@@ -264,6 +263,6 @@ public class TagHandlerFactory {
                 "Finished filling tag handler with %d tags in %d facets from "
                 + "the index with %d documents in %s",
                 termCount, tagHandler.getFacetNames().size(), ir.numDocs(),
-                 profiler.getSpendTime()));*/
+                 profiler.getSpendTime()));
     }
 }
