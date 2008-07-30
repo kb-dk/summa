@@ -27,6 +27,10 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import java.io.IOException;
 import java.io.File;
 
+/**
+ * The core is responsible for loading existing Facet-structures and for
+ * handling Facet setup in the form of configuration.
+ */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
@@ -37,6 +41,7 @@ public interface FacetCore {
      * that should be displayed. Example:
      * FacetBrowser.FACETS=Author (5), Title, subject (20)  
      */
+    // TODO: Add real property-handling - we need Locale and so on 
     public static final String FACETS = "FacetBrowser.FACETS";
 
     /**

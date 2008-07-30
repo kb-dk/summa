@@ -51,6 +51,8 @@ public interface Browser {
                               String queryLang,
                               FacetStructure.TagSortOrder sortOrder);
 
+    // TODO: Consider a request-object with wanted facets et al
+
     /**
      * Generate a facet browser structure and return it in a form suitable for
      * further handling, such as merging, reduction or conversion to XML.
