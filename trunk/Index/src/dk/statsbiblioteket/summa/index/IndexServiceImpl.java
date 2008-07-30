@@ -60,6 +60,7 @@ import dk.statsbiblioteket.summa.common.xml.DefaultNamespaceContext;
 import dk.statsbiblioteket.summa.common.lucene.analysis.SummaRepeatAnalyzer;
 import dk.statsbiblioteket.summa.common.lucene.analysis.SummaKeywordAnalyzer;
 import dk.statsbiblioteket.summa.common.index.IndexAlias;
+import dk.statsbiblioteket.summa.index.lucene.DocumentCreator;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 

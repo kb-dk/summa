@@ -70,7 +70,7 @@ public class CoreMapFactory {
             "FacetBrowser.STOPWORDS";
     /*
      * If the stopwords for a given field are unspecified, the stopwords defined
-     * in FacetBrowser.STOPWORDS_Fallback are used for that field.
+     * in LuceneFacetBrowser.STOPWORDS_Fallback are used for that field.
      * This is used by {@link #fillMap}.
      */
 //    private static final String STOPWORDSFALLBACK =

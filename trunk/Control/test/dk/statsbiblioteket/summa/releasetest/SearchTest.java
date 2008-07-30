@@ -43,21 +43,17 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.index.IndexException;
-import dk.statsbiblioteket.summa.common.index.IndexField;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
-import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
-import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.storage.io.RecordIterator;
 import dk.statsbiblioteket.summa.control.service.StorageService;
 import dk.statsbiblioteket.summa.control.service.FilterService;
 import dk.statsbiblioteket.summa.control.service.SearchService;
-import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.ingest.stream.FileReader;
 import dk.statsbiblioteket.summa.search.SummaSearcher;
 import dk.statsbiblioteket.summa.search.IndexWatcher;
 import dk.statsbiblioteket.summa.search.LuceneSearcher;
 import dk.statsbiblioteket.summa.index.XMLTransformer;
-import dk.statsbiblioteket.summa.index.IndexController;
+import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -260,7 +256,7 @@ public class SearchTest extends NoExitTestCase {
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
                     descriptorLocation.getFile());
         chain.getSubConfiguration("IndexUpdate").
-                set(IndexController.CONF_INDEX_ROOT_LOCATION,
+                set(IndexControllerImpl.CONF_INDEX_ROOT_LOCATION,
                     INDEX_ROOT.toString());
         chain.getSubConfiguration("IndexUpdate").
                 getSubConfiguration("LuceneUpdater").

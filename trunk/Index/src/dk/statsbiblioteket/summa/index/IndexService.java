@@ -24,6 +24,7 @@ package dk.statsbiblioteket.summa.index;
 
 import dk.statsbiblioteket.summa.common.lucene.index.SearchDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
+import dk.statsbiblioteket.summa.index.lucene.DocumentCreator;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.rmi.Remote;

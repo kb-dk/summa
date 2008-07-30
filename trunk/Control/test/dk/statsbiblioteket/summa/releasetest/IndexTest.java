@@ -42,7 +42,7 @@ import dk.statsbiblioteket.summa.control.service.StorageService;
 import dk.statsbiblioteket.summa.control.service.FilterService;
 import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.storage.io.RecordIterator;
-import dk.statsbiblioteket.summa.index.IndexController;
+import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -128,7 +128,7 @@ public class IndexTest extends NoExitTestCase {
 
         List<Filter> filters =
                 indexService.getFilterControl().getPumps().get(0).getFilters();
-        File indexLocation = ((IndexController)filters.get(filters.size()-1)).
+        File indexLocation = ((IndexControllerImpl)filters.get(filters.size()-1)).
                 getIndexLocation();
 
         String[] EXPECTED_IDS = new String[] {"fagref:gm@example.com",
