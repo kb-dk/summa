@@ -31,6 +31,9 @@ import java.io.IOException;
 
 import org.apache.lucene.index.IndexWriter;
 
+/**
+@deprecated optimization is performed during consolidation of indexes.
+ */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "hal")

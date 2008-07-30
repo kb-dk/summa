@@ -71,7 +71,9 @@
                     <value class="xproperties">
                         <entry>
                             <key>FilterPump.FilterClass</key>
-                            <value class="string">dk.statsbiblioteket.summa.index.DocumentCreator</value>
+                            <value class="string">
+                                dk.statsbiblioteket.summa.index.lucene.DocumentCreator
+                            </value>
                         </entry>
                         <entry>
                             <key>summa.index.descriptor-setup</key>
@@ -89,7 +91,9 @@
                     <value class="xproperties">
                         <entry>
                             <key>FilterPump.FilterClass</key>
-                            <value class="string">dk.statsbiblioteket.summa.index.IndexController</value>
+                            <value class="string">
+                                dk.statsbiblioteket.summa.index.IndexControllerImpl
+                            </value>
                         </entry>
                         <entry>
                             <key>summa.index.manipulators</key>
@@ -108,7 +112,9 @@
                             <value class="xproperties">
                                 <entry>
                                     <key>summa.index.manipulator-class</key>
-                                    <value class="string">dk.statsbiblioteket.summa.index.LuceneManipulator</value>
+                                    <value class="string">
+                                        dk.statsbiblioteket.summa.index.lucene.LuceneManipulator
+                                    </value>
                                 </entry>
                                 <entry>
                                     <key>summa.index.descriptor-setup</key>

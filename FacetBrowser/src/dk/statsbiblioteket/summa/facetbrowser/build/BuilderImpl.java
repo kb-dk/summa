@@ -79,4 +79,8 @@ public class BuilderImpl implements Builder {
     public void addDocuments(List<Document> documents) {
         // TODO: Implement this
     }
+
+    public void rebuildMap() {
+        // TODO: Implement this
+    }
 }

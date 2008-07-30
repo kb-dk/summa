@@ -57,6 +57,7 @@ public interface Builder {
      * @param documents facets and tags are extracted from these and added to
      *                  the internal structure.
      */
+    // TODO: Replace with Record
     public void addDocuments(List<Document> documents);
 
     /**
@@ -81,4 +82,11 @@ public interface Builder {
      *                 threadpool, these tags are ignored.
      */
 //    public void refresh(boolean iterate, boolean onlyMap);
+
+    /**
+     * Performs a complete rebuild of the mapping from documents to tags.
+     * During the rebuild, the FacetBrowser will still be responsive, but it
+     * will return result based on its state befor the rebuildMap-call.
+     */
+    public void rebuildMap();
 }
