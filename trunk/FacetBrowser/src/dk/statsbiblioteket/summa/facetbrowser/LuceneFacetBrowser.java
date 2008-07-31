@@ -29,7 +29,7 @@ package dk.statsbiblioteket.summa.facetbrowser;
 import java.io.IOException;
 
 import dk.statsbiblioteket.summa.facetbrowser.browse.Browser;
-import dk.statsbiblioteket.summa.facetbrowser.browse.FacetStructure;
+import dk.statsbiblioteket.summa.facetbrowser.browse.Result;
 import dk.statsbiblioteket.summa.facetbrowser.browse.BrowserImpl;
 import dk.statsbiblioteket.summa.facetbrowser.core.StructureDescription;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
@@ -85,18 +85,18 @@ public class LuceneFacetBrowser implements IndexChangeListener { // implements B
     }
 
     /* Browser interface */
-    public String getFacetXML(String queryString, String filterQuery,
+/*    public String getFacetXML(String queryString, String filterQuery,
                               String queryLang,
-                              FacetStructure.TagSortOrder sortOrder) {
+                              Result.TagSortOrder sortOrder) {
         return browser.getFacetXML(queryString, filterQuery,
                                    queryLang, sortOrder);
     }
-    public FacetStructure getFacetMap(String queryString, String filterQuery,
+    public Result getFacetMap(String queryString, String filterQuery,
                                       String queryLang,
-                                      FacetStructure.TagSortOrder sortOrder) {
-        return browser.getFacetMap(queryString, filterQuery,
-                                   queryLang, sortOrder);
-    }
+                                      Result.TagSortOrder sortOrder) {
+        return browser.getFacetMap(filterQuery, queryString,
+                                   sortOrder, null);
+    }*/
 
     /**
      * Performs a complete rebuild of the mapping from documents to tags.

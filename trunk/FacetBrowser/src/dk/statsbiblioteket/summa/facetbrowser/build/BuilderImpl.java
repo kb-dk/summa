@@ -34,6 +34,7 @@ import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexConnector;
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.document.Document;
@@ -68,6 +69,10 @@ public class BuilderImpl implements Builder {
     }
 
     public void save(String directory) throws IOException {
+        // TODO: Implement this
+    }
+
+    public void updateRecord(Record record) {
         // TODO: Implement this
     }
 

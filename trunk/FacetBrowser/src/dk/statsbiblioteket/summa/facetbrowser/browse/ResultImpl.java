@@ -1,4 +1,4 @@
-/* $Id: FacetStructureImpl.java,v 1.10 2007/10/05 10:20:22 te Exp $
+/* $Id: ResultImpl.java,v 1.10 2007/10/05 10:20:22 te Exp $
  * $Revision: 1.10 $
  * $Date: 2007/10/05 10:20:22 $
  * $Author: te $
@@ -22,7 +22,7 @@
  */
 /*
  * The State and University Library of Denmark
- * CVS:  $Id: FacetStructureImpl.java,v 1.10 2007/10/05 10:20:22 te Exp $
+ * CVS:  $Id: ResultImpl.java,v 1.10 2007/10/05 10:20:22 te Exp $
  */
 package dk.statsbiblioteket.summa.facetbrowser.browse;
 
@@ -50,10 +50,10 @@ import org.apache.commons.logging.Log;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public abstract class FacetStructureImpl<T extends Comparable<T>>
-        implements FacetStructure<T> {
+public abstract class ResultImpl<T extends Comparable<T>>
+        implements Result<T> {
     private static final transient Log log =
-            LogFactory.getLog(FacetStructureImpl.class);
+            LogFactory.getLog(ResultImpl.class);
 
     private int DEFAULTFACETCAPACITY = 20;
     protected StructureDescription structureDescription;
@@ -65,7 +65,7 @@ public abstract class FacetStructureImpl<T extends Comparable<T>>
      */
     protected LinkedHashMap<String, List<FlexiblePair<T, Integer>>> map;
 
-    public FacetStructureImpl(StructureDescription structureDescription) {
+    public ResultImpl(StructureDescription structureDescription) {
         this.structureDescription = structureDescription;
         map = new LinkedHashMap<String, List<FlexiblePair<T, Integer>>>(20); 
     }
@@ -153,18 +153,18 @@ public abstract class FacetStructureImpl<T extends Comparable<T>>
         return map;
     }
 
-    public synchronized void merge(FacetStructure other) {
+    public synchronized void merge(Result other) {
         if (other == null) {
             log.warn("Attempted to merge with null");
         }
-        String typeProblem = "The FacetStructureImpl<T> default merger can only"
-                             + " handle FacetStructureImpl<T> as input";
-        if (!(other instanceof FacetStructureImpl)) {
+        String typeProblem = "The ResultImpl<T> default merger can only"
+                             + " handle ResultImpl<T> as input";
+        if (!(other instanceof ResultImpl)) {
             throw new IllegalArgumentException(typeProblem);
         }
         Map<String, List<FlexiblePair<T, Integer>>> otherMap;
         try  {
-            otherMap = ((FacetStructureImpl<T>)other).getMap();
+            otherMap = ((ResultImpl<T>)other).getMap();
         } catch (ClassCastException e) {
             throw new IllegalArgumentException(typeProblem, e);
         }

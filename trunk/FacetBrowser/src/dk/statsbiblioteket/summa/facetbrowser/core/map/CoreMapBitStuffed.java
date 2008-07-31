@@ -361,7 +361,7 @@ public class CoreMapBitStuffed implements CoreMap {
                 ex.printStackTrace();
                 System.out.println("");*/
                 // Don't do anything else, as discussed with Hans and Mads.
-                // We throw an error upon load, if the index is larger than
+                // We throw an error upon open, if the index is larger than
                 // the map, so we'll live
             }
         }

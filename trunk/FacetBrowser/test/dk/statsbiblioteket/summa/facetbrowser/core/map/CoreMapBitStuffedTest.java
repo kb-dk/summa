@@ -209,7 +209,7 @@ public class CoreMapBitStuffedTest extends TestCase {
 
 /*    public void testLoad() throws Exception {
         CoreMapBitStuffedLong map = new CoreMapBitStuffedLong(10, 10);
-        map.load(ClusterMapCompleteArray.defaultPersistenceLocation);
+        map.open(ClusterMapCompleteArray.defaultPersistenceLocation);
         long[] values = map.getValues();
 
         int[] docs = new int[1000];

@@ -1,4 +1,4 @@
-/* $Id: FacetStructure.java,v 1.5 2007/10/05 10:20:22 te Exp $
+/* $Id: Result.java,v 1.5 2007/10/05 10:20:22 te Exp $
  * $Revision: 1.5 $
  * $Date: 2007/10/05 10:20:22 $
  * $Author: te $
@@ -22,7 +22,7 @@
  */
 /*
  * The State and University Library of Denmark
- * CVS:  $Id: FacetStructure.java,v 1.5 2007/10/05 10:20:22 te Exp $
+ * CVS:  $Id: Result.java,v 1.5 2007/10/05 10:20:22 te Exp $
  */
 package dk.statsbiblioteket.summa.facetbrowser.browse;
 
@@ -35,7 +35,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public interface FacetStructure<T> {
+public interface Result<T> {
     /**
      * Sort order for tags.<br/>
      * tag:        Natural order for the tags (most probably alpha-numeric).
@@ -63,12 +63,12 @@ public interface FacetStructure<T> {
      * point after merging has finished..
      * @param other data to be added to this FacetStructure.
      */
-    public void merge(FacetStructure other);
+    public void merge(Result other);
 
     /**
      * Resolve any JVM-specific dependencies and produce a FacetStructure
      * suitable for network transfer.
      * @return a version of the FacetStructure suitable for external use.
      */
-    public FacetStructure externalize();
+    public Result externalize();
 }

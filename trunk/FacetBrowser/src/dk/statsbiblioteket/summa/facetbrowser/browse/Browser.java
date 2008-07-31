@@ -22,7 +22,10 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.browse;
 
+import java.util.List;
+
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.facetbrowser.Structure;
 
 
 /**
@@ -34,43 +37,33 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public interface Browser {
-    /**
-     * Generate an XML representation for facet browsing of the result from
-     * searching with the given query.
-     * @param queryString Query string.
-     * @param filterQuery The filter is used before the query.
-     * @param queryLang the language, as specified in ISO 639-1. This selects
-     *                  the add of aliases used for query-parsing. A value of
-     *                  null selects the default language.
-     * @param sortOrder the sort order for the tags. The order of the facets
-     *                  is specified in the properties.
-     * @return an XML representation for facet browsing.
-     */
-    public String getFacetXML(String queryString,
-                              String filterQuery,
-                              String queryLang,
-                              FacetStructure.TagSortOrder sortOrder);
 
-    // TODO: Consider a request-object with wanted facets et al
+    /**
+     * @return a list with the names of all mapped Facets.
+     */
+    public List<String> getFacetNames();
 
     /**
      * Generate a facet browser structure and return it in a form suitable for
      * further handling, such as merging, reduction or conversion to XML.
-     * @param queryString Query string.
-     * @param filterQuery The filter is used before the query.
-     * @param queryLang the language, as specified in ISO 639-1. This selects
-     *                  the add of aliases used for query-parsing. A value of
-     *                  null selects the default language.
-     * @param sortOrder the sort order for the tags. The order of the facets
-     *                  is specified in the properties.
+     * </p><p>
+     * The parameters of this call are fairly low-level. It is recommended that
+     * implementations of Browser also supply a query-based method for
+     * requesting facet/tag information, as it eases experiments.
+     * @param docIDs    the ids for the documents to calculate Tags for.
+     * @param startPos  the start-position within the docIDs.
+     * @param length    the number of docIDs to use.
+     * @param facets    a comma-separated list with the names of the wanted
+     *                  Facets. See {@link Request} for details. If null is
+     *                  specified, the default Facets are returned.
      * @return a machine-oriented representation of the facet browser structure
      *         corresponding to the given query. Note that the result need not
      *         be directly Serializable, but that calling 
-     *         {@link FacetStructure#externalize()} on the result should produce
+     *         {@link Result#externalize()} on the result should produce
      *         a Serializable version.
      */
-    public FacetStructure getFacetMap(String queryString,
-                              String filterQuery,
-                              String queryLang,
-                              FacetStructure.TagSortOrder sortOrder);
+    public Result getFacetMap(int[] docIDs, int startPos, int length,
+                              String facets);
+
+    // TODO: Add index-lookup
 }

@@ -27,6 +27,7 @@
 package dk.statsbiblioteket.summa.facetbrowser.browse;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.io.IOException;
 
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
@@ -115,42 +116,41 @@ public class BrowserImpl implements Browser {
         }
     }
 
-    public String getFacetXML(String query, String filterQuery,
+/*    public String getFacetXML(String query, String filterQuery,
                               String queryLang,
-                              FacetStructure.TagSortOrder sortOrder) {
-        return getFacetMap(query, filterQuery, queryLang, sortOrder).toXML();
+                              Result.TagSortOrder sortOrder) {
+        return getFacetMap(filterQuery, query, sortOrder).toXML();
     }
-
-    public synchronized FacetStructure getFacetMap(String queryString,
-                                                   String filterQuery,
-                                                   String queryLang,
-                                                   FacetStructure.TagSortOrder
-                                                           sortOrder) {
+  */
+  /*  public synchronized Result getFacetMap(String filter,
+                                                   String query,
+                                                   String
+                                                           sort, String facets) {
         profiler.reset();
         slimCollector.clean();
         Query query;
         try {
             // TODO: Use queryLang here
-            query = queryParser.parse(queryString);
+            query = queryParser.parse(query);
         } catch (ParseException e) {
-            log.warn("Query ParseException with query \"" + queryString
+            log.warn("Query ParseException with query \"" + query
                      + "\": " + e.getMessage(), e);
             return null;
         }
         Filter filter = null;
         try {
             // TODO: Use queryLang here, cache filters?
-            if (filterQuery != null && !"".equals(filterQuery)) {
-                filter = new QueryFilter(queryParser.parse(queryString));
+            if (filter != null && !"".equals(filter)) {
+                filter = new QueryFilter(queryParser.parse(query));
             }
         } catch (ParseException e) {
-            log.warn("Query ParseException with filter \"" + filterQuery
+            log.warn("Query ParseException with filter \"" + filter
                      + "\": " + e.getMessage(), e);
             return null;
         }
         try {
             // TODO: Speed up collection by bypassing score calculation
-            if (filterQuery == null) {
+            if (filter == null) {
                 searcher.search(query, slimCollector);
             } else {
                 searcher.search(query, filter, slimCollector);
@@ -159,11 +159,11 @@ public class BrowserImpl implements Browser {
             log.error("IOException perforimg search: " + e.getMessage(), e);
             return null;
         }
-        return getFacetMap(queryString, sortOrder, slimCollector);
+        return getFacetMap(query, sort, slimCollector);
     }
 
-    protected synchronized FacetStructure getFacetMap(String query,
-                                       FacetStructure.TagSortOrder sortOrder,
+    protected synchronized Result getFacetMap(String query,
+                                       Result.TagSortOrder sortOrder,
                                        SlimCollector slimCollector) {
 
         int threadCount =
@@ -181,7 +181,7 @@ public class BrowserImpl implements Browser {
             startPos += partSize;
         }
 
-        FacetStructure structure = null;
+        Result structure = null;
         for (int browserID = 0 ; browserID < threadCount ; browserID++) {
             BrowserThread browser = browsers.get(browserID);
             browser.waitForResult(timeout);
@@ -200,12 +200,20 @@ public class BrowserImpl implements Browser {
         if (structure != null) {
             structure.reduce(sortOrder);
         }
-        log.debug("Created FacetStructure from query \"" + query + "\" and "
+        log.debug("Created Result from query \"" + query + "\" and "
                   + "sortOrder " + sortOrder
                   + " (" + slimCollector.getDocumentCount() + " documents) "
                   + " in " + profiler.getSpendTime());
         return structure;
     }
+    */
 
+    public List<String> getFacetNames() {
+        return null;
+    }
 
+    public Result getFacetMap(int[] docIDs, int startPos, int length,
+                              String facets) {
+        return null;
+    }
 }

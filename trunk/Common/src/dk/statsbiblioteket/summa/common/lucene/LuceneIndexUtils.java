@@ -64,6 +64,17 @@ public class LuceneIndexUtils {
     public static final String LUCENE_FOLDER = "lucene";
 
     /**
+     * Used to communicate changes to Lucene-indexes caused by this Record.
+     * Updates will have both {@link #META_DELETE_DOCID} and META_ADD_DOCID.
+     */
+    public static final String META_ADD_DOCID = "Index_DocID_Add";
+     /**
+      * Used to communicate changes to Lucene-indexes caused by this Record.
+      * Updates will have both META_DELETE_DOCID and {@link #META_ADD_DOCID}.
+      */
+    public static final String META_DELETE_DOCID = "Index_DocID_Delete";
+
+    /**
      * Get the sub-properties {@link #CONF_DESCRIPTOR} and create a descriptor
      * based on that. If the sub-properties does not exist, the default
      * descriptor is created.

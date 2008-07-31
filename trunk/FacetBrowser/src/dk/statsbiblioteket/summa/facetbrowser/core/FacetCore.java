@@ -35,28 +35,14 @@ import java.io.File;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public interface FacetCore {
-    /**
-     * The property key for the facets that should be used in the FacetBrowser.
-     * The facets are optionally specified with the maximum number of tags
-     * that should be displayed. Example:
-     * FacetBrowser.FACETS=Author (5), Title, subject (20)  
-     */
-    // TODO: Add real property-handling - we need Locale and so on 
-    public static final String FACETS = "FacetBrowser.FACETS";
 
     /**
-     * Load previously generated data for facet browsing. The data location is
-     * taken from the properties.
-     * @throws IOException if the data could not be read from the file system.
-     */
-    public void load() throws IOException;
-
-    /**
-     * Load previously generated data for facet browsing.
+     * Open a Facet structure at the given location. If there is no existing
+     * structure, .
      * @param directory the location of the data.
      * @throws IOException if the data could not be read from the file system.
      */
-    public void load(File directory) throws IOException;
+    public void open(File directory) throws IOException;
 
     /**
      * Checks to see if the internal facet representation is synchronized to
