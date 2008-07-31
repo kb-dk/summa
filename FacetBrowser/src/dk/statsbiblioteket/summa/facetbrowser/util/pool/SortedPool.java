@@ -25,7 +25,6 @@ package dk.statsbiblioteket.summa.facetbrowser.util.pool;
 import java.io.File;
 import java.io.IOException;
 import java.util.Comparator;
-import java.util.List;
 
 /*
 * The State and University Library of Denmark
@@ -134,5 +133,5 @@ public interface SortedPool<E extends Comparable> extends Comparator<E> {
      */
     public void clear();
 
-    // TODO: Add fast save for filesystem-based, use indexes upon load
+    // TODO: Add fast save for filesystem-based, use indexes upon open
 }

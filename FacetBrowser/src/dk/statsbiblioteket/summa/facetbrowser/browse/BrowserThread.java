@@ -49,8 +49,8 @@ public class BrowserThread implements Runnable {
     private int[] docIDs;
     private int startPos;
     private int endPos;
-    private FacetStructure.TagSortOrder sortOrder;
-    private FacetStructure result = null;
+    private Result.TagSortOrder sortOrder;
+    private Result result = null;
 
     private ReentrantLock lock = new ReentrantLock();
     private Thread thread = null;
@@ -72,7 +72,7 @@ public class BrowserThread implements Runnable {
      */
     public synchronized void startRequest(int[] docIDs, int startPos,
                                           int endPos,
-                                       FacetStructure.TagSortOrder sortOrder) {
+                                       Result.TagSortOrder sortOrder) {
         lock.lock();
         try {
             this.docIDs = docIDs;
@@ -96,10 +96,10 @@ public class BrowserThread implements Runnable {
     /**
      * @return a FacetStructure with facets and tags, derived from the data
      *         given in
-           {@link #startRequest(int[], int, int,FacetStructure.TagSortOrder)}.
+           {@link #startRequest(int[], int, int, Result.TagSortOrder)}.
      *         null if an exception occured.
      */
-    public synchronized FacetStructure getResult() {
+    public synchronized Result getResult() {
         if (!hasFinished()) {
             throw new IllegalStateException("It it not allowed to request the "
                                             + "result before the request has "

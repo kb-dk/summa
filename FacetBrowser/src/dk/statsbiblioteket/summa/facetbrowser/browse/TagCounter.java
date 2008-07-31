@@ -48,14 +48,14 @@ public interface TagCounter {
 
     /**
      * Get a map with Facets containing Tags, sorted by sortOrder. See
-     * {@link FacetStructure} for obvious use of this.
+     * {@link Result} for obvious use of this.
      * @param sortOrder how to sort the result. It is assumed that the
      *                  ID's for tags resolves to Strings, that are in
      *                  alpha-order.
      * @return a representation of the first elements, as specified by the
      *         structureDescription and the sortOrder.
      */
-    public FacetStructure getFirst(FacetStructure.TagSortOrder sortOrder);
+    public Result getFirst(Result.TagSortOrder sortOrder);
 
     /**
      * Reset this counter, so that is is ready for new increments.

@@ -28,6 +28,8 @@ import java.io.IOException;
 import java.util.List;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 
 /**
  * Builds or updates the structures needed for facet browsing.
@@ -37,56 +39,29 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         author = "te")
 public interface Builder {
     /**
+     * Updates the facet-structure based on the given Record.
+     * The record must contain either meta-value
+     * {@link LuceneIndexUtils#META_ADD_DOCID},
+     * {@link LuceneIndexUtils#META_DELETE_DOCID} or both, depending on whether
+     * it is an addition, a deletion or an update.
+     * @param record used as basis for the update.
+     */
+    public void updateRecord(Record record);
+
+    /**
+     * Discard any previous mapping and optionally tags and perform a complete
+     * build of the internal structure.
+     * @param keepTags if true, any existing tags are re-used. If the build is
+     *                 triggered because of suspicion of inconsistencies, it is
+     *                 recommended to let keepTags be true, as it speeds up
+     *                 building.
+     */
+    public void build(boolean keepTags);
+
+    /**
      * Store the internal representation to disk.
      * @param directory the location of the data.
      * @throws IOException if the internal representation could not be stored.
      */
     public void save(String directory) throws IOException;
-
-    /**
-     * Discard any previous mapping and optionally tags and perform a complete
-     * build of the internal structure.
-     * @param keepTags if true, any existing tags are re-used.
-     */
-    public void build(boolean keepTags);
-
-    /**
-     * Adds the given documents to the internal structure, assuming that the
-     * ID's for the documents follows without gaps right after the last known
-     * document in the structure.<br />
-     * @param documents facets and tags are extracted from these and added to
-     *                  the internal structure.
-     */
-    // TODO: Replace with Record
-    public void addDocuments(List<Document> documents);
-
-    /**
-     * Refresh the internal representation from the Lucene index.
-     * Note that iterative updates does not guarantee completely correct
-     * representation, as changed documents are not handled.
-     * Note that onlyMap updates will gradually make the facet browsing less
-     * and less complete, as new tags found in the new documents are not
-     * reflected in the representation. It is advisable to perform a complete
-     * build once in a while, if onlyMap is used as the standard update. 
-     * @param iterate suggest that the build is iterative, which means that
-     *                new documents are parsed and reflected in the internal
-     *                representation.
-     *                Note: Changed documents are not handled and the order
-     *                of the previously parsed documents are assumed to be
-     *                untouched.
-     *                Iterative updates are not necessarily supported. If they
-     *                are not supported,  a complete build should be performed
-     *                instead.
-     *  @param onlyMap only update the mapping between documents and tags.
-     *                 If a record contains tags that are not part of the
-     *                 threadpool, these tags are ignored.
-     */
-//    public void refresh(boolean iterate, boolean onlyMap);
-
-    /**
-     * Performs a complete rebuild of the mapping from documents to tags.
-     * During the rebuild, the FacetBrowser will still be responsive, but it
-     * will return result based on its state befor the rebuildMap-call.
-     */
-    public void rebuildMap();
 }

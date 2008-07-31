@@ -33,6 +33,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 
 import dk.statsbiblioteket.summa.facetbrowser.util.ClusterCommon;
+import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
@@ -40,6 +41,7 @@ import org.apache.log4j.Logger;
 /**
  * This describes how the complete cluster map should be build and displayed.
  * A core property is the facet names.
+ * @deprecated use {@link Structure} instead.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,

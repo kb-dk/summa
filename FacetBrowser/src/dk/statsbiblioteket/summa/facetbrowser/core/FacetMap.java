@@ -189,7 +189,7 @@ public class FacetMap {
      */
     public void store(File location) throws IOException {
         log.info("Storing facet map to \"" + location + "\"");
-        // TODO: Handle storing of files at the load-location
+        // TODO: Handle storing of files at the open-location
         coreMap.store(location);
         tagHandler.store(location);
         log.trace("Finished storing facet and tags at \"" + location + "\"");

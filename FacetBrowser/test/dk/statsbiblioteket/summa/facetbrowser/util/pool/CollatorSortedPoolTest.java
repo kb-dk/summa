@@ -23,7 +23,6 @@
 package dk.statsbiblioteket.summa.facetbrowser.util.pool;
 
 import java.util.Locale;
-import java.util.Collections;
 import java.util.Arrays;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -116,5 +115,5 @@ public class CollatorSortedPoolTest extends TestCase {
         testMutation(pool);
     }
 
-    // TODO: Save with disk, load with mem - check order
+    // TODO: Save with disk, open with mem - check order
 }

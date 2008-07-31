@@ -1,4 +1,4 @@
-/* $Id: FacetStructureLocal.java,v 1.8 2007/10/05 10:20:22 te Exp $
+/* $Id: ResultLocal.java,v 1.8 2007/10/05 10:20:22 te Exp $
  * $Revision: 1.8 $
  * $Date: 2007/10/05 10:20:22 $
  * $Author: te $
@@ -22,7 +22,7 @@
  */
 /*
  * The State and University Library of Denmark
- * CVS:  $Id: FacetStructureLocal.java,v 1.8 2007/10/05 10:20:22 te Exp $
+ * CVS:  $Id: ResultLocal.java,v 1.8 2007/10/05 10:20:22 te Exp $
  */
 package dk.statsbiblioteket.summa.facetbrowser.browse;
 
@@ -43,10 +43,10 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class FacetStructureLocal extends FacetStructureImpl<Integer> {
+public class ResultLocal extends ResultImpl<Integer> {
     private TagHandler tagHandler;
 
-    public FacetStructureLocal(StructureDescription structureDescription,
+    public ResultLocal(StructureDescription structureDescription,
                                TagHandler tagHandler) {
         super(structureDescription);
         this.tagHandler = tagHandler;
@@ -61,6 +61,7 @@ public class FacetStructureLocal extends FacetStructureImpl<Integer> {
         return ClusterCommon.simpleEntityEscape(resolveTagString(facet, tag));
     }
 
+    // TODO: Handle multiple fields
     protected String getQueryString(String facet, Integer tag) {
         return facet + ":\"" +
                ClusterCommon.simpleEntityEscape(resolveTagString(facet, tag))
@@ -76,9 +77,9 @@ public class FacetStructureLocal extends FacetStructureImpl<Integer> {
      * version of this FacetStructure, suitable for network-transfer.
      * @return a version of the FacetStructure suitable for external use.
      */
-    public FacetStructure externalize() {
-        FacetStructureExternal external =
-                new FacetStructureExternal(structureDescription);
+    public Result externalize() {
+        ResultExternal external =
+                new ResultExternal(structureDescription);
         for (Map.Entry<String, List<FlexiblePair<Integer, Integer>>> entry:
                 map.entrySet()) {
             String facet = entry.getKey();

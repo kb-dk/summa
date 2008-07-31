@@ -196,7 +196,7 @@ public class MemoryTagHandlerTest extends TestCase {
                 assertNotNull("Source name should be defined", sourceName);
                 assertTrue("facetID should be 0 or positive", facetID >= 0);
 
-                // Don't test getTagID, as it is not supported after load
+                // Don't test getTagID, as it is not supported after open
 /*
                 assertEquals("The tag IDs for facet #" + facetID + " and sourceName " + sourceName
                              + " from the loaded should be -1, "

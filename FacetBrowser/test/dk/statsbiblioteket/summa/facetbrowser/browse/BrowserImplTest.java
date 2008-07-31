@@ -30,22 +30,13 @@ import java.io.StringWriter;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.analysis.SimpleAnalyzer;
 import dk.statsbiblioteket.summa.facetbrowser.IndexBuilder;
-import dk.statsbiblioteket.summa.common.lucene.search.SlimCollector;
 import dk.statsbiblioteket.summa.facetbrowser.core.StructureDescription;
-import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandlerFactory;
-import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMap;
-import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMapFactory;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
-import dk.statsbiblioteket.summa.common.lucene.index.SearchDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexConnector;
-import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
 import dk.statsbiblioteket.summa.common.util.PriorityQueueLong;
-import dk.statsbiblioteket.util.Profiler;
 
 /**
  * BrowserImpl Tester.
@@ -181,8 +172,8 @@ public class BrowserImplTest extends TestCase {
 
         int[] docIDs = new int[] {0, 1, 2, 3, 4};
         coreMap.markCounterLists(tagCounter, docIDs, 0, docIDs.length-1);
-        FacetStructure facetStructure =
-                tagCounter.getFirst(FacetStructure.TagSortOrder.popularity);
+        Result facetStructure =
+                tagCounter.getFirst(Result.TagSortOrder.popularity);
         String browseXML = facetStructure.toXML();
         assertTrue("The result should be something",
                    browseXML.length() > "<facetmodel>\n</facetmodel>".length());*/
@@ -230,7 +221,7 @@ public class BrowserImplTest extends TestCase {
             profiler.reset();
             for (int i = 0 ; i < runs ; i++) {
                 coreMap.markCounterLists(tagCounter, docIDs, 0, docCount-1);
-           tagCounter.getFirst(FacetStructure.TagSortOrder.popularity).toXML();
+           tagCounter.getFirst(Result.TagSortOrder.popularity).toXML();
                 profiler.beat();
             }
             System.out.println("Average time for marking and extracting tags " +
@@ -282,10 +273,10 @@ public class BrowserImplTest extends TestCase {
                                      10000000};
         int warmup = 2;
         int runs = 3;
-        FacetStructure.TagSortOrder[] orders =
-                new FacetStructure.TagSortOrder[]{
-                        FacetStructure.TagSortOrder.popularity,
-                        FacetStructure.TagSortOrder.tag};
+        Result.TagSortOrder[] orders =
+                new Result.TagSortOrder[]{
+                        Result.TagSortOrder.popularity,
+                        Result.TagSortOrder.tag};
         Profiler profiler = new Profiler();
         profiler.setExpectedTotal(runs);
         int maxDoc = reader.maxDoc();
@@ -293,7 +284,7 @@ public class BrowserImplTest extends TestCase {
         System.out.println("Running tests...");
         SlimCollector slimCollector = new SlimCollector();
         for (int docCount: docCounts) {
-            for (FacetStructure.TagSortOrder order: orders) {
+            for (Result.TagSortOrder order: orders) {
                 slimCollector.clean();
                 for (int pos = 0 ; pos < docCount ; pos++) {
                     slimCollector.collect(random.nextInt(maxDoc), 0.0f);

@@ -151,12 +151,12 @@ public class TagCounterArray implements TagCounter, Runnable {
         }
     }
 
-    public synchronized FacetStructure getFirst(
-            FacetStructure.TagSortOrder sortOrder) {
+    public synchronized Result getFirst(
+            Result.TagSortOrder sortOrder) {
         lock.lock();
         try {
-            FacetStructureLocal result =
-                    new FacetStructureLocal(structure, tagHandler);
+            ResultLocal result =
+                    new ResultLocal(structure, tagHandler);
             for (int facetID = 0 ;
                  facetID < structure.getFacetNames().size() ;
                  facetID++) {
@@ -165,10 +165,10 @@ public class TagCounterArray implements TagCounter, Runnable {
 //            System.out.println(facetName +" reduce to " + maxTags);
 //            log.info("Sorting facet " + facetName);
                 int[] counterList = tags[facetID];
-                if (sortOrder == FacetStructure.TagSortOrder.tag) {
+                if (sortOrder == Result.TagSortOrder.tag) {
                     addFirstTagsAlpha(maxTags, counterList, result, facetName);
                 } else if (sortOrder ==
-                           FacetStructure.TagSortOrder.popularity) {
+                           Result.TagSortOrder.popularity) {
                     addFirstTagsPopularity(maxTags, counterList, result,
                                            facetID);
                 } else {
@@ -182,7 +182,7 @@ public class TagCounterArray implements TagCounter, Runnable {
     }
 
     private void addFirstTagsPopularity(int maxTags, int[] counterList,
-                                        FacetStructureLocal result,
+                                        ResultLocal result,
                                         int facetID) {
         int minPop = 0;
         System.out.println("1");
@@ -243,7 +243,7 @@ public class TagCounterArray implements TagCounter, Runnable {
     // Too slow
     @SuppressWarnings({"UnusedDeclaration"})
     private void addFirstTagsPopularityQueue(int maxTags, int[] counterList,
-                                            FacetStructureLocal result,
+                                            ResultLocal result,
                                             int facetID) {
         PriorityQueueLong queue = new PriorityQueueLong(maxTags);
         for (int i = counterList.length - 1 ; i != 0 ; i--) {
@@ -270,7 +270,7 @@ public class TagCounterArray implements TagCounter, Runnable {
     @SuppressWarnings({"UnusedDeclaration"})
     private void addFirstTagsPopularityGenericQueue(int maxTags,
                                                     int[] counterList,
-                                            FacetStructureLocal result,
+                                            ResultLocal result,
                                             int facetID) {
         PriorityQueue<FlexiblePair<Integer, Integer>> queue =
                 new PriorityQueue<FlexiblePair<Integer, Integer>>(maxTags);
@@ -301,7 +301,7 @@ public class TagCounterArray implements TagCounter, Runnable {
     }
 
     private void addFirstTagsAlpha(int maxTags, int[] counterList,
-                                   FacetStructureLocal result,
+                                   ResultLocal result,
                                    String facetName) {
         ArrayList<FlexiblePair<Integer, Integer>> alphaResult =
                 new ArrayList<FlexiblePair<Integer, Integer>>(

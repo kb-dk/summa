@@ -87,8 +87,8 @@ public class TagCounterTest extends TestCase {
                 tagCounter.increment(facetID, tagID);
             }
         }
-        FacetStructure first =
-                        tagCounter.getFirst(FacetStructure.TagSortOrder.tag);
+        Result first =
+                        tagCounter.getFirst(Result.TagSortOrder.tag);
         assertTrue("The result should be something", 
                    !"".equals(first.toXML()));
     }
@@ -137,7 +137,7 @@ public class TagCounterTest extends TestCase {
         System.out.println("Testing getFirst performance for POPULARITY");
         Profiler profiler = new Profiler();
         for (int i = 0 ; i < retries ; i++) {
-            tagCounter.getFirst(FacetStructure.TagSortOrder.popularity);
+            tagCounter.getFirst(Result.TagSortOrder.popularity);
             profiler.beat();
         }
         double speed = 1000 / profiler.getBps(true);
@@ -149,7 +149,7 @@ public class TagCounterTest extends TestCase {
         System.out.println("Testing getFirst performance for ALPHA");
         profiler = new Profiler();
         for (int i = 0 ; i < retries * 100; i++) {
-            tagCounter.getFirst(FacetStructure.TagSortOrder.tag);
+            tagCounter.getFirst(Result.TagSortOrder.tag);
             profiler.beat();
         }
         speed = 1000 / profiler.getBps(true);
@@ -201,13 +201,13 @@ public class TagCounterTest extends TestCase {
         }
         System.out.println("Warming up TagCounter...");
         for (int i = 0 ; i < 5 ; i++) {
-            counter.getFirst(FacetStructure.TagSortOrder.popularity);
+            counter.getFirst(Result.TagSortOrder.popularity);
         }
         System.out.println("Running getFirst tests...");
         Profiler profiler = new Profiler();
         profiler.setExpectedTotal(runs);
         for (int i = 0 ; i < runs ; i++) {
-            counter.getFirst(FacetStructure.TagSortOrder.popularity);
+            counter.getFirst(Result.TagSortOrder.popularity);
             profiler.beat();
         }
         double bps = profiler.getBps(true);
