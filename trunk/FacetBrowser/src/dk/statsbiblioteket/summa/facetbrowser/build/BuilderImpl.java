@@ -40,6 +40,7 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.document.Document;
 
 import java.io.IOException;
+import java.io.File;
 import java.util.List;
 
 /**
@@ -78,6 +79,10 @@ public class BuilderImpl implements Builder {
 
     public void build(boolean keepTags) {
 
+        // TODO: Implement this
+    }
+
+    public void save(File directory) throws IOException {
         // TODO: Implement this
     }
 

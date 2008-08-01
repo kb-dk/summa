@@ -47,7 +47,7 @@ public class XStorage implements ConfigurationStorage {
 
     private File storageFile;
     private XProperties xprops;
-    private Log log = LogFactory.getLog(XStorage.class);
+    private static Log log = LogFactory.getLog(XStorage.class);
 
     /*
      * Creates a XStorage around a XProperties.
