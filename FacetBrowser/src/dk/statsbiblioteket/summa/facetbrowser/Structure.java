@@ -22,21 +22,23 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser;
 
-import java.util.Map;
-import java.util.LinkedHashMap;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * The Facet Structure holds top-level information, such as the Facet names
- * and the maximum number of Tags in each Facet.
+ * and the maximum number of Tags in each Facet. Setup is done through
+ * {@link Configuration}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class Structure {
+public class Structure implements Configurable {
     private static Logger log = Logger.getLogger(Structure.class);
 
     /**

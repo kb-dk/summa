@@ -22,20 +22,22 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.core;
 
+import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
-import java.io.IOException;
 import java.io.File;
+import java.io.IOException;
 
 /**
  * The core is responsible for loading existing Facet-structures and for
  * handling Facet setup in the form of configuration.
+ * </p><p>
+ * @see {link Structure} for Configuration parameters.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public interface FacetCore {
-
+public interface FacetCore extends Configurable {
     /**
      * Open a Facet structure at the given location. If there is no existing
      * structure, .

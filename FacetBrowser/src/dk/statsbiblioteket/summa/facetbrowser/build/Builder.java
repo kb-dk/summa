@@ -22,14 +22,12 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.build;
 
-import org.apache.lucene.document.Document;
-
-import java.io.IOException;
-import java.util.List;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
+import dk.statsbiblioteket.util.qa.QAInfo;
+
+import java.io.File;
+import java.io.IOException;
 
 /**
  * Builds or updates the structures needed for facet browsing.
@@ -55,13 +53,14 @@ public interface Builder {
      *                 triggered because of suspicion of inconsistencies, it is
      *                 recommended to let keepTags be true, as it speeds up
      *                 building.
+     * @throws IOException in case of I/O problems.
      */
-    public void build(boolean keepTags);
+    public void build(boolean keepTags) throws IOException;
 
     /**
      * Store the internal representation to disk.
      * @param directory the location of the data.
      * @throws IOException if the internal representation could not be stored.
      */
-    public void save(String directory) throws IOException;
+    public void save(File directory) throws IOException;
 }
