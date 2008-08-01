@@ -732,7 +732,7 @@ public class IndexStatisticsTest extends TestCase {
     public void termsWithMangledChars() throws Exception {
         System.out.println("Running through the terms, looking for wrangled " +
                            "letters. Please have patience.");
-        Character[] wranglesigns = new Character[] {'�', '�'}; // TODO: Find the right chars again (lost due to CVS char-thingies)
+        Character[] wranglesigns = new Character[] {}; // TODO: Find the right 2 chars again (lost due to CVS char-thingies) 
         int maxResults = 10000;
         int maxRecords = Integer.MAX_VALUE;
         IndexReader ir = new IndexSearcher(ClusterCommon.getProperties().
