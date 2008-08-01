@@ -932,8 +932,14 @@ public class Configuration implements Serializable,
                                                  + "configuration at '"
                                                  + confLocation + "'");
             } catch (IOException e) {
+                storage = null;
+            } catch (ConfigurationStorageException e) {
+                storage = null;
+            }
+            if (storage == null) {
                 log.debug("Could not load configuration using FileStorage. "
                           + "Switching to XStorage");
+
                 try {
                     storage = new XStorage(confLocation);
                     log.trace("Loaded XStorage configuration");

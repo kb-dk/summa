@@ -24,10 +24,12 @@ package dk.statsbiblioteket.summa.facetbrowser;
 
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.util.XProperties;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -37,7 +39,9 @@ import java.util.Map;
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
+        author = "te",
+        comment="Configuration isn't intuitive with the list of storages")
+//FIXME: Structure relies on XProperties in configuration
 public class Structure implements Configurable {
     private static Logger log = Logger.getLogger(Structure.class);
 
@@ -71,7 +75,8 @@ public class Structure implements Configurable {
     public static final String CONF_FACET_NAME = "summa.facet.name";
 
     /**
-     * The fields that make up the Facet.
+     * The fields that make up the Facet. Stored as a comma-separated list
+     * of Strings.
      * </p><p>
      * This property is optional. Default is {@link #CONF_FACET_NAME}.
      */
@@ -98,10 +103,10 @@ public class Structure implements Configurable {
     /**
      * The default sort type for a Facet.
      * </p><p>
-     * This property is optional. Default is {@link #DEFAULT_SORT_TYPE}.
+     * This property is optional. Default is {@link #DEFAULT_FACET_SORT_TYPE}.
      */
-    public static final String CONF_SORT_TYPE = "summa.facet.sort.type";
-    public static final String DEFAULT_SORT_TYPE = SORT_POPULARITY;
+    public static final String CONF_FACET_SORT_TYPE = "summa.facet.sort.type";
+    public static final String DEFAULT_FACET_SORT_TYPE = SORT_POPULARITY;
 
     /**
      * The locale used for sorting the Tags in the Facet.
@@ -122,45 +127,48 @@ public class Structure implements Configurable {
         private int maxTags = DEFAULT_TAGS_MAX;
         private int wantedTags = DEFAULT_TAGS_WANTED;
         private String locale = null;
-        private String sortType = DEFAULT_SORT_TYPE;
+        private String sortType = DEFAULT_FACET_SORT_TYPE;
 
         public FacetStructure(String name, String[] fields,
                               int wantedTags, int maxTags,
                               String locale, String sortType) {
             log.trace("Creating FacetStructure for '" + name + "'");
             this.name = name;
-            this.fields = fields == null ? new String[]{name} : fields;
-            if (wantedTags > maxTags) {
-                log.warn(String.format(
-                        "Requested %d wanted tags, but the maximum is %d. "
-                        + "Rounding down to maximum", wantedTags, maxTags));
-                this.wantedTags = maxTags;
-            } else {
-                this.wantedTags = wantedTags;
-            }
+            setFields(fields);
+            setWantedTags(wantedTags);
             this.maxTags = maxTags;
-            this.locale = locale;
-            this.sortType = sortType == null ? this.sortType : sortType;
+            setLocale(locale);
+            setSortType(sortType == null ? this.sortType : sortType);
         }
 
-        public String[] getFields() {
-            return fields;
+        public FacetStructure(XProperties props) {
+            try {
+                name = props.getString(CONF_FACET_NAME);
+                if (props.containsKey(CONF_FACET_FIELDS)) {
+                    setFields(props.getString(CONF_FACET_FIELDS));
+                } else {
+                    setFields(name);
+                }
+                if (props.contains(CONF_FACET_TAGS_MAX)) {
+                    maxTags = props.getInteger(CONF_FACET_TAGS_MAX);
+                }
+                if (props.contains(CONF_FACET_TAGS_WANTED)) {
+                    setWantedTags(props.getInteger(CONF_FACET_TAGS_WANTED));
+                }
+                if (props.containsKey(CONF_FACET_LOCALE)) {
+                    setLocale(props.getString(CONF_FACET_LOCALE));
+                }
+                if (props.containsKey(CONF_FACET_SORT_TYPE)) {
+                    setSortType(props.getString(CONF_FACET_SORT_TYPE));
+                }
+
+            } catch (Exception e) {
+                throw new ConfigurationException(String.format(
+                        "Unable to construct FacetStructure for '%s'", name),
+                                                 e);
+            }
         }
-        public String getLocale() {
-            return locale;
-        }
-        public int getMaxTags() {
-            return maxTags;
-        }
-        public String getName() {
-            return name;
-        }
-        public String getSortType() {
-            return sortType;
-        }
-        public int getWantedTags() {
-            return wantedTags;
-        }
+
 
         /**
          * Construct a new FacetStructure from the existing one, optionally
@@ -183,6 +191,68 @@ public class Structure implements Configurable {
             return new FacetStructure(name, fields, wantedTags, maxTags,
                                       locale, sortType);
         }
+
+        /* Mutators */
+
+        public String getName() {
+            return name;
+        }
+        public String[] getFields() {
+            return fields;
+        }
+        private void setFields(String[] fields) {
+            if (fields == null || fields.length == 0) {
+                log.debug("No fields specified, using name '" + name + "'");
+                this.fields = new String[]{name};
+            } else {
+                this.fields = fields;
+            }
+        }
+        private void setFields(String fields) {
+            if (fields == null || "".equals(fields)) {
+                log.debug("No fields specified, using name '" + name + "'");
+                this.fields = new String[]{name};
+                return;
+            }
+            setFields(fields.split(" *, *"));
+        }
+        public String getLocale() {
+            return locale;
+        }
+        private void setLocale(String locale) {
+            // TODO: Implement this
+        }
+        public int getMaxTags() {
+            return maxTags;
+        }
+        public String getSortType() {
+            return sortType;
+        }
+        private void setSortType(String sortType) {
+            if (SORT_ALPHA.equals(sortType)
+                || SORT_POPULARITY.equals(sortType)) {
+                this.sortType = sortType;
+            } else {
+                log.warn(String.format(
+                        "Invalid sortType '%s' specified for Facet '%s'. "
+                        + "Using '%s' instead", sortType, name, this.sortType));
+            }
+            // TODO: Implement this
+        }
+        public int getWantedTags() {
+            return wantedTags;
+        }
+        private void setWantedTags(int wantedTags) {
+            if (wantedTags > maxTags) {
+                log.warn(String.format(
+                        "Requested %d wanted tags, but the maximum is %d. "
+                        + "Rounding down to maximum", wantedTags, maxTags));
+                this.wantedTags = maxTags;
+            } else {
+                this.wantedTags = wantedTags;
+            }
+        }
+
     }
 
     private Map<String, FacetStructure> facets;
@@ -199,8 +269,33 @@ public class Structure implements Configurable {
 
     public Structure(Configuration conf) {
         log.debug("Constructing Structure from configuration");
-        // TODO: Implement parser
-        // Remember : LinkedHashMap to preserve order
+        List<XProperties> facetConfs;
+        try {
+            //noinspection unchecked
+            facetConfs = (List<XProperties>)conf.get(CONF_FACETS);
+        } catch (ClassCastException e) {
+            throw new ConfigurationException(String.format(
+                    "Could not extract a list of XProperties from "
+                    + "configuration with key '%s'", CONF_FACETS), e);
+        }
+        facets = new LinkedHashMap<String, FacetStructure>(facetConfs.size());
+        for (XProperties facetConf: facetConfs) {
+            try {
+                FacetStructure fc = new FacetStructure(facetConf);
+                if (facets.containsKey(fc.getName())) {
+                    log.warn(String.format(
+                            "Facets already contain a FacetStructure named "
+                            + "'%s'. The old structure will be replaced",
+                            fc.getName()));
+                }
+                log.trace("Adding Facet '" + fc.getName() + "' to facets");
+                facets.put(fc.getName(), fc);
+            } catch (Exception e) {
+                throw new ConfigurationException("Unable to extract single "
+                                                 + "Facet configuration", e);
+            }
+        }
+        log.trace("Finished constructing Structure from configuration");
     }
 
     /* Getters */

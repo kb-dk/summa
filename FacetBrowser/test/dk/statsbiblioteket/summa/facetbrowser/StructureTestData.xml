@@ -1,0 +1,51 @@
+<xproperties>
+    <xproperties>
+        <entry>
+            <key>summa.facet.facets</key>
+            <value class="list">
+                <xproperties>
+                    <entry>
+                        <key>summa.facet.name</key>
+                        <value class="string">mini</value>
+                    </entry>
+                </xproperties>
+                <xproperties>
+                    <entry>
+                        <key>summa.facet.name</key>
+                        <value class="string">bad_sort</value>
+                    </entry>
+                    <entry>
+                        <key>summa.facet.sort.type</key>
+                        <value class="string">invalid</value>
+                    </entry>
+                </xproperties>
+                <xproperties>
+                    <entry>
+                        <key>summa.facet.name</key>
+                        <value class="string">full</value>
+                    </entry>
+                    <entry>
+                        <key>summa.facet.fields</key>
+                        <value class="string">foo, bar</value>
+                    </entry>
+                    <entry>
+                        <key>summa.facet.tags.max</key>
+                        <value class="int">87</value>
+                    </entry>
+                    <entry>
+                        <key>summa.facet.tags.wanted</key>
+                        <value class="int">30</value>
+                    </entry>
+                    <entry>
+                        <key>summa.facet.sort.type</key>
+                        <value class="string">ALPHA</value>
+                    </entry>
+                    <entry>
+                        <key>summa.facet.locale</key>
+                        <value class="string">de</value>
+                    </entry>
+                </xproperties>
+            </value>
+        </entry>
+    </xproperties>
+</xproperties>
