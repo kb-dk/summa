@@ -37,7 +37,6 @@ import dk.statsbiblioteket.summa.facetbrowser.Structure;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public interface Browser {
-
     /**
      * @return a list with the names of all mapped Facets.
      */
