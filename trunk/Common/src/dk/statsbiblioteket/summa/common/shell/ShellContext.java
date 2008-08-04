@@ -59,9 +59,18 @@ public interface ShellContext {
 
     /**
      * Read a line of input.
-     * @return
+     * @return the next line of input
      */
     public String readLine ();
+
+    /**
+     * Push a line of input into the shell context. This line will
+     * be read when any other pending lines have been read with
+     * {@link #readLine}
+     *
+     * @param line the line of input to add to the buffer
+     */
+    public void pushLine (String line);
 
     /**
      * Print a prompt string to the user, without a trailing newline.
