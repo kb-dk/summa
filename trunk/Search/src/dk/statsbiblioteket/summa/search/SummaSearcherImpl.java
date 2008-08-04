@@ -26,6 +26,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
+import dk.statsbiblioteket.summa.search.document.DocumentSearchWrapper;
 
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicLong;
@@ -42,7 +43,7 @@ import org.apache.commons.logging.LogFactory;
 /**
  * Convenience base class for SummaSearchers, taking care of basic setup.
  * Relevant properties from {@link SummaSearcher}, {@link IndexWatcher},
- * {@link SearchNodeWrapper} and {@link LuceneIndexUtils} needs to be specified.
+ * {@link DocumentSearchWrapper} and {@link LuceneIndexUtils} needs to be specified.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -69,7 +70,7 @@ public abstract class SummaSearcherImpl implements SummaSearcherMBean,
 
     private Semaphore searchQueueSemaphore;
     private Semaphore searchActiveSemaphore;
-    protected List<SearchNodeWrapper> searchNodes;
+    protected List<DocumentSearchWrapper> documentSearches;
     private IndexWatcher watcher;
     // TODO: Are default resultFields extracted properly? 
 
@@ -145,11 +146,11 @@ public abstract class SummaSearcherImpl implements SummaSearcherMBean,
         searchQueueSemaphore = new Semaphore(searchQueueMaxSize, true);
         searchActiveSemaphore = new Semaphore(maxConcurrentSearches,
                                               true);
-        searchNodes = new ArrayList<SearchNodeWrapper>(searchers);
+        documentSearches = new ArrayList<DocumentSearchWrapper>(searchers);
         log.trace("Constructing search nodes");
         for (int i = 0 ; i < searchers; i++) {
             try {
-                searchNodes.add(constructSearchNode(conf));
+                documentSearches.add(constructSearchNode(conf));
             } catch (IOException e) {
                 throw new ConfigurationException(String.format(
                         "Unable to construch searcher %d", i)
@@ -173,7 +174,7 @@ public abstract class SummaSearcherImpl implements SummaSearcherMBean,
      * @return a node ready to open an index.
      * @throws IOException if there was an error constructing the node.
      */
-    public abstract SearchNodeWrapper constructSearchNode(Configuration conf)
+    public abstract DocumentSearchWrapper constructSearchNode(Configuration conf)
                                                              throws IOException;
 
     public SearchResult fullSearch(String filter, String query, long startIndex,
@@ -196,8 +197,8 @@ public abstract class SummaSearcherImpl implements SummaSearcherMBean,
             try {
                 searchActiveSemaphore.acquire();
                 int minLoad = Integer.MAX_VALUE;
-                SearchNodeWrapper usable = null;
-                for (SearchNodeWrapper wrapper : searchNodes) {
+                DocumentSearchWrapper usable = null;
+                for (DocumentSearchWrapper wrapper : documentSearches) {
                     if (wrapper.isReady()) {
                         if (wrapper.getActive() < minLoad) {
                             minLoad = wrapper.getActive();
@@ -206,16 +207,16 @@ public abstract class SummaSearcherImpl implements SummaSearcherMBean,
                     }
                 }
                 if (usable == null) {
-                    log.debug("None of the " + searchNodes.size()
+                    log.debug("None of the " + documentSearches.size()
                               + " search nodes were ready. Waiting for "
                               + "readyness.");
                     long startTime = System.currentTimeMillis();
                     long endTime = startTime + searcherAvailabilityTimeout;
                     out:
                     while (System.currentTimeMillis() < endTime) {
-                        for (SearchNodeWrapper searchNode : searchNodes) {
-                            if (searchNode.isReady()) {
-                                usable = searchNode;
+                        for (DocumentSearchWrapper documentSearch : documentSearches) {
+                            if (documentSearch.isReady()) {
+                                usable = documentSearch;
                                 break out;
                             }
                         }
@@ -225,7 +226,7 @@ public abstract class SummaSearcherImpl implements SummaSearcherMBean,
                         throw new RemoteException(
                                 "Waited " + (endTime - startTime) + " ms for an"
                                 + " available searcher out of "
-                                + searchNodes.size() + ", but got none");
+                                + documentSearches.size() + ", but got none");
                     }
                 }
                 // TODO: Fix the race-condition on open vs. search
@@ -265,7 +266,7 @@ public abstract class SummaSearcherImpl implements SummaSearcherMBean,
     public synchronized void close() throws RemoteException {
         // TODO: Free as many resources as possible, even on exception
         watcher.stopWatching();
-        for (SearchNodeWrapper wrapper: searchNodes) {
+        for (DocumentSearchWrapper wrapper: documentSearches) {
             wrapper.close();
         }
     }
@@ -281,7 +282,7 @@ public abstract class SummaSearcherImpl implements SummaSearcherMBean,
         //noinspection DuplicateStringLiteralInspection
         log.debug("indexChanged(" + indexFolder + ") called");
         try {
-            for (SearchNodeWrapper wrapper: searchNodes) {
+            for (DocumentSearchWrapper wrapper: documentSearches) {
                 wrapper.open(indexFolder == null
                              ? null
                              : indexFolder.getAbsolutePath());
@@ -309,7 +310,7 @@ public abstract class SummaSearcherImpl implements SummaSearcherMBean,
     public synchronized long performWarmup() throws RemoteException {
         log.trace("Performing explicitely requested warmup");
         long startTime = System.nanoTime();
-        for (SearchNodeWrapper wrapper: searchNodes) {
+        for (DocumentSearchWrapper wrapper: documentSearches) {
             wrapper.warmup();
         }
         return System.nanoTime() - startTime;
