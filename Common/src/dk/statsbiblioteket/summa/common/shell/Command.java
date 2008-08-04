@@ -33,6 +33,7 @@ public abstract class Command {
 
     private CommandLine cli;
     private Options options;
+    private String raw;
     private String name;
     private String description;
     private String usage;
@@ -69,7 +70,9 @@ public abstract class Command {
      * <p>Invoke the command. All command line arguments are parsed
      * and set up. They can be retrieved or checked via the {@link #getOption}
      * and {@link #hasOption} methods.</p>
-     * <p>This method should never throw an exception.</p>
+     *
+     * <p>In case of errors the command should throw an exception</p>
+     *
      * @param ctx Context used to print messages and retrieve user feedback
      * @return {@code true} if the command ran succesfully, {@code false}
      *         otherwise.
@@ -87,10 +90,13 @@ public abstract class Command {
     /**
      * Set up the {@code Command} object with a set of command line options.
      * This method should be called before the {@link #invoke} method.
+     *
      * @param cli the parsed command line to use on next invocation.
+     * @param raw the raw command line entered by the user
      */
-    void prepare (CommandLine cli) {
+    void prepare (CommandLine cli, String raw) {
         this.cli = cli;
+        this.raw = raw;
     }
 
     /**
@@ -131,6 +137,10 @@ public abstract class Command {
      */
     protected String[] getArguments () {
         return cli.getArgs();
+    }
+
+    protected String getRawCommandLine() {
+        return raw;
     }
 
 }

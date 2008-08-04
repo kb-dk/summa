@@ -26,14 +26,12 @@ import org.apache.commons.cli.*;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.io.IOException;
-import java.io.Reader;
-import java.util.Arrays;
+import java.io.PushbackReader;
+import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
 import java.util.StringTokenizer;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Collections;
 
 import dk.statsbiblioteket.summa.common.shell.notifications.AbortNotification;
 import dk.statsbiblioteket.summa.common.shell.notifications.BadCommandLineNotification;
@@ -44,6 +42,7 @@ import dk.statsbiblioteket.summa.common.shell.notifications.SyntaxErrorNotificat
 import dk.statsbiblioteket.summa.common.shell.commands.Help;
 import dk.statsbiblioteket.summa.common.shell.commands.Quit;
 import dk.statsbiblioteket.summa.common.shell.commands.Trace;
+import dk.statsbiblioteket.summa.common.shell.commands.Exec;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
@@ -85,7 +84,13 @@ public class Core {
             this.shellCtx = shellCtx;
         } else {
             this.shellCtx = new ShellContext () {
-                private BufferedReader in = new BufferedReader (new InputStreamReader(System.in));
+                private PushbackReader in = new PushbackReader
+                                       (new InputStreamReader(System.in), 2048);
+
+                /* The buffer in the buffered reader _must_ be 1 or else
+                 * we will block when reading System.in. We only use the
+                 * buffered reader to get a readLine() method */
+                private BufferedReader lineIn =  new BufferedReader(in, 1);
 
                 public void error(String msg) {
                     System.out.println ("[ERROR] " + msg);
@@ -104,11 +109,25 @@ public class Core {
                 }
 
                 public String readLine() {
-                    try {
-                        return in.readLine().trim();
-                    } catch (IOException e) {
-                        throw new RuntimeException("Failed to read input", e);
+                    ByteArrayOutputStream bufIn = new ByteArrayOutputStream();
+                    char[] buf = new char[1024];
+
+                    //while (in.read (buf))
+                    return null;
+                }
+
+                public void pushLine (String line) {
+                    debug ("PUSH '" + line + "'");
+                    if (!line.endsWith("\n")) {
+                        line = line + "\n";
                     }
+
+                    /*try {
+                        //in.unless (line.toCharArray());
+                    } catch (IOException e) {
+                        throw new RuntimeException ("Failed to push line: '"
+                                                    + line + "'", e);
+                    }*/
                 }
 
                 public void prompt (String prompt) {
@@ -122,6 +141,7 @@ public class Core {
             installCommand(new Help());
             installCommand(new Quit());
             installCommand(new Trace());
+            installCommand(new Exec());
         }
     }
 
@@ -171,15 +191,15 @@ public class Core {
     }
 
     /**
-     * A main iteration of the core
+     * A main iteration of the core. The caller is responsible for handling
+     * any exceptions from the underlying subsystems.
+     * 
      * @throws Exception if an error happens inside the running {@link Command}
      * @throws ParseException if there is an error parsing the command line
      *                        as entered by the user.
      */
     private void do_main_iteration () throws Exception {
         String cmdString;
-        String[] tokens;
-        Command cmd;
 
         shellCtx.prompt(getPrompt());
 
@@ -189,12 +209,27 @@ public class Core {
             return;
         }
 
+        invoke (cmdString);
+    }
+
+    /**
+     * Parse an run a command.
+     *
+     * @param cmdString the command line to run
+     * @throws Exception any exception from the invoked {@link Command} will
+     *                   cascade upwards from this method
+     * @return true if and only if {@code cmdString} was executed successfully
+     */
+    boolean invoke (String cmdString) throws Exception {
+        String[] tokens;
+        Command cmd;
+
         tokens = tokenize(cmdString);
         cmd = commands.get (tokens[0]);
 
         if (cmd == null) {
             shellCtx.error("No such command '" + cmdString +"'");
-            return;
+            return false;
         }
 
         String[] args = new String[tokens.length-1];
@@ -203,8 +238,14 @@ public class Core {
         }
 
         CommandLine cli = cliParser.parse (cmd.getOptions(), args);
-        cmd.prepare(cli);
+
+        int commandEnd = tokens.length > 1 ? cmd.getName().length() + 1 :
+                                             cmd.getName().length(); 
+        cmd.prepare(cli, cmdString.substring(commandEnd));
+
         cmd.invoke (shellCtx);
+
+        return true;
     }
 
     /**
