@@ -20,7 +20,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.summa.search;
+package dk.statsbiblioteket.summa.search.document;
 
 import java.io.IOException;
 import java.io.BufferedReader;
@@ -32,18 +32,22 @@ import java.net.URL;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
+import dk.statsbiblioteket.summa.search.SearchNode;
+import dk.statsbiblioteket.summa.search.SummaSearcherMBean;
+import dk.statsbiblioteket.summa.search.SummaSearcher;
+import dk.statsbiblioteket.summa.search.SearchResult;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * Handles the logic of opening new indexes without disturbing the running
- * searches.
+ * Handles the logic of opening new document searchers without disturbing the
+ * running searches.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class SearchNodeWrapper implements SearchNode {
-    private static Log log = LogFactory.getLog(SearchNodeWrapper.class);
+public class DocumentSearchWrapper implements SearchNode {
+    private static Log log = LogFactory.getLog(DocumentSearchWrapper.class);
 
     /**
      * The number of milliseconds to wait between each poll for the status
@@ -63,9 +67,9 @@ public class SearchNodeWrapper implements SearchNode {
     private AtomicInteger activeSearches = new AtomicInteger();
 
     @SuppressWarnings({"UnusedDeclaration"})
-    public SearchNodeWrapper(SummaSearcherMBean master, Configuration conf,
+    public DocumentSearchWrapper(SummaSearcherMBean master, Configuration conf,
                              SearchNode node) {
-        log.trace("Constructing SearchNodeWrapper for " + node);
+        log.trace("Constructing DocumentSearchWrapper for " + node);
         this.master = master;
         this.node = node;
         ready = true;

@@ -7,12 +7,13 @@ package dk.statsbiblioteket.summa.search;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
+import dk.statsbiblioteket.summa.search.document.DocumentSearchWrapper;
 
 import java.io.IOException;
 
 /**
  * Lucene-specic searcher. Relevant properties from {@link SummaSearcher},
- * {@link IndexWatcher}, {@link SearchNodeWrapper} , {@link LuceneSearchNode}
+ * {@link IndexWatcher}, {@link DocumentSearchWrapper} , {@link LuceneSearchNode}
  * and {@link LuceneIndexUtils} needs to be specified.
  */
 public class LuceneSearcher extends SummaSearcherImpl implements
@@ -33,14 +34,14 @@ public class LuceneSearcher extends SummaSearcherImpl implements
                 conf.getInt(CONF_MAX_BOOLEAN_CLAUSES, maxBooleanClauses);
     }
 
-    public SearchNodeWrapper constructSearchNode(Configuration conf) throws
+    public DocumentSearchWrapper constructSearchNode(Configuration conf) throws
                                                                    IOException {
         if (descriptor == null) { // Bit of a hack
             descriptor = LuceneIndexUtils.getDescriptor(conf);
             maxBooleanClauses =
                     conf.getInt(CONF_MAX_BOOLEAN_CLAUSES, maxBooleanClauses);
         }
-        return new SearchNodeWrapper(this, conf,
+        return new DocumentSearchWrapper(this, conf,
                 new LuceneSearchNode(this, conf, descriptor));
     }
 }

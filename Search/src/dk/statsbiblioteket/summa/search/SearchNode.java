@@ -25,6 +25,7 @@ package dk.statsbiblioteket.summa.search;
 import java.io.IOException;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.search.document.DocumentSearchWrapper;
 
 /**
  * Provides methods for controlling a SummaSearcher as part of a collection
@@ -33,7 +34,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
  * </p><p>
  * Nodes are not responsible for keeping track of running searches when open
  * or close is called. This is the responsibility of the user and is
- * implemented in {@link SearchNodeWrapper}.
+ * implemented in {@link DocumentSearchWrapper}.
  * </p><p>
  * Nodes are not responsible for checking for sizes of fileds and fallbacks and
  * the size of maxRecords. Again, this is the responsibility of the caller.
