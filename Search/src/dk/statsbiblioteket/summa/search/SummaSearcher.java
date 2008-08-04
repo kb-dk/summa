@@ -45,7 +45,7 @@ public interface SummaSearcher extends Remote, BasicSearcher {
      * @throws RemoteException if the fields could not be retrieved.
      * @see SummaSearcher#CONF_RESULT_FIELDS
      */
-L    public String[] getResultFields() throws RemoteException;
+    public String[] getResultFields() throws RemoteException;
 
     /**
      * The result fields are the fields extracted from each hit from a search.
