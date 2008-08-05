@@ -67,6 +67,7 @@ public class ClientShell {
         shell.installCommand(new StartServiceCommand(client));
         shell.installCommand(new StopServiceCommand(client));
         shell.installCommand(new ServicesCommand(client));
+        shell.installCommand(new PingCommand(connManager, rmiAddress));
     }
 
     public void run () {
