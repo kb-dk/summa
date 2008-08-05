@@ -6,14 +6,15 @@ import dk.statsbiblioteket.summa.common.shell.Script;
 
 /**
  * <p>This command launches a script which is a series of commands delimited
- * by the semi-colon character ";".</p>
+ * by the semi-colon character ";". Semi colons can be escaped with back slahes
+ * </p>
  */
 public class Exec extends Command {
 
     public Exec() {
-        super ("exec", "Execute a series of commands delimied by ';' if any of "
-               + "the commands fail execution will stop");
-        setUsage ("run <command> [;command...]");
+        super ("exec", "Execute a series of commands delimied by ';' or "
+                       + " newline");
+        setUsage ("exec <command> [;command...]");
     }
     
     public void invoke(ShellContext ctx) throws Exception {
