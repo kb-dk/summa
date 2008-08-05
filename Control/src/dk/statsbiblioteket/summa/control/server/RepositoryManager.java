@@ -307,7 +307,7 @@ public class RepositoryManager implements Configurable,
             throw new BundleLoadingException(error, e);
         }
 
-        /* Run sanity checks */
+        /* Exec sanity checks */
 
         String bundleId = builder.getBundleId();
         if (bundleId == null) {

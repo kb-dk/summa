@@ -43,6 +43,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.NativeRunner;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.console.ProcessRunner;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -90,11 +91,10 @@ public class SSHDeployer implements ClientDeployer {
 
         /* Copy package to destination */
         log.debug("Deploying from " + source + " to " + destination);
+        ProcessRunner runner = new ProcessRunner (Arrays.asList("scp", source,
+                                                  login + ":"  + destination));
         try {
-            NativeRunner runner =
-                    new NativeRunner(new String[]{"scp", source,
-                                                  login + ":" + destination});
-            runner.execute(50000, 50000);
+            runner.run();
         } catch(Exception e) {
             String error = "Could not deploy from source '" + source
                            + "' to destination '" + destination + "'";
@@ -102,6 +102,15 @@ public class SSHDeployer implements ClientDeployer {
             feedback.putMessage(new Message(Message.MESSAGE_ALERT, error));
             throw new ClientDeploymentException(error, e);
         }
+
+        /* Check that the copy succeeded */
+        if (runner.getReturnCode() != 0) {
+            String error = "Could not deploy from source '" + source
+                           + "' to destination '" + destination + "'";
+            feedback.putMessage(new Message(Message.MESSAGE_ALERT, error));
+            throw new ClientDeploymentException(error);
+        }
+
         log.debug("Deployed from " + source + " to " + destination);
 
         /* Calculate archive name */
@@ -113,18 +122,17 @@ public class SSHDeployer implements ClientDeployer {
 
         /* Unpack */
         log.debug("Unpacking '" + archivePath + "' with login '" + login + "'");
-        NativeRunner runner =
-                new NativeRunner(new String[]{"ssh", login,
-                                              "cd", destination,
-                                              ";", "unzip", "-u",
-                                              archive});
+        runner = new ProcessRunner(Arrays.asList("ssh", login,
+                                                 "cd", destination,
+                                                 ";", "unzip", "-u",
+                                                 archive));
         String error = null;
         try {
-            int returnValue = runner.execute(50000, 50000);
-            if (returnValue != 0) {
+            runner.run();
+            if (runner.getReturnCode() != 0) {
                 error = "Could not unpack '" + archivePath + "' with login '"
                         + login + "'. Got return value "
-                        + returnValue + " and message:\n\t"
+                        + runner.getReturnCode() + " and message:\n\t"
                         + runner.getProcessErrorAsString();
             }
         } catch(Exception e) {
@@ -144,18 +152,17 @@ public class SSHDeployer implements ClientDeployer {
         /* Clean up */
         log.debug("Deleting " + archivePath + " at " + destination
                   + " with login " + login);
-        runner =
-                new NativeRunner(new String[]{"ssh", login,
-                                              "cd", destination,
-                                              ";", "rm", "-f",
-                                              archive});
+        runner = new ProcessRunner (Arrays.asList ("ssh", login,
+                                                   "cd", destination,
+                                                   ";", "rm", "-f",
+                                                   archive));
         error = null;
         try {
-            int returnValue = runner.execute(50000, 50000);
-            if (returnValue != 0) {
+            runner.run();
+            if (runner.getReturnCode() != 0) {
                 error = "Could not delete '" + archivePath + "' with login '"
                         + login + "'. Got return value "
-                        + returnValue + " and message:\n\t"
+                        + runner.getReturnCode() + " and message:\n\t"
                         + runner.getProcessErrorAsString();
             }
         } catch(Exception e) {
@@ -176,10 +183,6 @@ public class SSHDeployer implements ClientDeployer {
 
 
         log.info("Finished deploy of " + source + " to " + destination);
-        /*
-       scp foo.zip bar@zoo:/path/to/somewhere
-       ssh bar@zoo unzip /path/to/somewhere/foo.zip
-        */
     }
 
     private String[] privateFiles = new String[]{"jmx.access", "jmx.password"};
@@ -189,6 +192,7 @@ public class SSHDeployer implements ClientDeployer {
      * permissions and a readily available substitute has not been found.
      * This method performs a recursive descend and sets the correct permissions
      * for all jmx.access and jmx.password files it encounters.
+     *
      * @param root where to start the search for JMX-files.
      */
     private void fixJMXPermissions(File root) {
@@ -199,7 +203,7 @@ public class SSHDeployer implements ClientDeployer {
                 if (file.isDirectory()) {
                     fixJMXPermissions(file);
                 } else {
-                    for (String privateFile: privateFiles) {
+                    for (String privateFile : privateFiles) {
                         if (privateFile.equals(file.getName())) {
                             log.debug("Setting permissions for '"
                                       + file.getAbsoluteFile()
@@ -230,19 +234,21 @@ public class SSHDeployer implements ClientDeployer {
             throws Exception {
         log.trace("Verifying the existence of " + destination
                   + " with login " + login);
-        NativeRunner runner =
-                new NativeRunner(new String[]{"ssh", login,
-                                              "cd", destination});
-        if (runner.execute(50000, 50000) == 0 &&
+        ProcessRunner runner =
+                new ProcessRunner(Arrays.asList("ssh", login,
+                                                "cd", destination));
+        runner.run();
+        if (runner.getReturnCode() == 0 &&
             "".equals(runner.getProcessErrorAsString())) {
             log.trace("The destination " + destination + " already exists");
             return;
         }
         log.debug("The destination " + destination + " with login " + login
                   + " does not exist. Attempting creation");
-        runner = new NativeRunner(new String[]{"ssh", login,
-                                               "mkdir", "-p", destination});
-        if (runner.execute(50000, 50000) == 0) {
+        runner = new ProcessRunner (Arrays.asList("ssh", login,
+                                                  "mkdir", "-p", destination));
+        runner.run();
+        if (runner.getReturnCode() == 0) {
             log.debug("The destination " + destination + " was created");
         } else {
             String error = "Could not create directry '" + destination
@@ -258,21 +264,21 @@ public class SSHDeployer implements ClientDeployer {
      */
     private void ensurePermissions (Feedback feedback) throws IOException {
         log.debug("Setting file permissions for '" + destination + "'");
-        String[] command = new String[]{"ssh", login,
-                                        "cd", destination,
-                                        ";",
-                                        "chmod", "u=r",
-                                        BundleStub.POLICY_FILE,
-                                        BundleStub.JMX_ACCESS_FILE,
-                                        BundleStub.JMX_PASSWORD_FILE};
-        NativeRunner runner =
-                new NativeRunner(command);
+        List<String> command = Arrays.asList("ssh", login,
+                                             "cd", destination,
+                                             ";",
+                                             "chmod", "u=r",
+                                             BundleStub.POLICY_FILE,
+                                             BundleStub.JMX_ACCESS_FILE,
+                                             BundleStub.JMX_PASSWORD_FILE);
+        ProcessRunner runner =
+                new ProcessRunner(command);
         String error = null;
         try {
-            int returnValue = runner.execute(50000, 50000);
-            if (returnValue != 0) {
+            runner.run();
+            if (runner.getReturnCode() != 0) {
                 error = "Failed to set file permissions on '" + destination
-                        + "'. Got " + returnValue + " and message:\n\t"
+                        + "'. Got " + runner.getReturnCode() + " and message:\n\t"
                         + runner.getProcessErrorAsString();
             }
         } catch(Exception e) {
@@ -329,19 +335,17 @@ public class SSHDeployer implements ClientDeployer {
         log.debug ("Command line for '" + clientId + "':\n"
                    + Strings.join(commandLine, " "));
 
-        /* Run the command line */
-        NativeRunner runner =
-                new NativeRunner(commandLine.toArray(
-                                               new String[commandLine.size()]));
+        /* Exec the command line */
+        ProcessRunner runner = new ProcessRunner(commandLine);
 
         String error = null;
         try {
-            int returnValue = runner.execute(50000, 50000);
-            if (returnValue != 0) {
+            runner.run();
+            if (runner.getReturnCode() != 0) {
                 error = "Could not run client '" + clientId + "' with login "
                         + login + " and configuration server "
                         + confLocation + ". Got return value "
-                        + returnValue + " and message "
+                        + runner.getReturnCode() + " and message "
                         + runner.getProcessErrorAsString();
             }
         } catch(Exception e) {
