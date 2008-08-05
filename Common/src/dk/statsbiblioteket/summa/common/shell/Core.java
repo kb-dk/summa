@@ -28,6 +28,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PushbackReader;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.StringTokenizer;
 import java.util.List;
@@ -86,10 +87,6 @@ public class Core {
             this.shellCtx = new ShellContext () {
                 private PushbackReader in = new PushbackReader
                                        (new InputStreamReader(System.in), 2048);
-
-                /* The buffer in the buffered reader _must_ be 1 or else
-                 * we will block when reading System.in. We only use the
-                 * buffered reader to get a readLine() method */
                 private BufferedReader lineIn =  new BufferedReader(in, 1);
 
                 public void error(String msg) {
@@ -109,25 +106,26 @@ public class Core {
                 }
 
                 public String readLine() {
-                    ByteArrayOutputStream bufIn = new ByteArrayOutputStream();
-                    char[] buf = new char[1024];
-
-                    //while (in.read (buf))
-                    return null;
+                    try {
+                        String line = lineIn.readLine().trim();
+                        return line;
+                    } catch (IOException e) {
+                        throw new RuntimeException("Failed to read input", e);
+                    }
                 }
 
                 public void pushLine (String line) {
-                    debug ("PUSH '" + line + "'");
+                    /* Make sure we do have a new line */
                     if (!line.endsWith("\n")) {
                         line = line + "\n";
                     }
 
-                    /*try {
-                        //in.unless (line.toCharArray());
+                    try {
+                        in.unread (line.toCharArray());
                     } catch (IOException e) {
                         throw new RuntimeException ("Failed to push line: '"
                                                     + line + "'", e);
-                    }*/
+                    }
                 }
 
                 public void prompt (String prompt) {
@@ -395,7 +393,7 @@ public class Core {
                 getShellContext().error ("Error parsing command line: "
                         + e.getMessage());
             } catch (Exception e) {
-                shellCtx.error (e.getMessage());
+                shellCtx.error ("Caught error: '" + e.getMessage() + "'");
                 lastTrace = Strings.getStackTrace(e);
             }
         }
