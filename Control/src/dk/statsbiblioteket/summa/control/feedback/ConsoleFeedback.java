@@ -46,6 +46,11 @@ public class ConsoleFeedback implements Feedback {
 
     public ConsoleFeedback () {
         in = System.console();
+        
+        if (in == null) {
+            throw new RuntimeException("Unable to get system console");
+        }
+
         out = System.console().writer();
     }
 
