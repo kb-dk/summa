@@ -43,11 +43,15 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * Native command executor.
+ *
+ * This class is deprecated in favor of sbutil's
+ * {@link dk.statsbiblioteket.util.console.ProcessRunner}
  */
 // TODO: Rewrite this to use ProcessBuilder
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
+@Deprecated
 public class NativeRunner  {
     private InputStream processInput =   null;
     private InputStream processOutput = null;
