@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Iterator;
 import java.util.HashMap;
 import java.util.Properties;
+import java.util.List;
 import java.net.URL;
 import java.net.URLConnection;
 
@@ -129,12 +130,18 @@ public class MemoryStorage implements ConfigurationStorage {
     }
 
     public ConfigurationStorage getSubStorage(String key) {
-        throw new UnsupportedOperationException("Not capable of handling sub"
-                                                + " storages");
+        throw new UnsupportedOperationException(NOT_SUBSTORAGE_CAPABLE);
     }
 
     public ConfigurationStorage createSubStorage(String key) {
-        throw new UnsupportedOperationException("Not capable of handling sub"
-                                                + " storages");
+        throw new UnsupportedOperationException(NOT_SUBSTORAGE_CAPABLE);
+    }
+    public List<ConfigurationStorage> createSubStorages(String key, int count)
+                                                            throws IOException {
+        throw new UnsupportedOperationException(NOT_SUBSTORAGE_CAPABLE);
+    }
+    public List<ConfigurationStorage> getSubStorages(String key) throws
+                                                                 IOException {
+        throw new UnsupportedOperationException(NOT_SUBSTORAGE_CAPABLE);
     }
 }

@@ -37,6 +37,7 @@ import java.io.Serializable;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Iterator;
+import java.util.List;
 import java.net.MalformedURLException;
 
 import org.apache.commons.logging.Log;
@@ -216,22 +217,40 @@ public class RemoteStorage extends UnicastRemoteObject implements
     }
 
     // TODO: Can we return a RemoteStorage here?
-    public ConfigurationStorage getSubStorage(String key) throws
-                                                          RemoteException {
-        try {
-            return storage.getSubStorage(key);
-        } catch (IOException e) {
-            throw new RemoteException (e.toString());
-        }
-    }
-
-    // TODO: Can we return a RemoteStorage here?
     public ConfigurationStorage createSubStorage(String key) throws
                                                           RemoteException {
         try {
             return storage.createSubStorage(key);
         } catch (IOException e) {
-            throw new RemoteException (e.toString());
+            throw new RemoteException (e.toString(), e);
+        }
+    }
+
+    // TODO: Can we return a RemoteStorage here?
+    public ConfigurationStorage getSubStorage(String key) throws
+                                                          RemoteException {
+        try {
+            return storage.getSubStorage(key);
+        } catch (IOException e) {
+            throw new RemoteException (e.toString(), e);
+        }
+    }
+
+    public List<ConfigurationStorage> createSubStorages(String key, int count)
+                                                        throws RemoteException {
+        try {
+            return storage.createSubStorages(key, count);
+        } catch (IOException e) {
+            throw new RemoteException (e.toString(), e);
+        }
+    }
+
+    public List<ConfigurationStorage> getSubStorages(String key) throws
+                                                               RemoteException {
+        try {
+            return storage.getSubStorages(key);
+        } catch (IOException e) {
+            throw new RemoteException (e.toString(), e);
         }
     }
 

@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Iterator;
+import java.util.List;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 
@@ -85,15 +86,8 @@ public interface ConfigurationStorage extends Configurable, Serializable {
      */
     public boolean supportsSubStorage() throws IOException;
 
-    /**
-     * Note: This might not be supported by all storages. Check for availability
-     * with {@link #supportsSubStorage} in case of doubt.
-     * @param key the name of the sub storage.
-     * @return a sub storage.
-     * @throws IOException if there was an error performing the operation
-     */
-    public ConfigurationStorage getSubStorage(String key) throws IOException;
-
+    public static final String NOT_SUBSTORAGE_CAPABLE =
+            "Not capable of handling sub storages";
     /**
      * Creates a sub storage, adds it to the current storage and returns it.
      * Sub storages are fully capable storages and are typically used to order
@@ -107,4 +101,36 @@ public interface ConfigurationStorage extends Configurable, Serializable {
      */
     public ConfigurationStorage createSubStorage(String key) throws IOException;
 
+    /**
+     * Note: This might not be supported by all storages. Check for availability
+     * with {@link #supportsSubStorage} in case of doubt.
+     * @param key the name of the sub storage.
+     * @return a sub storage.
+     * @throws IOException if there was an error performing the operation
+     */
+    public ConfigurationStorage getSubStorage(String key) throws IOException;
+
+    /**
+     * Creates a list of sub storages, adds it to the current storage and
+     * returns it. Sub storages are fully capable storages.
+     * </p><p>
+     * Note: This might not be supported by all storages. Check for availability
+     * with {@link #supportsSubStorage} in case of doubt.
+     * @param key   the key for the list of storages.
+     * @param count the number of storages to create.
+     * @return a list of count sub storages.
+     * @throws IOException if the storages could not be created.
+     */
+    public List<ConfigurationStorage> createSubStorages(String key, int count)
+                                                             throws IOException;
+
+    /**
+     * Note: This might not be supported by all storages. Check for availability
+     * with {@link #supportsSubStorage} in case of doubt.
+     * @param key the key for the list of storages.
+     * @return a list of storages.
+     * @throws IOException if the list could not be extracted.
+     */
+    public List<ConfigurationStorage> getSubStorages(String key) throws
+                                                                 IOException;
 }

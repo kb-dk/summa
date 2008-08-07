@@ -181,9 +181,9 @@ public class FileStorage implements ConfigurationStorage {
         return false;
     }
 
+
     public ConfigurationStorage getSubStorage(String key) {
-        throw new UnsupportedOperationException("Not capable of handling sub"
-                                                + " storages");
+        throw new UnsupportedOperationException(NOT_SUBSTORAGE_CAPABLE);
     }
 
     public ConfigurationStorage createSubStorage(String key) {
@@ -201,5 +201,15 @@ public class FileStorage implements ConfigurationStorage {
         OutputStream out = new FileOutputStream(f);
         new Properties().storeToXML (out, "Created: " + new Date().toString());
         return f;
+    }
+
+    public List<ConfigurationStorage> createSubStorages(String key, int count)
+                                                            throws IOException {
+        throw new UnsupportedOperationException(NOT_SUBSTORAGE_CAPABLE);
+    }
+
+    public List<ConfigurationStorage> getSubStorages(String key) throws
+                                                                 IOException {
+        throw new UnsupportedOperationException(NOT_SUBSTORAGE_CAPABLE);
     }
 }

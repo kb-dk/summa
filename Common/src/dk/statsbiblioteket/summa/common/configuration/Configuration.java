@@ -38,6 +38,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -980,11 +981,58 @@ public class Configuration implements Serializable,
 
     /**
      * Constructs a new Configuration around an underlying sub storage.
-     * @param key the kay for the underlying sub storage.
+     * @param key the key for the underlying sub storage.
      * @return a sub configuration, based on the sub storage.
+     * @throws IOException if the sub configuration could not be created.
+     */
+    public Configuration createSubConfiguration(String key) throws IOException {
+        return new Configuration(storage.createSubStorage(key));
+    }
+
+    /**
+     * @param key the key for the underlying sub storage.
+     * @return a sub configuration, based on the sub storage.
+     * @throws IOException if the sub configuration could not be created.
      */
     public Configuration getSubConfiguration(String key) throws IOException {
         return new Configuration(storage.getSubStorage(key));
+    }
+
+    /**
+     * Creates a list of sub storages under the given key and returns it wrapped
+     * as Configurations.
+     * @param key   the key for the list sub storages.
+     * @param count the number of configurations that the list should contain.
+     * @return a list of sub storages wrapped as Configurations.
+     * @throws IOException if the list could not be created.
+     */
+    public List<Configuration> createSubConfigurations(String key, int count)
+                                                            throws IOException {
+        List<ConfigurationStorage> storages =
+                storage.createSubStorages(key, count);
+        List<Configuration> configurations =
+                new ArrayList<Configuration>(storages.size());
+        for (ConfigurationStorage storage: storages) {
+            configurations.add(new Configuration(storage));
+        }
+        return Collections.unmodifiableList(configurations);
+    }
+
+    /**
+     * @param key the key for the list of sub storages.
+     * @return a list of sub storages wrapped as Configurations.
+     * @throws IOException if the sub storages could not be retrieved.
+     */
+    public List<Configuration> getSubConfigurations(String key) throws 
+                                                                IOException {
+        List<ConfigurationStorage> storages =
+                storage.getSubStorages(key);
+        List<Configuration> configurations =
+                new ArrayList<Configuration>(storages.size());
+        for (ConfigurationStorage storage: storages) {
+            configurations.add(new Configuration(storage));
+        }
+        return Collections.unmodifiableList(configurations);
     }
 }
 

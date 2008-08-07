@@ -30,6 +30,7 @@ import java.rmi.RemoteException;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * Interface for exposing a remote {@link ConfigurationStorage} both as a JMX
@@ -82,4 +83,10 @@ public interface RemoteStorageMBean extends Remote, ConfigurationStorage {
 
     public ConfigurationStorage createSubStorage(String key) throws
                                                              RemoteException;
+
+    public List<ConfigurationStorage> createSubStorages(String key, int count)
+                                                        throws RemoteException;
+
+    public List<ConfigurationStorage> getSubStorages(String key) throws
+                                                                RemoteException;
 }
