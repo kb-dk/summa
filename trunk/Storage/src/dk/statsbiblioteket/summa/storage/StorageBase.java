@@ -1,4 +1,4 @@
-/* $Id: Control.java,v 1.9 2007/12/04 09:08:19 te Exp $
+/* $Id: StorageBase.java,v 1.9 2007/12/04 09:08:19 te Exp $
  * $Revision: 1.9 $
  * $Date: 2007/12/04 09:08:19 $
  * $Author: te $
@@ -20,57 +20,60 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.summa.storage.io;
+package dk.statsbiblioteket.summa.storage;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.List;
+import java.io.IOException;
 
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.api.WritableStorage;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.schedule.Schedulable;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * Control is an abstract class, which implements both the Access and Schedulable interface.
- * There is no choice of storage in Control. This choice is made in the subclasses.
+ * StorageBase is an abstract class, which implements both the Storage and Schedulable interface.
+ * There is no choice of storage in StorageBase. This choice is made in the subclasses.
  * Created by IntelliJ IDEA. User: hal. Date: Jan 9, 2006.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "hal, te")
-public abstract class Control extends UnicastRemoteObject implements Access,
-                                                                     Schedulable {
-    private static Log log = LogFactory.getLog(Control.class);
+public abstract class StorageBase extends UnicastRemoteObject implements Storage {
+    private static Log log = LogFactory.getLog(StorageBase.class);
 
-    /**
-     * Using the default constructor means that the Control will not be
-     * exposed as a RMI service by Control itself.
-     * @throws RemoteException in case of any error.
-     */
-    public Control() throws RemoteException {
-        super();
+    public StorageBase(Configuration conf) throws IOException {
+        super (getServicePort(conf));
+
+        log.trace("Exporting Storage interface");
+        RemoteHelper.exportRemoteInterface(this,
+                                           conf.getInt(Storage.DEFAULT_REGISTRY_PORT, 27000),
+                                           "summa-storage");
+
+        try {
+            RemoteHelper.exportMBean(this);
+        } catch (Exception e) {
+            log.warn ("Failed to register MBean, going on without it. "
+                      + "Error was", e);
+        }
     }
 
     /**
-     * The recommended constructor as it allows for RMI exposure.
-     * @param configuration
-     * @throws RemoteException
+     * Create the storage base with an empty configuration. This means that
+     * default values will be used throughout.
      */
-    public Control(Configuration configuration) throws RemoteException {
-
+    public StorageBase() throws IOException {
+        this(Configuration.newMemoryBased());
     }
 
-    /**
-     * Control constructor.
-     * @param port serviceport
-     * @throws RemoteException
-     */
-    public Control(int port) throws RemoteException{
-        super(port);
+    private static int getServicePort(Configuration configuration) {
+        return configuration.getInt(Storage.DEFAULT_SERVICE_PORT, 27027);
     }
 
     /**
@@ -79,7 +82,7 @@ public abstract class Control extends UnicastRemoteObject implements Access,
      * enough.
      */
     public List<RecordAndNext> next(Long iteratorKey, int maxRecords) throws
-                                                               RemoteException {
+                                                               IOException {
         List<RecordAndNext> records = new ArrayList<RecordAndNext>(maxRecords);
         int added = 0;
         while (added++ < maxRecords) {
@@ -122,19 +125,29 @@ public abstract class Control extends UnicastRemoteObject implements Access,
      * Is a Record is active, it should be indexed. This method returns
      * !DELETED & INDEXABLE.
      */
-    public boolean recordActive(String id) throws RemoteException {
+    public boolean recordActive(String id) throws IOException {
         Record record = getRecord(id);
         return record != null && !record.isDeleted() && record.isIndexable();
     }
 
-    public boolean recordExists(String name) throws RemoteException {
+    public boolean recordExists(String name) throws IOException {
         return getRecord(name) != null;
     }
 
     /**
-     * Close the connection to the underlying storage. The state of the Control
-     * after close is undefined.
-     * @throws RemoteException if the connection could not be closed properly.
+     * <p>Convenience implementation of {@link WritableStorage#flushAll}
+     * simply iterating through the list and calling
+     * {@link WritableStorage#flush} on each record.</p>
+     *
+     * <p>Subclasses of {@code StorageBase} may choose to overwrite this method
+     * for optimization purposes.</p>
+     *
+     * @param records the records to store or update
+     * @throws IOException on comminication errors
      */
-    public abstract void close() throws RemoteException;
+    public void flushAll (List<Record> records) throws IOException {
+        for (Record rec : records) {
+            flush(rec);
+        }
+    }
 }

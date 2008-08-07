@@ -27,17 +27,12 @@ import dk.statsbiblioteket.util.rpc.ConnectionFactory;
 import dk.statsbiblioteket.util.rpc.RMIConnectionFactory;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
-import dk.statsbiblioteket.summa.storage.io.Access;
+import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.rmi.RemoteStorage;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.rmi.Naming;
-import java.rmi.NotBoundException;
-import java.rmi.RemoteException;
-import java.net.MalformedURLException;
-import java.util.Map;
 
 /**
  * Utility class for Storage-related filters.
@@ -48,22 +43,23 @@ import java.util.Map;
 public class FilterCommons {
     private static final Log log = LogFactory.getLog(FilterCommons.class);
 
-    private static ConnectionFactory<Access> accessConnectionFactory =
-            new RMIConnectionFactory<Access>();
-    private static ConnectionManager<Access> accessConnectionManager =
-            new ConnectionManager<Access>(accessConnectionFactory);
+    /* FIXME: Remove this hard coded hack to RMI */
+    private static ConnectionFactory<? extends Storage> storageConnectionFactory =
+            new RMIConnectionFactory<RemoteStorage>();
+    private static ConnectionManager<Storage> accessConnectionManager =
+            new ConnectionManager<Storage>(storageConnectionFactory);
 
     /**
-     * Creates a ConnectionContext for the Access specified in accessKey.
+     * Creates a ConnectionContext for the Storage specified in accessKey.
      * After use, resources are released with {@link #releaseAccess}.
-     * @param configuration contains the Access address.
-     * @param accessKey     the key for the Access address. The Access address
+     * @param configuration contains the Storage address.
+     * @param accessKey     the key for the Storage address. The Storage address
      *                      is an standard RMI address, such as
      *                      "//localhost:6789/storage".
      * @return a Connection Context to access.
      *         See {@link ConnectionContext} for usage.
      */
-    public static synchronized ConnectionContext<Access> getAccess(
+    public static synchronized ConnectionContext<Storage> getAccess(
             Configuration configuration, String accessKey) {
         //noinspection DuplicateStringLiteralInspection
         log.trace("getAccess(..., " + accessKey + ") called");
@@ -81,12 +77,12 @@ public class FilterCommons {
     }
 
     /**
-     * Release the resources taken by the Access-context. Call this when the
+     * Release the resources taken by the Storage-context. Call this when the
      * context aren't used anymore.
-     * @param context the context for Access.
+     * @param context the context for Storage.
      */
     public static synchronized void releaseAccess(
-            ConnectionContext<Access> context) {
+            ConnectionContext<Storage> context) {
         accessConnectionManager.release(context);
     }
 }

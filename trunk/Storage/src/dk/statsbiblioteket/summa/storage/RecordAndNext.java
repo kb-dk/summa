@@ -1,4 +1,4 @@
-/* $Id: Schedule.java,v 1.4 2007/10/05 10:20:22 te Exp $
+/* $Id: RecordAndNext.java,v 1.4 2007/10/05 10:20:22 te Exp $
  * $Revision: 1.4 $
  * $Date: 2007/10/05 10:20:22 $
  * $Author: te $
@@ -20,48 +20,43 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.util.schedule;
+package dk.statsbiblioteket.summa.storage;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import java.util.TimerTask;
-import java.util.Date;
-import java.text.DateFormat;
-
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
+import java.io.Serializable;
+
 /**
- * The Schedule is resposible for calling a {@link Schedulable}.
- * A schedule is instanciated by the {@link Scheduler}
+ * Tuple class for returning both a Record and a next value from Storage to RecordIterator.
+ * Created by IntelliJ IDEA. User: bam. Date: Nov 17, 2005.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "hal")
-class Schedule extends TimerTask{
+        author = "bam, hal")
+public class RecordAndNext implements Serializable {
+
+    private final Record rec;
+    private final boolean next;
 
     /**
-    * reference to the component called by this component.
-    */
-    private final Schedulable scheduleClass;
-
-    private final Log log = LogFactory.getLog(this.getClass().getPackage().getName());
-
-
-    /**
-     * Default constructor.
-     * @param object the object to be scheduled.
+     * Construct a RecordAndNext object with the given Record rec and boolean next.
      */
-    Schedule(final Schedulable object){
-         scheduleClass = object;
+    public RecordAndNext(Record rec, boolean next) {
+        this.rec = rec;
+        this.next = next;
     }
 
     /**
-     * implementing {@link Runnable}.
+     * Get the Record of this RecordAndNext.
      */
-    public void run() {
-        log.info("Scheduled method call on: " + scheduleClass.getClass().getName() + "; runtime: " + DateFormat.getInstance().format(new Date()));
-        scheduleClass.perform();
+    public Record getRecord() {
+        return rec;
     }
-
+    /**
+     * Get the boolean Next value of this RecordAndNext.
+     */
+    public boolean getNext() {
+        return next;
+    }
 }

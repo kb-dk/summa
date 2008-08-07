@@ -1,4 +1,4 @@
-/* $Id: DatabaseControl.java,v 1.8 2007/12/04 09:08:19 te Exp $
+/* $Id: DatabaseStorage.java,v 1.8 2007/12/04 09:08:19 te Exp $
  * $Revision: 1.8 $
  * $Date: 2007/12/04 09:08:19 $
  * $Author: te $
@@ -22,7 +22,7 @@
  */
 /**
  * Created: te 2007-09-10 10:54:43
- * CVS:     $Id: DatabaseControl.java,v 1.8 2007/12/04 09:08:19 te Exp $
+ * CVS:     $Id: DatabaseStorage.java,v 1.8 2007/12/04 09:08:19 te Exp $
  */
 package dk.statsbiblioteket.summa.storage.database;
 
@@ -41,24 +41,24 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.util.StringMap;
-import dk.statsbiblioteket.summa.storage.io.Control;
-import dk.statsbiblioteket.summa.storage.io.RecordAndNext;
-import dk.statsbiblioteket.summa.storage.io.RecordIterator;
-import dk.statsbiblioteket.util.GZIP.GZIPUtils;
+import dk.statsbiblioteket.summa.storage.StorageBase;
+import dk.statsbiblioteket.summa.storage.RecordAndNext;
+import dk.statsbiblioteket.summa.storage.RecordIterator;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.Zips;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * An abstract implementation of a SQL-oriented database driven implementation
- * of Control.
+ * An abstract implementation of a SQL-oriented database driven extension
+ * of StorageBase.
  */
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public abstract class DatabaseControl extends Control {
-    private static Log log = LogFactory.getLog(DatabaseControl.class);
+public abstract class DatabaseStorage extends StorageBase {
+    private static Log log = LogFactory.getLog(DatabaseStorage.class);
 
     /**
      * The property-key for the username for the underlying database, if needed.
@@ -167,15 +167,15 @@ public abstract class DatabaseControl extends Control {
     private Map<Long, ResultIterator> iterators =
             new HashMap<Long, ResultIterator>(10);
 
-    public DatabaseControl() throws RemoteException {
+    public DatabaseStorage() throws IOException {
         // We need to define this to declare RemoteException
     }
 
-    public DatabaseControl(int port) throws RemoteException {
+    public DatabaseStorage(int port) throws IOException {
         // We need to define this to declare RemoteException
     }
 
-    public DatabaseControl(Configuration configuration) throws RemoteException {
+    public DatabaseStorage(Configuration configuration) throws IOException {
         super(updateConfiguration(configuration));
     }
 
@@ -480,7 +480,7 @@ public abstract class DatabaseControl extends Control {
             stmtCreateRecord.setString(2, record.getBase());
             stmtCreateRecord.setInt(3, boolToInt(record.isDeleted()));
             stmtCreateRecord.setInt(4, boolToInt(record.isIndexable()));
-            stmtCreateRecord.setBytes(5, GZIPUtils.gzip(record.getContent()));
+            stmtCreateRecord.setBytes(5, Zips.gzipBuffer(record.getContent()));
             stmtCreateRecord.setTimestamp(6,
                                  new Timestamp(record.getCreationTime()));
             stmtCreateRecord.setTimestamp(7,
@@ -492,9 +492,6 @@ public abstract class DatabaseControl extends Control {
                                          record.getMeta().toFormalBytes() :
                                          new byte[0]);
             stmtCreateRecord.execute();
-        } catch (IOException e) {
-            throw new RemoteException("IOException GZIPping data from record '"
-                                      + record.getId() + "'", e);
         } catch (SQLException e) {
             throw new RemoteException("SQLException creating new record '"
                                       + record.getId() + "'", e);
@@ -509,7 +506,7 @@ public abstract class DatabaseControl extends Control {
             stmtUpdateRecord.setString(1, record.getBase());
             stmtUpdateRecord.setInt(2, boolToInt(record.isDeleted()));
             stmtUpdateRecord.setInt(3, boolToInt(record.isIndexable()));
-            stmtUpdateRecord.setBytes(4, GZIPUtils.gzip(record.getContent()));
+            stmtUpdateRecord.setBytes(4, Zips.gzipBuffer(record.getContent()));
             stmtUpdateRecord.setTimestamp(5,
                                  new Timestamp(record.getModificationTime()));
             stmtUpdateRecord.setString(6, record.getParent());
@@ -621,7 +618,7 @@ public abstract class DatabaseControl extends Control {
                           resultSet.getString(BASE_COLUMN),
                           intToBool(resultSet.getInt(DELETED_COLUMN)),
                           intToBool(resultSet.getInt(INDEXABLE_COLUMN)),
-                          GZIPUtils.gunzip(resultSet.getBytes(DATA_COLUMN)),
+                          Zips.gunzipBuffer(resultSet.getBytes(DATA_COLUMN)),
                           resultSet.getTimestamp(CTIME_COLUMN).getTime(),
                           resultSet.getTimestamp(MTIME_COLUMN).getTime(),
                           resultSet.getString(PARENT_COLUMN),
@@ -693,7 +690,7 @@ public abstract class DatabaseControl extends Control {
          */
         public Record getRecord() throws SQLException, IOException {
             lastAccess = System.currentTimeMillis();
-            Record record = DatabaseControl.resultToRecord(resultSet);
+            Record record = DatabaseStorage.resultToRecord(resultSet);
             if (log.isTraceEnabled()) {
                 log.trace("getRecord returning '" + record.getId() + "'");
             }

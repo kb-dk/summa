@@ -34,8 +34,9 @@ import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.storage.StorageFactory;
-import dk.statsbiblioteket.summa.storage.database.DatabaseControl;
-import dk.statsbiblioteket.summa.storage.io.Control;
+import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
+import dk.statsbiblioteket.summa.storage.StorageBase;
+import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
@@ -73,9 +74,9 @@ public class RecordWriterTest extends TestCase {
 
     public void testWrite() throws Exception {
         Configuration conf = Configuration.newMemoryBased();
-        conf.set(DatabaseControl.PROP_LOCATION, storageLocation.toString());
-        Control control = StorageFactory.createController(conf);
-        assertNotNull("A controller should be available now", control);
+        conf.set(DatabaseStorage.PROP_LOCATION, storageLocation.toString());
+        Storage storage = StorageFactory.createStorage(conf);
+        assertNotNull("A controller should be available now", storage);
     }
 
     /* ObjectFilter test-implementation */

@@ -29,8 +29,8 @@ import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.storage.io.Access;
-import dk.statsbiblioteket.summa.storage.io.RecordIterator;
+import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.RecordIterator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -130,8 +130,8 @@ public class RecordReader implements ObjectFilter {
     public static final String DEFAULT_BASE = "";
 
     @SuppressWarnings({"FieldCanBeLocal"})
-    private ConnectionContext<Access> accessContext;
-    private Access access;
+    private ConnectionContext<Storage> accessContext;
+    private Storage storage;
     @SuppressWarnings({"FieldCanBeLocal"})
     private String base = DEFAULT_BASE;
     private File progressFile;
@@ -163,8 +163,8 @@ public class RecordReader implements ObjectFilter {
         log.trace("Constructing RecordReader");
         accessContext =
                 FilterCommons.getAccess(configuration, CONF_METADATA_STORAGE);
-         // TODO: Consider if this should be requested for every call to Access
-        access = accessContext.getConnection();
+         // TODO: Consider if this should be requested for every call to Storage
+        storage = accessContext.getConnection();
         base = configuration.getString(CONF_BASE, DEFAULT_BASE);
         String progressFileString =
                 configuration.getString(CONF_PROGRESS_FILE, null);
@@ -190,8 +190,8 @@ public class RecordReader implements ObjectFilter {
 
         try {
             recordIterator =
-                    access.getRecordsModifiedAfter(getStartTime(), base);
-        } catch (RemoteException e) {
+                    storage.getRecordsModifiedAfter(getStartTime(), base);
+        } catch (IOException e) {
             throw new ConfigurationException("RemoteException while getting "
                                              + "recordIterator for time "
                                              + getStartTime() + " and base '"
@@ -249,7 +249,7 @@ public class RecordReader implements ObjectFilter {
             }
         }
         //noinspection DuplicateStringLiteralInspection
-        log.trace("getStartTime: Could not access file '" + progressFile
+        log.trace("getStartTime: Could not storage file '" + progressFile
                   + "'. Returning 0");
         return 0;
     }

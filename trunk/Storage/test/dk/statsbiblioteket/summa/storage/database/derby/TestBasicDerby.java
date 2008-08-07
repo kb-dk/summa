@@ -26,11 +26,10 @@
  */
 package dk.statsbiblioteket.summa.storage.database.derby;
 
-import dk.statsbiblioteket.summa.storage.database.DatabaseControl;
+import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
-import org.apache.derby.jdbc.EmbeddedDriver;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -103,12 +102,12 @@ public class TestBasicDerby extends TestCase {
                     Statement createDatabase = conn.createStatement();
                     // http://java.sun.com/developer/technicalArticles/J2SE/Desktop/javadb/
                     createDatabase.execute(
-              "CREATE table " + DatabaseControl.TABLE + " ("
-              + " " + DatabaseControl.ID_COLUMN    + " VARCHAR(255), "
+              "CREATE table " + DatabaseStorage.TABLE + " ("
+              + " " + DatabaseStorage.ID_COLUMN    + " VARCHAR(255), "
               + " " + STATE_COLUMN + " VARCHAR(15), "
-              + " " + DatabaseControl.BASE_COLUMN  + " VARCHAR(15), "
+              + " " + DatabaseStorage.BASE_COLUMN  + " VARCHAR(15), "
               + " " + TIMESTAMP_COLUMN  + " TIMESTAMP,"
-              + " " + DatabaseControl.DATA_COLUMN
+              + " " + DatabaseStorage.DATA_COLUMN
                                   + " BLOB(" + BLOB_MAX_SIZE + ") )");
 
                  }
@@ -130,18 +129,19 @@ public class TestBasicDerby extends TestCase {
 
             // http://java.sun.com/developer/technicalArticles/J2SE/Desktop/javadb/
             stmtSaveNewRecord = conn.prepareStatement(
-        "INSERT INTO " + DatabaseControl.TABLE + " " +
-        "   (" + DatabaseControl.ID_COLUMN + ", "
+        "INSERT INTO " + DatabaseStorage.TABLE + " " +
+        "   (" + DatabaseStorage.ID_COLUMN + ", "
                + STATE_COLUMN + ", "
-               + DatabaseControl.BASE_COLUMN + ", "
+               + DatabaseStorage.BASE_COLUMN + ", "
                + TIMESTAMP_COLUMN + ", "
-               + DatabaseControl.DATA_COLUMN + ") "
+               + DatabaseStorage.DATA_COLUMN + ") "
                 + "VALUES (?, ?, ?, ?, ?)",
         Statement.RETURN_GENERATED_KEYS);
 
-            String RecordsQuery = "SELECT " + DatabaseControl.TABLE + "." + DatabaseControl.ID_COLUMN + ","  +
-                    DatabaseControl.TABLE + "." + STATE_COLUMN +
-                    " FROM " + DatabaseControl.TABLE; // + " WHERE " + DatabaseControl.TABLE + "." + DatabaseControl.BASE_COLUMN  + " =? ORDER BY " + ID_COLUMN;
+            String RecordsQuery = "SELECT " + DatabaseStorage.TABLE + "." + DatabaseStorage
+                    .ID_COLUMN + ","  +
+                    DatabaseStorage.TABLE + "." + STATE_COLUMN +
+                    " FROM " + DatabaseStorage.TABLE; // + " WHERE " + DatabaseStorage.TABLE + "." + DatabaseStorage.BASE_COLUMN  + " =? ORDER BY " + ID_COLUMN;
             getAll = conn.prepareStatement(RecordsQuery);
     }
 

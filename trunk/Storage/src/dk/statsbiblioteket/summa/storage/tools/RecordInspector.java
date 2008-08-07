@@ -33,9 +33,9 @@ import java.util.Date;
 import java.util.Properties;
 
 
-import dk.statsbiblioteket.summa.storage.io.Access;
+import dk.statsbiblioteket.summa.storage.api.Storage;
 
-import dk.statsbiblioteket.summa.storage.io.RecordIterator;
+import dk.statsbiblioteket.summa.storage.RecordIterator;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.xml.DefaultNamespaceContext;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -49,7 +49,7 @@ import java.rmi.RMISecurityManager;
 public class RecordInspector {
 
     String storageUrl;
-    Access io;
+    Storage io;
     XPathExpression statusPath;
 
     String[] testRecords = {"horizon_1258465", "horizon_1996560", "horizon_400166", "horizon_262248",
@@ -57,7 +57,7 @@ public class RecordInspector {
 
     public RecordInspector (String storageUrl) {
         try {
-            io = (Access) Naming.lookup (storageUrl);
+            io = (Storage) Naming.lookup (storageUrl);
 
             XPath xp = XPathFactory.newInstance().newXPath();
             DefaultNamespaceContext nsc = new DefaultNamespaceContext();
@@ -167,7 +167,7 @@ public class RecordInspector {
     }
 
     /**
-     * Run through the horizon database and mark everything deleted that should be deleted
+     * Exec through the horizon database and mark everything deleted that should be deleted
      */
     public void fixRecordStates () {
         Date startDate = new Date();

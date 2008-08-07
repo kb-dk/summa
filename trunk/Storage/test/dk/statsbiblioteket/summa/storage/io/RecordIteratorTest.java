@@ -26,6 +26,7 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.storage.RecordIterator;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
@@ -62,7 +63,7 @@ public class RecordIteratorTest extends TestCase {
     public void testExtendedIteration(int recordCount) throws Exception {
         FakeAccess access = new FakeAccess(recordCount);
         RecordIterator iterator = access.getRecords("foo");
-        assertTrue("Access should have something", iterator.hasNext());
+        assertTrue("Storage should have something", iterator.hasNext());
         for (int i = 0 ; i < recordCount ; i++) {
             try {
                 Record record = iterator.next();

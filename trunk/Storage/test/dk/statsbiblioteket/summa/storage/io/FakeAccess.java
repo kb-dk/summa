@@ -27,15 +27,17 @@
 package dk.statsbiblioteket.summa.storage.io;
 
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.storage.StorageBase;
+import dk.statsbiblioteket.summa.storage.RecordIterator;
+import dk.statsbiblioteket.summa.storage.RecordAndNext;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.rmi.RemoteException;
 import java.util.Random;
-import java.util.List;
-import java.util.ArrayList;
+import java.io.IOException;
 
 /**
- * Test helper for RecordIterator.  The pseudo-records contained in this Access
+ * Test helper for RecordIterator.  The pseudo-records contained in this Storage
  * have a sequential integer ID, starting with 0 and going forward. The content
  * of the records are pseudo-randomised.
  * </p><<p>
@@ -44,12 +46,12 @@ import java.util.ArrayList;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class FakeAccess extends Control  {
+public class FakeAccess extends StorageBase {
     private Random random = new Random();
     private int recordCount;
     private int position = 0; // Where to get the next record
 
-    public FakeAccess(int recordCount) throws RemoteException {
+    public FakeAccess(int recordCount) throws IOException {
         this.recordCount = recordCount;
     }
 

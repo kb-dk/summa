@@ -1,5 +1,5 @@
-/* $Id: RecordAndNext.java,v 1.4 2007/10/05 10:20:22 te Exp $
- * $Revision: 1.4 $
+/* $Id: WritableStorage.java,v 1.6 2007/10/05 10:20:22 te Exp $
+ * $Revision: 1.6 $
  * $Date: 2007/10/05 10:20:22 $
  * $Author: te $
  *
@@ -20,43 +20,41 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.summa.storage.io;
+package dk.statsbiblioteket.summa.storage.api;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
-import java.io.Serializable;
+import java.io.IOException;
+import java.util.List;
 
-/**
- * Tuple class for returning both a Record and a next value from Access to RecordIterator.
- * Created by IntelliJ IDEA. User: bam. Date: Nov 17, 2005.
- */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "bam, hal")
-public class RecordAndNext implements Serializable {
-
-    private final Record rec;
-    private final boolean next;
+        author = "hal")
+public interface WritableStorage {
 
     /**
-     * Construct a RecordAndNext object with the given Record rec and boolean next.
+     * Flush a record to the storage. In other words write it.
+     * @param record The record to store or update
+     * @throws IOException on comminication errors
      */
-    public RecordAndNext(Record rec, boolean next) {
-        this.rec = rec;
-        this.next = next;
-    }
+    void flush(Record record) throws IOException;
 
     /**
-     * Get the Record of this RecordAndNext.
+     * A batch optimized version of {@link #flush}. Use this method
+     * to optimize IPC overhead.
+     *
+     * @param records a list of records to store or update
+     * @throws IOException on communication errors
      */
-    public Record getRecord() {
-        return rec;
-    }
+    void flushAll(List<Record> records) throws IOException;
+
     /**
-     * Get the boolean Next value of this RecordAndNext.
+     * Close the storage for any further reads or writes.
+     * When this method returns it should be safe to turn of the JVM in which
+     * storage runs.
+     *
+     * @throws IOException on communication errors
      */
-    public boolean getNext() {
-        return next;
-    }
+    void close() throws IOException;
 }

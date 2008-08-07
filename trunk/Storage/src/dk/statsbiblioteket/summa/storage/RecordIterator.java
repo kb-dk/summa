@@ -20,12 +20,14 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.summa.storage.io;
+package dk.statsbiblioteket.summa.storage;
 
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.Serializable;
+import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -33,7 +35,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 /**
  * A RecordIterator is a facade for an iterator over a collection of records.
  * The collection of records is a ResultSet (of rows in the database) saved in
- * an Access object and is accessible by the RecordIterator via its private key.
+ * an Storage object and is accessible by the RecordIterator via its private key.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
        state = QAInfo.State.IN_DEVELOPMENT,
@@ -41,7 +43,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class RecordIterator implements Iterator<Record>, Serializable {
     // TODO: Consider making this adjustable
     public static int MAX_QUEUE_SIZE = 100;
-    private final Access iteratorHolder;
+    private final Storage iteratorHolder;
     private final Long key;
     private final Queue<RecordAndNext> records;
     private boolean next;
@@ -49,14 +51,14 @@ public class RecordIterator implements Iterator<Record>, Serializable {
     /**
      * RecordIterator Constructor.
      * The constructor for a RecordIterator object saves a private reference to
-     * the Access object, which holds the ResultSet accessible by this
+     * the Storage object, which holds the ResultSet accessible by this
      * RecordIterator, and the key by which the ResultSet can be accessed, and
      * next is initialised for hasNext.
      * @param iteratorHolder the object which holds the iterator
      * @param key the key for the remote iterator
      * @param next the value for the first call to hasNext()
      */
-    public RecordIterator(Access iteratorHolder, Long key, boolean next) {
+    public RecordIterator(Storage iteratorHolder, Long key, boolean next) {
         this.iteratorHolder = iteratorHolder;
         this.key = key;
         this.next = next;
@@ -84,12 +86,13 @@ public class RecordIterator implements Iterator<Record>, Serializable {
         try {
             if (records.size() == 0) {
                 records.addAll(iteratorHolder.next(key, MAX_QUEUE_SIZE));
+
             }
             RecordAndNext ran = records.poll();
             Record rec = ran.getRecord();
             next = ran.getNext();
             return rec;
-        } catch (RemoteException e) {
+        } catch (IOException e) {
             throw new NoSuchElementException("Could not get next Record for "
                                              + "key '" + key + "': "
                                              + e.getMessage());

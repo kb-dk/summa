@@ -10,7 +10,10 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.summa.storage.StorageFactory;
-import dk.statsbiblioteket.summa.storage.database.DatabaseControl;
+import dk.statsbiblioteket.summa.storage.StorageBase;
+import dk.statsbiblioteket.summa.storage.RecordIterator;
+import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.util.Files;
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -28,7 +31,7 @@ public class ControlTest extends TestCase {
     }
     // TODO: Test iterating deleted and not indexable records
     static int testdirCounter = 0;
-    Control control;
+    Storage control;
     File location;
     private Configuration conf;
 
@@ -37,7 +40,7 @@ public class ControlTest extends TestCase {
         location = new File(System.getProperty("java.io.tmpdir"), "controltest"
                                                             + testdirCounter++);
         conf = Configuration.newMemoryBased();
-        conf.set(DatabaseControl.PROP_LOCATION, location.toString());
+        conf.set(DatabaseStorage.PROP_LOCATION, location.toString());
 
         if (location.exists()) {
             Files.delete(location);
@@ -45,7 +48,7 @@ public class ControlTest extends TestCase {
                 fail("Failed to remove '" + location + "' on setUp");
             }
         }
-        control = StorageFactory.createController(conf);
+        control = StorageFactory.createStorage(conf);
     }
 
     public void tearDown() throws Exception {
