@@ -37,6 +37,8 @@ import java.io.*;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -143,6 +145,12 @@ public class XStorage implements ConfigurationStorage {
         return true;
     }
 
+    public ConfigurationStorage createSubStorage(String key) throws
+                                                             IOException {
+        put(key, new XProperties());
+        return getSubStorage(key);
+    }
+
     public ConfigurationStorage getSubStorage(String key) throws IOException {
         try {
             Object sub = get(key);
@@ -164,10 +172,40 @@ public class XStorage implements ConfigurationStorage {
         }
     }
 
-    public ConfigurationStorage createSubStorage(
-            String key) throws IOException {
-        put(key, new XProperties());
-        return getSubStorage(key);
+    public List<ConfigurationStorage> createSubStorages(String key, int count)
+                                                            throws IOException {
+        ArrayList<XProperties> subProperties =
+                new ArrayList<XProperties>(count);
+        List<ConfigurationStorage> storages =
+                new ArrayList<ConfigurationStorage>(count);
+        for (int i = 0 ; i < count ; i++) {
+            subProperties.add(new XProperties());
+            storages.add(new XStorage(subProperties.get(i)));
+        }
+        put(key, subProperties);
+        return storages;
+    }
+
+    public List<ConfigurationStorage> getSubStorages(String key) throws
+                                                                 IOException {
+        Object sub = get(key);
+        if (!(sub instanceof List)) {
+            throw new IOException(String.format(
+                    "The value for '%s' was of class '%s'. Expected List",
+                    key, sub.getClass()));
+        }
+        List list = (List)sub;
+        List<ConfigurationStorage> storages =
+                new ArrayList<ConfigurationStorage>(list.size());
+        for (Object o: list) {
+            if (!(o instanceof XProperties)) {
+                throw new IOException(String.format(
+                        "A class in the list for '%s' was '%s'. Expected "
+                        + "XProperties", key, o.getClass()));
+            }
+            storages.add(new XStorage((XProperties)o));
+        }
+        return storages;
     }
 
     private static File nextAvailableConfigurationFile () throws IOException {

@@ -33,6 +33,7 @@ import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
 import dk.statsbiblioteket.summa.common.configuration.storage.FileStorage;
 import dk.statsbiblioteket.summa.common.configuration.storage.RemoteStorage;
+import dk.statsbiblioteket.summa.common.configuration.storage.XStorage;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
@@ -240,6 +241,17 @@ public class ConfigurationTest extends TestCase {
         l = conf.getStrings("hello.nothing");
         assertEquals(l.size(), 1);
         assertEquals("baz", l.get(0));
+    }
+
+    public void testSubConfigurations() throws Exception {
+        Configuration conf = new Configuration(new XStorage());
+        List<Configuration> subs = conf.createSubConfigurations("foo", 3);
+        assertEquals("The length of the created list should be correct",
+                     3, subs.size());
+        List<Configuration> extracted = conf.getSubConfigurations("foo");
+        assertEquals("The length of the extracted list should be correct",
+                     3, extracted.size());
+
     }
 
     public void testGetClass() throws Exception {
