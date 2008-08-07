@@ -4,15 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.rmi.RemoteException;
 
-import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.storage.database.DatabaseControl;
-import dk.statsbiblioteket.summa.storage.io.Control;
+import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.util.Files;
-import dk.statsbiblioteket.util.rpc.ConnectionContext;
-import dk.statsbiblioteket.util.rpc.ConnectionFactory;
-import dk.statsbiblioteket.util.rpc.ConnectionManager;
-import dk.statsbiblioteket.util.rpc.RMIConnectionFactory;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -74,9 +68,9 @@ public class ControlDerbyTest extends TestCase {
         Configuration conf = Configuration.newMemoryBased();
         //noinspection DuplicateStringLiteralInspection
         File location = getLocation();
-        conf.set(DatabaseControl.PROP_LOCATION, location.toString());
-        DatabaseControl control = new ControlDerby(conf);
-        control.close();
+        conf.set(DatabaseStorage.PROP_LOCATION, location.toString());
+        DatabaseStorage storage = new DerbyStorage(conf);
+        storage.close();
         assertTrue("The location '" + location + "' should exist",
                    location.exists());
     }
@@ -85,31 +79,31 @@ public class ControlDerbyTest extends TestCase {
         Configuration conf = Configuration.newMemoryBased();
         //noinspection DuplicateStringLiteralInspection
         File location = getLocation();
-        conf.set(DatabaseControl.PROP_LOCATION, location.toString());
-        DatabaseControl control = new ControlDerby(conf);
-        control.close();
+        conf.set(DatabaseStorage.PROP_LOCATION, location.toString());
+        DatabaseStorage storage = new DerbyStorage(conf);
+        storage.close();
         assertTrue("The location '" + location + "' should exist",
                    location.exists());
         try {
-            control = new ControlDerby(conf);
+            storage = new DerbyStorage(conf);
         } catch (RemoteException e) {
             fail("It should be possible to reopen access to database");
             e.printStackTrace();
         }
-        control.close();
+        storage.close();
     }
 
     public void testFailedConnection() throws Exception {
         Configuration conf = Configuration.newMemoryBased();
         //noinspection DuplicateStringLiteralInspection
         File location = getLocation();
-        conf.set(DatabaseControl.PROP_LOCATION, location.toString());
-        conf.set(DatabaseControl.PROP_CREATENEW, false);
+        conf.set(DatabaseStorage.PROP_LOCATION, location.toString());
+        conf.set(DatabaseStorage.PROP_CREATENEW, false);
         try {
-            DatabaseControl control = new ControlDerby(conf);
-            fail("createNew was false, so construction of ControlDerby "
+            DatabaseStorage storage = new DerbyStorage(conf);
+            fail("createNew was false, so construction of DerbyStorage "
                  + "should fail");
-            control.close();
+            storage.close();
         } catch (RemoteException e) {
             // Expected
         }
@@ -119,48 +113,48 @@ public class ControlDerbyTest extends TestCase {
         Configuration conf = Configuration.newMemoryBased();
         //noinspection DuplicateStringLiteralInspection
         File location = getLocation();
-        conf.set(DatabaseControl.PROP_LOCATION, location.toString());
-        conf.set(DatabaseControl.PROP_USERNAME, "foo");
-        conf.set(DatabaseControl.PROP_PASSWORD, "bar");
-        DatabaseControl control = new ControlDerby(conf);
-        control.close();
+        conf.set(DatabaseStorage.PROP_LOCATION, location.toString());
+        conf.set(DatabaseStorage.PROP_USERNAME, "foo");
+        conf.set(DatabaseStorage.PROP_PASSWORD, "bar");
+        DatabaseStorage storage = new DerbyStorage(conf);
+        storage.close();
         assertTrue("The location '" + location + "' should exist",
                    location.exists());
 
         try {
-            control = new ControlDerby(conf);
+            storage = new DerbyStorage(conf);
         } catch (RemoteException e) {
             fail("It should be possible to access a protected database");
             e.printStackTrace();
         }
-        control.close();
+        storage.close();
 
-        // Authentication-failed test disabled at ControlDerby does not
+        // Authentication-failed test disabled at DerbyStorage does not
         // currently support authentication
- /*        conf.set(DatabaseControl.PROP_PASSWORD, "zoo");
+ /*        conf.set(DatabaseStorage.PROP_PASSWORD, "zoo");
         try {
-            control = new ControlDerby(conf);
+            storage = new DerbyStorage(conf);
 
             assertFalse("It should not be possible to access a protected"
                         + " database with the wrong credidentials", 
-                        control.getDatabaseInfo().length() > 0);
+                        storage.getDatabaseInfo().length() > 0);
         } catch (RemoteException e) {
             // Expected
         }
-        control.close();
+        storage.close();
 
 
        conf = Configuration.newMemoryBased();
          //noinspection DuplicateStringLiteralInspection
-        conf.set(DatabaseControl.PROP_LOCATION, location.toString());
+        conf.set(DatabaseStorage.PROP_LOCATION, location.toString());
         try {
-            control = new ControlDerby(conf);
+            storage = new DerbyStorage(conf);
             fail("It should not be possible to access a protected database " 
                  + "without any credidentials");
         } catch (RemoteException e) {
             // Expected
         }
-        control.close();*/
+        storage.close();*/
 
     }
 
@@ -168,10 +162,10 @@ public class ControlDerbyTest extends TestCase {
         Configuration conf = Configuration.newMemoryBased();
         //noinspection DuplicateStringLiteralInspection
         File location = getLocation();
-        conf.set(DatabaseControl.PROP_LOCATION, location.toString());
-        DatabaseControl control = new ControlDerby(conf);
+        conf.set(DatabaseStorage.PROP_LOCATION, location.toString());
+        DatabaseStorage storage = new DerbyStorage(conf);
         assertTrue("getDatabaseInfo should return something",
-                   control.getDatabaseInfo().length() > 0);
+                   storage.getDatabaseInfo().length() > 0);
     }
 
     public void testRMI() throws Exception {
@@ -179,17 +173,17 @@ public class ControlDerbyTest extends TestCase {
         Configuration conf = Configuration.newMemoryBased();
         //noinspection DuplicateStringLiteralInspection
         File location = getLocation();
-        conf.set(DatabaseControl.PROP_LOCATION, location.toString());
-        DatabaseControl control = new ControlDerby(conf);
+        conf.set(DatabaseStorage.PROP_LOCATION, location.toString());
+        DatabaseStorage control = new DerbyStorage(conf);
         assertTrue("getDatabaseInfo should return something",
                    control.getDatabaseInfo().length() > 0);
         control.flush(new Record("foow", "bar", new byte[10]));
 
-        // TODO: Move this to Control(?) in order to avoid MS-module dependency
-        ConnectionFactory<Control> cf = new RMIConnectionFactory<Control>();
-        ConnectionManager<Control> cm = new ConnectionManager<Control>(cf);
-        ConnectionContext<Control> ctx = cm.get("//localhost:2767/ping_service");
-        Control remoteControl = ctx.getConnection();
+        // TODO: Move this to StorageBase(?) in order to avoid MS-module dependency
+        ConnectionFactory<StorageBase> cf = new RMIConnectionFactory<StorageBase>();
+        ConnectionManager<StorageBase> cm = new ConnectionManager<StorageBase>(cf);
+        ConnectionContext<StorageBase> ctx = cm.get("//localhost:2767/ping_service");
+        StorageBase remoteControl = ctx.getConnection();
         assertEquals("getRecord should return the ingested Record",
                      "bar", remoteControl.getRecord("foow").getBase());
                      */

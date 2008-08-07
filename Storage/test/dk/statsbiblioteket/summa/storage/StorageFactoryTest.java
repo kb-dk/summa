@@ -3,9 +3,10 @@ package dk.statsbiblioteket.summa.storage;
 import java.io.File;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.storage.database.DatabaseControl;
-import dk.statsbiblioteket.summa.storage.database.derby.ControlDerby;
-import dk.statsbiblioteket.summa.storage.io.Control;
+import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
+import dk.statsbiblioteket.summa.storage.database.derby.DerbyStorage;
+import dk.statsbiblioteket.summa.storage.StorageBase;
+import dk.statsbiblioteket.summa.storage.api.Storage;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -40,19 +41,19 @@ public class StorageFactoryTest extends TestCase {
 
     public void testCreateDefaultController() throws Exception {
         Configuration conf = Configuration.newMemoryBased();
-        conf.set(DatabaseControl.PROP_LOCATION, location.toString());
-        Control control = StorageFactory.createController(conf);
-        assertNotNull("A controller should be created", control);
-        control.close();
+        conf.set(DatabaseStorage.PROP_LOCATION, location.toString());
+        Storage storage = StorageFactory.createStorage(conf);
+        assertNotNull("A controller should be created", storage);
+        storage.close();
     }
 
     public void testCreateDerbyController() throws Exception {
         Configuration conf = Configuration.newMemoryBased();
-        conf.set(DatabaseControl.PROP_LOCATION, location.toString());
-        conf.set(StorageFactory.PROP_CONTROLLER, ControlDerby.class.getName());
-        Control control = StorageFactory.createController(conf);
+        conf.set(DatabaseStorage.PROP_LOCATION, location.toString());
+        conf.set(StorageFactory.PROP_STORAGE, DerbyStorage.class.getName());
+        Storage storage = StorageFactory.createStorage(conf);
         assertEquals("The controller should be a ControlDerby",
-                     ControlDerby.class, control.getClass());
-        control.close();
+                     DerbyStorage.class, storage.getClass());
+        storage.close();
     }
 }

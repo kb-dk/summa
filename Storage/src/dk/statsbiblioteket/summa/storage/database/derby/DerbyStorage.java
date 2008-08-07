@@ -35,7 +35,7 @@ import java.sql.SQLException;
 
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.storage.database.DatabaseControl;
+import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -44,9 +44,9 @@ import org.apache.commons.logging.LogFactory;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class ControlDerby extends DatabaseControl implements ControlDerbyMBean,
+public class DerbyStorage extends DatabaseStorage implements DerbyStorageMBean,
                                                              Configurable {
-    private static Log log = LogFactory.getLog(ControlDerby.class);
+    private static Log log = LogFactory.getLog(DerbyStorage.class);
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public static final String driver = "org.apache.derby.jdbc.EmbeddedDriver";
@@ -60,7 +60,7 @@ public class ControlDerby extends DatabaseControl implements ControlDerbyMBean,
     private Connection connection;
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    public ControlDerby(Configuration configuration) throws RemoteException {
+    public DerbyStorage(Configuration configuration) throws IOException {
         super(configuration);
         log.trace("Constructing ControlDerby");
         username = configuration.getString(PROP_USERNAME, "");

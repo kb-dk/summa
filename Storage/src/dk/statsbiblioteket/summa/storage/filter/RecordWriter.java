@@ -23,12 +23,13 @@
 package dk.statsbiblioteket.summa.storage.filter;
 
 import java.rmi.RemoteException;
+import java.io.IOException;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
-import dk.statsbiblioteket.summa.storage.io.Access;
+import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
 import org.apache.commons.logging.Log;
@@ -56,8 +57,8 @@ public class RecordWriter extends ObjectFilterImpl {
     public static final String CONF_STORAGE =
             "summa.storage.RecordWriter.Storage";
 
-    private ConnectionContext<Access> accessContext;
-    private Access access;
+    private ConnectionContext<Storage> accessContext;
+    private Storage storage;
 
     /**
      * Established an RMI connection to the Storage specified in configuration.
@@ -69,11 +70,11 @@ public class RecordWriter extends ObjectFilterImpl {
         try {
             accessContext =
                     FilterCommons.getAccess(configuration, CONF_STORAGE);
-            // TODO: Consider if this should be requested for every Access-use
-            access = accessContext.getConnection();
+            // TODO: Consider if this should be requested for every Storage-use
+            storage = accessContext.getConnection();
         } catch (Exception e) {
             throw new ConfigurationException(
-                    "Could not get access for Filtercommons with property key '"
+                    "Could not get storage for Filtercommons with property key '"
                     + CONF_STORAGE + "'", e);
         }
         // TODO: Perform a check to see if the Storage is alive
@@ -96,8 +97,8 @@ public class RecordWriter extends ObjectFilterImpl {
             } else {
                 log.debug("Flushing record '" + record.getId() + "'");
             }
-            access.flush(record);
-        } catch (RemoteException e) {
+            storage.flush(record);
+        } catch (IOException e) {
             log.error("Exception flushing " + record, e);
             // TODO: Consider checking for fatal errors (the connection is down)
         }

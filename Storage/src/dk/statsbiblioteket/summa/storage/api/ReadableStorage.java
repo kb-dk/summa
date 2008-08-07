@@ -1,4 +1,4 @@
-/* $Id: AccessRead.java,v 1.7 2007/10/05 10:20:22 te Exp $
+/* $Id: ReadableStorage.java,v 1.7 2007/10/05 10:20:22 te Exp $
  * $Revision: 1.7 $
  * $Date: 2007/10/05 10:20:22 $
  * $Author: te $
@@ -20,24 +20,27 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.summa.storage.io;
+package dk.statsbiblioteket.summa.storage.api;
 
-import java.rmi.RemoteException;
 import java.util.List;
+import java.io.IOException;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.storage.RecordIterator;
+import dk.statsbiblioteket.summa.storage.RecordAndNext;
+import dk.statsbiblioteket.summa.common.Record;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "hal")
-public interface AccessRead {
+public interface ReadableStorage {
     /**
      * Get an iterator over all records in the database from the given base sorted by name.
      * @param base the name of the original record base
      * @return a RecordIterator of all records (sorted by name)
-     * @throws java.rmi.RemoteException
+     * @throws IOException
      */
-    RecordIterator getRecords(String base) throws RemoteException;
+    RecordIterator getRecords(String base) throws IOException;
 
     /**
      * Get an iterator over all records from the given base modified after the given time.
@@ -45,9 +48,9 @@ public interface AccessRead {
      * @param time a timestamp in milliseconds
      * @param base the name of the original record base
      * @return a RecordIterator of records modified after given time (sorted by name)
-     * @throws java.rmi.RemoteException
+     * @throws IOException
      */
-    RecordIterator getRecordsModifiedAfter(long time, String base) throws RemoteException;
+    RecordIterator getRecordsModifiedAfter(long time, String base) throws IOException;
 
     /**
      * Get an iterator over all records from the given base "from" the given id.
@@ -57,34 +60,34 @@ public interface AccessRead {
      * @param id record id (bib#/id)
      * @param base the name of the original record base
      * @return a RecordIterator of records "from" the given id (sorted by id)
-     * @throws java.rmi.RemoteException
+     * @throws IOException
      */
-    RecordIterator getRecordsFrom(String id, String base) throws RemoteException;
+    RecordIterator getRecordsFrom(String id, String base) throws IOException;
 
     /**
      * Get the record with the given id.
      * @param id record id (bib#/id)
      * @return the requested Record; null on record not found
-     * @throws java.rmi.RemoteException
+     * @throws IOException
      */
-    dk.statsbiblioteket.summa.common.Record getRecord(String id) throws RemoteException;
+    Record getRecord(String id) throws IOException;
 
     /**
      * Check if a record of the given id exists.
      * @param id record id (bib#/id)
      * @return true if a record of the given id exists; false otherwise
-     * @throws java.rmi.RemoteException
+     * @throws IOException
      */
-    boolean recordExists(String id) throws RemoteException;
+    boolean recordExists(String id) throws IOException;
 
     /**
      * Check if a record of the given id exists AND is active.
      * I.e. the record exists and is NOT marked deleted.
      * @param id record id (bib#/id)
      * @return true if a record of the given id exists and is active; false otherwise
-     * @throws java.rmi.RemoteException
+     * @throws IOException
      */
-    boolean recordActive(String id) throws RemoteException;
+    boolean recordActive(String id) throws IOException;
 
     /**
      * Return the next record in the record iteration identified by the given iterator key.
@@ -95,9 +98,9 @@ public interface AccessRead {
      *         the Record in the RecordAndNext object can be null if the iteration
      *         has no more elements or the iterator is not found
      *         (does not throw a NoSuchElementException)
-     * @throws java.rmi.RemoteException
+     * @throws IOException
      */
-    RecordAndNext next(Long iteratorKey) throws RemoteException;
+    RecordAndNext next(Long iteratorKey) throws IOException;
 
     /**
      * Return a maximum of maxRecords Records in the record iteration identified
@@ -109,10 +112,10 @@ public interface AccessRead {
      * @return a list of RecordAndNext objects holding the Records in the
      *         RecordIterator identified by the iteratorKey as well as the next
      *         next value.
-     * @throws java.rmi.RemoteException if there was a problem requesting
+     * @throws IOException if there was a problem requesting
      *                                  Records.
      */
     List<RecordAndNext> next(Long iteratorKey, int maxRecords) throws
-                                                                RemoteException;
+                                                                IOException;
 
 }

@@ -23,10 +23,11 @@
 package dk.statsbiblioteket.summa.storage;
 
 import java.rmi.RemoteException;
+import java.io.IOException;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.storage.database.derby.ControlDerby;
-import dk.statsbiblioteket.summa.storage.io.Control;
+import dk.statsbiblioteket.summa.storage.database.derby.DerbyStorage;
+import dk.statsbiblioteket.summa.storage.api.Storage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -37,47 +38,48 @@ public class StorageFactory {
     private static Log log = LogFactory.getLog(StorageFactory.class);
 
     /**
-     * The fully classified class name for the wanted Controller.
+     * The fully classified class name for the wanted Storage implementation.
      */
-    public static final String PROP_CONTROLLER = "summa.storage.controller";
+    public static final String PROP_STORAGE = "summa.storage.class";
 
-    private static final Class<? extends Control> DEFAULT_CONTROLLER =
-            ControlDerby.class;
+    private static final Class<? extends StorageBase> DEFAULT_STORAGE =
+            DerbyStorage.class;
 
     /**
-     * Construct a metadata storage controller based on the given properties.
-     * The properties are also passed to the constructor for the controller.
-     * @param configuration setup for the wanted controller along with the
-     *        property {@link #PROP_CONTROLLER} which should hold the class-name
-     *        for the wanted DatabaseControl. If no controller is specified,
-     *        the StorageFactory defaults to {@link ControlDerby}.
-     * @return a metadata storage controller.
+     * <p>Construct a storage instance based on the given properties.
+     * The properties are also passed to the constructor for the storage.</p>
+     *
+     * <p>Most interestingly is probably the property {@link #PROP_STORAGE}
+     * used to specify the class of the storage implementation to use.</p>
+     *
+     * @param conf setup for the wanted storage along with the
+     *        property {@link #PROP_STORAGE} which should hold the class-name
+     *        for the wanted {@link Storage}. If no storage is specified,
+     *        the {@code StorageFactory} defaults to {@link DerbyStorage}.
+     * @return an object implementing the {@link Storage} interface.
      * @throws RemoteException if the controller could not be created.
      */
-    public static Control createController(Configuration configuration) throws
-                                                               RemoteException {
-        log.trace("createController called");
+    public static Storage createStorage(Configuration conf) throws IOException {
+        log.trace("createStorage called");
 
-        Class<? extends Control> controllerClass;
+        Class<? extends Storage> storageClass;
         try {
-            controllerClass = configuration.getClass(PROP_CONTROLLER,
-                                                     Control.class,
-                                                     DEFAULT_CONTROLLER);
+            storageClass = conf.getClass(PROP_STORAGE,
+                                         Storage.class,
+                                         DEFAULT_STORAGE);
         } catch (Exception e) {
             throw new RemoteException("Could not get metadata storage control"
                                       + " class from property "
-                                      + PROP_CONTROLLER, e);
+                                      + PROP_STORAGE, e);
         }
         //noinspection DuplicateStringLiteralInspection
-        log.debug("Got controller class " + controllerClass
-                  + ". Commencing creation");
+        log.debug("Instantiating storage class " + storageClass);
         try {
             // FIXME: This forces a RMI call when packing as a service. Not good 
-            return Configuration.create(controllerClass, configuration);
-//            return Configuration.newMemoryBased().create(controllerClass);
+            return Configuration.create(storageClass, conf);
         } catch (Exception e) {
-            throw new RemoteException("Could not create controller class "
-                                      + controllerClass, e);
+            throw new IOException("Failed to instantiate storage class "
+                                  + storageClass, e);
         }
     }
 

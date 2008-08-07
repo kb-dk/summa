@@ -1,4 +1,4 @@
-/* $Id: UniqueIdRemoteException.java,v 1.3 2007/10/05 10:20:22 te Exp $
+/* $Id: ControlDerbyMBean.java,v 1.3 2007/10/05 10:20:22 te Exp $
  * $Revision: 1.3 $
  * $Date: 2007/10/05 10:20:22 $
  * $Author: te $
@@ -20,24 +20,16 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.summa.storage.io;
-
-import java.rmi.RemoteException;
+/**
+ * Created: te 2007-09-04 10:43:33
+ * CVS:     $Id: ControlDerbyMBean.java,v 1.3 2007/10/05 10:20:22 te Exp $
+ */
+package dk.statsbiblioteket.summa.storage.database.derby;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
-       state = QAInfo.State.IN_DEVELOPMENT,
-       author = "bam")
-public class UniqueIdRemoteException extends RemoteException {
-    private String id;
-
-    public UniqueIdRemoteException(String s, String id) {
-        super(s);
-        this.id = id;
-    }
-
-    public String getId() {
-        return id;
-    }
+        state = QAInfo.State.IN_DEVELOPMENT,
+        author = "te")
+public interface DerbyStorageMBean {
 }
