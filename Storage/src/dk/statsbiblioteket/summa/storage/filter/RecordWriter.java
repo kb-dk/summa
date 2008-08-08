@@ -30,6 +30,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.api.StorageConnectionFactory;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
 import org.apache.commons.logging.Log;
@@ -71,7 +72,8 @@ public class RecordWriter extends ObjectFilterImpl {
             accessContext =
                     FilterCommons.getAccess(configuration, CONF_STORAGE);
             // TODO: Consider if this should be requested for every Storage-use
-            storage = accessContext.getConnection();
+            Object o = accessContext.getConnection();
+            storage = (Storage) o; 
         } catch (Exception e) {
             throw new ConfigurationException(
                     "Could not get storage for Filtercommons with property key '"

@@ -8,9 +8,10 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.control.api.Service;
 import dk.statsbiblioteket.summa.control.api.Status;
-import dk.statsbiblioteket.summa.storage.database.DatabaseControl;
-import dk.statsbiblioteket.summa.storage.io.Access;
-import dk.statsbiblioteket.summa.storage.io.RecordIterator;
+import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
+import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.api.StorageConnectionFactory;
+import dk.statsbiblioteket.summa.storage.RecordIterator;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
@@ -109,15 +110,15 @@ public class StorageServiceTest extends NoExitTestCase {
         serviceRemote.start();
 
         // Connect to the Storage remotely
-        ConnectionFactory<Access> cf = new RMIConnectionFactory<Access>();
-        ConnectionManager<Access> cm = new ConnectionManager<Access>(cf);
+        ConnectionFactory<Storage> cf = new StorageConnectionFactory(conf);
+        ConnectionManager<Storage> cm = new ConnectionManager<Storage>(cf);
 
         // Do this for each connection
-        ConnectionContext<Access> ctx =
+        ConnectionContext<Storage> ctx =
                 cm.get("//localhost:27000/TestStorage");
-        assertNotNull("The ConnectionManager should return an Access"
+        assertNotNull("The ConnectionManager should return an Storage"
                       + " ConnectionContext", ctx);
-        Access remoteStorage = ctx.getConnection();
+        Storage remoteStorage = ctx.getConnection();
         remoteStorage.flush(new Record("foo", "bar", new byte[0]));
         RecordIterator recordIterator =
                 remoteStorage.getRecordsModifiedAfter(0, "bar");
@@ -138,7 +139,7 @@ public class StorageServiceTest extends NoExitTestCase {
 
     private Configuration createconfiguration() {
         Configuration conf = Configuration.newMemoryBased();
-        conf.set(DatabaseControl.PROP_LOCATION, location.toString());
+        conf.set(DatabaseStorage.PROP_LOCATION, location.toString());
         conf.set(Service.SERVICE_PORT, 27003);
         conf.set(Service.REGISTRY_PORT, 27000);
         conf.set(Service.SERVICE_ID, "TestStorage");

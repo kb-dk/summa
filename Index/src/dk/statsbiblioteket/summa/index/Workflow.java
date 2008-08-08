@@ -56,7 +56,7 @@ import java.util.concurrent.TimeUnit;
 import dk.statsbiblioteket.summa.io.AddTask;
 import dk.statsbiblioteket.summa.io.DeleteTask;
 import dk.statsbiblioteket.summa.io.UpdateTask;
-import dk.statsbiblioteket.summa.storage.io.Access;
+import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.common.lucene.index.OldIndexField;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
 import dk.statsbiblioteket.summa.common.lucene.index.SearchDescriptor;
@@ -96,7 +96,7 @@ public class Workflow {
 
     static final int qsize = 300;
 
-    private static Access _io;
+    private static Storage _io;
 
     private static LinkedList<String> idbuffer;
 
@@ -221,10 +221,10 @@ public class Workflow {
     }
 
 
-    private static void indexTarget(String target, boolean resume) throws MalformedURLException, NotBoundException, RemoteException {
+    private static void indexTarget(String target, boolean resume) throws MalformedURLException, NotBoundException, IOException {
             long lastModified = 0;
             String xslt_url = (String)p.get(target + XSLT_SUFFIX);
-            _io = (Access) Naming.lookup((String)p.get(target + IO_SERVICE));
+            _io = (Storage) Naming.lookup((String)p.get(target + IO_SERVICE));
             log.info("processing target " + target + "using xslt " + xslt_url);
             Iterator iter;
             boolean comp= false;

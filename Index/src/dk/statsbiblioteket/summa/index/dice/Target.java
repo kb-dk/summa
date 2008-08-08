@@ -22,7 +22,7 @@
  */
 package dk.statsbiblioteket.summa.index.dice;
 
-import dk.statsbiblioteket.summa.storage.io.AccessRead;
+import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
@@ -31,13 +31,14 @@ import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.util.Iterator;
 import java.util.HashMap;
+import java.io.IOException;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public class Target {
 
-    private AccessRead _io;
+    private ReadableStorage _io;
     Iterator source;
     String io_service;
     String xslt_url;
@@ -51,14 +52,14 @@ public class Target {
     /**
      * Connect to base
      */
-    public void initialize () throws RemoteException {
+    public void initialize () throws IOException {
         String base = jobHints.get("base");
         if (base == null) {
             throw new RuntimeException ("No \"base\" in jobHints");
         }
 
         try {
-            _io = (AccessRead) Naming.lookup (io_service);
+            _io = (ReadableStorage) Naming.lookup (io_service);
         } catch (Exception e) {
             throw new RemoteException ("Failed to look up io_service: " + io_service, e);
         }

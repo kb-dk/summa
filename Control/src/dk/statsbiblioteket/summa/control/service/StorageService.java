@@ -27,16 +27,17 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.storage.StorageFactory;
-import dk.statsbiblioteket.summa.storage.io.Access;
-import dk.statsbiblioteket.summa.storage.io.Control;
-import dk.statsbiblioteket.summa.storage.io.RecordAndNext;
-import dk.statsbiblioteket.summa.storage.io.RecordIterator;
+import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.StorageBase;
+import dk.statsbiblioteket.summa.storage.RecordAndNext;
+import dk.statsbiblioteket.summa.storage.RecordIterator;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.rmi.RemoteException;
 import java.util.List;
+import java.io.IOException;
 
 /**
  * Wrapper for Metadata Storage. The underlying type of storage (Lucene,
@@ -48,7 +49,7 @@ import java.util.List;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class StorageService extends ServiceBase implements Access {
+public class StorageService extends ServiceBase {
     private Log log = LogFactory.getLog(StorageService.class);
 
     // TODO: This should probably be in a module separate from Control,
@@ -57,14 +58,14 @@ public class StorageService extends ServiceBase implements Access {
     /**
      * The Storage implementation wrapped in this service.
      */
-    private Control storageControl;
+    private Storage storage;
 
     /**
      * Standard setup for Services. This does not start the Metadata Storage.
      * @param conf             the configuration to use.
      * @throws RemoteException if the setup could not be performed.
      */
-    public StorageService(Configuration conf) throws RemoteException {
+    public StorageService(Configuration conf) throws IOException {
         super(conf);
         setStatus(Status.CODE.constructed, "Created StorageService object",
                   Logging.LogLevel.DEBUG);
@@ -72,12 +73,15 @@ public class StorageService extends ServiceBase implements Access {
         this.conf = conf;
         exportRemoteInterfaces();
 
+        log.trace ("Creating storage instance");
+        storage = StorageFactory.createStorage(conf);
+
         setStatus(Status.CODE.constructed, "Remote interfaces are up",
                   Logging.LogLevel.DEBUG);
     }
 
     private boolean stopped = true;
-    private Configuration conf; // Is it okay to keep this?
+    private Configuration conf; // Is it okay to keep this? (NO -- mke)
     public void start() throws RemoteException {
         if (!stopped) {
             log.warn("start called when already running");
@@ -89,8 +93,8 @@ public class StorageService extends ServiceBase implements Access {
         log.info ("StorageService started");
         log.debug("Getting storage from StorageFactory");
         try {
-            storageControl = StorageFactory.createController(conf);
-        } catch (RemoteException t) {
+            storage = StorageFactory.createStorage(conf);
+        } catch (IOException t) {
             setStatus(Status.CODE.crashed,
                       "Crashed due to RemoteException when requesting storage",
                       Logging.LogLevel.FATAL, t);
@@ -117,11 +121,11 @@ public class StorageService extends ServiceBase implements Access {
         try {
             setStatus(Status.CODE.stopping, "Stopping storage control",
                       Logging.LogLevel.DEBUG);
-            storageControl.close();
+            storage.close();
             setStatus(Status.CODE.stopped,
                       "Storage control stopped successfully",
                       Logging.LogLevel.INFO);
-        } catch (RemoteException e) {
+        } catch (IOException e) {
             setStatus(Status.CODE.crashed,
                       "Storage control crashed while stopping",
                       Logging.LogLevel.ERROR, e);
@@ -148,44 +152,5 @@ public class StorageService extends ServiceBase implements Access {
         }
     }
 
-    /* Interface send-through for Access */
-
-    public RecordIterator getRecords(String base) throws RemoteException {
-        return storageControl.getRecords(base);
-    }
-
-    public RecordIterator getRecordsModifiedAfter(long time, String base)
-            throws RemoteException {
-        return storageControl.getRecordsModifiedAfter(time, base);
-    }
-
-    public RecordIterator getRecordsFrom(String id, String base)
-            throws RemoteException {
-        return storageControl.getRecordsFrom(id, base);
-    }
-
-    public Record getRecord(String id) throws RemoteException {
-        return storageControl.getRecord(id);
-    }
-
-    public boolean recordExists(String id) throws RemoteException {
-        return storageControl.recordExists(id);
-    }
-
-    public boolean recordActive(String id) throws RemoteException {
-        return storageControl.recordActive(id);
-    }
-
-    public RecordAndNext next(Long iteratorKey) throws RemoteException {
-        return storageControl.next(iteratorKey);
-    }
-
-    public List<RecordAndNext> next(Long iteratorKey, int maxRecords)
-            throws RemoteException {
-        return storageControl.next(iteratorKey, maxRecords);
-    }
-
-    public void flush(Record record) throws RemoteException {
-        storageControl.flush(record);
-    }
+    
 }

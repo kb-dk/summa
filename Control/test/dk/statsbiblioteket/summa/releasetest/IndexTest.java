@@ -41,7 +41,9 @@ import dk.statsbiblioteket.summa.common.unittest.LuceneTestHelper;
 import dk.statsbiblioteket.summa.control.service.StorageService;
 import dk.statsbiblioteket.summa.control.service.FilterService;
 import dk.statsbiblioteket.summa.control.api.Status;
-import dk.statsbiblioteket.summa.storage.io.RecordIterator;
+import dk.statsbiblioteket.summa.storage.RecordIterator;
+import dk.statsbiblioteket.summa.storage.StorageFactory;
+import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -72,7 +74,7 @@ public class IndexTest extends NoExitTestCase {
      * @throws Exception if the workflow failed.
      */
     public void testWorkflow() throws Exception {
-        StorageService storage = fillStorage();
+        Storage storage = fillStorage();
 
         File INDEX_ROOT = new File(System.getProperty("java.io.tmpdir"),
                                    "testindex");
@@ -138,7 +140,7 @@ public class IndexTest extends NoExitTestCase {
                 new File(indexLocation, LuceneIndexUtils.LUCENE_FOLDER),
                 EXPECTED_IDS);
 
-        storage.stop();
+        storage.close();
     }
 
     /**
@@ -146,11 +148,10 @@ public class IndexTest extends NoExitTestCase {
      * @return the StorageService containing the filled Storage.
      * @throws Exception if the fill failed.
      */
-    public StorageService fillStorage() throws Exception {
+    public Storage fillStorage() throws Exception {
         // Storage
         Configuration storageConf = IngestTest.getStorageConfiguration();
-        StorageService storage = new StorageService(storageConf);
-        storage.start();
+        Storage storage = StorageFactory.createStorage(storageConf);
 
         // Ingest
         URL dataLocation =

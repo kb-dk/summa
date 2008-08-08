@@ -575,8 +575,8 @@ public class Configuration implements Serializable,
      *         if {@code key} is not found
      */
     public <T> Class<? extends T> getClass (String key,
-                                  Class<T> classType,
-                                  Class<? extends T> defaultValue) {
+                                            Class<T> classType,
+                                            Class<? extends T> defaultValue) {
         try {
             return getClass(key, classType);
         } catch (NullPointerException e) {

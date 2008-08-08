@@ -22,12 +22,11 @@
  */
 package dk.statsbiblioteket.summa.ingest;
 
-import dk.statsbiblioteket.summa.storage.io.Access;
+import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.ingest.io.IODeleteRecord;
 import dk.statsbiblioteket.summa.ingest.io.IOUpdateRecord;
 import dk.statsbiblioteket.summa.ingest.io.IOCreateRecord;
 import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.common.Status;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.net.MalformedURLException;
@@ -60,10 +59,10 @@ public class Ingest {
     private static final Log log = LogFactory.getLog(Ingest.class);
 
     /**
-     * The {@link Access}-enabled metadata storage server that this Ingest is
+     * The {@link dk.statsbiblioteket.summa.storage.api.Storage}-enabled metadata storage server that this Ingest is
      * connected to.
      */
-    private static Access _io;
+    private static Storage _io;
 
     /**
      * A map between locations and instances of Ingest. This is used by
@@ -93,7 +92,7 @@ public class Ingest {
     private  ExecutorService servicePool;
 
     /**
-     * Connects to the given {@link Access}-enabled metadata storage server
+     * Connects to the given {@link dk.statsbiblioteket.summa.storage.api.Storage}-enabled metadata storage server
      * by RMI and creates a servicePool, ready for processing records.
      * @param RMIServer the name of a metadata storage server.
      * @throws MalformedURLException if the URL was not well-formed.
@@ -114,7 +113,7 @@ public class Ingest {
                 System.setSecurityManager(new RMISecurityManager());
            // }
             log.info("getting remote io: " + RMIServer);
-        _io = (Access) Naming.lookup(RMIServer);
+        _io = (Storage) Naming.lookup(RMIServer);
 
     }
 
@@ -244,10 +243,10 @@ public class Ingest {
     }
 
     /**
-     * @return The {@link Access}-enabled metadata storage server that this
+     * @return The {@link dk.statsbiblioteket.summa.storage.api.Storage}-enabled metadata storage server that this
      *         Ingest is connected to.
      */
-    Access getIO(){
+    Storage getIO(){
         return _io;
     }
 

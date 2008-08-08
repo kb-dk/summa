@@ -22,7 +22,7 @@
  */
 package dk.statsbiblioteket.summa.tools.monitor.RemoteMonitor;
 
-import dk.statsbiblioteket.summa.storage.io.Access;
+import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.index.IndexService;
 import dk.statsbiblioteket.summa.tools.monitor.Monitor;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
@@ -73,7 +73,7 @@ public class IteratableSourceIndexMonitor extends Monitor {
     private static String remoteIndexServiceName;
     private static String remoteIndexServicePort;
 
-    private Access store;
+    private Storage store;
     private IndexService indexer;
 
     private String persistenDirectory;
@@ -121,7 +121,7 @@ public class IteratableSourceIndexMonitor extends Monitor {
         if (System.getSecurityManager() == null)
             System.setSecurityManager(new RMISecurityManager());
         try {
-            store = (Access) Naming.lookup("//" + remoteStoreServer + ":" + remoteStoreServicePort + "/" + remoteStoreServiceName);
+            store = (Storage) Naming.lookup("//" + remoteStoreServer + ":" + remoteStoreServicePort + "/" + remoteStoreServiceName);
             log.info("Got ref to remoteStore: //" + remoteStoreServer + ":" + remoteStoreServicePort + "/" + remoteStoreServiceName );
             indexer = (IndexService) Naming.lookup("//" + remoteIndexServer + ":" + remoteIndexServicePort + "/" + remoteIndexServiceName);
             log.info("Got ref to Indexing engine: //" + remoteIndexServer + ":" + remoteIndexServicePort + "/" + remoteIndexServiceName);
@@ -175,7 +175,7 @@ public class IteratableSourceIndexMonitor extends Monitor {
                     log.debug("Getting records modified after: "  + timestamp);
                     iter = store.getRecordsModifiedAfter(timestamp, TARGET);
                 }
-            } catch (RemoteException e) {
+            } catch (IOException e) {
                 log.error("Error in getting remote iterator", e);
             }
 

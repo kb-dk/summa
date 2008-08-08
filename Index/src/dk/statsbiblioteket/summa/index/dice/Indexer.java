@@ -175,7 +175,7 @@ public class Indexer extends EmployerBase {
                 currentTarget.initialize();
                 log.info ("Target " + currentTarget + " initialized");
                 targetLog.log ("Ready: " + currentTarget);
-            } catch (RemoteException e) {
+            } catch (IOException e) {
                 log.error ("Failed to initialize target: " + currentTarget, e);
             }
             log.info ("Switching to target " + currentTarget);

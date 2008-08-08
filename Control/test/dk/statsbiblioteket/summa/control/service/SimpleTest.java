@@ -23,6 +23,7 @@
 package dk.statsbiblioteket.summa.control.service;
 
 import java.rmi.RemoteException;
+import java.io.IOException;
 
 import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -62,7 +63,7 @@ public class SimpleTest extends ServiceBase {
     private Status status;
     private ActualService service;
 
-    public SimpleTest (Configuration conf) throws RemoteException {
+    public SimpleTest (Configuration conf) throws IOException {
         super(conf);
 
         setStatus(Status.CODE.constructed, "Created SimpleTest object",

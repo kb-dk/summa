@@ -22,9 +22,9 @@
  */
 package dk.statsbiblioteket.summa.ingest.io;
 
-import java.rmi.RemoteException;
+import java.io.IOException;
 
-import dk.statsbiblioteket.summa.storage.io.Access;
+import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
@@ -35,7 +35,7 @@ import org.apache.commons.logging.LogFactory;
  * Provides functionality for performing io tasks.<br>
  *
  * The functionality includes standard error handling for
- * {@link dk.statsbiblioteket.summa.storage.io.Access} resource exhaustion.
+ * {@link dk.statsbiblioteket.summa.storage.api.Storage} resource exhaustion.
  * An IOTask will wait until the exhaustion is handled by the subsystem.
  * @deprecated
  */
@@ -58,12 +58,12 @@ public class IOTask implements Runnable {
      */
     private int sleepDelta = 100;
 
-    Access _io;
+    Storage _io;
     Record r;
 
 
 
-    public IOTask (Access io, Record r){
+    public IOTask (Storage io, Record r){
          this._io = io;
          this.r = r;
     }
@@ -77,7 +77,7 @@ public class IOTask implements Runnable {
             try {
                 _io.flush(r);
                 return;
-            } catch (RemoteException e) {
+            } catch (IOException e) {
                 if (e.getMessage().contains("java.net.BindException: "
                                              + "Address already in use")) { // Wait a little while before retrying
                     try {

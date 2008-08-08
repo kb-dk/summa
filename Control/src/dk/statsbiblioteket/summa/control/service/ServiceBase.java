@@ -23,6 +23,7 @@
 package dk.statsbiblioteket.summa.control.service;
 
 import dk.statsbiblioteket.summa.common.Logging;
+import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.control.api.BadConfigurationException;
 import dk.statsbiblioteket.summa.control.api.Service;
@@ -41,6 +42,7 @@ import java.rmi.NotBoundException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.io.IOException;
 
 /**
  * <p>Helper class to ease implementation of Summa ClientManager {@link Service}s.
@@ -138,9 +140,19 @@ public abstract class ServiceBase extends UnicastRemoteObject
      * @throws RemoteException if there is an error exporting the
                                {@link Service} interface
      */
-    protected void exportRemoteInterfaces() throws RemoteException {
+    protected void exportRemoteInterfaces() throws IOException {
         log.trace("exportRemoteInterfaces called");
-        Registry reg = getRegistry();
+        
+        RemoteHelper.exportRemoteInterface(this, registryPort, id);
+
+        try {
+            RemoteHelper.exportMBean(this);
+        } catch (Exception e) {
+            log.warn ("Failed to register MBean, going on without it. "
+                      + "Error was", e);
+        }
+
+        /*Registry reg = getRegistry();
 
         try {
             reg.rebind(id, this);
@@ -171,7 +183,7 @@ public abstract class ServiceBase extends UnicastRemoteObject
         } catch (Exception e) {
             log.error ("Failed to expose JMX interface. Going on without it.",
                        e);
-        }
+        }*/
     }
 
     protected void unexportRemoteInterfaces() throws RemoteException {
