@@ -73,9 +73,6 @@ public class StorageService extends ServiceBase {
         this.conf = conf;
         exportRemoteInterfaces();
 
-        log.trace ("Creating storage instance");
-        storage = StorageFactory.createStorage(conf);
-
         setStatus(Status.CODE.constructed, "Remote interfaces are up",
                   Logging.LogLevel.DEBUG);
     }
@@ -91,7 +88,7 @@ public class StorageService extends ServiceBase {
                   Logging.LogLevel.INFO);
         stopped = false;
         log.info ("StorageService started");
-        log.debug("Getting storage from StorageFactory");
+        log.debug("Creating Storage instance");
         try {
             storage = StorageFactory.createStorage(conf);
         } catch (IOException t) {
@@ -123,11 +120,11 @@ public class StorageService extends ServiceBase {
                       Logging.LogLevel.DEBUG);
             storage.close();
             setStatus(Status.CODE.stopped,
-                      "Storage control stopped successfully",
+                      "Storage control closed successfully",
                       Logging.LogLevel.INFO);
         } catch (IOException e) {
             setStatus(Status.CODE.crashed,
-                      "Storage control crashed while stopping",
+                      "Storage control crashed while closing",
                       Logging.LogLevel.ERROR, e);
             throw new RemoteException("RemoteException when closing storage "
                                       + "control", e);
@@ -138,7 +135,7 @@ public class StorageService extends ServiceBase {
         try {
             unexportRemoteInterfaces();
             log.info("Clean-up finished. Calling System.exit");
-        } catch (RemoteException e) {
+        } catch (IOException e) {
             log.warn("Failed to unexpose remote interfaces upon stop", e);
         }
 

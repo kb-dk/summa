@@ -113,7 +113,12 @@ public class FilterService extends ServiceBase implements FilterChainHandler {
         log.trace("Recieved request to stop FilterControl service");
         if (!filterControl.isRunning()) {
             log.warn("Attempting to stop FilterControl when not started");
-            unexportRemoteInterfaces();
+            try {
+                unexportRemoteInterfaces();
+            } catch (IOException e) {
+                throw new RemoteException("Failed to unexport remote interface",
+                                          e);
+            }
             return;
         }
         try {
@@ -134,12 +139,6 @@ public class FilterService extends ServiceBase implements FilterChainHandler {
                   "Filtercontrol service down, all lights green, performing "
                   + "clean-up",
                   Logging.LogLevel.INFO);
-        try {
-            unexportRemoteInterfaces();
-            log.info("Clean-up finished. Calling System.exit");
-        } catch (RemoteException e) {
-            log.warn("Failed to unexpose remote interfaces upon stop", e);
-        }
 
         // Do we really need to do this? It cleans up any stray threads, yes,
         // but isn't that the responsibility of the StorageServiceThread?

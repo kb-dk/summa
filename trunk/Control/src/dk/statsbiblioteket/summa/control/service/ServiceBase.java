@@ -136,7 +136,10 @@ public abstract class ServiceBase extends UnicastRemoteObject
     }
 
     /**
-     * Expose the {@link Service} interface as a remote service over rmi.
+     * Expose the {@link Service} interface as a remote service over rmi,
+     * as well as trying to export it as an MBean. If the MBean registration
+     * fails it will be ignored.
+     *
      * @throws RemoteException if there is an error exporting the
                                {@link Service} interface
      */
@@ -186,9 +189,24 @@ public abstract class ServiceBase extends UnicastRemoteObject
         }*/
     }
 
-    protected void unexportRemoteInterfaces() throws RemoteException {
+    /**
+     * Retract remote {@code Service} interface as well as MBean.
+     * If the MBean unregistration fails a warning will be logged, but nothing
+     * more.
+     *
+     * @throws IOException on communication errors with the RPC mechanism (rmi)
+     */
+    protected void unexportRemoteInterfaces() throws IOException {
         log.trace("unbindRemoteInterfaces called");
-        Registry reg = getRegistry();
+        RemoteHelper.unExportRemoteInterface(id, registryPort);
+
+        try {
+            RemoteHelper.exportMBean(this);
+        } catch (Exception e) {
+            log.warn ("Failed to unregister MBean. Going on anyway", e);
+        }
+
+        /*Registry reg = getRegistry();
         try {
             reg.unbind(id);
         } catch (NotBoundException e) {
@@ -205,7 +223,7 @@ public abstract class ServiceBase extends UnicastRemoteObject
             mbserver.unregisterMBean(name);
         } catch (Exception e) {
             log.warn("Failed to unexpose JMX interface. Continuing.", e);
-        }
+        }*/
     }
 
     private Registry getRegistry() throws RemoteException {

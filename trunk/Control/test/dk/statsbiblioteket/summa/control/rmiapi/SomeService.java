@@ -42,7 +42,11 @@ public class SomeService extends ServiceBase implements SomeInterface {
     public void stop() throws RemoteException {
         log.info("Stopping");
         someClass = null;
-        unexportRemoteInterfaces();
+        try {
+            unexportRemoteInterfaces();
+        } catch (IOException e) {
+            throw new RemoteException("Error unexporting remote interfaces", e);
+        }
     }
 
     public String getId() throws RemoteException {
