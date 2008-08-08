@@ -21,6 +21,10 @@ public class ServiceShell {
                 new SummaRMIConnectionFactory<Service>(null));
 
         shell.installCommand(new PingCommand(connManager, rmiAddress));
+        shell.installCommand(new IdCommand(connManager, rmiAddress));
+        shell.installCommand(new StartCommand(connManager, rmiAddress));
+        shell.installCommand(new StopCommand(connManager, rmiAddress));
+        shell.installCommand(new StatusCommand(connManager, rmiAddress));
 
     }
 
