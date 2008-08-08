@@ -2,22 +2,22 @@ package dk.statsbiblioteket.summa.control.service.shell;
 
 import dk.statsbiblioteket.summa.common.shell.Command;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
-import dk.statsbiblioteket.summa.control.api.ControlConnection;
 import dk.statsbiblioteket.summa.control.api.Service;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
 
 /**
- * Try to establish a connection to a service.
+ * Created by IntelliJ IDEA. User: mikkel Date: Aug 8, 2008 Time: 8:49:58 AM To
+ * change this template use File | Settings | File Templates.
  */
-public class PingCommand extends Command {
+public class IdCommand extends Command {
 
     private ConnectionManager<Service> cm;
     private String address;
 
-    public PingCommand (ConnectionManager<Service> cm,
+    public IdCommand(ConnectionManager<Service> cm,
                         String serviceAddress) {
-        super("ping", "Test the connection to the service");
+        super("id", "Print the instance id of the service");
         this.cm = cm;
         this.address = serviceAddress;
     }
@@ -25,8 +25,7 @@ public class PingCommand extends Command {
     public void invoke(ShellContext ctx) throws Exception {
         ConnectionContext<Service> connCtx = null;
 
-        ctx.prompt ("Pinging service at '" + address + "'...");
-
+        /* Get a connection */
         try {
             connCtx = cm.get (address);
         } catch (Exception e){
@@ -34,16 +33,20 @@ public class PingCommand extends Command {
                        + e.getMessage());
             throw new RuntimeException("Failed to connect to '" + address + "'",
                                        e);
+        }
+
+        /* Get and print the service id  */
+        try {
+            Service service = connCtx.getConnection();
+            String id = service.getId();
+            ctx.info(id);
         } finally {
             if (connCtx != null) {
                 cm.release (connCtx);
-                ctx.info("OK");
             } else {
                 ctx.error ("Failed to connect, unknown error");
             }
         }
-
-
     }
 
 }
