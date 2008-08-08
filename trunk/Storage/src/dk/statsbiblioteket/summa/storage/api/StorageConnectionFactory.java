@@ -5,6 +5,7 @@ import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.RMIConnectionFactory;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.rpc.SummaRMIConnectionFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -53,7 +54,7 @@ public class StorageConnectionFactory extends ConnectionFactory<Storage>
         Class<? extends ConnectionFactory> backendClass =
                                 conf.getClass(CONN_FACT_CLASS,
                                               ConnectionFactory.class,
-                                              RMIConnectionFactory.class);
+                                              SummaRMIConnectionFactory.class);
 
         log.debug ("Using backend connection factory '" + backendClass + "'");
 

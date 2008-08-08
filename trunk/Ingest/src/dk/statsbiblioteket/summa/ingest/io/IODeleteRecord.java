@@ -22,11 +22,9 @@
  */
 package dk.statsbiblioteket.summa.ingest.io;
 
-import dk.statsbiblioteket.summa.storage.io.Access;
+import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.util.qa.QAInfo;
-
-import java.rmi.RemoteException;
 
 /**
  * @deprecated
@@ -35,7 +33,7 @@ import java.rmi.RemoteException;
         state = QAInfo.State.UNDEFINED,
         author = "hal, te")
 public class IODeleteRecord extends IOTask {
-    public IODeleteRecord(Access io, String id) {
+    public IODeleteRecord(Storage io, String id) {
         super(io, Record.createDeletedRecord(id, "unknown"));
     }
 }

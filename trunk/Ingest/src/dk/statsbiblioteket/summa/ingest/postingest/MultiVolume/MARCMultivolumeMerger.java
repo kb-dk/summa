@@ -22,7 +22,7 @@
  */
 package dk.statsbiblioteket.summa.ingest.postingest.MultiVolume;
 
-import dk.statsbiblioteket.summa.storage.io.Access;
+import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -46,7 +46,7 @@ public class MARCMultivolumeMerger {
 
 
     MultiVolumeRecord.Record[] _records;
-    private Access io;
+    private Storage io;
     private Transformer trans;
     private String base;
     private IOMultiVolume multivol;
@@ -61,7 +61,7 @@ public class MARCMultivolumeMerger {
      * @param xslt              how to normalize a record.
      * @param base              which target base.
      */
-    public MARCMultivolumeMerger(Access io, InputStream xslt, String base) {
+    public MARCMultivolumeMerger(Storage io, InputStream xslt, String base) {
         multivol = IOMultiVolumeSQL.getInstance();
         _records = multivol.getAllMainRecords(base);
         this.io = io;
@@ -75,7 +75,7 @@ public class MARCMultivolumeMerger {
      * Merge records in the Metadata storage.<br>
      * @param io            where to find original records.
      */
-    public void MergeRecords(Access io) {
+    public void MergeRecords(Storage io) {
         for (MultiVolumeRecord.Record r : _records) {
             if (MultiVolumeRecord.RecordType.MAIN.equals(r.type)) {
                 if (r.content != null) {
@@ -89,12 +89,9 @@ public class MARCMultivolumeMerger {
                                                    orgConent.getBytes("utf-8"),
                                                    System.currentTimeMillis());
                         io.flush(record);
-                    } catch (RemoteException e) {
+                    } catch (IOException e) {
                         log.error("update failed on" + r.id);
-                    } catch (UnsupportedEncodingException e) {
-                        log.fatal("fix this bug in encoding");
-                        System.exit(-1);
-                    }
+                    } 
                     log.info("done update record:" + r.id);
                     log.trace(orgConent);
                 }

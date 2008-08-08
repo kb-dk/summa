@@ -30,6 +30,7 @@ import javax.management.NotCompliantMBeanException;
 import javax.management.MalformedObjectNameException;
 import java.rmi.RemoteException;
 import java.lang.management.ManagementFactory;
+import java.io.IOException;
 
 import dk.statsbiblioteket.summa.search.SummaSearcher;
 import dk.statsbiblioteket.summa.search.LuceneSearcher;
@@ -65,7 +66,7 @@ public class SearchService extends ServiceBase implements SummaSearcher,
     private Configuration conf;
     private SummaSearcher searcher;
 
-    public SearchService(Configuration conf) throws RemoteException {
+    public SearchService(Configuration conf) throws IOException {
         super(conf);
         this.conf = conf;
         exportRemoteInterfaces();

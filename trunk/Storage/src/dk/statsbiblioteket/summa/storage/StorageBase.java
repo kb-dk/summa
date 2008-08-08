@@ -33,6 +33,7 @@ import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.WritableStorage;
+import dk.statsbiblioteket.summa.storage.rmi.RemoteStorage;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -45,7 +46,8 @@ import org.apache.commons.logging.LogFactory;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "hal, te")
-public abstract class StorageBase extends UnicastRemoteObject implements Storage {
+public abstract class StorageBase extends UnicastRemoteObject
+                                  implements RemoteStorage {
     private static Log log = LogFactory.getLog(StorageBase.class);
 
     public StorageBase(Configuration conf) throws IOException {
@@ -82,7 +84,7 @@ public abstract class StorageBase extends UnicastRemoteObject implements Storage
      * enough.
      */
     public List<RecordAndNext> next(Long iteratorKey, int maxRecords) throws
-                                                               IOException {
+                                                               RemoteException {
         List<RecordAndNext> records = new ArrayList<RecordAndNext>(maxRecords);
         int added = 0;
         while (added++ < maxRecords) {
@@ -125,12 +127,12 @@ public abstract class StorageBase extends UnicastRemoteObject implements Storage
      * Is a Record is active, it should be indexed. This method returns
      * !DELETED & INDEXABLE.
      */
-    public boolean recordActive(String id) throws IOException {
+    public boolean recordActive(String id) throws RemoteException {
         Record record = getRecord(id);
         return record != null && !record.isDeleted() && record.isIndexable();
     }
 
-    public boolean recordExists(String name) throws IOException {
+    public boolean recordExists(String name) throws RemoteException {
         return getRecord(name) != null;
     }
 

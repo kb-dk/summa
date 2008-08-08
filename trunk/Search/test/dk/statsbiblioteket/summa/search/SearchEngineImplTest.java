@@ -89,7 +89,7 @@ public class SearchEngineImplTest extends TestCase {
     }
 
 
-    public void testSimpleSearch() throws Exception {
+    /*public void testSimpleSearch() throws Exception {
         String query= "Andersen";
         SearchEngine se = SearchEngineImpl.getInstance();
         String result = se.simpleSearch(query, 10,0);
@@ -125,7 +125,7 @@ public class SearchEngineImplTest extends TestCase {
         System.out.println("søgning i: "  + ((SearchEngineImplMBean)se).getLastResponseTime() +  " \n" + result + "\n" + firstID);
         System.out.println("\n\n\n\n");
         System.out.println(se.getSimilarDocuments(firstID, 0, 10));
-    }
+    }                                                */
 
     public void testShortRecord() {
         String recordID ="OAI_oai:digital.library.wisc.edu:WI.BelgAmrCol.0723b.bib";

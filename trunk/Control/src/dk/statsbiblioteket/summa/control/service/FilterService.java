@@ -23,6 +23,7 @@
 package dk.statsbiblioteket.summa.control.service;
 
 import java.rmi.RemoteException;
+import java.io.IOException;
 
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
 import dk.statsbiblioteket.summa.common.filter.FilterChainHandler;
@@ -57,7 +58,7 @@ public class FilterService extends ServiceBase implements FilterChainHandler {
      * @param conf             the configuration to use.
      * @throws RemoteException if the setup could not be performed.
      */
-    public FilterService(Configuration conf) throws RemoteException {
+    public FilterService(Configuration conf) throws IOException {
         super(conf);
         setStatus(Status.CODE.constructed, "Created FilterService object",
                   Logging.LogLevel.DEBUG);

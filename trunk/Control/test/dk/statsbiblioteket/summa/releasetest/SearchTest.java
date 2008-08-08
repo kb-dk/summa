@@ -44,7 +44,9 @@ import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.index.IndexException;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
-import dk.statsbiblioteket.summa.storage.io.RecordIterator;
+import dk.statsbiblioteket.summa.storage.RecordIterator;
+import dk.statsbiblioteket.summa.storage.StorageFactory;
+import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.control.service.StorageService;
 import dk.statsbiblioteket.summa.control.service.FilterService;
 import dk.statsbiblioteket.summa.control.service.SearchService;
@@ -108,10 +110,9 @@ public class SearchTest extends NoExitTestCase {
         }
     }
 
-    public StorageService startStorage() throws Exception {
+    public Storage startStorage() throws Exception {
         Configuration storageConf = IngestTest.getStorageConfiguration();
-        StorageService storage = new StorageService(storageConf);
-        storage.start();
+        Storage storage = StorageFactory.createStorage(storageConf);
         return storage;
     }
         
@@ -133,7 +134,7 @@ public class SearchTest extends NoExitTestCase {
     /* Connects to Storage, iterates all records and verifies that the given
        id exists.
      */
-    private void verifyStorage(StorageService storage, String id) throws
+    private void verifyStorage(Storage storage, String id) throws
                                                                      Exception {
         RecordIterator recordIterator =
                 storage.getRecordsModifiedAfter(0, BASE);
@@ -148,12 +149,12 @@ public class SearchTest extends NoExitTestCase {
     }
 
     public void testIngest() throws Exception {
-        StorageService storage = startStorage();
+        Storage storage = startStorage();
         ingest(new File(Resolver.getURL("data/search/input/part1").getFile()));
         verifyStorage(storage, "fagref:hj@example.com");
         ingest(new File(Resolver.getURL("data/search/input/part2").getFile()));
         verifyStorage(storage, "fagref:jh@example.com");
-        storage.stop();
+        storage.close();
     }
 
     File INDEX_ROOT = new File(System.getProperty("java.io.tmpdir"),
@@ -304,13 +305,13 @@ public class SearchTest extends NoExitTestCase {
 
     // Set up searcher, check for null
      // Set up storage
-     // Run index w/ update on storage
+     // Exec index w/ update on storage
      // Perform small ingest
-     // Run index w/ update on storage, verify result in searcher
+     // Exec index w/ update on storage, verify result in searcher
      // Perform ingest 2
-     // Run index w/ update on storage, verify result in searcher
+     // Exec index w/ update on storage, verify result in searcher
      // Delete record in storage
-     // Run index w/ update on storage, verify result in searcher
+     // Exec index w/ update on storage, verify result in searcher
 
     // TODO: The test fails sometimes, probably a race-condition. Fix it! 
     public void testFull() throws Exception {
@@ -322,7 +323,7 @@ public class SearchTest extends NoExitTestCase {
         } catch (IndexException e) {
             // Expected
         }
-        StorageService storage = startStorage();
+        Storage storage = startStorage();
         updateIndex();
         Thread.sleep(2000); // Wait for searcher to discover new content
         assertNotNull("Searching should provide a result (we don't care what)",
@@ -358,7 +359,7 @@ public class SearchTest extends NoExitTestCase {
         } catch (IndexException e) {
             fail("Failed search 2 for Gurli: " + e.getMessage());
         }
-        log.debug("Calling stop on Storage");
-        storage.stop();
+        log.debug("Calling close on Storage");
+        storage.close();
     }
 }

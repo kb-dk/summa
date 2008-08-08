@@ -27,7 +27,6 @@ import java.io.IOException;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
@@ -38,11 +37,11 @@ import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.control.service.StorageService;
 import dk.statsbiblioteket.summa.control.service.FilterService;
 import dk.statsbiblioteket.summa.storage.StorageFactory;
-import dk.statsbiblioteket.summa.storage.database.DatabaseControl;
+import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.api.StorageConnectionFactory;
+import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.filter.RecordWriter;
-import dk.statsbiblioteket.summa.storage.io.Access;
-import dk.statsbiblioteket.summa.storage.io.Control;
-import dk.statsbiblioteket.summa.storage.io.RecordIterator;
+import dk.statsbiblioteket.summa.storage.RecordIterator;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
@@ -209,10 +208,10 @@ public class IngestTest extends NoExitTestCase {
         return readerConf;
     }
     public static final String STORAGE_ADDRESS =
-            "//localhost:27000/TestStorage";
+            "//localhost:27000/summa-storage";
     public static Configuration getStorageConfiguration() {
         Configuration conf = Configuration.newMemoryBased();
-        conf.set(DatabaseControl.PROP_LOCATION,
+        conf.set(DatabaseStorage.PROP_LOCATION,
                  getStorageLocation().toString());
         conf.set(Service.SERVICE_PORT, 27003);
         conf.set(Service.REGISTRY_PORT, 27000);
@@ -229,16 +228,16 @@ public class IngestTest extends NoExitTestCase {
     public void testStorage() throws Exception {
         Configuration storageConf = getStorageConfiguration();
         assertTrue("Storage conf should have location", storageConf.valueExists(
-                DatabaseControl.PROP_LOCATION));
-        Control control = StorageFactory.createController(storageConf);
+                DatabaseStorage.PROP_LOCATION));
+        Storage storage = StorageFactory.createStorage(storageConf);
 
-        RecordIterator iterator = control.getRecordsModifiedAfter(0, TESTBASE);
+        RecordIterator iterator = storage.getRecordsModifiedAfter(0, TESTBASE);
         assertFalse("The Storage should be empty", iterator.hasNext());
 
         Record record = new Record("foo", TESTBASE, new byte[0]);
-        control.flush(record);
+        storage.flush(record);
 
-        iterator = control.getRecordsModifiedAfter(0, TESTBASE);
+        iterator = storage.getRecordsModifiedAfter(0, TESTBASE);
         assertTrue("The Storage should contain something", iterator.hasNext());
         assertEquals("The first record should have id as expected",
                      "foo", iterator.next().getId());
@@ -256,18 +255,8 @@ public class IngestTest extends NoExitTestCase {
         Configuration writerConf = getWriterConfiguration();
         Configuration storageConf = getStorageConfiguration();
 
-        // Start the Storage service remotely
-        new StorageService(storageConf);
-        ConnectionFactory<Service> serviceCF =
-                new RMIConnectionFactory<Service>();
-        ConnectionManager<Service> serviceCM =
-                new ConnectionManager<Service>(serviceCF);
-        ConnectionContext<Service> serviceContext =
-                serviceCM.get(STORAGE_ADDRESS);
-        assertNotNull("The ConnectionManager should return a Storage Service"
-                      + " ConnectionContext", serviceContext);
-        Service serviceRemote = serviceContext.getConnection();
-        serviceRemote.start();
+        // Create a storage instance
+        Storage storage = StorageFactory.createStorage(storageConf);
 
         // Set up filter chain
         FileReader reader = new FileReader(readerConf);
@@ -290,14 +279,14 @@ public class IngestTest extends NoExitTestCase {
         writer.close(true);
 
         // Connect to the Storage remotely
-        ConnectionFactory<Access> cf = new RMIConnectionFactory<Access>();
-        ConnectionManager<Access> cm = new ConnectionManager<Access>(cf);
+        ConnectionFactory<Storage> cf = new StorageConnectionFactory(storageConf);
+        ConnectionManager<Storage> cm = new ConnectionManager<Storage>(cf);
 
         // Do this for each connection
-        ConnectionContext<Access> ctx = cm.get(STORAGE_ADDRESS);
-        assertNotNull("The ConnectionManager should return an Access"
+        ConnectionContext<Storage> ctx = cm.get(STORAGE_ADDRESS);
+        assertNotNull("The ConnectionManager should return an Storage"
                       + " ConnectionContext", ctx);
-        Access remoteStorage = ctx.getConnection();
+        Storage remoteStorage = ctx.getConnection();
 
         RecordIterator recordIterator =
                 remoteStorage.getRecordsModifiedAfter(0, TESTBASE);
@@ -314,10 +303,7 @@ public class IngestTest extends NoExitTestCase {
 
         log.debug("Releasing remoteStorage connection context");
         cm.release(ctx);
-        log.debug("Stopping remote service");
-        serviceRemote.stop();
-        log.debug("Releasing service connection context");
-        serviceCM.release(serviceContext);
+
         log.debug("Finished testRemote unit test");
     }
 
@@ -331,8 +317,7 @@ public class IngestTest extends NoExitTestCase {
 
         // Storage
         Configuration storageConf = getStorageConfiguration();
-        StorageService storage = new StorageService(storageConf);
-        storage.start();
+        Storage storage = StorageFactory.createStorage(storageConf);
 
         // FIXME: Use classloader to locate the test root
         File filterConfFile = new File("Control/test/data/5records/"
@@ -368,5 +353,7 @@ public class IngestTest extends NoExitTestCase {
         }
         assertFalse("After " + NUM_RECORDS + " Records, iterator should finish",
                     recordIterator.hasNext());
+
+        storage.close();
     }
 }

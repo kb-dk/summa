@@ -8,6 +8,7 @@ import dk.statsbiblioteket.summa.control.service.ServiceBase;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 
 import java.rmi.RemoteException;
+import java.io.IOException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -20,7 +21,7 @@ public class SomeService extends ServiceBase implements SomeInterface {
 
     private SomeClass someClass = new SomeClass();
 
-    public SomeService(Configuration conf) throws RemoteException {
+    public SomeService(Configuration conf) throws IOException {
         super(conf);
         exportRemoteInterfaces();
     }

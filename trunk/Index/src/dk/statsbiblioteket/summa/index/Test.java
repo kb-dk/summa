@@ -22,8 +22,8 @@
  */
 package dk.statsbiblioteket.summa.index;
 
-import dk.statsbiblioteket.summa.storage.io.Access;
-import dk.statsbiblioteket.summa.storage.io.RecordIterator;
+import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.RecordIterator;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -179,9 +179,9 @@ public class Test {
     public static void main(String args[]) throws IndexServiceException, IOException, ParseException, NotBoundException, TransformerException {
 
 
- //       Access io = (Access) Naming.lookup("//localhost:8500/lucene_storage");
+ //       Storage io = (Storage) Naming.lookup("//localhost:8500/lucene_storage");
 
-        Access io1 = (Access) Naming.lookup("//localhost:8500/lucene_storage_new");
+        Storage io1 = (Storage) Naming.lookup("//localhost:8500/lucene_storage_new");
 
  //       FileWriter w = new FileWriter("/home/hal/netmusik_debug_old_storage.txt");
         FileWriter w2 = new FileWriter("/home/hal/netmusik_debug_new_storage.txt");

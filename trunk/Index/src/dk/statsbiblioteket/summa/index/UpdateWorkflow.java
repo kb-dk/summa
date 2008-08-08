@@ -51,7 +51,7 @@ import java.rmi.RemoteException;
 import java.rmi.Naming;
 import java.lang.management.ManagementFactory;
 
-import dk.statsbiblioteket.summa.storage.io.Access;
+import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.io.AddTask;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
 import dk.statsbiblioteket.summa.common.lucene.index.OldIndexField;
@@ -85,7 +85,7 @@ public class UpdateWorkflow {
 
     static final int qsize = 300;
 
-    private static Access _io;
+    private static Storage _io;
 
     private static LinkedList<String> idbuffer;
 
@@ -319,10 +319,10 @@ public class UpdateWorkflow {
 
     }
 
-    private static void updateTaget(String s) throws MalformedURLException, NotBoundException, RemoteException {
+    private static void updateTaget(String s) throws MalformedURLException, NotBoundException, IOException {
            long lastModified = 0;
             String xslt_url = (String)p.get(s + XSLT_SUFFIX);
-            _io = (Access) Naming.lookup((String)p.get(s + IO_SERVICE));
+            _io = (Storage) Naming.lookup((String)p.get(s + IO_SERVICE));
             log.info("processing target " + s + "using xslt " + xslt_url);
             Iterator iter;
             String lon = (String)p.get(s+TIME_SUFFIX);

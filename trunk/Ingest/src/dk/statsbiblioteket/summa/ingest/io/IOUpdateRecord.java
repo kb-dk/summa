@@ -22,7 +22,7 @@
  */
 package dk.statsbiblioteket.summa.ingest.io;
 
-import dk.statsbiblioteket.summa.storage.io.Access;
+import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
@@ -34,7 +34,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.UNDEFINED,
         author = "hal, te")
 public class IOUpdateRecord extends IOTask {
-    public IOUpdateRecord(Access io, String id, byte[] content,  String base) {
+    public IOUpdateRecord(Storage io, String id, byte[] content,  String base) {
         super(io, new Record(id, base, content, System.currentTimeMillis()));
     }
 }
