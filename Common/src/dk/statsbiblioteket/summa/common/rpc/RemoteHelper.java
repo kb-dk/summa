@@ -12,6 +12,7 @@ import java.rmi.registry.Registry;
 import java.rmi.registry.LocateRegistry;
 import java.lang.management.ManagementFactory;
 import java.io.IOException;
+import java.net.UnknownHostException;
 
 /**
  * Utility class to help export remote interfaces
@@ -94,9 +95,11 @@ public class RemoteHelper {
     }
 
     /**
-     * Export an object as a JMX MBean
-     * @param obj
-     * @throws IOException
+     * Export an object as a JMX MBean. Unregister the object with
+     * {@link #unExportMBean(Object)}
+     *  
+     * @param obj the object to expose as an MBean
+     * @throws IOException on communication errors with the JMX subsystem
      */
     public static void exportMBean (Object obj) throws IOException {
         ObjectName name = null;
@@ -106,7 +109,8 @@ public class RemoteHelper {
                        + " at mbean server");
 
             MBeanServer mbserver = ManagementFactory.getPlatformMBeanServer();
-            name = new ObjectName(obj.getClass().getName()+ ":type=" + obj.getClass().getSimpleName());
+            name = new ObjectName(obj.getClass().getName()
+                                  + ":type=" + obj.getClass().getSimpleName());
             mbserver.registerMBean(obj, name);
 
             log.info ("Registered " + obj.getClass().getName()
@@ -117,12 +121,42 @@ public class RemoteHelper {
         }
     }
 
+    /**
+     * Unexport an object that has been registered as a JMX MBean via
+     * {@link #exportMBean(Object)}.
+     *
+     * @param obj the object to unregsiter
+     * @throws IOException on communication errors with the JMX subsystem
+     */
+    public static void unExportMBean (Object obj) throws IOException {
+        ObjectName name = null;
+
+        try {
+            log.debug ("Unregistering " + obj.getClass().getName()
+                       + " at mbean server");
+
+            MBeanServer mbserver = ManagementFactory.getPlatformMBeanServer();
+            name = new ObjectName(obj.getClass().getName()
+                                  + ":type=" + obj.getClass().getSimpleName());
+            mbserver.unregisterMBean(name);
+        } catch (Exception e) {
+            log.warn("Failed to unregister JMX interface for "
+                     + obj.getClass() + ". Continuing.", e);
+        }
+    }
+
+    /**
+     * Get the host name of the running JVM
+     * 
+     * @return the host name, or "localhost" if encountering an
+     *         {@link UnknownHostException} from the Java runtime
+     */
     public static String getHostname () {
         try {
             java.net.InetAddress localMachine =
                     java.net.InetAddress.getLocalHost();
             return localMachine.getHostName();
-        } catch (java.net.UnknownHostException e) {
+        } catch (UnknownHostException e) {
             log.error ("Failed to get host name. Returning 'localhost'", e);
             return "localhost";
         }

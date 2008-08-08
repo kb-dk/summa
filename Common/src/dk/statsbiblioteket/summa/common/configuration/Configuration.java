@@ -933,8 +933,11 @@ public class Configuration implements Serializable,
                                                  + "configuration at '"
                                                  + confLocation + "'");
             } catch (IOException e) {
+                log.debug("Failed loading configuration from " + confLocation, e);
                 storage = null;
             } catch (ConfigurationStorageException e) {
+                log.debug("Configuration storage for " + confLocation
+                         + " encountered a problem", e);
                 storage = null;
             }
             if (storage == null) {
@@ -961,7 +964,7 @@ public class Configuration implements Serializable,
                 throw new ConfigurationException("Error reading configuration file " + confLocation, e);
             }
         }   */
-        log.trace("Returning storage");
+        log.trace("Returning storage of type " + storage.getClass());
         return new Configuration(storage);
     }
 

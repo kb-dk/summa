@@ -2,11 +2,11 @@
 
 # USAGE:
 #
-# start-service.sh [path_to_service_xml [config_location]]
+# start-client.sh [path_to_client_xml [config_location]]
 #
-# This script can start any Summa service given a service.xml
-# It will assume that the instance id of the service is the
-# name of the directory containing the service.xml 
+# This script can start any Summa Control Client given a client.xml
+# It will assume that the instance id of the client is the
+# name of the directory containing the client.xml
 #
 
 #
@@ -18,7 +18,7 @@
 #    app_root/
 #      lib/           # All 3rd party libs/jar
 #      config/        # Any properties or other config files
-#      service.xml    # Service description used to launch the service
+#      client.xml     # Client description used to launch the client
 #
 # Classpath Construction:
 #  - Any .jar in lib/ will be added to the classpath
@@ -46,24 +46,25 @@
 # EDIT HERE
 #
 
-# Detect the service.xml file
-SERVICE_XML=$(pwd)/service.xml
+# Detect the client.xml file
+CLIENT_XML=$(pwd)/client.xml
 if [ "$1" != "" ]; then
-    SERVICE_XML="$1"
+    CLIENT_XML="$1"
 fi
 
-# Abort if the service.xml is not found
-if [ ! -f $SERVICE_XML ]; then
-    echo -e "Service file $SERVICE_XML not found, or is not a regular file"
-    echo -e "You may pass the location of the service file as a parameter"
+echo XML $CLIENT_XML
+
+# Abort if the client.xml is not found
+if [ ! -f $CLIENT_XML ]; then
+    echo -e "Client file $CLIENT_XML not found, or is not a regular file"
+    echo -e "You may pass the location of the client.xml file as a parameter"
     exit 1
 fi
 
-# Update working dir, and update SERVICE_XML relative to DEPLOY
-DEPLOY=$(dirname $SERVICE_XML)
+# Update working dir
+DEPLOY=$(dirname $CLIENT_XML)
 pushd $DEPLOY > /dev/null
-SERVICE_XML=$(basename $SERVICE_XML)
-
+CLIENT_XML=$(basename $CLIENT_XML)
 
 # Detect CONFIG_LOCATION
 CONFIGURATION=configuration.xml
@@ -71,15 +72,15 @@ if [ "$2" != "" ]; then
     CONFIGURATION="$2"
 fi
 
-# calculate the service instance id from the directory name as per spec
-SERVICE_ID=$(basename $(pwd))
+# calculate the client instance id from the directory name as per spec
+CLIENT_ID=$(basename $(pwd))
 
-MAINJAR=$(grep '<mainJar>' $SERVICE_XML | sed -e 's@</\?mainJar>@@g' -e 's@[ \t]@@g')
-MAINCLASS=$(grep '<mainClass>' $SERVICE_XML | sed -e 's@</\?mainClass>@@g' -e 's@[ \t]@@g')
+MAINJAR=$(grep '<mainJar>' $CLIENT_XML | sed -e 's@</\?mainJar>@@g' -e 's@[ \t]@@g')
+MAINCLASS=$(grep '<mainClass>' $CLIENT_XML | sed -e 's@</\?mainClass>@@g' -e 's@[ \t]@@g')
 LIBDIRS=lib
 PRINT_CONFIG=true
 #JAVA_HOME=/usr/lib/jvm/java
-JVM_OPTS="-server -Xmx256m -Dsumma.configuration=$CONFIGURATION -Dsumma.control.service.id=$SERVICE_ID"
+JVM_OPTS="-server -Xmx256m -Dsumma.configuration=$CONFIGURATION -Dsumma.control.client.id=$CLIENT_ID"
 SECURITY_POLICY="$DEPLOY/config/policy"
 #ENABLE_JMX=true
 
@@ -171,8 +172,8 @@ if [ ! -z $PRINT_CONFIG ]; then
     echo -e "MainJar:\t$MAINJAR" 1>&2
     echo -e "MainClass:\t$MAINCLASS" 1>&2
     echo -e "Configuration:\t$CONFIGURATION" 1>&2
-    echo -e "Service file:\t$SERVICE_XML" 1>&2
-    echo -e "Service id:\t$SERVICE_ID" 1>&2
+    echo -e "Client file:\t$CLIENT_XML" 1>&2
+    echo -e "Client id:\t$CLIENT_ID" 1>&2
     echo -e "Working dir:\t`pwd`" 1>&2
     echo -e "JMX enabled:\t$ENABLE_JMX" 1>&2
     echo -e "Security:\t$SECURITY_POLICY\n" 1>&2

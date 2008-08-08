@@ -31,12 +31,12 @@ import dk.statsbiblioteket.summa.control.api.Status;
 /**
  * A {@link Command} for deploying a {@link Service} via a {@link ClientShell}.
  */
-public class GetStatusCommand extends Command {
+public class StatusCommand extends Command {
 
     ClientConnection client;
 
-    public GetStatusCommand(ClientConnection client) {
-        super("get-status", "print the status of the control client");
+    public StatusCommand(ClientConnection client) {
+        super("status", "print the status of the control client");
         this.client = client;
 
     }

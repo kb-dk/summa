@@ -62,12 +62,13 @@ public class ClientShell {
         client = ctx.getConnection();
         connManager.release (ctx);
 
-        shell.installCommand(new GetStatusCommand(client));
+        shell.installCommand(new StatusCommand(client));
         shell.installCommand(new DeployCommand(client));
         shell.installCommand(new StartServiceCommand(client));
         shell.installCommand(new StopServiceCommand(client));
         shell.installCommand(new ServicesCommand(client));
         shell.installCommand(new PingCommand(connManager, rmiAddress));
+        shell.installCommand(new IdCommand(connManager, rmiAddress));
     }
 
     public void run () {
