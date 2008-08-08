@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.StringTokenizer;
 import java.util.List;
 import java.util.ArrayList;
+import java.rmi.UnmarshalException;
 
 import dk.statsbiblioteket.summa.common.shell.notifications.AbortNotification;
 import dk.statsbiblioteket.summa.common.shell.notifications.BadCommandLineNotification;
@@ -392,6 +393,18 @@ public class Core {
             } catch (ParseException e) {
                 getShellContext().error ("Error parsing command line: "
                         + e.getMessage());
+            } catch (UnmarshalException e) {
+                /* This is a specific hack to handle the case where an RMI
+                 * service returns an unknown class */
+                if (e.getCause() instanceof ClassNotFoundException) {
+                    shellCtx.error ("Caught exception of unknown class type: "
+                                    + e.getCause().getMessage() + "\n\n"
+                                    + "This usually happens if a remote "
+                                    + "service throws a custom exception");
+                } else {
+                    shellCtx.error ("RMI protocol error:" + e.getMessage());
+                }
+                lastTrace = Strings.getStackTrace(e);
             } catch (Exception e) {
                 shellCtx.error ("Caught error: '" + e.getMessage() + "'");
                 lastTrace = Strings.getStackTrace(e);
