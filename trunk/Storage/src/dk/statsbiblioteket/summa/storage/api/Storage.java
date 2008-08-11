@@ -62,4 +62,9 @@ public interface Storage extends ReadableStorage, WritableStorage {
      */
     public static final String DEFAULT_REGISTRY_HOST = "summa.storage.registry.host";
 
+    /**
+     * Configuration property specifying where the storage should store
+     * persistent data. Default is {@code ~/summa-control/persistent}.
+     */
+    public static final String DATA_DIR_PROP = "summa.storage.data.dir";
 }

@@ -36,6 +36,7 @@ import java.sql.SQLException;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
+import dk.statsbiblioteket.summa.storage.StorageUtils;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -44,8 +45,7 @@ import org.apache.commons.logging.LogFactory;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class DerbyStorage extends DatabaseStorage implements DerbyStorageMBean,
-                                                             Configurable {
+public class DerbyStorage extends DatabaseStorage implements Configurable {
     private static Log log = LogFactory.getLog(DerbyStorage.class);
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
@@ -53,42 +53,32 @@ public class DerbyStorage extends DatabaseStorage implements DerbyStorageMBean,
 
     private String username;
     private String password;
-    private String location;
+    private File location;
     private boolean createNew = true;
     private boolean forceNew = false;
 
     private Connection connection;
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    public DerbyStorage(Configuration configuration) throws IOException {
-        super(configuration);
+    public DerbyStorage(Configuration conf) throws IOException {
+        super(conf);
         log.trace("Constructing ControlDerby");
-        username = configuration.getString(PROP_USERNAME, "");
-        password = configuration.getString(PROP_PASSWORD, "");
-        boolean locationExists;
+        username = conf.getString(PROP_USERNAME, "");
+        password = conf.getString(PROP_PASSWORD, "");
+
+        location = new File (StorageUtils.getGlobalPersistentDir(conf),
+                             "storage" + File.separator + "derby");
         try {
-            locationExists = configuration.valueExists(PROP_LOCATION);
-        } catch (IOException e) {
-            throw new RemoteException("Exception requesting property "
-                                      + PROP_LOCATION, e);
-        }
-        if (!locationExists) {
-            throw new RemoteException("Could not get the property "
-                                      + PROP_LOCATION
-                                      + ". Aborting database setup");
-        }
-        location = configuration.getString(PROP_LOCATION);
-        try {
-            if (configuration.valueExists(PROP_CREATENEW)) {
-                createNew = configuration.getBoolean(PROP_CREATENEW);
+            if (conf.valueExists(PROP_CREATENEW)) {
+                createNew = conf.getBoolean(PROP_CREATENEW);
             }
         } catch (IOException e) {
             throw new RemoteException("Exception requesting property "
                                       + PROP_CREATENEW, e);
         }
         try {
-            if (configuration.valueExists(PROP_FORCENEW)) {
-                forceNew = configuration.getBoolean(PROP_FORCENEW);
+            if (conf.valueExists(PROP_FORCENEW)) {
+                forceNew = conf.getBoolean(PROP_FORCENEW);
             }
         } catch (IOException e) {
             //noinspection DuplicateStringLiteralInspection
@@ -100,7 +90,7 @@ public class DerbyStorage extends DatabaseStorage implements DerbyStorageMBean,
                   + (password == null ? "[undefined]" : "[defined]")
                   + ", location: '" + location + "', createNew: " + createNew 
                   + ", forceNew: " + forceNew);
-        init(configuration);
+        init(conf);
         log.trace("Construction completed");
     }
 
@@ -115,7 +105,7 @@ public class DerbyStorage extends DatabaseStorage implements DerbyStorageMBean,
                  + ", location '" + location + "', createNew " + createNew
                  + " and forceNew " + forceNew);
 
-        if (new File(location).exists()) { /* Database location exists*/
+        if (location.exists()) { /* Database location exists*/
             log.debug("Old database found at '" + location + "'");
             if (forceNew) {
                 log.info("Deleting existing database at '" + location + "'");

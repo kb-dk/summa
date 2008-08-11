@@ -23,20 +23,15 @@
 package dk.statsbiblioteket.summa.control.service;
 
 import dk.statsbiblioteket.summa.common.Logging;
-import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.storage.StorageFactory;
 import dk.statsbiblioteket.summa.storage.api.Storage;
-import dk.statsbiblioteket.summa.storage.StorageBase;
-import dk.statsbiblioteket.summa.storage.RecordAndNext;
-import dk.statsbiblioteket.summa.storage.RecordIterator;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.rmi.RemoteException;
-import java.util.List;
 import java.io.IOException;
 
 /**

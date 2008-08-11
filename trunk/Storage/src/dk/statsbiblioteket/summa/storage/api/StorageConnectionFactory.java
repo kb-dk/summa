@@ -45,6 +45,8 @@ public class StorageConnectionFactory extends ConnectionFactory<Storage>
 
     /**
      * Instantiate a new factory based on the supplied configuration.
+     * @param conf the configuration for the storage connection. See
+     *             {@link #CONN_FACT_CLASS}.
      */
     public StorageConnectionFactory (Configuration conf) {
         log = LogFactory.getLog(StorageConnectionFactory.class);
@@ -73,6 +75,8 @@ public class StorageConnectionFactory extends ConnectionFactory<Storage>
     public Storage createConnection(String connectionId) {
         log.trace ("Creating connection to '" + connectionId + "' via backend "
                    + "'" + backend.getClass().getName() + "'");
-        return backend.createConnection (connectionId);
+        Object o = backend.createConnection (connectionId);
+        log.trace ("Got storage proxy class: " + o);
+        return (Storage) o;
     }
 }

@@ -34,6 +34,7 @@ import java.util.Properties;
 
 
 import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.api.StorageConnectionFactory;
 
 import dk.statsbiblioteket.summa.storage.RecordIterator;
 import dk.statsbiblioteket.summa.common.Record;
@@ -57,7 +58,7 @@ public class RecordInspector {
 
     public RecordInspector (String storageUrl) {
         try {
-            io = (Storage) Naming.lookup (storageUrl);
+            io = new StorageConnectionFactory().createConnection(storageUrl);
 
             XPath xp = XPathFactory.newInstance().newXPath();
             DefaultNamespaceContext nsc = new DefaultNamespaceContext();
@@ -102,7 +103,11 @@ public class RecordInspector {
         if (withContents) {
             String content = "";
             try {
-                content = new String (rec.getContent(), "UTF-8");
+                if (rec.getContent() == null) {
+                    content = "NULL";
+                } else {
+                    content = new String (rec.getContent(), "UTF-8");
+                }
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -258,9 +263,17 @@ public class RecordInspector {
         }
 
         if (recordId != null) {
-            // Just inpect a single record
+            // Just inspect a single record
             RecordInspector inspector = new RecordInspector (storageUrl);
             Record rec = inspector.fetch(recordId);
+
+            if (rec == null) {
+                System.err.println ("Got 'null' record. There is probably no"
+                                    + " record with id '" + recordId + "' in"
+                                    + " the storage");
+                System.exit (1);
+            }
+
             inspector.printRecord (rec, true);
             System.exit (0);
         }
