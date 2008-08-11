@@ -54,6 +54,7 @@ import org.apache.commons.logging.LogFactory;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke",
         comment = "Class needs Javadoc")
+// TODO: Use ConvenientMap for convenience
 public class Configuration implements Serializable,
                                       Iterable<Map.Entry<String,Serializable>>,
                                       Configurable {
@@ -463,7 +464,9 @@ public class Configuration implements Serializable,
             Pattern.compile("(.+)\\( *(\\-?[0-9]+) *\\).*");
 
     /**
-     * Parses the value for the key for Strings and Integers.
+     * Parses the value for the key for Strings and Integers and returns them
+     * as a list of Pairs.
+     * </p><p>
      * Sample value: a(1),b (2), c(4), d, e(16)
      * @param key          the name of the property to look up.
      * @param defaultValue the Integer that should be used when one of the
