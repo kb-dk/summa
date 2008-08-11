@@ -74,6 +74,7 @@ public class RecordWriterTest extends TestCase {
 
     public void testWrite() throws Exception {
         Configuration conf = Configuration.newMemoryBased();
+        Files.delete(storageLocation);
         conf.set(DatabaseStorage.PROP_LOCATION, storageLocation.toString());
         Storage storage = StorageFactory.createStorage(conf);
         assertNotNull("A controller should be available now", storage);
