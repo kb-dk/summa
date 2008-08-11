@@ -74,9 +74,10 @@ public class StorageFactory {
         }
         //noinspection DuplicateStringLiteralInspection
         log.debug("Instantiating storage class " + storageClass);
+
         try {
             // FIXME: This forces a RMI call when packing as a service. Not good 
-            return Configuration.create(storageClass, conf);
+            return Configuration.create(storageClass, conf);        
         } catch (Exception e) {
             throw new IOException("Failed to instantiate storage class "
                                   + storageClass, e);
