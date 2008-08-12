@@ -112,6 +112,11 @@ public class XStorage implements ConfigurationStorage {
     public Serializable get(String key) {
         try {
             return (Serializable)xprops.getObject(key);
+        } catch (ClassCastException e) {
+            throw new ClassCastException(String.format(
+                    "Unable to cast the value for key '%s' to Serializable, "
+                    + "got object of class %s",
+                    key, xprops.getObject(key).getClass().getName()));
         } catch (NullPointerException e) {
             return null;
         }
