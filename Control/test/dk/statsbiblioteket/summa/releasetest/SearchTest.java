@@ -31,6 +31,7 @@ import javax.management.remote.JMXConnectorFactory;
 import java.io.File;
 import java.io.IOException;
 import java.rmi.RMISecurityManager;
+import java.rmi.RemoteException;
 import java.security.Permission;
 import java.net.URL;
 import java.util.regex.Pattern;
@@ -52,7 +53,9 @@ import dk.statsbiblioteket.summa.control.service.SearchService;
 import dk.statsbiblioteket.summa.ingest.stream.FileReader;
 import dk.statsbiblioteket.summa.search.SummaSearcher;
 import dk.statsbiblioteket.summa.search.IndexWatcher;
-import dk.statsbiblioteket.summa.search.LuceneSearcher;
+import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
+import dk.statsbiblioteket.summa.search.Request;
+import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
 import dk.statsbiblioteket.summa.index.XMLTransformer;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import org.apache.commons.logging.Log;
@@ -167,7 +170,7 @@ public class SearchTest extends NoExitTestCase {
     }
 
     private SummaSearcher createSearcher() throws Exception {
-        return new LuceneSearcher(getSearcherConfiguration());
+        return new SummaSearcherImpl(getSearcherConfiguration());
     }
 
     private Configuration getSearcherConfiguration() throws IOException {
@@ -191,18 +194,24 @@ public class SearchTest extends NoExitTestCase {
     public void testSearcher() throws Exception {
         SummaSearcher searcher = createSearcher();
         try {
-            searcher.fullSearch(null, "hans", 0, 10, null, false, null, null);
-            fail("An IndexException should be thrown as no index data are"
-                 + " present yet");
-        } catch (IndexException e) {
+            searcher.search(simpleRequest("hans"));
+            fail("A RemoteException should be thrown after timeout as no index " 
+                 + "data are present yet");
+        } catch (RemoteException e) {
             // Expected
         }
+    }
+
+    private Request simpleRequest(String query) {
+        Request request = new Request();
+        request.put(DocumentSearcher.SEARCH_QUERY, query);
+        return request;
     }
 
     public void NonfunctioningYettestSearchService() throws Exception {
         SearchService searcher = createSearchService();
         try {
-            searcher.fullSearch(null, "hans", 0, 10, null, false, null, null);
+            searcher.search(simpleRequest("hans"));
             fail("An IndexException should be thrown as no index data are"
                  + " present yet");
         } catch (IndexException e) {
@@ -282,8 +291,7 @@ public class SearchTest extends NoExitTestCase {
     private Pattern hitPattern =
             Pattern.compile(".*hitCount\\=\\\"([0-9]+)\\\".*", Pattern.DOTALL);
     private int getHits(SummaSearcher searcher, String query) throws Exception {
-        String result = searcher.fullSearch(null, query, 0, 10,
-                                            null, false, null, null).toXML();
+        String result = searcher.search(simpleRequest(query)).toXML();
         Matcher matcher = hitPattern.matcher(result);
         if (!matcher.matches()) {
             throw new NullPointerException("Could not locate hitcount in " 
@@ -316,18 +324,17 @@ public class SearchTest extends NoExitTestCase {
     public void testFull() throws Exception {
         SummaSearcher searcher = createSearcher();
         try {
-            searcher.fullSearch(null, "hans", 0, 10, null, false, null, null);
-            fail("An IndexException should be throws as not index data are"
-                 + " present yet");
-        } catch (IndexException e) {
+            searcher.search(simpleRequest("hans"));
+            fail("A RemoteException should be thrown after timeout as no index"
+                 + " data are present yet");
+        } catch (RemoteException e) {
             // Expected
         }
         Storage storage = startStorage();
         updateIndex();
         Thread.sleep(2000); // Wait for searcher to discover new content
         assertNotNull("Searching should provide a result (we don't care what)",
-                      searcher.fullSearch(null, "dummy", 0, 1, null, false,
-                                          null, null));
+                      searcher.search(simpleRequest("dummy")));
         ingest(new File(Resolver.getURL("data/search/input/part1").getFile()));
         verifyStorage(storage, "fagref:hj@example.com");
         updateIndex();

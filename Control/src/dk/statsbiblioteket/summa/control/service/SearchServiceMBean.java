@@ -30,5 +30,6 @@ import dk.statsbiblioteket.summa.search.SummaSearcherMBean;
  */
 @QAInfo(level = QAInfo.Level.NOT_NEEDED,
         author = "te")
-public interface SearchServiceMBean extends SummaSearcherMBean {
+// TODO: Consider how to extend SummaSearcherMBean
+public interface SearchServiceMBean { //extends SummaSearcherMBean {
 }

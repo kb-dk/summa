@@ -16,10 +16,8 @@
         </entry>
 
         <entry>
-            <key>summa.search.searcher-class</key>
-            <value class="string">
-                dk.statsbiblioteket.support.lucene.search.LuceneSearcher
-            </value>
+            <key>summa.search.node.class</key>
+            <value class="string">dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode</value>
         </entry>
 
         <entry>
@@ -66,7 +64,7 @@
         </entry>
         <entry>
             <key>summa.search.searcher-availability.timeout</key>
-            <value class="int">300000</value>
+            <value class="int">5000</value>
         </entry>
         <!-- IndexWatcher -->
         <entry>

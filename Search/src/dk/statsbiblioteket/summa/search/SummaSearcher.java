@@ -48,5 +48,10 @@ public interface SummaSearcher extends Remote, Configurable {
      */
     public ResponseCollection search(Request request) throws RemoteException;
 
-
+    /**
+     * Close down the searcher. The searcher is not available for search after
+     * this.
+     * @throws RemoteException if an error happened during close.
+     */
+    public void close() throws RemoteException;
 }
