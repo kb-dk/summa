@@ -55,7 +55,8 @@
         <ant dir="Ingest" inheritall="false"/>
         <ant dir="Storage" inheritall="false"/>
         <ant dir="Control" inheritall="false"/>
-        <ant dir="Search" inheritall="false"/>        
+        <ant dir="Search" inheritall="false"/>
+        <ant dir="Support" inheritall="false"/>
     </target>
 
     <!-- Build documentation for all modules -->  
@@ -96,7 +97,10 @@
             </packageset>            
             <packageset dir="${basedir}/Search/src">
                 <include name="dk/statsbiblioteket/**/*"/>
-            </packageset>                                                
+            </packageset>
+            <packageset dir="${basedir}/Support/src">
+                <include name="dk/statsbiblioteket/**/*"/>
+            </packageset>
         </javadoc>
     </target>
 
@@ -110,7 +114,8 @@
         <ant dir="Ingest" inheritall="false" target="clean"/>
         <ant dir="Storage" inheritall="false" target="clean"/>
         <ant dir="Control" inheritall="false" target="clean"/>
-        <ant dir="Search" inheritall="false" target="clean"/>        
+        <ant dir="Search" inheritall="false" target="clean"/>
+        <ant dir="Support" inheritall="false" target="clean"/>
         <delete dir="${dist.dir}" />
     </target>
 
@@ -125,6 +130,7 @@
         <ant dir="Storage" inheritall="false" target="distclean"/>
         <ant dir="Control" inheritall="false" target="distclean"/>
         <ant dir="Search" inheritall="false" target="distclean"/>
+        <ant dir="Support" inheritall="false" target="distclean"/>
         <delete dir="${dist.dir}" />
         <delete dir="${doc.dir}" />
     </target>
