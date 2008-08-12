@@ -183,7 +183,6 @@ public class DocumentResponse implements Response {
      * @param record a record that should belong to the search result.
      */
     public void addRecord(Record record) {
-        System.err.println("Adding " + record);
         if (record == null) {
             throw new IllegalArgumentException(
                     "Expected a Record, got null");
@@ -266,7 +265,7 @@ public class DocumentResponse implements Response {
     /**
      * {@code
        <?xml version="1.0" encoding="UTF-8"?>
-       <searchresult filter="..." query="..."
+       <documentresult filter="..." query="..."
                      startIndex="..." maxRecords="..."
                      sortKey="..." reverseSort="..."
                      fields="..." searchTime="..." hitCount="...">
@@ -275,7 +274,7 @@ public class DocumentResponse implements Response {
            <field name="shortformat">...</field>
          </record>
          ...
-       </searchresult>
+       </documentresult>
        }
      * The content in the XML is entity-escaped.<br />
      * sortValue is the value that the sort was performed on. If the XML-result
@@ -289,8 +288,7 @@ public class DocumentResponse implements Response {
     public String toXML() {
         log.trace("toXML() called");
         StringWriter sw = new StringWriter(2000);
-        sw.append(ParseUtil.XML_HEADER).append("\n");
-        sw.append("<searchresult");
+        sw.append("<documentresult");
         appendIfDefined(sw, "filter", filter);
         appendIfDefined(sw, "query", query);
         sw.append(" startIndex=\"");
@@ -317,7 +315,7 @@ public class DocumentResponse implements Response {
         for (Record record: records) {
             record.toXML(sw);
         }
-        sw.append("</searchresult>\n");
+        sw.append("</documentresult>\n");
         log.trace("Returning XML from toXML()");
         return sw.toString();
     }
@@ -331,4 +329,6 @@ public class DocumentResponse implements Response {
     public void setSearchTime(long searchTime) {
         this.searchTime = searchTime;
     }
+
+
 }

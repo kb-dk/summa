@@ -27,14 +27,13 @@ import java.net.URL;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
-import java.io.StringWriter;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.util.ChangingSemaphore;
 
 /**
  * Handles the logic of controlling concurrent searches, open, close and
@@ -88,15 +87,30 @@ public abstract class SearchNodeImpl implements SearchNode {
     public static final boolean DEFAULT_SEARCH_WHILE_OPENING = false;
 
     /**
+     * If no searchers are ready upon search, wait up to this number of
+     * milliseconds for a searcher to become ready. If no searchers are ready
+     * at that time, an exception will be thrown.
+     */
+    public static final String CONF_SEARCHER_AVAILABILITY_TIMEOUT =
+            SummaSearcherImpl.CONF_SEARCHER_AVAILABILITY_TIMEOUT;
+    public static final int DEFAULT_SEARCHER_AVAILABILITY_TIMEOUT =
+            SummaSearcherImpl.DEFAULT_SEARCHER_AVAILABILITY_TIMEOUT;
+
+    /**
      * The size in bytes of the buffer used when retrieving warmup-data.
      */
     private static final int BUFFER_SIZE = 8192;
+    private static final int WARMUP_TIMEOUT = 10;
+    private static final int OPEN_TIMEOUT = 60 * 1000;
+    private static final int CLOSE_TIMEOUT = 60 * 1000;
+    private int searcherAvailabilityTimeout =
+            DEFAULT_SEARCHER_AVAILABILITY_TIMEOUT;
 
     private int concurrentSearches = DEFAULT_NUMBER_OF_CONCURRENT_SEARCHES;
     private String warmupData = DEFAULT_WARMUP_DATA;
     private int warmupMaxTime = DEFAULT_WARMUP_MAXTIME;
     private boolean searchWhileOpening = DEFAULT_SEARCH_WHILE_OPENING;
-    private Semaphore slots;
+    private ChangingSemaphore slots = new ChangingSemaphore(0);
 
     public SearchNodeImpl(Configuration conf) {
         log.trace("Constructing SearchNodeImpl");
@@ -106,6 +120,9 @@ public abstract class SearchNodeImpl implements SearchNode {
         warmupMaxTime = conf.getInt(CONF_WARMUP_MAXTIME, warmupMaxTime);
         searchWhileOpening = conf.getBoolean(CONF_SEARCH_WHILE_OPENING,
                                              searchWhileOpening);
+        searcherAvailabilityTimeout =
+                conf.getInt(CONF_SEARCHER_AVAILABILITY_TIMEOUT,
+                            searcherAvailabilityTimeout);
         log.debug(String.format(
                 "Constructed SearchNodeImpl with concurrentSearches %d, "
                 + "warmupData '%s', warmupMaxTime %d, searchWhileOpening %s",
@@ -123,7 +140,10 @@ public abstract class SearchNodeImpl implements SearchNode {
      */
     public void warmup() {
         log.trace("warmup() called");
-        checkSemaphore();
+        if (slots.getOverallPermits() == 0) {
+            log.warn("No warmup as open has no index is open");
+            return;
+        }
         if (warmupData == null || "".equals(warmupData)) {
             log.trace("No warmup-data defined. Skipping warmup");
             return;
@@ -166,13 +186,6 @@ public abstract class SearchNodeImpl implements SearchNode {
         }
     }
 
-    private void checkSemaphore() {
-        if (slots == null) {
-            throw new IllegalStateException("Open must be called before any"
-                                            + " other operation");
-        }
-    }
-
     /**
      * Performs a warm-up with the given request. This could be a single query
      * for a DocumentSearcher or a word for a did-you-mean searcher.
@@ -181,10 +194,12 @@ public abstract class SearchNodeImpl implements SearchNode {
     public void warmup(String request) {
         //noinspection DuplicateStringLiteralInspection
         log.trace("warmup(" + request + ") called");
-        checkSemaphore();
         try {
-            slots.acquire();
-            managedWarmup(request);
+            if (slots.tryAcquire(1, WARMUP_TIMEOUT, TimeUnit.MILLISECONDS)) {
+                managedWarmup(request);
+            } else {
+                log.debug("Skipped warmup(" + request + ") due to timeout");
+            }
         } catch (InterruptedException e) {
             log.warn("Interrupted while waiting for free slot in warmup", e);
         } finally {
@@ -206,65 +221,109 @@ public abstract class SearchNodeImpl implements SearchNode {
         log.trace("open finished for location '" + location + "'");
     }
     private synchronized void syncOpen(String location) throws RemoteException {
-        if (slots != null) {
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("syncOpen(" + location + ") called");
+        if (slots.getOverallPermits() != 0 && !searchWhileOpening) {
             try {
-                log.trace("open: acquiring " + concurrentSearches + " slots");
-                slots.acquire(concurrentSearches);
+                log.trace("open: acquiring " + slots.getOverallPermits()
+                          + " slots");
+                if (!slots.tryAcquire(slots.getOverallPermits(), OPEN_TIMEOUT,
+                                      TimeUnit.MILLISECONDS)) {
+                    //noinspection DuplicateStringLiteralInspection
+                    log.warn(String.format(
+                            "open(%s): Unable to acquire all slots within %d "
+                            + "milliseconds. Re-creating slot-semaphore",
+                            location, OPEN_TIMEOUT));
+                    slots = new ChangingSemaphore(0);
+                }
             } catch (InterruptedException e) {
                 throw new RemoteException("Interrupted while acquiring all "
                                           + "slots for open", e);
             }
         }
+        if (location == null) {
+            log.info("Location was null in open. Closing searcher");
+            managedClose();
+            slots.setOverallPermits(0);
+            return;
+        }
         log.trace("open: calling managedOpen(" + location + ")");
         managedOpen(location);
-        if (slots == null) {
-            slots = new Semaphore(concurrentSearches, true);
-        } else {
-            slots.release(concurrentSearches);
+        if (slots.getOverallPermits() == 0) {
+            slots.setOverallPermits(concurrentSearches);
+        } else if (!searchWhileOpening) {
+            slots.release(slots.getOverallPermits());
         }
+        log.trace("syncOpen finished");
     }
 
     /**
      * A managed version of {@link SearchNode#open(String)}. Implementations
      * are free to ignore threading and locking-issues.
      * @param location as specified in {@link SearchNode#open(String)}.
+     * @throws RemoteException if the index could not be opened.
      */
     protected abstract void managedOpen(String location) throws RemoteException;
 
     public int getFreeSlots() {
-        return slots == null ? 0 : slots.availablePermits();
+        return slots.availablePermits();
     }
 
     public synchronized void close() throws RemoteException {
         //noinspection DuplicateStringLiteralInspection
         log.trace("close() called");
-        checkSemaphore();
         try {
-            slots.acquire(concurrentSearches);
-            managedClose();
-        } catch(InterruptedException e) {
-            throw new RemoteException("close: Interrupted while waiting for "
-                                      + "slots", e);
+            if (log.isTraceEnabled()) {
+                log.trace(String.format(
+                        "close: acquiring %d slots",
+                        slots.getOverallPermits()));
+            }
+            if (!slots.tryAcquire(slots.getOverallPermits(), CLOSE_TIMEOUT,
+                                  TimeUnit.MILLISECONDS)) {
+                //noinspection DuplicateStringLiteralInspection
+                log.warn(String.format(
+                        "close: Unable to acquire all slots within %d "
+                        + "milliseconds. Re-creating slot-semaphore",
+                        CLOSE_TIMEOUT));
+                slots = new ChangingSemaphore(0);
+            } else {
+                slots.setOverallPermits(0);
+            }
+        } catch (InterruptedException e) {
+            slots.setOverallPermits(0);
+            throw new RemoteException(
+                    "Interrupted while acquiring all slots for close", e);
         }
-        slots.release(concurrentSearches);
+
+        try {
+            managedClose();
+        } catch(RemoteException e) {
+            throw new RemoteException("close: Exception calling managedClose",
+                                      e);
+        }
     }
 
     /**
      * A managed version of {@link SearchNode#close()}. Implementations are free
      * to ignore threading and locking-issues.
+     * @throws RemoteException if there was an exception closing.
      */
     protected abstract void managedClose() throws RemoteException;
 
     public void search(Request request, ResponseCollection responses) throws
                                                                RemoteException {
         log.trace("search called");
-        checkSemaphore();
         try {
             // TODO: Consider timeout for slot acquirement
-            slots.acquire();
+            if (!slots.tryAcquire(1, searcherAvailabilityTimeout,
+                                  TimeUnit.MILLISECONDS)) {
+                throw new RemoteException(String.format(
+                        "Time-limit of %d milliseconds exceeded",
+                        searcherAvailabilityTimeout));
+            }
         } catch (InterruptedException e) {
-            throw new RemoteException(
-                    "Unable to acquire slot for searching", e);
+            throw new RemoteException("Interruped while waiting for free slot "
+                                      + "for search");
         }
         try {
             managedSearch(request, responses);
@@ -310,10 +369,13 @@ public abstract class SearchNodeImpl implements SearchNode {
     public int getMaxConcurrentSearches() {
         return concurrentSearches;
     }
-    public void setMaxConcurrentSearches(int maxConcurrentSearches) {
+    public synchronized void setMaxConcurrentSearches(
+                                                    int maxConcurrentSearches) {
         log.debug(String.format("setMaxConcurrentSearches(%d) called",
                                 maxConcurrentSearches));
-        // TODO: Implement fancy setter that changes the semaphore
-        throw new UnsupportedOperationException("Not implemented yet");
+        concurrentSearches = maxConcurrentSearches;
+        if (slots.getOverallPermits() != 0) { // Race-condition here?
+            slots.setOverallPermits(concurrentSearches);
+        }
     }
 }

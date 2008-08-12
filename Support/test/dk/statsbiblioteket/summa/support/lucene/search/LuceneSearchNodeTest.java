@@ -1,7 +1,8 @@
-package dk.statsbiblioteket.support.lucene.search;
+package dk.statsbiblioteket.summa.support.lucene.search;
 
 import java.io.File;
 import java.util.BitSet;
+import java.rmi.RemoteException;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -12,6 +13,12 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.index.IndexException;
 import dk.statsbiblioteket.summa.common.index.IndexCommon;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
+import dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode;
+import dk.statsbiblioteket.summa.search.SummaSearcher;
+import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
+import dk.statsbiblioteket.summa.search.Request;
+import dk.statsbiblioteket.summa.search.ResponseCollection;
+import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.IndexReader;
@@ -24,10 +31,10 @@ import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
-public class LuceneSearcherTest extends TestCase {
-    private static Log log = LogFactory.getLog(LuceneSearcherTest.class);
+public class LuceneSearchNodeTest extends TestCase {
+    private static Log log = LogFactory.getLog(LuceneSearchNodeTest.class);
 
-    public LuceneSearcherTest(String name) {
+    public LuceneSearchNodeTest(String name) {
         super(name);
     }
 
@@ -38,7 +45,7 @@ public class LuceneSearcherTest extends TestCase {
         }
         testRoot.mkdirs();
         new File(testRoot, "index");
-        Assert.assertTrue("The sourceDir '" + sourceDir + "' should exist",
+        assertTrue("The sourceDir '" + sourceDir + "' should exist",
                    sourceDir.exists());
     }
 
@@ -50,7 +57,7 @@ public class LuceneSearcherTest extends TestCase {
     }
 
     public static Test suite() {
-        return new TestSuite(LuceneSearcherTest.class);
+        return new TestSuite(LuceneSearchNodeTest.class);
     }
 
     private File testRoot = new File(
@@ -67,7 +74,7 @@ public class LuceneSearcherTest extends TestCase {
                    descLocation, false);
 
         String configuration = Resolver.getUTF8Content(
-                "dk/statsbiblioteket/summa/search/LuceneSearcherTest_conf.xml");
+                "dk/statsbiblioteket/summa/support/lucene/search/LuceneSearcherTest_conf.xml");
         configuration = configuration.replace(
                 "/tmp/summatest/index",
                 testRoot.getAbsolutePath());
@@ -77,7 +84,7 @@ public class LuceneSearcherTest extends TestCase {
         File confLocation = new File(testRoot, "configuration.xml");
         Files.saveString(configuration, confLocation);
 
-        Assert.assertNotNull("The configuration should be available", confLocation);
+        assertNotNull("The configuration should be available", confLocation);
         return confLocation;
     }
 
@@ -91,41 +98,43 @@ public class LuceneSearcherTest extends TestCase {
     public void testBasicSearcher() throws Exception {
         makeIndex();
         Configuration conf = Configuration.load(basicSetup().getAbsolutePath());
-        LuceneSearcher searcher = new LuceneSearcher(conf);
-        log.debug("Search for 'hans' gave\n"
-                  + searcher.fullSearch(null, "hans", 0, 10,
-                                        null, false, null, null));
+        SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
+        Request request = new Request();
+        request.put(DocumentSearcher.SEARCH_QUERY, "hans");
+        log.debug("Search for 'hans' gave\n" 
+                  + searcher.search(request).toXML());
+        searcher.close();
     }
 
     public void testDiscovery() throws Exception {
         Configuration conf = Configuration.load(basicSetup().getAbsolutePath());
-        LuceneSearcher searcher = new LuceneSearcher(conf);
+        SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
+        Request request = new Request();
+        request.put(DocumentSearcher.SEARCH_QUERY, "hans");
         try {
-            searcher.fullSearch(null, "hans", 0, 10, null, false, null, null);
-            Assert.fail("An IndexException should be throws as not index data are"
+            searcher.search(request).toXML();
+            fail("An IndexException should be thrown as no index data are"
                  + " present yet");
-        } catch (IndexException e) {
+        } catch (RemoteException e) {
             // Expected
         }
-
         makeIndex();
         Thread.sleep(2000); // 2 * Min retention time
-
-        Assert.assertNotNull("Search should work now",
-                      searcher.fullSearch(null, "hans", 0, 10, null, false,
-                                          null, null));
+        // Search should work now
+        searcher.search(request);
+        searcher.close();
     }
 
     private File makeIndex() throws Exception {
         File index = new File(testRoot, IndexCommon.getTimestamp());
         File sourceIndex = new File(sourceDir, "index");
-        Assert.assertTrue("The source index '" + sourceIndex + "' should exist",
+        assertTrue("The source index '" + sourceIndex + "' should exist",
                    sourceIndex.exists());
 
         File lucene = new File(index, LuceneIndexUtils.LUCENE_FOLDER);
         Files.copy(sourceIndex, lucene, true);
 
-        Assert.assertTrue("The index-folder '" + index + "' should exist",
+        assertTrue("The index-folder '" + index + "' should exist",
                    index.exists());
         Files.saveString(Long.toString(System.currentTimeMillis()),
                          new File(index, IndexCommon.VERSION_FILE));

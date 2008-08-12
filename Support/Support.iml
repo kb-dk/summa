@@ -11,6 +11,11 @@
     <orderEntry type="module" module-name="Index" />
     <orderEntry type="module" module-name="Search" />
     <orderEntry type="module" module-name="Common" />
+    <orderEntry type="library" name="sbutil" level="project" />
+    <orderEntry type="library" name="lucene-core-2.3.0" level="project" />
+    <orderEntry type="library" name="log4j-1.2.14" level="project" />
+    <orderEntry type="library" name="junit-3.8.1" level="project" />
+    <orderEntry type="library" name="commons-logging-1.1" level="project" />
     <orderEntryProperties />
   </component>
 </module>

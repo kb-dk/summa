@@ -123,7 +123,7 @@ public class IndexCommon {
             for (int i = subs.length-1 ; i >= 0 ; i--) {
                 File version = new File(subs[i], VERSION_FILE);
                 if (version.exists()) {
-                    log.trace("getCurrentIndexLocation: got '" + subs[i] + "'");
+          //        log.trace("getCurrentIndexLocation: got '" + subs[i] + "'");
                     return subs[i];
                 }
             }

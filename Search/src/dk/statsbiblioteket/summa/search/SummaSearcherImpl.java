@@ -28,24 +28,25 @@ import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.util.ChangingSemaphore;
 
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.TimeUnit;
 import java.rmi.RemoteException;
 import java.io.File;
+import java.io.IOException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
  * Convenience base class for SummaSearchers, taking care of basic setup.
- * Relevant properties from {@link SummaSearcher}, {@link IndexWatcher},
- * {@link SearchNodeLoadBalancer} and {@link LuceneIndexUtils} needs to be
- * specified in the configuration.
+ * Relevant properties from {@link SearchNodeFactory}, {@link SummaSearcher}, 
+ * {@link IndexWatcher}, {@link SearchNodeLoadBalancer} and
+ * {@link LuceneIndexUtils} needs to be specified in the configuration.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class SummaSearcherImpl implements SummaSearcherMBean,
-                                                   SummaSearcher,
-                                                   IndexListener {
+public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
+                                          IndexListener {
     private static Log log = LogFactory.getLog(SummaSearcherImpl.class);
 
     /**
@@ -125,8 +126,17 @@ public class SummaSearcherImpl implements SummaSearcherMBean,
                     // To kickstart in case of lockout due to open or crashes
                     freeSlots.setOverallPermits(searchNode.getFreeSlots());
                 }
-                // TODO: Introduce timeout here
-                freeSlots.acquire();
+                if (log.isTraceEnabled() && freeSlots.availablePermits() <= 0) {
+                    log.trace("No free slots. Entering wait-mode with timeout "
+                              + searcherAvailabilityTimeout + " ms");
+                }
+                if (!freeSlots.tryAcquire(1, searcherAvailabilityTimeout,
+                                          TimeUnit.MILLISECONDS)) {
+                    throw new RemoteException(
+                            "Timeout in search: The limit of "
+                            + searcherAvailabilityTimeout
+                            + " milliseconds was exceeded");
+                }
             } catch (InterruptedException e) {
                 throw new RemoteException(
                         "Interrupted while waiting for free slot", e);

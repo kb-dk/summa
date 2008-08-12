@@ -10,7 +10,7 @@ import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.search.SearchNodeLoadBalancer;
 import dk.statsbiblioteket.summa.search.SummaSearcher;
 import dk.statsbiblioteket.summa.search.IndexWatcher;
-import dk.statsbiblioteket.support.lucene.search.LuceneSearchNode;
+import dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode;
 
 import java.io.IOException;
 
@@ -18,6 +18,7 @@ import java.io.IOException;
  * Lucene-specic searcher. Relevant properties from {@link SummaSearcher},
  * {@link IndexWatcher}, {@link SearchNodeLoadBalancer} , {@link LuceneSearchNode}
  * and {@link LuceneIndexUtils} needs to be specified.
+ * @deprecated in favor of the Search framework.
  */
 public class LuceneSearcher {/*extends SummaSearcherImpl implements
                                                       LuceneSearcherMBean {*/
