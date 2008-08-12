@@ -23,19 +23,13 @@
 package dk.statsbiblioteket.summa.search;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
-import dk.statsbiblioteket.summa.search.document.DocumentSearchWrapper;
+import dk.statsbiblioteket.summa.common.util.ChangingSemaphore;
 
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.rmi.RemoteException;
 import java.io.File;
-import java.io.IOException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -43,120 +37,68 @@ import org.apache.commons.logging.LogFactory;
 /**
  * Convenience base class for SummaSearchers, taking care of basic setup.
  * Relevant properties from {@link SummaSearcher}, {@link IndexWatcher},
- * {@link DocumentSearchWrapper} and {@link LuceneIndexUtils} needs to be specified.
+ * {@link SearchNodeLoadBalancer} and {@link LuceneIndexUtils} needs to be
+ * specified in the configuration.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public abstract class SummaSearcherImpl implements SummaSearcherMBean,
-                                                   Configurable,
+public class SummaSearcherImpl implements SummaSearcherMBean,
+                                                   SummaSearcher,
                                                    IndexListener {
     private static Log log = LogFactory.getLog(SummaSearcherImpl.class);
 
-    private int searchers = DEFAULT_NUMBER_OF_SEARCHERS;
+    /**
+     * If a new search is requested and there is no free slots, the search
+     * is queued. If the queue reaches its max-size, the request is not queued
+     * and an exception is thrown.
+     * </p><p>
+     * This is optional. Default is 50.
+     */
+    public static final String CONF_SEARCH_QUEUE_MAX_SIZE =
+            "summa.search.search-queue.max-size";
+    public static final int DEFAULT_SEARCH_QUEUE_MAX_SIZE = 50;
 
-    private int maxConcurrentSearches =
-            DEFAULT_NUMBER_OF_CONCURRENT_SEARCHES;
-    private int searchQueueMaxSize = DEFAULT_SEARCH_QUEUE_MAX_SIZE;
+    /**
+     * If no searchers are ready upon search, wait up to this number of
+     * milliseconds for a searcher to become ready. If no searchers are ready
+     * at that time, an exception will be thrown.
+     */
+    public static final String CONF_SEARCHER_AVAILABILITY_TIMEOUT =
+            "summa.search.searcher-availability.timeout";
+    public static final int DEFAULT_SEARCHER_AVAILABILITY_TIMEOUT = 5 * 60000;
+
     private int searcherAvailabilityTimeout =
             DEFAULT_SEARCHER_AVAILABILITY_TIMEOUT;
-    private String[] resultFields = DEFAULT_RESULT_FIELDS;
-    private String[] fallbackValues = DEFAULT_FALLBACK_VALUES;
-    private String sortKey = DEFAULT_DEFAULT_SORTKEY;
-    private long maxRecords = DEFAULT_MAX_NUMBER_OF_RECORDS;
-    private String warmupData = DEFAULT_WARMUP_DATA;
-    private int warmupMaxTime = DEFAULT_WARMUP_MAXTIME;
 
-
-    private Semaphore searchQueueSemaphore;
-    private Semaphore searchActiveSemaphore;
-    protected List<DocumentSearchWrapper> documentSearches;
+    private ChangingSemaphore searchQueue;
+    private ChangingSemaphore freeSlots = new ChangingSemaphore(0);
+    private SearchNode searchNode;
     private IndexWatcher watcher;
-    // TODO: Are default resultFields extracted properly? 
 
     private File indexFolder;
-    private String lastQuery = null;
     private long lastResponseTime = -1;
     private AtomicLong queryCount = new AtomicLong(0);
     private AtomicLong totalResponseTime = new AtomicLong(0);
 
     /**
-     * Extracts basic settings from the configuration.
+     * Extracts basic settings from the configuration and constructs the
+     * underlying tree of SearchNodes.
      * @param conf the configuration for the searcher.
+     * @throws RemoteException if the underlying SearchNode could not be
+     *                         constructed.
      */
-    public SummaSearcherImpl(Configuration conf) {
+    public SummaSearcherImpl(Configuration conf) throws RemoteException {
         log.trace("Constructor(Configuration) called");
-        searchQueueMaxSize =
-                conf.getInt(CONF_SEARCH_QUEUE_MAX_SIZE, searchQueueMaxSize);
-        maxConcurrentSearches =
-                conf.getInt(CONF_NUMBER_OF_CONCURRENT_SEARCHES,
-                            maxConcurrentSearches);
-        searchers = conf.getInt(CONF_NUMBER_OF_SEARCHERS,
-                                searchers);
-        if (searchers < 1) {
-            throw new ConfigurationException(String.format(
-                    "The number of searchers must be 1 or more. It was %s",
-                    searchers));
-        }
+        int searchQueueMaxSize = conf.getInt(CONF_SEARCH_QUEUE_MAX_SIZE,
+                                             DEFAULT_SEARCH_QUEUE_MAX_SIZE);
         searcherAvailabilityTimeout =
                 conf.getInt(CONF_SEARCHER_AVAILABILITY_TIMEOUT,
                             searcherAvailabilityTimeout);
 
-        resultFields = conf.getStrings(CONF_RESULT_FIELDS, resultFields);
-        fallbackValues = conf.getStrings(CONF_FALLBACK_VALUES, fallbackValues);
-        sortKey = conf.getString(CONF_DEFAULT_SORTKEY, sortKey);
-        if (fallbackValues != null
-            && resultFields.length != fallbackValues.length) {
-            //noinspection DuplicateStringLiteralInspection
-            throw new IllegalArgumentException(String.format(
-                    "The number of fallback-values(%s) was not equal to the "
-                    + "number of result-fields(%s)", fallbackValues.length,
-                                                     resultFields.length));
-        }
-        maxRecords = conf.getLong(CONF_MAX_RECORDS, maxRecords);
-        if (maxRecords <= 0) {
-            log.warn(String.format(
-                    "The property %s must be >0. It was %s. Resetting to "
-                    + "default %s",
-                    CONF_MAX_RECORDS, maxRecords,
-                    DEFAULT_MAX_NUMBER_OF_RECORDS == Long.MAX_VALUE ?
-                    "Long.MAX_VALUE" :
-                    DEFAULT_MAX_NUMBER_OF_RECORDS));
-            maxRecords = DEFAULT_MAX_NUMBER_OF_RECORDS;
-        }
-        warmupData = conf.getString(CONF_WARMUP_DATA, warmupData);
-        warmupMaxTime = conf.getInt(CONF_WARMUP_MAXTIME, warmupMaxTime);
-        log.debug("Warmup-data is '" + warmupData + "' with max warmup-time "
-                  + (warmupMaxTime == Integer.MAX_VALUE ?
-                     "Integer.MAX_VALUE" : warmupMaxTime) + " ms");
-
-        log.debug(String.format(
-                "Constructing with %s=%d, %s=%d, %s=%d, %s=%d, %s=%s, %s=%s, "
-                + "%s=%d, %s=%s, %s=%d",
-                CONF_SEARCH_QUEUE_MAX_SIZE, searchQueueMaxSize,
-              CONF_NUMBER_OF_CONCURRENT_SEARCHES, maxConcurrentSearches,
-                CONF_NUMBER_OF_SEARCHERS, searchers,
-                CONF_SEARCHER_AVAILABILITY_TIMEOUT, searcherAvailabilityTimeout,
-                CONF_RESULT_FIELDS, Arrays.toString(resultFields),
-                CONF_DEFAULT_SORTKEY, sortKey,
-                CONF_MAX_RECORDS, maxRecords,
-                CONF_WARMUP_DATA, warmupData,
-                CONF_WARMUP_MAXTIME, warmupMaxTime
-                ));
-        searchQueueSemaphore = new Semaphore(searchQueueMaxSize, true);
-        searchActiveSemaphore = new Semaphore(maxConcurrentSearches,
-                                              true);
-        documentSearches = new ArrayList<DocumentSearchWrapper>(searchers);
-        log.trace("Constructing search nodes");
-        for (int i = 0 ; i < searchers; i++) {
-            try {
-                documentSearches.add(constructSearchNode(conf));
-            } catch (IOException e) {
-                throw new ConfigurationException(String.format(
-                        "Unable to construch searcher %d", i)
-                );
-            }
-        }
+        searchQueue = new ChangingSemaphore(searchQueueMaxSize, true);
+        log.trace("Constructing search node");
+        searchNode = SearchNodeFactory.createSearchNode(conf);
 
         // Ready for open
         watcher = new IndexWatcher(conf);
@@ -164,111 +106,65 @@ public abstract class SummaSearcherImpl implements SummaSearcherMBean,
         watcher.startWatching(); // This fires an open to the indexes
     }
 
-    /**
-     * Construct a search node based on the given configuration. Note that nodes
-     * does not open indexes before {@link SearchNode#open(String)} is called.
-     * </p><p>
-     * The search node must be wrapped in a SearchNodeWrapper and will be
-     * search-engine-specific (e.g. a Lucene searcher).
-     * @param conf the setup for the node.
-     * @return a node ready to open an index.
-     * @throws IOException if there was an error constructing the node.
-     */
-    public abstract DocumentSearchWrapper constructSearchNode(Configuration conf)
-                                                             throws IOException;
-
-    public SearchResult fullSearch(String filter, String query, long startIndex,
-                                   long maxRecords, String sortKey,
-                                   boolean reverseSort, String[] resultFields,
-                                   String[] fallbacks) throws RemoteException {
+    public ResponseCollection search(Request request) throws RemoteException {
         long fullStartTime = System.nanoTime();
-        if (searchQueueSemaphore.availablePermits() == 0) {
+        if (searchQueue.availablePermits() == 0) {
             throw new RemoteException(
                     "Could not perform search as the queue of requests exceed "
-                    + searchQueueMaxSize);
+                    + searchQueue.getOverallPermits());
         }
         try {
-            searchQueueSemaphore.acquire();
+            searchQueue.acquire();
         } catch (InterruptedException e) {
             throw new RemoteException(
                     "Interrupted while waiting for search queue access", e);
         }
         try {
             try {
-                searchActiveSemaphore.acquire();
-                int minLoad = Integer.MAX_VALUE;
-                DocumentSearchWrapper usable = null;
-                for (DocumentSearchWrapper wrapper : documentSearches) {
-                    if (wrapper.isReady()) {
-                        if (wrapper.getActive() < minLoad) {
-                            minLoad = wrapper.getActive();
-                            usable = wrapper;
-                        }
-                    }
+                if (freeSlots.getOverallPermits() == 0) {
+                    // To kickstart in case of lockout due to open or crashes
+                    freeSlots.setOverallPermits(searchNode.getFreeSlots());
                 }
-                if (usable == null) {
-                    log.debug("None of the " + documentSearches.size()
-                              + " search nodes were ready. Waiting for "
-                              + "readyness.");
-                    long startTime = System.currentTimeMillis();
-                    long endTime = startTime + searcherAvailabilityTimeout;
-                    out:
-                    while (System.currentTimeMillis() < endTime) {
-                        for (DocumentSearchWrapper documentSearch : documentSearches) {
-                            if (documentSearch.isReady()) {
-                                usable = documentSearch;
-                                break out;
-                            }
-                        }
-                        Thread.sleep(10);
-                    }
-                    if (usable == null) {
-                        throw new RemoteException(
-                                "Waited " + (endTime - startTime) + " ms for an"
-                                + " available searcher out of "
-                                + documentSearches.size() + ", but got none");
-                    }
-                }
-                // TODO: Fix the race-condition on open vs. search
-                SearchResult result =
-                        usable.fullSearch(filter, query, startIndex, maxRecords,
-                                          sortKey, reverseSort,
-                                          resultFields, fallbacks);
-                lastQuery = query;
+                // TODO: Introduce timeout here
+                freeSlots.acquire();
+            } catch (InterruptedException e) {
+                throw new RemoteException(
+                        "Interrupted while waiting for free slot", e);
+            }
+            try {
+                ResponseCollection responses = new ResponseCollection();
+                searchNode.search(request, responses);
                 long responseTime = System.nanoTime() - fullStartTime;
                 lastResponseTime = responseTime;
-                log.trace("Query '" + query + "' performed in "
-                          + responseTime + " nanoseconds");
+                log.trace("Query performed in " + responseTime
+                          + " nanoseconds");
                 queryCount.incrementAndGet();
                 totalResponseTime.addAndGet(responseTime);
-                return result;
-            } catch (InterruptedException e) {
-                throw new RemoteException("Interrupted while waiting for active"
-                                          + " search queue access", e);
+                return responses;
             } finally {
-                searchActiveSemaphore.release();
+                try {
+                    // Checks for crashed SearchNodes
+                    freeSlots.setOverallPermits(searchNode.getFreeSlots());
+                } finally {
+                    freeSlots.release();
+                }
             }
         } finally {
-            searchQueueSemaphore.release();
+            searchQueue.release();
         }
-    }
-
-    public String simpleSearch(String query, long startIndex, long maxRecords) 
-                                                        throws RemoteException {
-        return fullSearch(null, query, startIndex, maxRecords,
-                          null, false, null, null).toXML();
     }
 
     /**
      * Shut down the searcher and free all resources. The searcher cannot be
      * used after close() has been called.
+     * @throws RemoteException is an exception happened when closing the
+     *                         underlying SearchNode.
      */
     public synchronized void close() throws RemoteException {
-        // TODO: Free as many resources as possible, even on exception
         watcher.stopWatching();
-        for (DocumentSearchWrapper wrapper: documentSearches) {
-            wrapper.close();
-        }
+        searchNode.close();
+        freeSlots.setOverallPermits(0);
+//        freeSlots.setPermits(searchNode.getFreeSlots());
     }
 
     /**
@@ -282,16 +178,15 @@ public abstract class SummaSearcherImpl implements SummaSearcherMBean,
         //noinspection DuplicateStringLiteralInspection
         log.debug("indexChanged(" + indexFolder + ") called");
         try {
-            for (DocumentSearchWrapper wrapper: documentSearches) {
-                wrapper.open(indexFolder == null
-                             ? null
-                             : indexFolder.getAbsolutePath());
-            }
-        } catch (IOException e) {
-            // TODO: Consider to make this a fatal
+            searchNode.open(indexFolder == null
+                            ? null
+                            : indexFolder.getAbsolutePath());
+        } catch (RemoteException e) {
+            // TODO: Consider making this a fatal
             log.error("Exception received while opening '" + indexFolder + "'",
                       e);
         }
+        freeSlots.setOverallPermits(searchNode.getFreeSlots());
         log.debug("Finished indexChanged(" + indexFolder + ") in " +
                   (System.currentTimeMillis() - startTime) + " ms");
     }
@@ -307,41 +202,15 @@ public abstract class SummaSearcherImpl implements SummaSearcherMBean,
         }
     }
 
-    public synchronized long performWarmup() throws RemoteException {
-        log.trace("Performing explicitely requested warmup");
-        long startTime = System.nanoTime();
-        for (DocumentSearchWrapper wrapper: documentSearches) {
-            wrapper.warmup();
-        }
-        return System.nanoTime() - startTime;
-    }
-
-    public int getSearchers() {
-        return searchers;
-    }
-    public void setSearchers(int numberOfSearchers) {
-        // TODO: Implement change of searchers
-        log.warn("setSearchers(" + numberOfSearchers + ") is not implemented"
-                 + " properly yet");
-        searchers = numberOfSearchers;
-    }
-
-    public int getMaxConcurrentSearches() {
-        return maxConcurrentSearches;
-    }
-    public void setMaxConcurrentSearches(int maxConcurrentSearches) {
-        log.debug(String.format("setMaxConcurrentSearches(%d) called",
-                                maxConcurrentSearches));
-        this.maxConcurrentSearches = maxConcurrentSearches;
-    }
+    /* Mutators */
 
     public int getSearchQueueMaxSize() {
-        return searchQueueMaxSize;
+        return searchQueue.getOverallPermits();
     }
     public void setSearchQueueMaxSize(int searchQueueMaxSize) {
         log.debug(String.format("setSearchQueueMaxSize(%s) called",
                                 searchQueueMaxSize));
-        this.searchQueueMaxSize = searchQueueMaxSize;
+        searchQueue.setOverallPermits(searchQueueMaxSize);
     }
 
     public int getSearcherAvailabilityTimeout() {
@@ -354,65 +223,12 @@ public abstract class SummaSearcherImpl implements SummaSearcherMBean,
         this.searcherAvailabilityTimeout = searcherAvailabilityTimeout;
     }
 
-    public String getSortKey() {
-        return sortKey;
-    }
-    public void setSortKey(String sortKey) {
-        log.debug(String.format("setSortKey(%s) called", sortKey));
-        this.sortKey = sortKey;
-    }
-
-    public String[] getResultFields() {
-        return resultFields;
-    }
-    public void setResultFields(String[] resultFields) {
-        log.debug(String.format("setResultFields(%s) called",
-                                Arrays.toString(resultFields)));
-        this.resultFields = resultFields;
-    }
-
-    public String[] getFallbackValues() {
-        return fallbackValues;
-    }
-    public void setFallbackValues(String[] fallbackValues) {
-        log.debug(String.format("setFallbackValues(%s) called",
-                                Arrays.toString(fallbackValues)));
-    }
-
-    public long getMaxRecords() {
-        return maxRecords;
-    }
-    public void setMaxRecords(long maxRecords) {
-        log.debug(String.format("setMaxRecords(%d) called", maxRecords));
-        this.maxRecords = maxRecords;
-    }
-
-    public String getWarmupData() {
-        return warmupData;
-    }
-    public void setWarmupData(String warmupData) {
-        log.debug(String.format("setWarmupData(%s) called", warmupData));
-        this.warmupData = warmupData;
-    }
-
-    public int getWarmupMaxTime() {
-        return warmupMaxTime;
-    }
-    public void setWarmupMaxTime(int warmupMaxTime) {
-        log.debug(String.format("setWarmupMaxTime(%d ms) called",
-                                warmupMaxTime));
-        this.warmupMaxTime = warmupMaxTime;
-    }
-
     public String getIndexLocation() throws RemoteException {
         return indexFolder.toString();
     }
 
     /* Statistics */
 
-    public String getLastQuery() {
-        return lastQuery;
-    }
     public long getQueryCount() throws RemoteException {
         return queryCount.get();
     }
@@ -427,17 +243,18 @@ public abstract class SummaSearcherImpl implements SummaSearcherMBean,
         return qc == 0 ? Double.NaN : (double)totalResponseTime.get() / qc;
     }
     public int getQueueLength() throws RemoteException {
-        return searchQueueSemaphore.getQueueLength();
+        return searchQueue.getQueueLength();
     }
     public int getCurrentSearches() throws RemoteException {
-        return searchActiveSemaphore.getQueueLength();
+        throw new UnsupportedOperationException("Not supported yet");
+//        return searchActiveSemaphore.getQueueLength();
     }
     // Not really thread-safe, but statistically this should work ;-)
     public void clearStatistics() throws RemoteException {
         //noinspection AssignmentToNull
-        lastQuery = null;
         lastResponseTime = -1;
         queryCount.set(0);
         totalResponseTime.set(0);
     }
+
 }

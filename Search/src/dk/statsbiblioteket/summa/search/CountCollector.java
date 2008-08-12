@@ -25,8 +25,9 @@ package dk.statsbiblioteket.summa.search;
 import org.apache.lucene.search.HitCollector;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
-/*
+/**
  * Collects the number of documents matching a given search;
+ * @deprecated with no successor
 */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,

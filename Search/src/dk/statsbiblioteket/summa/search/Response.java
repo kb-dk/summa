@@ -22,18 +22,36 @@
  */
 package dk.statsbiblioteket.summa.search;
 
-import java.rmi.RemoteException;
+import java.io.Serializable;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
- * Fairly minimal interface for searchers. This is normally only used directly
- * for search-nodes under a full-scale {@link SummaSearcher}.
- * @deprecated in favor of {@link SummaSearcher} and {@link SearchNode}.
+ * A response from a SearchNode contains SearchNode specific content.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
-public interface BasicSearcher {
-    
+        author = "te",
+        comment="Better class description needed ")
+public interface Response extends Serializable {
+    /**
+     * @return the name of the response. Responses instantiated from the same
+     *         class are required to return the same name, so that name
+     *         equality means that {@link #merge} can be safely called.
+     *         Names are required to be unique across classes.
+     */
+    public String getName();
+
+    /**
+     * Merge the content from other into this Response, sorting and trimming
+     * when necessary.
+     * @param other the Response to merge into this.
+     * @throws ClassCastException if other was not assignable to this.
+     */
+    public void merge(Response other) throws ClassCastException;
+
+    /**
+     * @return the content of Response as XML.
+     */
+    public String toXML();
 }

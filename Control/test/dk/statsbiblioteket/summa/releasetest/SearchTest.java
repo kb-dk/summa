@@ -47,7 +47,6 @@ import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.storage.RecordIterator;
 import dk.statsbiblioteket.summa.storage.StorageFactory;
 import dk.statsbiblioteket.summa.storage.api.Storage;
-import dk.statsbiblioteket.summa.control.service.StorageService;
 import dk.statsbiblioteket.summa.control.service.FilterService;
 import dk.statsbiblioteket.summa.control.service.SearchService;
 import dk.statsbiblioteket.summa.ingest.stream.FileReader;
