@@ -58,8 +58,12 @@ public class ResponseCollection implements Collection<Response>, Serializable {
      * {@code
     <?xml version="1.0" encoding="UTF-8" ?>
     <responsecollection>
+    <response>
     response-xml-1
+    </response>
+    <response>
     response-xml-2
+    </response>
     ...
     <responsecollection>
      }
@@ -70,7 +74,10 @@ public class ResponseCollection implements Collection<Response>, Serializable {
         sw.append("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n");
         sw.append("<responsecollection>\n");
         for (Map.Entry<String, Response> entry: responses.entrySet()) {
+            sw.append("<response name=\"").append(entry.getValue().getName());
+            sw.append("\">\n");
             sw.append(entry.getValue().toXML());
+            sw.append("</response>\n");
         }
         sw.append("</responsecollection>\n");
         return sw.toString();
@@ -189,5 +196,12 @@ public class ResponseCollection implements Collection<Response>, Serializable {
 
     public synchronized void clear() {
         responses.clear();
+    }
+
+    private String encode(String in) {
+        in = in.replaceAll("&", "&amp;");
+        in = in.replaceAll("\"", "&quot;");
+        in = in.replaceAll("<", "&lt;");
+        return in.replaceAll(">", "&gt;");
     }
 }

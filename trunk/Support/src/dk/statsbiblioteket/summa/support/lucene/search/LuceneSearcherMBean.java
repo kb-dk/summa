@@ -20,18 +20,17 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.support.lucene.search;
+package dk.statsbiblioteket.summa.support.lucene.search;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.search.SummaSearcherMBean;
-import dk.statsbiblioteket.summa.search.SummaSearcher;
+import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
 
 /**
- * Trivial extension of {@link SummaSearcherMBean} to make standard compliant
- * MBean implementation og the {@link LuceneSearcher}. 
+ * Trivial extension of {@link DocumentSearcher} to make standard compliant
+ * MBean implementation of the {@link LuceneSearchNode}.
  */
 @QAInfo(level = QAInfo.Level.NOT_NEEDED,
         state = QAInfo.State.UNDEFINED,
         author = "te")
-public interface LuceneSearcherMBean extends SummaSearcher {
+public interface LuceneSearcherMBean extends DocumentSearcher {
 }

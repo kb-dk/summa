@@ -20,7 +20,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.support.lucene.search;
+package dk.statsbiblioteket.summa.support.lucene.search;
 
 import java.io.IOException;
 import java.net.URL;
@@ -38,7 +38,7 @@ import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
 import dk.statsbiblioteket.summa.common.index.IndexException;
 import dk.statsbiblioteket.summa.search.document.DocumentSearcherImpl;
 import dk.statsbiblioteket.summa.search.document.DocumentResponse;
-import dk.statsbiblioteket.summa.search.SummaSearcherMBean;
+import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.search.IndexSearcher;
@@ -48,6 +48,7 @@ import org.apache.lucene.search.TopFieldDocs;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.document.FieldSelector;
@@ -64,12 +65,21 @@ import org.apache.lucene.index.CorruptIndexException;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class LuceneSearchNode extends DocumentSearcherImpl
-        implements Configurable {
+// TODO: Support setMaxBooleanClauses
+public class LuceneSearchNode extends DocumentSearcherImpl implements
+                                                                  Configurable {
     private static Log log = LogFactory.getLog(LuceneSearchNode.class);
 
+    /**
+     * The maximum number of boolean clauses that a query can be expanded to.
+     * </p><p>
+     * This property is optional. Default is 10000.
+     */
+    public static final String CONF_MAX_BOOLEAN_CLAUSES =
+            "summa.support.lucene.clauses.max";
+    public static final int DEFAULT_MAX_BOOLEAN_CLAUSES = 10000;
+    private int maxBooleanClauses = DEFAULT_MAX_BOOLEAN_CLAUSES;
 
-    private SummaSearcherMBean master = null;
     private LuceneIndexDescriptor descriptor;
     private SummaQueryParser parser;
     private IndexSearcher searcher;
@@ -78,77 +88,31 @@ public class LuceneSearchNode extends DocumentSearcherImpl
 
     /**
      * Constructs a Lucene search node from the given configuration. This
-     * involves the creation of an index descriptor. It is recommended to
-     * use {@link LuceneSearchNode(Configuration, LuceneIndexDescriptor)}
-     * instead, as reuse of the descriptor lowers resource use.
-     * @param conf         the setup for the node.
-     * @throws IOException if the node could not be initialized.
+     * involves the creation of an index descriptor.
+     * @param conf the setup for the node. See {@link LuceneIndexUtils},
+     *             {@link DocumentSearcherImpl} and {@link SearchNodeImpl} for
+     *             details on keys and values.
+     * @throws RemoteException if the node could not be initialized.
      */
-    public LuceneSearchNode(Configuration conf) throws IOException {
+    public LuceneSearchNode(Configuration conf) throws RemoteException {
+        super(conf);
+        log.debug("Constructing LuceneSearchNode");
+        maxBooleanClauses =
+                conf.getInt(CONF_MAX_BOOLEAN_CLAUSES, maxBooleanClauses);
+        log.trace("Setting max boolean clauses to " + maxBooleanClauses);
+        BooleanQuery.setMaxClauseCount(maxBooleanClauses);
         descriptor = LuceneIndexUtils.getDescriptor(conf);
         parser = new SummaQueryParser(descriptor);
-        init(conf);
     }
 
-    /**
-     * Constructs a Lucene search node from the given configuration and
-     * uses the given descriptor. This is the recommended constructor.
-     * @param conf         the setup for the node.
-     * @param descriptor   the description of the index.
-     * @throws IOException if the node could not be initialized.
-     */
-    public LuceneSearchNode(Configuration conf,
-                            LuceneIndexDescriptor descriptor) throws
-                                                              IOException {
-        this.descriptor = descriptor;
-        parser = new SummaQueryParser(descriptor);
-        init(conf);
-    }
-
-    /**
-     * Constructs a Lucene search node from the given configuration. It uses the
-     * given descriptor and relies on master for default values. This is the
-     * recommended constructor as it enables Java Bean based tweaks of the
-     * default values.
-     * @param master     the holder for default values.
-     * @param conf         the setup for the node.
-     * @param descriptor   the description of the index.
-     * @throws IOException if the node could not be initialized.
-     */
-    public LuceneSearchNode(SummaSearcherMBean master, Configuration conf,
-                            LuceneIndexDescriptor descriptor) throws
-                                                              IOException {
-        this.descriptor = descriptor;
-        parser = new SummaQueryParser(descriptor);
-        this.master = master;
-        if (master == null) {
-            init(conf);
-        }
-    }
-
-    private void init(Configuration conf) {
-//        resultFields = conf.getStrings(CONF_RESULT_FIELDS, resultFields);
-//        fallbackValues = conf.getStrings(CONF_FALLBACK_VALUES, fallbackValues);
-//        sortKey = conf.getString(CONF_DEFAULT_SORTKEY, sortKey);
-        log.debug("init with resultFields "
-                  + Arrays.toString(resultFields)
-                  + " and sort '" + sortKey + "'");
-        if (fallbackValues != null
-            && resultFields.length != fallbackValues.length) {
-            //noinspection DuplicateStringLiteralInspection
-            throw new IllegalArgumentException(String.format(
-                    "The number of fallback-values(%s) was not equal to the "
-                    + "number of result fields(%s)", fallbackValues.length,
-                                              resultFields.length));
-        }
-    }
-
-    public void open(String location) throws RemoteException {
+    public void managedOpen(String location) throws RemoteException {
         log.debug("Open called for location '" + location
                   + "'. Appending /" + LuceneIndexUtils.LUCENE_FOLDER);
         location +=  "/" + LuceneIndexUtils.LUCENE_FOLDER;
+        if (this.location != null) {
+            close();
+        }
         this.location = location;
-        close();
         if (location == null || "".equals(location)) {
             log.warn("open(null) called, no index available");
             return;
@@ -167,15 +131,19 @@ public class LuceneSearchNode extends DocumentSearcherImpl
         try {
             searcher = new IndexSearcher(
                     FSDirectory.getDirectory(urlLocation.getFile()));
+        } catch (CorruptIndexException e) {
+            throw new RemoteException(String.format(
+                    "Corrupt index at '%s'", urlLocation.getFile()), e);
         } catch (IOException e) {
             throw new RemoteException(String.format(
                     "Could not create an IndexSearcher for '%s'",
-                    urlLocation.getFile()));
+                    urlLocation.getFile()), e);
         }
         log.debug("Open finished for location '" + location + "'");
     }
 
-    public void close() {
+    public void managedClose() {
+        log.trace("close called");
         if (searcher != null) {
             try {
                 searcher.close();
@@ -190,28 +158,23 @@ public class LuceneSearchNode extends DocumentSearcherImpl
         }
     }
 
-    public void warmup(String query, String sortKey, String[] fields) {
+    public void managedWarmup(String query) {
         //noinspection OverlyBroadCatchBlock
         try {
-            fullSearch(null, query, 0, WARMUP_MAX_HITS, sortKey, false,
-                       fields, getFallbackValues());
+            fullSearch(null, query, 0, WARMUP_MAX_HITS, null, false, null,
+                       null);
         } catch (Throwable t) {
             log.warn("Throwable caught in warmup", t);
         }
     }
 
-    public DocumentResponse fullSearch(String filter, String query, long startIndex,
-                                   long maxRecords, String sortKey,
-                                   boolean reverseSort, String[] fields,
-                                   String[] fallbacks) throws RemoteException {
+    public DocumentResponse fullSearch(String filter, String query,
+                                       long startIndex, long maxRecords,
+                                       String sortKey, boolean reverseSort,
+                                       String[] fields, String[] fallbacks)
+                                                        throws RemoteException {
         return fullSearch(filter, query, startIndex, maxRecords,
                           sortKey, reverseSort, fields, fallbacks, true);
-    }
-
-    public String simpleSearch(String query, long startIndex,
-                               long maxRecords) throws RemoteException {
-        return fullSearch(null, query, startIndex, maxRecords,
-                          null, false, null, null, true).toXML();
     }
 
     private DocumentResponse fullSearch(String filter, String query,
@@ -256,11 +219,11 @@ public class LuceneSearchNode extends DocumentSearcherImpl
                 fields = getResultFields();
                 fallbacks = getFallbackValues();
             }
-            Filter filterO = filter == null || "".equals(filter) ? null :
+            Filter luceneFilter = filter == null || "".equals(filter) ? null :
                              new QueryWrapperFilter(parser.parse(filter));
-            Query queryO = parser.parse(query);
+            Query luceneQuery = parser.parse(query);
             TopFieldDocs topDocs = searcher.search(
-                    queryO, filterO,
+                    luceneQuery, luceneFilter,
                     (int)(startIndex + maxRecords), Sort.RELEVANCE);
 
             FieldSelector selector = new SetBasedFieldSelector(
@@ -269,32 +232,35 @@ public class LuceneSearchNode extends DocumentSearcherImpl
 
             DocumentResponse result =
                     new DocumentResponse(filter, query, startIndex, maxRecords,
-                                     sortKey, reverseSort, resultFields, 0,
+                                     sortKey, reverseSort, fields, 0,
                                      topDocs.totalHits);
-
-            for (int i = 0 ; i < topDocs.scoreDocs.length ; i++) {
+            // TODO: What about longs for startIndex and maxRecords?
+            for (int i = (int)startIndex ;
+                 i < topDocs.scoreDocs.length
+                 && i < (int)(startIndex + maxRecords);
+                 i++) {
                 ScoreDoc scoreDoc = topDocs.scoreDocs[i];
                 // TODO: Get a service id and the sort value
                 DocumentResponse.Record record =
-                        new DocumentResponse.Record(Integer.toString(scoreDoc.doc),
-                                                "NA", scoreDoc.score, null);
+                        new DocumentResponse.Record(
+                                Integer.toString(scoreDoc.doc), "NA",
+                                scoreDoc.score, null);
                 Document doc =
                      searcher.getIndexReader().document(scoreDoc.doc, selector);
-                for (int f = (int)startIndex ;
-                     f < fields.length && f < (int)(startIndex + maxRecords) ;
-                     f++) {
+                for (int f = 0 ; f < fields.length ; f++) {
                     Field iField = doc.getField(fields[f]);
                     if (iField == null || iField.stringValue() == null ||
                         "".equals(iField.stringValue())) {
                         if (fallbacks != null && fallbacks.length != 0) {
                             record.addField(new DocumentResponse.Field(
-                                    fields[i], fallbacks[i]));
+                                    fields[f], fallbacks[i]));
                         }
                     } else {
                         record.addField(new DocumentResponse.Field(
-                                fields[i], encode(iField.stringValue())));
+                                fields[f], encode(iField.stringValue())));
                     }
                 }
+                result.addRecord(record);
             }
             result.setSearchTime(System.currentTimeMillis()-startTime);
             if (doLog) {

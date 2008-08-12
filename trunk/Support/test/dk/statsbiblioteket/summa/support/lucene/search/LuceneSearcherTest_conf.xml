@@ -3,6 +3,14 @@
 <xproperties>
     <xproperties>
         <entry>
+            <key>summa.search.node.class</key>
+            <value class="string">dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode</value>
+        </entry>
+        <entry>
+            <key>summa.search.searcher-availability.timeout</key>
+            <value class="int">10</value>
+        </entry>
+        <entry>
             <key>search.clauses.max</key>
             <value class="int">20000</value>
         </entry>
@@ -43,10 +51,6 @@
         <entry>
             <key>summa.search.search-queue.max-size</key>
             <value class="int">50</value>
-        </entry>
-        <entry>
-            <key>summa.search.searcher-availability.timeout</key>
-            <value class="int">300000</value>
         </entry>
         <!-- IndexWatcher -->
         <entry>

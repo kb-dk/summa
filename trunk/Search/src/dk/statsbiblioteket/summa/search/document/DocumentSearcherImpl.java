@@ -101,7 +101,7 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements
     protected void managedSearch(Request request, ResponseCollection responses)
                                                         throws RemoteException {
         String query = request.getString(SEARCH_QUERY, null);
-        String filter = request.getString(SEARCH_QUERY, null);
+        String filter = request.getString(SEARCH_FILTER, null);
         if ((query == null || "".equals(query)) &&
             (filter == null || "".equals(filter))) {
             log.warn("No query and no filter specified for document search, "

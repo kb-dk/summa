@@ -165,7 +165,7 @@ public class IndexWatcher extends Observable<IndexListener> implements
     }
 
     private File updateAndReturnCurrentState() {
-        log.trace("updateAndReturnCurrentState called");
+//        log.trace("updateAndReturnCurrentState called");
         File newChecked = getCurrentIndexLocation();
         if (checkHasBeenPerformed && equals(lastCheckedLocation, newChecked)) {
             return lastCheckedLocation;
@@ -198,7 +198,7 @@ public class IndexWatcher extends Observable<IndexListener> implements
                 listener.indexChanged(lastCheckedLocation);
             } catch (Exception e) {
                 log.error("Encountered exception during notify with location '"
-                         + lastCheckedLocation + "'");
+                         + lastCheckedLocation + "'", e);
             }
         }
         lastNotification = System.currentTimeMillis();

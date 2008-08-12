@@ -51,6 +51,14 @@ public interface Response extends Serializable {
     public void merge(Response other) throws ClassCastException;
 
     /**
+     * The XML returned should be an XML-snippet: UTF-8 is used and no header
+     * should be included. A proper response could be {@code
+<myresponse>
+    <hits total="87">
+    <hit>Foo</hit>
+    ...
+</myresponse>
+    }
      * @return the content of Response as XML.
      */
     public String toXML();
