@@ -22,19 +22,12 @@
  */
 package dk.statsbiblioteket.summa.control.service;
 
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
-import javax.management.InstanceAlreadyExistsException;
-import javax.management.MBeanRegistrationException;
-import javax.management.NotCompliantMBeanException;
-import javax.management.MalformedObjectNameException;
 import java.rmi.RemoteException;
-import java.lang.management.ManagementFactory;
 import java.io.IOException;
 
 import dk.statsbiblioteket.summa.search.SummaSearcher;
 import dk.statsbiblioteket.summa.search.LuceneSearcher;
-import dk.statsbiblioteket.summa.search.SearchResult;
+import dk.statsbiblioteket.summa.search.document.DocumentResponse;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.control.api.Status;
@@ -193,7 +186,7 @@ public class SearchService extends ServiceBase implements SummaSearcher,
      * @return the result of a search, suitable for merging or XML construction.
      * @throws RemoteException if there was an exception during search.
      */
-    public SearchResult fullSearch(String filter, String query, long startIndex,
+    public DocumentResponse fullSearch(String filter, String query, long startIndex,
                              long maxRecords, String sortKey,
                              boolean reverseSort, String[] resultFields,
                              String[] fallbacks) throws RemoteException {

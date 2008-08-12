@@ -22,51 +22,69 @@
  */
 package dk.statsbiblioteket.summa.search;
 
-import java.io.IOException;
+import java.rmi.RemoteException;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.search.document.DocumentSearchWrapper;
 
 /**
- * Provides methods for controlling a SummaSearcher as part of a collection
- * of other SummaSearchers. Nodes should not open any indexes as part of the
+ * Nodes are the actual searchers under a SummaSearcher. Nodes are controlled
+ * by SummaSearcher and should not open any indexes as part of the
  * construction-phase. Only {@link #open(String)} should trigger opening.
  * </p><p>
- * Nodes are not responsible for keeping track of running searches when open
- * or close is called. This is the responsibility of the user and is
- * implemented in {@link DocumentSearchWrapper}.
+ * SearchNodes uses the Composite-pattern to achieve sequence, parallelism and
+ * controlling open/close.
  * </p><p>
- * Nodes are not responsible for checking for sizes of fileds and fallbacks and
- * the size of maxRecords. Again, this is the responsibility of the caller.
+ * Note: It is highly recommended to use the {@link SearchNodeImpl} as it
+ * keeps track of running searches when open and close is called.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public interface SearchNode extends BasicSearcher {
+public interface SearchNode {
+    /**
+     * A search will normally involve the addition of an implementation-specific
+     * Response to responses.  Some searchers (notably the FacetSearcher)
+     * requires data from previous Searchers (DocumentSearcher, in the case of
+     * FacetSearcher).
+     * @param request   contains SearchNode-specific request-data.
+     * @param responses where a Response to a Request is stored.
+     * @throws RemoteException if the search could not be performed.
+     */
+    public void search(Request request, ResponseCollection responses) throws
+                                                                RemoteException;
+
+    /**
+     * Performs a warm-up with the given request. This could be a single query
+     * for a DocumentSearcher or a word for a did-you-mean searcher.
+     * @param request implementation-specific warmup-data.
+     */
+    public void warmup(String request);
 
     /**
      * Opens the index at the given location. Implementations should ensure that
      * previously opened connections are closed before opening new.
      * It is not guaranteed that {@link #close()} will be called before open.
      * @param location     where the index can be found.
-     * @throws IOException if the index could not be opened.
+     * @throws RemoteException if the index could not be opened.
      */
-    public void open(String location) throws IOException;
+    public void open(String location) throws RemoteException;
 
     /**
-     * Perform a warmup-search. This normally means no logging of queries.
-     * @param query       the query string to use for search.
-     * @param sortKey     specifies how to sort. If this is null or
-     *                    {@link #SORT_ON_SCORE}, sorting will be done on the
-     *                    scores for the hits. If a field-name is specified,
-     *                    sorting will be done on that field.<br />
-     *                    This parameter is optional.
-     *                    Default is {@link #SORT_ON_SCORE}.
-     *                    Specifying null is the same as specifying
-     *                    {@link #SORT_ON_SCORE}.
-     * @param fields      the fields to extract content from.
-     *                    This parameter is optional. Default is specified
-     *                    in the conf. at {@link #CONF_RESULT_FIELDS}.
+     * Shut down the searcher and free all associated resources. The searcher
+     * cannot be used after close. If an open() is called after close, the
+     * searcher must be usable again.
+     * @throws RemoteException if an error occured during close. Implementers
+     *                         of the interface are urged to free as many
+     *                         resources as possible, even in the event of an
+     *                         exception.
      */
-    public void warmup(String query, String sortKey, String[] fields);
+    public void close() throws RemoteException;
+
+    /**
+     * A slot refers to the number of searches or warmups that can be performed
+     * simultaneously at the current time. If the number of free slots is 0,
+     * new requests should be queued.
+     * @return the number of free slots. This can be 0.
+     */
+    public int getFreeSlots();
 }

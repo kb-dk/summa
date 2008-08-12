@@ -22,14 +22,27 @@
  */
 package dk.statsbiblioteket.summa.search;
 
+import java.io.Serializable;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Set;
+import java.util.Collection;
+
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.common.util.ConvenientMap;
 
 /**
- * Trivial extension of {@link SummaSearcherMBean} to make standard compliant
- * MBean implementation og the {@link LuceneSearcher}. 
+ * A request to a SummaSearcher contains arguments to every SearchNode under
+ * the Searcher.
+ * </p><p>
+ * Note: Underlying empty String-values are equalled to null in getString,
+ * getInt, getLong and getBoolean. 
  */
-@QAInfo(level = QAInfo.Level.NOT_NEEDED,
-        state = QAInfo.State.UNDEFINED,
-        author = "te")
-public interface LuceneSearcherMBean extends SummaSearcher {
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.IN_DEVELOPMENT,
+        author = "te",
+        comment="Better class description needed")
+public class Request extends ConvenientMap {
+//    private static Log log = LogFactory.getLog(Request.class);
+
 }

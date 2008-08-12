@@ -17,7 +17,9 @@
 
         <entry>
             <key>summa.search.searcher-class</key>
-            <value class="string">dk.statsbiblioteket.summa.search.LuceneSearcher</value>
+            <value class="string">
+                dk.statsbiblioteket.support.lucene.search.LuceneSearcher
+            </value>
         </entry>
 
         <entry>
