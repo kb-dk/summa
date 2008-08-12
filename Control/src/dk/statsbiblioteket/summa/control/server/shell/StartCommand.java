@@ -73,7 +73,7 @@ public class StartCommand extends Command {
                         ClientDeployer.DEPLOYER_CLASS_PROPERTY,
                         transport,
                         ClientDeployer.DEPLOYER_FEEDBACK_PROPERTY,
-                "dk.statsbiblioteket.summa.control.feedback.RemoteFeedbackClient",
+                        "dk.statsbiblioteket.summa.control.feedback.RemoteFeedbackClient",
                         RemoteFeedback.REGISTRY_HOST_PROPERTY,
                         hostname);
 
