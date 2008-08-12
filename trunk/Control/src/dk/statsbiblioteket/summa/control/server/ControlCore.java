@@ -2,6 +2,7 @@ package dk.statsbiblioteket.summa.control.server;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
+import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
@@ -9,6 +10,8 @@ import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.api.BadConfigurationException;
 import dk.statsbiblioteket.summa.control.api.Feedback;
 import dk.statsbiblioteket.summa.control.api.NoSuchClientException;
+import dk.statsbiblioteket.summa.control.api.Status;
+import dk.statsbiblioteket.summa.control.client.Client;
 
 import java.io.IOException;
 import java.io.File;
@@ -183,7 +186,14 @@ public class ControlCore extends UnicastRemoteObject
         Feedback feedback = Configuration.create(feedbackClass, conf);
 
         try {
+            ClientMonitor mon = new ClientMonitor(clientManager,
+                                                  instanceId,
+                                                  8,
+                                                  feedback,
+                                                  Status.CODE.not_instantiated);
+            new Thread (mon).start ();
             deployer.start(feedback);
+
         } catch (Exception e) {
             throw new ClientDeploymentException("Error when starting client '"
                                                 + instanceId + "': "

@@ -337,11 +337,21 @@ public class SSHDeployer implements ClientDeployer {
 
         /* Exec the command line */
         ProcessRunner runner = new ProcessRunner(commandLine);
+        runner.setTimeout(5000);
 
         String error = null;
         try {
-            runner.run();
-            if (runner.getReturnCode() != 0) {
+            Thread processThread = new Thread (runner);
+            processThread.start();
+            processThread.join(5100); // We also set the timeout for this above
+
+            if (runner.isTimedOut()) {
+                String errorMsg = runner.getProcessErrorAsString();
+                error = "Start request for client '" + clientId + "' with login "
+                        + login + " and configuration server "
+                        + confLocation + ". Timed out"
+                        + errorMsg != null ? ":\n" + errorMsg : "";
+            } else if (runner.getReturnCode() != 0) {
                 error = "Could not run client '" + clientId + "' with login "
                         + login + " and configuration server "
                         + confLocation + ". Got return value "

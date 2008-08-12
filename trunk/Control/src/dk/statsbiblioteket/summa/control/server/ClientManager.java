@@ -191,6 +191,15 @@ public class ClientManager extends ConnectionManager<ClientConnection>
         }
     }
 
+    private String getClientHost (String instanceId) {
+        Configuration conf = getDeployConfiguration(instanceId);
+        return getClientHost(conf);
+    }
+
+    private String getClientHost (Configuration deployConfig) {
+        return deployConfig.getString(ClientConnection.REGISTRY_HOST_PROPERTY);
+    }
+
     /**
      * Find out what registry port a client uses
      * @param instanceId
@@ -229,15 +238,27 @@ public class ClientManager extends ConnectionManager<ClientConnection>
         return super.get (address);        
     }
 
+    public String getClientAddress (String instanceId) {
+        if (!knowsClient(instanceId)) {
+            throw new NoSuchClientException("No such client: " + instanceId);
+        }
+
+        Configuration clientDeployConf = getDeployConfiguration (instanceId);
+
+        String address = "//" + getClientHost (clientDeployConf);
+        address += ":" + getClientRegistryPort(instanceId, clientDeployConf);
+        address += "/" + instanceId;
+
+        return address;
+    }
+
     public String getClientAddress (String instanceId,
                                     Configuration clientDeployConf) {
         if (!knowsClient(instanceId)) {
             throw new NoSuchClientException("No such client: " + instanceId);
         }
 
-        String address = "//" + clientDeployConf.getString(
-                                       ClientConnection.REGISTRY_HOST_PROPERTY);
-
+        String address = "//" + getClientHost (clientDeployConf);
         address += ":" + getClientRegistryPort(instanceId, clientDeployConf);
         address += "/" + instanceId;
 
@@ -249,7 +270,9 @@ public class ClientManager extends ConnectionManager<ClientConnection>
     }
 
     private File getClientMetaFile (String instanceId) {
-        return new File (metaDir, instanceId + CLIENT_META_FILE_EXT);
+        File metaFile = new File (metaDir, instanceId + CLIENT_META_FILE_EXT);
+        log.trace ("Metafile for '" + instanceId + " is " + metaFile);
+        return metaFile;
     }
 
     public List<String> getClients() {
