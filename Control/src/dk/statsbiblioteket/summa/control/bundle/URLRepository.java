@@ -28,6 +28,9 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 
 import java.io.*;
 import java.net.URL;
+import java.util.regex.Pattern;
+import java.util.List;
+import java.util.ArrayList;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -109,5 +112,32 @@ public class URLRepository implements BundleRepository {
 
         return result;
 
+    }
+
+    public List<String> list (String regex) throws IOException {
+        log.trace ("Got list() request for '" + regex + "'");
+
+        if (!baseUrl.startsWith("file://")) {
+            throw new UnsupportedOperationException("Only 'file://'-based "
+                                                    + "repositories support "
+                                                    + "listing. Baseurl: "
+                                                    + baseUrl);
+        }
+
+        File baseDir = new File (new URL(baseUrl).getFile());
+        Pattern pat = Pattern.compile(regex);
+        List<String> result = new ArrayList <String> (10);
+
+        for (String bdl : baseDir.list()) {
+            bdl = bdl.replace (".bundle", "");
+            if (pat.matcher(bdl).matches()) {
+                result.add (bdl);
+                log.trace ("Match: " + bdl);
+            } else {
+                log.trace ("No match: " + bdl);
+            }
+        }
+
+        return result;
     }
 }

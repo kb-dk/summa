@@ -29,6 +29,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.List;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -63,6 +64,21 @@ public interface BundleRepository extends Configurable, Serializable {
      * @return a reference to the temporary {@code .bundle} file
      * @throws IOException if there is an error retrieving the bundle
      */
-    public abstract File get (String bundleId) throws IOException;
+    public File get (String bundleId) throws IOException;
+
+    /**
+     * Retrieve a list of available bundles, matching a regular expression.
+     * <p></p>
+     * This method is optional to implement. Implementations not supporting
+     * this method must throw {@link UnsupportedOperationException}
+     *
+     * @param regex a regular expression the bundle names must match. Use '.*'
+     *              to list all bundles.
+     * @return a list of bundle ids
+     * @throws IOException on communication errros
+     * @throws UnsupportedOperationException if the repository does not support
+     *                                       listing
+     */
+    public List<String> list (String regex) throws IOException;
 
 }
