@@ -26,7 +26,7 @@ import java.rmi.RemoteException;
 import java.io.IOException;
 
 import dk.statsbiblioteket.summa.search.SummaSearcher;
-import dk.statsbiblioteket.summa.search.LuceneSearcher;
+import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
 import dk.statsbiblioteket.summa.search.document.DocumentResponse;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Logging;
@@ -38,7 +38,7 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * Wrapper for a {@link SummaSearcher}, which will normally translate to a
- * {@link LuceneSearcher}.
+ * {@link SummaSearcher}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -49,13 +49,13 @@ public class SearchService extends ServiceBase {
     /**
      * The class to instantiate and use for searching.
      * </p><p>
-     * This is optional. Default is the {@link LuceneSearcher} class.
+     * This is optional. Default is the {@link SummaSearcher} class.
      */
     public static final String CONF_SEARCHER_CLASS =
             "summa.search.searcher.class";
 
     public static final Class<? extends SummaSearcher> DEFAULT_SEARCHER_CLASS =
-            LuceneSearcher.class;
+            SummaSearcherImpl.class;
 
     private Configuration conf;
     private SummaSearcher searcher;
