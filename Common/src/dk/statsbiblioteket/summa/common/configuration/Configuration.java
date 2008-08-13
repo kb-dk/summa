@@ -213,6 +213,8 @@ public class Configuration implements Serializable,
      * @param key the name of the value to look up.
      * @return the {@code String} representation of the value assciated with
      *         {@code key}. If the value does not exist, an exception is thrown.
+     *         The returned string will not containing leading or trailing white
+     *         space
      * @throws ConfigurationStorageException if there is an error communicating
      *                                       with the storage backend.
      * @throws NullPointerException          if there was no value corresponding
@@ -223,7 +225,7 @@ public class Configuration implements Serializable,
         if (val == null) {
             throw new NullPointerException("No such property: " + key);
         }
-        return val.toString();
+        return val.toString().trim();
     }
 
     /**
@@ -234,13 +236,15 @@ public class Configuration implements Serializable,
      *                                       with the storage backend.
      * @return the {@code String} representation of the value associated with
      *         {@code key} or the defaultValue, if the key did not exist.
+     *         The returned string will not containing leading or trailing white
+     *         space
      */
     public String getString(String key, String defaultValue) {
         Object val = get(key);
         if (val == null) {
             return defaultValue;
         }
-        return val.toString();
+        return val.toString().trim();
     }
 
     /**
@@ -377,8 +381,10 @@ public class Configuration implements Serializable,
 
     /**
      * Look up a list of Strings, previously stored with {@link #setStrings}.
+     * All string elements will be trimmed for leading and trailing white space.
+     *
      * @param key the name of the property to look up.
-     * @return value as a list of Strings.
+     * @return value as a list of trimmed Strings.
      * @throws NullPointerException if the property is not found.
      * @throws IllegalArgumentException if the property is found but does not
      *         parse as a list of Strings
@@ -391,11 +397,15 @@ public class Configuration implements Serializable,
             ArrayList<String> result =
                     new ArrayList<String>(((List)val).size());
             for (Object o: (List)val) {
-                result.add(o.toString());
+                result.add(o.toString().trim());
             }
             return result;
         }
         if (val instanceof String[]) {
+            String[] val_a = (String[])val;
+            for (int i = 0; i < val_a.length; i++) {
+                val_a[i] = val_a[i].trim();
+            }
             return Arrays.asList((String[]) val);
         }
         if (val == null) {
@@ -405,7 +415,7 @@ public class Configuration implements Serializable,
         ArrayList<String> result = new ArrayList<String>(unescaped.length);
         for (String s: unescaped) {
             result.add(s.replaceAll("&comma;", ",").
-                         replaceAll("&amp;", "&"));
+                         replaceAll("&amp;", "&").trim());
         }
         return result;
     }
@@ -549,6 +559,7 @@ public class Configuration implements Serializable,
         }
 
         if (val instanceof String) {
+            val = ((String)val).trim();
             try {
                 val = Class.forName((String)val);
             } catch (ClassNotFoundException e) {
