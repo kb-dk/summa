@@ -24,19 +24,23 @@ package dk.statsbiblioteket.summa.control.client.shell;
 
 import dk.statsbiblioteket.summa.common.shell.Command;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
+import dk.statsbiblioteket.summa.common.shell.RemoteCommand;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.api.Service;
+import dk.statsbiblioteket.util.rpc.ConnectionManager;
 
 /**
  * A {@link Command} for deploying a {@link Service} via a {@link ClientShell}.
  */
-public class DeployCommand extends Command {
+public class DeployCommand extends RemoteCommand<ClientConnection> {
 
     ClientConnection client;
+    private String clientAddress;
 
-    public DeployCommand(ClientConnection client) {
-        super("deploy", "Deploy a service given its bundle id");
-        this.client = client;
+    public DeployCommand(ConnectionManager<ClientConnection> connMgr,
+                         String clientAddress) {
+        super("deploy", "Deploy a service given its bundle id", connMgr);
+        this.clientAddress = clientAddress;
 
         setUsage ("deploy [options] <bundle-id> <instanceId>");
 
@@ -66,11 +70,15 @@ public class DeployCommand extends Command {
                     + " with configuration '" + confLocation + "'"
                     + "... ");
 
+
+        ClientConnection client = getConnection(clientAddress);
         try {
             client.deployService(bundleId, instanceId, confLocation);
         } catch (Exception e) {
             throw new RuntimeException("Deployment failed: " + e.getMessage(),
                                        e);
+        } finally {
+            releaseConnection();
         }
 
         ctx.info("OK");

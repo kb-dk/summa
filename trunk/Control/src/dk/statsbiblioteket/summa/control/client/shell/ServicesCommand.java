@@ -2,8 +2,10 @@ package dk.statsbiblioteket.summa.control.client.shell;
 
 import dk.statsbiblioteket.summa.common.shell.Command;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
+import dk.statsbiblioteket.summa.common.shell.RemoteCommand;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.client.Client;
+import dk.statsbiblioteket.util.rpc.ConnectionManager;
 
 import java.util.List;
 
@@ -11,13 +13,14 @@ import java.util.List;
  * A {@link Command} to list the services deployed in a {@link Client}.
  * Used in {@link ClientShell}.
  */
-public class ServicesCommand extends Command {
+public class ServicesCommand extends RemoteCommand<ClientConnection> {
 
-    ClientConnection client;
+    private String clientAddress;
 
-    public ServicesCommand(ClientConnection client) {
-        super("services", "List and query all deployed services");
-        this.client = client;
+    public ServicesCommand(ConnectionManager<ClientConnection> connMgr,
+                           String clientAddress) {
+        super("services", "List and query all deployed services", connMgr);
+        this.clientAddress = clientAddress;
 
         installOption("s", "status", false,
                       "Include service status for each service");
@@ -25,17 +28,23 @@ public class ServicesCommand extends Command {
     }
 
     public void invoke(ShellContext ctx) throws Exception {
-        List<String> services = client.getServices();
-        boolean listStatus = hasOption("s");
+        ClientConnection client = getConnection(clientAddress);
 
-        ctx.info ("Known services:");
+        try {
+            List<String> services = client.getServices();
+            boolean listStatus = hasOption("s");
 
-        for (String service : services) {
-            String msg = "\t" + service;
-            if (listStatus) {
-                msg += " " + client.getServiceStatus(service);
+            ctx.info ("Known services:");
+
+            for (String service : services) {
+                String msg = "\t" + service;
+                if (listStatus) {
+                    msg += " " + client.getServiceStatus(service);
+                }
+                ctx.info(msg);
             }
-            ctx.info(msg);            
+        } finally {
+            releaseConnection();
         }
     }
 }

@@ -20,7 +20,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.summa.control.server;
+package dk.statsbiblioteket.summa.control.api;
 
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -31,7 +31,8 @@ import dk.statsbiblioteket.summa.control.bundle.BundleStub;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
- * Abstract representation of a way of deploying and controlling ClientManager Clients.
+ * Abstract representation of a way of deploying and controlling
+ * {@link dk.statsbiblioteket.summa.control.client.Client}s.
  * Example {@code ClientDeployer}s could include <i>ssh</i>,
  * <i>local deployment</i>, <i>rmi</i>, etc.
  * </p><p>
@@ -93,7 +94,7 @@ public interface ClientDeployer extends Configurable {
      * <p>Configuration property defining the system property where the client is
      * to look up a {@link Configuration} with.</p>
      *
-     * <p>If this property is not set the {@link ControlCore} will set it to
+     * <p>If this property is not set the {@link dk.statsbiblioteket.summa.control.server.ControlCore} will set it to
      * point at the Control's configuration server before passing the configuration
      * to {@link ClientDeployer}'s constructor.</p>
      *

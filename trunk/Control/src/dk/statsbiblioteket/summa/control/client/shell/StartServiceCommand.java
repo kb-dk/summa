@@ -24,84 +24,29 @@ package dk.statsbiblioteket.summa.control.client.shell;
 
 import dk.statsbiblioteket.summa.common.shell.Command;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
+import dk.statsbiblioteket.summa.common.shell.RemoteCommand;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.api.Service;
 import dk.statsbiblioteket.summa.control.api.Status;
+import dk.statsbiblioteket.summa.control.api.StatusMonitor;
 import dk.statsbiblioteket.summa.control.client.Client;
 import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
  * A shell command to launch a {@link Service} deployed in a {@link Client}.
  */
-public class StartServiceCommand extends Command {
+public class StartServiceCommand extends RemoteCommand<ClientConnection> {
     private Log log = LogFactory.getLog(StartServiceCommand.class);
 
-    private class ServiceMonitor implements Runnable {
+    private String clientAddress;
 
-        private ClientConnection client;
-        private String serviceId;
-        private int timeout;
-        private ShellContext ctx;
-
-        /**
-         * Print an error to the {@link ShellContext} if the specified
-         * RMI server does not respond within {@code timeout} seconds.
-         *
-         * @param client The client controlling service to monitor
-         * @param serviceId id of the service to monitor
-         * @param timeout Number of seconds before the connection times out
-         * @param ctx ShellContext to print to in case of errors
-         */
-        public ServiceMonitor (ClientConnection client,
-                               String serviceId,
-                               int timeout,
-                               ShellContext ctx) {
-            this.client = client;
-            this.serviceId = serviceId;
-            this.timeout = timeout;
-            this.ctx = ctx;
-        }
-
-        public void run() {
-            for (int tick = 0; tick < timeout; tick++) {
-
-                try {
-                    Thread.sleep (1000);
-                } catch (InterruptedException e) {
-                    // We should probably die if somebody interrupts us
-                    return;
-                }
-
-                try {
-                    Status s = client.getServiceStatus(serviceId);
-
-                    if (Status.CODE.not_instantiated == s.getCode()) {
-                        // Wait another interation
-                        continue;
-                    }
-
-                    // If we reach this point we are good,
-                    // and the monitor should die
-                    ctx.debug ("Connection to service '" + serviceId
-                             + "' up. Status: " + s);
-                    return;
-                } catch (Exception e) {
-                    ctx.error ("Failed to ping service '" + serviceId
-                             + "'. Error was:\n " + Strings.getStackTrace(e));
-                }
-            }
-            ctx.error ("Service '" + serviceId + "' did not respond after "
-                       + timeout + "s. It has probably crashed.");
-        }
-    }
-
-    private ClientConnection client;
-
-    public StartServiceCommand(ClientConnection client) {
-        super("start", "Start a service given by id");
-        this.client = client;
+    public StartServiceCommand(ConnectionManager<ClientConnection> connMgr,
+                         String clientAddress) {
+        super("start", "Start a service given by id", connMgr);
+        this.clientAddress = clientAddress;
 
         setUsage("start [options] <service-id>");
 
@@ -133,6 +78,8 @@ public class StartServiceCommand extends Command {
                                : " with no configuration ")
                     + "... ");
 
+        ClientConnection client = getConnection(clientAddress);
+
         String baseMeta = "client '" + client.getId()+ "' with pkgId '"
                           + pkgId + "' and confLocation '" + confLocation
                           + "' in invoke";
@@ -141,11 +88,15 @@ public class StartServiceCommand extends Command {
             log.debug("calling startService for " + baseMeta);
             client.startService(pkgId, confLocation);
             log.debug("Attaching ServiceMonitor to " + baseMeta);
-            new Thread (new ServiceMonitor(client, pkgId, 5, ctx)).start();
+            StatusMonitor mon = new StatusMonitor(connMgr, pkgId, 5, ctx,
+                                          Status.CODE.not_instantiated); 
+            new Thread (mon).start();
         } catch (Exception e) {
 
             throw new RuntimeException ("Start of service failed: "
                                         + e.getMessage(), e);
+        } finally {
+            releaseConnection();
         }
         log.debug("End if invoke for " + baseMeta);
         ctx.info("OK");

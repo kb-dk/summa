@@ -25,7 +25,7 @@ package dk.statsbiblioteket.summa.control.api;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.control.client.Client;
-import dk.statsbiblioteket.summa.control.server.ClientDeployer;
+import dk.statsbiblioteket.summa.control.api.ClientDeployer;
 import dk.statsbiblioteket.summa.control.api.NoSuchServiceException;
 import dk.statsbiblioteket.summa.control.server.ClientDeploymentException;
 
@@ -37,7 +37,7 @@ import java.util.List;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke",
         comment="Unfinished")
-public interface ControlConnection {
+public interface ControlConnection extends Monitorable {
 
     /**
      * <p>Get the {@link Configuration} the client with <i>instanceId</i>

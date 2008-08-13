@@ -2,16 +2,19 @@ package dk.statsbiblioteket.summa.control.server;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
-import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.api.BadConfigurationException;
 import dk.statsbiblioteket.summa.control.api.Feedback;
 import dk.statsbiblioteket.summa.control.api.NoSuchClientException;
 import dk.statsbiblioteket.summa.control.api.Status;
-import dk.statsbiblioteket.summa.control.client.Client;
+import dk.statsbiblioteket.summa.control.api.StatusMonitor;
+import dk.statsbiblioteket.summa.control.api.ClientDeployer;
+import dk.statsbiblioteket.summa.control.api.DeployerFactory;
+import dk.statsbiblioteket.summa.control.api.FeedbackFactory;
 
 import java.io.IOException;
 import java.io.File;
@@ -52,13 +55,17 @@ public class ControlCore extends UnicastRemoteObject
 
     private Log log = LogFactory.getLog (ControlCore.class);
     private File baseDir;
+    private Status status;
     private ClientManager clientManager;
     private RepositoryManager repoManager;
     private ConfigurationManager confManager;
 
     public ControlCore(Configuration conf) throws IOException {
         super (getServicePort(conf));
-        log.debug("Creating ControlCore");
+
+        setStatus(Status.CODE.not_instantiated,
+                  "Setting up", Logging.LogLevel.DEBUG);
+
         clientManager = new ClientManager(conf);
         repoManager = new RepositoryManager(conf);
         confManager = new ConfigurationManager(conf);
@@ -66,7 +73,8 @@ public class ControlCore extends UnicastRemoteObject
         baseDir = ControlUtils.getControlBaseDir(conf);
         log.debug ("Using base dir '" + baseDir + "'");
 
-        log.trace("Exporting remote interface summa-control");
+        setStatus(Status.CODE.not_instantiated,
+                  "Exporting remote interfaces", Logging.LogLevel.DEBUG);
         RemoteHelper.exportRemoteInterface(this,
                                         conf.getInt(CONTROL_REGISTRY_PORT, 27000),
                                         "summa-control");
@@ -77,6 +85,10 @@ public class ControlCore extends UnicastRemoteObject
             log.warn ("Failed to register MBean, going on without it. "
                       + "Error was", e);
         }
+
+        setStatus(Status.CODE.idle,
+                  "Set up complete. Remote interfaces up",
+                  Logging.LogLevel.DEBUG);
     }
 
     private static int getServicePort(Configuration conf) {
@@ -84,8 +96,12 @@ public class ControlCore extends UnicastRemoteObject
     }
 
     public ClientConnection getClient(String instanceId) {
-        log.trace("getClient called");
+        setStatus(Status.CODE.running,
+                  "Looking up client '" + instanceId + "'",
+                  Logging.LogLevel.DEBUG);
+
         if (!clientManager.knowsClient(instanceId)) {
+            setStatusIdle();
             throw new NoSuchClientException("Unknown client: " + instanceId);
         }
 
@@ -93,41 +109,36 @@ public class ControlCore extends UnicastRemoteObject
                                                  clientManager.get (instanceId);
 
         if (conn == null) {
+            setStatusIdle();
             return null;
         }
 
         ClientConnection client = conn.getConnection();
         clientManager.release (conn);
+
+        setStatusIdle();
+
         return client;
     }
 
     public void deployClient(Configuration conf) {
-        log.trace ("Got deployClient request");
+        setStatusRunning ("Deploying client");
 
         validateClientConf(conf);
         log.info ("Preparing to start client with deployer config: \n"
                    + conf.dumpString());
 
-        log.debug("Creating deployer from class: "
-                  + conf.getString(ClientDeployer.DEPLOYER_CLASS_PROPERTY));
-        Class<ClientDeployer> deployerClass =
-                           conf.getClass(ClientDeployer.DEPLOYER_CLASS_PROPERTY,
-                                         ClientDeployer.class);
-        ClientDeployer deployer = Configuration.create(deployerClass, conf);
-
-        log.debug("Creating deployer feedback from class: "
-                  + conf.getString(ClientDeployer.DEPLOYER_FEEDBACK_PROPERTY));
-        Class<Feedback> feedbackClass =
-                           conf.getClass(ClientDeployer.DEPLOYER_FEEDBACK_PROPERTY,
-                                         Feedback.class);
-        Feedback feedback = Configuration.create(feedbackClass, conf);
-
+        ClientDeployer deployer = DeployerFactory.createClientDeployer(conf);
+        Feedback feedback = FeedbackFactory.createFeedback(conf);
 
         String instanceId = conf.getString(ClientDeployer.INSTANCE_ID_PROPERTY);
 
+        setStatusRunning ("Deploying client '" + instanceId + "'. "
+                          + "Waiting for deployer");
         try {
             deployer.deploy(feedback);
         } catch (Exception e) {
+            setStatusIdle();
             throw new ClientDeploymentException("Error when deploying client '"
                                                 + instanceId + "': "
                                                 + e.getMessage(), e);
@@ -138,20 +149,24 @@ public class ControlCore extends UnicastRemoteObject
                                conf);
 
         log.info ("Client '" + instanceId + "' deployed");
+        setStatusIdle();
     }
 
     public void startClient(Configuration conf) {
-        log.trace("startClient called");
+        setStatusRunning("Starting client");
+
         String instanceId = conf.getString(ClientDeployer.INSTANCE_ID_PROPERTY);
         String bundleId = clientManager.getBundleId(instanceId);
         log.trace("startClient: got bundleId '" + bundleId + "'");
 
         if (bundleId == null) {
+            setStatusIdle();
             throw new ClientDeploymentException("Unknown instance '"
                                                  + instanceId + "'");
         }
 
         if (!clientManager.knowsClient(instanceId)) {
+            setStatusIdle();
             throw new BadConfigurationException("Unknown client instance id '"
                                                 + instanceId + "'");
         }
@@ -171,22 +186,13 @@ public class ControlCore extends UnicastRemoteObject
 
         log.debug ("Modified deployment configuration:\n" + conf.dumpString());
 
-        log.debug("Creating deployer from class: "
-                  + conf.getString(ClientDeployer.DEPLOYER_CLASS_PROPERTY));
-        Class<ClientDeployer> deployerClass =
-                           conf.getClass(ClientDeployer.DEPLOYER_CLASS_PROPERTY,
-                                         ClientDeployer.class);
-        ClientDeployer deployer = Configuration.create(deployerClass, conf);
-
-        log.debug("Creating deployer feedback from class: "
-                  + conf.getString(ClientDeployer.DEPLOYER_CLASS_PROPERTY));
-        Class<Feedback> feedbackClass =
-                           conf.getClass(ClientDeployer.DEPLOYER_FEEDBACK_PROPERTY,
-                                         Feedback.class);
-        Feedback feedback = Configuration.create(feedbackClass, conf);
+        ClientDeployer deployer = DeployerFactory.createClientDeployer (conf);
+        Feedback feedback = FeedbackFactory.createFeedback (conf);
 
         try {
-            ClientMonitor mon = new ClientMonitor(clientManager,
+            setStatusRunning("Starting '" + instanceId
+                             + "'. Waiting for deployer");
+            StatusMonitor mon = new StatusMonitor(clientManager,
                                                   instanceId,
                                                   8,
                                                   feedback,
@@ -195,21 +201,25 @@ public class ControlCore extends UnicastRemoteObject
             deployer.start(feedback);
 
         } catch (Exception e) {
+            setStatusIdle();
             throw new ClientDeploymentException("Error when starting client '"
                                                 + instanceId + "': "
                                                 + e.getMessage(), e);
         }
 
+        setStatusIdle();
         log.info ("Client '" + instanceId + "' deployed");
     }
 
     public void stopClient(String instanceId) {
-        log.trace ("Preparing to stop client '" + instanceId + "'");
+        setStatusRunning("Stopping '" + instanceId + "'");
+
         ConnectionContext<ClientConnection> conn = null;
         try {
             conn = clientManager.get(instanceId);
 
             if (conn == null) {
+                setStatusIdle();
                 throw new NoSuchClientException(instanceId);
             }
 
@@ -221,6 +231,7 @@ public class ControlCore extends UnicastRemoteObject
             if (conn != null) {
                 clientManager.release(conn);
             }
+            setStatusIdle();
         }
 
     }
@@ -312,16 +323,43 @@ public class ControlCore extends UnicastRemoteObject
     }
 
     public List<String> getClients() {
-        return clientManager.getClients();
+        setStatus(Status.CODE.running, "Getting client list",
+                  Logging.LogLevel.TRACE);
+        List<String> list = clientManager.getClients();
+        setStatusIdle();
+        return list;
     }
 
     public List<String> getBundles() {
-        return repoManager.getBundles();
+        setStatus(Status.CODE.running, "Getting bundle list",
+                  Logging.LogLevel.TRACE);
+        List<String> list = repoManager.getBundles();
+        setStatusIdle();
+        return list;
+
     }
 
     public Configuration getDeployConfiguration(String instanceId)
             throws RemoteException {
         return clientManager.getDeployConfiguration(instanceId);
+    }
+
+    public Status getStatus() throws RemoteException {
+        return status;
+    }
+
+    private void setStatus (Status.CODE code, String msg,
+                            Logging.LogLevel level) {
+        status = new Status(code, msg);
+        Logging.log (this +" status: "+ status, log, level);
+    }
+
+    private void setStatusIdle () {
+        setStatus (Status.CODE.idle, "ready", Logging.LogLevel.DEBUG);
+    }
+
+    private void setStatusRunning (String msg) {
+        setStatus (Status.CODE.running, msg, Logging.LogLevel.INFO);
     }
 
     public static void main (String[] args) {

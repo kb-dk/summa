@@ -9,6 +9,7 @@ import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.api.BadConfigurationException;
 import dk.statsbiblioteket.summa.control.api.NoSuchClientException;
 import dk.statsbiblioteket.summa.control.api.ControlConnection;
+import dk.statsbiblioteket.summa.control.api.ClientDeployer;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionFactory;

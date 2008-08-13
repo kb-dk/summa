@@ -2,6 +2,7 @@ package dk.statsbiblioteket.summa.control.server;
 
 import dk.statsbiblioteket.summa.control.api.ControlConnection;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
+import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
@@ -30,5 +31,7 @@ public interface ControlRMIConnection extends ControlConnection, Remote {
 
     public Configuration getDeployConfiguration (String instanceId)
                                                         throws RemoteException;
+
+    public Status getStatus () throws RemoteException;
 
 }

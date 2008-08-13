@@ -36,7 +36,7 @@ import java.rmi.RemoteException;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
-public interface Service extends Configurable, Remote {
+public interface Service extends Configurable, Remote, Monitorable {
 
     /** <p>Property defining the id under which the service should report itself
      * via {@link #getId}. </p>

@@ -2,10 +2,12 @@ package dk.statsbiblioteket.summa.control.client;
 
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.api.Status;
+import dk.statsbiblioteket.summa.control.bundle.BundleRepository;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.List;
+import java.io.IOException;
 
 /**
  * Package private specification of a {@link ClientConnection} using RMI
@@ -35,5 +37,6 @@ public interface ClientRMIConnection extends Remote, ClientConnection {
 
     public String getId() throws RemoteException;
 
+    public BundleRepository getRepository () throws RemoteException;
 
 }
