@@ -7,6 +7,7 @@ import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import java.rmi.RemoteException;
 import java.rmi.NotBoundException;
+import java.rmi.RMISecurityManager;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.registry.Registry;
 import java.rmi.registry.LocateRegistry;
@@ -32,13 +33,18 @@ public class RemoteHelper {
      * @param serviceName the name of the service to export
      * @throws IOException if there is an error exporting the interface
      */
-    public static void exportRemoteInterface(Object obj,
+    public synchronized static void exportRemoteInterface(Object obj,
                                               int registryPort,
                                               String serviceName)
                                                             throws IOException {
         log.trace ("Preparing to export remote interfaces of " + obj
                    + "as '" + serviceName + "' with registry on port "
                    + registryPort);
+
+        if (System.getSecurityManager() == null) {
+            log.info ("No security manager set. Using RMISecurityManager");
+            System.setSecurityManager(new RMISecurityManager());
+        }
 
         UnicastRemoteObject remote = (UnicastRemoteObject) obj;
         Registry reg = null;
@@ -64,7 +70,7 @@ public class RemoteHelper {
                  + serviceName);
     }
 
-    public static void unExportRemoteInterface (String serviceName,
+    public synchronized static void unExportRemoteInterface (String serviceName,
                                                 int registryPort)
                                                             throws IOException {
         log.trace ("Preparing to unexport '" + serviceName + "' with registry on"
@@ -101,7 +107,8 @@ public class RemoteHelper {
      * @param obj the object to expose as an MBean
      * @throws IOException on communication errors with the JMX subsystem
      */
-    public static void exportMBean (Object obj) throws IOException {
+    public synchronized static void exportMBean (Object obj)
+                                                            throws IOException {
         ObjectName name = null;
 
         try {
@@ -128,7 +135,8 @@ public class RemoteHelper {
      * @param obj the object to unregsiter
      * @throws IOException on communication errors with the JMX subsystem
      */
-    public static void unExportMBean (Object obj) throws IOException {
+    public synchronized static void unExportMBean (Object obj)
+                                                            throws IOException {
         ObjectName name = null;
 
         try {
