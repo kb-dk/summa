@@ -29,9 +29,11 @@ package dk.statsbiblioteket.summa.control.server.deploy;
 import java.rmi.RemoteException;
 import java.util.List;
 import java.util.ArrayList;
+import java.io.IOException;
 
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.api.Status;
+import dk.statsbiblioteket.summa.control.bundle.BundleRepository;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -86,6 +88,10 @@ public class FakeClient implements ClientConnection {
     }
 
     public String getId() throws RemoteException {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return "Fake Id";
+    }
+
+    public BundleRepository getRepository() throws IOException {
+        return null;
     }
 }

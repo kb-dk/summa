@@ -39,6 +39,11 @@ public class BundleRepositoryTest extends TestCase {
     }
 
     public void testList () throws Exception {
+        Configuration localConf = Configuration.newMemoryBased(
+                                         BundleRepository.REPO_ADDRESS_PROPERTY,
+                                         "file:///tmp/summatest");
+        BundleRepository remoteRepo = new RemoteURLRepositoryServer (localConf);
+
         String filter = ".*";
 
         List<String> list = repo.list (filter);
@@ -49,5 +54,11 @@ public class BundleRepositoryTest extends TestCase {
         list = repo.list (filter);
         System.out.println ("Repo list for '" + filter + "':\n\t"
                             + Strings.join (list, "\n\t"));
+    }
+
+    public void testRemoteRepo () throws Exception {
+
+
+
     }
 }

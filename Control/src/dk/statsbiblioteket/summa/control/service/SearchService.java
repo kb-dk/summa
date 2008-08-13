@@ -26,65 +26,67 @@ import java.rmi.RemoteException;
 import java.io.IOException;
 
 import dk.statsbiblioteket.summa.search.SummaSearcher;
-import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
-import dk.statsbiblioteket.summa.search.ResponseCollection;
-import dk.statsbiblioteket.summa.search.Request;
+import dk.statsbiblioteket.summa.search.LuceneSearcher;
+import dk.statsbiblioteket.summa.search.document.DocumentResponse;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.control.api.Status;
+import dk.statsbiblioteket.summa.control.api.Service;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
  * Wrapper for a {@link SummaSearcher}, which will normally translate to a
- * {@link SummaSearcherImpl}.
+ * {@link LuceneSearcher}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class SearchService extends ServiceBase implements SummaSearcher,
-                                                          SearchServiceMBean {
+public class SearchService extends ServiceBase {
     private Log log = LogFactory.getLog(SearchService.class);
 
     /**
      * The class to instantiate and use for searching.
      * </p><p>
-     * This is optional. Default is the {@link SummaSearcherImpl} class.
+     * This is optional. Default is the {@link LuceneSearcher} class.
      */
     public static final String CONF_SEARCHER_CLASS =
-            "summa.search.searcher-class";
+            "summa.search.searcher.class";
+
     public static final Class<? extends SummaSearcher> DEFAULT_SEARCHER_CLASS =
-            SummaSearcherImpl.class;
+            LuceneSearcher.class;
 
     private Configuration conf;
     private SummaSearcher searcher;
 
     public SearchService(Configuration conf) throws IOException {
         super(conf);
-        this.conf = conf;
-        exportRemoteInterfaces();
-        setStatus(Status.CODE.constructed,
-                  "Created SearchService object",
+
+        setStatus(Status.CODE.not_instantiated,
+                  "Setting up",
                   Logging.LogLevel.DEBUG);
 
+        this.conf = conf;
+        exportRemoteInterfaces();
+
         setStatus(Status.CODE.constructed,
-                  "Remote interfaces are up for SearchService",
+                  "Remote interfaces up",
                   Logging.LogLevel.DEBUG);
     }
 
     public synchronized void start() throws RemoteException {
-        log.debug("Starting SearchService");
         if (searcher != null) {
             log.debug("Start called on an already running searcher");
-            stop();
         }
+
+        setStatusRunning("Creating Searcher");
         Class<? extends SummaSearcher> searcherClass;
         try {
             searcherClass = conf.getClass(CONF_SEARCHER_CLASS,
                                           SummaSearcher.class);
         } catch (NullPointerException e) {
-            log.warn(String.format(
+            log.info(String.format(
                     "The property '%s' was not defined. Defaulting to '%s'",
                     CONF_SEARCHER_CLASS, DEFAULT_SEARCHER_CLASS));
             searcherClass = DEFAULT_SEARCHER_CLASS;
@@ -103,9 +105,11 @@ public class SearchService extends ServiceBase implements SummaSearcher,
             setStatus(Status.CODE.crashed, message, Logging.LogLevel.ERROR, e);
             throw new RemoteException(message, e);
         }
+
         log.debug(String.format(
                 "Got SummaSearcher class '%s'. Commencing creation",
                 searcherClass));
+
         try {
             searcher = Configuration.create(searcherClass, conf);
         } catch (IllegalArgumentException e) {
@@ -121,9 +125,8 @@ public class SearchService extends ServiceBase implements SummaSearcher,
             setStatus(Status.CODE.crashed, message, Logging.LogLevel.ERROR, e);
             throw new RemoteException(message, e);
         }
-        setStatus(Status.CODE.running, String.format(
-                "Created and started the SummaSearcher '%s'", searcher),
-                  Logging.LogLevel.INFO);
+
+        setStatusIdle();
     }
 
     public synchronized void stop() throws RemoteException {
@@ -146,22 +149,5 @@ public class SearchService extends ServiceBase implements SummaSearcher,
             searcher = null;
         }
     }
-
-    /* Simple pass-through to the underlying searcher */
-
-
-    public ResponseCollection search(Request request) throws RemoteException {
-        return searcher.search(request);
-    }
-
-    /**
-     * Alias for {@link #stop}.
-     * @throws RemoteException if an error occured during close.
-     */
-    public void close() throws RemoteException {
-        stop();
-    }
-
-    /* Delegation of SummaSearcher methods */
 
 }

@@ -2,21 +2,24 @@ package dk.statsbiblioteket.summa.control.client.shell;
 
 import dk.statsbiblioteket.summa.common.shell.Command;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
+import dk.statsbiblioteket.summa.common.shell.RemoteCommand;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.api.ClientException;
 import dk.statsbiblioteket.summa.control.api.Service;
 import dk.statsbiblioteket.summa.control.client.Client;
+import dk.statsbiblioteket.util.rpc.ConnectionManager;
 
 /**
  * A shell command to launch a {@link Service} deployed in a {@link Client}.
  */
-public class StopServiceCommand extends Command {
+public class StopServiceCommand extends RemoteCommand<ClientConnection> {
 
-    private ClientConnection client;
+    private String clientAddress;
 
-    public StopServiceCommand(ClientConnection client) {
-        super("stop", "Stop a service given by id");
-        this.client = client;
+    public StopServiceCommand(ConnectionManager<ClientConnection> connMgr,
+                              String clientAddress) {
+        super("stop", "Stop a service given by id", connMgr);
+        this.clientAddress = clientAddress;
 
         setUsage("stop <service-id> [service-id] ...");
     }
@@ -28,24 +31,30 @@ public class StopServiceCommand extends Command {
             return;
         }
 
-        for (String id : getArguments()) {
+        ClientConnection client = getConnection(clientAddress);
 
-            ctx.prompt ("Stopping service '" + id + "' ... ");
+        try {
+            for (String id : getArguments()) {
 
-            try {
-                client.stopService(id);
-            } catch (ClientException e){
-                // A ClientException is a controlled exception, we don't print
-                // the whole stack trace
-                ctx.info ("FAILED");
-                ctx.error(e.getMessage());
-                continue;
-            } catch (Exception e) {
-                throw new RuntimeException ("Stopping of service failed: "
-                                            + e.getMessage(), e);
-            }            
+                ctx.prompt ("Stopping service '" + id + "' ... ");
 
-            ctx.info("OK");
+                try {
+                    client.stopService(id);
+                } catch (ClientException e){
+                    // A ClientException is a controlled exception, we don't print
+                    // the whole stack trace
+                    ctx.info ("FAILED");
+                    ctx.error(e.getMessage());
+                    continue;
+                } catch (Exception e) {
+                    throw new RuntimeException ("Stopping of service failed: "
+                                                + e.getMessage(), e);
+                }
+
+                ctx.info("OK");
+            }
+        } finally {
+            releaseConnection();
         }
     }
 }

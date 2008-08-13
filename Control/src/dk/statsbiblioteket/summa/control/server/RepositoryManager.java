@@ -11,12 +11,7 @@ import dk.statsbiblioteket.util.watch.FolderListener;
 import dk.statsbiblioteket.util.watch.FolderEvent;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.control.bundle.BundleRepository;
-import dk.statsbiblioteket.summa.control.bundle.Bundle;
-import dk.statsbiblioteket.summa.control.bundle.URLRepository;
-import dk.statsbiblioteket.summa.control.bundle.BundleSpecBuilder;
-import dk.statsbiblioteket.summa.control.bundle.BundleLoadingException;
-import dk.statsbiblioteket.summa.control.bundle.BundleFormatException;
+import dk.statsbiblioteket.summa.control.bundle.*;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
 
 import java.io.File;
@@ -25,6 +20,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Arrays;
+import java.util.ArrayList;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -53,10 +49,18 @@ public class RepositoryManager implements Configurable,
 
     /**
      * Configuration property defining the class clients should use to download
-     * bundles from the Control's repository.
+     * bundles from the Control's repository. The default is
+     * {@link RemoteURLRepositoryClient}.
      */
     public static final String CLIENT_REPO_PROPERTY =
                                            "summa.control.repository.clientClass";
+
+    /**
+     * Configuration property defining the class the repository manager should
+     * use itself. The default is {@link RemoteURLRepositoryServer}.
+     */
+    public static final String SERVER_REPO_PROPERTY =
+                                           "summa.control.repository.serverClass";
 
     /**
      * Configuration property defining the directory used for incoming bundles
@@ -87,6 +91,7 @@ public class RepositoryManager implements Configurable,
     private String address;
     private Class<? extends BundleRepository> clientRepoClass;
     private String clientDownloadDir;
+    private BundleRepository repo;
     private Log log = LogFactory.getLog (RepositoryManager.class);
     private File incomingDir;
     private FolderWatcher incomingWatcher;
@@ -133,10 +138,17 @@ public class RepositoryManager implements Configurable,
 
         controlBaseDir = ControlUtils.getControlBaseDir(conf);
 
+        /* Configure the local BundleRepository impl */
+        Class<? extends BundleRepository> repoClass =
+                conf.getClass(SERVER_REPO_PROPERTY,
+                              BundleRepository.class,
+                              RemoteURLRepositoryServer.class);
+        repo = Configuration.create (repoClass, conf);
+
         /* Configure Client Repo Class */
         clientRepoClass = conf.getClass (CLIENT_REPO_PROPERTY,
                                          BundleRepository.class,
-                                         URLRepository.class);
+                                         RemoteURLRepositoryClient.class);
         log.debug ("Using client repository class: "
                    + clientRepoClass.getName());
 
@@ -168,7 +180,13 @@ public class RepositoryManager implements Configurable,
      * @return whether or not the bundle is present in the repository
      */
     public boolean hasBundle (String bundleId) {
-        return new File (repoBaseDir, bundleId + Bundle.BUNDLE_EXT).exists();
+        try {
+            return repo.get(bundleId).exists();
+        } catch (IOException e) {
+            log.warn ("Error checking for existence of bundle '" + bundleId
+                     + "'", e);
+            return false;
+        }
     }
 
     /**
@@ -178,10 +196,19 @@ public class RepositoryManager implements Configurable,
      *         not exist.
      */
     public File getBundle (String bundleId) {
-        File bundleFile = new File (repoBaseDir, bundleId + Bundle.BUNDLE_EXT);
-        if (bundleFile.exists()) {
-            return bundleFile;
+        try {
+            File bundleFile = repo.get (bundleId);
+
+            if (bundleFile.exists()) {
+                return bundleFile;
+            }
+            // If we end here, the file don't exist, so return null (see below)
+
+        } catch (IOException e) {
+            // We return null below
+            log.warn ("Error fetching bundle file '" + bundleId + "'", e);
         }
+
         return null;
     }
 
@@ -208,24 +235,12 @@ public class RepositoryManager implements Configurable,
      */
     public List<String> getBundles () {
         log.trace ("Got getBundles() request");
-        final FilenameFilter filter = new FilenameFilter () {
-
-            public boolean accept(File file, String s) {
-                return repoBaseDir.equals(file) && s.endsWith(Bundle.BUNDLE_EXT);
-            }
-        };
-        String[] idArray = repoBaseDir.list(filter);
-
-        /* Strip .bundle suffixes */
-        for (int i = 0; i < idArray.length; i++) {
-            idArray[i] = idArray[i].substring(0,
-                                              idArray[i].length()
-                                              - Bundle.BUNDLE_EXT.length());
+        try {
+            return repo.list (".*");
+        } catch (IOException e) {
+            log.warn ("Error getting bundle list", e);
+            return new ArrayList<String>();
         }
-        List<String> ids = Arrays.asList(idArray);
-        log.trace ("Returning " + Logs.expand(ids, 5) + " for getBundles()"
-                   + "request");
-        return ids;
     }
 
     public Configuration getClientRepositoryConfig () {

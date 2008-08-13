@@ -36,7 +36,7 @@ import java.io.IOException;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
-public interface ClientConnection {
+public interface ClientConnection extends Monitorable {
 
     /** <p>Property defining the id under which the client should report itself
      * via {@link #getId}. This is also known as the client's <i>instance
@@ -66,7 +66,7 @@ public interface ClientConnection {
      *
      * <p>Default is 27002</p>
      */
-    public static final String SERVICE_PORT_PROPERTY =
+    public static final String CLIENT_PORT_PROPERTY =
                                             "summa.control.client.service.port";
 
     /** <p>Property defining the port on which the client should contact or create
@@ -189,4 +189,8 @@ public interface ClientConnection {
      */
     public String getId() throws IOException;
 
+    /**
+     * Get the {@link BundleRepository} the client uses.
+     */
+    public BundleRepository getRepository () throws IOException;
 }

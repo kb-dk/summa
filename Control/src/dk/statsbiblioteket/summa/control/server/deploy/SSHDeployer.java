@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Arrays;
 import java.util.ArrayList;
 
-import dk.statsbiblioteket.summa.control.server.ClientDeployer;
+import dk.statsbiblioteket.summa.control.api.ClientDeployer;
 import dk.statsbiblioteket.summa.control.server.ClientDeploymentException;
 import dk.statsbiblioteket.summa.control.server.ControlUtils;
 import dk.statsbiblioteket.summa.control.api.Feedback;
@@ -40,7 +40,6 @@ import dk.statsbiblioteket.summa.control.api.BadConfigurationException;
 import dk.statsbiblioteket.summa.control.bundle.BundleSpecBuilder;
 import dk.statsbiblioteket.summa.control.bundle.BundleStub;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.util.NativeRunner;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.console.ProcessRunner;

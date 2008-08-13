@@ -34,6 +34,7 @@ import dk.statsbiblioteket.summa.control.bundle.BundleStub;
 import dk.statsbiblioteket.summa.control.bundle.BundleSpecBuilder;
 import dk.statsbiblioteket.summa.control.bundle.URLRepository;
 import dk.statsbiblioteket.util.*;
+import dk.statsbiblioteket.util.rpc.ConnectionContext;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -74,10 +75,10 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
     public static final String SERVICE_TIMEOUT =
             "summa.control.client.serviceTimeout";
 
-    private Map<String, Service> services = new HashMap<String, Service>(10);
     private Status status;
     private BundleRepository repository;
     private BundleLoader loader;
+    private ServiceManager serviceMan;
     private String id;
     private String hostname;
     private String basePath;
@@ -89,18 +90,18 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
 
 
     // RMI-related data
-    private String registryHost, serviceName;
-    private int registryPort, servicePort;
+    private String registryHost, clientId;
+    private int registryPort, clientPort;
 
     /**
      * Create a client from a {@link Configuration} and expose it over rmi.
      * The various RMI properties needed are read from the {@code Configuraion}
      * as defined in {@link ClientConnection}.
-     * @param configuration the configuration from which to extract rmi  properties
+     * @param conf the conf from which to extract rmi  properties
      * @throws RemoteException if there is an error exposing the rmi service
      */
-    public Client(Configuration configuration) throws IOException {
-        super (getServicePort (configuration));
+    public Client(Configuration conf) throws IOException {
+        super (getServicePort (conf));
         log.debug("Constructing client");
         log.trace("Home dir: " + new File(".").getAbsolutePath());
 
@@ -113,22 +114,22 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                      + "' present");
         }
 
-        registryHost = configuration.getString(REGISTRY_HOST_PROPERTY,
+        registryHost = conf.getString(REGISTRY_HOST_PROPERTY,
                                                "localhost");
-        registryPort = configuration.getInt(REGISTRY_PORT_PROPERTY, 27000);
-        serviceName = System.getProperty(CLIENT_ID);
-        servicePort = configuration.getInt(SERVICE_PORT_PROPERTY, 27002);
-        id = serviceName;
+        registryPort = conf.getInt(REGISTRY_PORT_PROPERTY, 27000);
+        clientId = System.getProperty(CLIENT_ID);
+        clientPort = conf.getInt(CLIENT_PORT_PROPERTY, 27002);
+        id = clientId;
 
-        if (serviceName == null) {
+        if (clientId == null) {
             throw new BadConfigurationException("System property '" + CLIENT_ID
                                                 + "' not set");
         }
 
         basePath = System.getProperty("user.home") + File.separator
-                                     + configuration.getString(
-                                        CLIENT_BASEPATH_PROPERTY, "summa-control")
-                                     + File.separator + serviceName;
+                                     + conf.getString(
+                                      CLIENT_BASEPATH_PROPERTY, "summa-control")
+                                     + File.separator + clientId;
         log.debug ("Client '" + id + "' using basePath '" + basePath + "'");
 
         tmpPath = basePath + File.separator + "tmp";
@@ -140,19 +141,20 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
 
         /* Create repository */
         Class<? extends BundleRepository> repositoryClass =
-                                    configuration.getClass(
+                                    conf.getClass(
                                             REPOSITORY_CLASS_PROPERTY,
                                             BundleRepository.class,
                                             URLRepository.class);
-        repository = Configuration.create(repositoryClass, configuration);
+        repository = Configuration.create(repositoryClass, conf);
 
         /* Create bundle loader */
-        loader = Configuration.create(BundleLoader.class, configuration);
+        loader = Configuration.create(BundleLoader.class, conf);
 
         validateConfiguration();
 
-
-        serviceTimeout = configuration.getInt(SERVICE_TIMEOUT, 5);
+        /* Service related setup */
+        serviceTimeout = conf.getInt(SERVICE_TIMEOUT, 5);
+        serviceMan = new ServiceManager(conf);
 
         /* Find client hostname */
         hostname = RemoteHelper.getHostname();
@@ -162,7 +164,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                   "Setting up remote interfaces (rmi,jmx)",
                   Logging.LogLevel.DEBUG);
 
-        RemoteHelper.exportRemoteInterface(this, registryPort, serviceName);
+        RemoteHelper.exportRemoteInterface(this, registryPort, clientId);
         RemoteHelper.exportMBean(this);
 
         setStatus(Status.CODE.constructed, "Remote interfaces up",
@@ -197,12 +199,12 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                                                  + REGISTRY_PORT_PROPERTY
                                                 + " < 0. Value "
                                                 + registryPort);
-        } else if (serviceName.equals("")) {
+        } else if (clientId.equals("")) {
             throw new BadConfigurationException (this + ", " + CLIENT_ID
                                                  + " is empty");
-        } else if (servicePort < 0) {
-            throw new BadConfigurationException (this + ", " + servicePort
-                                                + " < 0. Value " + servicePort);
+        } else if (clientPort < 0) {
+            throw new BadConfigurationException (this + ", " + clientPort
+                                                + " < 0. Value " + clientPort);
         } else if (id.equals("")) {
             throw new BadConfigurationException (this + ", " + CLIENT_ID
                                                  + " is empty");
@@ -214,11 +216,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
     }
 
     private String getRMIAddress () {
-        return "//"+registryHost+":"+registryPort+"/"+serviceName;
-    }
-
-    private File getServiceDir(String id) {
-        return new File (servicePath, id);
+        return "//"+registryHost+":"+registryPort+"/"+ clientId;
     }
 
     /**
@@ -227,34 +225,40 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
      * This method is mainly here to be able to retrieve the service
      * port in the super() call in the constructor.
      *
-     * @param conf the configuration from which to read {@link #SERVICE_PORT_PROPERTY}
+     * @param conf the configuration from which to read {@link #CLIENT_PORT_PROPERTY}
      * @return the port
-     * @throws ConfigurationException if {@link # SERVICE_PORT_PROPERTY} cannot be read
+     * @throws ConfigurationException if {@link # CLIENT_PORT_PROPERTY} cannot be read
      */
     private static int getServicePort (Configuration conf) {
         try {
-            return conf.getInt(SERVICE_PORT_PROPERTY);
+            return conf.getInt(CLIENT_PORT_PROPERTY);
         } catch (Exception e) {
-            log.fatal("Unable to read " + SERVICE_PORT_PROPERTY
+            log.fatal("Unable to read " + CLIENT_PORT_PROPERTY
                       + "from configuration", e);
             throw new ConfigurationException("Unable to read "
-                                             + SERVICE_PORT_PROPERTY
+                                             + CLIENT_PORT_PROPERTY
                                              + "from configuration", e);
         }
 
     }
 
     public void stop() {
+        ConnectionContext<Service> connCtx = null;
+
         setStatus(Status.CODE.stopping, "Stopping all services",
                   Logging.LogLevel.INFO);
-        for (Map.Entry<String, Service> serviceEntry: services.entrySet()) {
+        for (String serviceId : serviceMan) {
             try {
-                log.trace("Trying to stop service "
-                        + serviceEntry.getKey());
-                serviceEntry.getValue().stop();
-                log.debug("Service " + serviceEntry.getKey() + " was stopped");
+                log.trace("Trying to stop service " + serviceId);
+                connCtx = serviceMan.get(serviceId);
+                connCtx.getConnection().stop();
+                log.debug("Service " + serviceId + " was stopped");
             } catch (Exception e) {
-                log.error("Could not stop service " + serviceEntry.getKey());
+                log.error("Could not stop service " + serviceId);
+            } finally {
+                if (connCtx != null) {
+                    connCtx.unref();
+                }
             }
         }
         setStatus(Status.CODE.stopped, "All services down. Stopping",
@@ -292,7 +296,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
 
     /**
      * <p>If this call completes it is guaranteed that
-     * {@link #getServiceDir} returns an existing bundle file.</p>
+     * {@link ServiceManager#getServiceDir} returns an existing bundle file.</p>
      *
      * <p>The local file is unpacked to {@code servicePath/bundleId}</p>
      *
@@ -361,8 +365,8 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
 
         // Check if the service is already deployed, ie if there already
         // is a service with the same instanceId
-        File pkgFile = getServiceDir(instanceId);
-        if (services.get(instanceId) != null || pkgFile.exists()) {
+        File pkgFile = serviceMan.getServiceDir(instanceId);
+        if (pkgFile.exists()) {
             reDeployService(instanceId, localFile);
         }
 
@@ -381,14 +385,24 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
 
     public void startService(String instanceId, String configLocation)
                                                         throws RemoteException {
+        if (!serviceMan.knows(instanceId)) {
+            throw new NoSuchServiceException(this, instanceId, "startService");
+        }
+
+        ConnectionContext<Service> connCtx = null;
+
         setStatusRunning ("Starting service " + instanceId);
-        Service service = services.get(instanceId);
-        File serviceFile = getServiceDir(instanceId);
+        File serviceFile = serviceMan.getServiceDir(instanceId);
         BundleStub stub;
 
-        if (service != null) {
+        connCtx = serviceMan.get(instanceId);
+
+        /* If the service is running but start() has not been called
+         * on it, just call Service.start() */
+        if (connCtx != null) {
+            Service service = connCtx.getConnection();
+            connCtx.unref();
             if (service.getStatus().getCode() == Status.CODE.stopped) {
-                log.debug("Found cached connection to '" + instanceId + "'");
                 log.debug("Calling start() on stopped service '" + instanceId
                           + "'");
                 service.start();
@@ -403,10 +417,6 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
             }
             setStatusIdle();
             return;
-        } else if (!serviceFile.exists()) {
-            log.error ("Trying to start service " + serviceFile + "; no such"
-                     + " file or directory. Ignoring request.");
-            throw new NoSuchServiceException(this, instanceId, "start");
         }
 
         try {
@@ -428,10 +438,15 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                                serviceFile.getParent());
         stub.addSystemProperty("summa.configuration", configLocation);
 
+
+        connCtx = serviceMan.get (instanceId);
+        if (connCtx != null) {
         try {
+            Service service = connCtx.getConnection();
+
             if (log.isDebugEnabled()) {
                 log.debug ("Launching '" + instanceId + "' with command line:\n"
-                          + Strings.join(stub.buildCommandLine(), " "));
+                           + Strings.join(stub.buildCommandLine(), " "));
             }
             final Process p = stub.start();
             log.trace("startService: Process started");
@@ -452,15 +467,13 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                 }
 
             }).start();
-            
+
             // FIXME: Should care about the returned Process?
 
             log.trace("Registering service");
             registerService (stub, configLocation);
 
             log.debug("Calling start() on service '" + instanceId +"'");
-            service = services.get(instanceId);
-            log.trace("Got service '" + service + "'");
             service.start();
             log.debug("Start called without errors");
 
@@ -468,6 +481,11 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
             log.error ("Failed to start service '" + instanceId
                        + "' with command line:\n"
                        + Logs.expand(stub.buildCommandLine(), 100), e);
+        } finally {
+            connCtx.unref();
+        }
+        } else {
+            log.warn ("Failed to connect to service '" + instanceId + "'");
         }
 
         setStatusIdle();
@@ -478,7 +496,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
 
         String instanceId = stub.getInstanceId();
 
-        if (services.get(instanceId) != null) {
+        if (serviceMan.knows(instanceId)) {
             log.warn ("Trying to register service '" + instanceId + "', but it"
                     + " is already registered. Ignoring request.");
             return;
@@ -541,7 +559,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         } else {
             log.info ("Service '" + instanceId
                       + "' registered. Status was " + status);
-            services.put(instanceId, service);
+            serviceMan.register(instanceId);
         }
 
     }
@@ -549,57 +567,63 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
     public void stopService(String id) throws RemoteException {
         setStatusRunning ("Stopping service " + id);
 
-        Service s = services.get (id);
+        if (!serviceMan.knows(id)) {
+            log.warn ("Can not stop service '" + id + "'. Service not "
+                      + "known");
+            throw new NoSuchServiceException(this, id, "stopService");
+        }
 
-        if (s == null) {
-            if (getServiceDir(id).exists()) {
+        ConnectionContext<Service> connCtx = null;
+        connCtx = serviceMan.get (id);
+
+        if (connCtx == null) {
+            if (serviceMan.getServiceDir(id).exists()) {
                 log.error ("Cannot stop service. Service '" + id
                            + "' not running");
                 throw new InvalidServiceStateException(this, id, "stopService",
                         "Not running");
-            } else {
-                log.error ("Request to stop unknown service '" + id + "'");
-                throw new NoSuchServiceException(this, id, "stopService");
             }
         } else {
             log.trace ("Calling stop() method on service '" + id + "'");
-            s.stop();
-
-            // Wait for service to die
             boolean serviceIsDead = false;
-            for (int tick = 0; tick < serviceTimeout; tick++) {
-                try {
-                    Thread.sleep(1000);
-                    Status status = s.getStatus();
-                    log.debug("Waiting for '" + id + "' to die. Service"
-                            + " status " + status);
-                    if (Status.CODE.stopped == status.getCode()) {
-                        // The service is stopped, but the RMI
-                        // connection is still alive. Keep the
-                        // connection around
-                        setStatusIdle ();
-                        return;
+            try {
+                Service s = connCtx.getConnection();
+                s.stop();
+
+
+                // Wait for service to die
+                for (int tick = 0; tick < serviceTimeout; tick++) {
+                    try {
+                        Thread.sleep(1000);
+                        Status status = s.getStatus();
+                        log.debug("Waiting for '" + id + "' to die. Service"
+                                  + " status " + status);
+                        if (Status.CODE.stopped == status.getCode()) {
+                            // The service is stopped, but the RMI
+                            // connection is still alive. Keep the
+                            // connection around
+                            setStatusIdle ();
+                            return;
+                        }
+                    } catch (InterruptedException e) {
+                        // Stop waiting for service to die
+                        break;
+                    } catch (RemoteException e) {
+                        log.info("Service ping to '" + id + "'failed. It is"
+                                 + " probably down.");
+                        serviceIsDead = true;
                     }
-                } catch (InterruptedException e) {
-                    // Stop waiting for service to die
-                    break;
-                } catch (RemoteException e) {
-                    log.info("Service ping to '" + id + "'failed. It is"
-                            + " probably down.");
-                    serviceIsDead = true;
                 }
+            } finally {
+                connCtx.unref();
             }
+
             if (!serviceIsDead) {
                 throw new InvalidServiceStateException(this, id, "stop",
                                                        "Service should be dead,"
                                                        + " but is still"
                                                        + " responding");
             }
-
-            // If we get here, the service has stopped responding
-            // and we can remove it from the list of running services
-            log.trace ("Removing '" + id + "' from list of running services");
-            services.remove(id);
 
         }
 
@@ -608,36 +632,38 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
 
     public Status getServiceStatus(String id) throws RemoteException {
         log.trace("Getting service status for " + id);
-        Service s = services.get (id);
 
         if (id == null) {
             throw new NullPointerException("id is null");
         }
 
-        if (s == null) {
-            if (getServiceDir(id).exists()) {
-                log.debug ("Got status request for non-running service '"
-                           + id + "'");
-                return new Status(Status.CODE.not_instantiated,
-                                  "Service '" + id + "' not running");
-            } else {
-                log.info("Got status request for unknown service '" + id + "'");
-                throw new NoSuchServiceException(this, id, "getServiceStatus");
-            }
+        if (!serviceMan.knows(id)) {
+            throw new NoSuchServiceException(this, id, "getStatus");
+        }
+
+        ConnectionContext<Service> connCtx = serviceMan.get (id);
+
+        if (connCtx == null) {
+            throw new InvalidServiceStateException(this, id,
+                                                   "getStatus", "not running");
         } else {
-            return s.getStatus();
+            Service s = connCtx.getConnection();
+            try {
+                Status status = s.getStatus();
+                return status;
+            } finally {
+                connCtx.unref();
+            }
         }
     }
 
     public List<String> getServices() {
         log.trace("Getting list of services");
 
-        String[] serviceFiles = new File (servicePath).list();
-        List<String> serviceList =
-                            new ArrayList<String>(Arrays.asList(serviceFiles));
+        List<String> serviceList = serviceMan.getServices();
 
         log.trace("Found services: "
-                  + Logs.expand(serviceList, serviceList.size())); 
+                  + Logs.expand(serviceList, serviceList.size()));
 
         return serviceList;
     }
@@ -645,6 +671,10 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
     public String getId() {
         log.trace ("Getting id");
         return id;
+    }
+
+    public BundleRepository getRepository() {
+        return repository;
     }
 
     private void setStatus (Status.CODE code, String msg,
@@ -699,22 +729,26 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
      * @throws RemoteException upon communication errors with the service
      */
     private void removeService(String id) throws RemoteException {
-        Service service = services.get (id);
-        File pkgFile = getServiceDir(id);
+        ConnectionContext<Service> connCtx = null;
+        File pkgFile = serviceMan.getServiceDir(id);
         String artifactPkgPath;
 
-        if (!pkgFile.exists() && pkgFile.isDirectory()) {
-            throw new ServicePackageException(this, id,
-                                             "cannot remove service '"
-                                             + id + "'"
-                                             + ", " + pkgFile
-                                             + " is not a directory");
-        }
-        if (service != null) {
-            service.stop ();
-            services.remove(id);
+        if (!serviceMan.knows(id)) {
+            throw new NoSuchServiceException(this, id, "removeService");
         }
 
+        connCtx = serviceMan.get (id);
+
+        /* Close the service if it is running */
+        if (connCtx != null) {
+            try {
+                connCtx.getConnection().stop ();
+            } finally {
+                connCtx.unref();
+            }
+        }
+
+        /* Find an available file name in the artifacts dir */
         int availNum = 1;
         artifactPkgPath = artifactPath +File.separator
                                + Files.baseName(pkgFile) + ".old.0";
@@ -732,7 +766,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
      * @param id the id of the service to set permissions for
      */
     private void checkPermissions(String id) {
-        File bundleDir = getServiceDir(id);
+        File bundleDir = serviceMan.getServiceDir(id);
         File policy = new File(bundleDir, BundleStub.POLICY_FILE);
         File password = new File(bundleDir, BundleStub.JMX_PASSWORD_FILE);
         File access = new File(bundleDir, BundleStub.JMX_ACCESS_FILE);

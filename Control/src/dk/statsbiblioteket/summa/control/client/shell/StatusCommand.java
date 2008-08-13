@@ -24,25 +24,34 @@ package dk.statsbiblioteket.summa.control.client.shell;
 
 import dk.statsbiblioteket.summa.common.shell.Command;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
+import dk.statsbiblioteket.summa.common.shell.RemoteCommand;
 import dk.statsbiblioteket.summa.control.api.Service;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.api.Status;
+import dk.statsbiblioteket.util.rpc.ConnectionManager;
 
 /**
  * A {@link Command} for deploying a {@link Service} via a {@link ClientShell}.
  */
-public class StatusCommand extends Command {
+public class StatusCommand extends RemoteCommand<ClientConnection> {
 
-    ClientConnection client;
+    private String clientAddress;
 
-    public StatusCommand(ClientConnection client) {
-        super("status", "print the status of the control client");
-        this.client = client;
+    public StatusCommand(ConnectionManager<ClientConnection> connMgr,
+                         String clientAddress) {
+        super("status", "print the status of the control client",
+              connMgr);
 
+        this.clientAddress = clientAddress;
     }
 
     public void invoke(ShellContext ctx) throws Exception {
-        Status status = client.getStatus();
-        ctx.info(status.toString());
+        ClientConnection client = getConnection(clientAddress);
+        try {
+            Status status = client.getStatus();
+            ctx.info(status.toString());
+        } finally {
+            releaseConnection();
+        }
     }
 }
