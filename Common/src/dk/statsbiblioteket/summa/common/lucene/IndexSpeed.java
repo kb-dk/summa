@@ -80,7 +80,8 @@ public class IndexSpeed {
     public static void main(String[] args) throws IOException, InterruptedException {
         if (!(args.length >= 1)) {
             System.err.println("Usage: IndexSpeed [-m maxdocs] [-r rambuffer]"
-                               + " [-f flushcount] [-d] [-u termlength] "
+                               + " [-f flushcount] [-d] [-t threads]"
+                               + " [-u termlength] "
                                + " [-s searcherinterval] [-rs] [-w] "
                                + "indexlocation");
             System.err.println("-m maxdocs\tThe maximum number of documents to "
