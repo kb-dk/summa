@@ -254,6 +254,31 @@ public class ConfigurationTest extends TestCase {
 
     }
 
+    public void testGetSystemConfigError () throws Exception {
+        try {
+            Configuration.getSystemConfiguration ("summa.snafu", false);
+            fail ("Lookup of unexisting system config should fail");
+        } catch (Configurable.ConfigurationException e) {
+            // expected
+        }
+    }
+
+    public void testGetSystemConfigAuto () throws Exception {
+        Configuration conf = Configuration.getSystemConfiguration ("summa.snafu",
+                                                                   true);
+
+        int count = 0;
+        for (Object o : conf) {
+            count++;
+        }
+
+        if (count == 0) {
+            fail ("Got empty system config. Expected non-empty config to " +
+                  "be found");
+        }
+
+    }
+
     public void testGetClass() throws Exception {
         //TODO: Test goes here...
     }

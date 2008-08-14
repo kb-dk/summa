@@ -63,6 +63,23 @@ public class Configuration implements Serializable,
     private ConfigurationStorage storage;
     public static final String DEFAULT_RESOURCE = "control.properties.xml";
 
+    /**
+     * Set of system resource names used to look for a configuration if none
+     * can be found under {@link #CONFIGURATION_PROPERTY}.
+     */
+    public static final String[] DEFAULT_RESOURCES = {
+                                                      "configuration.xml",
+                                                      "config.xml",
+                                                      "properties.xml",
+                                                      "configuration.properties",
+                                                      "config.properties",
+                                                      "config/configuration.xml",
+                                                      "config/config.xml",
+                                                      "config/properties.xml",
+                                                      "config/configuration.properties",
+                                                      "config/config.properties"
+                                                     };
+
     /** System property defining where to fetch the configuration.
      * This can be a normal URL or an rmi path.*/
     public static final String CONFIGURATION_PROPERTY = "summa.configuration";
@@ -840,24 +857,81 @@ public class Configuration implements Serializable,
 
     /**
      * As {@link #getSystemConfiguration(String)} but if the {@code allowUnset}
-     * argument is {@code true} an emoty memory based configuration will be
-     * returned if the system property {@code configPropName} is not set.
+     * argument is {@code true} and the system property {@code configPropName}
+     * is not set try hard to look up a configuration anywhere and return
+     * an empty one if none can be found.
+     * <p></p>
+     * The configurations tested if {@code allowUnset == true} can be found
+     * in {@link #DEFAULT_RESOURCES}.
+     *
      * @param configPropName name of system property containing the address
      *                       of the system configuration
-     * @param allowUnset if {@code true} an empty memory based configuration
-     *                   will be returned if {@code configPropName} is not set
-     * @return System configuration or an empty config if none is set
+     * @param allowUnset if {@code true} scavenge the system for anything looking
+     *                   like a configuration and return an empty one if none
+     *                   where found
+     * @return System configuration or an empty config if none where found
+     * @throws ConfigurationException if {@code allowUnset == false} and
+     *                                and {@code configPropName} was not set
+     *                                as a system property
      */
     public static Configuration getSystemConfiguration (String configPropName,
                                                         boolean allowUnset) {
-        ConfigurationStorage storage;
+        log.trace ("Getting system config for property '" + configPropName + "'"
+                   + ". Allowing unset: " + allowUnset);
+
         String confLocation = System.getProperty(configPropName);
 
         if (confLocation == null) {
             if (allowUnset) {
                 log.debug ("System configuraion property '" + configPropName + "' "
-                          + "not set. Using empty configuration.");
-                return Configuration.newMemoryBased();
+                          + "not set. Looking for configuration resource...");
+
+                ClassLoader loader = Thread.currentThread().getContextClassLoader();
+                String confResource = null;
+
+                for (String res : DEFAULT_RESOURCES) {
+                    confResource = res;
+                    if (loader.getResource (res) == null) {
+                        log.trace ("Configuration resource '" + res + "' not " +
+                                   "found");
+                    } else {
+                        log.debug ("Found configuration resource '" + res + "'");
+                        break;
+                    }
+                }
+
+                /* Use an empty conf, if we did not find one */
+                if (confResource == null) {
+                    log.info ("Did not find any system configuration. " +
+                              "Using empty configuration");
+                    return Configuration.newMemoryBased();
+                }
+
+                /* We have a resource, now try and load it however we can */
+                ConfigurationStorage storage;
+                try {
+                    storage = new XStorage (confResource);
+                    log.debug ("Loaded '" + confResource + "' as XProperties");
+                    return new Configuration (storage);
+                } catch (Exception e) {
+                    log.info ("Failed to load '" + confResource + "':"
+                              + e.getMessage ());
+                    log.debug ("Failed to load '" + confResource + "':"
+                               + e.getMessage (), e);
+                }
+
+                try {
+                    storage = new FileStorage (confResource);
+                    log.debug ("Loaded '" + confResource + "' as standard " +
+                               "properties");
+                    return new Configuration (storage);
+                } catch (Exception e) {
+                    log.info ("Failed to load '" + confResource + "'", e); 
+                }
+
+                log.info ("Failed to load any configuration." +
+                          "Using empty configuration");
+                return Configuration.newMemoryBased ();
             } else {
                 throw new ConfigurationException("Required system property '"
                                                  + configPropName + "' not set");
