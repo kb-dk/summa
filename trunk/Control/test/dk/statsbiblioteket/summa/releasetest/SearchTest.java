@@ -51,10 +51,7 @@ import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.control.service.FilterService;
 import dk.statsbiblioteket.summa.control.service.SearchService;
 import dk.statsbiblioteket.summa.ingest.stream.FileReader;
-import dk.statsbiblioteket.summa.search.SummaSearcher;
-import dk.statsbiblioteket.summa.search.IndexWatcher;
-import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
-import dk.statsbiblioteket.summa.search.Request;
+import dk.statsbiblioteket.summa.search.*;
 import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
 import dk.statsbiblioteket.summa.index.XMLTransformer;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
@@ -162,11 +159,10 @@ public class SearchTest extends NoExitTestCase {
     File INDEX_ROOT = new File(System.getProperty("java.io.tmpdir"),
                                "testindex");
 
-    private SearchService createSearchService() throws Exception {
-        SearchService searchService =
-                new SearchService(getSearcherConfiguration());
-        searchService.start();
-        return searchService;
+    private SummaSearcher createSearchService() throws Exception {
+        SummaSearcher searcher = SummaSearcherFactory.createSearcher(
+                                                    getSearcherConfiguration());
+        return searcher;
     }
 
     private SummaSearcher createSearcher() throws Exception {
@@ -209,7 +205,7 @@ public class SearchTest extends NoExitTestCase {
     }
 
     public void NonfunctioningYettestSearchService() throws Exception {
-        SearchService searcher = createSearchService();
+        SummaSearcher searcher = createSearchService();
         try {
             searcher.search(simpleRequest("hans"));
             fail("An IndexException should be thrown as no index data are"
@@ -222,7 +218,6 @@ public class SearchTest extends NoExitTestCase {
         JMXConnector jmxc = JMXConnectorFactory.connect(url, null);
 
         Thread.sleep(Integer.MAX_VALUE);
-        searcher.stop();
     }
 
     private static class ClientListener implements NotificationListener {

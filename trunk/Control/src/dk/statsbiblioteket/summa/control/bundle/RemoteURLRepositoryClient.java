@@ -52,15 +52,10 @@ public class RemoteURLRepositoryClient implements BundleRepository, Remote {
 
         /* If there is no explicit remote URL supplied use the URLRepo's default
          * Ie. don't specify it */
-        try {
-            if (conf.valueExists(PROP_REMOTE_URL)) {
+        if (conf.valueExists(PROP_REMOTE_URL)) {
                 localConf.set (REPO_ADDRESS_PROPERTY,
                                conf.getString(PROP_REMOTE_URL));
-            }
-        } catch (IOException e) {
-            throw new RuntimeException("Error probing memory based" +
-                                       "configuration. This should never happen");
-        }
+        }        
 
         /* Create the URLRepo with the custom config */
         localRepo = new URLRepository(localConf);

@@ -104,6 +104,13 @@ public class StatusMonitor implements Runnable {
 
             try {
                 Monitorable mon = getConnection();
+
+                if (mon == null) {
+                    ctx.info ("Connection to '" + connectionId + "', still not " +
+                              "up. Waiting...");
+                    continue;
+                }
+
                 Status s = mon.getStatus();
 
                 if (ignoreStatuses.contains(s.getCode())) {
@@ -116,7 +123,7 @@ public class StatusMonitor implements Runnable {
 
                 // If we reach this point we are good,
                 // and the monitor should die
-                ctx.debug ("'" + connectionId + "' reports status: " + s);
+                ctx.info ("'" + connectionId + "' reports status: " + s);
                 log.debug ("'" + connectionId + "' reports status: " + s);
                 return;
             } catch (Exception e) {
@@ -137,6 +144,10 @@ public class StatusMonitor implements Runnable {
 
         if (connCtx == null) {
             connCtx = connMgr.get(connectionId);
+        }
+
+        if (connCtx == null) {
+            return null;
         }
 
         return connCtx.getConnection();
