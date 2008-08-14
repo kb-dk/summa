@@ -624,8 +624,14 @@ public class Configuration implements Serializable,
      * @throws IOException if there was a problem communicating with the
      *                     underlying storage.
      */
-    public boolean valueExists(String key) throws IOException {
-        return storage.get(key) != null;
+    public boolean valueExists(String key) {
+        try {
+            return storage.get(key) != null;
+        } catch (IOException e) {
+            log.error ("Failed to detect existence of value '" + key + "': "
+                       + e.getMessage (), e);
+            return false;
+        }
     }
 
     /**
