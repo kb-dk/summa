@@ -37,6 +37,9 @@ import org.apache.log4j.Logger;
 
 /**
  * Performs the primary work of mapping document IDs to tags.
+ * Each BrowserThread creates a TagCounter, which requires a substantial amount
+ * of memory (4 * #tags bytes). The counter is reused, so it is strongly adviced
+ * to maintail a pool of Browserthreads and reuse them, to avoid heavy GCs.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -55,10 +58,10 @@ public class BrowserThread implements Runnable {
     private ReentrantLock lock = new ReentrantLock();
     private Thread thread = null;
 
-    public BrowserThread(TagHandler tagHandler, StructureDescription structure,
-                         CoreMap coreMap) {
+    public BrowserThread(TagHandler tagHandler, CoreMap coreMap) {
         this.coreMap = coreMap;
-        tagCounter = new TagCounterArray(structure, tagHandler);
+        // TODO: Continue here
+        tagCounter = new TagCounterArray(tagHandler, 0); //coreMap.getEmptyFacet());
     }
 
     /**
