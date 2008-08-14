@@ -248,7 +248,7 @@
         </copy>
     </target>
 
-    <target name=".test-1.bundle" depends=".jar, test.compile">
+    <target name=".test-search-1.bundle" depends=".jar, test.compile">
         <mkdir dir="${tmp.dir}"/>
 
         <!-- Create jar file for test service -->
@@ -271,21 +271,20 @@
                 value="${summa.version}"/>
         </replace>
 
-        <zip destfile="${dist.dir}/test-1.bundle">
+        <zip destfile="${dist.dir}/test-search-1.bundle">
 
-            <zipfileset file="${tmp.dir}/test.jar"/>
-
-            <zipfileset file="${tmp.dir}/test-bundle-1/service.xml"/>
+            <zipfileset file="${tmp.dir}/test-search-1/service.xml"/>
             <zipfileset prefix="lib" file="../${summa.ilib.common}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.search}"/>
             <zipfileset prefix="lib" file="${summa.lib.commons-logging}"/>
             <zipfileset prefix="lib" file="${summa.lib.log4j}"/>
             <zipfileset prefix="lib" file="${summa.lib.sbutil}"/>
             <zipfileset prefix="lib" file="${release.jar}"/>
 
-            <zipfileset prefix="config" file="${test.src.dir}/test-bundle-1/config/configuration.xml"/>
+            <zipfileset prefix="config" file="${test.src.dir}/test-search-1/config/configuration.xml"/>
             <zipfileset prefix="config" file="${basedir}/config/log4j.xml"/>
 
-            <zipfileset dir="${test.src.dir}/test-bundle-1/config" prefix="config" filemode="600">
+            <zipfileset dir="${test.src.dir}/test-search-1/config" prefix="config" filemode="600">
                 <include name="jmx.password"/>
                 <include name="jmx.access"/>
                 <include name="policy"/>
@@ -548,6 +547,6 @@
         <delete dir="${tmp.dir}"/>
     </target>
 
-    <target name="all" depends="release, .test-1.bundle, .test-client-1.bundle, bundle-storage, .test-data, .test-ingest-1.bundle, .test-ingest-fagref.bundle, .test-index-fagref.bundle"/>
+    <target name="all" depends="release, .test-search-1.bundle, .test-client-1.bundle, bundle-storage, .test-data, .test-ingest-1.bundle, .test-ingest-fagref.bundle, .test-index-fagref.bundle"/>
 
 </project>

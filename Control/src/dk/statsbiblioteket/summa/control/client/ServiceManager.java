@@ -71,6 +71,7 @@ public class ServiceManager extends ConnectionManager<Service>
     @Override
     public ConnectionContext<Service> get (String serviceId) {
         String address = getServiceAddress(serviceId);
+        log.trace ("Getting address for '"+ serviceId + "': " + address + "");
         return super.get (address);
     }
 

@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bundle>
-	<mainJar>test.jar</mainJar>
+	<mainJar>lib/@release.jar@</mainJar>
 	<mainClass>dk.statsbiblioteket.summa.control.service.Launcher</mainClass>
     <property name="com.sun.management.jmxremote.port" value="2766"/>
     <property name="com.sun.management.jmxremote.ssl" value="false"/>
-    <description>A simple test service for the Summa Control</description>
-	<bundleId>test-1</bundleId>
+    <description>A test bundle for the Summa Search module</description>
+	<bundleId>test-search-1</bundleId>
 	<fileList>
-		<file>test.jar</file>
         <file>lib/summa-common-@summa.version@.jar</file>
+        <file>lib/summa-search-@summa.version@.jar</file>
+        <file>lib/summa-control-@summa.version@.jar</file>
         <file>lib/@release.jar@</file>
         <file>lib/commons-logging-1.1.jar</file>
         <file>lib/log4j-1.2.14.jar</file>

@@ -32,6 +32,7 @@ public class PingCommand extends RemoteCommand<ClientConnection> {
 
         try {
             client.getStatus();
+            ctx.info ("OK");
         } finally {
             releaseConnection();
         }
