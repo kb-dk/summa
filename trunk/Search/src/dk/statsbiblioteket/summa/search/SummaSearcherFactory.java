@@ -21,20 +21,24 @@ public class SummaSearcherFactory {
      *
      * @param conf the configuration used to look up
      *             {@link SummaSearcher#PROP_CLASS}
+     * @param defaultClass the class to instantiate if
+     *                     {@link SummaSearcher#PROP_CLASS} is not set in
+     *                     {@code conf}
      * @return a newly created {@code SummaSearcher}
      * @throws Configurable.ConfigurationException if there is an error reading
      *                                             {@code conf} or there is an
      *                                             error creating the searcher
      *                                             instance
      */
-    public static SummaSearcher createSearcher (Configuration conf) {
+    public static SummaSearcher createSearcher (Configuration conf,
+                                                Class<? extends SummaSearcher> defaultClass) {
         log.trace("createSeacher called");
 
         Class<? extends SummaSearcher> seacherClass;
         try {
             seacherClass = conf.getClass(SummaSearcher.PROP_CLASS,
                                          SummaSearcher.class,
-                                         SummaSearcherImpl.class);
+                                         defaultClass);
         } catch (Exception e) {
             throw new Configurable.ConfigurationException ("Could not get searcher"
                                                            + " class from property "
@@ -51,5 +55,16 @@ public class SummaSearcherFactory {
                                                            + " seacher class "
                                                            + seacherClass, e);
         }
+    }
+
+    /**
+     * Call {@link #createSearcher(Configuration, Class)} with the default class
+     * set to {@link SummaSearcherImpl}.
+     *
+     * @param conf The configuration to use
+     * @return newly instantiated searcher
+     */
+    public static SummaSearcher createSearcher (Configuration conf) {
+        return createSearcher (conf, SummaSearcherImpl.class);
     }
 }
