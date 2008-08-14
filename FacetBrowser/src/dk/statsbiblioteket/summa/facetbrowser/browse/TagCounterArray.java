@@ -26,32 +26,44 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.browse;
 
-import java.util.List;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.concurrent.locks.ReentrantLock;
-import java.io.StringWriter;
-
-import dk.statsbiblioteket.summa.facetbrowser.util.FlexiblePair;
-import dk.statsbiblioteket.summa.facetbrowser.core.StructureDescription;
-import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
-import dk.statsbiblioteket.summa.common.util.PriorityQueueLong;
 import dk.statsbiblioteket.summa.common.util.PriorityQueue;
+import dk.statsbiblioteket.summa.common.util.PriorityQueueLong;
+import dk.statsbiblioteket.summa.facetbrowser.Structure;
+import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
+import dk.statsbiblioteket.summa.facetbrowser.util.FlexiblePair;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * A tag-counter optimized for medium to large search-results. The performance
  * is dependent on search-result size as well as index-size.
- *
+ * </p><p>
+ * Resetting the tag-counter for next usage takes place in a designated Thread.
+ * If the tag-counter is immediately re-used,
+ * </p><p>
  * If this tag-counter is reused, it should have zero impact on garbage
  * collection, as the internal structure can be cleared instead of reallocated.
+ * </p><p>
+ * In the case of size-changing pools of Tags, the underlying arrays will be
+ * adjusted, which will impact the garbage collector due to re-allocation.
+ *
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class TagCounterArray implements TagCounter, Runnable {
     private static Logger log = Logger.getLogger(TagCounterArray.class);
+
+    /**
+     * This is multiplied with the wanted tag array lengt when creating a new
+     * tag array, in order to allow for expansion.
+     */
+    private static final double expansionFactor = 1.2;
 
     /**
      * Ensures that the cleaning of the tagCounter has finished before the
@@ -61,82 +73,153 @@ public class TagCounterArray implements TagCounter, Runnable {
 
     /**
      * The tags-array has the signature int[facetID][tagID] and contains
-     * counts for the occurence of all facet/tag pairs.
+     * counts for the occurence of all facet/tag pairs. Note that the size of
+     * the secondary array might exceed the number of possible Tags for the
+     * corresponding Facet.
+     * </p><p>
+     * Likewise the size of the primary array is not equal to the number of
+     * Facets. See {@link #facetCount} for that.
+     * </p><p>
+     * Note: The number of facets only change when a new FacetControl is
+     *       created.
      */
     private int[][] tags;
-    private StructureDescription structure;
+    private int facetCount = -1;
+    private int emptyFacet;
     private TagHandler tagHandler;
 
     /**
      * Create the array from the informations in the given tagHandler. The
-     * tagHandler must be properly with regard to the number of facets. The
-     * expected number of tags for the individual facets is only used for
-     * initial size.
-     * @param structure the structure for facet browser.
+     * tagHandler must be correct with regard to the number of facets.
+     * </p><p>
+     * The emptyFacet will always contain a counter of length 1. It is used as
+     * a dummy placeholder for deleted tags, in order to avoid a conditional in
+     * the tight inner loop.
      * @param tagHandler an properly initialized tagHandler.
+     * @param emptyFacet the id for the empty facet. This must be greater than
+     *                   or equal to the number of proper facets in TagHandler.
+     *                   The first dimension of {@link #tags} is determined by
+     *                   this, so high values are to be avoided.
      */
-    public TagCounterArray(StructureDescription structure,
-                           TagHandler tagHandler) {
-        this.structure = structure;
+    // TODO: Verify String.format(...%s$d...)
+    public TagCounterArray(TagHandler tagHandler, int emptyFacet) {
         this.tagHandler = tagHandler;
-        int[][] tagCounts = new int[tagHandler.getFacetNames().size()][];
-        for (int i = 0 ; i < tagHandler.getFacetNames().size() ; i++) {
-            tagCounts[i] = new int[
-                    tagHandler.getTagCount(tagHandler.getFacetNames().get(i))];
+        this.emptyFacet = emptyFacet;
+        if (emptyFacet < tagHandler.getFacetNames().size()) {
+            log.error(String.format(
+                    "The emptyFacet was set to %d with the number of Facets "
+                    + "being %d. emptyFacet is adjusted to %2$d, but this will "
+                    + "probably not work with the core map",
+                    emptyFacet, tagHandler.getFacetNames().size()));
+            this.emptyFacet = tagHandler.getFacetNames().size();
         }
-        initialize(tagCounts, tagHandler.getFacetNames());
+    }
+    public synchronized void verify() {
+        log.trace("verify() called");
+        if (lock.isLocked()) {
+            log.trace("verify: Waiting for lock (probably due to running "
+                      + "reset)");
+        }
+        lock.lock();
+        log.trace("verify: Got lock");
+        try {
+            log.trace("Verifying the number of facets");
+            int newFacetCount = tagHandler.getFacetNames().size();
+            if (facetCount != -1 && facetCount != newFacetCount) {
+                log.error(String.format(
+                        "The old facet count was %d but was changed to %d. "
+                        + "Facet count should be constant. Correctness is not "
+                        + "guaranteed after this",
+                        facetCount, newFacetCount));
+                if (emptyFacet < newFacetCount) {
+                    log.error(String.format(
+                            "The old emptyFacet of %d is smaller than the new "
+                            + "number of Facets %d. Adjusting emptyFacet to "
+                            + "%2$d, which will probably lead to problems",
+                            emptyFacet, newFacetCount));
+                    emptyFacet = newFacetCount;
+                }
+            }
+            facetCount = newFacetCount;
+            if (tags == null || tags.length != emptyFacet + 1) {
+                log.debug("Creating new FacetTag-array with " + (emptyFacet + 1)
+                          + " facets");
+                tags = new int[emptyFacet + 1][];
+            }
+            log.trace("Verifying the length of tag-arrays");
+            int pos = 0;
+            for (String facetName: tagHandler.getFacetNames()) {
+                int tagCount = tagHandler.getTagCount(facetName);
+                if (tags[pos] == null || tags[pos].length < tagCount) {
+                    int newCount = (int)(tagHandler.getTagCount(facetName)
+                                         * expansionFactor);
+                    log.debug("Increasing tag-array for Facet " + facetName
+                              + " to max " + newCount + " with " + tagCount
+                              + " active tags");
+                    tags[pos] = new int[newCount];
+                }
+                pos++;
+            }
+            log.trace("Verifying the existence of emptyFacet array");
+            if (tags[emptyFacet] == null || tags[emptyFacet].length != 1) {
+                log.debug("Creating emptyFacet array of length 1 at position "
+                          + emptyFacet);
+                tags[emptyFacet] = new int[1];
+            }
+            log.trace("verify() finished");
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
-     * Constructs a tagCounter for the given Facets, using the given matrix
-     * for tags.
-     * @param facetNames the names of the Facets to count tags for.
-     * @param tags       a matrix with room for the counters for the tags.
-     *                   The first dimension must be equal to the length of
-     *                   facetNames, while the arrays in the second dimension
-     *                   must have lengths equal to the number of unique tags
-     *                   for the facet they correspond to.
-     * @deprecated this constructor is no longer valid and will be removed ASAP
+     * Increment the count for a Tag in a Facet. The count is incremented by 1.
+     * This is expected to be called millions of times per second, so
+     * performance is king. Error-checking is done solely by catching
+     * exceptions.
+     * Note: due to performance reasons, this is not thread-safe.
+     * @param facetID the ID for the Facet.
+     * @param tagID   the ID for the Tag.
      */
-    @SuppressWarnings({"UnusedDeclaration"})
-    public TagCounterArray(List<String> facetNames, int[][] tags) {
-        throw new UnsupportedOperationException("This constructor is no longer supported!");
-    }
-
-    private void initialize(int[][] tags, List<String> facetNames) {
-        StringWriter sw = new StringWriter();
-        int counter = 0;
-        for (int[] tagList: tags) {
-            sw.append(facetNames.get(counter++)).append("(");
-            sw.append(Integer.toString(tagList.length)).append(") ");
-        }
-        log.info("Creating tagCounter with " + facetNames.size() + " facets: " +
-                 sw.toString());
-        this.tags = tags;
-        if (tags.length != facetNames.size()) {
-            log.fatal("Dimension 1 for tags (" + tags.length +
-                      ") did not match facet count (" + facetNames.size() +
-                      ")");
-        }
-    }
-
+    @QAInfo(level = QAInfo.Level.FINE,
+            state = QAInfo.State.IN_DEVELOPMENT,
+            author = "te",
+            comment = "There is a potential for throwing tons of exceptions." +
+                      "Consider throwing only the first in each run")
     public void increment(int facetID, int tagID) {
         try {
             tags[facetID][tagID]++;
-        } catch (Exception e) {
+        } catch (ArrayIndexOutOfBoundsException e) {
+            if (facetID < 0
+                || (facetID > facetCount && facetID != emptyFacet)) {
+                log.error(String.format(
+                        "facetId was %d. It should be emptyFacet %d or (> 0 "
+                        + "and < facetCount %d). Skipping increment",
+                        facetID, emptyFacet, facetCount));
+                return;
+            }
+
+            if (facetID == emptyFacet) {
+                log.warn(String.format("tagID for emptyFacet %d was %d, where "
+                                       + "the only valid value is 0",
+                                       emptyFacet, tagID));
+                return;
+            }
+            if (tagID < 0) {
+                log.warn(String.format(
+                        "Illegal tagID %d for facet %s (id %d)",
+                        tagID, tagHandler.getFacetNames().get(facetID),
+                        facetID));
+                return;
+            }
             if (tagID >= tags[facetID].length) {
-                //noinspection DuplicateStringLiteralInspection
-                log.error("Faulty incrementing tag " + tagID
-                          + "/" + tags[facetID].length
-                          + " for facet " +  structure.getFacetName(facetID)
-                          + " (" + facetID + "/" + tags.length + ")");
-            } else {
-                log.debug("Expanding tag array for facet "
-                          + structure.getFacetName(facetID) + " from "
-                          + tags[facetID].length + " to " + (tagID + 1)
-                          + " elements", e);
+                log.debug(String.format(
+                        "increment(%d, %d) exceeded length %d of tag array for "
+                        + "facet %s. Increasing tag array accordingly",
+                        facetID, tagID, tags[facetID].length,
+                        tagHandler.getFacetNames().get(facetID)));
                 try {
-                    int[] newTagArray = new int[tagID + 1];
+                    int[] newTagArray = new int[(int)(tagID * expansionFactor)];
                     System.arraycopy(tags[facetID], 0,
                                      newTagArray, 0, tags[facetID].length);
                     tags[facetID] = newTagArray;
@@ -145,34 +228,46 @@ public class TagCounterArray implements TagCounter, Runnable {
                     log.error("Exception calling increment with facetID "
                               + facetID + ", tagID " + tagID
                               + " after expansion to size "
-                              + tags[facetID].length, ex);
+                              + (int)(tagID * expansionFactor), ex);
                 }
+                return;
             }
+            log.warn(String.format(
+                    "increment(%d, %d) encountered an unexpected "
+                    + "ArrayIndexOutOfBoundsException", facetID, tagID), e);
+        } catch (Exception e) {
+            log.warn(String.format(
+                    "Unexpected exception in increment(%d, %d)",
+                    facetID, tagID), e);
         }
     }
 
-    public synchronized Result getFirst(
-            Result.TagSortOrder sortOrder) {
+    public synchronized FacetResult getFirst(Structure requestStructure) {
         lock.lock();
         try {
-            ResultLocal result =
-                    new ResultLocal(structure, tagHandler);
-            for (int facetID = 0 ;
-                 facetID < structure.getFacetNames().size() ;
-                 facetID++) {
-                int maxTags = structure.getMaxTags(facetID);
-                String facetName = structure.getFacetName(facetID);
-//            System.out.println(facetName +" reduce to " + maxTags);
-//            log.info("Sorting facet " + facetName);
+            FacetResultLocal result =
+                    new FacetResultLocal(requestStructure, tagHandler);
+            for (Map.Entry<String, Structure.FacetStructure> facetEntry:
+                    requestStructure.getFacets().entrySet()) {
+                Structure.FacetStructure facet = facetEntry.getValue();
+                int facetID = facet.getFacetSortPosition();
+                int maxTags = facet.getMaxTags();
+                String facetName = facet.getName();
                 int[] counterList = tags[facetID];
-                if (sortOrder == Result.TagSortOrder.tag) {
-                    addFirstTagsAlpha(maxTags, counterList, result, facetName);
-                } else if (sortOrder ==
-                           Result.TagSortOrder.popularity) {
-                    addFirstTagsPopularity(maxTags, counterList, result,
-                                           facetID);
+                if (Structure.SORT_ALPHA.equals(facet.getSortType())) {
+                    addFirstTagsAlpha(maxTags, counterList,
+                                      tagHandler.getFacetSize(facetID),
+                                      result, facetName);
                 } else {
-                    log.fatal("Unknown sort order for tag: " + sortOrder);
+                    if (!Structure.SORT_POPULARITY.equals(facet.getSortType())){
+                        log.warn(String.format(
+                                "Unknown sort-order '%s' in getFirst, using %s",
+                                facet.getSortType(),
+                                Structure.SORT_POPULARITY));
+                    }
+                    addFirstTagsPopularity(maxTags, counterList,
+                                           tagHandler.getFacetSize(facetID),
+                                           result, facetID);
                 }
             }
             return result;
@@ -182,7 +277,8 @@ public class TagCounterArray implements TagCounter, Runnable {
     }
 
     private void addFirstTagsPopularity(int maxTags, int[] counterList,
-                                        ResultLocal result,
+                                        int counterLength,
+                                        FacetResultLocal result,
                                         int facetID) {
         int minPop = 0;
         System.out.println("1");
@@ -190,7 +286,8 @@ public class TagCounterArray implements TagCounter, Runnable {
         FlexiblePair<Integer, Integer>[] popResult =
                 (FlexiblePair<Integer, Integer>[])new FlexiblePair[maxTags+1];
         int tagCount = 0;
-        for (int i = 0 ; i < counterList.length ; i++) {
+        // TODO: Check for 1-off error in counterlength
+        for (int i = 0 ; i < counterLength ; i++) {
             int currentPop = counterList[i];
             if (currentPop > minPop || tagCount < maxTags) {
                 if (tagCount <= maxTags) {
@@ -236,17 +333,18 @@ public class TagCounterArray implements TagCounter, Runnable {
         for (int i = 0 ; i < sTags ; i++) {
             niceList.add(popResult[i]);
         }
-        result.assignTags(structure.getFacetName(facetID),
-                                      niceList);
+        result.assignTags(tagHandler.getFacetNames().get(facetID),
+                          niceList);
     }
 
     // Too slow
     @SuppressWarnings({"UnusedDeclaration"})
     private void addFirstTagsPopularityQueue(int maxTags, int[] counterList,
-                                            ResultLocal result,
+                                             int counterLength,
+                                            FacetResultLocal result,
                                             int facetID) {
         PriorityQueueLong queue = new PriorityQueueLong(maxTags);
-        for (int i = counterList.length - 1 ; i != 0 ; i--) {
+        for (int i = counterLength - 1 ; i != 0 ; i--) {
             if (counterList[i] > 0) {
                 queue.insert(Integer.MAX_VALUE - counterList[i]);
 //                queue.insert((long)(Integer.MAX_VALUE - counterList[i]) << 32 |
@@ -262,20 +360,21 @@ public class TagCounterArray implements TagCounter, Runnable {
                     (int)(v & 0xFFFF), Integer.MAX_VALUE - (int)(v >>> 31),
                     FlexiblePair.SortType.SECONDARY_DESCENDING));
         }
-        result.assignTags(structure.getFacetName(facetID),
-                                      niceList);
+        result.assignTags(tagHandler.getFacetNames().get(facetID),
+                          niceList);
     }
 
     // Slower than the other method
     @SuppressWarnings({"UnusedDeclaration"})
     private void addFirstTagsPopularityGenericQueue(int maxTags,
                                                     int[] counterList,
-                                            ResultLocal result,
-                                            int facetID) {
+                                                    int counterLength,
+                                                    FacetResultLocal result,
+                                                    int facetID) {
         PriorityQueue<FlexiblePair<Integer, Integer>> queue =
                 new PriorityQueue<FlexiblePair<Integer, Integer>>(maxTags);
         FlexiblePair<Integer, Integer> entry = null;
-        for (int i = 0 ; i < counterList.length ; i++) {
+        for (int i = 0 ; i < counterLength ; i++) {
             if (counterList[i] > 0) {
                 if (entry == null) {
                     entry = new FlexiblePair<Integer, Integer>(
@@ -296,18 +395,19 @@ public class TagCounterArray implements TagCounter, Runnable {
         while (queue.getSize() > 0) {
             niceList.add(queue.removeMin());
         }
-        result.assignTags(structure.getFacetName(facetID),
-                                      niceList);
+        result.assignTags(tagHandler.getFacetNames().get(facetID),
+                          niceList);
     }
 
     private void addFirstTagsAlpha(int maxTags, int[] counterList,
-                                   ResultLocal result,
+                                   int counterLength,
+                                   FacetResultLocal result,
                                    String facetName) {
         ArrayList<FlexiblePair<Integer, Integer>> alphaResult =
                 new ArrayList<FlexiblePair<Integer, Integer>>(
                         Math.min(maxTags, 50000)); // Sanity-check
         int counter = 0;
-        for (int i = 0 ; i < counterList.length ; i++) {
+        for (int i = 0 ; i < counterLength ; i++) {
             if (counterList[i] != 0) {
                 alphaResult.add(new FlexiblePair<Integer, Integer>(
                         i, counterList[i],
@@ -322,11 +422,11 @@ public class TagCounterArray implements TagCounter, Runnable {
     }
 
     public synchronized void reset() {
+        lock.lock();
         new Thread(this).run();
     }
 
     public void run() {
-        lock.lock();
         try {
             log.debug("Clearing counter lists...");
             for (int[] tag : tags) {

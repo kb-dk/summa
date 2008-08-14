@@ -96,6 +96,7 @@ public class StructureTest extends TestCase {
         Structure.FacetStructure bad = structure.getFacets().get("bad_sort");
         assertEquals("The bad sort should be corrected",
                      Structure.DEFAULT_FACET_SORT_TYPE, bad.getSortType());
+
         Structure.FacetStructure full = structure.getFacets().get("full");
         assertEquals("The fields should be as expected",
                      "foo, bar",

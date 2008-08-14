@@ -1,4 +1,4 @@
-/* $Id: ResultExternal.java,v 1.7 2007/10/05 10:20:22 te Exp $
+/* $Id: FacetResultExternal.java,v 1.7 2007/10/05 10:20:22 te Exp $
  * $Revision: 1.7 $
  * $Date: 2007/10/05 10:20:22 $
  * $Author: te $
@@ -22,11 +22,11 @@
  */
 /*
  * The State and University Library of Denmark
- * CVS:  $Id: ResultExternal.java,v 1.7 2007/10/05 10:20:22 te Exp $
+ * CVS:  $Id: FacetResultExternal.java,v 1.7 2007/10/05 10:20:22 te Exp $
  */
 package dk.statsbiblioteket.summa.facetbrowser.browse;
 
-import dk.statsbiblioteket.summa.facetbrowser.core.StructureDescription;
+import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
@@ -37,12 +37,16 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class ResultExternal extends ResultImpl<String> {
-    public ResultExternal(StructureDescription structureDescription) {
-        super(structureDescription);
+public class FacetResultExternal extends FacetResultImpl<String> {
+    public FacetResultExternal(Structure structure) {
+        super(structure);
     }
 
-    public Result externalize() {
+    public FacetResult externalize() {
         return this;
+    }
+
+    public String getName() {
+        return "FacetResult";
     }
 }

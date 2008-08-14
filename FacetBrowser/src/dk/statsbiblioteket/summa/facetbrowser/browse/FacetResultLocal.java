@@ -1,4 +1,4 @@
-/* $Id: ResultLocal.java,v 1.8 2007/10/05 10:20:22 te Exp $
+/* $Id: FacetResultLocal.java,v 1.8 2007/10/05 10:20:22 te Exp $
  * $Revision: 1.8 $
  * $Date: 2007/10/05 10:20:22 $
  * $Author: te $
@@ -22,33 +22,34 @@
  */
 /*
  * The State and University Library of Denmark
- * CVS:  $Id: ResultLocal.java,v 1.8 2007/10/05 10:20:22 te Exp $
+ * CVS:  $Id: FacetResultLocal.java,v 1.8 2007/10/05 10:20:22 te Exp $
  */
 package dk.statsbiblioteket.summa.facetbrowser.browse;
 
+import dk.statsbiblioteket.summa.facetbrowser.Structure;
+import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
+import dk.statsbiblioteket.summa.facetbrowser.util.ClusterCommon;
+import dk.statsbiblioteket.summa.facetbrowser.util.FlexiblePair;
+import dk.statsbiblioteket.util.qa.QAInfo;
+
+import java.io.StringWriter;
 import java.util.List;
 import java.util.Map;
-
-import dk.statsbiblioteket.summa.facetbrowser.util.FlexiblePair;
-import dk.statsbiblioteket.summa.facetbrowser.util.ClusterCommon;
-import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
-import dk.statsbiblioteket.summa.facetbrowser.core.StructureDescription;
-import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * The local FacetStructure is optimized towards compact and fast implementation
  * at the cost of serializability. Down to earth, this means that Strings are
- * represented with integers (pointers to a String-pool).
+ * represented with integers that are pointers to Tags in a pool.
  */
+// TODO: Consider if this can be auto-externalized in case of serializing
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class ResultLocal extends ResultImpl<Integer> {
+public class FacetResultLocal extends FacetResultImpl<Integer> {
     private TagHandler tagHandler;
 
-    public ResultLocal(StructureDescription structureDescription,
-                               TagHandler tagHandler) {
-        super(structureDescription);
+    public FacetResultLocal(Structure structure, TagHandler tagHandler) {
+        super(structure);
         this.tagHandler = tagHandler;
     }
 
@@ -61,11 +62,39 @@ public class ResultLocal extends ResultImpl<Integer> {
         return ClusterCommon.simpleEntityEscape(resolveTagString(facet, tag));
     }
 
-    // TODO: Handle multiple fields
     protected String getQueryString(String facet, Integer tag) {
-        return facet + ":\"" +
-               ClusterCommon.simpleEntityEscape(resolveTagString(facet, tag))
-               + "\"";
+        Structure.FacetStructure fc = structure.getFacet(facet);
+        if (fc == null) {
+            throw new IllegalStateException(String.format(
+                    "The requested facet '%s' was not present in the structure",
+                    facet));
+        }
+        if (fc.getFields() == null || fc.getFields().length == 1) {
+            throw new IllegalStateException(String.format(
+                    "No fields specified in facet structure '%s'",
+                    fc.getName()));
+        }
+
+        String escapedTag =
+                ClusterCommon.simpleEntityEscape(resolveTagString(facet, tag));
+        StringWriter sw = new StringWriter(100);
+        if (fc.getFields().length > 1) {
+            sw.append("(");
+        }
+        for (int i = 0 ; i < fc.getFields().length ; i++) {
+            sw.append(fc.getFields()[i]);
+            sw.append(":\"");
+            sw.append(escapedTag);
+            sw.append("\"");
+            if (i < fc.getFields().length - 1) {
+                sw.append(" OR ");
+            }
+        }
+        if (fc.getFields().length > 1) {
+            sw.append(")");
+        }
+
+        return sw.toString();
     }
 
     protected String resolveTagString(String facet, Integer tag) {
@@ -73,13 +102,12 @@ public class ResultLocal extends ResultImpl<Integer> {
     }
 
     /**
-     * Resolve the internal tag-id's to Strings and produce a serializable
+     * Resolve the internal tag-ids to Strings and produce a serializable
      * version of this FacetStructure, suitable for network-transfer.
      * @return a version of the FacetStructure suitable for external use.
      */
-    public Result externalize() {
-        ResultExternal external =
-                new ResultExternal(structureDescription);
+    public FacetResult externalize() {
+        FacetResultExternal external = new FacetResultExternal(structure);
         for (Map.Entry<String, List<FlexiblePair<Integer, Integer>>> entry:
                 map.entrySet()) {
             String facet = entry.getKey();
@@ -91,4 +119,9 @@ public class ResultLocal extends ResultImpl<Integer> {
         return external;
     }
 
+    /* Response interface */
+
+    public String getName() {
+        return "FacetResultLocal";
+    }
 }

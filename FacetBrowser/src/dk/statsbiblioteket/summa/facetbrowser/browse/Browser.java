@@ -25,7 +25,6 @@ package dk.statsbiblioteket.summa.facetbrowser.browse;
 import java.util.List;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.facetbrowser.Structure;
 
 
 /**
@@ -52,16 +51,17 @@ public interface Browser {
      * @param docIDs    the ids for the documents to calculate Tags for.
      * @param startPos  the start-position within the docIDs.
      * @param length    the number of docIDs to use.
-     * @param facets    a comma-separated list with the names of the wanted
-     *                  Facets. See {@link Request} for details. If null is
-     *                  specified, the default Facets are returned.
+     * @param facets    a comma-separated list with the names and optionally
+     *                  max tag count of the wanted Facets. See {@link Request}
+     *                  for details. If null is specified, the default Facets
+     *                  are returned.
      * @return a machine-oriented representation of the facet browser structure
      *         corresponding to the given query. Note that the result need not
      *         be directly Serializable, but that calling 
-     *         {@link Result#externalize()} on the result should produce
+     *         {@link FacetResult#externalize()} on the result should produce
      *         a Serializable version.
      */
-    public Result getFacetMap(int[] docIDs, int startPos, int length,
+    public FacetResult getFacetMap(int[] docIDs, int startPos, int length,
                               String facets);
 
     // TODO: Add index-lookup

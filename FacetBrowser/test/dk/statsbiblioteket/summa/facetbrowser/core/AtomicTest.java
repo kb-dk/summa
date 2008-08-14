@@ -26,36 +26,43 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.core;
 
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.Random;
-import java.util.ArrayList;
-
 import junit.framework.TestCase;
-import dk.statsbiblioteket.util.Profiler;
-import dk.statsbiblioteket.util.Strings;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicIntegerArray;
 
 /**
  * Experimenting with atomic power.
+ *
+ * AtomicIntArray might be fast enough for updates, but clearing for next run
+ * takes far too much time and reallocating every time taxes the garbage
+ * collector. Seems like we're stuck with traditional intarrays...
  */
 public class AtomicTest extends TestCase {
     private static final int SIZE = 10 * 1000 * 1000;
     private static final int WARMUP = 1;
     private static final int RUNS = 3;
 
-    public void dumpMemoryUsage() throws Exception {
+    public void testDumpMemoryUsage() throws Exception {
         System.out.println("Initial mem: " + mem());
         int[] l = new int[SIZE];
         System.out.println("Imt mem: " + mem());
         l = null;
-        AtomicInteger[] al = new AtomicInteger[SIZE];
+        AtomicIntegerArray al = new AtomicIntegerArray(SIZE);
+        long nano = System.nanoTime();
         for (int i = 0 ; i < SIZE ; i++) {
-            al[i] = new AtomicInteger(0);
+            al.set(i, 0);
         }
-        System.out.println("AInt mem: " + mem());
+        System.out.println("AInt mem: " + mem() + "/" + SIZE
+                           + " ints  filled in "
+                           + (System.nanoTime() - nano) / 1000000.0
+                           + " milliseconds");
     }
 
-    public void dumpSpeed() throws Exception {
+    public void testDumpSpeed() throws Exception {
         Random random = new Random();
         System.out.println("Creating");
         int[] l = new int[SIZE];
@@ -63,6 +70,7 @@ public class AtomicTest extends TestCase {
         for (int i = 0 ; i < SIZE ; i++) {
             al[i] = new AtomicInteger(0);
         }
+        AtomicIntegerArray ala = new AtomicIntegerArray(SIZE);
         System.gc();
         System.out.println("Warming up");
         for (int i = 0 ; i < WARMUP ; i++) {
@@ -70,10 +78,12 @@ public class AtomicTest extends TestCase {
                 int pos = random.nextInt(SIZE);
                 l[pos]++;
                 al[pos].incrementAndGet();
+                ala.incrementAndGet(pos);
             }
         }
         System.out.println("Running");
         for (int i = 0 ; i < RUNS ; i++) {
+
             System.gc();
             long startTime = System.currentTimeMillis();
             for (int j = 0 ; j < SIZE ; j++) {
@@ -81,29 +91,54 @@ public class AtomicTest extends TestCase {
             }
             long randomTime = System.currentTimeMillis()-startTime;
             System.out.println("\nRandom time: "
-                               + Math.round(SIZE / (randomTime / 1000.0))
-                               + " randoms/sec");
+                               + Math.round(SIZE / randomTime)
+                               + " randoms/ms");
 
             System.gc();
             startTime = System.currentTimeMillis();
             for (int j = 0 ; j < SIZE ; j++) {
                 l[random.nextInt(SIZE)]++;
             }
-            double spend = (System.currentTimeMillis() - startTime - randomTime)
-                           / 1000.0;
+            double spend = (System.currentTimeMillis() - startTime -randomTime);
             System.out.println("Plain int:  "
                                + Math.round(SIZE / spend)
-                               + " increments/sec");
+                               + " increments/ms");
+            startTime = System.currentTimeMillis();
+            Arrays.fill(l, 0);
+            spend = (System.currentTimeMillis() - startTime);
+            System.out.println("Plain int clear in " + spend + " ms");
 
+            System.gc();
             startTime = System.currentTimeMillis();
             for (int j = 0 ; j < SIZE ; j++) {
                 al[random.nextInt(SIZE)].getAndIncrement();
             }
-            spend = (System.currentTimeMillis() - startTime - randomTime)
-                     / 1000.0;
+            spend = (System.currentTimeMillis() - startTime - randomTime);
             System.out.println("Atomic int: "
                                + Math.round(SIZE / spend)
-                               + " increments/sec");
+                               + " increments/ms");
+            startTime = System.currentTimeMillis();
+            for (AtomicInteger anAl : al) {
+                anAl.set(0);
+            }
+            spend = (System.currentTimeMillis() - startTime);
+            System.out.println("Atomic int clear in " + spend + " ms");
+
+            System.gc();
+            startTime = System.currentTimeMillis();
+            for (int j = 0 ; j < SIZE ; j++) {
+                ala.getAndIncrement(random.nextInt(SIZE));
+            }
+            spend = (System.currentTimeMillis() - startTime - randomTime);
+            System.out.println("Atomic int array: "
+                               + Math.round(SIZE / spend)
+                               + " increments/ms");
+            startTime = System.currentTimeMillis();
+            for (int j = 0 ; j < ala.length() ; j++) {
+                ala.set(j, 0);
+            }
+            spend = (System.currentTimeMillis() - startTime);
+            System.out.println("Atomic int array clear in " + spend + " ms");
         }
     }
 

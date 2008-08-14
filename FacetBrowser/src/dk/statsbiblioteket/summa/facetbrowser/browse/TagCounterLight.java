@@ -86,16 +86,16 @@ public class TagCounterLight implements TagCounter, Runnable {
         facet.put(tagID, count == null ? 1 : count+1);
     }
 
-    public synchronized Result getFirst(
-            Result.TagSortOrder sortOrder) {
+    public synchronized FacetResult getFirst(
+            FacetResult.TagSortOrder sortOrder) {
         lock.lock();
         try {
-            ResultLocal result = new ResultLocal(structure,
+            FacetResultLocal result = new FacetResultLocal(structure,
                                                                  tagHandler);
 
             for (int facetID = 0 ; facetID < facets.size() ; facetID++) {
                 int maxTags = structure.getMaxTags(facetID);
-                if (sortOrder == Result.TagSortOrder.tag) {
+                if (sortOrder == FacetResult.TagSortOrder.tag) {
                     Map<Integer, Integer> facet = facets.get(facetID);
                     if (facet.size() > 0) {
                         ArrayList<FlexiblePair<Integer, Integer>> alphaResult =
@@ -110,7 +110,7 @@ public class TagCounterLight implements TagCounter, Runnable {
                                           alphaResult.subList(0, Math.min(alphaResult.size(),
                                                                           maxTags)));
                     }
-                } else if (sortOrder == Result.TagSortOrder.popularity) {
+                } else if (sortOrder == FacetResult.TagSortOrder.popularity) {
                     Map<Integer, Integer> facet = facets.get(facetID);
                     if (facet.size() > 0) {
                         ArrayList<FlexiblePair<Integer, Integer>> popResult =

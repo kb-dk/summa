@@ -1,4 +1,4 @@
-/* $Id: ResultImpl.java,v 1.10 2007/10/05 10:20:22 te Exp $
+/* $Id: FacetResultImpl.java,v 1.10 2007/10/05 10:20:22 te Exp $
  * $Revision: 1.10 $
  * $Date: 2007/10/05 10:20:22 $
  * $Author: te $
@@ -22,25 +22,21 @@
  */
 /*
  * The State and University Library of Denmark
- * CVS:  $Id: ResultImpl.java,v 1.10 2007/10/05 10:20:22 te Exp $
+ * CVS:  $Id: FacetResultImpl.java,v 1.10 2007/10/05 10:20:22 te Exp $
  */
 package dk.statsbiblioteket.summa.facetbrowser.browse;
 
-import java.util.Map;
-import java.util.List;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.ArrayList;
-import java.io.StringWriter;
-
+import dk.statsbiblioteket.summa.facetbrowser.Structure;
+import dk.statsbiblioteket.summa.facetbrowser.util.ClusterCommon;
 import dk.statsbiblioteket.summa.facetbrowser.util.FlexiblePair;
 import dk.statsbiblioteket.summa.facetbrowser.util.Pair;
-import dk.statsbiblioteket.summa.facetbrowser.util.ClusterCommon;
-import dk.statsbiblioteket.summa.facetbrowser.core.StructureDescription;
+import dk.statsbiblioteket.summa.search.Response;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import java.io.StringWriter;
+import java.util.*;
 
 /**
  * Base implementation of a facet structure, where the tags are generic.
@@ -50,13 +46,12 @@ import org.apache.commons.logging.Log;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public abstract class ResultImpl<T extends Comparable<T>>
-        implements Result<T> {
+public abstract class FacetResultImpl<T extends Comparable<T>>
+        implements FacetResult<T> {
     private static final transient Log log =
-            LogFactory.getLog(ResultImpl.class);
+            LogFactory.getLog(FacetResultImpl.class);
 
     private int DEFAULTFACETCAPACITY = 20;
-    protected StructureDescription structureDescription;
 
     /**
      * Pseudo-code: Map<FacetName, FlexiblePair<Tag, TagCount>>.
@@ -64,10 +59,12 @@ public abstract class ResultImpl<T extends Comparable<T>>
      * significant.
      */
     protected LinkedHashMap<String, List<FlexiblePair<T, Integer>>> map;
+    protected Structure structure;
 
-    public ResultImpl(StructureDescription structureDescription) {
-        this.structureDescription = structureDescription;
-        map = new LinkedHashMap<String, List<FlexiblePair<T, Integer>>>(20); 
+    public FacetResultImpl(Structure structure) {
+        map = new LinkedHashMap<String, List<FlexiblePair<T, Integer>>>(
+                DEFAULTFACETCAPACITY);
+        this.structure = structure;
     }
 
     /**
@@ -92,7 +89,7 @@ public abstract class ResultImpl<T extends Comparable<T>>
                 int tagCount = 0;
 
                 Integer maxTags =
-                        structureDescription.getMaxTags(facet.getKey());
+                        structure.getFacets().get(facet.getKey()).getMaxTags();
                 for (FlexiblePair<T, Integer> tag: facet.getValue()) {
                     if (tagCount++ < maxTags) {
                         sw.write("    <tag name=\"");
@@ -132,7 +129,8 @@ public abstract class ResultImpl<T extends Comparable<T>>
                         List<FlexiblePair<T, Integer>>>(map.size());
         for (Map.Entry<String, List<FlexiblePair<T, Integer>>> entry:
                 map.entrySet()) {
-            int maxTags = structureDescription.getMaxTags(entry.getKey());
+            int maxTags =
+                    structure.getFacets().get(entry.getKey()).getMaxTags();
             if (entry.getValue().size() <= maxTags) {
                 newMap.put(entry.getKey(), entry.getValue());
             } else {
@@ -153,18 +151,25 @@ public abstract class ResultImpl<T extends Comparable<T>>
         return map;
     }
 
-    public synchronized void merge(Result other) {
+    public void merge(Response otherResponse) throws ClassCastException {
+        if (!(otherResponse instanceof FacetResult)) {
+            throw new ClassCastException(String.format(
+                    "Expected a FacetResult, but go '%s'",
+                    otherResponse.getClass().getName()));
+        }
+        FacetResult other = (FacetResult)otherResponse;
         if (other == null) {
             log.warn("Attempted to merge with null");
         }
-        String typeProblem = "The ResultImpl<T> default merger can only"
-                             + " handle ResultImpl<T> as input";
-        if (!(other instanceof ResultImpl)) {
+        String typeProblem = "The FacetResultImpl<T> default merger can only"
+                             + " handle FacetResultImpl<T> as input";
+        if (!(other instanceof FacetResultImpl)) {
             throw new IllegalArgumentException(typeProblem);
         }
         Map<String, List<FlexiblePair<T, Integer>>> otherMap;
         try  {
-            otherMap = ((ResultImpl<T>)other).getMap();
+            //noinspection unchecked
+            otherMap = ((FacetResultImpl<T>)other).getMap();
         } catch (ClassCastException e) {
             throw new IllegalArgumentException(typeProblem, e);
         }
@@ -233,7 +238,7 @@ public abstract class ResultImpl<T extends Comparable<T>>
     }
 
     protected void sortFacets() {
-        final StructureDescription s2 = structureDescription;
+        final Structure s2 = structure;
         // construct list
         List<Pair<String, List<FlexiblePair<T, Integer>>>> ordered =
                 new ArrayList<Pair<String, List<FlexiblePair<T, Integer>>>>(
@@ -250,8 +255,10 @@ public abstract class ResultImpl<T extends Comparable<T>>
                                         List<FlexiblePair<T, Integer>>> o1,
                                    Pair<String,
                                         List<FlexiblePair<T, Integer>>> o2) {
-                    Integer score1 = s2.getFacetSortOrder(o1.getKey());
-                    Integer score2 =s2.getFacetSortOrder(o2.getKey());
+                    Integer score1 =
+                            s2.getFacet(o1.getKey()).getFacetSortPosition();
+                    Integer score2 =
+                            s2.getFacet(o2.getKey()).getFacetSortPosition();
                     if (score1 != null && score2 != null) {
                         return score1.compareTo(score2);
                     } else if (score1 != null) {

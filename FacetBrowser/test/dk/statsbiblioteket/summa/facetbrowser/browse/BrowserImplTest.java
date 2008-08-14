@@ -172,8 +172,8 @@ public class BrowserImplTest extends TestCase {
 
         int[] docIDs = new int[] {0, 1, 2, 3, 4};
         coreMap.markCounterLists(tagCounter, docIDs, 0, docIDs.length-1);
-        Result facetStructure =
-                tagCounter.getFirst(Result.TagSortOrder.popularity);
+        FacetResult facetStructure =
+                tagCounter.getFirst(FacetResult.TagSortOrder.popularity);
         String browseXML = facetStructure.toXML();
         assertTrue("The result should be something",
                    browseXML.length() > "<facetmodel>\n</facetmodel>".length());*/
@@ -221,7 +221,7 @@ public class BrowserImplTest extends TestCase {
             profiler.reset();
             for (int i = 0 ; i < runs ; i++) {
                 coreMap.markCounterLists(tagCounter, docIDs, 0, docCount-1);
-           tagCounter.getFirst(Result.TagSortOrder.popularity).toXML();
+           tagCounter.getFirst(FacetResult.TagSortOrder.popularity).toXML();
                 profiler.beat();
             }
             System.out.println("Average time for marking and extracting tags " +
@@ -273,10 +273,10 @@ public class BrowserImplTest extends TestCase {
                                      10000000};
         int warmup = 2;
         int runs = 3;
-        Result.TagSortOrder[] orders =
-                new Result.TagSortOrder[]{
-                        Result.TagSortOrder.popularity,
-                        Result.TagSortOrder.tag};
+        FacetResult.TagSortOrder[] orders =
+                new FacetResult.TagSortOrder[]{
+                        FacetResult.TagSortOrder.popularity,
+                        FacetResult.TagSortOrder.tag};
         Profiler profiler = new Profiler();
         profiler.setExpectedTotal(runs);
         int maxDoc = reader.maxDoc();
@@ -284,7 +284,7 @@ public class BrowserImplTest extends TestCase {
         System.out.println("Running tests...");
         SlimCollector slimCollector = new SlimCollector();
         for (int docCount: docCounts) {
-            for (Result.TagSortOrder order: orders) {
+            for (FacetResult.TagSortOrder order: orders) {
                 slimCollector.clean();
                 for (int pos = 0 ; pos < docCount ; pos++) {
                     slimCollector.collect(random.nextInt(maxDoc), 0.0f);

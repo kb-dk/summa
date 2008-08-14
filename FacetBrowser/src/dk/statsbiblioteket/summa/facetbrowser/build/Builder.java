@@ -58,6 +58,39 @@ public interface Builder {
     public void build(boolean keepTags) throws IOException;
 
     /**
+     * Add the tag under the facet to the docID. If any value doesn't exist,
+     * the underlying structures are responsible for creating them.
+     * @param docID the document-index specific document ID.
+     * @param facet the facet for the tag. Depending on implementation, the
+     *              facet must be specified in the setup, before calling this
+     *              method. The default implementation requires it.
+     * @param tag   the tag to add.
+     * @throws IOException if an I/O error occured.
+     */
+    public void add(int docID, String facet, String tag) throws IOException;
+
+    /**
+     * Clear all tags for the given docID.
+     * @param docID the document-index specific document ID.
+     * @param shift if true, all subsequent documents are shifted down. This
+     *              can be considered a removal of the docID, instead of just
+     *              a clear. If false, no shifting is done.
+     *              Note: Lucene deletes documents with delayed shifting:
+     *              A deleted document is marked as deleted. Upon merging,
+     *              optimization and purgeDeletes, subsequent documents are
+     *              shifted. The order after sifting is not guaranteed.
+     * @throws IOException if the document could not be cleared.
+     */
+    public void clear(int docID, boolean shift) throws IOException;
+
+    /**
+     * Clear the underlying structure.
+     * @param keepTags if true, the tag structures are kept.
+     * @throws IOException if the structure could not be cleared.
+     */
+    public void clear(boolean keepTags) throws IOException;
+
+    /**
      * Store the internal representation to disk.
      * @param directory the location of the data.
      * @throws IOException if the internal representation could not be stored.
