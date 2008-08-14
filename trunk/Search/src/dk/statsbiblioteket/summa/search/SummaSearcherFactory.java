@@ -42,7 +42,7 @@ public class SummaSearcherFactory {
                                                            e);
         }
         
-        log.debug("Instantiating searcher class " + seacherClass);
+        log.debug("Instantiating searcher class: " + seacherClass);
 
         try {
             return Configuration.create(seacherClass, conf);
