@@ -4,7 +4,9 @@ import java.io.IOException;
 
 /**
  * An interface for objects that have a state that can be monitored.
- * This is mostly targetted at remote services.
+ * This is mostly targeted at remote services.
+ *
+ * @see StatusMonitor
  */
 public interface Monitorable {
 
