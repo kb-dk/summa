@@ -27,6 +27,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configurable;
 
 import java.rmi.RemoteException;
 import java.rmi.Remote;
+import java.io.IOException;
 
 /**
  * A SummaSearcher is a collection of one or more SearchNodes. Any given Search
@@ -35,7 +36,19 @@ import java.rmi.Remote;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public interface SummaSearcher extends Remote, Configurable {
+public interface SummaSearcher extends Configurable {
+
+    /**
+     * The port on which the searcher service should communicate.
+     * The default is 28020.
+     */
+    public static final String PROP_SERVICE_PORT = "summa.searcher.port";
+
+    /**
+     * The class used to instantiate the searcher. Default is
+     * {@link SummaSearcherImpl}
+     */
+    public static final String PROP_CLASS = "summa.searcher.class";
 
     /**
      * A search will normally involve the addition of an implementation-specific
@@ -46,12 +59,12 @@ public interface SummaSearcher extends Remote, Configurable {
      * @return responsed from the underlying SearchNodes.
      * @throws RemoteException if one of the SearchNodes threw an exception.
      */
-    public ResponseCollection search(Request request) throws RemoteException;
+    public ResponseCollection search(Request request) throws IOException;
 
     /**
      * Close down the searcher. The searcher is not available for search after
      * this.
      * @throws RemoteException if an error happened during close.
      */
-    public void close() throws RemoteException;
+    public void close() throws IOException;
 }
