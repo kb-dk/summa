@@ -18,6 +18,8 @@
     <orderEntry type="library" name="sbutil" level="project" />
     <orderEntry type="library" name="lucene-core-2.3.0" level="project" />
     <orderEntry type="library" name="lucene-queries-2.3.0" level="project" />
+    <orderEntry type="module" module-name="Index" />
+    <orderEntry type="module" module-name="Search" />
     <orderEntryProperties />
   </component>
 </module>

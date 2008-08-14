@@ -26,21 +26,32 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.browse;
 
+import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * Interface for counting occurences of tags in facets. This is normally used
- * together with a search-result.
+ * together with a search-result. The order of usage is normally as follows:
+ * </p><p>
+ * 1. Call {@link #verify} to make sure the counter is ready.<br />
+ * 2. Fill the counter with a series of calls to {@link #increment}.<br />
+ * 3. Get the result from {@link #getFirst}.<br />
+ * 4. Start a clearing with {@link #reset} so that it can run in the background.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public interface TagCounter {
+    /**
+     * Ensures that previous {@link #reset}s are finished and that the internal
+     * structures are in sync with Tag-pools. It is *strongly* adviced to call
+     * this before starting to fill the counter with {@link #increment}.
+     */
+    public void verify();
 
     /**
      * Increment the count for a Tag in a Facet. The count is incremented by 1.
-     * Note: due to performance reasons, this isn't possible to make
-     *       thread-safe.
+     * Note: due to performance reasons, this is not thread-safe.
      * @param facetID the ID for the Facet.
      * @param tagID   the ID for the Tag.
      */
@@ -48,20 +59,18 @@ public interface TagCounter {
 
     /**
      * Get a map with Facets containing Tags, sorted by sortOrder. See
-     * {@link Result} for obvious use of this.
-     * @param sortOrder how to sort the result. It is assumed that the
-     *                  ID's for tags resolves to Strings, that are in
-     *                  alpha-order.
+     * {@link FacetResult} for obvious use of this.
+     * @param request the facets and max tags to return together with sort order
+     *                and similar options.
      * @return a representation of the first elements, as specified by the
-     *         structureDescription and the sortOrder.
+     *         structureDescription and the request.
      */
-    public Result getFirst(Result.TagSortOrder sortOrder);
+    public FacetResult getFirst(Structure request);
 
     /**
      * Reset this counter, so that is is ready for new increments.
+     * This must be done before a new round of updates can take place.
      * If possible, this should be done in a threaded manner.
-     * Implementations must ensure that reset and {@link #getFirst} are
-     * thread-safe.
      */
     public void reset();
 

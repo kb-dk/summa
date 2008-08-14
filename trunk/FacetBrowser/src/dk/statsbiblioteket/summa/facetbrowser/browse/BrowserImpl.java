@@ -28,7 +28,6 @@ package dk.statsbiblioteket.summa.facetbrowser.browse;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.io.IOException;
 
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
 import dk.statsbiblioteket.summa.facetbrowser.core.StructureDescription;
@@ -39,10 +38,6 @@ import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.Filter;
-import org.apache.lucene.search.QueryFilter;
-import org.apache.lucene.queryParser.ParseException;
 import org.apache.log4j.Logger;
 
 /**
@@ -118,11 +113,11 @@ public class BrowserImpl implements Browser {
 
 /*    public String getFacetXML(String query, String filterQuery,
                               String queryLang,
-                              Result.TagSortOrder sortOrder) {
+                              FacetResult.TagSortOrder sortOrder) {
         return getFacetMap(filterQuery, query, sortOrder).toXML();
     }
   */
-  /*  public synchronized Result getFacetMap(String filter,
+  /*  public synchronized FacetResult getFacetMap(String filter,
                                                    String query,
                                                    String
                                                            sort, String facets) {
@@ -162,8 +157,8 @@ public class BrowserImpl implements Browser {
         return getFacetMap(query, sort, slimCollector);
     }
 
-    protected synchronized Result getFacetMap(String query,
-                                       Result.TagSortOrder sortOrder,
+    protected synchronized FacetResult getFacetMap(String query,
+                                       FacetResult.TagSortOrder sortOrder,
                                        SlimCollector slimCollector) {
 
         int threadCount =
@@ -181,7 +176,7 @@ public class BrowserImpl implements Browser {
             startPos += partSize;
         }
 
-        Result structure = null;
+        FacetResult structure = null;
         for (int browserID = 0 ; browserID < threadCount ; browserID++) {
             BrowserThread browser = browsers.get(browserID);
             browser.waitForResult(timeout);
@@ -200,7 +195,7 @@ public class BrowserImpl implements Browser {
         if (structure != null) {
             structure.reduce(sortOrder);
         }
-        log.debug("Created Result from query \"" + query + "\" and "
+        log.debug("Created FacetResult from query \"" + query + "\" and "
                   + "sortOrder " + sortOrder
                   + " (" + slimCollector.getDocumentCount() + " documents) "
                   + " in " + profiler.getSpendTime());
@@ -212,7 +207,7 @@ public class BrowserImpl implements Browser {
         return null;
     }
 
-    public Result getFacetMap(int[] docIDs, int startPos, int length,
+    public FacetResult getFacetMap(int[] docIDs, int startPos, int length,
                               String facets) {
         return null;
     }

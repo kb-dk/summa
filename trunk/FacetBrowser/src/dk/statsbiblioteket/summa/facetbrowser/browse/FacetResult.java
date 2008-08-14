@@ -1,4 +1,4 @@
-/* $Id: Result.java,v 1.5 2007/10/05 10:20:22 te Exp $
+/* $Id: FacetResult.java,v 1.5 2007/10/05 10:20:22 te Exp $
  * $Revision: 1.5 $
  * $Date: 2007/10/05 10:20:22 $
  * $Author: te $
@@ -22,10 +22,11 @@
  */
 /*
  * The State and University Library of Denmark
- * CVS:  $Id: Result.java,v 1.5 2007/10/05 10:20:22 te Exp $
+ * CVS:  $Id: FacetResult.java,v 1.5 2007/10/05 10:20:22 te Exp $
  */
 package dk.statsbiblioteket.summa.facetbrowser.browse;
 
+import dk.statsbiblioteket.summa.search.Response;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
@@ -35,20 +36,13 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public interface Result<T> {
+public interface FacetResult<T> extends Response {
     /**
      * Sort order for tags.<br/>
      * tag:        Natural order for the tags (most probably alpha-numeric).
      * popularity: Order by number of occurences.
      */
     public enum TagSortOrder {tag, popularity}
-
-    /**
-     * Convert the internal structure to XML, suitable for output to
-     * web-services and similar.
-     * @return an XML-representation of the structure.
-     */
-    public String toXML();
 
     /**
      * Reduce the representation according to the limitations defined in
@@ -58,17 +52,9 @@ public interface Result<T> {
     public void reduce(TagSortOrder tagSortOrder);
 
     /**
-     * Merge the data from other to this FacetStructure. Note that merging does
-     * not reduce the data, so it is advisable to run {@link #reduce} at some
-     * point after merging has finished..
-     * @param other data to be added to this FacetStructure.
-     */
-    public void merge(Result other);
-
-    /**
      * Resolve any JVM-specific dependencies and produce a FacetStructure
      * suitable for network transfer.
      * @return a version of the FacetStructure suitable for external use.
      */
-    public Result externalize();
+    public FacetResult externalize();
 }
