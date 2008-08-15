@@ -539,7 +539,7 @@ public class Configuration implements Serializable,
      *                                       with the storage backend.
      */
     @SuppressWarnings ("unchecked")
-    public <T> Class<T> getClass (String key, Class<T> classType) {
+    public <T> Class<? extends T> getClass (String key, Class<T> classType) {
         return getClass(key, classType, this);
     }
 
@@ -548,7 +548,7 @@ public class Configuration implements Serializable,
     }
 
     public static Class getClass (String key, Configuration conf) {
-        return getClass(key, Object.class, conf);
+        return Configuration.getClass(key, Object.class, conf);
     }
 
     /**
@@ -565,8 +565,8 @@ public class Configuration implements Serializable,
      * @throws ConfigurationStorageException if there is an error communicating
      *                                       with the storage backend.
      */
-    public static <T> Class<T> getClass(String key, Class<T> classType,
-                                        Configuration conf) {
+    public static <T> Class<? extends T> getClass(String key, Class<T> classType,
+                                                  Configuration conf) {
         Object val = conf.get(key);
         if (val == null) {
             throw new NullPointerException("No such property: " + key);
@@ -597,6 +597,29 @@ public class Configuration implements Serializable,
     }
 
     /**
+     * Like {@link Configuration#getClass(String,Class,Configuration)}. Use this
+     * static variant of {@link #getClass} to avoid loading the class over RMI.
+     * @param key the property name to look up
+     * @param classType the class to cast the return value to
+     * @param defaultClass default class to return if {@code key} was not found
+     *                     in {@code conf}
+     * @param conf the {@code Configuration} used to look up {@code key}
+     * @return The class defined for the given key or {@code defaultClass} if
+     *         {@code key} is not found in {@code conf}
+     */
+    public static <T> Class<? extends T> getClass(String key, Class<T> classType,
+                                                  Class<? extends T> defaultClass,
+                                                  Configuration conf) {
+        try {
+            return Configuration.getClass(key, classType, conf);
+        } catch (NullPointerException e) {
+            log.info ("No class defined for property' " + key
+                        + "'. Using default: " + defaultClass.getName());
+            return defaultClass;
+        }
+    }
+
+    /**
      * Get a class value resorting to a default class if it is not found
      * in the configuration.
      * @param key the name of the property to look up.
@@ -611,7 +634,7 @@ public class Configuration implements Serializable,
         try {
             return getClass(key, classType);
         } catch (NullPointerException e) {
-            log.warn ("Unable to find class for property '" + key
+            log.info ("Unable to find class for property '" + key
                       + "'. Using default '" + defaultValue.getName() + "'");
             return defaultValue;
         }
