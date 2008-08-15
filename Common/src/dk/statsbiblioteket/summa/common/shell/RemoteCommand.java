@@ -35,4 +35,18 @@ abstract public class RemoteCommand<E> extends Command {
         connCtx.unref();
         connCtx = null;
     }
+
+    protected synchronized void reportConnectionError (Throwable t) {
+        if (connCtx != null) {
+            connMgr.reportError(connCtx, t);
+        }
+        connCtx = null;
+    }
+
+    protected synchronized void reportConnectionError (String msg) {
+        if (connCtx != null) {
+            connMgr.reportError(connCtx, msg);
+        }
+        connCtx = null;
+    }
 }
