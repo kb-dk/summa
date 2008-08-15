@@ -3,6 +3,9 @@ package dk.statsbiblioteket.summa.common.shell;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
 
+import java.net.SocketException;
+import java.net.ConnectException;
+
 /**
  * Abstract helper class to facilitate command implementations that need
  * a connection to a remote RPC service to work.
@@ -48,5 +51,18 @@ abstract public class RemoteCommand<E> extends Command {
             connMgr.reportError(connCtx, msg);
         }
         connCtx = null;
+    }
+
+    /**
+     * Report the connection as broken if {@code t} is one of a collection
+     * of known connection-related exception.
+     * <p></p>
+     * Call this method generously when catching exception.
+     * @param t the exception to check if connection-related
+     */
+    protected synchronized void checkConnectionError (Throwable t) {
+        if (t instanceof SocketException) {
+            reportConnectionError(t);
+        }
     }
 }
