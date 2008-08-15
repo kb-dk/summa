@@ -65,7 +65,8 @@ public class TagCounterTest extends TestCase {
         IndexBuilder.checkIndex();
         reader = IndexBuilder.getReader();
         tagHandler = new MemoryTagHandler(reader, structure);
-        tagCounter = new TagCounterArray(structure, tagHandler);
+        tagCounter = new TagCounterArray(tagHandler,
+                                         tagHandler.getFacetNames().size());
     }
 
     @SuppressWarnings({"AssignmentToNull"})
@@ -87,10 +88,10 @@ public class TagCounterTest extends TestCase {
                 tagCounter.increment(facetID, tagID);
             }
         }
-        FacetResult first =
-                        tagCounter.getFirst(FacetResult.TagSortOrder.tag);
-        assertTrue("The result should be something", 
-                   !"".equals(first.toXML()));
+        throw new UnsupportedOperationException("Update this to new API");
+//        FacetResult first = tagCounter.getFirst(structure);
+//        assertTrue("The result should be something",
+//                   !"".equals(first.toXML()));
     }
 
     public void dumpPerformance() throws Exception {
@@ -137,8 +138,9 @@ public class TagCounterTest extends TestCase {
         System.out.println("Testing getFirst performance for POPULARITY");
         Profiler profiler = new Profiler();
         for (int i = 0 ; i < retries ; i++) {
-            tagCounter.getFirst(FacetResult.TagSortOrder.popularity);
-            profiler.beat();
+            throw new UnsupportedOperationException("Change to new api");
+//            tagCounter.getFirst(FacetResult.TagSortOrder.popularity);
+//            profiler.beat();
         }
         double speed = 1000 / profiler.getBps(true);
         System.out.println("Average speed: " + speed
@@ -149,8 +151,9 @@ public class TagCounterTest extends TestCase {
         System.out.println("Testing getFirst performance for ALPHA");
         profiler = new Profiler();
         for (int i = 0 ; i < retries * 100; i++) {
-            tagCounter.getFirst(FacetResult.TagSortOrder.tag);
-            profiler.beat();
+            throw new UnsupportedOperationException("Change to new api");
+//            tagCounter.getFirst(FacetResult.TagSortOrder.tag);
+//            profiler.beat();
         }
         speed = 1000 / profiler.getBps(true);
         System.out.println("Average speed: " + speed
@@ -184,7 +187,8 @@ public class TagCounterTest extends TestCase {
         StructureDescription structure = new StructureDescription(facetNames);
         MemoryTagHandler handler =
                 new MemoryTagHandler(structure, tags);
-        TagCounter counter = new TagCounterArray(structure, handler);
+        throw new UnsupportedOperationException("Change to new api");
+/*        TagCounter counter = new TagCounterArray(structure, handler);
 
         int markedTags = 0;
         System.out.println("Filling TagCounter...");
@@ -201,14 +205,16 @@ public class TagCounterTest extends TestCase {
         }
         System.out.println("Warming up TagCounter...");
         for (int i = 0 ; i < 5 ; i++) {
-            counter.getFirst(FacetResult.TagSortOrder.popularity);
+            throw new UnsupportedOperationException("Change to new api");
+//            counter.getFirst(FacetResult.TagSortOrder.popularity);
         }
         System.out.println("Running getFirst tests...");
         Profiler profiler = new Profiler();
         profiler.setExpectedTotal(runs);
         for (int i = 0 ; i < runs ; i++) {
-            counter.getFirst(FacetResult.TagSortOrder.popularity);
-            profiler.beat();
+            throw new UnsupportedOperationException("Change to new api");
+//            counter.getFirst(FacetResult.TagSortOrder.popularity);
+//            profiler.beat();
         }
         double bps = profiler.getBps(true);
         System.out.println("Extracted first from " + markedTags
@@ -216,6 +222,7 @@ public class TagCounterTest extends TestCase {
                            + fn.length + " facets "
                            + bps + " times/second, "
                            + 1000 / bps + " ms/extraction");
+                           */
     }
 
     public static Test suite() {

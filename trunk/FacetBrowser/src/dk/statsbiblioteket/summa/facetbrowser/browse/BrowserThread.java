@@ -30,8 +30,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.TimeUnit;
 
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
-import dk.statsbiblioteket.summa.facetbrowser.core.StructureDescription;
 import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMap;
+import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
 
@@ -52,7 +52,7 @@ public class BrowserThread implements Runnable {
     private int[] docIDs;
     private int startPos;
     private int endPos;
-    private FacetResult.TagSortOrder sortOrder;
+    private Structure request;
     private FacetResult result = null;
 
     private ReentrantLock lock = new ReentrantLock();
@@ -60,8 +60,7 @@ public class BrowserThread implements Runnable {
 
     public BrowserThread(TagHandler tagHandler, CoreMap coreMap) {
         this.coreMap = coreMap;
-        // TODO: Continue here
-        tagCounter = new TagCounterArray(tagHandler, 0); //coreMap.getEmptyFacet());
+        tagCounter = new TagCounterArray(tagHandler, coreMap.getEmptyFacet());
     }
 
     /**
@@ -71,17 +70,16 @@ public class BrowserThread implements Runnable {
      * @param docIDs   the document IDs from which to extract the structure.
      * @param startPos the starting position for the IDs to use (inclusive).
      * @param endPos   the end position for the IDs to use (inclusive).
-     * @param sortOrder the sort order of the result.
+     * @param request  details on the facets to return.
      */
     public synchronized void startRequest(int[] docIDs, int startPos,
-                                          int endPos,
-                                       FacetResult.TagSortOrder sortOrder) {
+                                          int endPos, Structure request) {
         lock.lock();
         try {
             this.docIDs = docIDs;
             this.startPos = startPos;
             this.endPos = endPos;
-            this.sortOrder = sortOrder;
+            this.request = request;
             thread = new Thread(this);
             thread.run();
         } finally {
@@ -98,8 +96,7 @@ public class BrowserThread implements Runnable {
 
     /**
      * @return a FacetStructure with facets and tags, derived from the data
-     *         given in
-           {@link #startRequest(int[], int, int, FacetResult.TagSortOrder)}.
+     *         given in {@link #startRequest(int[], int, int, Structure)}.
      *         null if an exception occured.
      */
     public synchronized FacetResult getResult() {
@@ -152,7 +149,7 @@ public class BrowserThread implements Runnable {
                 result = null; // There really is no result!
                 return;
             }
-            result = tagCounter.getFirst(sortOrder);
+            result = tagCounter.getFirst(request);
             try {
                 tagCounter.reset(); // Clean-up
             } catch (Exception e) {

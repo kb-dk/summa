@@ -552,8 +552,9 @@ public abstract class ClusterMapComplete {
              facetID++) {
             counterLists[facetID] = getCounterList(facetID);
         }
-        return new TagCounterArray(clusterDescription.getFacetNames(),
-                                   counterLists);
+        throw new UnsupportedOperationException("Deprecated class");
+//        return new TagCounterArray(clusterDescription.getFacetNames(),
+//                                   counterLists);
     }
 
     protected abstract int[] getCounterList(int facetID);

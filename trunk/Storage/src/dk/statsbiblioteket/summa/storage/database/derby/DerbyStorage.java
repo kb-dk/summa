@@ -75,11 +75,11 @@ public class DerbyStorage extends DatabaseStorage implements Configurable {
         if (conf.valueExists(PROP_FORCENEW)) {
                 forceNew = conf.getBoolean(PROP_FORCENEW);
         }
-        
+
         log.debug("ControlDerby extracted properties username: " + username
                  + ", password: "
                   + (password == null ? "[undefined]" : "[defined]")
-                  + ", location: '" + location + "', createNew: " + createNew 
+                  + ", location: '" + location + "', createNew: " + createNew
                   + ", forceNew: " + forceNew);
         init(conf);
         log.trace("Construction completed");
@@ -157,7 +157,7 @@ public class DerbyStorage extends DatabaseStorage implements Configurable {
                                          ? ""
                                          : " [password defined]"), e);
         }
-        
+
         log.info("Connected to database at '" + location + "'");
         if (createNew) {
             log.info("Creating new table for '" + location + "'");
@@ -180,6 +180,5 @@ public class DerbyStorage extends DatabaseStorage implements Configurable {
         } catch (SQLException e) {
             throw new RemoteException("SQLException when closing connection",
                                       e);
-        }
-    }
+        }    }
 }

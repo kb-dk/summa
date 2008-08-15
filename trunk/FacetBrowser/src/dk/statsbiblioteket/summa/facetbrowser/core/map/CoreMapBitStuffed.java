@@ -42,6 +42,7 @@ import java.io.StringWriter;
 import org.apache.log4j.Logger;
 import dk.statsbiblioteket.summa.facetbrowser.browse.TagCounter;
 import dk.statsbiblioteket.summa.facetbrowser.util.ClusterCommon;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 
 /**
  * The BitStuffed CoreMap packs pointers from document-id's to facet/tags in an
@@ -51,6 +52,7 @@ import dk.statsbiblioteket.summa.facetbrowser.util.ClusterCommon;
  * Updates needs to be done, so that any new document-id is either
  * 0 or <= (the largest existing document-id + 1).
  */
+// TODO: Handle emptyFacet translation int<->long for load and store
 public class CoreMapBitStuffed implements CoreMap {
     private static Logger log = Logger.getLogger(CoreMapBitStuffed.class);
     private static final String MAP_FILENAME = "map.dat";
@@ -63,10 +65,14 @@ public class CoreMapBitStuffed implements CoreMap {
     private static final int FACETBITS =  5;
     private static final int FACETSHIFT = 32 - FACETBITS;
     private static final int VALUE_MASK = 0xFFFFFFFF << FACETBITS >>> FACETBITS;
-    private static final int FACET_LIMIT = (int) StrictMath.pow(2, FACETBITS);
+    /**
+     * The -1 in the calculation is to make room for the emptyFacet.
+     */
+    private static final int FACET_LIMIT = (int) StrictMath.pow(2, FACETBITS)-1;
 
     private int docCapacity;
     private int facetCount;
+    private boolean shift = DEFAULT_SHIFT_ON_REMOVE;
 
     private int highestDocID = -1;
     private int[] index;
@@ -82,6 +88,22 @@ public class CoreMapBitStuffed implements CoreMap {
      * @param facetCount the number of facets for this core map.
      */
     public CoreMapBitStuffed(int docCount, int facetCount) {
+        init(docCount, facetCount);
+    }
+
+    /**
+     * Creates a core map with initial size based on the given number of
+     * documents.
+     * @param conf       configuration for the CoreMap.
+     * @param docCount   the expected number of documents.
+     * @param facetCount the number of facets for this core map.
+     */
+    public CoreMapBitStuffed(Configuration conf, int docCount, int facetCount) {
+        init(docCount, facetCount);
+        shift = conf.getBoolean(CONF_SHIFT_ON_REMOVE, shift);
+    }
+
+    private void init(int docCount, int facetCount) {
         if (facetCount >= FACET_LIMIT) {
             //noinspection DuplicateStringLiteralInspection
             throw new IllegalArgumentException("This core map only allows "
@@ -178,6 +200,17 @@ public class CoreMapBitStuffed implements CoreMap {
                                                + "docID " + docID + " from "
                                                + " the map with size "
                                                + (highestDocID + 1));
+        }
+        if (!shift) {
+            try {
+                for (int i = index[docID] ; i < index[docID + 1] ; i++) {
+                    values[i] = FACET_LIMIT << FACETSHIFT;
+                }
+            } catch (ArrayIndexOutOfBoundsException e) {
+                log.warn(String.format("Out of bounds in remove(%d, %b)",
+                                       docID, shift), e);
+            }
+            return;
         }
         int removeAmount = index[docID + 1] - index[docID];
         System.arraycopy(values, index[docID + 1],
@@ -381,6 +414,10 @@ public class CoreMapBitStuffed implements CoreMap {
                                tag + delta & VALUE_MASK;
             }
         }
+    }
+
+    public int getEmptyFacet() {
+        return FACET_LIMIT;
     }
 
     public static boolean canHandle(int dimension2, int maxContent) {

@@ -31,6 +31,7 @@ import dk.statsbiblioteket.summa.facetbrowser.core.StructureDescription;
 import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMap;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandlerFactory;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
+import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexConnector;
@@ -44,21 +45,20 @@ import java.io.File;
 import java.util.List;
 
 /**
- * Default implementation of
- * {@link Browser}.
+ * Default implementation of {@link Builder}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class BuilderImpl implements Builder {
     private Configuration configuration;
-    private StructureDescription structure;
+    private Structure structure;
     private IndexConnector connector;
     private CoreMap coreMap;
     private TagHandler tagHandler;
 
     public BuilderImpl(Configuration configuration,
-                       StructureDescription structure,
+                       Structure structure,
                        IndexConnector connector,
                        CoreMap coreMap,
                        TagHandler tagHandler) {
@@ -80,6 +80,15 @@ public class BuilderImpl implements Builder {
     public void build(boolean keepTags) {
 
         // TODO: Implement this
+    }
+
+    public void add(int docID, String facet, String tag) throws IOException {
+    }
+
+    public void clear(int docID, boolean shift) throws IOException {
+    }
+
+    public void clear(boolean keepTags) throws IOException {
     }
 
     public void save(File directory) throws IOException {
