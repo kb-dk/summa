@@ -26,12 +26,12 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.util.ChangingSemaphore;
+import dk.statsbiblioteket.summa.search.dummy.SearchNodeDummy;
 
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.TimeUnit;
 import java.rmi.RemoteException;
 import java.io.File;
-import java.io.IOException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -85,6 +85,11 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
     /**
      * Extracts basic settings from the configuration and constructs the
      * underlying tree of SearchNodes.
+     * <p></p>
+     * The searcher will instantiate a {@link SearchNode} based on the
+     * property {@link SearchNodeFactory#CONF_NODE_CLASS}. If this property
+     * is not defined the searcher will fall back to using a
+     * {@link dk.statsbiblioteket.summa.search.dummy.SearchNodeDummy}
      * @param conf the configuration for the searcher.
      * @throws RemoteException if the underlying SearchNode could not be
      *                         constructed.
@@ -99,7 +104,8 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
 
         searchQueue = new ChangingSemaphore(searchQueueMaxSize, true);
         log.trace("Constructing search node");
-        searchNode = SearchNodeFactory.createSearchNode(conf);
+        searchNode = SearchNodeFactory.createSearchNode(conf,
+                                                        SearchNodeDummy.class);
 
         // Ready for open
         watcher = new IndexWatcher(conf);

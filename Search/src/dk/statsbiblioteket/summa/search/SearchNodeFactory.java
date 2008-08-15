@@ -81,6 +81,28 @@ public class SearchNodeFactory {
     }
 
     /**
+     * Like {@link #createSearchNode(Configuration)} but fall back to using
+     * a {@code defaultClass} to instantiate the search node if
+     * {@link #CONF_NODE_CLASS} is not defined in {@code conf}
+     *
+     * @param conf The configuration used to look up {@link #CONF_NODE_CLASS}
+     * @param defaultClass Fallback class if {@link #CONF_NODE_CLASS} is not
+     *                     found in {@code conf}
+     * @return a newly instantiated {@link SearchNode}
+     * @throws RemoteException if the SearchNode could not be created.
+     */
+    public static SearchNode createSearchNode(Configuration conf,
+                                              Class<?extends SearchNode> defaultClass)
+                                              {
+
+        Class<? extends SearchNode> searchNodeClass =
+                Configuration.getClass(CONF_NODE_CLASS, SearchNode.class,
+                                       defaultClass, conf);
+
+        return Configuration.create (searchNodeClass, conf);
+    }
+
+    /**
      * Extracts the sub Configuration with the key key from properties and
      * calls {@link #createSearchNode(Configuration)} with that configuration.
      * @param conf the configuration that contains the wanted sub configuration.
@@ -99,6 +121,8 @@ public class SearchNodeFactory {
         }
         return createSearchNode(sub);
     }
+
+
     /**
      * Constructs a list of nodes from all the sub-properties in
      * {@link #CONF_NODES}. The CONF_NODES-property must contain a list of

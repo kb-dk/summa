@@ -25,6 +25,7 @@ package dk.statsbiblioteket.summa.search;
 import java.rmi.RemoteException;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.common.configuration.Configurable;
 
 /**
  * Nodes are the actual searchers under a SummaSearcher. Nodes are controlled
@@ -40,7 +41,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public interface SearchNode {
+public interface SearchNode extends Configurable {
     /**
      * A search will normally involve the addition of an implementation-specific
      * Response to responses.  Some searchers (notably the FacetSearcher)
