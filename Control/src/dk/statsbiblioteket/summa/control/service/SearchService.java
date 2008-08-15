@@ -26,14 +26,11 @@ import java.rmi.RemoteException;
 import java.io.IOException;
 
 import dk.statsbiblioteket.summa.search.SummaSearcher;
-import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
 import dk.statsbiblioteket.summa.search.SummaSearcherFactory;
-import dk.statsbiblioteket.summa.search.document.DocumentResponse;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.control.api.Status;
-import dk.statsbiblioteket.summa.control.api.Service;
-import dk.statsbiblioteket.summa.control.rmi.RMISearcherProxy;
+import dk.statsbiblioteket.summa.search.rmi.RMISearcherProxy;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

@@ -35,6 +35,8 @@ import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.net.SocketException;
+
 /**
  * A shell command to launch a {@link Service} deployed in a {@link Client}.
  */
@@ -92,7 +94,7 @@ public class StartServiceCommand extends RemoteCommand<ClientConnection> {
                                           Status.CODE.not_instantiated); 
             new Thread (mon).start();
         } catch (Exception e) {
-
+            checkConnectionError(e);
             throw new RuntimeException ("Start of service failed: "
                                         + e.getMessage(), e);
         } finally {

@@ -39,9 +39,19 @@ public class Launcher {
 
             log.trace ("Got system configuration");
 
-            Class<Service> serviceClass = Configuration.getClass(SERVICE_CLASS,
-                                                                 Service.class,
-                                                                 conf);
+            Class<? extends Service> serviceClass = null;
+            try {
+                serviceClass = Configuration.getClass(SERVICE_CLASS,
+                                                      Service.class,
+                                                      conf);
+            } catch (NullPointerException e) {
+                log.fatal ("Property '" + SERVICE_CLASS + "' not defined " +
+                           "in configuration. Config was:\n\n"
+                           + conf.dumpString());
+
+                System.exit (2);
+            }
+            
             log.debug ("Using service class " + SERVICE_CLASS
                        + " = " + serviceClass);
 
