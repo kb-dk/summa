@@ -342,14 +342,15 @@ public class SSHDeployer implements ClientDeployer {
         try {
             Thread processThread = new Thread (runner);
             processThread.start();
-            processThread.join(5100); // We also set the timeout for this above
+            processThread.join(6000); // We also set the timeout for this above,
+                                      // but wait slightly longer
 
             if (runner.isTimedOut()) {
                 String errorMsg = runner.getProcessErrorAsString();
                 error = "Start request for client '" + clientId + "' with login "
                         + login + " and configuration server "
                         + confLocation + ". Timed out"
-                        + errorMsg != null ? ":\n" + errorMsg : "";
+                        + (errorMsg != null ? ":\n" + errorMsg : "");
             } else if (runner.getReturnCode() != 0) {
                 error = "Could not run client '" + clientId + "' with login "
                         + login + " and configuration server "
@@ -364,7 +365,7 @@ public class SSHDeployer implements ClientDeployer {
             log.error("Exception in start: " + e.getMessage(), e);
         }
         if (error != null) {
-            log.error(error);
+            log.error("Error when starting client: " + error);
             feedback.putMessage(new Message(Message.MESSAGE_ALERT, error));
             throw new Exception(error);
 
