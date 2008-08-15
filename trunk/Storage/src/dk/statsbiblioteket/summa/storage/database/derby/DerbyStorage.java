@@ -68,23 +68,14 @@ public class DerbyStorage extends DatabaseStorage implements Configurable {
 
         location = new File (StorageUtils.getGlobalPersistentDir(conf),
                              "storage" + File.separator + "derby");
-        try {
-            if (conf.valueExists(PROP_CREATENEW)) {
+        if (conf.valueExists(PROP_CREATENEW)) {
                 createNew = conf.getBoolean(PROP_CREATENEW);
-            }
-        } catch (IOException e) {
-            throw new RemoteException("Exception requesting property "
-                                      + PROP_CREATENEW, e);
         }
-        try {
-            if (conf.valueExists(PROP_FORCENEW)) {
+
+        if (conf.valueExists(PROP_FORCENEW)) {
                 forceNew = conf.getBoolean(PROP_FORCENEW);
-            }
-        } catch (IOException e) {
-            //noinspection DuplicateStringLiteralInspection
-            throw new RemoteException("Exception requesting property "
-                                      + PROP_FORCENEW, e);
         }
+        
         log.debug("ControlDerby extracted properties username: " + username
                  + ", password: "
                   + (password == null ? "[undefined]" : "[defined]")
@@ -189,5 +180,6 @@ public class DerbyStorage extends DatabaseStorage implements Configurable {
         } catch (SQLException e) {
             throw new RemoteException("SQLException when closing connection",
                                       e);
-        }    }
+        }
+    }
 }
