@@ -58,6 +58,8 @@ import org.apache.commons.logging.LogFactory;
 public class SSHDeployer implements ClientDeployer {
     private static final Log log = LogFactory.getLog(SSHDeployer.class);
 
+    private static final int START_TIMEOUT = 7000;
+
     private String login;
     private String destination;
     private String source;
@@ -336,14 +338,15 @@ public class SSHDeployer implements ClientDeployer {
 
         /* Exec the command line */
         ProcessRunner runner = new ProcessRunner(commandLine);
-        runner.setTimeout(5000);
+        runner.setTimeout(START_TIMEOUT);
 
         String error = null;
         try {
             Thread processThread = new Thread (runner);
             processThread.start();
-            processThread.join(6000); // We also set the timeout for this above,
-                                      // but wait slightly longer
+
+            /* Wait until the deployment is done or times out */
+            processThread.join();
 
             if (runner.isTimedOut()) {
                 String errorMsg = runner.getProcessErrorAsString();

@@ -34,6 +34,7 @@ import dk.statsbiblioteket.summa.control.bundle.BundleStub;
 import dk.statsbiblioteket.summa.control.bundle.BundleSpecBuilder;
 import dk.statsbiblioteket.summa.control.bundle.URLRepository;
 import dk.statsbiblioteket.util.*;
+import dk.statsbiblioteket.util.console.ProcessRunner;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -411,7 +412,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
             } else {
                 log.warn("Trying to start service '" + instanceId
                         + "', but it is already running. Ignoring request.");
-
+                setStatusIdle ();
                 throw new InvalidServiceStateException(this, instanceId,
                                                        "start",
                                                         "Already running");
@@ -420,6 +421,9 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
             return;
         }
 
+        /* If we reach this point we need to start a new JVM for the service.
+         * And when we have that running connect to the Service and call
+         * Service.start() */
         try {
             log.debug("Calling load for serviceFile '" + serviceFile + "'");
             stub = loader.load (serviceFile);
@@ -440,53 +444,49 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         stub.addSystemProperty("summa.configuration", configLocation);
 
 
+        if (log.isDebugEnabled()) {
+            log.debug ("Launching '" + instanceId + "' with command line:\n"
+                    + Strings.join(stub.buildCommandLine(), " "));
+        }
+
+        /* Try and run the service JVM */
+        ProcessRunner runner = new ProcessRunner(stub.buildCommandLine());
+        Thread processThread = new Thread (runner);
+        runner.setStartingDir(serviceMan.getServiceDir(instanceId));
+        processThread.start();
+        try {
+            processThread.join (3000);
+        } catch (InterruptedException e) {
+            log.info ("Interrupted while waiting for service process for "
+                       + "service '" + instanceId + "'");
+            return;
+        }
+
+        if (!processThread.isAlive()) {
+            String errorMessage = runner.getProcessErrorAsString();
+            throw new ClientException(this, "Service '" + instanceId
+                                      + "' exited prematurely with exit code "
+                                      + runner.getReturnCode()
+                                      + (errorMessage != null ?
+                                            ", and error: " + errorMessage :
+                                            ""));
+        }
+
+
+        log.trace("Registering service");
+        registerService (stub, configLocation);
+
         connCtx = serviceMan.get (instanceId);
         if (connCtx != null) {
-        try {
             Service service = connCtx.getConnection();
-
-            if (log.isDebugEnabled()) {
-                log.debug ("Launching '" + instanceId + "' with command line:\n"
-                           + Strings.join(stub.buildCommandLine(), " "));
-            }
-            final Process p = stub.start();
-            log.trace("startService: Process started");
-            // Flush output stream
-            new Thread (new Runnable () {
-
-                public void run() {
-                    log.info("Flushing output of child " + p);
-                    try {
-                        Streams.pipe(p.getInputStream(), System.out);
-                        Streams.pipe(p.getErrorStream(), System.err);
-                        log.info("Waiting for process");
-                        p.waitFor();
-                    } catch (Exception e) {
-                        log.error ("Error flushing subprocess pipe", e);
-                    }
-                    log.info ("Child process exited with " + p.exitValue());
-                }
-
-            }).start();
-
-            // FIXME: Should care about the returned Process?
-
-            log.trace("Registering service");
-            registerService (stub, configLocation);
-
             log.debug("Calling start() on service '" + instanceId +"'");
             service.start();
             log.debug("Start called without errors");
-
-        } catch (IOException e) {
-            log.error ("Failed to start service '" + instanceId
-                       + "' with command line:\n"
-                       + Logs.expand(stub.buildCommandLine(), 100), e);
-        } finally {
-            connCtx.unref();
-        }
         } else {
             log.warn ("Failed to connect to service '" + instanceId + "'");
+            throw new ClientException(this, "When starting service '"
+                                      + instanceId + "': Failed to connect to"
+                                      + " service");
         }
 
         setStatusIdle();
