@@ -107,7 +107,7 @@ public class BrowserImpl implements Browser {
 
         browsers = new ArrayList<BrowserThread>(browserThreads);
         for (int i = 0 ; i < browserThreads ; i++) {
-            browsers.add(new BrowserThread(tagHandler, structure, coreMap));
+            browsers.add(new BrowserThread(tagHandler, coreMap));
         }
     }
 

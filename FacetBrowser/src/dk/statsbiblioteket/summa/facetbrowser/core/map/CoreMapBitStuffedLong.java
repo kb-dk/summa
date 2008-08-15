@@ -43,6 +43,9 @@ import dk.statsbiblioteket.summa.facetbrowser.browse.TagCounter;
 import dk.statsbiblioteket.summa.facetbrowser.util.ClusterCommon;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
+/**
+ * A long-based version of {@link CoreMapBitStuffed}. Not up to date!
+ */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
@@ -56,6 +59,7 @@ public class CoreMapBitStuffedLong implements CoreMap {
 
     private int docCapacity;
     private int facetCount;
+    private boolean shift = DEFAULT_SHIFT_ON_REMOVE;
 
     private int lastDocID = -1;
     private int[] index;
@@ -69,6 +73,8 @@ public class CoreMapBitStuffedLong implements CoreMap {
     protected static final long VALUE_MASK =
             0xFFFFFFFFFFFFFFFFL << FACETBITS >>> FACETBITS;
 
+    private static final int FACET_LIMIT = (int) StrictMath.pow(2, FACETBITS)-1;
+
 
     protected int[] getIndex() {
         return index;
@@ -78,17 +84,12 @@ public class CoreMapBitStuffedLong implements CoreMap {
     }
 
     public CoreMapBitStuffedLong(int docCount, int facetCount) {
-/*        int limit1 = (int) StrictMath.pow(2, FACETSHIFT);
-        if (docCount > limit1) {
-            throw new ArrayIndexOutOfBoundsException("Dimension 1 must be" +
-                                                     " at most " + limit1);
-        }*/
-        int facetLimit = (int) StrictMath.pow(2, FACETBITS);
-        if (facetCount > facetLimit) {
-            throw new ArrayIndexOutOfBoundsException("The facet count was " +
-                                                     facetCount +
-                                                     ". It must be" +
-                                                     " at most " + facetLimit);
+        if (facetCount >= FACET_LIMIT) {
+            //noinspection DuplicateStringLiteralInspection
+            throw new IllegalArgumentException("This core map only allows "
+                                               + FACET_LIMIT + " facets. "
+                                               + facetCount + " facets was"
+                                               + "specified");
         }
         docCapacity = docCount;
         this.facetCount = facetCount;
@@ -272,6 +273,10 @@ public class CoreMapBitStuffedLong implements CoreMap {
 
     public void adjustPositions(int facetID, int position, int delta) {
         throw new IllegalAccessError("adjustPositions not implemented yet!");
+    }
+
+    public int getEmptyFacet() {
+        return FACET_LIMIT;
     }
 
 

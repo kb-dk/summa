@@ -86,7 +86,8 @@ public class ControlledClusterMap {
         for (int counter = 0 ; counter < facetNames.size() ; counter++) {
             tags[counter] = new int[tagHandler.getFacetSize(counter)];
         }
-        return new TagCounterArray(facetNames, tags);
+        return new TagCounterArray(tagHandler,
+                                   tagHandler.getFacetNames().size());
     }
 
     public CoreMap constructCoreMap(int documents) {

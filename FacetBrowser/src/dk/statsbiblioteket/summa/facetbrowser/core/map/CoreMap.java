@@ -26,8 +26,10 @@ import java.io.IOException;
 import java.io.File;
 
 import dk.statsbiblioteket.summa.facetbrowser.browse.TagCounter;
+import dk.statsbiblioteket.summa.facetbrowser.browse.TagCounterArray;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
 import dk.statsbiblioteket.summa.facetbrowser.core.StructureDescription;
+import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 
 /*
@@ -44,6 +46,16 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
  * [DocID][FacetID][TagID].
  */
 public interface CoreMap {
+    /**
+     * Whether or not a {@link #remove(int)} results in the subsequent documents
+     * being shifted down or not.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_SHIFT_ON_REMOVE =
+            "summa.facet.core.shift-on-remove";
+    public static final boolean DEFAULT_SHIFT_ON_REMOVE = false;
+
     /**
      * Set the tagIDs corresponding to a given facet for a given document.
      * Note that this must be done sequentially, which means that docID must
@@ -78,9 +90,11 @@ public interface CoreMap {
 
     /**
      * Removes the given docID, with corresponding facet- and tagIDs from the
-     * map. Any following docIDs are shifted down by one.
+     * map. Depending on configuration, this might result in the following
+     * docIDs are shifted down by one. If shifting is not enabled, all
+     * facet/tag-pairs for the docID is set to FACET_LIMIT/0 aka emptyFacet/0.
      * </p><p>
-     * Note: This corresponds to the way Lucene handles removal of documents.
+     * Note: Lucene does not shift on deletes.
      * @param docID the docID top remove.
      */
     public void remove(int docID);
@@ -134,4 +148,16 @@ public interface CoreMap {
      * @see TagHandler#removeTag(int, int)
      */
     public void adjustPositions(int facetID, int position, int delta);
+
+    /**
+     * The emptyFacet is the position of the Facet responsible for counting tags
+     * from deleted documents. When documents are deleted, their facets are all
+     * set to this id and their tags are set to 0.
+     * </p><p>
+     * Note: This id must be at least the number of facets specified in 
+     *       {@link Structure}.
+     * @return the emptyFacet, used for tags from deleted documents.
+     * @see {@link TagCounterArray#emptyFacet}.
+     */
+    public int getEmptyFacet();
 }
