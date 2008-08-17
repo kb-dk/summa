@@ -49,9 +49,9 @@
     <!-- Internal project dependencies -->
     <path id="lib.internal">    
         <pathelement location="../Common/${summa.classes.dir}"/>
+        <pathelement location="../Storage/${summa.classes.dir}"/>
         <pathelement location="../Ingest/${summa.classes.dir}"/>
         <pathelement location="../Index/${summa.classes.dir}"/>
-        <pathelement location="../Storage/${summa.classes.dir}"/>
         <pathelement location="../Search/${summa.classes.dir}"/>
     </path>
     
@@ -65,6 +65,42 @@
 
     <target name=".compileCommon">
         <ant inheritAll="false" dir="../Common" target="compile"/>
+    </target>
+
+    <target name=".releaseCommon">
+        <ant inheritAll="false" dir="../Common" target="release"/>
+    </target>
+
+    <target name=".compileStorage">
+        <ant inheritAll="false" dir="../Storage" target="compile"/>
+    </target>
+
+    <target name=".releaseStorage">
+        <ant inheritAll="false" dir="../Storage" target="release"/>
+    </target>
+
+    <target name=".compileIngest">
+        <ant inheritAll="false" dir="../Ingest" target="compile"/>
+    </target>
+
+    <target name=".releaseIngest">
+        <ant inheritAll="false" dir="../Ingest" target="release"/>
+    </target>
+
+    <target name=".compileIndex">
+        <ant inheritAll="false" dir="../Index" target="compile"/>
+    </target>
+
+    <target name=".releaseIndex">
+        <ant inheritAll="false" dir="../Index" target="release"/>
+    </target>
+
+    <target name=".compileSearch">
+        <ant inheritAll="false" dir="../Search" target="compile"/>
+    </target>
+
+    <target name=".releaseSearch">
+        <ant inheritAll="false" dir="../Search" target="release"/>
     </target>
 
     <target name="depends">
@@ -91,14 +127,38 @@
         </condition>
         <antcall target="${compileCommonTask}"/>
 
+        <!-- Check that Storage is compiled -->
+        <echo message="Checking whether Storage is compiled"/>
+        <condition property="compileStorageTask" value=".phony" else=".compileStorage">
+            <available file="../Storage/${summa.classes.dir}"/>
+        </condition>
+        <antcall target="${compileStorageTask}"/>
+
+        <!-- Check that Ingest is compiled -->
+        <echo message="Checking whether Ingest is compiled"/>
+        <condition property="compileIngestTask" value=".phony" else=".compileIngest">
+            <available file="../Ingest/${summa.classes.dir}"/>
+        </condition>
+        <antcall target="${compileIngestTask}"/>
+
+        <!-- Check that Index is compiled -->
+        <echo message="Checking whether Index is compiled"/>
+        <condition property="compileIndexTask" value=".phony" else=".compileIndex">
+            <available file="../Index/${summa.classes.dir}"/>
+        </condition>
+        <antcall target="${compileIndexTask}"/>
+
+        <!-- Check that Search is compiled -->
+        <echo message="Checking whether Search is compiled"/>
+        <condition property="compileSearchTask" value=".phony" else=".compileSearch">
+            <available file="../Search/${summa.classes.dir}"/>
+        </condition>
+        <antcall target="${compileSearchTask}"/>
+
         <!-- Store space-separated list of lib-filenames in lib.files -->
         <pathconvert refid="lib.path" property="lib.files" pathsep=" ">
             <map from="${lib.dir}/" to=""/>
         </pathconvert>
-    </target>
-
-    <target name=".releaseCommon">
-        <ant inheritAll="false" dir="../Common" target="release"/>
     </target>
 
     <target name=".release.depends" depends="depends">
@@ -107,6 +167,30 @@
             <available file="../${summa.ilib.common}"/>
         </condition>
         <antcall target="${releaseCommonTask}"/>
+
+        <!-- Check that Storage release is compiled -->
+        <condition property="releaseStorageTask" value=".phony" else=".releaseStorage">
+            <available file="../${summa.ilib.storage}"/>
+        </condition>
+        <antcall target="${releaseStorageTask}"/>
+
+        <!-- Check that Ingest release is compiled -->
+        <condition property="releaseIngestTask" value=".phony" else=".releaseIngest">
+            <available file="../${summa.ilib.ingest}"/>
+        </condition>
+        <antcall target="${releaseIngestTask}"/>
+
+        <!-- Check that Index release is compiled -->
+        <condition property="releaseIndexTask" value=".phony" else=".releaseIndex">
+            <available file="../${summa.ilib.index}"/>
+        </condition>
+        <antcall target="${releaseIndexTask}"/>
+
+        <!-- Check that Search release is compiled -->
+        <condition property="releaseSearchTask" value=".phony" else=".releaseSearch">
+            <available file="../${summa.ilib.search}"/>
+        </condition>
+        <antcall target="${releaseSearchTask}"/>
     </target>
 
     <target name="clean">
