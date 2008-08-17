@@ -10,11 +10,16 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.io.IOException;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  *
  */
 public class RemoteConsoleFeedback extends UnicastRemoteObject
                                    implements RemoteFeedback {    
+
+    private static Log log = LogFactory.getLog (RemoteConsoleFeedback.class);
 
     private Feedback feedback;
     private int registryPort;
@@ -23,7 +28,13 @@ public class RemoteConsoleFeedback extends UnicastRemoteObject
 
     public RemoteConsoleFeedback(Configuration conf) throws IOException {
         super (getServicePort(conf));
-        feedback = new ConsoleFeedback(conf);
+        try {
+            feedback = new ConsoleFeedback(conf);
+        } catch (Exception e) {
+            log.warn ("Unable to create ConsoleFeedback. Falling back"
+                         + "to VoidFeedback", e);
+            feedback = new VoidFeedback();
+        }
         closed = false;
         registryPort = conf.getInt (REGISTRY_PORT_PROPERTY, 27000);
         serviceName = conf.getString(SERVICE_NAME_PROPERTY,
