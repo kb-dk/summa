@@ -71,24 +71,22 @@ public class RemoteHelper {
     }
 
     public synchronized static void unExportRemoteInterface (String serviceName,
-                                                int registryPort)
+                                                             int registryPort)
                                                             throws IOException {
         log.trace ("Preparing to unexport '" + serviceName + "' with registry on"
                    + " port " + registryPort);
         Registry reg = null;
 
-        try {
-            reg = LocateRegistry.createRegistry(registryPort);
-            log.debug("Created registry on port " + registryPort);
-        } catch (RemoteException e) {
-            reg = LocateRegistry.getRegistry("localhost", registryPort);
-            log.debug ("Found registry localhost:" + registryPort);
-        }
+        /* We should not try and create the registry when we want to
+         * unregister a service. */
 
+        reg = LocateRegistry.getRegistry("localhost", registryPort);
+        log.debug ("Found registry localhost:" + registryPort);
 
         if (reg == null) {
-            throw new RemoteException ("Failed to locate or create registry on "
-                                        + "localhost:" + registryPort);
+            log.error ("Can not unbind service '" + serviceName + "'. No "
+                       + "registry running on port " + registryPort);
+            return;
         }
 
         try {

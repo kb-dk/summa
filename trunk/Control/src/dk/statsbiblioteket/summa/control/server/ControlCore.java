@@ -197,9 +197,10 @@ public class ControlCore extends UnicastRemoteObject
                                                   8,
                                                   feedback,
                                                   Status.CODE.not_instantiated);
-            new Thread (mon).start ();
+            Thread statusThread = new Thread (mon);
+            statusThread.setDaemon (true); // Allow JVM to exit
+            statusThread.start();
             deployer.start(feedback);
-
         } catch (Exception e) {
             setStatusIdle();
             throw new ClientDeploymentException("Error when starting client '"

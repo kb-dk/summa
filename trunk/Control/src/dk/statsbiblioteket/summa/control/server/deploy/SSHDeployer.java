@@ -343,6 +343,7 @@ public class SSHDeployer implements ClientDeployer {
         String error = null;
         try {
             Thread processThread = new Thread (runner);
+            processThread.setDaemon (true); // Allow JVM to exit
             processThread.start();
 
             /* Wait until the deployment is done or times out */

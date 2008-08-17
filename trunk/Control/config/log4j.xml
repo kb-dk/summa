@@ -61,7 +61,7 @@
     </appender>  -->
 
 
-    <logger name="dk.statsbiblioteket.summa">
+    <logger name="dk.statsbiblioteket">
         <level value="TRACE" />
         <appender-ref ref="FILE" />
     </logger>
