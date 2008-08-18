@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.text.Collator;
 import java.io.StringWriter;
+import java.io.Serializable;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.util.ParseUtil;
@@ -96,7 +97,7 @@ public class DocumentResponse implements Response {
     /**
      * Contains a representation of each hit from a search.
      */
-    public static class Record {
+    public static class Record implements Serializable {
         private float score;
         private String sortValue;
         private String id;
