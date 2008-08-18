@@ -5,10 +5,7 @@
 <properties>
 
     <!-- The RMI communications port -->
-    <entry key="summa.control.service.port">2770</entry>
-
-    <!-- The port on which the registry should/does run -->
-    <entry key="summa.control.service.registry.port">2767</entry>
+    <entry key="summa.control.service.port">27070</entry>
 
     <!-- The class implementing the Service interface -->
     <entry key="control.launcher.service.class">dk.statsbiblioteket.summa.control.service.StorageService</entry>

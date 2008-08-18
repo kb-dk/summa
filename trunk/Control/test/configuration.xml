@@ -6,13 +6,10 @@
 
     <entry key="summa.configuration.service.port">2768</entry>
     <entry key="summa.configuration.service.name">ConfigurationStorage</entry>
-    <entry key="summa.configuration.registry.port">2767</entry>
-    <entry key="summa.configuration.registry.host">localhost</entry>
 
     <entry key="summa.control.client.id">test-client-1</entry>
     <entry key="summa.control.client.basepath">summa-control</entry>
     <entry key="summa.control.client.service.port">5536</entry>
-    <entry key="summa.control.client.registry.port">2767</entry>
     <entry key="summa.control.client.registry.host">localhost</entry>
 
     <entry key="summa.control.client.repository.class">

@@ -2,13 +2,8 @@
     <xproperties>
         <entry>
             <key>summa.control.service.port</key>
-            <value class="int">2772</value>
+            <value class="int">27072</value>
         </entry>
-        <entry>
-            <key>summa.control.service.registry.port</key>
-            <value class="int">2767</value>
-        </entry>
-
         <entry>
             <key>FilterPump.ChainName</key>
             <value class="string">Simple file-based ingest</value>
@@ -96,10 +91,6 @@
                         <entry>
                             <key>FilterPump.FilterClass</key>
                             <value class="string">dk.statsbiblioteket.summa.storage.filter.RecordWriter</value>
-                        </entry>
-                        <entry>
-                            <key>summa.storage.RecordWriter.Storage</key>
-                            <value class="string">//localhost:27000/TestStorage</value>
                         </entry>
                     </value>
                 </entry>

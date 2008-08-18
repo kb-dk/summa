@@ -2,13 +2,8 @@
     <xproperties>
         <entry>
             <key>summa.control.service.port</key>
-            <value class="int">2784</value>
+            <value class="int">27084</value>
         </entry>
-        <entry>
-            <key>summa.control.service.registry.port</key>
-            <value class="int">2767</value>
-        </entry>
-
         <entry>
             <key>FilterPump.ChainName</key>
             <value class="string">Simple fagref index</value>
@@ -34,10 +29,6 @@
                         <entry>
                             <key>FilterPump.FilterClass</key>
                             <value class="string">dk.statsbiblioteket.summa.storage.filter.RecordReader</value>
-                        </entry>
-                        <entry>
-                            <key>summa.storage.RecordReader.Storage</key>
-                            <value class="string">//localhost:27000/TestStorage</value>
                         </entry>
                         <entry>
                             <key>summa.storage.RecordReader.start-from-scratch</key>

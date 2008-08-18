@@ -2,11 +2,7 @@
     <xproperties>
         <entry>
             <key>summa.control.service.port</key>
-            <value class="int">2777</value>
-        </entry>
-        <entry>
-            <key>summa.control.service.registry.port</key>
-            <value class="int">2767</value>
+            <value class="int">27077</value>
         </entry>
 
         <!-- The class implementing the Service interface -->
@@ -102,10 +98,6 @@
                         <entry>
                             <key>FilterPump.FilterClass</key>
                             <value class="string">dk.statsbiblioteket.summa.storage.filter.RecordWriter</value>
-                        </entry>
-                        <entry>
-                            <key>summa.storage.RecordWriter.Storage</key>
-                            <value class="string">//localhost:2767/TestStorage</value>
                         </entry>
                     </value>
                 </entry>

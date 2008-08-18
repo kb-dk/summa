@@ -47,7 +47,7 @@ public class IndexCommon {
 
     /**
      * The pattern for sub-folders under an index-root. The sub-folders contains
-     * further index-files.
+     * further index-files. Example {@code 20080815-152500}.
      */
     public static final Pattern TIMESTAMP_PATTERN =
             Pattern.compile("[0-9]{8}-[0-9]{6}");

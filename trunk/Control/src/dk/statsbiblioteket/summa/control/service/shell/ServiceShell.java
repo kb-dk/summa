@@ -36,7 +36,7 @@ public class ServiceShell {
 
     public static void printUsage () {
         System.err.println ("USAGE:\n\tcontrol-shell <service-rmi-address>\n");
-        System.err.println ("For example:\n\tcontrol-shell //localhost:2767/my-service");
+        System.err.println ("For example:\n\tcontrol-shell //localhost:27000/my-service");
     }
 
     public static void main (String[] args) {

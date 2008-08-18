@@ -5,10 +5,7 @@
 <properties>
 
     <!-- The RMI communications port -->
-    <entry key="summa.control.client.service.port">2769</entry>
-
-    <!-- The port on which the registry should/does run -->
-    <entry key="summa.control.client.registry.port">2767</entry>
+    <entry key="summa.control.client.service.port">27069</entry>
 
     <!-- Base path for the service repo -->
     <entry key="summa.control.repository.address">file:///tmp/summatest</entry>
