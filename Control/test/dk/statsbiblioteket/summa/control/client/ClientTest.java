@@ -49,7 +49,7 @@ public class ClientTest extends TestCase {
     }
 
     public void testDeploy () throws Exception {
-        ClientConnection client = (ClientConnection) Naming.lookup ("//localhost:2767/test-client-1");
+        ClientConnection client = (ClientConnection) Naming.lookup ("//localhost:27000/test-client-1");
         URL url = new URL("http://java.sun.com/javase/6/docs/api/java/net/HttpCookie.html");
 
         client.deployService("test-1", "test-1-1", null);

@@ -53,7 +53,7 @@ public class RecordWriter extends ObjectFilterImpl {
 
     /**
      * The Storage to connect to. This is a standard RMI address.
-     * Example: //localhost:6789/storage;
+     * Example: //localhost:27000/summa-storage;
      */
     public static final String CONF_STORAGE =
             "summa.storage.RecordWriter.Storage";

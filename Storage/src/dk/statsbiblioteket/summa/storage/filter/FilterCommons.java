@@ -64,14 +64,9 @@ public class FilterCommons {
         //noinspection DuplicateStringLiteralInspection
         log.trace("getAccess(..., " + accessKey + ") called");
         String accessPoint;
-        try {
-            accessPoint = configuration.getString(accessKey);
-        } catch (Exception e) {
-            throw new Configurable.ConfigurationException(
-                    "Unable to get the RMI address for the remote "
-                    + "Storage from the configuration with key '"
-                    + accessKey + "'");
-        }
+        accessPoint = configuration.getString(accessKey,
+                                              "//localhost:27000/summa-storage");
+
         log.debug("Connecting to the access point '" + accessPoint + "'");
         return accessConnectionManager.get(accessPoint);
     }
@@ -82,7 +77,7 @@ public class FilterCommons {
      * @param context the context for Storage.
      */
     public static synchronized void releaseAccess(
-            ConnectionContext<Storage> context) {
+                                           ConnectionContext<Storage> context) {
         accessConnectionManager.release(context);
     }
 }

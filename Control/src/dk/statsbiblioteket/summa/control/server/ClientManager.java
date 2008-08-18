@@ -225,8 +225,8 @@ public class ClientManager extends ConnectionManager<ClientConnection>
         * Retrieve ClientConnection.REGISTRY_HOST_PROPERTY and return it
         * */
 
-        log.error ("WARNING - HARDCODED CLIENT REG. PORT 2767");
-        return 2767;
+        log.error ("WARNING - HARDCODED CLIENT REG. PORT 2700");
+        return 27000;
     }
 
     public ConnectionContext<ClientConnection>get (String clientId) {

@@ -388,6 +388,7 @@
             <zipfileset file="${tmp.dir}/test-search-1/service.xml"/>
             <zipfileset prefix="lib" file="../${summa.ilib.common}"/>
             <zipfileset prefix="lib" file="../${summa.ilib.search}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.support}"/>
             <zipfileset prefix="lib" file="${summa.lib.commons-logging}"/>
             <zipfileset prefix="lib" file="${summa.lib.log4j}"/>
             <zipfileset prefix="lib" file="${summa.lib.sbutil}"/>

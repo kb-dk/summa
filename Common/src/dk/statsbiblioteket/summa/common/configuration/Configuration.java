@@ -61,7 +61,6 @@ public class Configuration implements Serializable,
     private static Log log = LogFactory.getLog(Configuration.class);
 
     private ConfigurationStorage storage;
-    public static final String DEFAULT_RESOURCE = "control.properties.xml";
 
     /**
      * Set of system resource names used to look for a configuration if none
@@ -83,6 +82,11 @@ public class Configuration implements Serializable,
     /** System property defining where to fetch the configuration.
      * This can be a normal URL or an rmi path.*/
     public static final String CONFIGURATION_PROPERTY = "summa.configuration";
+
+    /** System property defining the root directory from which persistent
+     * data should be read and stored to. The default value is
+     * {@code $HOME/summa-control/persistent */
+    public static final String PERSISTENT_DIR_PROPERTY = "summa.persistent";
 
     /**
      * Create a {@code Configuraion} with the given {@link ConfigurationStorage}
@@ -738,15 +742,6 @@ public class Configuration implements Serializable,
     }
 
     /**
-     * Load default config from the {@link #DEFAULT_RESOURCE}
-     * if it is found in the classpath.
-     * @throws java.io.IOException if there was a problem loading the file
-     */
-    public void loadDefaults () throws IOException {
-        loadFromXML(DEFAULT_RESOURCE);
-    }
-
-    /**
      * Load properties from the given file into this config.
      * @param filename name of file in the classpath
      * @throws IOException if there was a problem loading the file
@@ -1153,6 +1148,36 @@ public class Configuration implements Serializable,
             configurations.add(new Configuration(storage));
         }
         return Collections.unmodifiableList(configurations);
+    }
+
+    /**
+     * Convenience method to look up the system global directory for persistent
+     * data. This is defined by the property {@link #PERSISTENT_DIR_PROPERTY}.
+     * <p></p>
+     * If the configuration does not define the property the system property
+     * with the same name will be checked. If that fails too the default
+     * of {@code $HOME/summa-control/persistent will be used
+     *
+     * @return A {@code File} pointing to the root directory where persistent
+     *         data should be stored
+     */
+    public File getPeristentDir () {
+        try {
+            return new File (getString(PERSISTENT_DIR_PROPERTY));
+        } catch (NullPointerException e) {
+            log.debug (PERSISTENT_DIR_PROPERTY + " not defined in configuration");
+            String loc = System.getProperty(PERSISTENT_DIR_PROPERTY);
+            if (loc == null) {
+                loc = System.getProperty("user.home") + File.separator
+                        + "summa-control" + File.separator + "persistent";
+                log.debug ("System property " + PERSISTENT_DIR_PROPERTY + "not"
+                           + " defined. Using default: " + loc);
+                return new File (loc);
+            }
+            log.debug ("Using system property " + PERSISTENT_DIR_PROPERTY + " "
+                       +  "for persistent data: " + loc);
+            return new File (loc);
+        }
     }
 }
 
