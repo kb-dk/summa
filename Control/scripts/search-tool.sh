@@ -1,13 +1,6 @@
 #!/bin/bash
 
-# USAGE:
-#
-# start-service.sh [path_to_service_xml [config_location]]
-#
-# This script can start any Summa service given a service.xml
-# It will assume that the instance id of the service is the
-# name of the directory containing the service.xml 
-#
+DEPLOY=`dirname $0`/..
 
 #
 # TEMPLATE FOR RUNNING JARS FROM BASH SCRIPTS
@@ -16,9 +9,10 @@
 # The following directory structure will be assumed
 #
 #    app_root/
+#      bin/           # All executable scripts go here, ie derivatives of this template
 #      lib/           # All 3rd party libs/jar
 #      config/        # Any properties or other config files
-#      service.xml    # Service description used to launch the service
+#      MAINJAR        # jar file containing the main class
 #
 # Classpath Construction:
 #  - Any .jar in lib/ will be added to the classpath
@@ -46,41 +40,14 @@
 # EDIT HERE
 #
 
-# Detect the service.xml file
-SERVICE_XML=$(pwd)/service.xml
-if [ "$1" != "" ]; then
-    SERVICE_XML="$1"
-fi
-
-# Abort if the service.xml is not found
-if [ ! -f $SERVICE_XML ]; then
-    echo -e "Service file $SERVICE_XML not found, or is not a regular file"
-    echo -e "You may pass the location of the service file as a parameter"
-    exit 1
-fi
-
-# Update working dir, and update SERVICE_XML relative to DEPLOY
-DEPLOY=$(dirname $SERVICE_XML)
-pushd $DEPLOY > /dev/null
-SERVICE_XML=$(basename $SERVICE_XML)
-
-
-# Detect CONFIG_LOCATION
-CONFIGURATION=configuration.xml
-if [ "$2" != "" ]; then
-    CONFIGURATION="$2"
-fi
-
-# calculate the service instance id from the directory name as per spec
-SERVICE_ID=$(basename $(pwd))
-
-MAINJAR=$(grep '<mainJar>' $SERVICE_XML | sed -e 's@</\?mainJar>@@g' -e 's@[ \t]@@g')
-MAINCLASS=$(grep '<mainClass>' $SERVICE_XML | sed -e 's@</\?mainClass>@@g' -e 's@[ \t]@@g')
-LIBDIRS=lib
+MAINJAR=@summa.ilib.search@
+MAINCLASS=dk.statsbiblioteket.summa.search.tools.SearchInspector
+CONFIGURATION=configuration-server.xml
+#LIBDIRS=lib
 PRINT_CONFIG=true
 #JAVA_HOME=/usr/lib/jvm/java
-JVM_OPTS="-server -Xmx256m -Dsumma.configuration=$CONFIGURATION -Dsumma.control.service.id=$SERVICE_ID -Dsumma.control.service.basepath=$(DEPLOY/..)"
-SECURITY_POLICY="$DEPLOY/config/policy"
+JVM_OPTS="-server -Xmx64m -Dsumma.configuration=$CONFIGURATION"
+SECURITY_POLICY="$DEPLOY/config/.server.policy"
 #ENABLE_JMX=true
 
 #JMX_PORT=8469
@@ -92,6 +59,9 @@ SECURITY_POLICY="$DEPLOY/config/policy"
 #
 # DON'T EDIT BEYOND THIS POINT
 #
+
+DEPLOY=`dirname $0`/..
+pushd $DEPLOY > /dev/null
 
 # Helper function to set properties in a properties file
 # $1 : property name
@@ -162,7 +132,7 @@ if [ "$ENABLE_JMX" == "true" ]; then
     JMX="$JMX_PORT $JMX_SSL $JMX_PASS $JMX_ACCESS";
 fi;
 
-COMMAND="$JAVA_HOME/bin/java $JVM_OPTS $SECURITY_POLICY $JMX -cp $CLASSPATH $MAINCLASS"
+COMMAND="$JAVA_HOME/bin/java $JVM_OPTS $SECURITY_POLICY $JMX -cp $CLASSPATH $MAINCLASS $*"
 
 # Report settings
 if [ ! -z $PRINT_CONFIG ]; then
@@ -170,9 +140,6 @@ if [ ! -z $PRINT_CONFIG ]; then
     echo -e "Classpath:\t$CLASSPATH" 1>&2
     echo -e "MainJar:\t$MAINJAR" 1>&2
     echo -e "MainClass:\t$MAINCLASS" 1>&2
-    echo -e "Configuration:\t$CONFIGURATION" 1>&2
-    echo -e "Service file:\t$SERVICE_XML" 1>&2
-    echo -e "Service id:\t$SERVICE_ID" 1>&2
     echo -e "Working dir:\t`pwd`" 1>&2
     echo -e "JMX enabled:\t$ENABLE_JMX" 1>&2
     echo -e "Security:\t$SECURITY_POLICY\n" 1>&2

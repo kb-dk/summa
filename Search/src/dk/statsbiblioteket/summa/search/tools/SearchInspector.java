@@ -13,18 +13,25 @@ import java.rmi.Naming;
 public class SearchInspector {
 
     public static void main (String[] args) throws Exception {
-        if (args.length <= 2) {
+        if (args.length < 2) {
             System.err.println ("USAGE:\n\t" +
-                                "SearchInspector <rmi-address> [key=val...]");
-            System.err.println ("Fx: SearchInspector " +
+                                "SearchInspector <rmi-address> <key=val> [key=val]");
+            System.err.println ("Example:\n\tsearch-tool.sh " +
                                 "//localhost:28000/summa-searcher summa.query=foo");
+            System.exit (1);
         }
 
+        System.err.print("Looking up searcher on: " + args[0] + " ... ");
         SummaSearcher searcher = (SummaSearcher)Naming.lookup (args[0]);
+        System.err.println("[OK]");
+
         Request rq = parseArgs (args);
 
+        System.err.print("Performing request... ");
         ResponseCollection resp = searcher.search(rq);
+        System.err.println("[OK]");
 
+        System.err.println("Result:");
         System.out.println (resp.toXML());
     }
 
