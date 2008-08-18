@@ -19,6 +19,10 @@
         dk.statsbiblioteket.summa.control.bundle.RemoteURLRepositoryClient
     </entry>
 
+    <entry key="summa.search.node.class">
+        dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode
+    </entry>
+
     <entry key="summa.control.repository.download.dir">tmp</entry>
     <entry key="summa.control.repository.address">//localhost:27000/remoteURLRepository</entry>
 

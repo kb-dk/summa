@@ -53,6 +53,7 @@
         <pathelement location="../Ingest/${summa.classes.dir}"/>
         <pathelement location="../Index/${summa.classes.dir}"/>
         <pathelement location="../Search/${summa.classes.dir}"/>
+        <pathelement location="../Support/${summa.classes.dir}"/>
     </path>
     
     <!-- lib.files : set by the .checkDepends target -->
@@ -101,6 +102,14 @@
 
     <target name=".releaseSearch">
         <ant inheritAll="false" dir="../Search" target="release"/>
+    </target>
+
+    <target name=".compileSupport">
+        <ant inheritAll="false" dir="../Support" target="compile"/>
+    </target>
+
+    <target name=".releaseSupport">
+        <ant inheritAll="false" dir="../Support" target="release"/>
     </target>
 
     <target name="depends">
@@ -155,6 +164,13 @@
         </condition>
         <antcall target="${compileSearchTask}"/>
 
+        <!-- Check that Support is compiled -->
+        <echo message="Checking whether Support is compiled"/>
+        <condition property="compileSupportTask" value=".phony" else=".compileSupport">
+            <available file="../Support/${summa.classes.dir}"/>
+        </condition>
+        <antcall target="${compileSupportTask}"/>
+
         <!-- Store space-separated list of lib-filenames in lib.files -->
         <pathconvert refid="lib.path" property="lib.files" pathsep=" ">
             <map from="${lib.dir}/" to=""/>
@@ -191,6 +207,12 @@
             <available file="../${summa.ilib.search}"/>
         </condition>
         <antcall target="${releaseSearchTask}"/>
+
+        <!-- Check that Support release is compiled -->
+        <condition property="releaseSupportTask" value=".phony" else=".releaseSupport">
+            <available file="../${summa.ilib.support}"/>
+        </condition>
+        <antcall target="${releaseSupportTask}"/>
     </target>
 
     <target name="clean">
@@ -308,6 +330,7 @@
             <zipfileset prefix="${prefix}/lib" file="../${summa.ilib.ingest}"/>
             <zipfileset prefix="${prefix}/lib" file="../${summa.ilib.index}"/>
             <zipfileset prefix="${prefix}/lib" file="../${summa.ilib.search}"/>
+            <zipfileset prefix="${prefix}/lib" file="../${summa.ilib.support}"/>
 
             <zipfileset prefix="${prefix}/config" file="${basedir}/config/log4j.xml"/>
             <zipfileset prefix="${prefix}/config" file="${basedir}/config/configuration-server.xml"/>
