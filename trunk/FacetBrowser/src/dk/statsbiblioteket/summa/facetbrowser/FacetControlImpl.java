@@ -1,6 +1,6 @@
 /**
  * Created: te 13-08-2008 10:29:07
- * CVS:     $Id:$
+ * CVS:     $Id$
  */
 package dk.statsbiblioteket.summa.facetbrowser;
 
@@ -17,7 +17,7 @@ import org.apache.commons.logging.LogFactory;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class FacetControlImpl implements FacetControl, Configurable {
+public abstract class FacetControlImpl implements FacetControl, Configurable {
     private Log log = LogFactory.getLog(FacetControlImpl.class);
 
     public FacetControlImpl(Configurable conf) {

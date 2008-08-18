@@ -76,7 +76,7 @@ public class FacetMap {
      */
     public void removeDocument(int docID) {
         log.debug("Removing document " + docID);
-        coreMap.remove(docID, false);
+        coreMap.remove(docID);
         log.trace("Removed document " + docID);
     }
 
