@@ -659,6 +659,29 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         }
     }
 
+    public Service getServiceConnection (String id) throws RemoteException {
+        log.trace("Getting service connection for " + id);
+
+        if (id == null) {
+            throw new NullPointerException("id is null");
+        }
+
+        if (!serviceMan.knows(id)) {
+            throw new NoSuchServiceException(this, id, "getServiceConnection");
+        }
+
+        ConnectionContext<Service> connCtx = serviceMan.get (id);
+
+        if (connCtx == null) {
+            throw new InvalidServiceStateException(this, id,
+                                                   "getStatus", "not running");
+        } else {
+            Service s = connCtx.getConnection();
+            connCtx.unref();
+            return s;
+        }
+    }
+
     public List<String> getServices() {
         log.trace("Getting list of services");
 

@@ -90,8 +90,9 @@ public class StartServiceCommand extends RemoteCommand<ClientConnection> {
             log.debug("calling startService for " + baseMeta);
             client.startService(pkgId, confLocation);
             log.debug("Attaching ServiceMonitor to " + baseMeta);
-            StatusMonitor mon = new StatusMonitor(connMgr, pkgId, 5, ctx,
-                                          Status.CODE.not_instantiated);
+            StatusMonitor mon = new StatusMonitor(client.getServiceConnection(pkgId),
+                                                  5, ctx,
+                                                  Status.CODE.not_instantiated);
             Thread monThread = new Thread (mon, "ServiceStatusMonitor");
             monThread.setDaemon (true); // Allow the JVM to exit
             monThread.start();
