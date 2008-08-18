@@ -67,7 +67,7 @@ public abstract class ServiceBase extends UnicastRemoteObject
     /**
      *
      */
-    private Log log = LogFactory.getLog(ServiceBase.class);
+    private static final Log log = LogFactory.getLog(ServiceBase.class);
 
     private int registryPort;
     private String id;
@@ -96,7 +96,7 @@ public abstract class ServiceBase extends UnicastRemoteObject
         }
 
         registryPort = conf.getInt(REGISTRY_PORT, 27000);
-        servicePort = conf.getInt(SERVICE_PORT, 27003);
+        servicePort = conf.getInt(SERVICE_PORT, 28003);
         log.info("ServiceBase constructor finished with registryPort "
                  + registryPort + ", servicePort " + servicePort
                  + " and id '" + id + "'");
@@ -126,8 +126,9 @@ public abstract class ServiceBase extends UnicastRemoteObject
         try {
             return conf.getInt(SERVICE_PORT);
         } catch (Exception e) {
-            throw new BadConfigurationException("Unable to read " + SERVICE_PORT
-                                              + "from configuration", e);
+            log.warn ("No service port specified in " + SERVICE_PORT + ". "
+                      + "Defaulting to anonymous service port");
+            return 0;
         }
     }
 

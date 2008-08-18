@@ -54,7 +54,7 @@ public interface Service extends Configurable, Remote, Monitorable {
 
     /**
      * Property defining the port on which the service's rmi service should
-     * communicate. Default should be 27003.
+     * communicate. Default should be 28003.
      */
     public static final String SERVICE_PORT = "summa.control.service.port";
 

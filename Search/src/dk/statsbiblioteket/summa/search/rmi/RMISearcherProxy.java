@@ -114,7 +114,14 @@ public class RMISearcherProxy extends UnicastRemoteObject
     }
 
     private static int getServicePort (Configuration conf) {
-        return (conf.getInt(PROP_SERVICE_PORT, 28020));
+        try {
+            return conf.getInt(PROP_SERVICE_PORT);
+        } catch (NullPointerException e) {
+            log.warn ("Service port property " + PROP_SERVICE_PORT + " not "
+                     + "defined in configuration. Falling back to anonymous "
+                     + "port");
+            return 0;
+        }
     }
 
     @Override
