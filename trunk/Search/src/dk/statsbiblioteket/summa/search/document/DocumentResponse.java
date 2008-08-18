@@ -97,7 +97,7 @@ public class DocumentResponse implements Response {
     /**
      * Contains a representation of each hit from a search.
      */
-    public static class Record implements Serializable {
+    private static class Record implements Serializable {
         private float score;
         private String sortValue;
         private String id;
@@ -152,7 +152,7 @@ public class DocumentResponse implements Response {
     /**
      * Containt content from a requested Field for a Record.
      */
-    public static class Field {
+    private static class Field implements Serializable {
         private String name;
         private String content;
 
@@ -183,7 +183,7 @@ public class DocumentResponse implements Response {
      * Add a Record to the SearchResult. The order of Records is significant.
      * @param record a record that should belong to the search result.
      */
-    public void addRecord(Record record) {
+    private void addRecord(Record record) {
         if (record == null) {
             throw new IllegalArgumentException(
                     "Expected a Record, got null");
@@ -323,11 +323,11 @@ public class DocumentResponse implements Response {
 
     /* Getters and setters */
 
-    public List<Record> getRecords() {
+    private List<Record> getRecords() {
         return records;
     }
     // Because building the DocumentResponse takes time
-    public void setSearchTime(long searchTime) {
+    private void setSearchTime(long searchTime) {
         this.searchTime = searchTime;
     }
 
