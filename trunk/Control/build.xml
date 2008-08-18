@@ -280,6 +280,9 @@
             <replacefilter
                 token="@summa.ilib.control@"
                 value="${release.jar}"/>
+            <replacefilter
+                token="@summa.ilib.search@"
+                value="lib/summa-search-${summa.version}.jar"/>
         </replace>
     </target>
 
@@ -303,6 +306,8 @@
             <zipfileset prefix="${prefix}/lib" file="../${summa.ilib.common}"/>
             <zipfileset prefix="${prefix}/lib" file="../${summa.ilib.storage}"/>
             <zipfileset prefix="${prefix}/lib" file="../${summa.ilib.ingest}"/>
+            <zipfileset prefix="${prefix}/lib" file="../${summa.ilib.index}"/>
+            <zipfileset prefix="${prefix}/lib" file="../${summa.ilib.search}"/>
 
             <zipfileset prefix="${prefix}/config" file="${basedir}/config/log4j.xml"/>
             <zipfileset prefix="${prefix}/config" file="${basedir}/config/configuration-server.xml"/>
