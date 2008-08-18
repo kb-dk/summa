@@ -8,7 +8,7 @@ import java.rmi.Naming;
 
 /**
  * Little tool to hook up to a {@link SummaSearcher} and launch a search
- * on it
+ * on it and print the result to stdout.
  */
 public class SearchInspector {
 
@@ -35,6 +35,13 @@ public class SearchInspector {
         System.out.println (resp.toXML());
     }
 
+    /**
+     * Parse key=value pairs from the command line, skipping args[0] because
+     * that will be the rmi address
+     * @param args the args as passed to main()
+     * @return a compiled {@link Request} object ready to pass to
+     *         {@link SummaSearcher#search}
+     */
     private static Request parseArgs(String[] args) {
         Request rq = new Request ();
 
