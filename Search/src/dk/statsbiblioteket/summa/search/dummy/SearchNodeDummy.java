@@ -27,13 +27,6 @@ import org.apache.commons.logging.LogFactory;
  */
 public class SearchNodeDummy extends SearchNodeImpl {
 
-    /**
-     * Configuration property defining what the {@code SearchNode} puts
-     * in its repsonse to {@link SearchNodeImpl#managedSearch}.
-     * Default is "Void (request_num)".
-     */
-    public static final String PROP_SEARCH_RESP = "summa.search.void.response";
-
     private static final Log log = LogFactory.getLog (SearchNodeDummy.class);
 
     private int warmupCount;
