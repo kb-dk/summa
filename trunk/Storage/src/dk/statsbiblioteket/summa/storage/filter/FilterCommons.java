@@ -52,7 +52,7 @@ public class FilterCommons {
     /**
      * Creates a ConnectionContext for the Storage specified in accessKey.
      * After use, resources are released with {@link #releaseAccess}.
-     * @param configuration contains the Storage address.
+     * @param conf contains the Storage address.
      * @param accessKey     the key for the Storage address. The Storage address
      *                      is an standard RMI address, such as
      *                      "//localhost:6789/storage".
@@ -60,12 +60,12 @@ public class FilterCommons {
      *         See {@link ConnectionContext} for usage.
      */
     public static synchronized ConnectionContext<Storage> getAccess(
-            Configuration configuration, String accessKey) {
+                                         Configuration conf, String accessKey) {
         //noinspection DuplicateStringLiteralInspection
         log.trace("getAccess(..., " + accessKey + ") called");
         String accessPoint;
-        accessPoint = configuration.getString(accessKey,
-                                              "//localhost:28000/summa-storage");
+        accessPoint = conf.getString(accessKey,
+                                     "//localhost:28000/summa-storage");
 
         log.debug("Connecting to the access point '" + accessPoint + "'");
         return accessConnectionManager.get(accessPoint);
