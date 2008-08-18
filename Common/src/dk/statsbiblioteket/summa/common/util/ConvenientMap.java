@@ -196,7 +196,8 @@ public class ConvenientMap extends HashMap<String, Serializable> {
     public String[] getStrings(String key, String[] defaultValues) {
         List<String> result = getStrings(key, defaultValues == null ? null :
                                               Arrays.asList(defaultValues));
-        return result.toArray(new String[result.size()]);
+        return result == null ? null :
+               result.toArray(new String[result.size()]);
     }
 
     public static class Pair<T, U> {
