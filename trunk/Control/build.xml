@@ -511,12 +511,10 @@
     </target>
 
     <target name=".test-index-fagref.bundle" depends=".jar, test.compile">
-        <property name="bundle-id" value="test-index-fagref"/>
-
         <mkdir dir="${tmp.dir}"/>
 
         <!-- Create jar file for test service -->
-        <jar basedir="${test.build.dir}" compress="true" jarfile="${tmp.dir}/${bundle-id}-service-${summa.version}.jar"/>
+        <jar basedir="${test.build.dir}" compress="true" jarfile="${tmp.dir}/test-index-fagref-service-${summa.version}.jar"/>
 
         <!-- Roll service bundle -->
         <copy todir="${tmp.dir}">
@@ -537,9 +535,9 @@
 
         <zip destfile="${dist.dir}/test-index-fagref.bundle">
 
-            <zipfileset file="${tmp.dir}/${bundle-id}-service-${summa.version}.jar"/>
+            <zipfileset file="${tmp.dir}/test-index-fagref-service-${summa.version}.jar"/>
 
-            <zipfileset file="${tmp.dir}/${bundle-id}/service.xml"/>
+            <zipfileset file="${tmp.dir}/test-index-fagref/service.xml"/>
             <zipfileset prefix="lib" file="../${summa.ilib.common}"/>
             <zipfileset prefix="lib" file="../${summa.ilib.storage}"/>
             <zipfileset prefix="lib" file="../${summa.ilib.index}"/>
@@ -549,10 +547,10 @@
             <zipfileset prefix="lib" file="${basedir}/../${summa.lib.lucene}"/>
             <zipfileset prefix="lib" file="${release.jar}"/>
 
-            <zipfileset prefix="config" file="${test.src.dir}/${bundle-id}/config/configuration.xml"/>
+            <zipfileset prefix="config" file="${test.src.dir}/test-index-fagref/config/configuration.xml"/>
             <zipfileset prefix="config" file="${basedir}/config/log4j.xml"/>
 
-            <zipfileset dir="${test.src.dir}/${bundle-id}/config" prefix="config" filemode="600">
+            <zipfileset dir="${test.src.dir}/test-index-fagref/config" prefix="config" filemode="600">
                 <include name="jmx.password"/>
                 <include name="jmx.access"/>
                 <include name="policy"/>
