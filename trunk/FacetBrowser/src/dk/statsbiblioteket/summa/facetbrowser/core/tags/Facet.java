@@ -25,20 +25,19 @@ package dk.statsbiblioteket.summa.facetbrowser.core.tags;
 import java.io.File;
 import java.io.IOException;
 import java.text.Collator;
-import java.util.Locale;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.CachedCollator;
 import dk.statsbiblioteket.summa.facetbrowser.util.pool.CollatorSortedPool;
 import dk.statsbiblioteket.summa.facetbrowser.util.pool.MemoryStringPool;
 import dk.statsbiblioteket.summa.facetbrowser.util.pool.DiskStringPool;
+import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
  * A Facet is a named collection of Tags. This will normally map to a field with
  * corresponding terms in an index. Facets are index-format agnostic and are
- * only concerned with maintaining the structure og Tags.
+ * only concerned with maintaining the structure of Tags.
  * </p><p>
  * Unless a Locale is provided, Tags are sorted in Unicode order. Using a
  * Locale is relevant if the Tags are to be presented is a specific order,
@@ -89,10 +88,7 @@ public class Facet implements CollatorSortedPool {
     private CollatorSortedPool pool;
     private File location;
 
-    private String name;
-    private String locale;
-
-    private String[] fields;
+    private FacetStructure structure;
 
     /**
      * Constructs a Facet from the given properties. If createNew is set to
@@ -100,50 +96,34 @@ public class Facet implements CollatorSortedPool {
      * existing Facet was created with the same collator as specified or that
      * {@link #cleanup()} is called after creation. 
      * @param location   the folder with the Facet data.
-     * @param name       the name of the Facet. This is used to generate file
-     *                   names and should normally be a field in an index.
-     * @param locale     used to provide localized sorting of Tags and must be
-     *                   usable for {@code new Locale(locale)}. If null,
-     *                   Unicode-sorting is used.
-     * @param fields     the fields that this Facet represent. This will
-     *                   normally be either equal to name or be the member-
-     *                   fields of a group. The fields are expected to be used
-     *                   when the Facet is populated and when responses are
-     *                   created, but are not used internally in Facet.
+     * @param structure  the static definition of a Facet. This holds values
+     *                   such as name, locale and fields.
      * @param createNew  ignore any existing Tags and start with no Tags.
      * @param useMemory  hold the entire structure in memory. See the java-doc
      *                   for the class for details.
      * @throws IOException if an existing structure could not be loaded.
      */
-    public Facet(File location, String name, String locale, String[] fields,
+    public Facet(File location, FacetStructure structure,
                  boolean createNew, boolean useMemory) throws IOException {
-        if (fields == null) {
-            log.warn("fields not specified in constructor, using name '"
-                     + name + "'");
-            fields = new String[]{name};
-        }
-        if (name == null || "".equals(name)) {
-            throw new IllegalArgumentException("name must be specified");
-        }
         if (location == null || "".equals(location.toString())) {
             throw new IllegalArgumentException("location must be specified");
         }
         this.location = location;
-        this.name = name;
-        this.fields = fields;
+        this.structure = structure;
         if (useMemory) {
-            log.debug("Creating memory-based pool for Facet '" + name + "'");
+            log.debug("Creating memory-based pool for Facet '"
+                      + structure.getName() + "'");
             pool = new MemoryStringPool();
             if (!createNew) {
-                pool.load(location, name);
+                pool.load(location, structure.getName());
             }
         } else {
-            log.debug("Creating disk-based pool for Facet '" + name + "'");
-            pool = new DiskStringPool(location, name, createNew);
+            log.debug("Creating disk-based pool for Facet '"
+                      + structure.getName() + "'");
+            pool = new DiskStringPool(location, structure.getName(), createNew);
         }
-        setLocale(locale);
         log.debug(String.format("Facet '%s' at '%s' is ready for use",
-                                name, location));
+                                structure.getName(), location));
     }
 
     /**
@@ -152,8 +132,9 @@ public class Facet implements CollatorSortedPool {
      */
     public void load() throws IOException {
         log.debug(String.format(
-                "Reloading content for Facet '%s' at '%s", name, location));
-        pool.load(location, name);
+                "Reloading content for Facet '%s' at '%s", structure.getName(),
+                location));
+        pool.load(location, structure.getName());
     }
 
     /**
@@ -165,37 +146,21 @@ public class Facet implements CollatorSortedPool {
      * @throws IOException if the data could not be stored.
      */
     public void store() throws IOException {
-        pool.store(location, name);
+        pool.store(location, structure.getName());
     }
 
     /* Mutators */
 
     public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
+        return structure.getName();
     }
 
     public String[] getFields() {
-        return fields;
-    }
-
-    public void setFields(String[] fields) {
-        this.fields = fields;
+        return structure.getFields();
     }
 
     public String getLocale() {
-        return locale;
-    }
-
-    public void setLocale(String locale) {
-        this.locale = locale;
-        log.debug("Assigning Locale '" + locale + "' to Facet '" + name + "'");
-        pool.setCollator(locale == null ? null
-                         : new CachedCollator(new Locale(locale)));
-        cleanup();
+        return structure.getLocale();
     }
 
     /* Delegated methods */
@@ -242,16 +207,25 @@ public class Facet implements CollatorSortedPool {
         return pool.getValue(position);
     }
 
+    private static final String NAME_CLASH =
+            "%s: The specified poolName '%s' was different from the name of "
+            + "the underlying FacetStructure '%s'. Ignoring poolName";
     public void load(File location, String poolName) throws IOException {
+        if (!structure.getName().equals(poolName)) {
+            log.warn(String.format(NAME_CLASH, "load", poolName,
+                                   structure.getName()));
+        }
         this.location = location;
-        name = poolName;
-        pool.load(location, poolName);
+        pool.load(location, structure.getName());
     }
-
     public void store(File location, String poolName) throws IOException {
+        if (!structure.getName().equals(poolName)) {
+            //noinspection DuplicateStringLiteralInspection
+            log.warn(String.format(NAME_CLASH, "store", poolName,
+                                   structure.getName()));
+        }
         this.location = location;
-        name = poolName;
-        pool.store(location, poolName);
+        pool.store(location, structure.getName());
     }
 
     public int compare(String o1, String o2) {

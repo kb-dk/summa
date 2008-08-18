@@ -41,8 +41,8 @@ public class StructureTest extends TestCase {
         ArrayList<XProperties> facets =
                 new ArrayList<XProperties>(5);
         XProperties facet = new XProperties();
-        facet.put(Structure.CONF_FACET_NAME, "foo");
-        facet.put(Structure.CONF_FACET_TAGS_MAX, "100");
+        facet.put(FacetStructure.CONF_FACET_NAME, "foo");
+        facet.put(FacetStructure.CONF_FACET_TAGS_MAX, "100");
         facets.add(facet);
         xp.put(Structure.CONF_FACETS, facets);
 
@@ -90,14 +90,14 @@ public class StructureTest extends TestCase {
         assertEquals("The number of FacetStructures should match",
                      3, structure.getFacets().size());
 
-        Structure.FacetStructure mini = structure.getFacets().get("mini");
+        FacetStructure mini = structure.getFacets().get("mini");
         assertEquals("The mini should contain default value for max tags",
-                     Structure.DEFAULT_TAGS_MAX, mini.getMaxTags());
-        Structure.FacetStructure bad = structure.getFacets().get("bad_sort");
+                     FacetStructure.DEFAULT_TAGS_MAX, mini.getMaxTags());
+        FacetStructure bad = structure.getFacets().get("bad_sort");
         assertEquals("The bad sort should be corrected",
-                     Structure.DEFAULT_FACET_SORT_TYPE, bad.getSortType());
+                     FacetStructure.DEFAULT_FACET_SORT_TYPE, bad.getSortType());
 
-        Structure.FacetStructure full = structure.getFacets().get("full");
+        FacetStructure full = structure.getFacets().get("full");
         assertEquals("The fields should be as expected",
                      "foo, bar",
                      Strings.join(Arrays.asList(full.getFields()), ", "));
@@ -105,7 +105,7 @@ public class StructureTest extends TestCase {
         assertEquals("wantedTags should be as expected",
                      30, full.getWantedTags());
         assertEquals("sortType should be as expected",
-                     Structure.SORT_ALPHA, full.getSortType());
+                     FacetStructure.SORT_ALPHA, full.getSortType());
         assertEquals("locale shuld be as expected", "de", full.getLocale());
     }
 

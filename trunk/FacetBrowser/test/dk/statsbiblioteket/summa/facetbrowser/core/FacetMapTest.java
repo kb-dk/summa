@@ -71,11 +71,12 @@ public class FacetMapTest extends TestCase {
         //noinspection UnusedDeclaration
         for (String facetName: structure.getFacetNames()) {
             //noinspection DuplicateStringLiteralInspection
-            pools[position++] = new Facet(
-                    new File(System.getProperty("java.io.tmpdir")), 
-                    "facettest" + position, null, null, true, true);
+            // TODO: Update this
+//            pools[position++] = new Facet(
+//                    new File(System.getProperty("java.io.tmpdir")),
+//                    "facettest" + position, null, null, true, true);
         }
-        handler = new TagHandlerImpl(structure, pools);
+//        handler = new TagHandlerImpl(structure, pools);
         map = new FacetMap(config, core, handler);
     }
 

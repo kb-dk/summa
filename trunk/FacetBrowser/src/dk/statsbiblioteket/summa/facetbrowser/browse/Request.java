@@ -22,10 +22,8 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.browse;
 
-import java.util.Map;
-import java.util.regex.Pattern;
-
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
+import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
 
@@ -57,8 +55,8 @@ public class Request extends Structure {
      *                 taken from the defaults.
      *                 Optionally, the sort-type for a given Facet can be
      *                 specified in the same parenthesis. Valid values are
-     *                 {@link Structure#SORT_POPULARITY} and
-     *                 {@link Structure#SORT_ALPHA}.
+     *                 {@link FacetStructure#SORT_POPULARITY} and
+     *                 {@link FacetStructure#SORT_ALPHA}.
      *                 If no sort-type is specified, the number is taken from
      *                 the defaults.
      *                 Example: "Title (ALPHA), Author (5 POPULARITY), City"
@@ -104,10 +102,10 @@ public class Request extends Structure {
                 Integer maxTags = null;
                 String sortType = null;
                 for (String facetArg: facetArgs) {
-                    if (Structure.SORT_POPULARITY.equals(facetArg)) {
-                        sortType = Structure.SORT_POPULARITY;
-                    } else if (Structure.SORT_ALPHA.equals(facetArg)) {
-                        sortType = Structure.SORT_ALPHA;
+                    if (FacetStructure.SORT_POPULARITY.equals(facetArg)) {
+                        sortType = FacetStructure.SORT_POPULARITY;
+                    } else if (FacetStructure.SORT_ALPHA.equals(facetArg)) {
+                        sortType = FacetStructure.SORT_ALPHA;
                     } else {
                         try {
                             maxTags = Integer.parseInt(facetArg);

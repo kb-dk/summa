@@ -36,20 +36,22 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import dk.statsbiblioteket.summa.facetbrowser.util.pool.SortedPool;
 import dk.statsbiblioteket.summa.facetbrowser.core.StructureDescription;
+import dk.statsbiblioteket.summa.facetbrowser.Structure;
+import dk.statsbiblioteket.summa.facetbrowser.lucene.LuceneFacetBuilder;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * Provides (optionally persistent) maps of tags in facets. The mapping is
  * optimised towards access-speed. Incremental updates of the map is
  * possible, although significantly slower than a complete
- * {@link TagHandlerFactory#fill} if the whole map needs to be build.
+ * {@link LuceneFacetBuilder#fill} if the whole map needs to be build.
  */
 @QAInfo(state=QAInfo.State.IN_DEVELOPMENT)
 public class TagHandlerImpl implements TagHandler {
     private Log log = LogFactory.getLog(TagHandlerImpl.class);
 
     private Facet[] facets;
-    private StructureDescription structure;
+    private Structure structure;
     private boolean dirty = false;
     public static final String PERSISTENCE_PREFIX = "tags_";
 
@@ -59,8 +61,7 @@ public class TagHandlerImpl implements TagHandler {
      * @param facets pools to hold tags. There must be a pool for each facet
      *               specified in structure.
      */
-    public TagHandlerImpl(StructureDescription structure,
-                          Facet[] facets) {
+    public TagHandlerImpl(Structure structure, Facet[] facets) {
         this.structure = structure;
         this.facets = facets;
     }
@@ -136,12 +137,13 @@ public class TagHandlerImpl implements TagHandler {
         return structure.getFacetNames();
     }
 
+    // TODO: Rewrite this completely to handle missing pools.
     public void load(File folder) throws IOException {
         dirty = false;
         log.debug("Loading tag handler data from folder \"" + folder + "\"");
         int facetID = 0;
         for (SortedPool<String> tagPool: facets) {
-            String facetName = structure.getFacetName(facetID++);
+            String facetName = structure.getFacet(facetID++).getName();
             log.debug("Loading tags \"" + facetName + "\"");
             tagPool.load(folder, PERSISTENCE_PREFIX + facetName);
         }
@@ -149,12 +151,13 @@ public class TagHandlerImpl implements TagHandler {
         log.debug("Finished loading tags for " + facets.length + " facets");
     }
 
+    // TODO: Rewrite this to handle holes in id
     public void store(File folder) throws IOException {
         failIfDirty();
         log.debug("Storing tag handler data to folder \"" + folder + "\"");
         int facetID = 0;
         for (SortedPool<String> tagPool: facets) {
-            String facetName = structure.getFacetName(facetID++);
+            String facetName = structure.getFacet(facetID++).getName();
             log.debug("Storing tags \"" + facetName + "\"");
             tagPool.store(folder, PERSISTENCE_PREFIX + facetName);
         }
@@ -166,6 +169,7 @@ public class TagHandlerImpl implements TagHandler {
         //noinspection DuplicateStringLiteralInspection
         log.debug("Closing " + facets.length + " facets");
         for (SortedPool<String> tagPool: facets) {
+            // TODO: Don't clear, just close
             tagPool.clear();
         }
         //noinspection AssignmentToNull
@@ -196,7 +200,9 @@ public class TagHandlerImpl implements TagHandler {
         log.debug("Cleaning " + facets.length + " facets");
         int facetID = 0;
         for (SortedPool<String> tagPool: facets) {
-            log.debug("Cleaning tagPool " + structure.getFacetName(facetID++)
+            // TODO: Make this fail-safe
+            log.debug("Cleaning tagPool "
+                      + structure.getFacet(facetID++).getName()
                       + " with " + tagPool.size() + " tags");
             tagPool.cleanup();
         }
@@ -206,8 +212,9 @@ public class TagHandlerImpl implements TagHandler {
     public int addTag(int facetID, String tagName) {
         failIfDirty();
         if (log.isTraceEnabled()) {
+            // Make this fail-safe
             log.trace("Adding \"" + tagName + " to facet "
-                      + structure.getFacetName(facetID));
+                      + structure.getFacet(facetID).getName());
         }
         return facets[facetID].add(tagName);
     }
@@ -216,9 +223,10 @@ public class TagHandlerImpl implements TagHandler {
         failIfDirty();
         if (log.isTraceEnabled()) {
             //noinspection DuplicateStringLiteralInspection
+            // TODO: Make this fail-safe
             log.trace("Removing tag \"" + facets[facetID].getValue(tagID)
                       + "\" with ID " + tagID + " from facet "
-                      + structure.getFacetName(facetID));
+                      + structure.getFacet(facetID).getName());
         }
         facets[facetID].remove(tagID);
     }

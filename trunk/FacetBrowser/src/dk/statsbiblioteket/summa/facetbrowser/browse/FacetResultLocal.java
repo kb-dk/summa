@@ -27,6 +27,7 @@
 package dk.statsbiblioteket.summa.facetbrowser.browse;
 
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
+import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
 import dk.statsbiblioteket.summa.facetbrowser.util.ClusterCommon;
 import dk.statsbiblioteket.summa.facetbrowser.util.FlexiblePair;
@@ -63,7 +64,7 @@ public class FacetResultLocal extends FacetResultImpl<Integer> {
     }
 
     protected String getQueryString(String facet, Integer tag) {
-        Structure.FacetStructure fc = structure.getFacet(facet);
+        FacetStructure fc = structure.getFacet(facet);
         if (fc == null) {
             throw new IllegalStateException(String.format(
                     "The requested facet '%s' was not present in the structure",

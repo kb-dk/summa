@@ -121,8 +121,10 @@ public class ClusterMapCompleteArray extends ClusterMapComplete {
         int facetCount = clusterDescription.getFacetNames().size();
 
         log.info("Expanding facet content");
-        expandedFacets =
-                TagHandlerFactory.getTagHandler(ir, clusterDescription);
+        // TODO: Implement this
+//        expandedFacets =
+//                TagHandlerFactory.getTagHandler(ir, clusterDescription);
+
 //        expandedFacets = new ArrayList<SortedHash<String>>(facetNames.size());
 //        int fCounter = 0;
 //        expandedFacets.fill(ir, facetNames);

@@ -29,6 +29,7 @@ package dk.statsbiblioteket.summa.facetbrowser.browse;
 import dk.statsbiblioteket.summa.common.util.PriorityQueue;
 import dk.statsbiblioteket.summa.common.util.PriorityQueueLong;
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
+import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
 import dk.statsbiblioteket.summa.facetbrowser.util.FlexiblePair;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -247,23 +248,23 @@ public class TagCounterArray implements TagCounter, Runnable {
         try {
             FacetResultLocal result =
                     new FacetResultLocal(requestStructure, tagHandler);
-            for (Map.Entry<String, Structure.FacetStructure> facetEntry:
+            for (Map.Entry<String, FacetStructure> facetEntry:
                     requestStructure.getFacets().entrySet()) {
-                Structure.FacetStructure facet = facetEntry.getValue();
-                int facetID = facet.getFacetSortPosition();
+                FacetStructure facet = facetEntry.getValue();
+                int facetID = facet.getFacetID();
                 int maxTags = facet.getMaxTags();
                 String facetName = facet.getName();
                 int[] counterList = tags[facetID];
-                if (Structure.SORT_ALPHA.equals(facet.getSortType())) {
+                if (FacetStructure.SORT_ALPHA.equals(facet.getSortType())) {
                     addFirstTagsAlpha(maxTags, counterList,
                                       tagHandler.getFacetSize(facetID),
                                       result, facetName);
                 } else {
-                    if (!Structure.SORT_POPULARITY.equals(facet.getSortType())){
+                    if (!FacetStructure.SORT_POPULARITY.equals(facet.getSortType())){
                         log.warn(String.format(
                                 "Unknown sort-order '%s' in getFirst, using %s",
                                 facet.getSortType(),
-                                Structure.SORT_POPULARITY));
+                                FacetStructure.SORT_POPULARITY));
                     }
                     addFirstTagsPopularity(maxTags, counterList,
                                            tagHandler.getFacetSize(facetID),

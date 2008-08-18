@@ -256,9 +256,9 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
                                    Pair<String,
                                         List<FlexiblePair<T, Integer>>> o2) {
                     Integer score1 =
-                            s2.getFacet(o1.getKey()).getFacetSortPosition();
+                            s2.getFacet(o1.getKey()).getFacetID();
                     Integer score2 =
-                            s2.getFacet(o2.getKey()).getFacetSortPosition();
+                            s2.getFacet(o2.getKey()).getFacetID();
                     if (score1 != null && score2 != null) {
                         return score1.compareTo(score2);
                     } else if (score1 != null) {
