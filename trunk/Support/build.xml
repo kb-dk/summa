@@ -8,7 +8,7 @@
     <property file="${basedir}/../build.properties"/>
 
     <!-- Project properties -->
-    <property name="project.name" value="summa-suppport"/>
+    <property name="project.name" value="summa-support"/>
     <property name="project.version" value="${summa.version}"/>
     <property name="release" value="${project.name}-${project.version}"/>
     <property name="release.jar" value="${release}.jar"/>
