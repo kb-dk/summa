@@ -66,6 +66,7 @@ public class IndexSpeed {
     private static int searchinterval = -1;
     private static boolean reopen = false;
     private static boolean warm = false;
+    private static boolean noWrite = false;
 
     private static int feedbackInterval = 10000;
     private static final String[] SEMI_RANDOMS = new String[]{
@@ -82,7 +83,7 @@ public class IndexSpeed {
             System.err.println("Usage: IndexSpeed [-m maxdocs] [-r rambuffer]"
                                + " [-f flushcount] [-d] [-t threads]"
                                + " [-u termlength] "
-                               + " [-s searcherinterval] [-rs] [-w] "
+                               + " [-s searcherinterval] [-rs] [-w] [-n]"
                                + "indexlocation");
             System.err.println("-m maxdocs\tThe maximum number of documents to "
                                + "create (default: Integer.MAX_VALUE-1)");
@@ -102,6 +103,8 @@ public class IndexSpeed {
             System.err.println("-rs\tUse the re-open method for searcher");
             System.err.println("-w\tWarm searcher after opening with a "
                                + "catch-all search");
+            System.err.println("-n\tNo writing of Documents (simulation. "
+                               + "Default: false)");
             System.err.println("indexlocation\tA folder for the index");
             System.exit(-1);
         }
@@ -127,6 +130,8 @@ public class IndexSpeed {
                 reopen = true;
             } else if ("-w".equals(next)) {
                 warm = true;
+            } else if ("-n".equals(next)) {
+                noWrite = true;
             } else if (indexLocation == null) {
                 indexLocation = next;
             } else {
@@ -299,7 +304,11 @@ public class IndexSpeed {
                     }
                 }
                 try {
-                    writer.addDocument(document);
+                    if (!noWrite) {
+                        writer.addDocument(document);
+                    } else {
+                        log.trace("Skipping doc-add due to no write switch");
+                    }
                     if (flush > 0 && id % flush == 0) {
                         writer.flush();
                     }
