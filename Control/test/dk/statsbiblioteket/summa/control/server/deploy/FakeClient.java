@@ -33,6 +33,7 @@ import java.io.IOException;
 
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.api.Status;
+import dk.statsbiblioteket.summa.control.api.Service;
 import dk.statsbiblioteket.summa.control.bundle.BundleRepository;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -78,6 +79,10 @@ public class FakeClient implements ClientConnection {
     public Status getServiceStatus(String id) throws RemoteException {
         log.info("Faking status for " + id);
         return new Status(Status.CODE.running, "Fake status for " + id);
+    }
+
+    public Service getServiceConnection(String id) throws IOException {
+       throw new UnsupportedOperationException();
     }
 
     public List<String> getServices() throws RemoteException {

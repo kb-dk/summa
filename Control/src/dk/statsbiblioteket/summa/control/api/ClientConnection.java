@@ -174,6 +174,15 @@ public interface ClientConnection extends Monitorable {
     public Status getServiceStatus(String id) throws IOException;
 
     /**
+     * Return a connection to a service given by its instance id.
+     *
+     * @param id the instance id of the service to look up
+     * @return a proxy for the service object
+     * @throws IOException in case of communication errors
+     */
+    public Service getServiceConnection (String id) throws IOException;
+
+    /**
      * Iterate through the deployed services and collect a list of the ids
      * for said services.
      * @return a list of all the deployed services.

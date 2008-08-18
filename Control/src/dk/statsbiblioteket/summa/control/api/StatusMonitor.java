@@ -21,6 +21,7 @@ public class StatusMonitor implements Runnable {
     private static final Log log = LogFactory.getLog(StatusMonitor.class);
 
     private ConnectionManager<? extends Monitorable> connMgr;
+    private Monitorable _mon;
     private String connectionId;
     private int timeout;
     private ShellContext ctx;
@@ -65,6 +66,21 @@ public class StatusMonitor implements Runnable {
 
         log.trace ("Created StatusMonitor with timeout " + timeout  + ", ignoring"
                    + " statuses " + Logs.expand(this.ignoreStatuses, 5) + ". "
+                   + "Outputting to a " + ctx);
+    }
+
+    public StatusMonitor (Monitorable mon,
+                          int timeout,
+                          ShellContext ctx,
+                          Status.CODE... ignoreStatuses) {
+        this._mon = mon;
+        this.timeout = timeout;
+        this.ctx = ctx;
+        this.ignoreStatuses = Arrays.asList(ignoreStatuses);
+
+        log.trace ("Created StatusMonitor with statis connection and timeout "
+                   + timeout  + ", ignoring statuses "
+                   + Logs.expand(this.ignoreStatuses, 5) + ". "
                    + "Outputting to a " + ctx);
     }
 
@@ -123,8 +139,14 @@ public class StatusMonitor implements Runnable {
 
                 // If we reach this point we are good,
                 // and the monitor should die
-                ctx.info ("'" + connectionId + "' reports status: " + s);
-                log.debug ("'" + connectionId + "' reports status: " + s);
+                if (connectionId != null) {
+                    ctx.info ("'" + connectionId + "' reports status: " + s);
+                    log.debug ("'" + connectionId + "' reports status: " + s);
+                } else {
+                    ctx.info ("Connection reports status: " + s);
+                    log.debug ("Connection reports status: " + s);
+                }
+
                 return;
             } catch (Exception e) {
                 ctx.error ("Failed to ping '" + connectionId
@@ -141,6 +163,11 @@ public class StatusMonitor implements Runnable {
     }
 
     private synchronized Monitorable getConnection() {
+        if (_mon != null) {
+            log.trace ("Returning static Monitorable connection");
+            return _mon;
+        }
+
 
         if (connCtx == null) {
             connCtx = connMgr.get(connectionId);
@@ -154,6 +181,12 @@ public class StatusMonitor implements Runnable {
     }
 
     private synchronized void releaseConnection() {
+        if (_mon != null) {
+            log.trace ("Ignoring release requeston static "
+                       + "Monitorable connection");
+            return;
+        }
+
         if (connCtx == null) {
             log.debug ("Status monitor is trying to release its connection, "
                       + "but has never aquired one. This is an internal bug"

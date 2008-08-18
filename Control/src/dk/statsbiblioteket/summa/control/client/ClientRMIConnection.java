@@ -2,6 +2,7 @@ package dk.statsbiblioteket.summa.control.client;
 
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.api.Status;
+import dk.statsbiblioteket.summa.control.api.Service;
 import dk.statsbiblioteket.summa.control.bundle.BundleRepository;
 
 import java.rmi.Remote;
@@ -32,6 +33,8 @@ public interface ClientRMIConnection extends Remote, ClientConnection {
     public void stopService(String id) throws RemoteException;
 
     public Status getServiceStatus(String id) throws RemoteException;
+
+    public Service getServiceConnection (String id) throws RemoteException;
 
     public List<String> getServices() throws RemoteException;
 
