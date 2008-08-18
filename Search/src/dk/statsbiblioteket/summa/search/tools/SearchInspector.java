@@ -15,7 +15,7 @@ public class SearchInspector {
     public static void main (String[] args) throws Exception {
         if (args.length < 2) {
             System.err.println ("USAGE:\n\t" +
-                                "SearchInspector <rmi-address> <key=val> [key=val]");
+                                "search-tool.sh <rmi-address> <key=val> [key=val]...");
             System.err.println ("Example:\n\tsearch-tool.sh " +
                                 "//localhost:28000/summa-searcher summa.query=foo");
             System.exit (1);
