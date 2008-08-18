@@ -26,80 +26,34 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.build;
 
-import dk.statsbiblioteket.summa.facetbrowser.browse.Browser;
-import dk.statsbiblioteket.summa.facetbrowser.core.StructureDescription;
 import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMap;
-import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandlerFactory;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
-import dk.statsbiblioteket.summa.common.lucene.index.IndexConnector;
-import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.document.Document;
-
-import java.io.IOException;
-import java.io.File;
-import java.util.List;
 
 /**
- * Default implementation of {@link Builder}.
+ * Abstract class with index-agnostic implementations of {@link Builder}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class BuilderImpl implements Builder {
-    private Configuration configuration;
+public abstract class BuilderImpl implements Builder {
     private Structure structure;
-    private IndexConnector connector;
     private CoreMap coreMap;
     private TagHandler tagHandler;
 
+    public BuilderImpl() {
+        throw new IllegalStateException("This constructor is to be removed");
+    }
+
     public BuilderImpl(Configuration configuration,
                        Structure structure,
-                       IndexConnector connector,
                        CoreMap coreMap,
                        TagHandler tagHandler) {
-        this.configuration = configuration;
         this.structure = structure;
-        this.connector = connector;
         this.tagHandler = tagHandler;
         this.coreMap = coreMap;
     }
 
-    public void save(String directory) throws IOException {
-        // TODO: Implement this
-    }
-
-    public void updateRecord(Record record) {
-        // TODO: Implement this
-    }
-
-    public void build(boolean keepTags) {
-
-        // TODO: Implement this
-    }
-
-    public void add(int docID, String facet, String tag) throws IOException {
-    }
-
-    public void clear(int docID, boolean shift) throws IOException {
-    }
-
-    public void clear(boolean keepTags) throws IOException {
-    }
-
-    public void save(File directory) throws IOException {
-        // TODO: Implement this
-    }
-
-    public void addDocuments(List<Document> documents) {
-        // TODO: Implement this
-    }
-
-    public void rebuildMap() {
-        // TODO: Implement this
-    }
 }

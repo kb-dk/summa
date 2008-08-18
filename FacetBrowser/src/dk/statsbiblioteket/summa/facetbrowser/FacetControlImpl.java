@@ -5,6 +5,7 @@
 package dk.statsbiblioteket.summa.facetbrowser;
 
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -17,12 +18,16 @@ import org.apache.commons.logging.LogFactory;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public abstract class FacetControlImpl implements FacetControl, Configurable {
+public abstract class FacetControlImpl implements FacetControl {
     private Log log = LogFactory.getLog(FacetControlImpl.class);
 
     public FacetControlImpl(Configurable conf) {
         log.info("Constructing FacetControlImpl");
 
+    }
+
+    public FacetControlImpl(Configuration conf) {
+        
     }
 
 }

@@ -76,8 +76,8 @@ public class LuceneFacetBrowser implements IndexChangeListener { // implements B
 
         // TODO: Implement logic for reuse, iterated build and clean start
         // TODO: Use IndexDescriptor
-        tagHandler =
-                TagHandlerFactory.getTagHandler(configuration, null, connector);
+//        tagHandler =
+//                TagHandlerFactory.getTagHandler(configuration, null, connector);
 //        coreMap = CoreMapFactory.getCoreMap(configuration, connector);
         browser = new BrowserImpl(configuration, searcher, queryParser,
                                   tagHandler, structure, coreMap);

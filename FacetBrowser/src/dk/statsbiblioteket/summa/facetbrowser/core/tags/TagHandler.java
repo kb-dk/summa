@@ -38,6 +38,8 @@ import java.io.IOException;
  * The TagHandler is responsible for mapping between integer and String
  * representations of tags.
  * </p><p>
+ * A TagHandler requires that the
+ * </p><p>
  * The tags are guaranteed to be in consistent order, so order of the id of two
  * tags is equal to comparing their String representation. This is especially
  * relevant for the methods {@link #addTag} and {@link #removeTag}, as they
