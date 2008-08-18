@@ -12,8 +12,18 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * A {@link dk.statsbiblioteket.summa.search.SearchNode} implementation that simply returns statistics about
- * its usage. This class is mainly used for debugging.
+ * A {@link dk.statsbiblioteket.summa.search.SearchNode} implementation that
+ * simply returns statistics about its usage. Use it by plugging it into
+ * a {@link dk.statsbiblioteket.summa.search.SummaSearcherImpl}.
+ * <p></p>
+ * If you need a stand alone dummy searcher use {@link SummaSearcherDummy}
+ * instead.
+ * <p></p>
+ * This class is mainly used for debugging.
+ *
+ * @see SummaSearcherDummy
+ * @see dk.statsbiblioteket.summa.search.SummaSearcherImpl
+ * @see DummyResponse
  */
 public class SearchNodeDummy extends SearchNodeImpl {
 
