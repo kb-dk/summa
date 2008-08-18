@@ -65,7 +65,7 @@ public class FilterCommons {
         log.trace("getAccess(..., " + accessKey + ") called");
         String accessPoint;
         accessPoint = configuration.getString(accessKey,
-                                              "//localhost:27000/summa-storage");
+                                              "//localhost:28000/summa-storage");
 
         log.debug("Connecting to the access point '" + accessPoint + "'");
         return accessConnectionManager.get(accessPoint);
