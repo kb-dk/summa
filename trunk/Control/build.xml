@@ -237,7 +237,7 @@
         <copy file="${basedir}/../${summa.lib.commons-cli}" tofile="${summa.lib.commons-cli}"/>
         <copy file="${basedir}/../${summa.lib.junit}" tofile="${summa.lib.junit}"/>
         <copy file="${basedir}/../${summa.lib.sbutil}" tofile="${summa.lib.sbutil}"/>
-        <copy file="${basedir}/../${summa.lib.sbutil}" tofile="${summa.lib.lucene}"/>
+        <copy file="${basedir}/../${summa.lib.lucene}" tofile="${summa.lib.lucene}"/>
     </target>
 
 
