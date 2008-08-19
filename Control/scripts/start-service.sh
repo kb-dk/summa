@@ -79,7 +79,7 @@ MAINCLASS=$(grep '<mainClass>' $SERVICE_XML | sed -e 's@</\?mainClass>@@g' -e 's
 LIBDIRS=lib
 PRINT_CONFIG=true
 #JAVA_HOME=/usr/lib/jvm/java
-JVM_OPTS="-server -Xmx256m -Dsumma.configuration=$CONFIGURATION -Dsumma.control.service.id=$SERVICE_ID -Dsumma.control.service.basepath=$(DEPLOY/..)"
+JVM_OPTS="-server -Xmx256m -Dsumma.configuration=$CONFIGURATION -Dsumma.control.service.id=$SERVICE_ID -Dsumma.control.service.basepath=$($DEPLOY/..)"
 SECURITY_POLICY="$DEPLOY/config/policy"
 #ENABLE_JMX=true
 
