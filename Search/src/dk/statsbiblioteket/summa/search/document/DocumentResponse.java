@@ -183,7 +183,7 @@ public class DocumentResponse implements Response {
      * Add a Record to the SearchResult. The order of Records is significant.
      * @param record a record that should belong to the search result.
      */
-    private void addRecord(Record record) {
+    public void addRecord(Record record) {
         if (record == null) {
             throw new IllegalArgumentException(
                     "Expected a Record, got null");
@@ -327,7 +327,7 @@ public class DocumentResponse implements Response {
         return records;
     }
     // Because building the DocumentResponse takes time
-    private void setSearchTime(long searchTime) {
+    public void setSearchTime(long searchTime) {
         this.searchTime = searchTime;
     }
 
