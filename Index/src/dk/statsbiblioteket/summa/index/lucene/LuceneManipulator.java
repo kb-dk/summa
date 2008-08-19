@@ -52,7 +52,7 @@ import org.apache.lucene.document.Document;
 
 /**
  * Handles iterative updates of a Lucene index. A Record that is an update of an
- * already ingested Record is treaded as a deletion followed by an addition.
+ * already ingested Record is treated as a deletion followed by an addition.
  * </p><p>
  * The manipulator maintains a cache of RecordIDs in the given index, mapped to
  * LuceneIDs. This consumes memory linear to the number of Documents. The cache
@@ -82,6 +82,24 @@ public class LuceneManipulator implements IndexManipulator {
     public static final String CONF_BUFFER_SIZE_PAYLOADS =
             "summa.index.lucene.BUFFER_SIZE_PAYLOADS";
     public static final int DEFAULT_BUFFER_SIZE_PAYLOADS = -1;
+
+    /**
+     * If the document is added, the meta data for the Record will be marked
+     * with an add_id, specifying the internal docID from Lucene for the newly
+     * added document. This is useful for IndexManipulators that needs to be
+     * correlated with the Lucene index, such as the Facet system.
+     */
+    public static final String MARK_ADD_ID = "summa.index.document.add-id";
+    /**
+     * If the document is deleted, the meta data for the Record will be marked
+     * with a delete_id, specifying the internal docID from Lucene for the newly
+     * deleted document. This is useful for IndexManipulators that needs to be
+     * correlated with the Lucene index, such as the Facet system.
+     * </p><p>
+     * Note: Updates count as a deletion followed by an add.
+     */
+    public static final String MARK_DELETE_ID =
+            "summa.index.document.delete-id";
 
     /** The index descriptor, used for providing Analyzers et al. */
     private LuceneIndexDescriptor descriptor;
@@ -278,9 +296,9 @@ public class LuceneManipulator implements IndexManipulator {
         ensureStoredID(id, payload);
         boolean deleted =
                 payload.getRecord() != null && payload.getRecord().isDeleted();
-        if (deleted) {
+        if (deleted) { // Plain delete
             updateDeletion(id, payload);
-        } else {
+        } else { // Addition or update
             updateAddition(id, payload);
         }
         return deletions.size() + additions.size() >= bufferSizePayloads;
@@ -311,9 +329,12 @@ public class LuceneManipulator implements IndexManipulator {
                     (Document)payload.getData(Payload.LUCENE_DOCUMENT);
             // TODO: Add support for Tokenizer and Filters
             writer.addDocument(document, descriptor.getIndexAnalyzer());
-            idMapper.put(id, writer.docCount());
+            // TODO: Verify that docCount is trustable with regard to deletes
+            payload.getData().put(MARK_ADD_ID, writer.docCount()-1);
+            idMapper.put(id, writer.docCount()-1);
         } else {
             if (deletions.containsKey(id)) {
+                // TODO: How does this work with Facet?
                 debug.write(" & existing deletion");
                 if (additions.containsKey(id)) {
                     debug.write(" & existing addition =>");
@@ -365,6 +386,7 @@ public class LuceneManipulator implements IndexManipulator {
         }
         debug.write(" add(new deletion)");
         log.debug(debug.toString());
+        // TODO: Signal MARK_DELETE_ID
         deletions.put(id, payload); // Replaces any existing deletion
     }
 

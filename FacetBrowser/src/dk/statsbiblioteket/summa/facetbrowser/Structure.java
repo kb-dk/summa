@@ -33,11 +33,15 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * The Facet Structure holds top-level information, such as the Facet names
  * and the maximum number of Tags in each Facet. Setup is done through
  * {@link Configuration} - see {@link FacetStructure} for valid parameters.
+ * </p><p>
+ * Note: The Facet names and IDs in the FacetStructure does not change during an
+ *       execution, nor are any Facets added or removed.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -85,9 +89,10 @@ public class Structure implements Configurable, Serializable {
                                              e);
         }
         facets = new LinkedHashMap<String, FacetStructure>(facetConfs.size());
+        int facetID = 0;
         for (Configuration facetConf: facetConfs) {
             try {
-                FacetStructure fc = new FacetStructure(facetConf);
+                FacetStructure fc = new FacetStructure(facetConf, facetID++);
                 if (facets.containsKey(fc.getName())) {
                     log.warn(String.format(
                             "Facets already contain a FacetStructure named "
@@ -101,12 +106,18 @@ public class Structure implements Configurable, Serializable {
                                                  + "Facet configuration", e);
             }
         }
-        log.trace("Defining sort order");
-        int sortPos = 0;
-        for (Map.Entry<String, FacetStructure> entry: facets.entrySet()) {
-            entry.getValue().setFacetID(sortPos++);
-        }
+        freezeFacets();
         log.trace("Finished constructing Structure from configuration");
+    }
+
+    /**
+     * Wraps the facet map as immutable, making it further updates impossible.
+     * This should be done after construction, as the immutability of Structure
+     * is guaranteed.
+     */
+    protected void freezeFacets() {
+        log.debug("Making facets immutable");
+        facets = Collections.unmodifiableMap(facets);
     }
 
     /* Getters */
