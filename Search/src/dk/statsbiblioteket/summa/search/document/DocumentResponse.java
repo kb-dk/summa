@@ -97,7 +97,7 @@ public class DocumentResponse implements Response {
     /**
      * Contains a representation of each hit from a search.
      */
-    private static class Record implements Serializable {
+    public static class Record implements Serializable {
         private float score;
         private String sortValue;
         private String id;
@@ -152,7 +152,7 @@ public class DocumentResponse implements Response {
     /**
      * Containt content from a requested Field for a Record.
      */
-    private static class Field implements Serializable {
+    public static class Field implements Serializable {
         private String name;
         private String content;
 
