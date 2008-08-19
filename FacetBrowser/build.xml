@@ -55,6 +55,7 @@
     <path id="lib.internal">
         <pathelement location="../Common/${summa.classes.dir}"/>
         <pathelement location="../Search/${summa.classes.dir}"/>
+        <pathelement location="../Index/${summa.classes.dir}"/>
     </path>
 
     <!-- lib.files : add by the .checkDepends target -->
@@ -72,6 +73,14 @@
 
     <target name=".releaseCommon">
         <ant inheritAll="false" dir="../Common" target="release"/>
+    </target>
+
+    <target name=".compileIndex">
+        <ant inheritAll="false" dir="../Index" target="compile"/>
+    </target>
+
+    <target name=".releaseIndex">
+        <ant inheritAll="false" dir="../Index" target="release"/>
     </target>
 
     <target name=".compileSearch">
@@ -107,6 +116,13 @@
         </condition>
         <antcall target="${compileCommonTask}"/>
 
+        <!-- Check that Index is compiled -->
+        <echo message="Checking whether Index is compiled"/>
+        <condition property="compileIndexTask" value=".phony" else=".compileIndex">
+            <available file="../Index/${summa.classes.dir}"/>
+        </condition>
+        <antcall target="${compileIndexTask}"/>
+
         <!-- Check that Search is compiled -->
         <echo message="Checking whether Search is compiled"/>
         <condition property="compileSearchTask" value=".phony" else=".compileSearch">
@@ -126,6 +142,12 @@
             <available file="../${summa.ilib.common}"/>
         </condition>
         <antcall target="${releaseCommonTask}"/>
+
+        <!-- Check that Index release is compiled -->
+        <condition property="releaseIndexTask" value=".phony" else=".releaseIndex">
+            <available file="../${summa.ilib.index}"/>
+        </condition>
+        <antcall target="${releaseIndexTask}"/>
 
         <!-- Check that Search release is compiled -->
         <condition property="releaseSearchTask" value=".phony" else=".releaseSearch">
