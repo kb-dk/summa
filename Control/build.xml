@@ -125,6 +125,7 @@
                 <available file="${summa.lib.commons-cli}"/>
                 <available file="${summa.lib.junit}"/>
                 <available file="${summa.lib.sbutil}"/>
+                <available file="${summa.lib.lucene}"/>
             </and>
         </condition>
         <antcall target="${newTask}"/>
@@ -236,6 +237,7 @@
         <copy file="${basedir}/../${summa.lib.commons-cli}" tofile="${summa.lib.commons-cli}"/>
         <copy file="${basedir}/../${summa.lib.junit}" tofile="${summa.lib.junit}"/>
         <copy file="${basedir}/../${summa.lib.sbutil}" tofile="${summa.lib.sbutil}"/>
+        <copy file="${basedir}/../${summa.lib.sbutil}" tofile="${summa.lib.lucene}"/>
     </target>
 
 
