@@ -39,17 +39,31 @@ public class StatusCommand extends RemoteCommand<ClientConnection> {
 
     public StatusCommand(ConnectionManager<ClientConnection> connMgr,
                          String clientAddress) {
-        super("status", "print the status of the control client",
+        super("status", "Print the status of the control client, or query the " +
+              "status of deployed services",
               connMgr);
+
+        setUsage("status [service_id]...");
 
         this.clientAddress = clientAddress;
     }
 
     public void invoke(ShellContext ctx) throws Exception {
         ClientConnection client = getConnection(clientAddress);
+
+        String[] services = getArguments();
+
         try {
-            Status status = client.getStatus();
-            ctx.info(status.toString());
+            if (services.length == 0) {
+                Status status = client.getStatus();
+                ctx.info("Client status: " + status.toString());
+            } else {
+                ctx.info ("Status of services:");
+                for (String service : services) {
+                    Status status = client.getStatus();
+                    ctx.info("\t" + service + ": " + status.toString());
+                }
+            }
         } finally {
             releaseConnection();
         }
