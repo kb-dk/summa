@@ -138,6 +138,7 @@ public class TagHandlerImpl implements TagHandler {
     }
 
     // TODO: Rewrite this completely to handle missing pools.
+    // TODO: Fail on changed locale or changed fields
     public void load(File folder) throws IOException {
         dirty = false;
         log.debug("Loading tag handler data from folder \"" + folder + "\"");

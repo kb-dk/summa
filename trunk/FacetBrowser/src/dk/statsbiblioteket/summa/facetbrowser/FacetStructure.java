@@ -32,7 +32,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
 
 /**
-     * The structure for a single Facet.
+ * The structure for a single Facet.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -103,10 +103,11 @@ public class FacetStructure implements Serializable {
      */
     public static final String CONF_FACET_LOCALE = "summa.facet.locale";
 
-    public FacetStructure(String name, String[] fields,
+    public FacetStructure(String name, int id, String[] fields,
                           int wantedTags, int maxTags,
                           String locale, String sortType) {
         log.trace("Creating FacetStructure for '" + name + "'");
+        this.id = id;
         this.name = name;
         setFields(fields);
         setWantedTags(wantedTags);
@@ -115,7 +116,8 @@ public class FacetStructure implements Serializable {
         setSortType(sortType == null ? this.sortType : sortType);
     }
 
-    public FacetStructure(Configuration conf) {
+    public FacetStructure(Configuration conf, int id) {
+        this.id = id;
         try {
             name = conf.getString(CONF_FACET_NAME);
             if (conf.valueExists(CONF_FACET_FIELDS)) {
@@ -158,7 +160,7 @@ public class FacetStructure implements Serializable {
         if (sortType == null) {
             sortType = this.sortType;
         }
-        return new FacetStructure(name, fields, wantedTags, maxTags,
+        return new FacetStructure(name, id, fields, wantedTags, maxTags,
                                   locale, sortType);
     }
 
@@ -252,8 +254,5 @@ public class FacetStructure implements Serializable {
      */
     public Integer getFacetID() {
         return id;
-    }
-    public void setFacetID(Integer facetSortPosition) {
-        this.id = facetSortPosition;
     }
 }

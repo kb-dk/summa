@@ -24,7 +24,7 @@
  * The State and University Library of Denmark
  * CVS:  $Id: LuceneFacetBrowser.java,v 1.11 2007/10/05 10:20:24 te Exp $
  */
-package dk.statsbiblioteket.summa.facetbrowser;
+package dk.statsbiblioteket.summa.facetbrowser.lucene;
 
 import java.io.IOException;
 
@@ -32,7 +32,6 @@ import dk.statsbiblioteket.summa.facetbrowser.browse.Browser;
 import dk.statsbiblioteket.summa.facetbrowser.browse.BrowserImpl;
 import dk.statsbiblioteket.summa.facetbrowser.core.StructureDescription;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
-import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandlerFactory;
 import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMap;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;

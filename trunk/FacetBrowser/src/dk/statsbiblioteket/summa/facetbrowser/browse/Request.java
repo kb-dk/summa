@@ -126,6 +126,7 @@ public class Request extends Structure {
                     + "Switching to default facets", wantedFacets));
             getFacets().putAll(defaults.getFacets());
         }
+        freezeFacets();
     }
 
     /* Getters */
