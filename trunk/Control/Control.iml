@@ -21,6 +21,7 @@
     <orderEntry type="module" module-name="Ingest" />
     <orderEntry type="module" module-name="Index" />
     <orderEntry type="module" module-name="Search" />
+    <orderEntry type="module" module-name="Support" />
     <orderEntryProperties />
   </component>
 </module>
