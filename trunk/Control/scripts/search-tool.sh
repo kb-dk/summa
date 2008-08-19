@@ -44,7 +44,7 @@ MAINJAR=@summa.ilib.search@
 MAINCLASS=dk.statsbiblioteket.summa.search.tools.SearchInspector
 CONFIGURATION=configuration-server.xml
 #LIBDIRS=lib
-PRINT_CONFIG=false
+PRINT_CONFIG=
 #JAVA_HOME=/usr/lib/jvm/java
 JVM_OPTS="-server -Xmx64m -Dsumma.configuration=$CONFIGURATION"
 SECURITY_POLICY="$DEPLOY/config/.server.policy"
