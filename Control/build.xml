@@ -392,6 +392,7 @@
             <zipfileset prefix="lib" file="${summa.lib.commons-logging}"/>
             <zipfileset prefix="lib" file="${summa.lib.log4j}"/>
             <zipfileset prefix="lib" file="${summa.lib.sbutil}"/>
+            <zipfileset prefix="lib" file="${summa.lib.lucene}"/>
             <zipfileset prefix="lib" file="${release.jar}"/>
 
             <zipfileset prefix="config" file="${test.src.dir}/test-search-1/config/configuration.xml"/>
@@ -544,7 +545,7 @@
             <zipfileset prefix="lib" file="${summa.lib.commons-logging}"/>
             <zipfileset prefix="lib" file="${summa.lib.log4j}"/>
             <zipfileset prefix="lib" file="${summa.lib.sbutil}"/>
-            <zipfileset prefix="lib" file="${basedir}/../${summa.lib.lucene}"/>
+            <zipfileset prefix="lib" file="${summa.lib.lucene}"/>
             <zipfileset prefix="lib" file="${release.jar}"/>
 
             <zipfileset prefix="config" file="${test.src.dir}/test-index-fagref/config/configuration.xml"/>
