@@ -41,13 +41,13 @@ public class ServicesCommand extends RemoteCommand<ClientConnection> {
             for (String service : services) {
                 String msg = "\t" + service;
                 if (listStatus) {
-                    Status status;
+                    String status;
                     try {
-                         status = client.getServiceStatus(service);
+                         status = "" + client.getServiceStatus(service);
                     } catch (InvalidServiceStateException e) {
-                        status = null;
+                        status = "Not running";
                     }
-                    msg += "  " + (status != null ? status : "Not running");
+                    msg += "  " + status;
                 }
                 ctx.info(msg);
             }
