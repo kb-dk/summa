@@ -4,6 +4,8 @@ import dk.statsbiblioteket.summa.common.shell.Command;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.common.shell.RemoteCommand;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
+import dk.statsbiblioteket.summa.control.api.Status;
+import dk.statsbiblioteket.summa.control.api.InvalidServiceStateException;
 import dk.statsbiblioteket.summa.control.client.Client;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 
@@ -39,7 +41,13 @@ public class ServicesCommand extends RemoteCommand<ClientConnection> {
             for (String service : services) {
                 String msg = "\t" + service;
                 if (listStatus) {
-                    msg += " " + client.getServiceStatus(service);
+                    Status status;
+                    try {
+                         status = client.getServiceStatus(service);
+                    } catch (InvalidServiceStateException e) {
+                        status = null;
+                    }
+                    msg += "  " + (status != null ? status : "Not running");
                 }
                 ctx.info(msg);
             }
