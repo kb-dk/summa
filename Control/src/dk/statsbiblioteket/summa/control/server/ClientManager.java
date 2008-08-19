@@ -279,7 +279,14 @@ public class ClientManager extends ConnectionManager<ClientConnection>
     public List<String> getClients() {
         log.trace ("Getting client list");
         String[] metaContents = metaDir.list();
-        List<String> clients = new ArrayList(metaContents.length);
+
+        if (metaContents == null) {
+            log.warn ("Error reading " + metaDir + ". It has probably been" +
+                    "deleted");
+            return new ArrayList<String>(0);
+        }
+
+        List<String> clients = new ArrayList<String>(metaContents.length);
 
         for (String client : metaContents) {
             if (client.endsWith(CLIENT_META_FILE_EXT)) {
