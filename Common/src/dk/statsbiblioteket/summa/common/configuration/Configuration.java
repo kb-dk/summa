@@ -1045,8 +1045,15 @@ public class Configuration implements Serializable,
                                                  + "configuration at '"
                                                  + confLocation + "'");
             } catch (IOException e) {
-                log.debug("Failed loading configuration from " + confLocation, e);
-                storage = null;
+                if (log.isTraceEnabled()) {
+                    log.debug("Failed loading configuration from "
+                              + confLocation, e);
+                } else {
+                    log.debug("Failed loading configuration from "
+                              + confLocation + " (enable trace to get "
+                              + "Exception)");
+                }
+                    storage = null;
             } catch (ConfigurationStorageException e) {
                 log.debug("Configuration storage for " + confLocation
                          + " encountered a problem", e);

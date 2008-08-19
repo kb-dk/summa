@@ -47,6 +47,7 @@ import dk.statsbiblioteket.summa.common.index.IndexException;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.storage.RecordIterator;
 import dk.statsbiblioteket.summa.storage.StorageFactory;
+import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.control.service.FilterService;
 import dk.statsbiblioteket.summa.control.service.SearchService;
@@ -82,7 +83,7 @@ public class SearchTest extends NoExitTestCase {
 
     public void tearDown() throws Exception {
         super.tearDown();
-        cleanup();
+//        cleanup();
     }
 
     private void cleanup() throws Exception {
@@ -111,6 +112,8 @@ public class SearchTest extends NoExitTestCase {
 
     public Storage startStorage() throws Exception {
         Configuration storageConf = IngestTest.getStorageConfiguration();
+        storageConf.set(DatabaseStorage.PROP_CREATENEW, true);
+        storageConf.set(DatabaseStorage.PROP_FORCENEW, true);
         Storage storage = StorageFactory.createStorage(storageConf);
         return storage;
     }
@@ -287,6 +290,7 @@ public class SearchTest extends NoExitTestCase {
             Pattern.compile(".*hitCount\\=\\\"([0-9]+)\\\".*", Pattern.DOTALL);
     private int getHits(SummaSearcher searcher, String query) throws Exception {
         String result = searcher.search(simpleRequest(query)).toXML();
+        log.debug("Result from search: " + result);
         Matcher matcher = hitPattern.matcher(result);
         if (!matcher.matches()) {
             throw new NullPointerException("Could not locate hitcount in " 
@@ -327,14 +331,14 @@ public class SearchTest extends NoExitTestCase {
         }
         Storage storage = startStorage();
         updateIndex();
-        Thread.sleep(2000); // Wait for searcher to discover new content
+        Thread.sleep(3000); // Wait for searcher to discover new content
         assertNotNull("Searching should provide a result (we don't care what)",
                       searcher.search(simpleRequest("dummy")));
         ingest(new File(Resolver.getURL("data/search/input/part1").getFile()));
         verifyStorage(storage, "fagref:hj@example.com");
         updateIndex();
         log.debug("Finished updating of index. It should now contain 1 doc");
-        Thread.sleep(2000); // Wait for searcher to discover new content
+        Thread.sleep(3000); // Wait for searcher to discover new content
         try {
             verifySearch(searcher, "Hans", 1);
         } catch (IndexException e) {
@@ -349,7 +353,7 @@ public class SearchTest extends NoExitTestCase {
         ingest(new File(Resolver.getURL("data/search/input/part2").getFile()));
         updateIndex();
         log.debug("Finished updating of index. It should now contain 3 docs");
-        Thread.sleep(2000); // Wait for searcher to discover new content
+        Thread.sleep(3000); // Wait for searcher to discover new content
         try {
             verifySearch(searcher, "Hans", 1);
         } catch (IndexException e) {
