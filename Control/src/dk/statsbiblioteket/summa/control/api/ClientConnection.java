@@ -165,11 +165,13 @@ public interface ClientConnection extends Monitorable {
     /**
      * <p>Get the status for a specific service. If the service is not deployed,
      * an error is thrown.</p>
-     * <p>If the service is deployed, but not running the returned status code
-     * will be {@link Status.CODE#not_instantiated}</p>.
+     * <p>If the service is deployed, but not running an
+     * {@link InvalidServiceStateException} is thrown</p>.
      * @param id the <i>instance id</i> for the service.
      * @return   the status for the service.
-     * @throws IOException in case of communication errors.
+     * @throws IOException in case of communication errors
+     * @throws InvalidServiceStateException if the service is deployed but not
+     *                                      running
      */
     public Status getServiceStatus(String id) throws IOException;
 

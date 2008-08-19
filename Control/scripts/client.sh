@@ -1,7 +1,5 @@
 #!/bin/bash
 
-DEPLOY=`dirname $0`/..
-
 #
 # TEMPLATE FOR RUNNING JARS FROM BASH SCRIPTS
 #
@@ -40,13 +38,18 @@ DEPLOY=`dirname $0`/..
 # EDIT HERE
 #
 
+DEPLOY=`dirname $0`/..
+pushd $DEPLOY > /dev/null
+
+CLIENT_ID=$(basename $(pwd))
+
 MAINJAR=@summa.ilib.control@
 MAINCLASS=dk.statsbiblioteket.summa.control.client.Client
 CONFIGURATION=configuration-server.xml
 #LIBDIRS=lib
 PRINT_CONFIG=true
 #JAVA_HOME=/usr/lib/jvm/java
-JVM_OPTS="-server -Xmx64m -Dsumma.configuration=$CONFIGURATION"
+JVM_OPTS="-server -Xmx64m -Dsumma.configuration=$CONFIGURATION" -Dsumma.control.client.id=$CLIENT_ID
 SECURITY_POLICY="$DEPLOY/config/.server.policy"
 ENABLE_JMX=true
 
@@ -59,9 +62,6 @@ JMX_PASS="$DEPLOY/config/jmx/jmx.password"
 #
 # DON'T EDIT BEYOND THIS POINT
 #
-
-DEPLOY=`dirname $0`/..
-pushd $DEPLOY > /dev/null
 
 # Helper function to set properties in a properties file
 # $1 : property name
