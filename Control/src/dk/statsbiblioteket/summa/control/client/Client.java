@@ -270,7 +270,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                 }
             }
         }
-        setStatus(Status.CODE.stopped, "All services down. Stopping JVM in"
+        setStatus(Status.CODE.stopped, "All services down. Stopping JVM in "
                   + DeferredSystemExit.DEFAULT_DELAY/1000 + "s",
                   Logging.LogLevel.WARN);
         new DeferredSystemExit(0);
