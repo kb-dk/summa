@@ -46,6 +46,8 @@ public class ServicesCommand extends RemoteCommand<ClientConnection> {
                          status = "" + client.getServiceStatus(service);
                     } catch (InvalidServiceStateException e) {
                         status = "Not running";
+                    } catch (Exception e) {
+                        status = "Error connecting: " + e.getMessage();
                     }
                     msg += "  " + status;
                 }
