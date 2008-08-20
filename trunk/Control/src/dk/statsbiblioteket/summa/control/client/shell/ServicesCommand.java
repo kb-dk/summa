@@ -48,6 +48,7 @@ public class ServicesCommand extends RemoteCommand<ClientConnection> {
                         status = "Not running";
                     } catch (Exception e) {
                         status = "Error connecting: " + e.getMessage();
+                        client.reportError(service);
                     }
                     msg += "  " + status;
                 }
