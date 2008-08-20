@@ -112,6 +112,7 @@ public class SearchService extends ServiceBase {
         //noinspection OverlyBroadCatchBlock
         try {
             searcher.close();
+            searcher = null;
             setStatus(Status.CODE.stopped, "Searcher closed successfully",
                       Logging.LogLevel.DEBUG);
         } catch (Exception e) {

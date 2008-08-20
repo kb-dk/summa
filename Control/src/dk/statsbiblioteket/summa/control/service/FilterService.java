@@ -51,6 +51,7 @@ public class FilterService extends ServiceBase implements FilterChainHandler {
      * The FilterControl wrapped in this service.
      */
     private FilterControl filterControl;
+    private Configuration conf;
 
     /**
      * Standard setup for Services. This does not start the pump in
@@ -60,29 +61,8 @@ public class FilterService extends ServiceBase implements FilterChainHandler {
      */
     public FilterService(Configuration conf) throws IOException {
         super(conf);
-        setStatus(Status.CODE.constructed, "Created FilterService object",
-                  Logging.LogLevel.DEBUG);
-        filterControl = new FilterControl(conf) {
-            protected void finishedCallback() {
-                switch (getStatus()) {
-                    case error:
-                        setStatus(Status.CODE.crashed, "Crashed",
-                                  Logging.LogLevel.ERROR);
-                        break;
-                    case ready:
-                    case stopping:
-                    case stopped:
-                        setStatus(Status.CODE.stopped, "Stopped with substatus "
-                                                       + getStatus(),
-                                  Logging.LogLevel.DEBUG);
-                        break;
-                    default:
-                        setStatus(Status.CODE.stopped,
-                                  "Stopped with unknown state " + getStatus(),
-                                  Logging.LogLevel.WARN);
-                }
-            }
-        };
+        this.conf = conf;
+
         exportRemoteInterfaces();
 
         setStatus(Status.CODE.constructed, "Remote interfaces are up",
@@ -90,6 +70,32 @@ public class FilterService extends ServiceBase implements FilterChainHandler {
     }
 
     public void start() throws RemoteException {
+        if (filterControl == null) {
+            setStatusRunning("Creating filterControl");
+            filterControl = new FilterControl(conf) {
+                protected void finishedCallback() {
+                    switch (getStatus()) {
+                        case error:
+                            setStatus(Status.CODE.crashed, "Crashed",
+                                      Logging.LogLevel.ERROR);
+                            break;
+                        case ready:
+                        case stopping:
+                        case stopped:
+                            setStatus(Status.CODE.stopped,
+                                      "Stopped with substatus " + getStatus(),
+                                      Logging.LogLevel.DEBUG);
+                            break;
+                        default:
+                            setStatus(Status.CODE.stopped,
+                                      "Stopped with unknown state " + getStatus(),
+                                      Logging.LogLevel.WARN);
+                    }
+                }
+            };
+            setStatusIdle();
+        }
+
         if (filterControl.isRunning()) {
             log.warn("start called when already running");
             return;
@@ -113,14 +119,9 @@ public class FilterService extends ServiceBase implements FilterChainHandler {
         log.trace("Recieved request to stop FilterControl service");
         if (!filterControl.isRunning()) {
             log.warn("Attempting to stop FilterControl when not started");
-            try {
-                unexportRemoteInterfaces();
-            } catch (IOException e) {
-                throw new RemoteException("Failed to unexport remote interface",
-                                          e);
-            }
             return;
         }
+
         try {
             setStatus(Status.CODE.stopping, "Stopping FilterControl service",
                       Logging.LogLevel.DEBUG);
@@ -138,23 +139,11 @@ public class FilterService extends ServiceBase implements FilterChainHandler {
         setStatus(Status.CODE.stopped,
                   "Filtercontrol service down, all lights green, performing "
                   + "clean-up",
-                  Logging.LogLevel.INFO);
-
-        // Do we really need to do this? It cleans up any stray threads, yes,
-        // but isn't that the responsibility of the StorageServiceThread?
-        // TODO: Consider if System.exit is needed upon stop
-        try {
-            System.exit(0);
-        } catch (SecurityException e) {
-            log.warn("System.exit disabled");
-        }
+                  Logging.LogLevel.INFO);        
     }
 
     // TODO: Consider if this should be replaced by more interface methods
     public FilterControl getFilterControl() {
         return filterControl;
     }
-
-
-
 }

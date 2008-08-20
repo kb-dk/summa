@@ -23,6 +23,8 @@
 package dk.statsbiblioteket.summa.control.client;
 
 import dk.statsbiblioteket.summa.common.Logging;
+import dk.statsbiblioteket.summa.common.shell.VoidShellContext;
+import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
 import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
 import dk.statsbiblioteket.summa.common.configuration.Configurable.ConfigurationException;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -93,6 +95,12 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
     // RMI-related data
     private String registryHost, clientId;
     private int registryPort, clientPort;
+
+    private enum StartAction {
+        RETRY,
+        STARTED,
+        BOOTSTRAP
+    }
 
     /**
      * Create a client from a {@link Configuration} and expose it over rmi.
@@ -262,9 +270,10 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                 }
             }
         }
-        setStatus(Status.CODE.stopped, "All services down. Stopping",
-                Logging.LogLevel.INFO);
-        System.exit(0);
+        setStatus(Status.CODE.stopped, "All services down. Stopping JVM in"
+                  + DeferredSystemExit.DEFAULT_DELAY/1000 + "s",
+                  Logging.LogLevel.WARN);
+        new DeferredSystemExit(0);
     }
 
     public Status getStatus() {
@@ -394,29 +403,33 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         ConnectionContext<Service> connCtx = null;
 
         setStatusRunning ("Starting service " + instanceId);
-        File serviceFile = serviceMan.getServiceDir(instanceId);
-        BundleStub stub;
-
         connCtx = serviceMan.get(instanceId);
 
         /* If the service is running but start() has not been called
          * on it, just call Service.start() */
         if (connCtx != null) {
+
             Service service = connCtx.getConnection();
-            connCtx.unref();
-            if (service.getStatus().getCode() == Status.CODE.stopped) {
-                log.debug("Calling start() on stopped service '" + instanceId
-                          + "'");
-                service.start();
-                log.debug("Stopped service started");
-            } else {
-                log.warn("Trying to start service '" + instanceId
-                        + "', but it is already running. Ignoring request.");
-                setStatusIdle ();
-                throw new InvalidServiceStateException(this, instanceId,
-                                                       "start",
-                                                        "Already running");
+            try {
+                StartAction action =
+                              conditionalServiceStart (service, configLocation);
+                switch (action) {
+                    case BOOTSTRAP:
+                        bootStrapService(instanceId, configLocation);
+                        break;
+                    case RETRY:
+                        startService(instanceId, configLocation);
+                        break;
+                    case STARTED:
+                        log.info ("Service '" + instanceId + "' started");
+                        break;
+                }
+            } catch (RemoteException e) {
+                serviceMan.reportError(connCtx, e);
+            } finally {
+                connCtx.unref();
             }
+
             setStatusIdle();
             return;
         }
@@ -424,24 +437,39 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         /* If we reach this point we need to start a new JVM for the service.
          * And when we have that running connect to the Service and call
          * Service.start() */
+        log.info ("No connection to service '" + instanceId + "', commencing "
+                  + "bootstrap");
+        bootStrapService(instanceId, configLocation);
+    }
+
+    /**
+     * Start a service up from scratch, booting its JVM and calling start
+     * on its Service interface when it is up
+     */
+    private void bootStrapService (String instanceId, String confLocation)
+                                                    throws RemoteException {
+        log.info ("Bootstrapping service '" + instanceId + "'");
+        File serviceFile = serviceMan.getServiceDir(instanceId);
+        BundleStub stub;
+
         try {
             log.debug("Calling load for serviceFile '" + serviceFile + "'");
             stub = loader.load (serviceFile);
         } catch (IOException e) {
             setStatusIdle();
             throw new ServicePackageException (this, instanceId,
-                                              "Error loading service '"
-                                              + instanceId
-                                              + "', from file " + serviceFile,
-                                              e);
+                    "Error loading service '"
+                            + instanceId
+                            + "', from file " + serviceFile,
+                    e);
         }
 
         stub.addSystemProperty(CLIENT_PERSISTENT_DIR_PROPERTY, persistentPath);
         stub.addSystemProperty(CLIENT_ID, id);
         stub.addSystemProperty(Service.SERVICE_ID, instanceId);
         stub.addSystemProperty(Service.SERVICE_BASEPATH,
-                               serviceFile.getParent());
-        stub.addSystemProperty("summa.configuration", configLocation);
+                serviceFile.getParent());
+        stub.addSystemProperty("summa.configuration", confLocation);
 
 
         if (log.isDebugEnabled()) {
@@ -459,38 +487,107 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
             processThread.join (3000);
         } catch (InterruptedException e) {
             log.info ("Interrupted while waiting for service process for "
-                       + "service '" + instanceId + "'");
+                    + "service '" + instanceId + "'");
             return;
         }
 
         if (!processThread.isAlive()) {
             String errorMessage = runner.getProcessErrorAsString();
             throw new ClientException(this, "Service '" + instanceId
-                                      + "' exited prematurely with exit code "
-                                      + runner.getReturnCode()
-                                      + (errorMessage != null ?
-                                            ", and error: " + errorMessage :
-                                            ""));
+                    + "' exited prematurely with exit code "
+                    + runner.getReturnCode()
+                    + (errorMessage != null ?
+                    ", and error: " + errorMessage :
+                    ""));
         }
 
 
         log.trace("Registering service");
-        registerService (stub, configLocation);
+        registerService (stub, confLocation);
 
-        connCtx = serviceMan.get (instanceId);
+        // Wait for a connection to the service
+        ConnectionContext<Service> connCtx = serviceMan.get(instanceId);
         if (connCtx != null) {
-            Service service = connCtx.getConnection();
-            log.debug("Calling start() on service '" + instanceId +"'");
-            service.start();
-            log.debug("Start called without errors");
+            connCtx.unref ();
         } else {
-            log.warn ("Failed to connect to service '" + instanceId + "'");
-            throw new ClientException(this, "When starting service '"
-                                      + instanceId + "': Failed to connect to"
-                                      + " service");
+            log.error ("Failed to connect to bootstrapped service "
+                       + instanceId);
+            throw new InvalidServiceStateException(this, instanceId, "start",
+                                                   "Client can not establish "
+                                                   + "a connection");
         }
 
+        // Service should be up. Call start() on the Service interface
+        startService(instanceId, confLocation);
+
         setStatusIdle();
+    }
+
+    /**
+     * Start a service given a connection to it. The returned action hints
+     * what further action the caller must take.
+     */
+    private StartAction conditionalServiceStart(Service service, String confLocation)
+                                                        throws RemoteException {
+        Status status = service.getStatus();
+        String instanceId = service.getId();
+        StatusMonitor mon = null;
+
+        switch (status.getCode()) {
+            case constructed:
+                log.debug("Calling start() on constructed service '"
+                        + instanceId + "'");
+                service.start();
+                log.debug("Service started");
+                return StartAction.STARTED;
+            case stopped:
+                log.debug("Calling start() on stopped service '"
+                        + instanceId + "'");
+                service.start();
+                log.debug("Stopped service started");
+                return StartAction.STARTED;
+            case stopping:
+                mon = new StatusMonitor(service, 10,
+                        new VoidShellContext(),
+                        Status.CODE.stopping);
+                log.info ("Service is stopping, waiting for it to "
+                        + "completely stop before retrying start");
+                mon.run(); // Waits until service leaves stopping state
+                return StartAction.RETRY;
+            case idle:
+            case running:
+            case startingUp:
+                log.info ("Ignoring start request but service is "
+                        + "already running");
+                return StartAction.STARTED;
+            case recovering:
+                mon = new StatusMonitor(service, 10,
+                        new VoidShellContext(),
+                        Status.CODE.stopping);
+                log.info ("Service is recovering, waiting for it to "
+                        + "come back before retrying start");
+                mon.run(); // Waits until service leaves stopping state
+                return StartAction.RETRY;
+            case crashed:
+                log.warn ("Service " + instanceId + " has crashed."
+                        + "Killing it before restart");
+                service.kill ();
+                try {
+                    Thread.sleep (5000);
+                } catch (InterruptedException e) {
+                    log.warn("Interrupted while waiting for service "
+                            + "to shut down");
+                }
+                return StartAction.RETRY;
+            case not_instantiated:
+                log.info ("Service '" + instanceId + "' not running. Requesting"
+                          + " bootstrap");
+                return StartAction.BOOTSTRAP;
+        }
+        log.error ("Unmatched service state: " + status + ". This is a bug"
+                   + " in Summa's Client implementation Pretending that "
+                   + " service '" + instanceId + "' is started");
+        return StartAction.STARTED;
     }
 
     private void registerService(BundleStub stub, String configLocation) {

@@ -114,6 +114,7 @@ public class StorageService extends ServiceBase {
             setStatus(Status.CODE.stopping, "Stopping storage control",
                       Logging.LogLevel.DEBUG);
             storage.close();
+            storage = null;
             setStatus(Status.CODE.stopped,
                       "Storage control closed successfully",
                       Logging.LogLevel.INFO);
@@ -127,21 +128,6 @@ public class StorageService extends ServiceBase {
         setStatus(Status.CODE.stopped,
                   "StorageService down, all lights green, performing clean-up",
                   Logging.LogLevel.INFO);
-        try {
-            unexportRemoteInterfaces();
-            log.info("Clean-up finished. Calling System.exit");
-        } catch (IOException e) {
-            log.warn("Failed to unexpose remote interfaces upon stop", e);
-        }
-
-        // Do we really need to do this? It cleans up any stray threads, yes,
-        // but isn't that the responsibility of the StorageServiceThread?
-        // TODO: Consider if System.exit is needed upon stop
-        try {
-            System.exit(0);
-        } catch (SecurityException e) {
-            log.warn("System.exit disabled");
-        }
     }
 
     

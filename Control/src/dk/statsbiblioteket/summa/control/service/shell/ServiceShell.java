@@ -25,6 +25,7 @@ public class ServiceShell {
         shell.installCommand(new StartCommand(connManager, rmiAddress));
         shell.installCommand(new StopCommand(connManager, rmiAddress));
         shell.installCommand(new StatusCommand(connManager, rmiAddress));
+        shell.installCommand(new KillCommand(connManager, rmiAddress));
 
     }
 

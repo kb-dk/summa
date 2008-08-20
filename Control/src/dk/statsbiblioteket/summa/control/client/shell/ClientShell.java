@@ -70,6 +70,7 @@ public class ClientShell {
         shell.installCommand(new PingCommand(connManager, rmiAddress));
         shell.installCommand(new IdCommand(connManager, rmiAddress));
         shell.installCommand(new RepositoryCommand(connManager, rmiAddress));
+        shell.installCommand(new KillCommand(connManager, rmiAddress));
     }
 
     public void run () {

@@ -23,6 +23,7 @@
 package dk.statsbiblioteket.summa.control.service;
 
 import dk.statsbiblioteket.summa.common.Logging;
+import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
 import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.control.api.BadConfigurationException;
@@ -161,6 +162,10 @@ public abstract class ServiceBase extends UnicastRemoteObject
      * Retract remote {@code Service} interface as well as MBean.
      * If the MBean unregistration fails a warning will be logged, but nothing
      * more.
+     * <p></p>
+     * Note that under normal operations services will not need to do this.
+     * After a {@link #stop()} command the remote interfaces still needs to be
+     * up.
      *
      * @throws IOException on communication errors with the RPC mechanism (rmi)
      */
@@ -221,5 +226,29 @@ public abstract class ServiceBase extends UnicastRemoteObject
 
     public String toString() {
         return "[service:" + id + "@" + getRMIAddress() + "]";
+    }
+
+    public void kill () throws RemoteException {
+        log.info("Got kill command. Preparing for JVM shutdown");
+        int exitCode = 0;
+        try {
+            if (status.getCode() != Status.CODE.stopped &&
+                    status.getCode() != Status.CODE.stopping) {
+                log.debug ("Stopping service before killing it");
+                stop();
+            } else {
+                log.debug ("Service is already stopped or stopping. Commencing "
+                           + "kill");
+            }
+        } catch (Throwable t) {
+            log.warn ("Caught error when shutting down. Commencing shutdown: "
+                      + t.getMessage(), t);
+            exitCode = 1;
+        }
+
+        log.warn ("Killed. The JVM is shutting down in "
+                  + DeferredSystemExit.DEFAULT_DELAY/1000 + "s, with exit code "
+                  + exitCode);
+        new DeferredSystemExit(exitCode);
     }
 }

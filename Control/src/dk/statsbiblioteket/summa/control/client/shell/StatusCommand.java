@@ -25,10 +25,7 @@ package dk.statsbiblioteket.summa.control.client.shell;
 import dk.statsbiblioteket.summa.common.shell.Command;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.common.shell.RemoteCommand;
-import dk.statsbiblioteket.summa.control.api.Service;
-import dk.statsbiblioteket.summa.control.api.ClientConnection;
-import dk.statsbiblioteket.summa.control.api.Status;
-import dk.statsbiblioteket.summa.control.api.InvalidServiceStateException;
+import dk.statsbiblioteket.summa.control.api.*;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 
 /**
@@ -66,6 +63,8 @@ public class StatusCommand extends RemoteCommand<ClientConnection> {
                         status = "" + client.getServiceStatus(service);
                     } catch (InvalidServiceStateException e) {
                         status = "Not running";
+                    } catch (NoSuchServiceException e) {
+                        status = "No such service";
                     }
                     ctx.info("\t" + service + ": " + status);
                 }
