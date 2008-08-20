@@ -29,6 +29,7 @@ import java.util.Map;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.util.ConvenientMap;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -67,7 +68,7 @@ public class Payload {
      * Data for the Payload, such as stream-origin. Used for filter-specific
      * data. The map can be accessed by {@link #getData}.
      */
-    private Map<String, Object> data;
+    private ConvenientMap data;
 
 
     /* Constructors */
@@ -98,9 +99,9 @@ public class Payload {
      * new map.
      * @return the data for this Payload.
      */
-    public Map<String, Object> getData() {
+    public ConvenientMap getData() {
         if (data == null) {
-            data = new HashMap<String, Object>(10);
+            data = new ConvenientMap();
         }
         return data;
     }
@@ -112,7 +113,11 @@ public class Payload {
      * @return the value for the key, or null if the key is not in the map.
      */
     public Object getData(String key) {
-        return data == null ? null : data.get(key);
+        try {
+            return data == null ? null : data.get(key);
+        } catch (NullPointerException e) {
+            return null;
+        }
     }
 
     /**
