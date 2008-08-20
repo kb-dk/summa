@@ -42,4 +42,6 @@ public interface ClientRMIConnection extends Remote, ClientConnection {
 
     public BundleRepository getRepository () throws RemoteException;
 
+    public void reportError (String id) throws RemoteException;
+
 }

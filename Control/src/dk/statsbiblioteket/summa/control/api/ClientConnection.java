@@ -204,4 +204,12 @@ public interface ClientConnection extends Monitorable {
      * Get the {@link BundleRepository} the client uses.
      */
     public BundleRepository getRepository () throws IOException;
+
+    /**
+     * Report to the client that the given service is acting up and
+     * that it should check its connection to the service.
+     * @param id the service to report
+     * @throws IOException on communication errors with the client
+     */
+    public void reportError (String id) throws IOException;
 }

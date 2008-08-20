@@ -771,7 +771,8 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
 
         if (connCtx == null) {
             throw new InvalidServiceStateException(this, id,
-                                                   "getStatus", "not running");
+                                                   "getServiceConnection",
+                                                   "not running");
         } else {
             Service s = connCtx.getConnection();
             connCtx.unref();
@@ -797,6 +798,23 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
 
     public BundleRepository getRepository() {
         return repository;
+    }
+
+    public void reportError(String id) throws RemoteException {
+        log.debug ("Got error report on '" + id + "'");
+
+        try {
+            ConnectionContext<Service> connCtx = serviceMan.get(id);
+            if (connCtx == null) {
+                log.debug("When reporting error on '" + id + "', service"
+                           + " unreachable");
+                return;
+            }
+
+            serviceMan.reportError(connCtx, "Reported broken by 3rd party");
+        } catch (Exception e) {
+            log.warn ("Failed to mark connection to '" + id + "' broken", e);
+        }
     }
 
     private void setStatus (Status.CODE code, String msg,

@@ -4,6 +4,7 @@
 	<mainClass>dk.statsbiblioteket.summa.control.service.Launcher</mainClass>
     <property name="com.sun.management.jmxremote.port" value="2771"/>
     <property name="com.sun.management.jmxremote.ssl" value="false"/>
+    <property name="java.rmi.server.codebase" value="file:///home/mikkel/summa-control/t1/services/search/lib/summa-search-@summa.version@.jar"/>
     <description>The Storage module</description>
 	<bundleId>storage</bundleId>
 	<fileList>
