@@ -247,24 +247,26 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                                 scoreDoc.score, null);
                 Document doc =
                      searcher.getIndexReader().document(scoreDoc.doc, selector);
-                for (int f = 0 ; f < fields.length ; f++) {
-                    Field iField = doc.getField(fields[f]);
+                for (String field : fields) {
+                    Field iField = doc.getField(field);
                     if (iField == null || iField.stringValue() == null ||
                         "".equals(iField.stringValue())) {
                         if (fallbacks != null && fallbacks.length != 0) {
                             record.addField(new DocumentResponse.Field(
-                                    fields[f], fallbacks[i]));
+                                    field, fallbacks[i]));
                         }
                     } else {
                         record.addField(new DocumentResponse.Field(
-                                fields[f], encode(iField.stringValue())));
+                                field, encode(iField.stringValue())));
                     }
                 }
                 result.addRecord(record);
             }
             result.setSearchTime(System.currentTimeMillis()-startTime);
             if (doLog) {
-                log.debug("fullSearch(..., '" + query + "', ...) done in "
+                log.debug("fullSearch(..., '" + query + "', ...) returning "
+                          + result.size() + "/" + topDocs.totalHits
+                          + " hits found in "
                           + (System.currentTimeMillis()-startTime) + " ms");
             }
             return result;

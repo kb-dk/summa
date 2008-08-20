@@ -334,5 +334,10 @@ public class DocumentResponse implements Response {
         this.searchTime = searchTime;
     }
 
-
+    /**
+     * @return the amount of added Records.
+     */
+    public int size() {
+        return records.size();
+    }
 }
