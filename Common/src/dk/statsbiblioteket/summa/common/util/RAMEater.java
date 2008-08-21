@@ -36,8 +36,6 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.QA_NEEDED,
         author = "te")
 public class RAMEater {
-    private static final long SLEEP_TIME = 20;
-    public static final long RANDOM_UPDATES = 100;
 
     /**
      * Allocated memory in chunks of 1 MB and fills it with garbage. This goes
@@ -48,14 +46,21 @@ public class RAMEater {
     public static void main(String[] args) {
         boolean resident = false;
         int maxMB = Integer.MAX_VALUE;
+        int updates = 100;
+        int sleepTime = 20;
         int pos = 0;
         while (pos < args.length) {
             if ("-h".equals(args[pos])) {
-                System.out.println("Usage: RAMEater [-r] [-m MB]");
+                System.out.println(
+                        "Usage: RAMEater [-r [-u updates] [s ms]] [-m MB]");
                 System.out.println(
                         "-r: resident. Do not exit and perform periodical, "
                         + "random updates to memory to keep it from being "
                         + "swapped\n"
+                        + "-u: random updates to perform periodically when "
+                        + "resident (default " + updates + ")\n"
+                        + "-s: delay between each update-run (default "
+                        + sleepTime + " ms)\n"
                         + "-m: max MB to allocate");
                 return;
             }
@@ -67,6 +72,18 @@ public class RAMEater {
             if ("-m".equals(args[pos])) {
                 pos++;
                 maxMB = Integer.parseInt(args[pos]);
+                pos++;
+                continue;
+            }
+            if ("-u".equals(args[pos])) {
+                pos++;
+                updates = Integer.parseInt(args[pos]);
+                pos++;
+                continue;
+            }
+            if ("-s".equals(args[pos])) {
+                pos++;
+                sleepTime = Integer.parseInt(args[pos]);
                 pos++;
             }
         }
@@ -101,17 +118,17 @@ public class RAMEater {
                                          / 1048576));
         System.out.println(String.format(
                 "Entering random updates mode: Updating %d random bytes each "
-                + "%d ms", RANDOM_UPDATES, SLEEP_TIME));
+                + "%d ms", updates, sleepTime));
         Random random = new Random();
         //noinspection InfiniteLoopStatement
         while (true) {
             try {
-                Thread.sleep(SLEEP_TIME);
+                Thread.sleep(sleepTime);
             } catch (InterruptedException e) {
                 throw new IllegalStateException("Interrupted while sleeping in"
                                                 + " resident-mode", e);
             }
-            for (int i = 0 ; i < RANDOM_UPDATES ; i++) {
+            for (int i = 0 ; i < updates; i++) {
                 bytes.get(random.nextInt(bytes.size()))
                         [random.nextInt(BLOCK_SIZE)] =
                         (byte)(random.nextInt(255) & 0xFF);
