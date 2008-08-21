@@ -776,6 +776,46 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         } else {
             Service s = connCtx.getConnection();
             connCtx.unref();
+
+            try {
+                log.trace ("Testing service connection '" + id + "'");
+                String tmpId = s.getId();
+
+                if (!id.equals(tmpId)) {
+                    log.warn ("Service '" + id + "' reports id '" + tmpId + "'");
+                    throw new InvalidServiceStateException(this, id,
+                                                   "getServiceConnection",
+                                                   "service reports unexpected "
+                                                    + "id '" + tmpId + "'");
+                }
+
+                log.trace ("Connection to '" + id + "' good");                
+            } catch (Exception e) {
+                // Something is bad. Mark the connection broken wait a bit,
+                // and try to establish a new connection
+                log.info ("Connection to '" + id + "' broken: "
+                           + e.getMessage());
+                log.debug (e);
+
+                serviceMan.reportError(connCtx, e);
+
+                try {
+                    Thread.sleep (serviceMan.getLingerTime() * 1000);
+                } catch (InterruptedException ie) {
+                    log.debug ("Interrupted while waiting for grace time of "
+                               + "'" + id + "' to expire");
+                    throw new InvalidServiceStateException(this, id,
+                                                   "getServiceConnection",
+                                                   "Connection to service broken"
+                                                   + " interrupedt while waiting"
+                                                   + " for new connection");
+                }
+
+                // Retry connection
+                log.debug ("Retrying connection to '" + id + "'");
+                return getServiceConnection(id);
+            }
+
             return s;
         }
     }
