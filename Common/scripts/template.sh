@@ -118,7 +118,7 @@ do
         fi
     done
 done
-CLASSPATH=$CLASSPATH:config/:$MAINJAR
+CLASSPATH=$CLASSPATH:config/:lib/:$MAINJAR
 
 # Check JAVA_HOME
 DEFAULT_JAVA_HOME=/usr/lib/jvm/java
@@ -134,6 +134,7 @@ fi
 # Check security policy
 if [ "$SECURITY_POLICY" != "" ]; then
     SECURITY_POLICY="-Djava.security.policy=$SECURITY_POLICY"
+    SECURITY_POLICY="$SECURITY_POLICY -Djava.security.manager"
 fi;
 
 # Check JMX
