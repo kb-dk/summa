@@ -32,20 +32,21 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 /**
  * {@link Collections#sort} copies the content of a given list to an Array
  * before sorting. This does not work properly for persistent storage based
- * lists.
+ * lists. The ListSorter sorts by swapping elements directly in the list.
+ * For memory-based Lists, this is slower than Collections.sort by about a
+ * factor 4, so it should only be used when memory-use is a concern.
  * </p><p>
- * If the List to sort is a {@link RandomAccess}-list, the sorter uses HeapSort.
- * If the List is not random access, the standard sort on Collections is called.
+ * The sorter used HeapSort with element-swapping.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class ListSorter {
     public <T> void sort(List<T> list, Comparator<? super T> c) {
-        if (!(list instanceof RandomAccess)) {
+/*        if (!(list instanceof RandomAccess)) {
             Collections.sort(list, c);
             return;
-        }
+        }*/
         for (int position = list.size() / 2 - 1 ; position >= 0 ; position--) {
             siftDown(list, position, list.size(), c);
         }
@@ -55,8 +56,12 @@ public class ListSorter {
     }
 
     /**
-     * Default implementation of swap. Depending on the list to sort, this
-     * might be overwritten.
+     * Default implementation of swap. If the List-structure is capable of
+     * swapping elements faster or better than by using get, setand set,
+     * this method should be overwritten to support the better swap.
+     * </p><p>
+     * The sorter uses this method only to modify the order of elements in
+     * the list.
      * @param list the list with the elements to swap.
      * @param pos1 the index of the first value.
      * @param pos2 the index of the second value.
