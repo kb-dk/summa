@@ -36,7 +36,10 @@ import dk.statsbiblioteket.util.qa.QAInfo;
  * For memory-based Lists, this is slower than Collections.sort by about a
  * factor 4, so it should only be used when memory-use is a concern.
  * </p><p>
- * The sorter used HeapSort with element-swapping.
+ * A HeapSort is used, which takes O(n*log(n)) time and n space. The HeapSort
+ * uses {@link #swap} only to modify the list.
+ * @see {@url http://en.wikibooks.org/wiki/Wikiversity:Data_Structures#Heaps}.
+ * @see {@url http://www.personal.kent.edu/~rmuhamma/Algorithms/MyAlgorithms/Sorting/heapSort.htm}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
