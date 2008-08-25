@@ -47,8 +47,18 @@ import org.apache.commons.logging.LogFactory;
 public class URLRepository implements BundleRepository {
 
     private String tmpDir;
-    private Log log = LogFactory.getLog(this.getClass());;
+    private Log log = LogFactory.getLog(this.getClass());
     private String baseUrl;
+    public String apiBaseUrl;
+
+    /**
+     * Configuration property defining the base URL from which jar files are
+     * served. Consumers will download the jar files from
+     * {@code <baseUrl>/<jarFileName>}. This controls the behavior of
+     * {@link #expandApiUrl}.
+     */
+    public static final String API_BASE_URL_PROPERTY =
+                                         "summa.control.repository.api.baseurl";
 
     /**
      * <p>Create a new URLRepository. If the {@link #DOWNLOAD_DIR_PROPERTY} is
@@ -63,15 +73,26 @@ public class URLRepository implements BundleRepository {
                              + File.separator + "summa-control" + File.separator
                              + "repo";
 
+        String defaultApiUrl = "file://" + System.getProperty("user.home")
+                             + File.separator + "summa-control" + File.separator
+                             + "api";
+
         this.tmpDir = conf.getString(DOWNLOAD_DIR_PROPERTY, "tmp");
         this.baseUrl = conf.getString (BundleRepository.REPO_ADDRESS_PROPERTY,
-                                       defaultRepo);        
+                                       defaultRepo);
+        this.apiBaseUrl = conf.getString (URLRepository.API_BASE_URL_PROPERTY,
+                                          defaultApiUrl);
+
 
         /* make sure baseurl ends with a slash */
         if (!baseUrl.endsWith("/")) {
             baseUrl += "/";
         }
 
+        /* make sure apiBaseurl ends with a slash */
+        if (!apiBaseUrl.endsWith("/")) {
+            apiBaseUrl += "/";
+        }
 
         log.debug ("Created " + this.getClass().getName()
                  + " instance with base url " + baseUrl);
@@ -106,7 +127,7 @@ public class URLRepository implements BundleRepository {
         OutputStream out = new BufferedOutputStream(
                                                  new FileOutputStream (result));
 
-        Streams.pipeStream(con, out);
+        Streams.pipe (con, out);
 
         log.debug ("Done downloading " + url + " to " + result);
 
@@ -139,5 +160,9 @@ public class URLRepository implements BundleRepository {
         }
 
         return result;
+    }
+
+    public String expandApiUrl (String jarFileName) throws IOException {
+        return apiBaseUrl + jarFileName;
     }
 }

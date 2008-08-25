@@ -95,4 +95,13 @@ public class RemoteURLRepositoryServer extends UnicastRemoteObject
                                       + e.getMessage(), e);
         }
     }
+
+     public String expandApiUrl (String jarFileName) throws RemoteException {
+        try {
+            return localRepo.expandApiUrl(jarFileName);
+        } catch (IOException e) {
+            throw new RemoteException("Failed to expand API URL for '"
+                                      + jarFileName + "'", e);
+        }
+    }
 }

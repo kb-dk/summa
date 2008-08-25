@@ -45,11 +45,13 @@ public class BundleSpecBuilder {
     private Bundle.Type bundleType;
     private Configuration properties;
     private HashSet<String> fileSet;
+    private HashSet<String> apiSet;
 
     public BundleSpecBuilder () {
         bundleType = Bundle.Type.SERVICE;
         properties = Configuration.newMemoryBased();
         fileSet = new HashSet<String>();
+        apiSet = new HashSet<String>();
 
     }
 
@@ -80,6 +82,11 @@ public class BundleSpecBuilder {
     public void removeFile (String file) { fileSet.remove(file); }
     public boolean hasFile (String file) { return fileSet.contains(file); }
     public Collection<String> getFiles () { return fileSet; }
+
+    public void addApi (String jarFile) { apiSet.add(jarFile); }
+    public void removeApi (String jarFile) { apiSet.remove(jarFile); }
+    public boolean hasApi (String jarFile) { return apiSet.contains(jarFile); }
+    public Collection<String> getApi () { return apiSet; }
 
     public void write (OutputStream out) throws IOException {
         if (out == null) {
@@ -123,6 +130,14 @@ public class BundleSpecBuilder {
                     out.println ("  <property name=\"" + entry.getKey() + "\""
                                       + " value=\"" + entry.getValue() +"\"/>");
                 }
+            }
+
+            if (!apiSet.isEmpty()) {
+                out.println ("  <publicApi>");
+                for (String file : apiSet) {
+                    out.println ("    <file>" + file + "</file>");
+                }
+                out.println ("  </publicApi>");
             }
 
             if (!fileSet.isEmpty()) {
@@ -282,6 +297,8 @@ public class BundleSpecBuilder {
                 instanceId = node.getTextContent();
             } else if ("fileList".equals(node.getNodeName())) {
                 readFilelist (node);
+            } else if ("publicApi".equals(node.getNodeName())) {
+                readPublicApi (node);
             } else if ("property".equals(node.getNodeName())) {
                 String name = node.getAttributes().getNamedItem("name").getNodeValue();
                 String value = node.getAttributes().getNamedItem("value").getNodeValue();
@@ -323,6 +340,31 @@ public class BundleSpecBuilder {
             addFile(file);
         }
         log.trace("Finished readFileList");
+    }
+
+    private void readPublicApi(Node node) {
+        log.trace("readPublicApi called");
+        NodeList files = node.getChildNodes();
+
+        // Add all <file> nodes of <publicApi> to the public API set
+        for (int i = 0; i < files.getLength(); i++) {
+
+            // Skip garbage text and comments
+            if (files.item(i).getNodeType() == Node.TEXT_NODE ||
+                files.item(i).getNodeType() == Node.COMMENT_NODE) {
+                continue;
+            }
+
+            // Assert that we only have file nodes
+            if (!"file".equals(files.item(i).getNodeName())) {
+                throw new BundleFormatException("Illegal child '"
+                + files.item(i).getNodeName() + "' of publicApi");
+            }
+
+            String file = files.item(i).getTextContent();
+            addApi(file);
+        }
+        log.trace("Finished readPublicApi");
     }
 
     public void checkFileList (File bundleDir) {
