@@ -74,6 +74,15 @@ public class RemoteURLRepositoryClient implements BundleRepository, Remote {
         }
     }
 
+    public String expandApiUrl (String jarFileName) throws IOException {
+        BundleRepository repo = getConnetion();
+        try {
+            return repo.expandApiUrl(jarFileName);
+        } finally {
+            releaseConnection();
+        }
+    }
+
     private synchronized BundleRepository getConnetion () throws IOException {
         if (connCtx == null) {
             connCtx = connMgr.get(repoAddress);

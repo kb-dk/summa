@@ -24,6 +24,9 @@ public class BundleSpecBuilderTest extends TestCase {
     + "  <description>myDescription</description>\n"
     + "  <property name=\"myProp1\" value=\"myProp1Value\"/>\n"
     + "  <property name=\"myProp2\" value=\"myProp2Value\"/>\n"
+    + "  <publicApi>\n"
+    + "    <file>myLib-1.1.jar</file>\n"
+    + "  </publicApi>\n"
     + "  <fileList>\n"
     + "    <file>myFile1</file>\n"
     + "    <file>myFile2</file>\n"
@@ -117,6 +120,14 @@ public class BundleSpecBuilderTest extends TestCase {
         assertFalse(b.hasFile("foo"));
     }
 
+    public void testAddRemoveApi () throws Exception {
+        assertFalse(b.hasApi("foo"));
+        b.addApi("foo");
+        assertTrue(b.hasApi("foo"));
+        b.removeApi("foo");
+        assertFalse(b.hasApi("foo"));
+    }
+
     /**
      * b should point at a fully loaded spec, matching {@link #sampleSpec}
      */
@@ -136,6 +147,8 @@ public class BundleSpecBuilderTest extends TestCase {
             //expected
         }
 
+        assertTrue(b.hasApi("myLib-1.1.jar"));
+        assertFalse(b.hasApi("myLibNonExistant-0.1-alpha1.jar"));
 
         assertTrue(b.hasFile("myFile1"));
         assertTrue(b.hasFile("myFile2"));
@@ -204,7 +217,7 @@ public class BundleSpecBuilderTest extends TestCase {
     }
 
     public void testBuildFileList () throws Exception {
-        File bundleRoot = new File ("Control/test/test-bundle-1");
+        File bundleRoot = new File ("Control/test/test-search-1");
         b.buildFileList(bundleRoot);
 
         assertTrue(b.hasFile("service.xml"));
@@ -226,7 +239,7 @@ public class BundleSpecBuilderTest extends TestCase {
         b.setBundleType(Bundle.Type.SERVICE);
         b.addFile("config/configuration.xml");
         b.setBundleId("unit-test");
-        File bundleFile = b.buildBundle(new File("Control/test/test-bundle-1"),
+        File bundleFile = b.buildBundle(new File("Control/test/test-search-1"),
                                         new File("tmp/delete_me"));
 
         System.out.println ("Wrote: " + bundleFile);

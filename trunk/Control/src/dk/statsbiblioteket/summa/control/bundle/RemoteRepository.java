@@ -16,4 +16,6 @@ public interface RemoteRepository extends BundleRepository, Remote {
     @Override
     public List<String> list (String regex) throws RemoteException;
 
+    @Override
+    public String expandApiUrl (String jarFileName) throws RemoteException;
 }

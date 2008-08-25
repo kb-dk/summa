@@ -81,4 +81,19 @@ public interface BundleRepository extends Configurable, Serializable {
      */
     public List<String> list (String regex) throws IOException;
 
+    /**
+     * Return a string encoded URL for where the given jar file can be
+     * downloaded.
+     * <p></p>
+     * This is useful for building the system property
+     * {@code java.rmi.server.codebase} or similar where consumers need a place
+     * to look up custom classes used in the reply from a server process.
+     * 
+     * @param jarFileName
+     * @return A valid URL pointing at a place where the jar file can be
+     *         downloaded or {@code null} if the jar file is not found in the
+     *         API segment of the repository.
+     */
+    public String expandApiUrl (String jarFileName) throws IOException;
+
 }
