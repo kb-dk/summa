@@ -1,11 +1,7 @@
 package dk.statsbiblioteket.summa.control.server;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Logs;
-import dk.statsbiblioteket.util.Files;
-import dk.statsbiblioteket.util.Strings;
-import dk.statsbiblioteket.util.Zips;
-import dk.statsbiblioteket.util.Checksums;
+import dk.statsbiblioteket.util.*;
 import dk.statsbiblioteket.util.watch.FolderWatcher;
 import dk.statsbiblioteket.util.watch.FolderListener;
 import dk.statsbiblioteket.util.watch.FolderEvent;
@@ -17,10 +13,7 @@ import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Arrays;
-import java.util.ArrayList;
+import java.util.*;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -95,6 +88,7 @@ public class RepositoryManager implements Configurable,
     private Log log = LogFactory.getLog (RepositoryManager.class);
     private File incomingDir;
     private FolderWatcher incomingWatcher;
+    private Random random;
 
     private class IncomingListener implements FolderListener {
 
@@ -145,6 +139,8 @@ public class RepositoryManager implements Configurable,
                               RemoteURLRepositoryServer.class);
         repo = Configuration.create (repoClass, conf);
 
+        random = new Random ();
+
         /* Configure Client Repo Class */
         clientRepoClass = conf.getClass (CLIENT_REPO_PROPERTY,
                                          BundleRepository.class,
@@ -165,6 +161,7 @@ public class RepositoryManager implements Configurable,
                new FolderWatcher(incomingDir,
                                  conf.getInt(WATCHER_POLL_INTERVAL_PROPERTY, 5),
                                  conf.getInt(WATCHER_GRACETIME_PROPERTY, 3000));
+            incomingWatcher.addFolderListener(new IncomingListener(this));
 
         } catch (IOException e) {
             log.error ("Failed to initialize monitor for incming files on '"
@@ -258,21 +255,35 @@ public class RepositoryManager implements Configurable,
      * @param prospectBundle the bundle to import into the repository
      * @throws BundleLoadingException if the bundle is not accepted into the
      *                                repository
+     * @throws FileAlreadyExistsException if the bundle already exists in the
+     *                                    repository
      */
     public void importBundle (File prospectBundle) throws IOException {
         log.info ("Preparing to import bundle file '" + prospectBundle + "'");
-        BundleSpecBuilder builder;
+        File updatedBundle;
+        File repoDest = new File(repoBaseDir, Files.baseName(prospectBundle));
+
+        /* Make sure we don't already know the bundle */
+        if (repoDest.exists()) {
+            throw new FileAlreadyExistsException (repoDest);
+        }
+        log.trace ("Bundle " + repoDest + " is not already in repo. Good");
 
         /* Make sure the file is a-ok */
         checkBundleFile(prospectBundle);
 
         /* Make sure bundle contents and spec is ok */
-        checkBundle(prospectBundle, true);
+        updatedBundle = checkBundle(prospectBundle, true);
+
+        /* Add to repo */
+        log.info ("Importing " + updatedBundle + ", to: " + repoDest);
+        Files.move (updatedBundle, repoDest);
 
         /* Clean up */
         log.debug ("Deleting '" + prospectBundle + "' (successfully imported)");
         Files.delete (prospectBundle);
-        log.info ("'" + prospectBundle + "' imported successfully");
+        log.info ("'" + Files.baseName(prospectBundle)
+                  + "' imported successfully");
     }
 
     /**
@@ -285,14 +296,19 @@ public class RepositoryManager implements Configurable,
      * @throws BundleFormatException if the bundle is readable, but the spec
      *                               is bad
      * @throws java.io.IOException of there are errors handling the bundle file
+     * @return Temporary unpacked bundle used by the inspection.
+     *         If {@code update == true} the bundle spec of the temporary bundle
+     *         will also be updated. The method consumer is responsible for
+     *         deleting the temporary bundle
      */
-    public void checkBundle (File bundleFile, boolean update) throws IOException {
+    public File checkBundle (File bundleFile, boolean update) throws IOException {
         /* Unzip bundle to staging area */
         File stagingDir = new File (controlBaseDir, "tmp");
-        stagingDir = new File (stagingDir,
-                               new String (Checksums.md5(bundleFile)));
-        log.debug ("Unpacking '" + bundleFile + "' to staging direcotry '"
+        stagingDir = new File (stagingDir, "" + random.nextInt());
+
+        log.debug ("Unpacking '" + bundleFile + "' to staging directory '"
                    + stagingDir + "'");
+        
         if (stagingDir.exists()) {
             log.debug ("Staging dir already exists. Deleting.");
             Files.delete (stagingDir);
@@ -304,9 +320,9 @@ public class RepositoryManager implements Configurable,
         /* Try and read the bundle spec */
         BundleSpecBuilder builder;
         try {
-            builder = BundleSpecBuilder.open (bundleFile);
+            builder = BundleSpecBuilder.open (stagingDir);
         } catch (IOException e) {
-            String error = "Failed to read bundle '" + bundleFile
+            String error = "Failed to read bundle descriptor from '" + stagingDir
                          + "': " + e.getMessage()
                          + "\nRemoved from incoming queue.";
             try {
@@ -361,17 +377,32 @@ public class RepositoryManager implements Configurable,
             log.warn ("Bundle '" + bundleId + "' has no description");
         }
 
+        /* This must be done before we validate the fileList and publicApi */
+        if (update) {
+            log.debug ("Building fileList for '" + bundleId +"'");
+            builder.buildFileList(stagingDir);
+            log.debug ("Building codebase for '" + bundleId +"'");
+            builder.expandCodebase(repo);
+            builder.writeToDir(stagingDir);
+        }
+
         if (builder.getFiles().size() != 0) {
             log.debug ("Validating fileList for bundle '" + bundleId + "'");
             builder.checkFileList(stagingDir);
-        } else if (update) {
-            log.debug ("Building fileList for '" + bundleId +"'");
-            builder.buildFileList(stagingDir);
-        } else {
+        }
+
+        if (builder.getApi().size() != 0) {
+            log.debug ("Validating publicApi for bundle '" + bundleId + "'");
+            builder.checkPublicApi();
+        }
+
+        if (!update && builder.getFiles().size() == 0){
             throw new BundleFormatException("No, or empty,  fileList for"
                                             + " bundle '" + bundleId + "'");
         }
 
+        return builder.buildBundle (stagingDir,
+                                    new File (controlBaseDir, "tmp"));
     }
 
     /**

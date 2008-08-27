@@ -26,7 +26,7 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.browse;
 
-import dk.statsbiblioteket.summa.search.Response;
+import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**

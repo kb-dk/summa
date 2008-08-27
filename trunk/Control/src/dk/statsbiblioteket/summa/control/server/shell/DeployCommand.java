@@ -7,8 +7,8 @@ import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
 import dk.statsbiblioteket.summa.control.api.ControlConnection;
 import dk.statsbiblioteket.summa.control.api.ClientDeployer;
 import dk.statsbiblioteket.summa.control.server.ControlUtils;
-import dk.statsbiblioteket.summa.control.feedback.RemoteFeedback;
-import dk.statsbiblioteket.summa.control.feedback.RemoteConsoleFeedback;
+import dk.statsbiblioteket.summa.control.api.feedback.rmi.RemoteFeedback;
+import dk.statsbiblioteket.summa.control.api.feedback.rmi.RemoteConsoleFeedback;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
@@ -94,7 +94,7 @@ public class DeployCommand extends Command {
                         ClientDeployer.DEPLOYER_TARGET_PROPERTY,
                         target,
                         ClientDeployer.DEPLOYER_FEEDBACK_PROPERTY,
-                "dk.statsbiblioteket.summa.control.feedback.RemoteFeedbackClient",
+                "dk.statsbiblioteket.summa.control.api.feedback.rmi.RemoteFeedbackClient",
                         RemoteFeedback.REGISTRY_HOST_PROPERTY,
                         hostname);
 

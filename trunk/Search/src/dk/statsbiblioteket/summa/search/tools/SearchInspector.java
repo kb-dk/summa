@@ -1,8 +1,8 @@
 package dk.statsbiblioteket.summa.search.tools;
 
-import dk.statsbiblioteket.summa.search.SummaSearcher;
-import dk.statsbiblioteket.summa.search.Request;
-import dk.statsbiblioteket.summa.search.ResponseCollection;
+import dk.statsbiblioteket.summa.search.api.SummaSearcher;
+import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 
 import java.rmi.Naming;
 

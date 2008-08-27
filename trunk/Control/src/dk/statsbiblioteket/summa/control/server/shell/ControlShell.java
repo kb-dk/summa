@@ -1,7 +1,7 @@
 package dk.statsbiblioteket.summa.control.server.shell;
 
 import dk.statsbiblioteket.summa.control.api.ControlConnection;
-import dk.statsbiblioteket.summa.control.server.ControlRMIConnection;
+import dk.statsbiblioteket.summa.control.api.rmi.ControlRMIConnection;
 import dk.statsbiblioteket.summa.common.shell.Core;
 import dk.statsbiblioteket.summa.common.rpc.SummaRMIConnectionFactory;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;

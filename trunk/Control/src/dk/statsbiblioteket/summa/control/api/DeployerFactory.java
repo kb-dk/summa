@@ -6,7 +6,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * Helper class used to instantiate {@link Feedback} objects of the right type.
+ * Helper class used to instantiate {@link dk.statsbiblioteket.summa.control.api.feedback.Feedback} objects of the right type.
  */
 public class DeployerFactory {
 

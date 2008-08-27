@@ -34,7 +34,9 @@
                     <value class="xproperties">
                         <entry>
                             <key>FilterPump.FilterClass</key>
-                            <value class="string">dk.statsbiblioteket.summa.storage.filter.RecordReader</value>
+                            <value class="string">
+                                dk.statsbiblioteket.summa.storage.api.filter.RecordReader
+                            </value>
                         </entry>
                         <entry>
                             <key>summa.storage.RecordReader.start-from-scratch</key>

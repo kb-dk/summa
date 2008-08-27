@@ -90,9 +90,12 @@ public class BundleLoader implements Configurable {
             }
         }
 
-        /* Construct JVM args */
+        /* Construct JVM args. Property values need to be surrounded by
+         * quotes to ensure property values may contain spaces */
         for (Map.Entry<String, Serializable> entry : builder.getProperties()) {
-            String arg = "-D"+entry.getKey()+"="+entry.getValue();
+            String arg = (String) entry.getValue();
+            arg = arg.replace (" ", "\\ ");
+            arg = "-D"+entry.getKey()+"="+arg; 
             jvmArgs.add(arg);
             log.trace("load added JVM arg " + arg);
         }

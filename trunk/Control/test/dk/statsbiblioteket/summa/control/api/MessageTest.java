@@ -7,6 +7,8 @@ import junit.framework.TestCase;
 
 import java.util.Arrays;
 
+import dk.statsbiblioteket.summa.control.api.feedback.Message;
+
 public class MessageTest extends TestCase {
     Message message;
     String msgText;
@@ -22,7 +24,7 @@ public class MessageTest extends TestCase {
         msgType = Message.MESSAGE_ALERT;
         respText = "response text";
         respRaw = new char[]{'r', 'e', 's', 'p' , 'o', 'n', 's', 'e'}; 
-        message = new Message (msgType, msgText);
+        message = new Message(msgType, msgText);
     }
 
     public void testGetMessageType() throws Exception {

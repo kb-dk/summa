@@ -110,10 +110,14 @@ public class BundleStub {
      * Set a system property for the command line that will be created
      * by {@link #buildCommandLine()}. This will be used when running
      * {@link #start()}.
+     * <p></p>
+     * The value string will be quoted in the final command line, so it may
+     * contain spaces and other characters normally requiring escaping.
      * @param name the name of the property to set
      * @param value the value of the property to set
      */
     public void addSystemProperty (String name, String value) {
+        value = value.replace (" ", "\\ ");
         jvmArgs.add ("-D"+name+"="+value);
     }
 

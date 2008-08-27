@@ -6,8 +6,8 @@ import dk.statsbiblioteket.summa.common.shell.Command;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.control.api.ControlConnection;
 import dk.statsbiblioteket.summa.control.api.ClientDeployer;
-import dk.statsbiblioteket.summa.control.feedback.RemoteConsoleFeedback;
-import dk.statsbiblioteket.summa.control.feedback.RemoteFeedback;
+import dk.statsbiblioteket.summa.control.api.feedback.rmi.RemoteConsoleFeedback;
+import dk.statsbiblioteket.summa.control.api.feedback.rmi.RemoteFeedback;
 import dk.statsbiblioteket.summa.control.server.ControlUtils;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
@@ -73,7 +73,7 @@ public class StartCommand extends Command {
                         ClientDeployer.DEPLOYER_CLASS_PROPERTY,
                         transport,
                         ClientDeployer.DEPLOYER_FEEDBACK_PROPERTY,
-                        "dk.statsbiblioteket.summa.control.feedback.RemoteFeedbackClient",
+                        "dk.statsbiblioteket.summa.control.api.feedback.rmi.RemoteFeedbackClient",
                         RemoteFeedback.REGISTRY_HOST_PROPERTY,
                         hostname);
 

@@ -33,8 +33,8 @@ import java.util.ArrayList;
 import dk.statsbiblioteket.summa.control.api.ClientDeployer;
 import dk.statsbiblioteket.summa.control.server.ClientDeploymentException;
 import dk.statsbiblioteket.summa.control.server.ControlUtils;
-import dk.statsbiblioteket.summa.control.api.Feedback;
-import dk.statsbiblioteket.summa.control.api.Message;
+import dk.statsbiblioteket.summa.control.api.feedback.Feedback;
+import dk.statsbiblioteket.summa.control.api.feedback.Message;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.api.BadConfigurationException;
 import dk.statsbiblioteket.summa.control.bundle.BundleSpecBuilder;
@@ -187,6 +187,7 @@ public class SSHDeployer implements ClientDeployer {
     }
 
     private String[] privateFiles = new String[]{"jmx.access", "jmx.password"};
+    
     /**
      * The permissions for JMX.access and JMX.password needs to be readable only
      * for the owner. The Unzip provided by Java does not handle file
@@ -196,7 +197,7 @@ public class SSHDeployer implements ClientDeployer {
      *
      * @param root where to start the search for JMX-files.
      */
-    private void fixJMXPermissions(File root) {
+    /*private void fixJMXPermissions(File root) {
         log.trace("fixJMXPermissions(" + root + ") entered");
         try {
             File[] files = root.listFiles();
@@ -222,7 +223,7 @@ public class SSHDeployer implements ClientDeployer {
             log.warn("fixJMXPermissions: Could not handle '" + root
                      + "'. Skipping");
         }
-    }
+    }*/
 
     /**
      * Check to see whether the destination folde rexists. If it doesn't, try
@@ -265,15 +266,19 @@ public class SSHDeployer implements ClientDeployer {
      */
     private void ensurePermissions (Feedback feedback) throws IOException {
         log.debug("Setting file permissions for '" + destination + "'");
+
+        /* The 'cd destination part' needs to be added a single arg */
         List<String> command = Arrays.asList("ssh", login,
                                              "cd", destination,
                                              ";",
-                                             "chmod", "u=r",
+                                             "chmod", "a=,u=r",
                                              BundleStub.POLICY_FILE,
                                              BundleStub.JMX_ACCESS_FILE,
                                              BundleStub.JMX_PASSWORD_FILE);
         ProcessRunner runner =
                 new ProcessRunner(command);
+        log.trace ("Command to ensure permissions:\n"
+                   + Strings.join (command, " "));
         String error = null;
         try {
             runner.run();
@@ -294,6 +299,7 @@ public class SSHDeployer implements ClientDeployer {
             feedback.putMessage(new Message(Message.MESSAGE_ALERT, error));
             throw new ClientDeploymentException(error);
         }
+        log.trace ("File permissions fixed for client '" + clientId + "'");
     }
 
     public void start(Feedback feedback) throws Exception {

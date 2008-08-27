@@ -12,6 +12,7 @@
     <property name="release" value="${project.name}-${project.version}"/>
     <property name="release.war" value="${project.name}.war"/>
     <property name="release.jar" value="${release}.jar"/>
+    <property name="release.api.jar" value="${project.name}-api-${project.version}.jar"/>
 
     <property name="src.dir" value="${basedir}/src"/>
     <property name="test.src.dir" value="${basedir}/test"/>
@@ -147,6 +148,7 @@
     <target name="clean">
         <delete dir="${build.dir}"/>
         <delete file="${release.jar}"/>
+        <delete file="${release.api.jar}"/>
     </target>
 
     <target name="distclean" depends="clean">
@@ -194,6 +196,8 @@
 
     <target name=".jar" depends="compile">
         <jar basedir="${build.dir}" compress="true" jarfile="${release.jar}"/>
+        <jar basedir="${build.dir}" compress="true" jarfile="${release.api.jar}"
+             includes="dk/statsbiblioteket/summa/search/api/**/*"/>
     </target>
     
     
@@ -237,6 +241,7 @@
         <zip destfile="${dist.dir}/${release}.zip">
 
             <zipfileset prefix="${prefix}" file="${release.jar}"/>
+            <zipfileset prefix="${prefix}" file="${release.api.jar}"/>
             
             <zipfileset prefix="${prefix}" file="${basedir}/../${summa.license}"/>
 

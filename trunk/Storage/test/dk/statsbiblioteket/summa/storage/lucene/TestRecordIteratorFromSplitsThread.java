@@ -22,7 +22,7 @@
  */
 package dk.statsbiblioteket.summa.storage.lucene;
 
-import dk.statsbiblioteket.summa.storage.RecordIterator;
+import dk.statsbiblioteket.summa.storage.api.RecordIterator;
 import org.apache.log4j.Logger;
 
 /**

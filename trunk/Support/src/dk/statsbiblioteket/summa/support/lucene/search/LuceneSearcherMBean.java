@@ -23,7 +23,7 @@
 package dk.statsbiblioteket.summa.support.lucene.search;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
+import dk.statsbiblioteket.summa.search.api.document.DocumentSearcher;
 
 /**
  * Trivial extension of {@link DocumentSearcher} to make standard compliant

@@ -99,4 +99,8 @@ public class FakeClient implements ClientConnection {
     public BundleRepository getRepository() throws IOException {
         return null;
     }
+
+    public void reportError(String id) throws IOException {
+        log.info ("Error reported on: " + id);
+    }
 }
