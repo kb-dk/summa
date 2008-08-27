@@ -13,7 +13,15 @@ import java.rmi.registry.Registry;
 import java.rmi.registry.LocateRegistry;
 import java.lang.management.ManagementFactory;
 import java.io.IOException;
+import java.io.File;
 import java.net.UnknownHostException;
+import java.net.URL;
+import java.net.MalformedURLException;
+import java.util.Collection;
+import java.util.ArrayList;
+
+import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.Zips;
 
 /**
  * Utility class to help export remote interfaces
@@ -168,4 +176,100 @@ public class RemoteHelper {
         }
     }
 
+    /**
+     * Throws a {@link InvalidCodePathException} if one or more of the
+     * URIs listed in {@code uris} does not point at a valid {@code .jar}
+     * file.
+     * @param uris an array of uris to test for jar file contents
+     */
+    public static void testCodePath (String[] uris)
+                                               throws InvalidCodePathException {
+        log.trace ("testCodePath() called");
+
+        File tmpDir = new File (System.getProperty("java.io.tmpdir"),
+                                "summa-RH-resolutions");
+
+        try {
+            Files.delete(tmpDir);
+        } catch (IOException e) {
+            log.error ("Failed to create or delete temporary dir. Can not "
+                       + "resolve code path", e);
+            return;
+        }
+
+        for (String uri : uris) {
+            log.trace ("Testing codepath for " + uri);
+
+            tmpDir.mkdirs();
+
+            /* Check that it is a .jar file */
+            if (!uri.endsWith(".jar")) {
+                throw new InvalidCodePathException("Non .jar-file in codepath: "
+                                                   + uri);
+            }
+
+            /* Check that it is a valid url */
+            URL url;
+            try {
+                url = new URL (uri);
+            } catch (MalformedURLException e) {
+                log.warn("Malformed URL in codepath", e);
+                throw new InvalidCodePathException ("Malformed url: " + uri
+                                                    + ", error was: "
+                                                    + e.getMessage());
+            }
+
+            /* Try to download the url */
+            File jar;
+            try {
+                jar = Files.download(url, tmpDir, true);
+            } catch (IOException e) {
+                log.warn ("Unable to retrieve url", e);
+                throw new InvalidCodePathException("Unable to retrieve url"
+                                                   + url + ": "
+                                                   + e.getMessage());
+            }
+
+            /* validate that the contens looks like a .jar */
+            try {
+                Zips.unzip(jar.getAbsolutePath(), tmpDir.getAbsolutePath(),
+                           true);
+
+                File metaInf = new File (tmpDir, "META-INF");
+                if (!metaInf.exists()) {
+                    throw new InvalidCodePathException("The .jar-file "+ url
+                                                       + " does not contain "
+                                                       + "a META-INF directory");
+                }
+
+            } catch (IOException e) {
+                throw new InvalidCodePathException ("Failed to extract "
+                                                     + url + ". The .jar file "
+                                                     + "is possibly corrupt");
+            }
+
+            /* OK, it looks like a real .jar file there. Go on */
+            log.debug ("Validated .jar-file: " + url);
+
+            try {
+                Files.delete(tmpDir);
+            } catch (IOException e) {
+                log.error ("Failed to delete temporary dir. Can not "
+                           + "resolve code path", e);
+                return;
+            }
+        }
+
+    }
+
+    /**
+     * Exception thrown when trying to resolve a URI not pointing at a valid
+     * {@code .jar}-file, by calling {@link RemoteHelper#testCodePath}.
+     */
+    public static class InvalidCodePathException extends Exception {
+
+        public InvalidCodePathException(String msg) {
+            super (msg);
+        }
+    }
 }
