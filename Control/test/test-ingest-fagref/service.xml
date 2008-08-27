@@ -5,18 +5,5 @@
     <property name="com.sun.management.jmxremote.port" value="2776"/>
     <property name="com.sun.management.jmxremote.ssl" value="false"/>
     <description>Test ingest fagref</description>
-	<bundleId>test-index-fagref</bundleId>
-	<fileList>
-		<file>lib/summa-storage-@summa.version@.jar</file>
-        <file>lib/summa-common-@summa.version@.jar</file>
-        <file>lib/summa-ingest-@summa.version@.jar</file>
-        <file>lib/@release.jar@</file>
-        <file>lib/commons-logging-1.1.jar</file>
-        <file>lib/log4j-1.2.14.jar</file>
-        <file>lib/sbutil-0.3.2.jar</file>
-        <file>config/jmx.access</file>
-        <file>config/jmx.password</file>
-        <file>config/policy</file>
-        <file>config/configuration.xml</file>
-    </fileList>
+	<bundleId>test-ingest-fagref</bundleId>
 </bundle>

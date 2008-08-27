@@ -2,8 +2,8 @@ package dk.statsbiblioteket.summa.control.server;
 
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.api.Status;
-import dk.statsbiblioteket.summa.control.api.Feedback;
-import dk.statsbiblioteket.summa.control.feedback.FeedbackShellContext;
+import dk.statsbiblioteket.summa.control.api.feedback.Feedback;
+import dk.statsbiblioteket.summa.control.api.feedback.FeedbackShellContext;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.Logs;
@@ -73,7 +73,7 @@ public class ClientMonitor implements Runnable {
 
     /**
      * Same as other constructor, except that any user feedback is delivered
-     * via a {@link Feedback} instead of a {@link ShellContext}.
+     * via a {@link dk.statsbiblioteket.summa.control.api.feedback.Feedback} instead of a {@link ShellContext}.
      */
     public ClientMonitor (ConnectionManager<ClientConnection> connMgr,
                           String clientId,

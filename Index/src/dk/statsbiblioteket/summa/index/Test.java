@@ -23,7 +23,7 @@
 package dk.statsbiblioteket.summa.index;
 
 import dk.statsbiblioteket.summa.storage.api.Storage;
-import dk.statsbiblioteket.summa.storage.RecordIterator;
+import dk.statsbiblioteket.summa.storage.api.RecordIterator;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -200,7 +200,7 @@ public class Test {
             w.append("\nCONTENT::::::::\n\n").append(content).append("\n\nCVSXSLT:::::::::::::\n\n").append(tr).append("\n\nanvendt::::::::::::").append(tr1).append("\n\n\n\n");
         }
         w.flush();w.close();
- */     RecordIterator  ir = io1.getRecords("netmusik");
+ */     RecordIterator ir = io1.getRecords("netmusik");
         while (ir.hasNext()){
             Record r = ir.next();
             String content = new String(r.getContent(), "utf-8");

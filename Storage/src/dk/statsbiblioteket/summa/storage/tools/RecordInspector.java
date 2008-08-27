@@ -27,7 +27,6 @@ import org.xml.sax.InputSource;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
-import java.rmi.Naming;
 import java.io.*;
 import java.util.Date;
 import java.util.Properties;
@@ -35,8 +34,8 @@ import java.util.Properties;
 
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageConnectionFactory;
+import dk.statsbiblioteket.summa.storage.api.RecordIterator;
 
-import dk.statsbiblioteket.summa.storage.RecordIterator;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.xml.DefaultNamespaceContext;
 import dk.statsbiblioteket.util.qa.QAInfo;

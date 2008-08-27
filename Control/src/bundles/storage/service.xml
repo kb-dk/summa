@@ -4,20 +4,10 @@
 	<mainClass>dk.statsbiblioteket.summa.control.service.Launcher</mainClass>
     <property name="com.sun.management.jmxremote.port" value="2771"/>
     <property name="com.sun.management.jmxremote.ssl" value="false"/>
-    <property name="java.rmi.server.codebase" value="file:///home/mikkel/summa-control/t1/services/search/lib/summa-search-@summa.version@.jar"/>
     <description>The Storage module</description>
 	<bundleId>storage</bundleId>
-	<fileList>
-		<file>lib/summa-storage-@summa.version@.jar</file>
+	<publicApi>
         <file>lib/summa-common-@summa.version@.jar</file>
-        <file>lib/derby-10.3.1.4.jar</file>
-        <file>lib/@release.jar@</file>
-        <file>lib/commons-logging-1.1.jar</file>
-        <file>lib/log4j-1.2.14.jar</file>
-        <file>lib/sbutil-0.3.2.jar</file>
-        <file>config/jmx.access</file>
-        <file>config/jmx.password</file>
-        <file>config/policy</file>
-        <file>config/configuration.xml</file>
-    </fileList>
+        <file>lib/summa-storage-api-@summa.version@.jar</file>
+    </publicApi>
 </bundle>

@@ -26,7 +26,7 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.storage.RecordIterator;
+import dk.statsbiblioteket.summa.storage.api.RecordIterator;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**

@@ -88,11 +88,26 @@ public interface BundleRepository extends Configurable, Serializable {
      * This is useful for building the system property
      * {@code java.rmi.server.codebase} or similar where consumers need a place
      * to look up custom classes used in the reply from a server process.
-     * 
-     * @param jarFileName
+     * <p></p>
+     * If {@code jarFileName} already start with an URL scheme, ie.
+     * {@code http://}, {@code ftp://}, or what ever, the repository should
+     * return {@code jarFileName} unmodified.
+     * <p></p>
+     * The repository will only use the basename of the provided file
+     * to construct the URL. Applications are free to pass in full paths
+     * to the jar files, like
+     * <pre>
+     *    lib/myLib-0.1.jar
+     * </pre>
+     * Which might resolve to something like
+     * <pre>
+     *    http://meanmachine:8080/summa-control/api/myLib-0.1.jar
+     * </pre>
+     * @param jarFileName path to .jar file to look up an API URL for
      * @return A valid URL pointing at a place where the jar file can be
      *         downloaded or {@code null} if the jar file is not found in the
-     *         API segment of the repository.
+     *         API segment of the repository. If {@code jarFileName} is already
+     *         an URL then it will be returned unmodified
      */
     public String expandApiUrl (String jarFileName) throws IOException;
 

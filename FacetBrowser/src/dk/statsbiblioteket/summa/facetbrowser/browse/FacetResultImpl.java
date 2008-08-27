@@ -30,7 +30,7 @@ import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.util.ClusterCommon;
 import dk.statsbiblioteket.summa.facetbrowser.util.FlexiblePair;
 import dk.statsbiblioteket.summa.facetbrowser.util.Pair;
-import dk.statsbiblioteket.summa.search.Response;
+import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

@@ -16,6 +16,7 @@
 
     <entry key="summa.control.repository.download.dir">tmp</entry>
     <entry key="summa.control.repository.address">file:///tmp/summatest</entry>
+    <entry key="summa.control.repository.api.baseurl">file:///tmp/summatest/api</entry>
     <entry key="summa.control.repository.dir">/tmp/summatest</entry>
 
 

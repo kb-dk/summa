@@ -26,8 +26,8 @@ import java.util.List;
 import java.io.IOException;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.storage.RecordIterator;
-import dk.statsbiblioteket.summa.storage.RecordAndNext;
+import dk.statsbiblioteket.summa.storage.api.RecordIterator;
+import dk.statsbiblioteket.summa.storage.api.RecordAndNext;
 import dk.statsbiblioteket.summa.common.Record;
 
 @QAInfo(level = QAInfo.Level.NORMAL,

@@ -1,6 +1,9 @@
 package dk.statsbiblioteket.summa.search.rmi;
 
-import dk.statsbiblioteket.summa.search.*;
+import dk.statsbiblioteket.summa.search.SummaSearcherFactory;
+import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
+import dk.statsbiblioteket.summa.search.api.*;
+import dk.statsbiblioteket.summa.search.api.rmi.RemoteSearcher;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
 

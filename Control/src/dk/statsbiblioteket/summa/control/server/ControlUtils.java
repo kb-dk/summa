@@ -59,13 +59,8 @@ public class ControlUtils {
      */
     public static File getRepositoryBaseDir (Configuration conf) {
         String basePath = conf.getString (RepositoryManager.BASE_PATH_PROPERTY,
-                                          System.getProperty("user.home")
-                                        + File.separator
-                                        + "public_html"
-                                        + File.separator
-                                        + "control"
-                                        + File.separator
-                                        + "repo");
+                                          new File(getControlBaseDir(conf),
+                                                   "repo").toString());
 
         File baseDir = new File (basePath);
         if (!baseDir.exists()) {
@@ -88,13 +83,8 @@ public class ControlUtils {
      */
     public static File getIncomingDir (Configuration conf) {
         String incPath = conf.getString (RepositoryManager.INCOMING_DIR_PROPERTY,
-                                          System.getProperty("user.home")
-                                        + File.separator
-                                        + "public_html"
-                                        + File.separator
-                                        + "control"
-                                        + File.separator
-                                        + "incoming");
+                                         new File(getControlBaseDir(conf),
+                                                   "incoming").toString());
 
         File incDir = new File (incPath);
         if (!incDir.exists()) {
@@ -134,10 +124,8 @@ public class ControlUtils {
         String address =
                   conf.getString(BundleRepository.REPO_ADDRESS_PROPERTY,
                                  "http://"
-                                 + RemoteHelper.getHostname()
-                                 + "/~"
-                                 + System.getProperty("user.name")
-                                 + "/control/repo");
+                                 + RemoteHelper.getHostname() + ":8080"
+                                 + "/summa-control/repo");
         return address;
     }
 
@@ -157,7 +145,9 @@ public class ControlUtils {
     }
 
     /**
-     * Read the (unzipped) contents of a single zip entry within a zip file
+     * Read the (unzipped) contents of a single zip entry within a zip file.
+     * <p></p>
+     * TODO: Move this method to Zips in sbutil
      * @param zipFile zip file to read from
      * @param entryName name of entry withing the zip file
      * @return a byte array with the unpacked data, or null if the entry is

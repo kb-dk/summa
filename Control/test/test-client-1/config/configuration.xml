@@ -10,4 +10,6 @@
     <!-- Base path for the service repo -->
     <entry key="summa.control.repository.address">file:///tmp/summatest</entry>
 
+    <entry key="summa.control.repository.api.baseurl">file:///tmp/summatest</entry>
+
 </properties>

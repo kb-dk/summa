@@ -2,6 +2,7 @@ package dk.statsbiblioteket.summa.search;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

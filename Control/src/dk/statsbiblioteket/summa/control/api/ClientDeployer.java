@@ -24,7 +24,7 @@ package dk.statsbiblioteket.summa.control.api;
 
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.control.api.Feedback;
+import dk.statsbiblioteket.summa.control.api.feedback.Feedback;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.api.ControlConnection;
 import dk.statsbiblioteket.summa.control.bundle.BundleStub;

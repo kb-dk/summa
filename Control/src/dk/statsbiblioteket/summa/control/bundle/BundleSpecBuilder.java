@@ -24,6 +24,7 @@ import java.util.zip.ZipOutputStream;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.FileAlreadyExistsException;
+import dk.statsbiblioteket.util.Files;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
@@ -222,13 +223,40 @@ public class BundleSpecBuilder {
      * Open a new builder from a file. If the file name is either
      * {@code client.xml} or {@code service.xml} the bundle type
      * will be set accordingly.
+     * <p></p>
+     * If {@code file} is a directory the method will look for a
+     * {@code service.xml} or {@code client.xml} inside it.
      * @param file file to read bundle spec from
      * @return a bundle spec ready for manipulations
      * @throws IOException if there is an error reading the file
      */
     public static BundleSpecBuilder open(File file) throws IOException {
-        BundleSpecBuilder builder = open(new FileInputStream(file));
-        String filename = file.toString();
+        BundleSpecBuilder builder;
+        File desc;
+
+        if (file.isDirectory()) {
+            File serviceDesc = new File (file, "service.xml");
+            File clientDesc = new File (file, "client.xml");
+
+            if (serviceDesc.isFile()) {
+                builder = open(new FileInputStream(serviceDesc));
+                desc = serviceDesc;
+            } else if (clientDesc.isFile()) {
+                builder = open(new FileInputStream(clientDesc));
+                desc = clientDesc;
+            } else {
+                throw new BundleLoadingException("No client.xml or service.xml "
+                                                 + "inside " + file);
+            }
+        } else if (file.isFile()) {
+            builder = open(new FileInputStream(file));
+            desc = file;
+        } else {
+            throw new BundleLoadingException("No such file or directory "
+                                             + file);
+        }
+
+        String filename = desc.toString();
         if (filename.endsWith("client.xml")) {
             builder.setBundleType(Bundle.Type.CLIENT);
         } else if (filename.endsWith("service.xml")) {
@@ -385,6 +413,23 @@ public class BundleSpecBuilder {
     }
 
     /**
+     * Verify that all files listed in {@code <publicApi>} are present in
+     * {@code <fileList>} as well.
+     */
+    public void checkPublicApi () {
+        log.trace("checkPublicApi called");
+        // Check that each file in fileList exists
+        for (String filename : apiSet) {
+            if (!fileSet.contains(filename)) {
+                throw new BundleFormatException("Listed public API file '"
+                                              + filename + "' is not present "
+                                              + "in the file list");
+            }
+        }
+        log.trace("Finished checkFileList");
+    }
+
+    /**
      * <p>Recusively scan a directory and add all files to the file list of this
      * builder.</p>
      *
@@ -416,6 +461,35 @@ public class BundleSpecBuilder {
             addFile(getFilename());
         }
         log.trace("Finished buildFileList(" + bundleDir + ")");
+    }
+
+    /**
+     * Convenience method to expand {@code <publicApi>} into the property
+     * {@code java.rmi.server.codebase}.
+     * <p></p>
+     * Only the basename of the files mentioned in {@code <publicApi>}
+     * will be used in the codebase.
+     * @param repo A {@link BundleRepository} used to expand the location
+     *             of the public api jars. 
+     */
+    public void expandCodebase (BundleRepository repo) {
+        // Expand all public API refs into the codebase
+        String codeBase = "";
+        for (String apiFile : getApi()) {
+            apiFile = new File(apiFile).getName();
+            String apiUrl;
+            try {
+                apiUrl = repo.expandApiUrl(apiFile);
+            } catch (IOException e) {
+                apiUrl = "ERROR";
+            }
+            codeBase += apiUrl + " ";
+            log.trace ("Updated codebase: '" + codeBase + "'");
+        }        
+
+        if (!"".equals(codeBase)) {
+            setProperty("java.rmi.server.codebase", codeBase.trim());
+        }
     }
 
     private void recursiveScan (File rootDir, String child) {
@@ -548,9 +622,14 @@ public class BundleSpecBuilder {
             }
         }
 
-        /* Construct JVM args */
+        /* Construct JVM args.
+         * Non-integer values needs to be enclosed in single-pings to
+         * handle spaces gracefully. If we keep the pings on the integers
+         * too we get some errors when launching */
         for (Map.Entry<String, Serializable> entry : getProperties()) {
-            String arg ="-D"+entry.getKey()+"="+entry.getValue();
+            String val = (String) entry.getValue();
+            val = val.replace(" ", "\\ ");
+            String arg ="-D"+entry.getKey()+"="+val;
             jvmArgs.add(arg);
             log.trace("getStub: Adding argument " + arg);
         }

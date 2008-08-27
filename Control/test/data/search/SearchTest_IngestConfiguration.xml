@@ -101,7 +101,9 @@
                     <value class="xproperties">
                         <entry>
                             <key>FilterPump.FilterClass</key>
-                            <value class="string">dk.statsbiblioteket.summa.storage.filter.RecordWriter</value>
+                            <value class="string">
+                                dk.statsbiblioteket.summa.storage.api.filter.RecordWriter
+                            </value>
                         </entry>
                     </value>
                 </entry>

@@ -29,7 +29,7 @@ import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
-import dk.statsbiblioteket.summa.control.feedback.ConsoleFeedback;
+import dk.statsbiblioteket.summa.control.api.feedback.ConsoleFeedback;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**

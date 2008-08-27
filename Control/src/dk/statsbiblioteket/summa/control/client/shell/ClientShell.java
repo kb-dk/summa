@@ -26,7 +26,7 @@ import dk.statsbiblioteket.summa.common.shell.Core;
 import dk.statsbiblioteket.summa.common.rpc.SummaRMIConnectionFactory;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.client.Client;
-import dk.statsbiblioteket.summa.control.client.ClientRMIConnection;
+import dk.statsbiblioteket.summa.control.api.rmi.ClientRMIConnection;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
 

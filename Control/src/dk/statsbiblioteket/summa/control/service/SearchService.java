@@ -25,19 +25,19 @@ package dk.statsbiblioteket.summa.control.service;
 import java.rmi.RemoteException;
 import java.io.IOException;
 
-import dk.statsbiblioteket.summa.search.SummaSearcher;
+import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.SummaSearcherFactory;
+import dk.statsbiblioteket.summa.search.rmi.RMISearcherProxy;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.control.api.Status;
-import dk.statsbiblioteket.summa.search.rmi.RMISearcherProxy;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * Wrapper for a {@link SummaSearcher}, which will normally translate to a
- * {@link SummaSearcher}.
+ * Wrapper for a {@link dk.statsbiblioteket.summa.search.api.SummaSearcher}, which will normally translate to a
+ * {@link dk.statsbiblioteket.summa.search.api.SummaSearcher}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -47,10 +47,10 @@ public class SearchService extends ServiceBase {
 
     /**
      * The search service will fall back to this class if the configuration does
-     * not specify {@link SummaSearcher#PROP_CLASS}
+     * not specify {@link dk.statsbiblioteket.summa.search.api.SummaSearcher#PROP_CLASS}
      */
     public static final Class<? extends SummaSearcher> DEFAULT_SEARCHER_CLASS =
-            RMISearcherProxy.class;
+                                                        RMISearcherProxy.class;
 
     private Configuration conf;
     private SummaSearcher searcher;

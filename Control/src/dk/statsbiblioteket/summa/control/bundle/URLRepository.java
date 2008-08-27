@@ -56,6 +56,9 @@ public class URLRepository implements BundleRepository {
      * served. Consumers will download the jar files from
      * {@code <baseUrl>/<jarFileName>}. This controls the behavior of
      * {@link #expandApiUrl}.
+     * <p></p>
+     * If this property is unset {@link #REPO_ADDRESS_PROPERTY}{@code ../api}
+     * will be used.
      */
     public static final String API_BASE_URL_PROPERTY =
                                          "summa.control.repository.api.baseurl";
@@ -73,9 +76,8 @@ public class URLRepository implements BundleRepository {
                              + File.separator + "summa-control" + File.separator
                              + "repo";
 
-        String defaultApiUrl = "file://" + System.getProperty("user.home")
-                             + File.separator + "summa-control" + File.separator
-                             + "api";
+        String defaultApiUrl = defaultRepo + File.separator + ".."
+                               + File.separator + "api";
 
         this.tmpDir = conf.getString(DOWNLOAD_DIR_PROPERTY, "tmp");
         this.baseUrl = conf.getString (BundleRepository.REPO_ADDRESS_PROPERTY,
@@ -163,6 +165,17 @@ public class URLRepository implements BundleRepository {
     }
 
     public String expandApiUrl (String jarFileName) throws IOException {
+        // By contract we must return URLs as is
+        if (jarFileName.startsWith("http://") ||
+            jarFileName.startsWith("https://")||
+            jarFileName.startsWith("ftp://")  ||
+            jarFileName.startsWith("sftp://")) {
+            return jarFileName;
+        }
+
+        /* Only take the basename into account */
+        jarFileName = new File (jarFileName).getName();
+
         return apiBaseUrl + jarFileName;
     }
 }

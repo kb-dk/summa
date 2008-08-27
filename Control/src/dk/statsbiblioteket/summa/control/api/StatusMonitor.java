@@ -7,7 +7,8 @@ import dk.statsbiblioteket.util.rpc.ConnectionContext;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
-import dk.statsbiblioteket.summa.control.feedback.FeedbackShellContext;
+import dk.statsbiblioteket.summa.control.api.feedback.FeedbackShellContext;
+import dk.statsbiblioteket.summa.control.api.feedback.Feedback;
 
 import java.util.List;
 import java.util.Arrays;

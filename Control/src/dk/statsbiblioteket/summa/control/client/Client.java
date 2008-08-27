@@ -351,12 +351,16 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         }
 
         // Unzip the file into the tmp directory, and set the instance id
-        // in the spec file
+        // in the spec file, as well as expanding the members of
+        // <publicApi/> into the system property {@code java.rmi.server.codebase}
         try {
             Zips.unzip (localFile.toString(), tmpPkg.toString(), false);
             File specFile = new File(tmpPkg, "service.xml");
             BundleSpecBuilder builder = BundleSpecBuilder.open (specFile);
+
             builder.setInstanceId(instanceId);
+            builder.expandCodebase(repository);
+
             builder.write (specFile);
 
         } catch (IOException e) {

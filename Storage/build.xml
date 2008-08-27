@@ -12,6 +12,7 @@
     <property name="project.version" value="${summa.version}"/>
     <property name="release" value="${project.name}-${project.version}"/>
     <property name="release.jar" value="${release}.jar"/>
+    <property name="release.api.jar" value="${project.name}-api-${project.version}.jar"/>
 
     <!-- Persistent directories -->
     <property name="src.dir" value="${basedir}/src"/>
@@ -169,6 +170,9 @@
 
     <target name=".jar" depends="compile">
         <jar basedir="${build.dir}" compress="true" jarfile="${release.jar}"/>
+
+        <jar basedir="${build.dir}" compress="true" jarfile="${release.api.jar}"
+             includes="dk/statsbiblioteket/summa/storage/api/**/*"/>
     </target>
 
     <target name="release" depends="distclean, .release.depends, .jar, doc">
@@ -184,6 +188,7 @@
         <zip destfile="${dist.dir}/${release}.zip">
 
             <zipfileset prefix="${prefix}" file="${release.jar}"/>
+            <zipfileset prefix="${prefix}" file="${release.api.jar}"/>
 
             <zipfileset prefix="${prefix}/lib" dir="${lib.dir}" includes="${lib.files}"/>
             <zipfileset prefix="${prefix}/lib"  dir="${basedir}" file="../${summa.ilib.common}"/>

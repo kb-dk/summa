@@ -28,8 +28,8 @@ package dk.statsbiblioteket.summa.storage.io;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.storage.StorageBase;
-import dk.statsbiblioteket.summa.storage.RecordIterator;
-import dk.statsbiblioteket.summa.storage.RecordAndNext;
+import dk.statsbiblioteket.summa.storage.api.RecordIterator;
+import dk.statsbiblioteket.summa.storage.api.RecordAndNext;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.rmi.RemoteException;
