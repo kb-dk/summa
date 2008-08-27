@@ -754,6 +754,11 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
             try {
                 Status status = s.getStatus();
                 return status;
+            } catch (Exception e) {
+                serviceMan.reportError(connCtx, e);
+                throw new InvalidServiceStateException(this, id,
+                                                       "getServiceStatus",
+                                                       "Connection broken");
             } finally {
                 connCtx.unref();
             }
