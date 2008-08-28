@@ -190,6 +190,9 @@ public class RemoteHelper {
                                 "summa-RH-resolutions");
 
         try {
+            /* Just try and create the dir to make sure we have something
+             * to delete */
+            tmpDir.mkdirs();
             Files.delete(tmpDir);
         } catch (IOException e) {
             log.error ("Failed to create or delete temporary dir. Can not "
@@ -225,7 +228,7 @@ public class RemoteHelper {
                 jar = Files.download(url, tmpDir, true);
             } catch (IOException e) {
                 log.warn ("Unable to retrieve url", e);
-                throw new InvalidCodePathException("Unable to retrieve url"
+                throw new InvalidCodePathException("Unable to retrieve url "
                                                    + url + ": "
                                                    + e.getMessage());
             }
