@@ -30,6 +30,7 @@ import java.util.List;
 import dk.statsbiblioteket.summa.control.api.Service;
 import dk.statsbiblioteket.summa.control.client.Client;
 import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -117,8 +118,10 @@ public class BundleStub {
      * @param value the value of the property to set
      */
     public void addSystemProperty (String name, String value) {
-        value = value.replace (" ", "\\ ");
-        jvmArgs.add ("-D"+name+"="+value);
+        //value = value.replace (" ", "\\ ");
+        String arg = "-D"+name+"="+value;
+        log.trace ("Added JVM arg: " + arg);
+        jvmArgs.add (arg);
     }
 
     /**
@@ -135,7 +138,7 @@ public class BundleStub {
         log.trace("start called");
         List<String> cmdLine = buildCommandLine();
         log.debug("start: Bundle dir is '" + bundleDir + "', command line is "
-                 + Strings.join(cmdLine, " "));
+                 + Logs.expand(cmdLine, 100));
         ProcessBuilder pb = new ProcessBuilder();
         log.trace("ProcessBuilder created, setting directory '" + bundleDir
                   + "'");

@@ -62,6 +62,8 @@ public interface ControlConnection extends Monitorable {
      *         known, but not running
      * @throws NoSuchClientException if the client with {@code instanceId}
      *                                is not known
+     * @throws InvalidClientStateException if the client is not running or
+     *                                     has a broken connection
      * @throws IOException if there is an error communicating with the client
      *                     or establishing the connection
      */

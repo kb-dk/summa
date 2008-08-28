@@ -33,15 +33,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.management.MBeanServer;
-import javax.management.ObjectName;
-import java.lang.management.ManagementFactory;
 import java.rmi.RMISecurityManager;
 import java.rmi.RemoteException;
-import java.rmi.AccessException;
-import java.rmi.NotBoundException;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.io.IOException;
 
@@ -76,6 +69,21 @@ public abstract class ServiceBase extends UnicastRemoteObject
 
     public ServiceBase(Configuration conf) throws RemoteException {
         super (getServicePort(conf));
+
+        /* Make sure that the codebase appears valid */
+        String codeBase = System.getProperty ("java.rmi.server.codebase");
+        if (codeBase != null) {
+            log.debug ("Validating codebase: " + codeBase);
+            String[] urls = codeBase.split(" ");
+            try {
+                RemoteHelper.testCodeBase(urls);
+            } catch (RemoteHelper.InvalidCodeBaseException e) {
+                throw new RemoteException ("Invalid codebase: "
+                                           + e.getMessage(), e);
+            }
+        } else {
+            log.debug ("Codebase not set");
+        }
 
         id = System.getProperty(SERVICE_ID);
         if (id == null) {

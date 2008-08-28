@@ -42,6 +42,7 @@ import dk.statsbiblioteket.summa.control.bundle.BundleStub;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.console.ProcessRunner;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -186,45 +187,6 @@ public class SSHDeployer implements ClientDeployer {
         log.info("Finished deploy of " + source + " to " + destination);
     }
 
-    private String[] privateFiles = new String[]{"jmx.access", "jmx.password"};
-    
-    /**
-     * The permissions for JMX.access and JMX.password needs to be readable only
-     * for the owner. The Unzip provided by Java does not handle file
-     * permissions and a readily available substitute has not been found.
-     * This method performs a recursive descend and sets the correct permissions
-     * for all jmx.access and jmx.password files it encounters.
-     *
-     * @param root where to start the search for JMX-files.
-     */
-    /*private void fixJMXPermissions(File root) {
-        log.trace("fixJMXPermissions(" + root + ") entered");
-        try {
-            File[] files = root.listFiles();
-            for (File file: files) {
-                if (file.isDirectory()) {
-                    fixJMXPermissions(file);
-                } else {
-                    for (String privateFile : privateFiles) {
-                        if (privateFile.equals(file.getName())) {
-                            log.debug("Setting permissions for '"
-                                      + file.getAbsoluteFile()
-                                      + " to read-only for owner and no "
-                                      + "permissions for everyone else");
-                            file.setReadable(false, false);
-                            file.setReadable(true, true);
-                            file.setWritable(false, false);
-                            file.setExecutable(false, false);
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            log.warn("fixJMXPermissions: Could not handle '" + root
-                     + "'. Skipping");
-        }
-    }*/
-
     /**
      * Check to see whether the destination folde rexists. If it doesn't, try
      * to create it.
@@ -334,17 +296,23 @@ public class SSHDeployer implements ClientDeployer {
 
         /* Build the command line with and ssh prefix */
         List<String> commandLine = new ArrayList<String>();
-        commandLine.addAll (Arrays.asList("ssh", login,
-                                          "cd", destination,                
-                                          ";"));
-        commandLine.addAll(stub.buildCommandLine());
+        commandLine.addAll (Arrays.asList("ssh", login));
+
+        /* We need to escape all elements of the remote command line
+         * since it must be passed as a single arg to ssh */
+        String remoteArg = "cd " + destination + ";";
+        List<String> remoteCmdLine = stub.buildCommandLine();
+        remoteCmdLine.set(0, probeJVMPath()); // Detect the JVM path remotely and override it
+        for (String arg : remoteCmdLine) {
+            remoteArg = remoteArg + " " + arg.replace(" ", "\\ ");
+        }
+        commandLine.add(remoteArg);
 
         log.debug ("Command line for '" + clientId + "':\n"
-                   + Strings.join(commandLine, " "));
+                   + Logs.expand(commandLine, 100));
 
         /* Exec the command line */
         ProcessRunner runner = new ProcessRunner(commandLine);
-        runner.setTimeout(START_TIMEOUT);
 
         String error = null;
         try {
@@ -353,7 +321,7 @@ public class SSHDeployer implements ClientDeployer {
             processThread.start();
 
             /* Wait until the deployment is done or times out */
-            processThread.join();
+            processThread.join(START_TIMEOUT);
 
             if (runner.isTimedOut()) {
                 String errorMsg = runner.getProcessErrorAsString();
@@ -361,6 +329,11 @@ public class SSHDeployer implements ClientDeployer {
                         + login + " and configuration server "
                         + confLocation + ". Timed out"
                         + (errorMsg != null ? ":\n" + errorMsg : "");
+            } else if (processThread.isAlive()) {
+                /* The process is still running. This is probably a good sign,
+                 * but we have no way to be sure */
+                log.debug ("Process thread for '" + clientSpec + "' still "
+                           + "running. Let's hope it is doing good");
             } else if (runner.getReturnCode() != 0) {
                 error = "Could not run client '" + clientId + "' with login "
                         + login + " and configuration server "
@@ -409,5 +382,49 @@ public class SSHDeployer implements ClientDeployer {
             throw new IllegalArgumentException(error);
         }
         return value;
+    }
+
+    private String probeJVMPath () {
+        final String[] rootProspects = new String[] {"/usr/java/",
+                                             "/usr/lib/jvm/"};
+
+        final String[] jrePropsects = new String[] {"java-6-sun",
+                                           "java-1.6-sun",
+                                           "java-1.6.0-sun",
+                                           "java-6-openjdk",
+                                           "java-1.6-openjdk",
+                                           "java-1.6.0-openjdk",
+                                           "jdk1.6",
+                                           "jre1.6"};
+
+        log.debug ("Probing for JVM path on " + login);
+
+        for (String jre : jrePropsects) {
+            for (String root : rootProspects) {
+                String probePath = root + jre + "/bin/java";
+                log.trace("Probing for JRE " +probePath);
+                ProcessRunner probe = new ProcessRunner ("ssh", login,
+                                                         probePath
+                                                         + " -version");
+                probe.run();
+                if (probe.getReturnCode() == 0) {
+                    log.debug("Found JVM on " + login + ": " + probePath);
+                    return probePath;
+                }
+            }
+        }
+
+        String probePath = "/usr/bin/java";
+        log.trace ("Probing for JRE " + probePath);
+        ProcessRunner probe = new ProcessRunner ("ssh", login,
+                                                 probePath
+                                                 + " -version");
+        probe.run();
+        if (probe.getReturnCode() == 0) {
+            log.debug("Found JVM on " + login + ": " + probePath);
+            return probePath;
+        }
+
+        throw new ClientDeploymentException("Unable to detect JRE on " + login);
     }
 }

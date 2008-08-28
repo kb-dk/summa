@@ -617,7 +617,7 @@ public class BundleSpecBuilder {
         /* Find all .jar files in lib/ */
         for (String lib : getFiles()) {
             if (lib.endsWith(".jar") && lib.startsWith("lib/")) {
-                log.trace("getStub: Adding '" + lib + "' to libs");
+                log.trace("getStub() adding lib: " + lib);
                 libs.add(lib);
             }
         }
@@ -628,10 +628,10 @@ public class BundleSpecBuilder {
          * too we get some errors when launching */
         for (Map.Entry<String, Serializable> entry : getProperties()) {
             String val = (String) entry.getValue();
-            val = val.replace(" ", "\\ ");
+            //val = val.replace(" ", "\\ ");
             String arg ="-D"+entry.getKey()+"="+val;
             jvmArgs.add(arg);
-            log.trace("getStub: Adding argument " + arg);
+            log.trace("getStub() adding argument: " + arg);
         }
 
         /* Detect JMX support */
@@ -649,7 +649,7 @@ public class BundleSpecBuilder {
                          + BundleStub.POLICY_FILE);
         }
 
-        log.trace("getStub: Creating BundleStub");
+        log.trace("getStub() creating BundleStub");
         BundleStub stub = new BundleStub(new File ("."),
                               getBundleId(),
                               getInstanceId(),
@@ -657,7 +657,7 @@ public class BundleSpecBuilder {
                               getMainClass(),
                               libs,
                               jvmArgs);
-        log.trace("Finished getStub, returning BundleStub " + stub);
+        log.trace("Finished getStub(), returning: " + stub);
         return stub;
 
     }

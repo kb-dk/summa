@@ -181,6 +181,10 @@ public interface ClientConnection extends Monitorable {
      * @param id the instance id of the service to look up
      * @return a proxy for the service object
      * @throws IOException in case of communication errors
+     * @throws InvalidServiceStateException if the service is not running or
+     *                                      has a broken connection
+     * @throws NoSuchServiceException if the client does not know of a service
+     *                                with the id {@code id}.
      */
     public Service getServiceConnection (String id) throws IOException;
 
