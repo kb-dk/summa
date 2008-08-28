@@ -128,8 +128,8 @@ public class ListSorterTest extends TestCase implements Comparator<String> {
     }
 
     private List<String> getRandomWords(int wordCount, int maxLength) {
-        char[] LETTERS = ("abcdefghijklmnopqrstuvwxyzæøå"
-                         + "ABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ1234567890 ").
+        char[] LETTERS = ("abcdefghijklmnopqrstuvwxyzÃ¦Ã¸Ã¥"
+                         + "ABCDEFGHIJKLMNOPQRSTUVWXYZÃ†Ã˜Ã…1234567890 ").
                 toCharArray();
         Random random = new Random();
         List<String> randomWords = new ArrayList<String>(wordCount);
