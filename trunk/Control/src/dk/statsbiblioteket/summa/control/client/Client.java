@@ -766,7 +766,22 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
     }
 
     public Service getServiceConnection (String id) throws RemoteException {
-        log.trace("Getting service connection for " + id);
+        return getServiceConnection(id, 0);
+    }
+
+    private Service getServiceConnection (String id, int numRetries)
+                                                        throws RemoteException {
+        final int maxRetries = 10;
+
+        log.trace("Getting service connection for " + id
+                  + (numRetries == 0 ? "" : ". Retry: " + numRetries));
+
+        if (numRetries >= maxRetries) {
+            throw new InvalidServiceStateException(this, id,
+                                                   "getServiceConnection",
+                                                   "Giving up after "
+                                                   + maxRetries + " retries");
+        }
 
         if (id == null) {
             throw new NullPointerException("id is null");
@@ -822,7 +837,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
 
                 // Retry connection
                 log.debug ("Retrying connection to '" + id + "'");
-                return getServiceConnection(id);
+                return getServiceConnection(id, numRetries + 1);
             }
 
             return s;
