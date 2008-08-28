@@ -75,6 +75,7 @@ public class MemoryStringPoolTest extends TestCase {
     public void testSorting() throws IOException {
         testSorting(getPool(3));
     }
+
     public static void testSorting(SortedPool<String> pool) {
         String[] words = new String[]{
                 "Duksedreng", "Daskelars", "Dumrian", "Drøbel",
