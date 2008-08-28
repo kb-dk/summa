@@ -22,11 +22,11 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.build;
 
-import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
+import dk.statsbiblioteket.summa.facetbrowser.core.FacetCore;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
-import java.io.File;
 import java.io.IOException;
 
 /**
@@ -35,16 +35,16 @@ import java.io.IOException;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public interface Builder {
+public interface Builder extends FacetCore {
     /**
-     * Updates the facet-structure based on the given Record.
+     * Updates the facet-structure based on the given Payload.
      * The record must contain either meta-value
      * {@link LuceneIndexUtils#META_ADD_DOCID},
      * {@link LuceneIndexUtils#META_DELETE_DOCID} or both, depending on whether
      * it is an addition, a deletion or an update.
-     * @param record used as basis for the update.
+     * @param payload used as basis for the update.
      */
-    public void updateRecord(Record record);
+    public void update(Payload payload);
 
     /**
      * Discard any previous mapping and optionally tags and perform a complete
@@ -72,16 +72,9 @@ public interface Builder {
     /**
      * Clear all tags for the given docID.
      * @param docID the document-index specific document ID.
-     * @param shift if true, all subsequent documents are shifted down. This
-     *              can be considered a removal of the docID, instead of just
-     *              a clear. If false, no shifting is done.
-     *              Note: Lucene deletes documents with delayed shifting:
-     *              A deleted document is marked as deleted. Upon merging,
-     *              optimization and purgeDeletes, subsequent documents are
-     *              shifted. The order after sifting is not guaranteed.
      * @throws IOException if the document could not be cleared.
      */
-    public void clear(int docID, boolean shift) throws IOException;
+    public void remove(int docID) throws IOException;
 
     /**
      * Clear the underlying structure.
@@ -91,9 +84,9 @@ public interface Builder {
     public void clear(boolean keepTags) throws IOException;
 
     /**
-     * Store the internal representation to disk.
-     * @param directory the location of the data.
+     * Store the internal representation. The location will normally be
+     * specified upon creation of the Builder.
      * @throws IOException if the internal representation could not be stored.
      */
-    public void save(File directory) throws IOException;
+    public void store() throws IOException;
 }

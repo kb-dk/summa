@@ -22,12 +22,17 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.util.pool;
 
-import java.io.File;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
+import dk.statsbiblioteket.summa.facetbrowser.BaseObjects;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.CachedCollator;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+
+import java.io.File;
+import java.io.IOException;
+import java.text.Collator;
+import java.util.Locale;
 
 /**
  * MemoryStringPool Tester.
@@ -41,20 +46,32 @@ public class MemoryStringPoolTest extends TestCase {
         super(name);
     }
 
+    BaseObjects bo;
     public void setUp() throws Exception {
         super.setUp();
+        bo = new BaseObjects();
     }
 
     public void tearDown() throws Exception {
         super.tearDown();
+        bo.close();
     }
 
     public static Test suite() {
         return new TestSuite(MemoryStringPoolTest.class);
     }
 
+    static Collator defaultCollator = new CachedCollator(new Locale("da"));
+    public static MemoryStringPool getPool(int id) throws IOException {
+        MemoryStringPool pool = new MemoryStringPool(defaultCollator);
+        pool.open(poolFolder, "testpool" + id, false, true);
+        return pool;
+    }
+    static File poolFolder = new File(System.getProperty("java.io.tmpdir"),
+                           "facetTestMemory");
+
     public void testIO() throws Exception {
-        testIO(new MemoryStringPool(), new MemoryStringPool());
+        testIO(getPool(1), getPool(1));
     }
     public static void testIO(SortedPool<String> pool1,
                               SortedPool<String> pool2) throws Exception {
@@ -65,12 +82,12 @@ public class MemoryStringPoolTest extends TestCase {
         File temp = File.createTempFile("MemoryTest", "tmp");
         temp.deleteOnExit();
         File tempLocation = temp.getParentFile();
-        pool1.store(tempLocation, "temp");
+        pool1.store();
         assertTrue("Values should exist",
                    new File(tempLocation, "temp.dat").exists());
         assertTrue("Indexes should exist",
                    new File(tempLocation, "temp.index").exists());
-        pool2.load(tempLocation, "temp");
+        pool2.open(poolFolder, pool1.getName(), false, false);
         MemoryPoolTest.compareOrder("The loaded pool should be equal to the"
                                     + " saved", pool1, pool2);
         new File(tempLocation, "temp.dat").delete();
@@ -83,6 +100,6 @@ public class MemoryStringPoolTest extends TestCase {
     }
 
     public void dumpDirty() throws Exception {
-        MemoryPoolTest.dumpDirty(new MemoryStringPool(), 1000000);
+        MemoryPoolTest.dumpDirty(getPool(3), 1000000);
     }
 }

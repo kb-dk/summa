@@ -25,7 +25,7 @@ package dk.statsbiblioteket.summa.facetbrowser.util;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
- * Superclass for the different types of Pairs.
+ * Pair with flexible sorting.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -34,9 +34,9 @@ public class FlexiblePair<T extends Comparable<T> , S extends Comparable<S>>
         implements Comparable<FlexiblePair<T, S>> {
     public enum SortType {PRIMARY_ASCENDING, PRIMARY_DESCENDING,
                           SECONDARY_ASCENDING, SECONDARY_DESCENDING}
+    protected T key;
+    protected S value;
 
-    private T key;
-    private S value;
     private SortType sortType;
 
     public FlexiblePair(T key, S value, SortType sortType) {
@@ -52,6 +52,7 @@ public class FlexiblePair<T extends Comparable<T> , S extends Comparable<S>>
             return 0;
         }
         // TODO: Move this out of the class, as it is prone to error
+        // TODO: Sont on secondary value?
         switch (sortType) {
             case PRIMARY_ASCENDING:
                 return key.compareTo(o.getKey());

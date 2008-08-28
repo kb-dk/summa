@@ -23,12 +23,16 @@
 package dk.statsbiblioteket.summa.facetbrowser.util.pool;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Random;
+import java.util.Locale;
+import java.text.Collator;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.CachedCollator;
 
 /**
  * DiskPool Tester.
@@ -50,66 +54,75 @@ public class DiskPoolTest extends TestCase {
         super.tearDown();
     }
 
+    static Collator defaultCollator = new CachedCollator(new Locale("da"));
+    public static DiskStringPool getPool() throws IOException {
+        DiskStringPool pool = new DiskStringPool(defaultCollator);
+        pool.open(new File(System.getProperty("java.io.tmpdir"),
+                           "facetTestDisk"),
+                  "testpool", false, true);
+        return pool;
+    }
+    
     public void testSetGetValue() throws Exception {
-        MemoryPoolTest.testSetGetValue(new DiskStringPool());
+        MemoryPoolTest.testSetGetValue(getPool());
     }
 
     public void testIO() throws Exception {
-        MemoryStringPoolTest.testIO(new DiskStringPool(), new DiskStringPool());
+        MemoryStringPoolTest.testIO(getPool(), getPool());
     }
 
     public void dumpSpeed() throws Exception {
-        MemoryPoolTest.dumpSpeed(new DiskStringPool());
+        MemoryPoolTest.dumpSpeed(getPool());
         System.gc();
-        MemoryPoolTest.dumpSpeed(new DiskStringPool());
+        MemoryPoolTest.dumpSpeed(getPool());
     }
 
     public void makeSmallSample() throws Exception {
-        MemoryPoolTest.createSample(new DiskStringPool(), 1000,
+        MemoryPoolTest.createSample(getPool(), 1000,
                                     new File("/tmp"), "test_1K");
     }
 
     public void makeMediumSample() throws Exception {
-        MemoryPoolTest.createSample(new DiskStringPool(), 1000000,
+        MemoryPoolTest.createSample(getPool(), 1000000,
                                     new File("/tmp"), "test_1M");
     }
 
     public void makeBigSample() throws Exception {
-        MemoryPoolTest.createSample(new DiskStringPool(), 10000000,
+        MemoryPoolTest.createSample(getPool(), 10000000,
                                     new File("/tmp"), "test_10M");
     }
 
     public void dumpDirty() throws Exception {
-        MemoryPoolTest.dumpDirty(new DiskStringPool(), 1000000);
+        MemoryPoolTest.dumpDirty(getPool(), 1000000);
     }
     public void testDirty() throws Exception {
-        MemoryPoolTest.testDirty(new DiskStringPool());
+        MemoryPoolTest.testDirty(getPool());
     }
     public void testDirtyRandom() throws Exception {
-        MemoryPoolTest.testDirtyRandom(new DiskStringPool(),
-                                       new DiskStringPool(), 1000);
+        MemoryPoolTest.testDirtyRandom(getPool(),
+                                       getPool(), 1000);
     }
 
     public void testDirtyOffByOne() throws Exception {
         int RUNS = 100;
         int samples = 1000;
         for (int r = 0 ; r < RUNS ; r++) {
-            DiskPool<String> pool = new DiskStringPool();
+            DiskPool<String> pool = getPool();
             Random random = new Random();
             for (int i = 0 ; i < samples ; i++) {
                 String adder = Integer.toString(random.nextInt(samples / 4));
-                pool.dirtyAdd(adder);
+                pool.add(adder);
             }
             pool.cleanup();
             for (int i = 0 ; i < samples ; i++) {
                 assertFalse("No values should contain line breaks",
-                     pool.getValue(random.nextInt(pool.size())).contains("\n"));
+                     pool.get(random.nextInt(pool.size())).contains("\n"));
             }
         }
     }
 
     public void testPosition() throws Exception {
-        MemoryPoolTest.testPosition(new DiskStringPool());
+        MemoryPoolTest.testPosition(getPool());
     }
 
 

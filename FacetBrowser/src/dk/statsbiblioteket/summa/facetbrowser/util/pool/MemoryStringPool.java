@@ -28,43 +28,30 @@ package dk.statsbiblioteket.summa.facetbrowser.util.pool;
 
 import java.text.Collator;
 import java.util.Arrays;
+import java.io.File;
+import java.io.IOException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * Simple implementation of Strings with MemoryPool.
  * The persistent files used by this implementation are compatible with those
  * from {@link DiskStringPool}.
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.QA_NEEDED,
+        author = "te")
 public class MemoryStringPool extends MemoryPool<String> implements
                                                           CollatorSortedPool {
-    private Log log = LogFactory.getLog(MemoryStringPool.class);
+//    private Log log = LogFactory.getLog(MemoryStringPool.class);
+
     private Collator collator = null;
 
-    protected byte[] valueToBytes(String value) {
-        return StringConverter.valueToBytes(value);
-    }
-
-    protected String bytesToValue(byte[] buffer, int length) {
-        return StringConverter.bytesToValue(buffer, length);
-    }
-
-    public int compare(String o1, String o2) {
-        return collator == null? o1.compareTo(o2) : collator.compare(o1, o2);
-    }
-
-    public void cleanup() {
-        //noinspection DuplicateStringLiteralInspection
-        log.debug("Cleaning up dirty added values (" + valueCount + ")");
-        if (collator == null) {
-            Arrays.sort(values, 0, valueCount);
-        } else {
-            Arrays.sort(values, 0, valueCount, collator);
-        }
-        removeDuplicates();
-        //noinspection DuplicateStringLiteralInspection
-        log.debug("Finished cleanup. Resulting value-count: " + valueCount);
+    public MemoryStringPool(Collator collator) {
+        super(new StringConverter(), collator);
+        this.collator = collator;
     }
 
     /* Mutators */

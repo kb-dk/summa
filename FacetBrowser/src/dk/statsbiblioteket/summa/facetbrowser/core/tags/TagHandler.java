@@ -26,8 +26,6 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.core.tags;
 
-import dk.statsbiblioteket.summa.facetbrowser.util.pool.SortedPool;
-import dk.statsbiblioteket.summa.common.lucene.index.IndexConnector;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.util.List;
@@ -36,18 +34,29 @@ import java.io.IOException;
 
 /**
  * The TagHandler is responsible for mapping between integer and String
- * representations of tags.
- * </p><p>
- * A TagHandler requires that the
+ * representations of tags. It enforces Strict ordering of the Tags.
  * </p><p>
  * The tags are guaranteed to be in consistent order, so order of the id of two
  * tags is equal to comparing their String representation. This is especially
- * relevant for the methods {@link #addTag} and {@link #removeTag}, as they
+ * relevant for the methods {@link #insertTag} and {@link #removeTag}, as they
  * might shift the underlying structure.
+ * </p><p>
+ * TagHandlers must have a constructor that takes (Configuration conf,
+ * Structure structure,boolean readOnly) as arguments.
  */
-@QAInfo(state=QAInfo.State.QA_NEEDED,
-        level=QAInfo.Level.NORMAL)
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.IN_DEVELOPMENT,
+        author = "te")
 public interface TagHandler {
+    /**
+     * If true, the TagHandler should hold the entire structure in memory.
+     * </p><p>
+     * Optional. Default is false.
+     * @see {@link Facet}.
+     */
+    public static final String CONF_USE_MEMORY =
+            "summa.facet.taghandler.use-memory";
+    public static final boolean DEFAULT_USE_MEMORY = false;
 
     /**
      * Resolve the id (integer representation) for a given tag name. This method
@@ -120,22 +129,26 @@ public interface TagHandler {
     public List<Facet> getFacets();
 
     /**
-     * Load the structure from disk.
-     * @param folder       the folder to store the content in.
-     * @throws IOException in case of disk-related problems during store.
+     * Open the structure from disk. This needs to be called before use.
+     * @param folder the folder for persistent content.
+     * @throws IOException in case of major disk-related problems during store.
+     * @return a list of Facets that had no existing structure on disk or had a
+     *         structure that was inconsistent with the base setup.
+     *         Users ofopen should perform a remove and an update of the Facets
+     *         returned and of any structures using the handler (such af
+     *         CoreMap), if the list is not empty.
      */
-    public void load(File folder) throws IOException;
+    public List<Facet> open(File folder) throws IOException;
 
     /**
-     * Store the structure on disk.
-     * @param folder       the folder to store the content in.
+     * Store the structure on disk at the location specified in {@link #open}.
      * @throws IOException in case of disk-related problems during store.
      */
-    public void store(File folder) throws IOException;
+    public void store() throws IOException;
 
     /**
      * Close down any open files and similar resources. The state of the
-     * TagHandler is invalid after close.
+     * TagHandler is invalid after close until {@link #open} has been called.
      */
     public void close();
 
@@ -158,23 +171,34 @@ public interface TagHandler {
     public void dirtyAddTag(int facetID, String tagName);
 
     /**
+     * Add a tag to the given facet. This method does not guarantee external
+     * consistency for tagIDs. It should be used for quickly adding a lot
+     * of tags for later use.<br />
+     * A cleanup must be called after a series of calls to dirtyAddTag.
+     * @see {@link #cleanup}.
+     * @param facetName the name of the Facet for the Tag.
+     * @param tagName the String representation of a Tag under the given Facet.
+     */
+    public void dirtyAddTag(String facetName, String tagName);
+
+    /**
      * Perform a cleanup of the tagHandler, ensuring natural order and dublet
      * reduction. This must be called after calls to {@link #dirtyAddTag}.
      */
     public void cleanup();
 
     /**
-     * Add a tag to the given facet and return the index of the tag.<br/>
+     * Insert a tag to the given facet and return the index of the tag.<br/>
      * Note that this might shift the id of the existing tags if the new tag is
      * positioned before the last existing tag. Shifting always occur downwards
      * one position for all tags following the newly inserted tag.
      * @param facetID the integer representation of a Facet (can be resolved
      *                by getFacetID).
      * @param tagName the String representation of a Tag under the given Facet.
-     * @return the id for the newly added tag. If the tag already exists, the
-     *         id for the existing tag is returned.
+     * @return the id for the newly added tag. If the tag already exists,
+     *         (-id-1) for the existing tag is returned.
      */
-    public int addTag(int facetID, String tagName);
+    public int insertTag(int facetID, String tagName);
 
     /**
      * Remove a tag from the given facet.<br/>

@@ -26,48 +26,43 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.util.pool;
 
-import java.io.IOException;
-import java.io.File;
-import java.io.RandomAccessFile;
-
+import dk.statsbiblioteket.summa.common.util.ListSorter;
+import dk.statsbiblioteket.util.LineReader;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import dk.statsbiblioteket.util.Profiler;
-import dk.statsbiblioteket.util.LineReader;
+
+import java.io.*;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * The DiskPool uses the local filesystem for the storage of values. An index
  * of the value positions is kept in RAM. This takes up 8*valueCount bytes.
  * </p><p>
- * The internal position list packs pointers to value- and shadow-file together
- * with the size of the individual values. This means that the maximum size
- * of a given value is restricted to 2^15 bytes.
- * </p><p>
- * During use, a temporary shadow-file with added strings are kept on disk.
- * Upon storing, the shadow-file is removed.
+ * New values are appended to the values-file, but never removed. As long as
+ * the underlying storage system allows for readers to access a file, while a
+ * writer updates it, concurrent access should not be a problem.
  * </p><p>
  * While care has been taken to optimize the speed of this pool, it is
  * significantly slower than the equivalent {@link MemoryPool}.
  */
-public abstract class DiskPool<E extends Comparable<? super E>>
-                                                     extends SortedPoolImpl<E> {
+public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
     private Log log = LogFactory.getLog(DiskPool.class);
     private static final int DEFAULT_SIZE = 1000;
     private static final int MAX_INCREMENT = 1000000;
 
-    private static final byte LENGTH_ROLL = 48; // Number of bits to roll
-    private static final long OFFSET_MASK = 
-            Math.round(StrictMath.pow(2, LENGTH_ROLL))-1;
+    private ListSorter sorter;
 
     /**
-     * The index for the DiskPool is special.
-     * Positive values and 0 indicates offsets in the standard value data file.
-     * Negative values indicates offsets in the shadow file.
-     * The length of the given value in the value file is added to the offset by
-     * length*2^48. For the shadow file, the length is subtracted.
+     * The index for the DiskPool. This is kept as an array in order to minimize
+     * memory usage. The index can be longer than the amount of values.
+     * The amount of values is given by {@link #valueCount}.
+     * </p><p>
+     * Note that each long in the array are made up of length and position as
+     * described in {@link SortedPool}.
      */
-    private long[] indexes = new long[DEFAULT_SIZE];
-    protected int valueCount = 0;
+    private long[] indexes;
+    private int valueCount = 0;
 
     /**
      * The file containing values. This can be null, in case on a newly created
@@ -75,344 +70,199 @@ public abstract class DiskPool<E extends Comparable<? super E>>
      */
 //    private RandomAccessFile values;
     private LineReader values;
+    /**
+     * The buffer for LineReader. This should be aproximately the length (bytes)
+     * of the largest value.
+     */
+    private static final int VALUE_BUFFER_SIZE = 100;
 
-    /**
-     * The file containing added values. This is changed every time a value is
-     * added.
-     */
-    // TODO: When should we remove this file?
-    private RandomAccessFile shadow;
-    /**
-     * The position for a new value.
-     */
-    private long newShadowPosition = 0;
-    private File shadowFile;
-
-    /**
-     * Constructing a DiskPool without a location and a name will result in
-     * temporary files being created in the temp-dir specified in Java
-     * properties.
-     * @throws IOException if the temporary files could not be created.
-     */
-    public DiskPool() throws IOException {
-        //noinspection DuplicateStringLiteralInspection
-        this(new File(System.getProperty("java.io.tmpdir")),
-                      "TempPool_" + System.currentTimeMillis(), true);
+    public DiskPool(ValueConverter<E> valueConverter,
+                          Comparator comparator) {
+        super(valueConverter, comparator);
+        sorter = new ListSorter() {
+            protected <T> void swap(List<T> list, int pos1, int pos2) {
+                long temp = indexes[pos1];
+                indexes[pos2] = indexes[pos1];
+                indexes[pos1] = temp;
+            }
+        };
     }
 
-    /**
-     * Constructing a DiskPool with newPool add to true will not change any
-     * data on disk before storing.
-     * @param location the folder with the persistent files.
-     * @param poolName the name of the pool.
-     * @param newPool  if true, a new pool is created, if false, an old pool
-     *                 is loaded.
-     * @throws IOException if old data could not be loaded or new data not
-     *                     be created.
-     */
-    public DiskPool(File location, String poolName, boolean newPool)
-            throws IOException {
-        if (!newPool) {
-            load(location, poolName);
-        } else {
-            log.info("Creating empty data file for '" + poolName + "' in '"
-                     + location + "'");
-            new File(location, poolName + ".dat").createNewFile();
-            connectToValues(location, poolName);
-        }
-    }
-
-    public void load(File location, String poolName) throws IOException {
-        log.debug("Loading index and values for '" + poolName + "' in '"
-                  + location + "'");
+    public boolean open(File location, String poolName, boolean readOnly,
+                        boolean forceNew) throws IOException {
         if (values != null) {
-            log.debug("Closing handles for values and shadow (" + shadowFile
-                      + ")");
-            values.close();
-            shadow.close();
-            shadowFile.delete();
-            clear();
+            log.warn(String.format(
+                    "Opening new pool without previous close of '%s'. "
+                    + "Attempting close", location));
+            try {
+                values.close();
+            } catch (IOException e) {
+                log.warn(String.format(
+                        "IOException closing previous pool for '%s'",
+                         location), e);
+            }
         }
-        loadAndHandleIndex(location, poolName);
-        connectToValues(location, poolName);
-    }
-
-    protected void connectToValues(File location, String poolName) throws
-                                                                   IOException {
-        log.debug("Connecting to values and shadow file for '" + poolName
-                  + "' in '" + location + "'");
-        values = new LineReader(new File(location, poolName + ".dat"),
-                                      "r");
-        values.setBufferSize(100);
-//        values = new RandomAccessFile(new File(location, poolName + ".dat"),
-//                                      "r");
-        createAndConnectToShadow(location, poolName);
-    }
-
-    private void createAndConnectToShadow(File location, String poolName) throws
-                                                                   IOException {
-        shadowFile = new File(location,
-                              poolName + "_" + System.currentTimeMillis()
-                              + ".shadow");
-        shadowFile.createNewFile();
-        shadow = new RandomAccessFile(shadowFile, "rw");
-    }
-
-    /**
-     * Loads the index into RAM and updates lengths to reflect it.
-     * @param location where the index is stored.
-     * @param poolName the name of the pool.
-     * @throws IOException if the index data could not be loaded.
-     */
-    protected void loadAndHandleIndex(File location, String poolName) throws
-                                                                      IOException {
-        log.debug("Loading index for '" + poolName + "' in '" + location + "'");
-        indexes = loadIndex(location, poolName);
-        for (int i = 0 ; i < indexes.length - 1 ; i++) {
-            indexes[i] = indexes[i] | indexes[i+1] - indexes[i] << LENGTH_ROLL;
+        setBaseData(location, poolName, readOnly);
+        if (!getIndexFile().exists() || !getValueFile().exists()) {
+            if (!forceNew) {
+                log.trace(String.format(
+                        "Index data: %spresent, value data: %spresent. A new "
+                        + "pool '%s' will be created at '%s'",
+                        getIndexFile().exists() ? "" : "not ",
+                        getValueFile().exists() ? "" : "not ",
+                        poolName, location));
+                forceNew = true;
+            }
         }
-        valueCount = indexes.length - 1;
-        //noinspection DuplicateStringLiteralInspection
-        log.debug("Finished loading index and updating length for " + valueCount
-                  + " values for '" + poolName + "' in '" + location + "'");
+        if (forceNew) {
+            log.debug(String.format("creating new pool '%s' at '%s'",
+                                    poolName, location));
+            remove(getValueFile(), "existing values");
+            getValueFile().createNewFile();
+            indexes = new long[DEFAULT_SIZE];
+        } else {
+            log.trace("Loading index");
+            indexes = loadIndex();
+        }
+        connectToValues();
+        return !forceNew;
     }
 
-    @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    public int add(E value) {
-        log.trace("Adding '" + value + "' to the pool");
-        int insertPos = binarySearch(value);
-        if (insertPos < valueCount && getValue(insertPos).equals(value)) {
-            log.debug("The value '" + value + "' already exists in the pool");
-            return -1;
+    public void store() throws IOException {
+        log.debug(String.format("Storing pool '%s' to location '%s'",
+                                poolName, location));
+        File tmpIndex = new File(getIndexFile().toString() + ".tmp");
+        remove(tmpIndex, "previously stored index");
+
+        FileOutputStream indexOut = new FileOutputStream(tmpIndex);
+        BufferedOutputStream indexBuf = new BufferedOutputStream(indexOut);
+        ObjectOutputStream index = new ObjectOutputStream(indexBuf);
+
+        index.writeInt(VERSION);
+        index.writeInt(size());
+
+        for (int i = 0 ; i < size() ; i++) {
+            index.writeLong(indexes[i]);
         }
+        log.trace("Stored all values for '" + poolName + "', closing streams");
+        index.flush();
+        index.close();
+        indexBuf.close();
+        indexOut.close();
+        log.trace(String.format("store: Renaming index '%s' to '%s'",
+                                tmpIndex, getIndexFile()));
+        remove(getIndexFile(), "old index");
+        tmpIndex.renameTo(getIndexFile());
+        log.debug("Finished storing pool '" + poolName + "' to location '"
+                  + location + "'");
+
+    }
+
+    private void connectToValues() throws IOException {
+        values = new LineReader(getValueFile(), readOnly ? "r" : "rw");
+        values.setBufferSize(VALUE_BUFFER_SIZE);
+    }
+
+    public void close() {
+        log.trace("Close called");
+        if (values != null) {
+            try {
+                values.close();
+            } catch (IOException e) {
+                log.warn(String.format(
+                        "Exception while attempting close "
+                        + "for pool '%s' at '%s'",
+                        poolName, location), e);
+            }
+        }
+        values = null;
+        valueCount = 0;
+    }
+
+    public String getName() {
+        return "Generic Disk Pool";
+    }
+
+    protected void sort() {
+        sorter.sort(this, this);
+    }
+
+    public E set(int index, E element) {
+        if (index < 0 || index >= size()) {
+            throw new ArrayIndexOutOfBoundsException(String.format(
+                    "The index %d for %s was not between 0 and %d",
+                    index, element, valueCount));
+        }
+        E e = get(index);
+        indexes[index] = storeValue(element);
+        return e;
+    }
+
+    private long storeValue(E element) {
+        byte[] setBytes = getValueConverter().valueToBytes(element);
+        long pos = values.length();
+        if (setBytes.length > 0) {
+            try {
+                values.seek(pos);
+                values.write(setBytes);
+            } catch (IOException e1) {
+                throw new RuntimeException(String.format(
+                        "Unable to store value '%s' at file-position %d for "
+                        + "'%s' in '%s'",
+                        element, pos, poolName, location), e1);
+            }
+        }
+        return getIndexEntry(pos, setBytes.length);
+    }
+
+    public void add(int insertPos, E value) {
+        log.trace("Adding '" + value + "' to the pool at index " + insertPos);
+
         /* Check that there is enough room */
         expandIfNeeded();
         /* Make room */
-        if (insertPos < valueCount) {
+        if (insertPos < size()) {
             System.arraycopy(indexes, insertPos, indexes, insertPos + 1,
-                             valueCount - insertPos);
+                             size() - insertPos);
         }
-        /* Assign */
-        log.trace("Inserting at position " + insertPos);
-        try {
-            shadow.seek(newShadowPosition);
-        } catch (IOException e) {
-            throw new RuntimeException("Could not seek to position "
-                                       + newShadowPosition
-                                       + " in the shadow file '"
-                                       + shadowFile + "'");
-        }
-        byte[] bytes = valueToBytes(value);
-        try {
-            shadow.write(bytes);
-        } catch (IOException e) {
-            throw new RuntimeException("Could not store value '" + value + "'"
-                                       + " to shadow file '" + shadowFile + "'",
-                                       e);
-        }
-        long combined = newShadowPosition + ((long)bytes.length << LENGTH_ROLL);
-        indexes[insertPos] = -combined; // Shadows are negative!
-        newShadowPosition += bytes.length;
-        valueCount++;
-        return insertPos;
-    }
-
-    @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    public void dirtyAdd(E value) {
-        if (log.isTraceEnabled()) {
-            log.trace("Adding '" + value + "' to the pool");
-        }
-        /* Check that there is enough room */
-        expandIfNeeded();
-        try {
-            shadow.seek(newShadowPosition);
-        } catch (IOException e) {
-            throw new RuntimeException("Could not seek to position "
-                                       + newShadowPosition
-                                       + " in the shadow file '"
-                                       + shadowFile + "'");
-        }
-        byte[] bytes = valueToBytes(value);
-        try {
-            shadow.write(bytes);
-        } catch (IOException e) {
-            throw new RuntimeException("Could not store value '" + value + "'"
-                                       + " to shadow file '" + shadowFile + "'",
-                                       e);
-        }
-        long combined = newShadowPosition + ((long)bytes.length << LENGTH_ROLL);
-        indexes[valueCount] = -combined; // Shadows are negative!
-        newShadowPosition += bytes.length;
+        indexes[insertPos] = storeValue(value);
         valueCount++;
     }
-
-    public void cleanup() {
-        //noinspection DuplicateStringLiteralInspection
-        log.debug("Cleaning up dirty added values (" + valueCount + ")");
-        sortIndexes();
-        removeDuplicates();
-    }
-
-    /**
-     * The sorter needs to look up the values from the indexes and should not
-     * use too much memory, as the DiskPool are geared towards low memory usage.
-     * A HeapSort is used, which takes O(n*log(n)) time and n space.
-     * see http://en.wikibooks.org/wiki/Wikiversity:Data_Structures#Heaps
-     * and http://www.personal.kent.edu/~rmuhamma/Algorithms/MyAlgorithms/Sorting/heapSort.htm
-     */
-    protected void sortIndexes() {
-        /* This is O(n), although it looks like O(n*log(n)) */
-        //noinspection DuplicateStringLiteralInspection
-        log.debug("Sorting " + valueCount + " values");
-        log.debug("Sifting down " + (valueCount / 2 - 1) + " entries");
-        int every = valueCount / 2 / 100;
-        Profiler siftProfiler = new Profiler();
-        siftProfiler.setExpectedTotal(100);
-        for (int position = valueCount / 2 - 1 ; position >= 0 ; position--) {
-            if (log.isDebugEnabled() && position % every == 0) {
-                siftProfiler.beat();
-                if (log.isTraceEnabled()) {
-                    log.trace("sortIndexes: sifted down "
-                              + (valueCount / 2 - position) * 100 /
-                                (valueCount / 2)
-                              + "%. ETA: "
-                              + siftProfiler.getETAAsString(true));
-                }
-            }
-            siftDown(position, valueCount);
-        }
-
-        every = valueCount / 100;
-        Profiler minProfiler = new Profiler();
-        minProfiler.setExpectedTotal(100);
-        log.debug("Removing minimum value " + valueCount + " times");
-        for (int i = valueCount ; i > 0 ; i--) {
-//            System.out.println("=> " + i);
-            indexes[i-1] = removeMin(i);
-            if (log.isDebugEnabled() && i % every == 0) {
-                minProfiler.beat();
-                log.debug("sortIndexes: removedMin "
-                          + (valueCount - i) * 100 / valueCount + "%. ETA: "
-                          + minProfiler.getETAAsString(true));
-            }
-//            System.out.println(i + " " + getValue(i-1));
-/*            for (int j = 0 ; j < valueCount ; j++) {
-                System.out.print(getValue(j) + " ");
-            }
-            System.out.println("");*/
-        }
-        log.debug("Finished sorting " + valueCount + " values in " 
-                  + siftProfiler.getSpendTime());
-    }
-    protected void siftDown(int startPosition, int heapSize) {
-        int position = startPosition;
-        while (firstChild(position) < heapSize) {
-            int kid = firstChild(position);
-            if (kid < heapSize-1 &&
-                compare(getValue(kid), getValue(kid+1)) < 0) {
-                kid++;
-            }
-            if (compare(getValue(position), getValue(kid)) > 0) {
-                break;
-            } else {
-                swap(kid, position);
-                position = kid;
-            }
-        }
-    }
-    protected int firstChild(int element) {
-        return 2*element+1;
-    }
-    private void swap(int element1, int element2) {
-        long temp = indexes[element1];
-        indexes[element1] = indexes[element2];
-        indexes[element2] = temp;
-    }
-    public long removeMin(int heapSize) {
-        long result = indexes[0];
-        indexes[0] = indexes[heapSize-1];
-        heapSize--;
-        siftDown(0, heapSize);
-        return result;
-    }
-
 
     protected void expandIfNeeded() {
-        if (valueCount == indexes.length) {
-            int newSize = Math.min(valueCount + MAX_INCREMENT, valueCount * 2);
+        if (size() == indexes.length) {
+            int newSize = Math.min(size() + MAX_INCREMENT, size() * 2);
             log.debug("Expanding internal arrays of indexes to length "
                       + newSize);
             long[] newIndexes = new long[newSize];
-            System.arraycopy(indexes, 0, newIndexes, 0, valueCount);
+            System.arraycopy(indexes, 0, newIndexes, 0, size());
             indexes = newIndexes;
         }
     }
 
-    @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    public void remove(int position) {
+    public E remove(int position) {
         log.trace("Removing value at position " + position);
-         if (position < 0 || position >= valueCount) {
-             throw new ArrayIndexOutOfBoundsException("The position " + position
-                                                      + " was not between 0"
-                                                      + " and " + valueCount);
-         }
+        E e = get(position);
         System.arraycopy(indexes, position + 1, indexes, position,
-                         valueCount - position + 1);
-         valueCount--;
+                         size() - position + 1);
+        valueCount--;
+        return e;
      }
 
-    public int getPosition(E value) {
-        //noinspection DuplicateStringLiteralInspection
-        log.trace("Getting position for  '" + value + "' in the pool");
-        int insertPos = binarySearch(value);
-        return insertPos == valueCount
-               || valueCount == 0
-               || !value.equals(getValue(insertPos)) ? -1 : insertPos;
-    }
-
-    private byte[] buffer = new byte[1024];
-    @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    public E getValue(int position) {
-        long combined = indexes[position];
-        long corrected = combined < 0 ? -combined : combined;
-        long index = corrected & OFFSET_MASK;
-        int length = (int)(corrected >> LENGTH_ROLL);
-
-        if (buffer.length < length) {
-            buffer = new byte[length];
-        }
-
-        if (combined < 0) { // Shadow file
-            try {
-                shadow.seek(index);
-            } catch (IOException e) {
-                throw new RuntimeException("Could not seek to shadow position "
-                                           + position + "(offset " + index
-                                           + " in the file)", e);
-            }
-            try {
-                shadow.readFully(buffer, 0, length);
-                return bytesToValue(buffer, length);
-            } catch (IOException e) {
-                throw new RuntimeException("Could not read shadow at position "
-                                           + position + "(offset " + index 
-                                           + " in the file)", e);
-            }
+    public E get(int position) {
+        if (position < 0 || position >= size()) {
+            throw new ArrayIndexOutOfBoundsException(String.format(
+                    "The position %d was not between 0 and %d",
+                    position, size()));
         }
         try {
-            values.seek(index);
+            return readValue(values, indexes[position]);
         } catch (IOException e) {
-            throw new RuntimeException("Could not seek to value position "
-                                       + position + "(offset " + index
-                                       + " in the file)", e);
-        }
-        try {
-            values.readFully(buffer, 0, length);
-            return bytesToValue(buffer, length);
-        } catch (IOException e) {
-            throw new RuntimeException("Could not read value at position "
-                                       + position + "(offset " + index
-                                       + " in the file)", e);
+            throw new IllegalStateException(String.format(
+                    "No value present at position %d with length %d in file "
+                    + "'%s' for pool '%s'",
+                    getValuePosition(indexes[position]),
+                    getValueLength(indexes[position]), location, poolName), e);
         }
     }
 
@@ -421,12 +271,44 @@ public abstract class DiskPool<E extends Comparable<? super E>>
     }
 
     public void clear() {
+        log.debug(String.format("Clear called for pool '%s' at '%s'",
+                                poolName, location));
         valueCount = 0;
         indexes = new long[DEFAULT_SIZE];
-        newShadowPosition = 0;
+        if (values != null) {
+            log.debug("Closing old value reader");
+            try {
+                values.close();
+            } catch (IOException e) {
+                log.warn(String.format(
+                        "Could not close reader for pool '%s' at '%s'",
+                        poolName, location));
+            }
+        }
+        try {
+            remove(getValueFile(), "existing values");
+        } catch (IOException e) {
+            log.warn(String.format("As '%s' could not be removed, the clearing "
+                                   + "of '%s' might fail",
+                                   getValueFile(), poolName));
+        }
+        try {
+            getValueFile().createNewFile();
+        } catch (IOException e) {
+            throw new RuntimeException(String.format(
+                    "Unable to create file '%s' for pool '%s",
+                    getValueFile(), poolName), e);
+        }
+        try {
+            connectToValues();
+        } catch (IOException e) {
+            throw new RuntimeException(String.format(
+                    "Unable to connect to file '%s' for pool '%s",
+                    getValueFile(), poolName), e);
+        }
     }
 
-    /**
+    /*
      * A indirect binary searcher which recognizes valueCount and performs
      * lookups for its values. Other than that, it behaves as the implementation
      * from Sun.<br/>
@@ -434,7 +316,7 @@ public abstract class DiskPool<E extends Comparable<? super E>>
      * @param value the value to search for.
      * @return the insertion point for value.
      */
-    protected int binarySearch(E value) {
+/*    protected int binarySearch(E value) {
         int low = 0;
         int high = valueCount-1;
         while (low <= high) {
@@ -450,4 +332,5 @@ public abstract class DiskPool<E extends Comparable<? super E>>
         }
         return low;
     }
+  */
 }

@@ -24,10 +24,35 @@
  * The State and University Library of Denmark
  * CVS:  $Id: FacetResultImpl.java,v 1.10 2007/10/05 10:20:22 te Exp $
  */
+/* $Id: FacetResultImpl.java,v 1.10 2007/10/05 10:20:22 te Exp $
+ * $Revision: 1.10 $
+ * $Date: 2007/10/05 10:20:22 $
+ * $Author: te $
+ *
+ * The Summa project.
+ * Copyright (C) 2005-2007  The State and University Library
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+/*
+ * The State and University Library of Denmark
+ * CVS:  $Id: FacetResultImpl.java,v 1.10 2007/10/05 10:20:22 te Exp $
+ */
 package dk.statsbiblioteket.summa.facetbrowser.browse;
 
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
-import dk.statsbiblioteket.summa.facetbrowser.util.ClusterCommon;
 import dk.statsbiblioteket.summa.facetbrowser.util.FlexiblePair;
 import dk.statsbiblioteket.summa.facetbrowser.util.Pair;
 import dk.statsbiblioteket.summa.search.api.Response;
@@ -81,7 +106,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
                 map.entrySet()) {
             if (facet.getValue().size() > 0) {
                 sw.write("  <facet name=\"");
-                sw.write(ClusterCommon.simpleEntityEscape(facet.getKey()));
+                sw.write(simpleEntityEscape(facet.getKey()));
                 // TODO: Preserve scoring
                 sw.write("\">\n");
 
@@ -292,7 +317,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
      * @return a String-representation of the Tag.
      */
     protected String getTagString(String facet, T tag) {
-        return ClusterCommon.simpleEntityEscape(String.valueOf(tag));
+        return simpleEntityEscape(String.valueOf(tag));
     }
     /**
      * This should be overridet when subclassing, if the tags does not resolve
@@ -303,7 +328,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
      */
     protected String getQueryString(String facet, T tag) {
         return facet + ":\"" +
-               ClusterCommon.simpleEntityEscape(String.valueOf(tag)) + "\"";
+               simpleEntityEscape(String.valueOf(tag)) + "\"";
     }
 
     /**
@@ -387,4 +412,11 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
         tags.add(new FlexiblePair<T, Integer>(tag, tagCount,
                                    FlexiblePair.SortType.SECONDARY_DESCENDING));
     }
-}
+
+    public static String simpleEntityEscape(String text) {
+        return text.replaceAll("&",  "&amp;").
+                    replaceAll("<",  "&lt;").
+                    replaceAll(">",  "&gt;").
+                    replaceAll("#",  "%23"). // Escaping for URL
+                    replaceAll("\"", "&quot;");
+    }}

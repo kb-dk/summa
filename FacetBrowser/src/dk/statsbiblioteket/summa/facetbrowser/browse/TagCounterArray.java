@@ -245,6 +245,10 @@ public class TagCounterArray implements TagCounter, Runnable {
 
     public synchronized FacetResult getFirst(Structure requestStructure) {
         lock.lock();
+        if (requestStructure == null) {
+            log.trace("getFirst: Specified requestStructure was null, using "
+                      + "default structure");
+        }
         try {
             FacetResultLocal result =
                     new FacetResultLocal(requestStructure, tagHandler);

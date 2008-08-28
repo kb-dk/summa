@@ -22,12 +22,14 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.util.pool;
 
-import java.util.Locale;
-import java.util.Arrays;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.CachedCollator;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
+
+import java.io.File;
+import java.text.Collator;
+import java.util.Arrays;
+import java.util.Locale;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -44,23 +46,27 @@ public class CollatorSortedPoolTest extends TestCase {
         super.tearDown();
     }
 
+    Collator defaultCollator = new CachedCollator(new Locale("da"));
+
     private void testSorting(CollatorSortedPool pool) {
-        CachedCollator collator = new CachedCollator(new Locale("da"));
-        pool.setCollator(collator);
         pool.clear();
         String[] terms = new String[]{"a", "å", "", "ø", "æ", "/"};
-        for (String term: terms) {
-            pool.add(term);
-        }
-        Arrays.sort(terms, collator);
+        pool.addAll(Arrays.asList(terms));
+        Arrays.sort(terms, defaultCollator);
         assertEquals(terms, pool);
     }
     public void testMemoryBasedSorting() throws Exception {
-        MemoryStringPool pool = new MemoryStringPool();
+        MemoryStringPool pool = new MemoryStringPool(defaultCollator);
+        pool.open(new File(System.getProperty("java.io.tmpdir"),
+                           "facetTestMem"),
+                  "testpool", false, true);
         testSorting(pool);
     }
     public void testDiskBasedSorting() throws Exception {
-        DiskStringPool pool = new DiskStringPool();
+        DiskStringPool pool = new DiskStringPool(defaultCollator);
+        pool.open(new File(System.getProperty("java.io.tmpdir"),
+                           "facetTestDisk"),
+                  "testpool", false, true);
         testSorting(pool);
     }
 
@@ -69,7 +75,7 @@ public class CollatorSortedPoolTest extends TestCase {
                      expectedTerms.length, pool.size());
         for (int i = 0 ; i < pool.size() ; i++) {
             assertEquals("Terms at position " + i + " should match",
-                         expectedTerms[i], pool.getValue(i));
+                         expectedTerms[i], pool.get(i));
         }
     }
 
@@ -107,11 +113,11 @@ public class CollatorSortedPoolTest extends TestCase {
         assertEquals(new String[0], pool);
     }
     public void testMemoryBasedMutation() throws Exception {
-        MemoryStringPool pool = new MemoryStringPool();
+        MemoryStringPool pool = MemoryPoolTest.getPool();
         testMutation(pool);
     }
     public void testDiskBasedMutation() throws Exception {
-        DiskStringPool pool = new DiskStringPool();
+        DiskStringPool pool = DiskPoolTest.getPool();
         testMutation(pool);
     }
 

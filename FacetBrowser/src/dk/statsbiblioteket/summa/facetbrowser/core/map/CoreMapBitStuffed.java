@@ -33,29 +33,29 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.core.map;
 
-import java.io.ObjectOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.File;
-import java.io.StringWriter;
-
-import org.apache.log4j.Logger;
-import dk.statsbiblioteket.summa.facetbrowser.browse.TagCounter;
-import dk.statsbiblioteket.summa.facetbrowser.util.ClusterCommon;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.facetbrowser.Structure;
+import dk.statsbiblioteket.summa.facetbrowser.browse.TagCounter;
+import org.apache.log4j.Logger;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.StringWriter;
 
 /**
  * The BitStuffed CoreMap packs pointers from document-id's to facet/tags in an
  * array of integers. This is a very compact representation, with the drawback
  * that it is limited to 31 facets of 134 million tags each.
  * </p><p>
- * Updates needs to be done, so that any new document-id is either
- * 0 or <= (the largest existing document-id + 1).
+ * It is expected that this structure might some day be memory-mapped.
+ * To prepare for this, the following constraint has been introduced:<br />
+ * Additions of mappings are always in the end. No in-array editing.<br />
+ * @see {@link #add}.
  */
-// TODO: Handle emptyFacet translation int<->long for load and store
-public class CoreMapBitStuffed implements CoreMap {
+// TODO: Handle emptyFacet translation int<->long for open and store
+public class CoreMapBitStuffed extends CoreMapImpl implements CoreMap {
     private static Logger log = Logger.getLogger(CoreMapBitStuffed.class);
-    private static final String MAP_FILENAME = "map.dat";
+
 //    private static final int VERSION = 10000;
 
     private static final int CONTENT_INITIAL_SIZE = 10000;
@@ -64,58 +64,62 @@ public class CoreMapBitStuffed implements CoreMap {
 
     private static final int FACETBITS =  5;
     private static final int FACETSHIFT = 32 - FACETBITS;
-    private static final int VALUE_MASK = 0xFFFFFFFF << FACETBITS >>> FACETBITS;
+    private static final int TAG_MASK = 0xFFFFFFFF << FACETBITS >>> FACETBITS;
     /**
      * The -1 in the calculation is to make room for the emptyFacet.
      */
     private static final int FACET_LIMIT = (int) StrictMath.pow(2, FACETBITS)-1;
 
-    private int docCapacity;
-    private int facetCount;
     private boolean shift = DEFAULT_SHIFT_ON_REMOVE;
 
-    private int highestDocID = -1;
+    /**
+     * Mapping from docID => start position in {@link #values}. The end position
+     * is index[docID+1]. If the document has been removed and no shifting has
+     * been performed, index[docID] == Integer.MAX_VALUE. The last valud element
+     * in the list will always point to the next free position in values.
+     * </p><p>
+     * The amount of documents mapped in index is {@link #highestDocID}+1.
+     */
     private int[] index;
 
+    /**
+     * The highest inserted docID.
+     */
+    private int highestDocID = -1;
+
+    /**
+     * A value is a composite of
+     * [facetID({@link #FACETBITS} bits)][tagID({@link #FACETSHIFT} bits].
+     */
+    private int[] values;
+    /**
+     * The next free position in the values.
+     */
     private int valuePos = 0;
-    private int finalIndex;
-    private int[] values = new int[CONTENT_INITIAL_SIZE];
 
     /**
-     * Creates a core map with initial size based on the given number of
-     * documents.
-     * @param docCount the expected number of documents.
-     * @param facetCount the number of facets for this core map.
+     * Creates a core map awaiting {@link #open}.
+     * @param conf      configuration for the CoreMap.
+     *                  See {@link CoreMap} for details.
+     * @param structure the structure for the Facets.
      */
-    public CoreMapBitStuffed(int docCount, int facetCount) {
-        init(docCount, facetCount);
-    }
-
-    /**
-     * Creates a core map with initial size based on the given number of
-     * documents.
-     * @param conf       configuration for the CoreMap.
-     * @param docCount   the expected number of documents.
-     * @param facetCount the number of facets for this core map.
-     */
-    public CoreMapBitStuffed(Configuration conf, int docCount, int facetCount) {
-        init(docCount, facetCount);
+    public CoreMapBitStuffed(Configuration conf, Structure structure) {
+        super(conf, structure);
         shift = conf.getBoolean(CONF_SHIFT_ON_REMOVE, shift);
-    }
-
-    private void init(int docCount, int facetCount) {
-        if (facetCount >= FACET_LIMIT) {
-            //noinspection DuplicateStringLiteralInspection
-            throw new IllegalArgumentException("This core map only allows "
-                                               + FACET_LIMIT + " facets. "
-                                               + facetCount + " facets was"
-                                               + "specified");
+        if (structure.getFacets().size() > FACET_LIMIT) {
+            throw new IllegalArgumentException(String.format(
+                    "The number of facets in the structure was %d. This "
+                    + "CoreMap supports a maximum of %d Facets",
+                    structure.getFacets().size(), FACET_LIMIT));
         }
-        docCapacity = docCount;
-        this.facetCount = facetCount;
-        finalIndex = docCount -1;
-        index = new int[docCapacity + 1];
+        log.trace("Constructed CoreMapBitStuffed with shifting: " + shift);
     }
+    
+//    private void init(int docCount, int facetCount) {
+  //      docCapacity = docCount;
+    //    finalIndex = docCount -1;
+//        index = new int[docCapacity + 1];
+//    }
 
     /**
      * Adds the given tags in the given facet to the given docID.
@@ -125,22 +129,62 @@ public class CoreMapBitStuffed implements CoreMap {
      * @param tagIDs an array of IDs for tags belonging to the given facet.
      */
     public void add(int docID, int facetID, int[] tagIDs) {
-        if (facetID >= facetCount) {
+        if (facetID >= structure.getFacets().size()) {
             //noinspection DuplicateStringLiteralInspection
-            throw new IllegalArgumentException("This core map only allows "
-                                               + FACET_LIMIT + " facets. The "
-                                               + "ID for the facet in add was "
-                                               + facetID);
+            throw new IllegalArgumentException(String.format(
+                    "This core map only allows %d facets. The ID for the facet "
+                    + "in add was %d", FACET_LIMIT, facetID));
         }
-        if (docID > highestDocID + 1) {
-            throw new ArrayIndexOutOfBoundsException(
+        if (docID > getDocCount()) {
+            // We could auto expand, but gaps indicate problems with the feeder
+            throw new ArrayIndexOutOfBoundsException(String.format(
                     "Adding new documents require the doc-id to be <= (the "
-                    + "largest existing doc-id + 1). The doc-id was "
-                    + docID + " and the highest legalvalue is "
-                    + (highestDocID + 1));
+                    + "largest existing doc-id + 1). The doc-id was %d"
+                    + " and the highest legalvalue is %d",
+                    docID, getDocCount()));
         }
         // Check index capacity
-        if (docID > docCapacity-1) {
+        fitStructure(docID, tagIDs);
+
+        int insertPos = index[docID + 1];
+        if (docID == getDocCount()) { // New at the end
+            highestDocID = docID;
+            if (highestDocID == 0) { // First addition
+                index[0] = 0;
+                index[1] = tagIDs.length;
+                insertPos = 0;
+            } else {
+                index[getDocCount()] = index[highestDocID] + tagIDs.length;
+                insertPos = index[highestDocID];
+            }
+        } else if (docID <= highestDocID) { // Expand existing
+            throw new UnsupportedOperationException(String.format(
+                    "Insertion into index not permitted in this core map. "
+                    + "Wanted position was %d with an index-length of %d",
+                    docID, getDocCount()));
+/*            if (docID < highestDocID) { // Move values
+                System.arraycopy(values, index[docID + 1], values,
+                                 index[docID + 1] + tagIDs.length, valuePos);
+            }
+            // Update positions
+            for (int iPos = docID + 1 ; iPos <= highestDocID + 1 ; iPos++) {
+                index[iPos] += tagIDs.length;
+            }*/
+        }
+        // Insert values
+        for (int tagPos = 0 ; tagPos < tagIDs.length ; tagPos++) {
+            int tagID = tagIDs[tagPos];
+            values[insertPos + tagPos] = getValue(facetID, tagID);
+        }
+        valuePos += tagIDs.length;
+    }
+
+    private int getValue(int facetID, int tagID) {
+        return facetID << FACETSHIFT | tagID & TAG_MASK;
+    }
+
+    private void fitStructure(int docID, int[] tagIDs) {
+        if (docID > index.length - 1) {
             int newSize = Math.max(MIN_GROWTH_SIZE,
                                    (int)(index.length * CONTENT_GROWTHFACTOR));
             //noinspection DuplicateStringLiteralInspection
@@ -149,7 +193,6 @@ public class CoreMapBitStuffed implements CoreMap {
             int[] exp = new int[newSize];
             System.arraycopy(index, 0, exp, 0, index.length);
             index = exp;
-            docCapacity = newSize;
         }
         // Check value capacity
         if (valuePos + tagIDs.length >= values.length) {
@@ -163,52 +206,24 @@ public class CoreMapBitStuffed implements CoreMap {
             System.arraycopy(values, 0, exp, 0, values.length);
             values = exp;
         }
-
-        int insertPos = index[docID + 1];
-        if (docID == highestDocID + 1) { // New at the end
-            highestDocID = docID;
-            if (highestDocID == 0) {
-                index[0] = 0;
-                index[1] = tagIDs.length;
-                insertPos = 0;
-            } else {
-                index[highestDocID + 1] = index[highestDocID] + tagIDs.length;
-                insertPos = index[highestDocID];
-            }
-        } else if (docID <= highestDocID) { // Expand existing
-            if (docID < highestDocID) { // Move values
-                System.arraycopy(values, index[docID + 1], values,
-                                 index[docID + 1] + tagIDs.length, valuePos);
-            }
-            // Update positions
-            for (int iPos = docID + 1 ; iPos <= highestDocID + 1 ; iPos++) {
-                index[iPos] += tagIDs.length;
-            }
-        }
-        // Insert values
-        for (int tagPos = 0 ; tagPos < tagIDs.length ; tagPos++) {
-            int aContent = tagIDs[tagPos];
-            values[insertPos + tagPos] =
-                    facetID << FACETSHIFT | aContent & VALUE_MASK;
-        }
-        valuePos += tagIDs.length;
     }
 
+    private int EMPTY_VALUE = getValue(getEmptyFacet(), 0);
     public void remove(int docID) {
         if (docID > highestDocID) {
-            throw new IllegalArgumentException("Cannot remove non-existing "
-                                               + "docID " + docID + " from "
-                                               + " the map with size "
-                                               + (highestDocID + 1));
+            throw new IllegalArgumentException(String.format(
+                    "Cannot remove non-existing docID %d from map with size %d",
+                    docID, getDocCount()));
         }
         if (!shift) {
             try {
                 for (int i = index[docID] ; i < index[docID + 1] ; i++) {
-                    values[i] = FACET_LIMIT << FACETSHIFT;
+                    values[i] = EMPTY_VALUE;
                 }
             } catch (ArrayIndexOutOfBoundsException e) {
-                log.warn(String.format("Out of bounds in remove(%d, %b)",
-                                       docID, shift), e);
+                log.warn(String.format(
+                        "Out of bounds in remove(%d) with shift %s",
+                        docID, shift), e);
             }
             return;
         }
@@ -236,6 +251,7 @@ public class CoreMapBitStuffed implements CoreMap {
     }
     protected String exposeInternalState() {
         StringWriter sw = new StringWriter(500);
+        //noinspection DuplicateStringLiteralInspection
         sw.append("Index: ").append(dump(index, highestDocID+2));
         sw.append(", Values: ").append(dump(values, valuePos));
         return sw.toString();
@@ -251,21 +267,16 @@ public class CoreMapBitStuffed implements CoreMap {
     public int[] get(int docID, int facetID) {
         if (docID > highestDocID) {
             //noinspection DuplicateStringLiteralInspection
-            throw new ArrayIndexOutOfBoundsException("Requested " + docID
-                                                     + " out of "
-                                                     + (highestDocID + 1)
-                                                     + " documents");
+            throw new ArrayIndexOutOfBoundsException(String.format(
+                    "Requested %d out of %d documents", docID, getDocCount()));
         }
         int to = index[docID + 1];
-//        System.out.println("X " + docID + ", Y " + facetID +
-//                           ", From " + index[docID] + ", To " + to);
         int[] result = new int[to-index[docID]];
         int resultPos = 0;
         for (int i = index[docID] ; i < to ; i++) {
             int value = values[i];
-            int currentFacetID = value >>> FACETSHIFT;
-            if (currentFacetID == facetID) {
-                result[resultPos++] = value & VALUE_MASK;
+            if (facetID == value >>> FACETSHIFT) {
+                result[resultPos++] = value & TAG_MASK;
             }
         }
         int[] reducedResult = new int[resultPos];
@@ -273,81 +284,46 @@ public class CoreMapBitStuffed implements CoreMap {
         return reducedResult;
     }
 
-    @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    public void store(File location) throws IOException {
+    public void store() throws IOException {
         log.info("Storing integer-based map");
-        ObjectOutputStream mapOut =
-                            ClusterCommon.objectPrinter(location, MAP_FILENAME);
-
-        mapOut.writeInt(CoreMapBitStuffedLong.VERSION);
-        mapOut.writeInt(docCapacity);
-        mapOut.writeInt(facetCount);
-        mapOut.writeInt(87); // Dummy to maintain backwards compatability
-        mapOut.writeInt(highestDocID);
-        mapOut.writeInt(valuePos);
-        mapOut.writeInt(finalIndex); // TODO: Consider this
-
-        log.trace("Storing index");
-        mapOut.writeInt(index.length);
-        for (int anIndex : index) {
-            mapOut.writeInt(anIndex);
-        }
-
-        log.trace("Storing values");
-        mapOut.writeInt(values.length);
-        for (int value : values) {
-            mapOut.writeLong(intValueToLong(value));
-        }
-        mapOut.close();
+        storeMeta();
+        storeIndex(index, getDocCount() + 1);
+        storeValues(valuePos);
         log.debug("Finished storing integer-based map");
     }
 
-    protected long intValueToLong(int value) {
-        int dim2 = value >>> FACETSHIFT;
-        int dim1 = value & VALUE_MASK;
-        return (long)dim2 << CoreMapBitStuffedLong.FACETSHIFT | dim1;
-    }
+    public boolean open(File location, boolean forceNew) throws IOException {
+        //noinspection DuplicateStringLiteralInspection
+        log.info(String.format("open(%s, %b) called", location, forceNew));
+        setBaseData(location, readOnly);
 
-    protected int longValueToInt(long value) {
-        int dim2 = (int)(value >>> CoreMapBitStuffedLong.FACETSHIFT);
-        int dim1 = (int)(value & CoreMapBitStuffedLong.VALUE_MASK);
-        return dim2 << FACETSHIFT | dim1;
-    }
-
-    @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    public void load(File location) throws IOException {
-        log.info("Loading map " + MAP_FILENAME);
-        ObjectInputStream mapIn =
-                             ClusterCommon.objectLoader(location, MAP_FILENAME);
-        int version = mapIn.readInt();
-        if (CoreMapBitStuffedLong.VERSION != version) {
-            //noinspection DuplicateStringLiteralInspection
-            throw new IOException("Wrong version. Expected " +
-                                  CoreMapBitStuffedLong.VERSION +
-                                  " got " + version);
-        }
-        docCapacity = mapIn.readInt();
-        facetCount = mapIn.readInt();
-        mapIn.readInt(); // Read the dummy valut to maintain compatability
-        highestDocID = mapIn.readInt();
-        valuePos = mapIn.readInt();
-        finalIndex = mapIn.readInt();
-
-        int indexSize = mapIn.readInt();
-        log.debug("Loading index with size " + indexSize);
-        index = new int[indexSize];
-        for (int i = 0 ; i < index.length ; i++) {
-            index[i] = mapIn.readInt();
+        if (forceNew) {
+            clear();
+            return false;
         }
 
-        int valueSize = mapIn.readInt();
-        log.debug("Loading values with size " + valueSize);
-        values = new int[valueSize];
-        for (int i = 0 ; i < values.length ; i++) {
-            values[i] = longValueToInt(mapIn.readLong());
+        long startTime = System.currentTimeMillis();
+        try {
+            openMeta();
+            index = openIndex();
+            highestDocID = index[index.length-2];
+            valuePos = index[index.length-1];
+            int valueSize = (int)Math.max(MIN_GROWTH_SIZE,
+                                        valuePos * CONTENT_GROWTHFACTOR);
+            values = new int[valueSize];
+            openValues(index[index.length-1]);
+        } catch (IOException e) {
+            log.warn(String.format(
+                    "Could not load persistent data for core map at '%s'."
+                    + " Creating new core map",
+                    location), e);
+            clear();
+            return false;
         }
-        log.debug("Finished loading map");
-        mapIn.close();
+        log.debug(String.format("Retrieved %d indexes and %d values in %s ms",
+                                index.length, values.length,
+                                System.currentTimeMillis() - startTime));
+        return true;
     }
 
     public int getDocCount() {
@@ -378,12 +354,12 @@ public class CoreMapBitStuffed implements CoreMap {
 //                    System.out.println("- Fetching value " + i + "/" + values.length);
 //                    value = values[i]; // Seems slower than 2 * direct access
 /*                    System.out.println("Marking " + (value >>> FACETSHIFT) +
-                                       " to " + (value & VALUE_MASK));*/
+                                       " to " + (value & TAG_MASK));*/
                     tagCounter.increment(values[i] >>> FACETSHIFT,
-                                         values[i] & VALUE_MASK);
+                                         values[i] & TAG_MASK);
 //                    System.out.println("Marked");
 //                    counterLists[value >>> FACETSHIFT]
-//                                [value &  VALUE_MASK]++;
+//                                [value &  TAG_MASK]++;
                 }
             } catch (Exception ex) {
                 if (log.isTraceEnabled()) {
@@ -408,12 +384,22 @@ public class CoreMapBitStuffed implements CoreMap {
         for (int vPos = 0 ; vPos < valuePos ; vPos++) {
             int value = values[vPos];
             int facet = value >>> FACETSHIFT;
-            int tag = value & VALUE_MASK;
+            int tag = value & TAG_MASK;
             if (facet == facetID && tag >= position) {
                 values[vPos] = facet << FACETSHIFT |
-                               tag + delta & VALUE_MASK;
+                               tag + delta & TAG_MASK;
             }
         }
+    }
+
+    protected long getPersistentValue(int index) {
+        return getPersistentValue(values[index] >>> FACETSHIFT,
+                                  values[index] & TAG_MASK);
+    }
+
+    protected void putValue(int position, long value) {
+        values[position] = getValue(persistentValueToFacetID(value),
+                                    persistentValueToTagID(value));
     }
 
     public int getEmptyFacet() {
@@ -428,18 +414,10 @@ public class CoreMapBitStuffed implements CoreMap {
 
     public void clear() {
         highestDocID = -1;
-        index = new int[docCapacity + 1];
+        index = new int[CONTENT_INITIAL_SIZE];
 
-        finalIndex = docCapacity - 1;
         valuePos = 0;
         values = new int[CONTENT_INITIAL_SIZE];
-    }
-
-    protected int[] getIndex() {
-        return index;
-    }
-    protected int[] getValues() {
-        return values;
     }
 
 }

@@ -26,10 +26,10 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.browse;
 
-import dk.statsbiblioteket.summa.facetbrowser.Structure;
+import dk.statsbiblioteket.summa.common.util.ParseUtil;
 import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
+import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
-import dk.statsbiblioteket.summa.facetbrowser.util.ClusterCommon;
 import dk.statsbiblioteket.summa.facetbrowser.util.FlexiblePair;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
@@ -60,7 +60,7 @@ public class FacetResultLocal extends FacetResultImpl<Integer> {
     }
 
     protected String getTagString(String facet, Integer tag) {
-        return ClusterCommon.simpleEntityEscape(resolveTagString(facet, tag));
+        return ParseUtil.encode(resolveTagString(facet, tag));
     }
 
     protected String getQueryString(String facet, Integer tag) {
@@ -76,8 +76,9 @@ public class FacetResultLocal extends FacetResultImpl<Integer> {
                     fc.getName()));
         }
 
+        // TODO: Should # be excaped too?
         String escapedTag =
-                ClusterCommon.simpleEntityEscape(resolveTagString(facet, tag));
+                ParseUtil.encode(resolveTagString(facet, tag));
         StringWriter sw = new StringWriter(100);
         if (fc.getFields().length > 1) {
             sw.append("(");

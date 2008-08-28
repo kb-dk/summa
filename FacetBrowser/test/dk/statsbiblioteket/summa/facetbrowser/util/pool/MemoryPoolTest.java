@@ -23,11 +23,15 @@
 package dk.statsbiblioteket.summa.facetbrowser.util.pool;
 
 import java.util.Random;
+import java.util.Locale;
 import java.io.File;
 import java.io.StringWriter;
+import java.io.IOException;
+import java.text.Collator;
 
 import junit.framework.TestCase;
 import dk.statsbiblioteket.util.Profiler;
+import dk.statsbiblioteket.util.CachedCollator;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
@@ -50,6 +54,15 @@ public class MemoryPoolTest extends TestCase {
         super.tearDown();
     }
 
+    static Collator defaultCollator = new CachedCollator(new Locale("da"));
+    public static  MemoryStringPool getPool() throws IOException {
+        MemoryStringPool pool = new MemoryStringPool(defaultCollator);
+        pool.open(new File(System.getProperty("java.io.tmpdir"),
+                           "facetTestDisk"),
+                  "testpool", false, true);
+        return pool;
+    }
+
     protected static void compareOrder(String message, SortedPool pool,
                                        Object[] expected) {
         assertEquals("(" + message + ") The arrays should have the same size",
@@ -58,7 +71,7 @@ public class MemoryPoolTest extends TestCase {
             //noinspection DuplicateStringLiteralInspection
             assertEquals("(" + message + ") The objects at position " + i
                          + " should be equal",
-                         expected[i], pool.getValue(i));
+                         expected[i], pool.get(i));
         }
     }
     protected static void compareOrder(String message, SortedPool pool1,
@@ -69,7 +82,7 @@ public class MemoryPoolTest extends TestCase {
             //noinspection DuplicateStringLiteralInspection
             assertEquals("(" + message + ") The objects at position " + i
                          + " should be equal",
-                         pool1.getValue(i), pool2.getValue(i));
+                         pool1.get(i), pool2.get(i));
         }
     }
     protected static boolean compareOrderBool(String message, SortedPool pool1,
@@ -78,7 +91,7 @@ public class MemoryPoolTest extends TestCase {
             return false;
         }
         for (int i = 0 ; i < pool1.size() ; i++) {
-            if (!pool1.getValue(i).equals(pool2.getValue(i))) {
+            if (!pool1.get(i).equals(pool2.get(i))) {
                 System.out.println(message);
                 return false;
             }
@@ -87,39 +100,39 @@ public class MemoryPoolTest extends TestCase {
     }
 
     public void testSetGetValue() throws Exception {
-        testSetGetValue(new MemoryStringPool());
+        testSetGetValue(getPool());
     }
     public static void testSetGetValue(SortedPool<String> pool) throws
                                                                 Exception {
         assertEquals("The initial size should be zero", 0, pool.size());
-        assertEquals("The position of a should be zero", 0, pool.add("a"));
+        assertEquals("The position of a should be zero", 0, pool.insert("a"));
         compareOrder("a added", pool, new String[]{"a"});
-        assertEquals("The position of d should be one", 1, pool.add("d"));
+        assertEquals("The position of d should be one", 1, pool.insert("d"));
         compareOrder("d added", pool, new String[]{"a", "d"});
-        assertEquals("The position of b should be one", 1, pool.add("b"));
+        assertEquals("The position of b should be one", 1, pool.insert("b"));
         compareOrder("b added", pool, new String[]{"a", "b", "d"});
 
         assertEquals("The position of d after b should be two",
-                     2, pool.getPosition("d"));
-        pool.add("a");
+                     2, pool.indexOf("d"));
+        pool.insert("a");
         assertEquals("Reinserting a shouldn't change anything", 3, pool.size());
         compareOrder("Reinserting", pool, new String[]{"a", "b", "d"});
-        assertEquals("The position of 1 should be zero", 0, pool.add("1"));
+        assertEquals("The position of 1 should be zero", 0, pool.insert("1"));
         compareOrder("1 is 0", pool, new String[]{"1", "a", "b", "d"});
-        assertEquals("The position of e should be four", 4, pool.add("e"));
+        assertEquals("The position of e should be four", 4, pool.insert("e"));
         compareOrder("e is 4", pool, new String[]{"1", "a", "b", "d", "e"});
 
-        assertEquals("Position of 1 check", 0, pool.getPosition("1"));
-        assertEquals("Position of b check", 2, pool.getPosition("b"));
-        assertEquals("Position of e check", 4, pool.getPosition("e"));
-        assertEquals("Position of unknown check", -1, pool.getPosition("x"));
+        assertEquals("Position of 1 check", 0, pool.indexOf("1"));
+        assertEquals("Position of b check", 2, pool.indexOf("b"));
+        assertEquals("Position of e check", 4, pool.indexOf("e"));
+        assertEquals("Position of unknown check", -1, pool.indexOf("x"));
     }
 
-    private SortedPool<String> samplePool() {
-        SortedPool<String> pool = new MemoryStringPool();
-        pool.add("Flim");
-        pool.add("Flam");
-        pool.add("Flum");
+    private SortedPool<String> samplePool() throws IOException {
+        SortedPool<String> pool = getPool();
+        pool.insert("Flim");
+        pool.insert("Flam");
+        pool.insert("Flum");
         return pool;
     }
 
@@ -161,9 +174,9 @@ public class MemoryPoolTest extends TestCase {
     }
 
     public void dumpSpeed() throws Exception {
-        dumpSpeed(new MemoryStringPool());
+        dumpSpeed(getPool());
         System.gc();
-        dumpSpeed(new MemoryStringPool());
+        dumpSpeed(getPool());
     }
     public static void dumpSpeed(SortedPool<String> pool) throws Exception {
         int ADD_RUNS = 50000;
@@ -182,7 +195,7 @@ public class MemoryPoolTest extends TestCase {
         profiler = new Profiler();
         profiler.setExpectedTotal(ADD_RUNS);
         for (int i = 0 ; i < ADD_RUNS ; i++) {
-            pool.add(Integer.toString(random.nextInt()));
+            pool.insert(Integer.toString(random.nextInt()));
             profiler.beat();
         }
         System.out.println("Pool add: " + Math.round(profiler.getBps(false))
@@ -193,7 +206,7 @@ public class MemoryPoolTest extends TestCase {
         profiler.setExpectedTotal(GET_RUNS);
         int size = pool.size();
         for (int i = 0 ; i < GET_RUNS ; i++) {
-            pool.getValue(random.nextInt(size));
+            pool.get(random.nextInt(size));
             profiler.beat();
         }
         System.out.println("Pool get: " + Math.round(profiler.getBps(false))
@@ -203,10 +216,10 @@ public class MemoryPoolTest extends TestCase {
     }
 
     public void makeSmallSample() throws Exception {
-        createSample(new MemoryStringPool(), 1000, new File("/tmp"), "test_1K");
+        createSample(getPool(), 1000, new File("/tmp"), "test_1K");
     }
     public void makeMediumSample() throws Exception {
-        createSample(new MemoryStringPool(), 1000000,
+        createSample(getPool(), 1000000,
                      new File("/tmp"), "test_1M");
     }
 
@@ -219,7 +232,7 @@ public class MemoryPoolTest extends TestCase {
         profiler.setExpectedTotal(samples);
         int feedback = Math.max(1, samples / 100);
         for (int i = 0 ; i < samples ; i++) {
-            pool.add(Integer.toString(random.nextInt()));
+            pool.insert(Integer.toString(random.nextInt()));
             profiler.beat();
             if (i % feedback == 0) {
                 System.out.println("Added " + i + "/" + samples
@@ -232,16 +245,16 @@ public class MemoryPoolTest extends TestCase {
         System.out.println("\nConstruction took "+ profiler.getSpendTime());
 
         profiler = new Profiler();
-        pool.store(location, name);
+        pool.store();
         System.out.println("Storing took "+ profiler.getSpendTime());
     }
 
     public void dumpDirty() throws Exception {
-        dumpDirty(new MemoryStringPool(), 1000000);
+        dumpDirty(getPool(), 1000000);
     }
 
     public void testDirtyRandom() throws Exception {
-        testDirtyRandom(new MemoryStringPool(), new MemoryStringPool(), 1000);
+        testDirtyRandom(getPool(), getPool(), 1000);
     }
 
     public static void testDirtyRandom(SortedPool<String> pool1,
@@ -249,8 +262,8 @@ public class MemoryPoolTest extends TestCase {
         Random random = new Random();
         for (int i = 0 ; i < samples ; i++) {
             String adder = Integer.toString(random.nextInt(samples / 4));
-            pool1.dirtyAdd(adder);
-            pool2.add(adder);
+            pool1.add(adder);
+            pool2.insert(adder);
         }
         pool1.cleanup();
         if (!compareOrderBool("dirtyAdds and normal adds should give the "
@@ -258,9 +271,9 @@ public class MemoryPoolTest extends TestCase {
             System.out.println("Dumping values:");
             for (int i = 0 ; i < Math.max(pool1.size(), pool2.size()) ; i++) {
                 System.out.print("(" +
-                                   (i < pool1.size() ? pool1.getValue(i) : "NA")
+                                   (i < pool1.size() ? pool1.get(i) : "NA")
                                    + ", "
-                                 + (i < pool2.size() ? pool2.getValue(i) : "NA")
+                                 + (i < pool2.size() ? pool2.get(i) : "NA")
                                    + ") ");
             }
             System.out.println("");
@@ -268,7 +281,7 @@ public class MemoryPoolTest extends TestCase {
     }
 
     public void testDirty() throws Exception {
-        testDirty(new MemoryStringPool());
+        testDirty(getPool());
     }
 
     public static void testDirty(SortedPool<String> pool) throws Exception {
@@ -318,7 +331,7 @@ public class MemoryPoolTest extends TestCase {
             if (i < input.length-1) {
                 sw.append(", ");
             }
-            pool.dirtyAdd(input[i]);
+            pool.add(input[i]);
         }
         pool.cleanup();
         compareOrder(sw.toString(), pool, expected);
@@ -331,7 +344,7 @@ public class MemoryPoolTest extends TestCase {
         Random random = new Random();
         int feedback = Math.max(1, samples / 100);
         for (int i = 0 ; i < samples ; i++) {
-            pool.dirtyAdd(Integer.toString(random.nextInt()));
+            pool.add(Integer.toString(random.nextInt()));
             profiler.beat();
             if (i % feedback == 0) {
                 System.out.println("Dirty added " + i + "/" + samples
@@ -353,15 +366,15 @@ public class MemoryPoolTest extends TestCase {
         pool.add("Flam");
         pool.add("Flum");
         assertEquals("The position of Flem should be -1 as it does not exist",
-                     -1, pool.getPosition("Flem"));
+                     -1, pool.indexOf("Flem"));
         assertEquals("The position of Flim should be correct",
-                     1, pool.getPosition("Flim"));
+                     1, pool.indexOf("Flim"));
         assertEquals("The position of Flem should still be -1",
-                     -1, pool.getPosition("Flem"));
+                     -1, pool.indexOf("Flem"));
         assertEquals("The position of Flzm should also be -1",
-                     -1, pool.getPosition("Flzm"));
+                     -1, pool.indexOf("Flzm"));
     }
     public void testPosition() throws Exception {
-        testPosition(new MemoryStringPool());
+        testPosition(getPool());
     }
 }

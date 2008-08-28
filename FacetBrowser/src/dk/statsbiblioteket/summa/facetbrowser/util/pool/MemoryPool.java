@@ -26,210 +26,128 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.util.pool;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.FileInputStream;
-import java.io.BufferedInputStream;
-import java.util.Arrays;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import dk.statsbiblioteket.util.LineReader;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 /**
- * The MemoryPool stores all values in RAM. It uses binary search for efficient
- * value-based lookups and direct array indexing for position-based lookups.
- * </p><p>
- * Note that MemoryPool isn't synchronised.
+ * The MemoryPool stores all values in RAM. No connection to any underlying
+ * persistent data are maintained during use, except when opening and storing.
  */
-public abstract class MemoryPool<E extends Comparable<? super E>> extends
-                                                       SortedPoolImpl<E> {
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.IN_DEVELOPMENT,
+        author = "te")
+public class MemoryPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
     private Log log = LogFactory.getLog(MemoryPool.class);
+
     private static final int DEFAULT_SIZE = 1000;
-    private static final int MAX_INCREMENT = 1000000;
+    private static final double EXPAND_FACTOR = 1.2;
 
-    protected E[] values;
-    protected int valueCount = 0;
+    protected List<E> values;
 
-    public MemoryPool() {
-        log.info("Creating empty pool");
-        values = getArray(DEFAULT_SIZE);
+    public MemoryPool(ValueConverter<E> valueConverter,
+                          Comparator comparator) {
+        super(valueConverter, comparator);
+        log.trace("Created MemoryPool");
     }
 
-    // Remove assumption of sorted strings and use index instead
-    @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    public void load(File location, String poolName) throws IOException {
-        log.debug("Loading indexes and data for pool '" + poolName
-                  + "' at location '" + location + "'");
-        long[] index = loadIndex(location, poolName);
-        log.trace("Index data loaded for pool '" + poolName
-                  + "' at location '" + location + "'");
-               
-        FileInputStream dataIn =
-                new FileInputStream(new File(location, poolName + ".dat"));
-        BufferedInputStream dataBuf = new BufferedInputStream(dataIn);
-        valueCount = index.length-1;
-        log.debug("Starting load of " + valueCount + " values");
-        values = getArray(valueCount);
+    public boolean open(File location, String poolName, boolean readOnly,
+                        boolean forceNew) throws IOException {
+        setBaseData(location, poolName, readOnly);
+        if (forceNew) {
+            log.debug(String.format("Force creating new pool '%s' at '%s'",
+                                    poolName, location));
+            values = new ArrayList<E>(DEFAULT_SIZE);
+            return false;
+        }
+        if (!(getIndexFile().exists() && getValueFile().exists())) {
+            log.debug(String.format("No existing data for '%s' at '%s'. "
+                                    + "Creating new pool", poolName, location));
+            values = new ArrayList<E>(DEFAULT_SIZE);
+            return false;
+        }
+        log.trace(String.format("Attempting load of index for '%s' from '%s'",
+                                poolName, getIndexFile()));
+        log.debug(String.format(
+                "Loading index and values for pool '%s' at '%s'",
+                poolName, getIndexFile()));
+        long[] index = loadIndex();
+        log.debug(String.format("Index loaded for pool '%s' at '%s'",
+                                poolName, getIndexFile()));
 
-        long feedback = Math.max(valueCount / 100, 1);
+        LineReader lr = new LineReader(getValueFile(), "r");
+        values =  new ArrayList<E>(readOnly ? index.length :
+                                   (int)(index.length * EXPAND_FACTOR));
         Profiler profiler = new Profiler();
-        profiler.setExpectedTotal(size());
-        for (int i = 0 ; i < size() ; i++) {
-            if (log.isTraceEnabled() && i % feedback == 0) {
-                log.trace("Loaded " + i + "/" + valueCount + " values. ETA: "
-                          + profiler.getETAAsString(true));
-            }
-            values[i] = readValue(dataBuf, (int)(index[i+1]-index[i]));
+        profiler.setExpectedTotal(index.length);
+        for (long element : index) {
+            add(readValue(lr, element));
             profiler.beat();
         }
-        log.trace("Loaded " +  valueCount + " values for '" + poolName
-                  + "', closing streams");
-        dataBuf.close();
-        dataIn.close();
-        log.debug("Finished loading " + valueCount + " values from pool '"
-                  + poolName + "' at location '" + location + "'");
+        log.debug(String.format("Loaded values for '%s' from '%s' in %s",
+                                poolName, getValueFile(),
+                                profiler.getSpendTime()));
+        lr.close();
+        return true;
     }
 
-    private byte[] buffer = new byte[1024];
-    /**
-     * Read a value from the given stream. The length indicated the number of
-     * bytes that the value occupies. It is the responsibility of the
-     * implementing class to read exactly length bytes.
-     * @param in     the stream to read from.
-     * @param length the number of bytes to read.
-     * @return a value deserialised from the bytes read from the stream.
-     * @throws IOException if the value could not be read from the stream.
-     */
-    @QAInfo(state=QAInfo.State.QA_NEEDED, level=QAInfo.Level.PEDANTIC,
-            author="te", reviewers={"mke"},
-            comment="Check that in.read works as expected")
-    protected E readValue(BufferedInputStream in, int length) throws IOException {
-        log.trace("Reading value data from stream with length " + length);
-        if (buffer.length < length) {
-            buffer = new byte[length];
-        }
-        length = in.read(buffer, 0, length);
-        return bytesToValue(buffer, length);
-    }
-
-
-    @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    public int add(E value) {
-        log.trace("Adding '" + value + "' to the pool");
-        int insertPos = binarySearch(value);
-        if (insertPos < valueCount && values[insertPos].equals(value)) {
-            log.debug("The value '" + value + "' already exists in the pool");
-            return -1;
-        }
-        expandIfNeeded();
-        /* Make room */
-        if (insertPos < valueCount) {
-            System.arraycopy(values, insertPos, values, insertPos + 1,
-                             valueCount - insertPos);
-        }
-        /* Assign */
-        log.trace("Inserting at position " + insertPos);
-        values[insertPos] = value;
-        valueCount++;
-        return insertPos;
-    }
-
-    protected void expandIfNeeded() {
-        /* Check that there is enough room */
-        if (valueCount == values.length) {
-            int newSize = Math.min(valueCount + MAX_INCREMENT, valueCount * 2);
-            log.debug("Expanding internal array of values to length "
-                      + newSize);
-            E[] newValues = getArray(newSize);
-            System.arraycopy(values, 0, newValues, 0, valueCount);
-            values = newValues;
+    public void close() {
+        if (values != null) {
+            values.clear();
         }
     }
 
-    public void dirtyAdd(E value) {
-        expandIfNeeded();
-        values[valueCount++] = value;
+    public void store() throws IOException {
+        store(location, poolName);
     }
 
-    public void cleanup() {
+    protected void sort() {
+        Collections.sort(this, this); // Works fine for memory-based
+    }
+
+    public String getName() {
+        return "Generic Memory Pool";
+    }
+
+    /* List interface delegations */
+
+    public E remove(int position) {
+        E e = values.remove(position);
         //noinspection DuplicateStringLiteralInspection
-        log.debug("Cleaning up dirty added values (" + valueCount + ")");
-        Arrays.sort(values, 0, valueCount);
-        removeDuplicates();
-        log.debug("Finished cleanup. Resulting values: " + valueCount);
+        log.trace("Removed element '" + e + "' at position " + position);
+        return e;
     }
 
-    @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    public void remove(int position) {
-        log.trace("Removing value at position " + position);
-         if (position < 0 || position >= valueCount) {
-            throw new ArrayIndexOutOfBoundsException("The position " + position
-                                                     + " was not between 0"
-                                                     + " and " + valueCount);
-        }
-        System.arraycopy(values, position + 1, values, position,
-                         valueCount - position + 1);
-        valueCount--;
-    }
-
-    public int getPosition(E value) {
-        //noinspection DuplicateStringLiteralInspection
-        log.trace("Getting position for  '" + value + "' in the pool");
-        int insertPos = binarySearch(value);
-        return insertPos == valueCount
-               || valueCount == 0
-               || !value.equals(getValue(insertPos)) ? -1 : insertPos;
-    }
-
-    public E getValue(int position) {
+    public E get(int position) {
         // No trace here, as it needs to be FAST
-        return values[position];
+        return values.get(position);
     }
 
     public int size() {
-        return valueCount;
+        return values.size();
     }
 
     public void clear() {
-        valueCount = 0;
-        values = getArray(DEFAULT_SIZE);
+        values.clear();
     }
 
-    /**
-     * This hack is taken from ArrayList and demonstrates one of the problems
-     * with generics.
-     * @param arraysize the size of the wanted array.
-     * @return an array which can hold values of the type specified in the
-     *         creation of the generified MemoryPool.
-     */
-    protected  E[] getArray(int arraysize) {
-        //noinspection unchecked
-        return (E[])new Comparable[arraysize];
+    public void add(int index, E element) {
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("Adding '" + element + "' at position " + index);
+        values.add(index, element);
     }
 
-    /**
-     * A simple binary searcher which recognizes valueCount. Other than that,
-     * it behaves as the implementation from Sun.<br/>
-     * http://en.wikipedia.org/wiki/Binary_search
-     * @param value the value to search for.
-     * @return the insertion point for value.
-     */
-    protected int binarySearch(E value) {
-        int low = 0;
-        int high = valueCount-1;
-        while (low <= high) {
-            int mid = (low + high) / 2;
-            int diff = compare(values[mid], value);
-            if (diff > 0) {
-                high = mid - 1;
-            } else if (diff < 0) {
-                low = mid + 1;
-            } else {
-                return mid;
-            }
-        }
-        return low;
+    public E set(int index, E element) {
+        return values.set(index, element);
     }
+
 }

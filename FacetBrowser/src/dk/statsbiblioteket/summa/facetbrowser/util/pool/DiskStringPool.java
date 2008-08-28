@@ -44,31 +44,13 @@ import org.apache.commons.logging.LogFactory;
         author = "te")
 public class DiskStringPool extends DiskPool<String> implements
                                                      CollatorSortedPool {
-    private Log log = LogFactory.getLog(DiskStringPool.class);
+//    private Log log = LogFactory.getLog(DiskStringPool.class);
 
     private Collator collator = null;
 
-    public DiskStringPool() throws IOException {
-        super();
-    }
-
-    public DiskStringPool(File location, String poolName,
-                          boolean newPool) throws IOException {
-        super(location, poolName, newPool);
-        log.debug(String.format(
-                "Constructed pool '%s' for location '%s'", poolName, location));
-    }
-
-    protected byte[] valueToBytes(String value) {
-        return StringConverter.valueToBytes(value);
-    }
-
-    protected String bytesToValue(byte[] buffer, int length) {
-        return StringConverter.bytesToValue(buffer, length);
-    }
-
-    public int compare(String o1, String o2) {
-        return collator == null? o1.compareTo(o2) : collator.compare(o1, o2);
+    public DiskStringPool(Collator collator) throws IOException {
+        super(new StringConverter(), collator);
+        this.collator = collator;
     }
 
     /* Mutators */

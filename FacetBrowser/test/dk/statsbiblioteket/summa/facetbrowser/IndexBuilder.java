@@ -33,7 +33,6 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
-import dk.statsbiblioteket.summa.facetbrowser.connection.IndexConnectionImplLocal;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexConnector;
@@ -87,9 +86,9 @@ public class IndexBuilder {
         }
     }
 
-    public static IndexConnectionImplLocal getConnection() {
-        return new IndexConnectionImplLocal(IndexBuilder.INDEXLOCATION);
-    }
+//    public static IndexConnectionImplLocal getConnection() {
+//        return new IndexConnectionImplLocal(IndexBuilder.INDEXLOCATION);
+//    }
 
     public static IndexReader getReader() throws IOException {
         checkIndex();

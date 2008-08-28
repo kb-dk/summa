@@ -26,23 +26,25 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.core;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.ArrayList;
-
+import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMap;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Provides a mapping between document-IDs and facet/tags. Basic addition
  * and removal of document-IDs is possible, allowing for iterative updates.
+ * </p><p>
+ * The FacetMap is the main interaction-interface to Facet updating and takes 
+ * care on keeping TagHandler and CoreMap in sync.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -52,18 +54,16 @@ public class FacetMap {
 
     private CoreMap coreMap;
     private TagHandler tagHandler;
-    StructureDescription structure;
+    private Structure structure;
+    private boolean readOnly;
 
-    public FacetMap(Configuration configuration,
-                    CoreMap coreMap, TagHandler tagHandler) {
+    public FacetMap(Structure structure,
+                    CoreMap coreMap, TagHandler tagHandler, boolean readOnly) {
         log.debug("Constructing facet map");
+        this.structure = structure;
         this.coreMap = coreMap;
         this.tagHandler = tagHandler;
-        structure = new StructureDescription(configuration);
-/*        boolean updateAfterLoad =
-                configuration.getBoolean(UPDATE_AFTER_LOAD);
-        boolean storeAfterChange =
-                configuration.getBoolean(STORE_AFTER_CHANGE);*/
+        this.readOnly = readOnly;
     }
 
     /**
@@ -75,9 +75,17 @@ public class FacetMap {
      * @param docID the document to remove.
      */
     public void removeDocument(int docID) {
+        checkReadOnly();
         log.debug("Removing document " + docID);
         coreMap.remove(docID);
         log.trace("Removed document " + docID);
+    }
+
+    private void checkReadOnly() {
+        if (readOnly) {
+            throw new IllegalStateException(
+                    "The CoreMap is marked as read-only");
+        }
     }
 
     /**
@@ -89,12 +97,9 @@ public class FacetMap {
      * @param facetTags a map with facet/tag pairs. The keys in the map are
      *                  facets names, while the values are tag names.
      */
-    public void addToDocument(int docID, Map<String, List<String>> facetTags) {
-        if (docID > getDocCount()) {
-            throw new IllegalArgumentException("The docID was " + docID
-                                               + ". It should be <= "
-                                               + getDocCount());
-        }
+    public synchronized void addToDocument(int docID, Map<String,
+            List<String>> facetTags) {
+        checkReadOnly();
         log.debug("Adding String-based facet/tags to document " + docID);
         Map<Integer, List<Integer>> facetTagIDs =
                 new HashMap<Integer, List<Integer>>(facetTags.size());
@@ -106,15 +111,17 @@ public class FacetMap {
             List<Integer> tagIDs =
                     new ArrayList<Integer>(facet.getValue().size());
             for (String tag: facet.getValue()) {
-                int tagID = tagHandler.getTagID(facetID, tag);
-                if (tagID == -1) {
-                    tagID = tagHandler.addTag(facetID, tag);
+                int tagID = tagHandler.insertTag(facetID, tag);
+                if (tagID > 0) {
                     coreMap.adjustPositions(facetID, tagID, 1);
+                    // Adjust already resolved tagIDs
                     for (int i = 0 ; i < tagIDs.size() ; i++) {
                         if (tagIDs.get(i) >= tagID) {
                             tagIDs.set(i, tagIDs.get(i) + 1);
                         }
                     }
+                } else { // Tag already exists
+                    tagID = -1 * (tagID + 1);
                 }
                 tagIDs.add(tagID);
             }
@@ -123,6 +130,22 @@ public class FacetMap {
         log.trace("Finished adding Strings for document " + docID
                   + ", switching to map update");
         addToDocumentByID(docID, facetTagIDs);
+    }
+
+    public void addToDocument(int docID, String facet, List<String> tags) {
+        Map<String, List<String>> facetTags =
+                new HashMap<String, List<String>>(1);
+        facetTags.put(facet, tags);
+        addToDocument(docID, facetTags);
+    }
+
+    public void add(int docID, String facet, String tag) throws IOException {
+        int facetID = structure.getFacetID(facet);
+        int tagID = tagHandler.insertTag(facetID, tag);
+        if (tagID > 0) {
+            coreMap.adjustPositions(facetID, tagID, 1);
+        }
+        coreMap.add(docID, facetID, new int[]{tagID});
     }
 
     /**
@@ -138,6 +161,7 @@ public class FacetMap {
      */
     public void addToDocumentByID(int docID,
                                   Map<Integer, List<Integer>> facetTags) {
+        checkReadOnly();
         log.trace("Adding ID-based facet/tags to document " + docID);
         for (Map.Entry<Integer, List<Integer>> facet: facetTags.entrySet()) {
             int[] tagIDs = new int[facet.getValue().size()];
@@ -163,6 +187,7 @@ public class FacetMap {
      *                  facetIDs, while the values are tagIDs.
      */
     public void addToDocumentByArray(int docID, Map<Integer, int[]> facetTags) {
+        checkReadOnly();
         log.trace("Adding ID-based array-stored facet/tags to doc " + docID);
         for (Map.Entry<Integer, int[]> facet: facetTags.entrySet()) {
             coreMap.add(docID, facet.getKey(), facet.getValue());
@@ -179,20 +204,17 @@ public class FacetMap {
      * Note 2: This takes a considerable amount of time.
      */
     public void optimise() {
+        checkReadOnly();
         log.warn("Optimising facet map not implemented yet");
     }
 
     /**
      * Stores the map at the given location.
-     * @param location where to store the map.
      * @throws IOException if an I/O error occured.
      */
-    public void store(File location) throws IOException {
-        log.info("Storing facet map to \"" + location + "\"");
-        // TODO: Handle storing of files at the open-location
-        coreMap.store(location);
-        tagHandler.store(location);
-        log.trace("Finished storing facet and tags at \"" + location + "\"");
+    public void store() throws IOException {
+        coreMap.store();
+        tagHandler.store();
     }
 
     /**

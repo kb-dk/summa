@@ -54,6 +54,7 @@ public class Structure implements Configurable, Serializable {
      * each holding the setup for a single Facet.
      * </p><p>
      * This property is mandatory.
+     * @see {@link FacetStructure}.
      */
     public static final String CONF_FACETS = "summa.facet.facets";
 

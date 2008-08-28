@@ -31,56 +31,45 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.facetbrowser.IndexBuilder;
+import dk.statsbiblioteket.summa.facetbrowser.BaseObjects;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
-import dk.statsbiblioteket.summa.facetbrowser.core.tags.MemoryTagHandler;
-import dk.statsbiblioteket.summa.facetbrowser.core.StructureDescription;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.lucene.index.IndexReader;
 
-/**
- * CoreMapBitStuffedLong Tester.
- *
- * @author <Authors name>
- * @since <pre>10/06/2006</pre>
- * @version 1.0
- */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.IN_DEVELOPMENT,
+        author = "te")
 public class CoreMapBitStuffedTest extends TestCase {
     public CoreMapBitStuffedTest(String name) {
         super(name);
     }
 
+    BaseObjects bo;
+
     public void setUp() throws Exception {
         super.setUp();
+        bo = new BaseObjects();
     }
 
     public void tearDown() throws Exception {
         super.tearDown();
+        bo.close();
     }
 
     public void testSetGet() throws Exception {
         //TODO: Test goes here...
     }
 
-    @SuppressWarnings({"UnusedDeclaration"})
     private TagHandler getTagHandler() throws Exception {
         IndexBuilder.checkIndex();
         IndexReader reader = IndexBuilder.getReader();
-        return new MemoryTagHandler(reader,
-                                    new StructureDescription(getFacetNames()));
+        TagHandler handler = bo.getTagHandler();
+        // TODO: Fill the TagHandler from the index
+        return handler;
     }
 
-    private List<String> getFacetNames() {
-        String[] fn = new String[]{IndexBuilder.AUTHOR, IndexBuilder.GENRE,
-                                   IndexBuilder.TITLE, IndexBuilder.FREETEXT,
-                                   IndexBuilder.VARIABLE};
-        List<String> facetNames = new ArrayList<String>(fn.length);
-        for (String f: fn) {
-            facetNames.add(f);
-        }
-        return facetNames;
-    }
-
-    public void testExpansion() {
-        CoreMapBitStuffed map = new CoreMapBitStuffed(2, 2);
+    public void testExpansion() throws Exception {
+        CoreMap map = bo.getCoreMap();
         assertEquals("The map should contain no elements to start with",
                      0, map.getDocCount());
         map.add(0, 0, new int[]{12, 23, 34});
@@ -116,7 +105,7 @@ public class CoreMapBitStuffedTest extends TestCase {
     }
 
     public void testAddition() throws Exception {
-        CoreMapBitStuffed map = new CoreMapBitStuffed(2, 2);
+        CoreMap map = bo.getCoreMap();
         map.add(0, 0, new int[]{23, 34});
         assertArrayEquals("Initial array should be correct",
                           new int[]{23, 34}, map.get(0, 0));
@@ -146,7 +135,8 @@ public class CoreMapBitStuffedTest extends TestCase {
     // TODO: Expand this test-suite with more like testAddition
     
     public void testRemove() throws Exception {
-        CoreMapBitStuffed map = new CoreMapBitStuffed(2, 2);
+        // TODO: Make a new map with shift=true
+        CoreMap map = bo.getCoreMap();
         map.add(0, 0, new int[]{23, 34});
         map.add(1, 0, new int[]{1});
         map.add(2, 0, new int[]{2});
@@ -179,7 +169,7 @@ public class CoreMapBitStuffedTest extends TestCase {
     }
 
     public void testAdjustPositions() throws Exception {
-        CoreMapBitStuffed map = new CoreMapBitStuffed(2, 2);
+        CoreMap map = bo.getCoreMap();
         map.add(0, 0, new int[]{23, 34});
         map.add(1, 0, new int[]{1});
         map.add(2, 0, new int[]{2});
