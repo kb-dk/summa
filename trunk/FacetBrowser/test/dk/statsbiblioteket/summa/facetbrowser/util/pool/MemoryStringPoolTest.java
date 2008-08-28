@@ -125,12 +125,13 @@ public class MemoryStringPoolTest extends TestCase {
     public static void testSortBasic(SortedPool<String> pool)
             throws Exception {
         String[] BASE = new String[]{"Daskelars", "Drillenisse",
-                                     "Drøbel", "Duksedreng",
+                                     "Dræsine", "Drøbel", "Duksedreng",
                                      "Dumrian"};
         pool.add("Duksedreng");
         pool.add("Daskelars");
         pool.add("Dumrian");
         pool.add("Drøbel");
+        pool.add("Dræsine");
         pool.add("Drillenisse");
         MemoryPoolTest.compareOrder("Plain addition should work", pool, BASE);
     }

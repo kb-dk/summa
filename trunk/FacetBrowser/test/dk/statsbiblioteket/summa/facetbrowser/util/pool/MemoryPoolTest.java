@@ -266,12 +266,12 @@ public class MemoryPoolTest extends TestCase {
         Random random = new Random();
         for (int i = 0 ; i < samples ; i++) {
             String adder = Integer.toString(random.nextInt(samples / 4));
-            pool1.add(adder);
+            pool1.dirtyAdd(adder);
             pool2.insert(adder);
         }
         pool1.cleanup();
         if (!compareOrderBool("dirtyAdds and normal adds should give the "
-                              + "same result", pool1, pool2)) {
+                              + "same result after cleanup", pool1, pool2)) {
             System.out.println("Dumping values:");
             for (int i = 0 ; i < Math.max(pool1.size(), pool2.size()) ; i++) {
                 System.out.print("(" +

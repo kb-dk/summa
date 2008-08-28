@@ -28,12 +28,14 @@ package dk.statsbiblioteket.summa.facetbrowser.util.pool;
 
 import dk.statsbiblioteket.summa.common.util.ListSorter;
 import dk.statsbiblioteket.util.LineReader;
+import dk.statsbiblioteket.util.Logs;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.*;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Arrays;
 
 /**
  * The DiskPool uses the local filesystem for the storage of values. An index
@@ -216,6 +218,7 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
     }
 
     public void add(int insertPos, E value) {
+        //noinspection DuplicateStringLiteralInspection
         log.trace("Adding '" + value + "' to the pool at index " + insertPos);
 
         /* Check that there is enough room */
@@ -226,6 +229,10 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
                              size() - insertPos);
         }
         indexes[insertPos] = storeValue(value);
+/*        System.out.println("Insertpos " + insertPos
+                           + " valuelength " + getValueLength(indexes[insertPos])
+                           + " valueposition " + getValuePosition(indexes[insertPos]));
+                           */
         valueCount++;
     }
 
