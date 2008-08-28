@@ -127,8 +127,8 @@ public interface SortedPool<E extends Comparable<E>> extends List<E>,
     /**
      * @return the name of the pool as specified in {@link #open}.
      */
-    
     public String getName();
+
     /**
      * Add the given value to the pool and return the position of the newly
      * inserted value if it does not already exist. The insertion point will be
@@ -153,13 +153,22 @@ public interface SortedPool<E extends Comparable<E>> extends List<E>,
     /* List interface notes */
 
     /**
+     * Add a value to the pool. This is a wrapper for {@link #insert}.
+     * @param value the value to add to the pool.
+     * @return true if the value was added.
+     * @see {@link #insert}.
+     */
+    public boolean add(E value); // Defined in List
+
+    /**
      * Add a value to the pool as fast as possible. The state of the pool
      * will be inconsistent until {@link #cleanup} has been called.
      * The method intended use is for initial builds of large pools.
      * @param value the value to add to the pool.
+     * @return true if the value was added.
      * @see {@link #insert}.
      */
-    public boolean add(E value); // Defined in List
+    public boolean dirtyAdd(E value);
 
     /**
      * Adding an element at a specific position from outside of the

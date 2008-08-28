@@ -53,7 +53,11 @@ public class StringConverter implements ValueConverter<String> {
 
     public String bytesToValue(byte[] buffer, int length) {
         try {
-            return new String(buffer, 0, length, "utf-8");
+            String result = new String(buffer, 0, length, "utf-8");
+            if (result.length() == 0) {
+                return result;
+            }
+            return result.substring(0, result.length()-1); // Remove \n
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException("utf-8 conversion failed", e);
         }

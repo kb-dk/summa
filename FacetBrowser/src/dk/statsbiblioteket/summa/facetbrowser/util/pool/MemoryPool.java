@@ -62,6 +62,9 @@ public class MemoryPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
 
     public boolean open(File location, String poolName, boolean readOnly,
                         boolean forceNew) throws IOException {
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("Open(" + location + ", " + poolName + ", " + readOnly 
+                  + ", " + forceNew + ") called");
         setBaseData(location, poolName, readOnly);
         if (forceNew) {
             log.debug(String.format("Force creating new pool '%s' at '%s'",
@@ -112,10 +115,6 @@ public class MemoryPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
 
     protected void sort() {
         Collections.sort(this, this); // Works fine for memory-based
-    }
-
-    public String getName() {
-        return "Generic Memory Pool";
     }
 
     /* List interface delegations */

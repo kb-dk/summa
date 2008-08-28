@@ -22,17 +22,19 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.util.pool;
 
-import java.util.Random;
-import java.util.Locale;
-import java.io.File;
-import java.io.StringWriter;
-import java.io.IOException;
-import java.text.Collator;
-
-import junit.framework.TestCase;
-import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.CachedCollator;
+import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import junit.framework.TestCase;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.text.Collator;
+import java.util.Arrays;
+import java.util.Locale;
+import java.util.Random;
 
 /**
  * MemoryPool Tester.
@@ -70,7 +72,9 @@ public class MemoryPoolTest extends TestCase {
         for (int i = 0 ; i < expected.length ; i++) {
             //noinspection DuplicateStringLiteralInspection
             assertEquals("(" + message + ") The objects at position " + i
-                         + " should be equal",
+                         + " should be equal (expected "
+                         + Logs.expand(Arrays.asList(expected), 10)
+                         + " actual " + Logs.expand(pool, 10) + ")",
                          expected[i], pool.get(i));
         }
     }
