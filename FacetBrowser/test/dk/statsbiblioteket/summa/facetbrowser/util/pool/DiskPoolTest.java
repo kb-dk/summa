@@ -26,6 +26,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Random;
 import java.util.Locale;
+import java.util.List;
+import java.util.ArrayList;
 import java.text.Collator;
 
 import junit.framework.Test;
@@ -52,14 +54,22 @@ public class DiskPoolTest extends TestCase {
 
     public void tearDown() throws Exception {
         super.tearDown();
+        for (SortedPool pool: openedPools) {
+            pool.close();
+        }
+        openedPools.clear();
     }
 
+    static File TMP_DIR = new File(System.getProperty("java.io.tmpdir"));
+
     static Collator defaultCollator = new CachedCollator(new Locale("da"));
+    static List<SortedPool> openedPools = new ArrayList<SortedPool>(10);
+    static Random random = new Random();
     public static DiskStringPool getPool() throws IOException {
         DiskStringPool pool = new DiskStringPool(defaultCollator);
-        pool.open(new File(System.getProperty("java.io.tmpdir"),
-                           "facetTestDisk"),
-                  "testpool", false, true);
+        pool.open(new File(TMP_DIR, "facetTestDisk"),
+                  "testpool" + random.nextInt(), false, true);
+        openedPools.add(pool);
         return pool;
     }
     
@@ -72,39 +82,38 @@ public class DiskPoolTest extends TestCase {
     }
 
     public void dumpSpeed() throws Exception {
-        MemoryPoolTest.dumpSpeed(getPool());
         System.gc();
         MemoryPoolTest.dumpSpeed(getPool());
     }
 
     public void makeSmallSample() throws Exception {
         MemoryPoolTest.createSample(getPool(), 1000,
-                                    new File("/tmp"), "test_1K");
+                                    TMP_DIR, "test_1K");
     }
 
     public void makeMediumSample() throws Exception {
         MemoryPoolTest.createSample(getPool(), 1000000,
-                                    new File("/tmp"), "test_1M");
+                                    TMP_DIR, "test_1M");
     }
 
     public void makeBigSample() throws Exception {
-        MemoryPoolTest.createSample(getPool(), 10000000,
-                                    new File("/tmp"), "test_10M");
+        MemoryPoolTest.createSample(getPool(), 5000000,
+                                    TMP_DIR, "test_10M");
     }
 
     public void dumpDirty() throws Exception {
-        MemoryPoolTest.dumpDirty(getPool(), 1000000);
+        MemoryPoolTest.dumpDirty(getPool(), 100000);
     }
     public void testDirty() throws Exception {
         MemoryPoolTest.testDirty(getPool());
     }
     public void testDirtyRandom() throws Exception {
         MemoryPoolTest.testDirtyRandom(getPool(),
-                                       getPool(), 1000);
+                                       getPool(), 100);
     }
 
     public void testDirtyOffByOne() throws Exception {
-        int RUNS = 100;
+        int RUNS = 10;
         int samples = 1000;
         for (int r = 0 ; r < RUNS ; r++) {
             DiskPool<String> pool = getPool();

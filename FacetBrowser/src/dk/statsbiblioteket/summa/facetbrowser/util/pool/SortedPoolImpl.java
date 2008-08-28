@@ -292,7 +292,7 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
             author = "te",
             comment = "Should we add checks for valid ranges?")
     protected static long getIndexEntry(long pos, long length) {
-        return (length << POSITION_BITS) | pos;
+        return length << POSITION_BITS | pos;
     }
 
     protected static long getValueLength(long indexEntry) {
@@ -361,12 +361,18 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
             return getValueConverter().bytesToValue(BUFFER, 0);
         }
         long valPos = getValuePosition(indexElement);
-        log.trace("Retrieving value from file at position " + valPos);
+        if (log.isTraceEnabled()) {
+            log.trace("readValue: Retrieving value of length " + length 
+                      + " from file at position " + valPos);
+        }
         reader.seek(valPos);
         if (BUFFER.length < length) {
             BUFFER = new byte[length];
         }
         reader.readFully(BUFFER, 0, length);
+        for (int i = 0 ; i < length ; i++) {
+            System.out.println(BUFFER[i]);
+        }
         return getValueConverter().bytesToValue(BUFFER, length);
     }
 
