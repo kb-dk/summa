@@ -17,8 +17,6 @@ import java.io.File;
 import java.net.UnknownHostException;
 import java.net.URL;
 import java.net.MalformedURLException;
-import java.util.Collection;
-import java.util.ArrayList;
 
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Zips;
@@ -177,14 +175,14 @@ public class RemoteHelper {
     }
 
     /**
-     * Throws a {@link InvalidCodePathException} if one or more of the
+     * Throws a {@link dk.statsbiblioteket.summa.common.rpc.RemoteHelper.InvalidCodeBaseException} if one or more of the
      * URIs listed in {@code uris} does not point at a valid {@code .jar}
      * file.
      * @param uris an array of uris to test for jar file contents
      */
-    public static void testCodePath (String[] uris)
-                                               throws InvalidCodePathException {
-        log.trace ("testCodePath() called");
+    public static void testCodeBase(String[] uris)
+                                               throws InvalidCodeBaseException {
+        log.trace ("testCodeBase() called");
 
         File tmpDir = new File (System.getProperty("java.io.tmpdir"),
                                 "summa-RH-resolutions");
@@ -207,7 +205,7 @@ public class RemoteHelper {
 
             /* Check that it is a .jar file */
             if (!uri.endsWith(".jar")) {
-                throw new InvalidCodePathException("Non .jar-file in codepath: "
+                throw new InvalidCodeBaseException("Non .jar-file in codepath: "
                                                    + uri);
             }
 
@@ -217,7 +215,7 @@ public class RemoteHelper {
                 url = new URL (uri);
             } catch (MalformedURLException e) {
                 log.warn("Malformed URL in codepath", e);
-                throw new InvalidCodePathException ("Malformed url: " + uri
+                throw new InvalidCodeBaseException("Malformed url: " + uri
                                                     + ", error was: "
                                                     + e.getMessage());
             }
@@ -228,7 +226,7 @@ public class RemoteHelper {
                 jar = Files.download(url, tmpDir, true);
             } catch (IOException e) {
                 log.warn ("Unable to retrieve url", e);
-                throw new InvalidCodePathException("Unable to retrieve url "
+                throw new InvalidCodeBaseException("Unable to retrieve url "
                                                    + url + ": "
                                                    + e.getMessage());
             }
@@ -240,13 +238,13 @@ public class RemoteHelper {
 
                 File metaInf = new File (tmpDir, "META-INF");
                 if (!metaInf.exists()) {
-                    throw new InvalidCodePathException("The .jar-file "+ url
+                    throw new InvalidCodeBaseException("The .jar-file "+ url
                                                        + " does not contain "
                                                        + "a META-INF directory");
                 }
 
             } catch (IOException e) {
-                throw new InvalidCodePathException ("Failed to extract "
+                throw new InvalidCodeBaseException("Failed to extract "
                                                      + url + ". The .jar file "
                                                      + "is possibly corrupt");
             }
@@ -267,11 +265,11 @@ public class RemoteHelper {
 
     /**
      * Exception thrown when trying to resolve a URI not pointing at a valid
-     * {@code .jar}-file, by calling {@link RemoteHelper#testCodePath}.
+     * {@code .jar}-file, by calling {@link RemoteHelper#testCodeBase}.
      */
-    public static class InvalidCodePathException extends Exception {
+    public static class InvalidCodeBaseException extends Exception {
 
-        public InvalidCodePathException(String msg) {
+        public InvalidCodeBaseException(String msg) {
             super (msg);
         }
     }

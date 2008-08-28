@@ -11,9 +11,9 @@ public class RemoteHelperTest extends TestCase {
         String[] codePath = new String[] {"goo.jar"};
 
         try {
-            RemoteHelper.testCodePath(codePath);
+            RemoteHelper.testCodeBase(codePath);
             fail ("Codepath is not a URL");
-        } catch (RemoteHelper.InvalidCodePathException e) {
+        } catch (RemoteHelper.InvalidCodeBaseException e) {
             System.out.println ("Error in codepath as expected: "
                                 + e.getMessage());
         }
@@ -23,9 +23,9 @@ public class RemoteHelperTest extends TestCase {
         String[] codePath = new String[] {"http://goo"};
 
         try {
-            RemoteHelper.testCodePath(codePath);
+            RemoteHelper.testCodeBase(codePath);
             fail ("Codepath is a .jar");
-        } catch (RemoteHelper.InvalidCodePathException e) {
+        } catch (RemoteHelper.InvalidCodeBaseException e) {
             System.out.println ("Error in codepath as expected: "
                                 + e.getMessage());
         }
@@ -35,9 +35,9 @@ public class RemoteHelperTest extends TestCase {
         String[] codePath = new String[] {"http://example.com/foobar.jar"};
 
         try {
-            RemoteHelper.testCodePath(codePath);
+            RemoteHelper.testCodeBase(codePath);
             fail ("Codepath does not represent an existing file");
-        } catch (RemoteHelper.InvalidCodePathException e) {
+        } catch (RemoteHelper.InvalidCodeBaseException e) {
             System.out.println ("Error in codepath as expected: "
                                 + e.getMessage());
         }

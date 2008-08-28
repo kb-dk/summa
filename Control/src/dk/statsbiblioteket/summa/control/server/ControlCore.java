@@ -105,11 +105,29 @@ public class ControlCore extends UnicastRemoteObject
 
         if (conn == null) {
             setStatusIdle();
-            return null;
+            throw new InvalidClientStateException (instanceId, "Not running");
         }
 
         ClientConnection client = conn.getConnection();
-        clientManager.release (conn);
+
+        /* validate the connection */
+        try {
+            String lookupId = client.getId();
+
+            if (!instanceId.equals(lookupId)) {
+                log.warn ("Client reports illegal id '" + lookupId
+                          + "'. Expected '" + instanceId + "'");
+                throw new InvalidClientStateException(instanceId,
+                                                      "Reports illegal id '"
+                                                      + lookupId + "'");
+            }
+        } catch (Exception e) {
+            clientManager.reportError(conn, e);
+            throw new InvalidClientStateException(instanceId,
+                                                  "Broken connection", e);
+        } finally {
+            clientManager.release (conn);
+        }
 
         setStatusIdle();
 

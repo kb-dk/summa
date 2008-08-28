@@ -94,10 +94,10 @@ public class BundleLoader implements Configurable {
          * quotes to ensure property values may contain spaces */
         for (Map.Entry<String, Serializable> entry : builder.getProperties()) {
             String arg = (String) entry.getValue();
-            arg = arg.replace (" ", "\\ ");
+            //arg = arg.replace (" ", "\\ ");
             arg = "-D"+entry.getKey()+"="+arg; 
             jvmArgs.add(arg);
-            log.trace("load added JVM arg " + arg);
+            log.trace("Added JVM arg " + arg);
         }
 
         log.trace("Returning BundleStub for instance '"
