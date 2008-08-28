@@ -152,6 +152,10 @@ public class URLRepository implements BundleRepository {
         List<String> result = new ArrayList <String> (10);
 
         for (String bdl : baseDir.list()) {
+            if (!bdl.endsWith(".bundle")) {
+                log.trace ("Skipping non-.bundle '" + bdl + "'");
+                continue;
+            }
             bdl = bdl.replace (".bundle", "");
             if (pat.matcher(bdl).matches()) {
                 result.add (bdl);
