@@ -16,7 +16,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
+  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
@@ -53,7 +53,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         author = "te")
 public abstract class SortedPoolImpl<E extends Comparable<E>>
         extends AbstractList<E> implements SortedPool<E>, Comparator<E> {
-    private Log log = LogFactory.getLog(SortedPool.class);
+    private Log log = LogFactory.getLog(SortedPoolImpl.class);
     protected static final int VERSION = 2;
 
     protected ValueConverter<E> valueConverter;
@@ -238,17 +238,20 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
 
         long pos = 0;
         long feedback = Math.max(size() / 100, 1);
+        if (!log.isTraceEnabled()) {
+            feedback = Integer.MAX_VALUE; // Disable
+        }
         Profiler profiler = new Profiler();
         profiler.setExpectedTotal(size());
         for (int i = 0 ; i < size() ; i++) {
-            if (i % feedback == 0) {
-                log.debug("Stored " + i + "/" + size() + " values. ETA: "
-                          + profiler.getETAAsString(true));
-            }
             int length = writeValue(dataBuf, get(i));
             index.writeLong(getIndexEntry(pos, length));
             pos += length;
             profiler.beat();
+            if (i % feedback == 0) {
+                log.trace("Stored " + i + "/" + size() + " values. ETA: "
+                          + profiler.getETAAsString(true));
+            }
         }
         index.writeLong(pos); // Index for next logical, but non-existing, value
         log.trace("Stored all values for '" + poolName + "', closing streams");
@@ -260,14 +263,20 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
         index.close();
         indexBuf.close();
         indexOut.close();
+        remove(getIndexFile(), "old index");
         log.trace(String.format("store: Renaming index '%s' to '%s'",
                                 tmpIndex, getIndexFile()));
-        remove(getIndexFile(), "old index");
-        tmpIndex.renameTo(getIndexFile());
+        if (!tmpIndex.renameTo(getIndexFile())) {
+            throw new IOException(String.format("Unable to rename '%s' to '%s'",
+                                                tmpIndex, getIndexFile()));
+        }
+        remove(getValueFile(), "old values");
         log.trace(String.format("store: Renaming values '%s' to '%s'",
                                 tmpValues, getValueFile()));
-        remove(getValueFile(), "old values");
-        tmpValues.renameTo(getValueFile());
+        if (!tmpValues.renameTo(getValueFile())) {
+            throw new IOException(String.format("Unable to rename '%s' to '%s'",
+                                                tmpValues, getValueFile()));
+        }
         log.debug("Finished storing pool '" + poolName + "' to location '"
                   + location + "'");
     }
@@ -351,7 +360,9 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
         if (length == 0) {
             return getValueConverter().bytesToValue(BUFFER, 0);
         }
-        reader.seek(getValuePosition(indexElement));
+        long valPos = getValuePosition(indexElement);
+        log.trace("Retrieving value from file at position " + valPos);
+        reader.seek(valPos);
         if (BUFFER.length < length) {
             BUFFER = new byte[length];
         }
@@ -408,9 +419,9 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
         if (insertPos >= 0) {
             log.trace("Value '" + value + "' already exists in pool '"
                       + poolName + "'");
-            return -insertPos - 1;
+            return -1 * (insertPos + 1);
         }
-        insertPos = -insertPos - 1;
+        insertPos = -1 * (insertPos + 1);
         add(insertPos, value); // Positive position
         return insertPos;
     }
@@ -421,10 +432,11 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
     public void cleanup() {
         log.trace("cleanup called");
         long startTime = System.nanoTime();
+        sort();
         removeDuplicates();
         //noinspection DuplicateStringLiteralInspection
         log.trace("cleanup finished for " + size() + " elements in "
-                  + (System.nanoTime()-startTime) + " nanoseconds");
+                  + (System.nanoTime()-startTime) / 1000000.0 + "ms");
     }
 
     /**
@@ -442,7 +454,20 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
                comparator.compare(o1, o2);
     }
 
+    public String getName() {
+        return poolName;
+    }
+
+    public boolean dirtyAdd(E value) {
+        add(size(), value);
+        return true;
+    }
+
     /* List interface */
+
+    public boolean add(E e) {
+        return insert(e) >= 0;
+    }
 
     public int indexOf(E value) {
         int index = Collections.binarySearch(this, value, this);

@@ -56,20 +56,25 @@
     </appender>
 
     <logger name="dk.statsbiblioteket.summa.facetbrowser.util.pool.DiskPool">
-        <level value="DEBUG"/>
+        <level value="FATAL"/>
         <appender-ref ref="CONSOLE"/>
     </logger>
 
-    <logger name="dk.statsbiblioteket.summa.facetbrowser">
+<!--    <logger name="dk.statsbiblioteket.summa.facetbrowser">
         <level value="ERROR"/>
         <appender-ref ref="FILE"/>
+    </logger>-->
+
+    <logger name="dk.statsbiblioteket.summa.facetbrowser">
+        <level value="trace"/>
+        <appender-ref ref="CONSOLE"/>
     </logger>
 
     <!-- all loggers inherit the root logger - so don't include the root appenders
     in the other loggers (will duplicate log entries in the log file) -->
     <root>
-        <level value="ERROR" />
-        <appender-ref ref="CONSOLE" />
+        <level value="FATAL" />
+        <appender-ref ref="FILE" />
     </root>
 
 </log4j:configuration>

@@ -282,6 +282,10 @@ public class Facet implements CollatorSortedPool {
         return pool.add(value);
     }
 
+    public boolean dirtyAdd(String value) {
+        return pool.dirtyAdd(value);
+    }
+
     public void add(int index, String element) {
         pool.add(index, element);
     }

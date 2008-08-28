@@ -72,6 +72,7 @@ public class FakeClient implements ClientConnection {
         log.info("Fake starting " + id);
     }
 
+
     public void stopService(String id) throws RemoteException {
         log.info("Fake stopping " + id);
     }
