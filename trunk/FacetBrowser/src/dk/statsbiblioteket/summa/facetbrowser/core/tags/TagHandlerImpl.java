@@ -26,19 +26,22 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.core.tags;
 
-import java.util.List;
-import java.util.Arrays;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
+import dk.statsbiblioteket.summa.facetbrowser.Structure;
+import dk.statsbiblioteket.summa.facetbrowser.lucene.LuceneFacetBuilder;
+import dk.statsbiblioteket.summa.facetbrowser.util.pool.SortedPool;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import dk.statsbiblioteket.summa.facetbrowser.util.pool.SortedPool;
-import dk.statsbiblioteket.summa.facetbrowser.core.StructureDescription;
-import dk.statsbiblioteket.summa.facetbrowser.Structure;
-import dk.statsbiblioteket.summa.facetbrowser.lucene.LuceneFacetBuilder;
-import dk.statsbiblioteket.util.qa.QAInfo;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Provides (optionally persistent) maps of tags in facets. The mapping is
@@ -46,24 +49,41 @@ import dk.statsbiblioteket.util.qa.QAInfo;
  * possible, although significantly slower than a complete
  * {@link LuceneFacetBuilder#fill} if the whole map needs to be build.
  */
-@QAInfo(state=QAInfo.State.IN_DEVELOPMENT)
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.IN_DEVELOPMENT,
+        author = "te")
 public class TagHandlerImpl implements TagHandler {
     private Log log = LogFactory.getLog(TagHandlerImpl.class);
 
     private Facet[] facets;
     private Structure structure;
     private boolean dirty = false;
-    public static final String PERSISTENCE_PREFIX = "tags_";
 
     /**
-     * Constructs a tag handler around the given pools.
-     * @param structure the description of the setup.
-     * @param facets pools to hold tags. There must be a pool for each facet
-     *               specified in structure.
+     * Creates underlying Facets.
+     * After construction, {@link #open(File)} must be called before use.
+     * @param conf      the setup for the TagHandler.
+     * @param structure the overall structure for the FacetBrowser.
+     * @param readOnly  if true, the TagHandler will allow only requests.
+     * @throws java.io.IOException if the underlying {@link Facet}s could not
+     *                             be constructed.
      */
-    public TagHandlerImpl(Structure structure, Facet[] facets) {
+    public TagHandlerImpl(Configuration conf, Structure structure,
+                          boolean readOnly) throws IOException {
+        log.debug("Creating TagHandlerImpl");
         this.structure = structure;
-        this.facets = facets;
+        facets = new Facet[structure.getFacetNames().size()];
+        boolean useMemory =
+                conf.getBoolean(CONF_USE_MEMORY, DEFAULT_USE_MEMORY);
+
+        int position = 0;
+        for (Map.Entry<String, FacetStructure> entry:
+                structure.getFacets().entrySet()) {
+            facets[position++] =
+                    new Facet(entry.getValue(), useMemory, readOnly);
+        }
+        log.trace(String.format("TagHandlerImpl constructor finished with "
+                                + "%d facets", position));
     }
 
     /**
@@ -90,12 +110,12 @@ public class TagHandlerImpl implements TagHandler {
 
     public int getTagID(int facetID, String tagName) {
         failIfDirty();
-        return facets[facetID].getPosition(tagName);
+        return facets[facetID].indexOf(tagName);
     }
 
     public String getTagName(int facetID, int tagID) {
         failIfDirty();
-        return facets[facetID].getValue(tagID);
+        return facets[facetID].get(tagID);
     }
 
     public int getFacetID(String facetName) {
@@ -139,44 +159,44 @@ public class TagHandlerImpl implements TagHandler {
 
     // TODO: Rewrite this completely to handle missing pools.
     // TODO: Fail on changed locale or changed fields
-    public void load(File folder) throws IOException {
+    public List<Facet> open(File folder) throws IOException {
+        log.debug("Loading tag handler data from folder '" + folder + "'");
+        List<Facet> nonLoaded = new ArrayList<Facet>(facets.length);
         dirty = false;
-        log.debug("Loading tag handler data from folder \"" + folder + "\"");
         int facetID = 0;
-        for (SortedPool<String> tagPool: facets) {
+        for (Facet tagPool: facets) {
             String facetName = structure.getFacet(facetID++).getName();
             log.debug("Loading tags \"" + facetName + "\"");
-            tagPool.load(folder, PERSISTENCE_PREFIX + facetName);
+            if (!tagPool.open(folder)) {
+                log.debug("Unable to load data for Facet '" + tagPool + "'");
+                nonLoaded.add(tagPool);
+            }
         }
         //noinspection DuplicateStringLiteralInspection
         log.debug("Finished loading tags for " + facets.length + " facets");
+        return nonLoaded;
     }
 
-    // TODO: Rewrite this to handle holes in id
-    public void store(File folder) throws IOException {
+    public void store() throws IOException {
         failIfDirty();
-        log.debug("Storing tag handler data to folder \"" + folder + "\"");
-        int facetID = 0;
+        log.debug("Storing tag handler data");
+        long startTime = System.currentTimeMillis();
         for (SortedPool<String> tagPool: facets) {
-            String facetName = structure.getFacet(facetID++).getName();
-            log.debug("Storing tags \"" + facetName + "\"");
-            tagPool.store(folder, PERSISTENCE_PREFIX + facetName);
+            tagPool.store();
         }
-        //noinspection DuplicateStringLiteralInspection
-        log.debug("Finished storing tags for " + facets.length + " facets");
+        log.debug(String.format("Finished storing tags for %d facets in %d ms",
+                                facets.length,
+                                System.currentTimeMillis() - startTime));
     }
 
     public void close() {
         //noinspection DuplicateStringLiteralInspection
-        log.debug("Closing " + facets.length + " facets");
+        log.debug(String.format("Closing %d facets", facets.length));
         for (SortedPool<String> tagPool: facets) {
-            // TODO: Don't clear, just close
-            tagPool.clear();
+            tagPool.close();
         }
-        //noinspection AssignmentToNull
-        facets = null;
         log.trace("Finished closing tag pools. Tag handler state is now"
-                  + " unstable");
+                  + " unstable until open is called");
     }
 
     public String getStats() {
@@ -193,39 +213,41 @@ public class TagHandlerImpl implements TagHandler {
     }
 
     public void dirtyAddTag(int facetID, String tagName) {
-        facets[facetID].dirtyAdd(tagName);
+        facets[facetID].add(tagName);
+    }
+
+    public void dirtyAddTag(String facetName, String tagName) {
+        dirtyAddTag(structure.getFacetID(facetName), tagName);
     }
 
     public void cleanup() {
         //noinspection DuplicateStringLiteralInspection
         log.debug("Cleaning " + facets.length + " facets");
+        long startTime = System.currentTimeMillis();
         int facetID = 0;
         for (SortedPool<String> tagPool: facets) {
-            // TODO: Make this fail-safe
             log.debug("Cleaning tagPool "
                       + structure.getFacet(facetID++).getName()
                       + " with " + tagPool.size() + " tags");
             tagPool.cleanup();
         }
-        log.debug("Finished cleaning");
+        log.debug("Finished cleanup in " 
+                  + (System.currentTimeMillis() - startTime) + "ms");
     }
 
-    public int addTag(int facetID, String tagName) {
+    public int insertTag(int facetID, String tagName) {
         failIfDirty();
         if (log.isTraceEnabled()) {
-            // Make this fail-safe
             log.trace("Adding \"" + tagName + " to facet "
-                      + structure.getFacet(facetID).getName());
+                      + facets[facetID].getName());
         }
-        return facets[facetID].add(tagName);
+        return facets[facetID].insert(tagName);
     }
 
     public void removeTag(int facetID, int tagID) {
         failIfDirty();
         if (log.isTraceEnabled()) {
-            //noinspection DuplicateStringLiteralInspection
-            // TODO: Make this fail-safe
-            log.trace("Removing tag \"" + facets[facetID].getValue(tagID)
+            log.trace("Removing tag \"" + facets[facetID].get(tagID)
                       + "\" with ID " + tagID + " from facet "
                       + structure.getFacet(facetID).getName());
         }

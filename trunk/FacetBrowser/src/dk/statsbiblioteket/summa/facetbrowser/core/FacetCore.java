@@ -47,10 +47,11 @@ public interface FacetCore extends Configurable {
     public void open(File directory) throws IOException;
 
     /**
-     * Checks to see if the internal facet representation is synchronized to
-     * the Lucene index and the configuration. The check is not guaranteed to
-     * deliver the correct result, only a strong indication.
-     * @return true if the internal representation is in sync with the index.
+     * Closes any connections to underlying persistent data and clears
+     * structures in memory.
+     * </p><p>
+     * Note: This does not synchronize content in memory to storage.
+     * @throws IOException if opened persistent files could not be closed.
      */
-    public boolean isSynchronized();
+    public void close() throws IOException;
 }

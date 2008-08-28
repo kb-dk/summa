@@ -26,11 +26,19 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.build;
 
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.facetbrowser.FacetControlImpl;
+import dk.statsbiblioteket.summa.facetbrowser.Structure;
+import dk.statsbiblioteket.summa.facetbrowser.core.FacetMap;
 import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMap;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
-import dk.statsbiblioteket.summa.facetbrowser.Structure;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
+
+import java.io.IOException;
+import java.io.File;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Abstract class with index-agnostic implementations of {@link Builder}.
@@ -39,21 +47,64 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public abstract class BuilderImpl implements Builder {
-    private Structure structure;
-    private CoreMap coreMap;
-    private TagHandler tagHandler;
+    private Log log = LogFactory.getLog(BuilderImpl.class);
 
-    public BuilderImpl() {
-        throw new IllegalStateException("This constructor is to be removed");
-    }
+    protected Structure structure;
+    protected CoreMap coreMap;
+    protected TagHandler tagHandler;
+    protected FacetMap facetMap;
 
-    public BuilderImpl(Configuration configuration,
-                       Structure structure,
-                       CoreMap coreMap,
-                       TagHandler tagHandler) {
+    protected File location;
+
+    @SuppressWarnings({"UnusedDeclaration"})  // We'll probably need it later
+    public BuilderImpl(Configuration configuration, Structure structure,
+                       CoreMap coreMap, TagHandler tagHandler) {
         this.structure = structure;
         this.tagHandler = tagHandler;
         this.coreMap = coreMap;
+        facetMap = new FacetMap(structure, coreMap, tagHandler, false);
     }
 
+    public synchronized void open(File location) throws IOException {
+        log.debug(String.format("Open(%s) called", location));
+        this.location = location;
+        coreMap.open(location, false);
+        tagHandler.open(location);
+        log.trace("Open finished");
+    }
+
+    public synchronized void store() throws IOException {
+        log.debug("Store called");
+        facetMap.store();
+    }
+
+    public synchronized void clear(boolean keepTags) throws IOException {
+        log.debug(String.format("clear(%b) called", keepTags));
+        coreMap.clear();
+        if (!keepTags) {
+            tagHandler.clearTags();
+        }
+    }
+
+    public synchronized void close() throws IOException {
+        //noinspection DuplicateStringLiteralInspection
+        log.debug("close() called");
+        coreMap.clear();
+        tagHandler.close();
+        location = null;
+        log.trace("close() finished");
+    }
+
+    // TODO: Examine concurrency-problems
+    public void add(int docID, String facet, String tag) throws IOException {
+        if (log.isTraceEnabled()) {
+            //noinspection DuplicateStringLiteralInspection
+            log.trace("add(" + docID + ", " + facet + ", " + tag + ") called");
+        }
+        facetMap.add(docID, facet, tag);
+    }
+
+    public synchronized void remove(int docID) throws IOException {
+        facetMap.removeDocument(docID);
+    }
 }

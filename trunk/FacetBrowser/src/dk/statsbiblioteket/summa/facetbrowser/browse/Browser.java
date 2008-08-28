@@ -22,9 +22,10 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.browse;
 
-import java.util.List;
-
+import dk.statsbiblioteket.summa.facetbrowser.core.FacetCore;
 import dk.statsbiblioteket.util.qa.QAInfo;
+
+import java.util.List;
 
 
 /**
@@ -35,7 +36,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public interface Browser {
+public interface Browser extends FacetCore {
     /**
      * @return a list with the names of all mapped Facets.
      */

@@ -27,28 +27,19 @@
 package dk.statsbiblioteket.summa.facetbrowser.util.pool;
 
 import java.io.UnsupportedEncodingException;
+import java.io.IOException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import dk.statsbiblioteket.util.LineReader;
 
 /**
  * Simple conversion of Strings to and from bytes.
  */
-public class StringConverter {
+public class StringConverter implements ValueConverter<String> {
     private static Log log = LogFactory.getLog(StringConverter.class);
 
-    private static final int brLength = getBreakLength();
-
-    private static int getBreakLength() {
-        try {
-            byte[] buffer = "\n".getBytes("utf-8");
-            return buffer.length;
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("Encoding problem in getBreakLength", e);
-        }
-    }
-
-    public static byte[] valueToBytes(String value) {
+    public byte[] valueToBytes(String value) {
         if (log.isTraceEnabled()) {
             log.trace("Converting \"" + value + "\" to bytes");
         }
@@ -60,15 +51,11 @@ public class StringConverter {
         }
     }
 
-    public static String bytesToValue(byte[] buffer, int length) {
+    public String bytesToValue(byte[] buffer, int length) {
         try {
-            if (log.isTraceEnabled()) {
-                log.trace("Converting " + length + " bytes to String");
-            }
-            return new String(buffer, 0, length - brLength, "utf-8");
+            return new String(buffer, 0, length, "utf-8");
         } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("utf-8 conversion failed for buffer '"
-                                       + buffer + "' of length " + length, e);
+            throw new RuntimeException("utf-8 conversion failed", e);
         }
     }
 }

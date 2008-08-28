@@ -39,31 +39,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
-import dk.statsbiblioteket.summa.common.lucene.index.SearchDescriptor;
-import dk.statsbiblioteket.summa.common.lucene.search.BinaryCollector;
-import dk.statsbiblioteket.summa.common.lucene.search.DiscardingCollector;
-import dk.statsbiblioteket.summa.common.lucene.search.SlimCollector;
-import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
-import dk.statsbiblioteket.summa.common.lucene.search.TopCollector;
-import dk.statsbiblioteket.summa.facetbrowser.connection.IndexConnection;
-import dk.statsbiblioteket.summa.facetbrowser.connection.IndexConnectionFactory;
-import dk.statsbiblioteket.summa.facetbrowser.util.ClusterCommon;
 import dk.statsbiblioteket.summa.facetbrowser.util.FlexiblePair;
 import dk.statsbiblioteket.summa.facetbrowser.util.Pair;
-import dk.statsbiblioteket.summa.facetbrowser.util.ReversePair;
-import dk.statsbiblioteket.util.Files;
-import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
-import org.apache.lucene.analysis.SimpleAnalyzer;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.index.TermFreqVector;
-import org.apache.lucene.search.Hits;
 import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
 
 /**
  * @deprecated until updated to the new IndexDescriptor.
@@ -77,7 +62,7 @@ public class IndexStatisticsTest extends TestCase {
     public void testUnique() throws Exception {
 //        String[] facets = {"author_normalised", "location_normalised", "series_normalised", "llcl", "lnlm", "ldbk", "ludk", "ldds", "lkl", "lfn", "linst", "ldk5", "lma_long", "su_pe", "su_corp", "su_lc", "mesh", "su_dk", "lsu_oai", "llang"};
         String[] facets = {"freetext"};
-        IndexReader ir = new IndexSearcher(ClusterCommon.getProperties().getProperty(ClusterCommon.INDEXLOCATION)).getIndexReader();
+        IndexReader ir = null; //new IndexSearcher(ClusterCommon.getProperties().getProperty(ClusterCommon.INDEXLOCATION)).getIndexReader();
 //        Term searchTerm = new Term(facet, "");
 //        TermEnum terms = ir.terms(searchTerm);
         Vector<HashSet<String>> sets = new Vector<HashSet<String>>(facets.length);
@@ -176,6 +161,8 @@ public class IndexStatisticsTest extends TestCase {
         }
     }
                */
+
+    /*
     public void dumpSearchTime() throws Exception {
         int LIMIT = 5;
         int TOTALLIMIT = 5;
@@ -217,20 +204,22 @@ public class IndexStatisticsTest extends TestCase {
         }
 
     }
-
+      */
     /**
      * Just call testUniqueChars
      */
+    /*
     public static void main() throws Exception {
         new IndexStatisticsTest().testUniqueChars();
-    }
-
+    } */
+    /*
     public void countAuthor() throws Exception {
         countTerms("author_normalised");
     }
     public void countType() throws Exception {
         countTerms("lma_long");
-    }
+    } */
+    /*
     public void countTerms(String field) throws IOException {
         IndexReader ir = new IndexSearcher(ClusterCommon.getProperties().
                 getProperty(ClusterCommon.INDEXLOCATION)).getIndexReader();
@@ -272,12 +261,13 @@ public class IndexStatisticsTest extends TestCase {
         }
         System.out.println(sw);
     }
+      */
 
     /**
      * Creates stat-files in /tmp with the most popular tags under the given
      * fields.
      */
-    public void dumpTermFrequency() throws IOException {
+/*    public void dumpTermFrequency() throws IOException {
         int limit = 500;
 
         String[] wantedFields = ("ldk5, lma_long, su_pe, su_corp, su_lc, " +
@@ -313,9 +303,10 @@ public class IndexStatisticsTest extends TestCase {
                                " tags in " + dest);
             Files.saveString(sw.toString(), dest);
         }
-    }
+    } */
+
     /* Tests the speed of various topdoc extraction methods */
-    public void testTopDocPerformance() throws Exception {
+/*    public void testTopDocPerformance() throws Exception {
         int WARM = 2;
         int RUNS = 5;
         int[] MAXS = new int[] {10, 100, 1000, 10000};
@@ -326,7 +317,7 @@ public class IndexStatisticsTest extends TestCase {
         SearchDescriptor d = new SearchDescriptor(indexLocation);
         d.loadDescription(indexLocation);
         // TODO: Implement this
-/*        SummaQueryParser p = new SummaQueryParser(new String[]{"freetext"},
+        SummaQueryParser p = new SummaQueryParser(new String[]{"freetext"},
                                                   new SimpleAnalyzer(), d);
         Query query = p.parse("freetext:bog");
         assertTrue("The number of hits for the search should be > 0",
@@ -397,7 +388,7 @@ public class IndexStatisticsTest extends TestCase {
             System.out.println("");
         }
   */
-    }
+//    }
 
     public List<FlexiblePair<String, Integer>> getTags(IndexReader ir,
                                                        String facet) throws
@@ -418,7 +409,7 @@ public class IndexStatisticsTest extends TestCase {
         Collections.sort(tags);
         return tags;
     }
-
+      /*
     public void testNullThingie() throws Exception {
         IndexSearcher is = new IndexSearcher(ClusterCommon.getProperties().
                 getProperty(ClusterCommon.INDEXLOCATION));
@@ -438,8 +429,8 @@ public class IndexStatisticsTest extends TestCase {
         assertNotNull("We should find something for default terms after next()",
                       terms2.term());
 
-    }
-
+    }   */
+  /*
     public void matchLang() throws Exception {
         String LANG = "llang";
         IndexSearcher is = new IndexSearcher(ClusterCommon.getProperties().
@@ -460,15 +451,15 @@ public class IndexStatisticsTest extends TestCase {
                                "\t" + englishName);
         }
     }
-
+    */
     /**
      * Dumps a list of all the unique characters in the index, sorted by
      * popularity.
      */
-    public void testUniqueChars() throws Exception {
-        testUniqueChars(ClusterCommon.getProperties().
-                getProperty(ClusterCommon.INDEXLOCATION));
-    }
+//    public void testUniqueChars() throws Exception {
+//        testUniqueChars(ClusterCommon.getProperties().
+//                getProperty(ClusterCommon.INDEXLOCATION));
+//    }
 
     public void testUniqueCharsInRealIndex() throws Exception {
         testUniqueChars("/space/full_index");
@@ -542,15 +533,11 @@ public class IndexStatisticsTest extends TestCase {
         sw.append("<p>Found ").append(String.valueOf(chars.size()));
         sw.append(" unique chars:</p>\n");
         sw.append("<p>");
-/*        sw.append("Unsorted:\n");
-        for (Character c: chars.keySet()) {
-            sw.append(c);
-        }*/
 
 
         // Sort by popularity
         // Sorted is popularity, (char, sample)
-        LinkedList<ReversePair<Integer, Pair<Character, String>>> sorted =
+/*        LinkedList<ReversePair<Integer, Pair<Character, String>>> sorted =
                 new LinkedList<ReversePair<Integer, Pair<Character, String>>>();
         for (Map.Entry<Character, Pair<Integer, String>> entry:
                 chars.entrySet()) {
@@ -573,15 +560,15 @@ public class IndexStatisticsTest extends TestCase {
         sw.append("</p>\n");
 
         sw.append("<h2>Order by popularity</h2>\n");
-
+  */
 //        sw.append("Char\tUnicode\tCount\tSample\n");
-        for (ReversePair<Integer, Pair<Character, String>> entry: sorted) {
-/*            sw.append(String.format("%s\t%s\t%d\t%s\n",
+   /*     for (ReversePair<Integer, Pair<Character, String>> entry: sorted) {
+                        sw.append(String.format("%s\t%s\t%d\t%s\n",
                                     entry.getValue().getKey(),
                                     Integer.toString(entry.getValue().getKey(), 16),
                                     entry.getKey(),
                                     entry.getValue().getValue()));
-                                    */
+
             sw.append("<div class=\"c\">");
             sw.append(entry.getValue().getKey()).append(" ");
             sw.append(Integer.toString(entry.getKey()));
@@ -590,7 +577,7 @@ public class IndexStatisticsTest extends TestCase {
             sw.append("</div>\n");
         }
         sw.append("</body>\n</html>");
-
+                                    */
         storeString(sw.toString(), "/tmp/unique.html");
         System.out.println("Finished. Result stored in /tmp/unique.txt");
     }
@@ -629,8 +616,8 @@ public class IndexStatisticsTest extends TestCase {
     public void findRecordsWithChars(String searchChars) throws Exception {
         int limit = Integer.MAX_VALUE;
         int maxRecords = Integer.MAX_VALUE;
-        IndexReader ir = new IndexSearcher(ClusterCommon.getProperties().
-                getProperty(ClusterCommon.INDEXLOCATION)).getIndexReader();
+        IndexReader ir = null;//new IndexSearcher(ClusterCommon.getProperties().
+                //getProperty(ClusterCommon.INDEXLOCATION)).getIndexReader();
         Map<String, Set<Character>> foundRecords =
                 new HashMap<String, Set<Character>>(10000);
         int fieldcount = 1;
@@ -695,7 +682,7 @@ public class IndexStatisticsTest extends TestCase {
                 .append(searchChars).append(":\n");
 
         // Sort and write
-        List<Pair<String, Set<Character>>> sorted = new
+/*        List<Pair<String, Set<Character>>> sorted = new
             LinkedList<Pair<String, Set<Character>>>();
         for (Map.Entry<String, Set<Character>> entry: foundRecords.entrySet()) {
             sorted.add(new Pair<String,
@@ -713,7 +700,7 @@ public class IndexStatisticsTest extends TestCase {
             sw.append("\n");
         }
 
-        storeString(sw.toString(), "/tmp/searchresult.txt");
+        storeString(sw.toString(), "/tmp/searchresult.txt");                  */
         System.out.println("Finished. Result stored in /tmp/searchresult.txt");
     }
 
@@ -735,8 +722,8 @@ public class IndexStatisticsTest extends TestCase {
         Character[] wranglesigns = new Character[] {}; // TODO: Find the right 2 chars again (lost due to CVS char-thingies) 
         int maxResults = 10000;
         int maxRecords = Integer.MAX_VALUE;
-        IndexReader ir = new IndexSearcher(ClusterCommon.getProperties().
-                getProperty(ClusterCommon.INDEXLOCATION)).getIndexReader();
+        IndexReader ir = null;//new IndexSearcher(ClusterCommon.getProperties().
+                //getProperty(ClusterCommon.INDEXLOCATION)).getIndexReader();
         Collection fieldNames = ir.getFieldNames(IndexReader.FieldOption.ALL);
         int hits = 0;
         StringWriter sw = new StringWriter(20000);

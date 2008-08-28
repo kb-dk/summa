@@ -25,14 +25,15 @@ package dk.statsbiblioteket.summa.facetbrowser.util;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
- * A standard pair.
+ * A standard pair that compares on key.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class Pair <T extends Comparable<T> , S> implements Comparable<Pair<T, S>> {
-    private T key;
-    private S value;
+public class Pair <T extends Comparable<T> , S>
+        implements Comparable<Pair<T, S>> {
+    protected T key;
+    protected S value;
 
     public Pair(T key, S value) {
         this.key = key;

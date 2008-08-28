@@ -22,26 +22,23 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.core;
 
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Arrays;
-import java.io.StringWriter;
-import java.io.File;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
-import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMap;
-import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMapBitStuffed;
-import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
-import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandlerImpl;
-import dk.statsbiblioteket.summa.facetbrowser.core.tags.Facet;
-import dk.statsbiblioteket.summa.facetbrowser.util.pool.SortedPool;
-import dk.statsbiblioteket.summa.facetbrowser.util.pool.MemoryStringPool;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
+import dk.statsbiblioteket.summa.facetbrowser.Structure;
+import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMap;
+import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMapBitStuffed;
+import dk.statsbiblioteket.summa.facetbrowser.core.tags.Facet;
+import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+
+import java.io.StringWriter;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * FacetMap Tester.
@@ -61,11 +58,11 @@ public class FacetMapTest extends TestCase {
     public void setUp() throws Exception {
         super.setUp();
 
-        core = new CoreMapBitStuffed(100, 3);
         MemoryStorage memStore = new MemoryStorage();
-        memStore.put(StructureDescription.FACETS, "A, B, C");
+        memStore.put(Structure.CONF_FACETS, "A, B, C");
         Configuration config = new Configuration(memStore);
-        StructureDescription structure = new StructureDescription(config);
+        Structure structure = new Structure(config);
+        core = new CoreMapBitStuffed(config, structure);
         Facet[] pools = new Facet[structure.getFacetNames().size()];
         int position = 0;
         //noinspection UnusedDeclaration
@@ -77,7 +74,7 @@ public class FacetMapTest extends TestCase {
 //                    "facettest" + position, null, null, true, true);
         }
 //        handler = new TagHandlerImpl(structure, pools);
-        map = new FacetMap(config, core, handler);
+        map = new FacetMap(structure, core, handler, false);
     }
 
     public void tearDown() throws Exception {

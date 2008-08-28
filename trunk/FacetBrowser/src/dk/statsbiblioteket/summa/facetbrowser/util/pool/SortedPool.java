@@ -24,114 +24,185 @@ package dk.statsbiblioteket.summa.facetbrowser.util.pool;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Comparator;
+import java.util.List;
+import java.util.RandomAccess;
 
-/*
-* The State and University Library of Denmark
-* CVS:  $Id: SortedPool.java,v 1.3 2007/10/04 13:28:21 te Exp $
-*
+import dk.statsbiblioteket.util.qa.QAInfo;
+
+/**
 * Maintains an ordered list of values, providing fast lookup based on position
 * and lookup based on value. Additions and removals from the pool shifts
 * positions in a deterministic manner.
+* </p><p>
+* SortedPools are not guaranteed to accept input before {@link #open} has been
+* called.
+* </p><p>
+* null is not a permitted value for SortedPools. All values are unique, with
+* regard to equals().
+* </p><p>
+* For persistence, the format of the pool is as follows:
+* </p><p>
+* [poolname].dat contains the values in implementation-specific format
+* directly appended after each other.
+* </p><p>
+* [poolname].index contains the index-entries for the values in [poolname].dat.
+* The entries are represented af longs, made up of length of the value followed
+* by its position. {@link #POSITION_BITS} specify the amount of bits for position.
+* The format of the file is as follows:<br />
+* version (4 bytes)<br />
+* entry-count (4 bytes)<br />
+* index-entries (8 bytes * entry-count)<br />
+* </p><p>
+* Note: The position in the entries does not need to be increasing. It is up
+*       to the implementation to be capable of determining when one value
+*       ends and the next begins (e.g. use \n as delimiter for Strings).
 */
-public interface SortedPool<E extends Comparable> extends Comparator<E> {
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.IN_DEVELOPMENT,
+        author = "te")
+public interface SortedPool<E extends Comparable<E>> extends List<E>,
+                                                          RandomAccess {
+    public static final String VALUES_POSTFIX = ".dat";
+    public static final String INDEX_POSTFIX = ".index";
+
     /**
-     * Load the pool from disk. The format of the pool is as follows:
+     * When data are stored, an entry in index-data consists of 64 bits split in
+     * [length][index] where [length] is 64 - POSITION_BITS bits long and [index]
+     * is POSITION_BITS bits long.
      * </p><p>
-     * [poolname].dat contains the values represented as Strings.
-     * They are stored sequentially, delimited with linebreaks.
-     * Line 0 contains the value with position 0, line 1 contains the value with
-     * position 1 and so on.
+     * This limits the maximum file size to 2^POSITION_BITS-1 and the maximum
+     * entry-size to 2^(64-POSITION_BITS)-1 bytes in length.
+     */
+    public static final byte POSITION_BITS = 40; // 1TB index, 16MB values
+    public static final long POSITION_MASK =
+            Math.round(StrictMath.pow(2, POSITION_BITS))-1;
+
+    /**
+     * Opens an existing pool or creates a new pool at the given location.
+     * If forceNew is true, a new pool is always created. If forceNew is false
+     * and no pool-data exists, a new pool is created and false is returned.
      * </p><p>
-     * [poolname].index contains the index of the values in [poolname].dat.
-     * The indexes are represented af longs, directly stored as 8 bytes, no
-     * delimiters. They are prepended with a version (4 bytes) and a count
-     * of entries (4 bytes). They are appended with the index of the next
-     * logical value, which also happens to be the file size of the values
-     * file. The appended index does not could as an entry in the entry
-     * count.<br>
-     * There are exactly as many entries in [poolname].index as there are in
-     * [poolname].dat.
      * @param location the folder with the persistent data.
      * @param poolName the name of the pool.
+     * @param readOnly if true, the index is opened as read-only.
+     * @param forceNew ignore any existing data and create a new pool.
      * @throws IOException if the pool could not be loaded.
+     * @return true if existing data could be retrieved from Storage.
      */
-    public void load(File location, String poolName) throws IOException;
+    public boolean open(File location, String poolName, boolean readOnly,
+                        boolean forceNew) throws IOException;
 
     /**
-     * Store the pool to disk. The format is described under {@link #load}.
-     * @param location the folder with the persistent data.
-     * @param poolName the name of the pool.
-     * @throws IOException if the pool could not be stored..
+     * Ensure that the persistent files for the pool are stored. The location
+     * will be the one used in {@link #open} or similar. Implementations are
+     * adviced to ensure that users of existing persistence files can still
+     * access those during save (e.g. save under another name, then move with
+     * overwrite).
+     * The storage format is described under {@link #open}.
+     * @throws IOException if the pool could not be stored.
      */
-    public void store(File location, String poolName) throws IOException;
+    // TODO: Consider how to do this properly on systems with file locking.
+    public void store() throws IOException;
 
+    /**
+     * Construct a File object based on the location, poolname and stated
+     * postfix. This is the recommended method for calculating Files for
+     * implementation-specific persistence.
+     * </p><p>
+     * Example: {@code getPoolPersistenceFile(".meta");} =>
+     *          File(".../mylocation/mypool.meta).
+     * @param postfix the postfix for the pool-specific persistent file.
+     * @return a File for the pool with the given postfix.
+     */
+    public File getPoolPersistenceFile(String postfix);
+
+    /**
+     * Close down any connections to persistent files and call remove.
+     * In order to use the Pool for further work, open must be called.
+     * </p><p>
+     * Note: It is legal to call close befor the first open.
+     */
+    public void close();
+
+    /**
+     * @return the name of the pool as specified in {@link #open}.
+     */
+    
+    public String getName();
     /**
      * Add the given value to the pool and return the position of the newly
-     * inserted value. The position of all following values are incremented
-     * by one.
-     * @param value the value to add to the pool.
-     * @return the position of the newly added value.
-     *         -1 is returned if the value already exists in the pool.
+     * inserted value if it does not already exist. The insertion point will be
+     * determined by the implementation. The position of all following values
+     * are incremented by one if the value is not already existing.
+     * </p><p>
+     * If the value is already existing, no change is done to the list.
+     * @param value the value to insert in the pool.
+     * @return the position of the newly added value. If the value already
+     *         exists in the pool, (-position)-1 is returned.
+     * @see {@link #add}.
      */
-    public int add(E value);
+    public int insert(E value);
+
+    /**
+     * Ensures that the state of the pool is consistent. Used after a
+     * series of calls to {@link #add}. Note that this method will most
+     * probably change the position of the values.
+     */
+    public void cleanup();
+
+    /* List interface notes */
 
     /**
      * Add a value to the pool as fast as possible. The state of the pool
-     * will be externally inconsistent until {@link #cleanup} has been called.
-     * The methods intended use is for initial builds of large pools.
-     * </p><p>
-     * Important: Duplicates will only be removed during optimise, so adding
-     *            a lot of duplocates with dirtyAdd will take up a lot of space.
+     * will be inconsistent until {@link #cleanup} has been called.
+     * The method intended use is for initial builds of large pools.
      * @param value the value to add to the pool.
+     * @see {@link #insert}.
      */
-    public void dirtyAdd(E value);
+    public boolean add(E value); // Defined in List
 
     /**
-     * Ensures that the external state of the pool is consistent. Used after a
-     * series of calls to {@link #dirtyAdd}. Note that this method will most
-     * probably change the position of the values.
-     * </p><p>
-     * Calling optimise on an already cleaned pool will not change the position
-     * of the values, but it might take some time.
+     * Adding an element at a specific position from outside of the
+     * pool-framework should be avoided, as it makes the state of the pool
+     * inconsistent.
+     * @param index   where to add the element.
+     * @param element the element to add.
      */
-    public void cleanup();
+    public void add(int index, E element); // Defined in List
 
     /**
      * Remove the value at the given position. The position of all following
      * values are decremented by one.
      * @param position the position in the pool.
      */
-    public void remove(int position);
-
-    /**
-     * Search the pool for the given value and return the position. This method
-     * are not guaranteed to be fast, as it is secondary to {@link #getValue}.
-     * @param value the value to search for.
-     * @return the position of the value, -1 if it does not exist.
-     */
-    public int getPosition(E value);
+    public E remove(int position);
 
     /**
      * Return the value at the given position. Implementations on the SortedPool
-     * interface should optimise this method over {@link #getPosition} in terms
+     * interface should optimise this method over {@link #indexOf} in terms
      * of lookup speed.
      * @param position the position of the value in the pool.
      * @return the value at the given position. Requesting values outside of
      *         0..size() returns an undefined value or an exception. This is
      *         due to speed optimisation.
      */
-    public E getValue(int position);
+    //public E get(int position); // Defined in list
 
     /**
-     * @return the number of values in the pool.
+     * Search the pool for the given value and return the position. This method
+     * is not guaranteed to be fast, as it is secondary to {@link #get}.
+     * @param value the value to search for.
+     * @return the position of the value, -1 if it does not exist.
      */
-    public int size();
+    public int indexOf(E value); // Defined in List
 
     /**
-     * Clear the pool of all values.
+     * Setting the element from outside of the pool-framework should be avoided,
+     * as it makes the state of the pool inconsistent.
+     * @param index   where to set the element.
+     * @param element the element to set.
+     * @return the old element, if any, else null.
      */
-    public void clear();
+    public E set(int index, E element); // Defined in List
 
-    // TODO: Add fast save for filesystem-based, use indexes upon open
 }

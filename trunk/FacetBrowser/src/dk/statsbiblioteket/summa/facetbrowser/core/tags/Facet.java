@@ -22,17 +22,21 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.core.tags;
 
+import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
+import dk.statsbiblioteket.summa.facetbrowser.util.pool.CollatorSortedPool;
+import dk.statsbiblioteket.summa.facetbrowser.util.pool.DiskStringPool;
+import dk.statsbiblioteket.summa.facetbrowser.util.pool.MemoryStringPool;
+import dk.statsbiblioteket.util.CachedCollator;
+import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.XProperties;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.text.Collator;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.facetbrowser.util.pool.CollatorSortedPool;
-import dk.statsbiblioteket.summa.facetbrowser.util.pool.MemoryStringPool;
-import dk.statsbiblioteket.summa.facetbrowser.util.pool.DiskStringPool;
-import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.util.*;
 
 /**
  * A Facet is a named collection of Tags. This will normally map to a field with
@@ -77,93 +81,178 @@ import org.apache.commons.logging.LogFactory;
  * State Drive is available and the Facet has a non-trivial size, it is highly
  * recommended to use the filesystem-based approach on the SSD as it allows
  * for frequent persistence check-points with little penalty.
+ * </p><p>
+ * The Facet extends the persistent files from pools with a meta-file containing
+ * name, fields and locale. If the fields or the locale differs upon open, the
+ * persistent data are classified as invalid.
  */
 // TODO: Supply real-world measurements for conventional harddisks and SSDs
+// TODO: Resort upon changed locale instead of discarding (must signal core map)
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class Facet implements CollatorSortedPool {
     private Log log = LogFactory.getLog(Facet.class);
 
-    private CollatorSortedPool pool;
-    private File location;
+    private static final String META_FILE_POSTFIX = ".facet";
+    private final static String META_NAME = "name";
+    private final static String META_FIELDS = "fields";
+    private final static String META_LOCALE = "locale";
 
     private FacetStructure structure;
+    private CollatorSortedPool pool;
+    private boolean readOnly;
 
     /**
      * Constructs a Facet from the given properties. If createNew is set to
      * false, it is the responsibility of the caller to either ensure that the
      * existing Facet was created with the same collator as specified or that
      * {@link #cleanup()} is called after creation. 
-     * @param location   the folder with the Facet data.
      * @param structure  the static definition of a Facet. This holds values
-     *                   such as name, locale and fields.
-     * @param createNew  ignore any existing Tags and start with no Tags.
      * @param useMemory  hold the entire structure in memory. See the java-doc
      *                   for the class for details.
+     * @param readOnly   if true, updates are not possible.
      * @throws IOException if an existing structure could not be loaded.
      */
-    public Facet(File location, FacetStructure structure,
-                 boolean createNew, boolean useMemory) throws IOException {
-        if (location == null || "".equals(location.toString())) {
-            throw new IllegalArgumentException("location must be specified");
-        }
-        this.location = location;
+    public Facet(FacetStructure structure, boolean useMemory, boolean readOnly)
+                                                            throws IOException {
         this.structure = structure;
-        if (useMemory) {
-            log.debug("Creating memory-based pool for Facet '"
-                      + structure.getName() + "'");
-            pool = new MemoryStringPool();
-            if (!createNew) {
-                pool.load(location, structure.getName());
-            }
-        } else {
-            log.debug("Creating disk-based pool for Facet '"
-                      + structure.getName() + "'");
-            pool = new DiskStringPool(location, structure.getName(), createNew);
-        }
-        log.debug(String.format("Facet '%s' at '%s' is ready for use",
-                                structure.getName(), location));
-    }
-
-    /**
-     * Load the content for the Facet from the previously stated location.
-     * @throws IOException if the data could not be loaded.
-     */
-    public void load() throws IOException {
+        this.readOnly = readOnly;
+        //noinspection DuplicateStringLiteralInspection
         log.debug(String.format(
-                "Reloading content for Facet '%s' at '%s", structure.getName(),
-                location));
-        pool.load(location, structure.getName());
+                "Creating %s-based pool for Facet '%s'",
+                useMemory ? "memory" : "storage", structure.getName()));
+        if (useMemory) {
+            pool = new MemoryStringPool(getCollatorFromPool(structure));
+        } else {
+            pool = new DiskStringPool(getCollatorFromPool(structure));
+        }
+        log.debug(String.format("Facet '%s' is constructed",
+                                structure.getName()));
     }
 
-    /**
-     * Store the content of the Facet at the previously stated location.
-     * </p><p>
-     * Note: This will not trigger a {@link #cleanup()}. The only way to ensure
-     * a complete cleanup with erasure of all orphaned Tags is to store at a
-     * new location or with a new name.
-     * @throws IOException if the data could not be stored.
-     */
-    public void store() throws IOException {
-        pool.store(location, structure.getName());
+    private static Map<String, Collator> collators =
+            new HashMap<String, Collator>(5);
+    private static synchronized Collator getCollatorFromPool(FacetStructure
+            structure) {
+        if (structure.getLocale() == null) {
+            return null;
+        }
+        if (collators.get(structure.getLocale()) == null) {
+            collators.put(
+                    structure.getLocale(),
+                    new CachedCollator(new Locale(structure.getLocale())));
+        }
+        return collators.get(structure.getLocale());
     }
 
     /* Mutators */
 
-    public String getName() {
-        return structure.getName();
+
+    /**
+     * Loads persistent Facet data. If no data exists, the underlying structure
+     * creates needed files and are made ready for filling.
+     * @param location the base folder for the persistent data.
+     * @return true if a open could be performed, false if there was no existing
+     *              structure or if the structure differed from expectations.
+     * @throws IOException if there was an I/O error.
+     */
+    public boolean open(File location) throws IOException {
+        boolean forceNew = true;
+        File metaFile = pool.getPoolPersistenceFile(META_FILE_POSTFIX);
+        try {
+            //noinspection MismatchedQueryAndUpdateOfCollection
+            XProperties xp = new XProperties(metaFile.toString());
+            String n = structure.getName();
+            String f = Strings.join(Arrays.asList(structure.getFields()), ", ");
+            String l = structure.getLocale() == null ? "":structure.getLocale();
+            if (n.equals(xp.getString(META_NAME))
+                && f.equals(Strings.join(
+                    Arrays.asList(xp.getString(META_FIELDS)), ", "))
+                && l.equals(xp.getString(META_LOCALE))) {
+                forceNew = false;
+            } else {
+                log.info(String.format(
+                        "The meta-data for the persistent facet did not match "
+                        + "the structure for Facet '%s' at '%s', forcing new",
+                        structure.getName(), location));
+            }
+        } catch (Exception e) {
+            log.debug(String.format(
+                    "Could not open facet meta data for pool '%s' at '%s', "
+                    + "no persistent data will be loaded",
+                    pool.getName(), metaFile), e);
+        }
+        try {
+            log.debug(String.format(
+                    "Opening facet '%s' at '%s', read only: %s, force new: %s",
+                    structure.getName(), location, readOnly, forceNew));
+            return pool.open(location, structure.getName(), readOnly, forceNew);
+        } catch (IOException e) {
+            if (!forceNew) {
+                if (readOnly) {
+                    throw new IOException(String.format(
+                            "Unable to open pool '%s' at '%s' in "
+                            + "read only mode",
+                            structure.getName(), location), e);
+                }
+                log.warn(String.format(
+                        "IOException while opening pool '%s' at '%s', "
+                        + "attempting to force a new structure",
+                        structure.getName(), location), e);
+                try {
+                    return pool.open(location, structure.getName(), readOnly,
+                                     true);
+                } catch (IOException e2) {
+                    throw new IOException(String.format(
+                            "Unable to force new facet '%s' at '%s' at second "
+                            + "attempt", structure.getName(), location), e2);
+                }
+            }
+            throw new IOException(String.format(
+                    "Unable to force new facet '%s' at '%s'",
+                    structure.getName(), location), e);
+        }
+    }
+    public boolean open(File location, String poolName, boolean readOnly,
+                        boolean forceNew) throws IOException {
+       throw new UnsupportedOperationException("Use (open(File) instead");
     }
 
-    public String[] getFields() {
-        return structure.getFields();
+
+    public void store() throws IOException {
+        //noinspection DuplicateStringLiteralInspection
+        log.debug(String.format("store() called for Facet '%s'",
+                                structure.getName()));
+        File metaFile = pool.getPoolPersistenceFile(META_FILE_POSTFIX);
+        XProperties xp = new XProperties(metaFile.toString());
+        xp.put(META_NAME, structure.getName());
+        String f = Strings.join(Arrays.asList(structure.getFields()), ", ");
+        xp.put(META_FIELDS, f);
+        String l = structure.getLocale() == null ? "":structure.getLocale();
+        xp.put(META_LOCALE, l);
+        log.trace(String.format("Storing meta file '%s' for Facet '%s'",
+                                metaFile, structure.getName()));
+        xp.store(metaFile.toString());
+        log.trace(String.format("Storing pool data for Facet '%s'",
+                                structure.getName()));
+        pool.store();
     }
 
-    public String getLocale() {
-        return structure.getLocale();
+    public File getPoolPersistenceFile(String postfix) {
+        return pool.getPoolPersistenceFile(postfix);
     }
 
-    /* Delegated methods */
+    public void close() {
+        log.debug(String.format("close() called for Facet '%s'",
+                                structure.getName()));
+        if (pool == null) {
+            return;
+        }
+        pool.close();
+    }
+
+    /* CollatorSortedPool delegations */
 
     public Collator getCollator() {
         return pool.getCollator();
@@ -175,60 +264,124 @@ public class Facet implements CollatorSortedPool {
         cleanup();
     }
 
-    public int add(String value) {
-        return pool.add(value);
+    /* SortedPool delegations */
+
+    public String getName() {
+        return structure.getName();
     }
 
-    public void dirtyAdd(String value) {
-        pool.dirtyAdd(value);
-    }
-
-    public void remove(int position) {
-        pool.remove(position);
-    }
-
-    public int size() {
-        return pool.size();
+    public int insert(String value) {
+        return pool.insert(value);
     }
 
     public void cleanup() {
         pool.cleanup();
     }
 
+    public boolean add(String value) {
+        return pool.add(value);
+    }
+
+    public void add(int index, String element) {
+        pool.add(index, element);
+    }
+
+    public String remove(int position) {
+        return pool.remove(position);
+    }
+
+    public String get(int position) {
+        return pool.get(position);
+    }
+
+    public int indexOf(String value) {
+        return pool.indexOf(value);
+    }
+
+    public String set(int index, String element) {
+        return pool.set(index, element);
+    }
+
+    public String[] getFields() {
+        return structure.getFields();
+    }
+
+    public String getLocale() {
+        return structure.getLocale();
+    }
+
+    /* List delegations */
+
+    public int size() {
+        return pool.size();
+    }
+
+    public boolean isEmpty() {
+        return pool.isEmpty();
+    }
+
+    public boolean contains(Object o) {
+        return pool.contains(o);
+    }
+
+    public Iterator<String> iterator() {
+        return pool.iterator();
+    }
+
+    public Object[] toArray() {
+        return pool.toArray();
+    }
+
+    public <T> T[] toArray(T[] a) {
+        return pool.toArray(a);
+    }
+
+    public boolean remove(Object o) {
+        return pool.remove(o);
+    }
+
+    public boolean containsAll(Collection<?> c) {
+        return pool.containsAll(c);
+    }
+
+    public boolean addAll(Collection<? extends String> c) {
+        return pool.addAll(c);
+    }
+
+    public boolean addAll(int index, Collection<? extends String> c) {
+        return pool.addAll(index, c);
+    }
+
+    public boolean removeAll(Collection<?> c) {
+        return pool.removeAll(c);
+    }
+
+    public boolean retainAll(Collection<?> c) {
+        return pool.retainAll(c);
+    }
+
     public void clear() {
         pool.clear();
     }
 
-    public int getPosition(String value) {
-        return pool.getPosition(value);
+    public int indexOf(Object o) {
+        return pool.indexOf(o);
     }
 
-    public String getValue(int position) {
-        return pool.getValue(position);
+    public int lastIndexOf(Object o) {
+        return pool.lastIndexOf(o);
     }
 
-    private static final String NAME_CLASH =
-            "%s: The specified poolName '%s' was different from the name of "
-            + "the underlying FacetStructure '%s'. Ignoring poolName";
-    public void load(File location, String poolName) throws IOException {
-        if (!structure.getName().equals(poolName)) {
-            log.warn(String.format(NAME_CLASH, "load", poolName,
-                                   structure.getName()));
-        }
-        this.location = location;
-        pool.load(location, structure.getName());
-    }
-    public void store(File location, String poolName) throws IOException {
-        if (!structure.getName().equals(poolName)) {
-            //noinspection DuplicateStringLiteralInspection
-            log.warn(String.format(NAME_CLASH, "store", poolName,
-                                   structure.getName()));
-        }
-        this.location = location;
-        pool.store(location, structure.getName());
+    public ListIterator<String> listIterator() {
+        return pool.listIterator();
     }
 
-    public int compare(String o1, String o2) {
-        return pool.compare(o1, o2);
+    public ListIterator<String> listIterator(int index) {
+        return pool.listIterator(index);
+    }
+
+    public List<String> subList(int fromIndex, int toIndex) {
+        return pool.subList(fromIndex, toIndex);
     }
 }
+

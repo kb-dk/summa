@@ -22,20 +22,12 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser;
 
-import java.io.IOException;
 import java.io.File;
 import java.util.Arrays;
 
-import org.apache.lucene.index.TermFreqVector;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.search.Hits;
 import org.apache.log4j.Logger;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.facetbrowser.connection.IndexConnection;
-import dk.statsbiblioteket.summa.facetbrowser.connection.IndexConnectionFactory;
-import dk.statsbiblioteket.summa.facetbrowser.util.ClusterCommon;
-import dk.statsbiblioteket.summa.facetbrowser.build.facet.Element;
 import junit.framework.TestCase;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection", "deprecation"})
@@ -45,13 +37,13 @@ import junit.framework.TestCase;
 public class TestCommon extends TestCase {
     private static final Logger log = Logger.getLogger(TestCommon.class);
 
-    public static String oneliner(IndexConnection connection, int docID) {
+/*    public static String oneliner(IndexConnection connection, int docID) {
         Document doc = connection.getDoc(docID);
         TermFreqVector freetext =
                 connection.getTermFreqVector(docID, ClusterCommon.FREETEXT);
         return ClusterCommon.oneliner(doc, docID, freetext);
     }
-
+  */
     public void testAssign() throws Exception {
         int a = 10;
         assertEquals("a should be assigned to the start value", 10, a);
@@ -70,7 +62,7 @@ public class TestCommon extends TestCase {
             // Expected, so do nothing
         }
     }
-
+    /*
     public void testGetNamesFromProperties() throws Exception {
         ClusterCommon.getProperties().put("Test", "a,b, c");
         String[] simple = ClusterCommon.getNamesFromProperties("Test");
@@ -110,7 +102,8 @@ public class TestCommon extends TestCase {
 
 
     }
-
+      */
+    /*
     public static String oneliner(IndexConnection connection, String recordID) throws IOException {
         String searchTerm = ClusterCommon.colonEscape(recordID);
         Hits hits =
@@ -151,7 +144,7 @@ public class TestCommon extends TestCase {
             // Do nothing, as this is expected
         }
     }
-
+      */
     public void measureBitTweaking() {
         int arraySize = 1000000;
         int iterations = 500;

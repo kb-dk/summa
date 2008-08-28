@@ -22,19 +22,18 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.browse;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Random;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
+import dk.statsbiblioteket.summa.facetbrowser.BaseObjects;
 import dk.statsbiblioteket.summa.facetbrowser.IndexBuilder;
-import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
-import dk.statsbiblioteket.summa.facetbrowser.core.tags.MemoryTagHandler;
-import dk.statsbiblioteket.summa.facetbrowser.core.StructureDescription;
 import dk.statsbiblioteket.util.Profiler;
+import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 import org.apache.lucene.index.IndexReader;
+
+import java.util.Random;
+import java.io.IOException;
 
 /**
  * TagCounterArray Tester.
@@ -43,53 +42,47 @@ import org.apache.lucene.index.IndexReader;
  * @since <pre>03/22/2007</pre>
  * @version 1.0
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.IN_DEVELOPMENT,
+        author = "te")
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class TagCounterTest extends TestCase {
     IndexReader reader;
-    String[] fn = new String[]{IndexBuilder.AUTHOR, IndexBuilder.GENRE,
-                               IndexBuilder.TITLE, IndexBuilder.FREETEXT,
-                               IndexBuilder.VARIABLE};
-    StructureDescription structure = new StructureDescription(fn);
-    TagHandler tagHandler;
-    TagCounter tagCounter;
 
     public TagCounterTest(String name) {
         super(name);
     }
 
+    BaseObjects bo;
+
     public void setUp() throws Exception {
         super.setUp();
+        bo = new BaseObjects();
     }
 
     public void setupSample() throws Exception {
         IndexBuilder.checkIndex();
         reader = IndexBuilder.getReader();
-        tagHandler = new MemoryTagHandler(reader, structure);
-        tagCounter = new TagCounterArray(tagHandler,
-                                         tagHandler.getFacetNames().size());
     }
 
     @SuppressWarnings({"AssignmentToNull"})
     public void tearDown() throws Exception {
         super.tearDown();
+        bo.close();
         reader = null;
-        fn = null;
-        structure = null;
-        tagHandler = null;
-        tagCounter = null;
     }
 
     public void testGetFirst() throws Exception {
         setupSample();
-        for (int facetID = 0 ; facetID < fn.length ; facetID++) {
+        for (int facetID = 0 ; facetID < bo.facetNames.length ; facetID++) {
             for (int tagID = 0 ;
-                 tagID < tagHandler.getFacetSize(facetID) ;
+                 tagID < bo.getTagHandler().getFacetSize(facetID) ;
                  tagID++) {
-                tagCounter.increment(facetID, tagID);
+                bo.getTagCounter().increment(facetID, tagID);
             }
         }
         throw new UnsupportedOperationException("Update this to new API");
-//        FacetResult first = tagCounter.getFirst(structure);
+//        FacetResult first = bo.getTagCounter().getFirst(structure);
 //        assertTrue("The result should be something",
 //                   !"".equals(first.toXML()));
     }
@@ -99,12 +92,12 @@ public class TagCounterTest extends TestCase {
         System.out.println("Testing fill performance");
         int retries = 20;
         int COMPLETERUNS = 50;
-        int updates = COMPLETERUNS * tagHandler.getTagCount();
+        int updates = COMPLETERUNS * bo.getTagHandler().getTagCount();
         System.out.println("Warming up...");
         for (int i = 0 ; i < 10 ; i++) {
             fill(10);
         }
-        tagCounter.reset();
+        bo.getTagCounter().reset();
         System.out.println("Running...");
         Profiler profiler = new Profiler();
         for (int i = 0 ; i < retries ; i++) {
@@ -114,17 +107,17 @@ public class TagCounterTest extends TestCase {
         double speed = 1000 / profiler.getBps(true);
         System.out.println("Average speed: " + speed
                            + " ms for " + COMPLETERUNS + " complete fills of "
-                           + tagHandler.getTagCount() + " tags ("
+                           + bo.getTagHandler().getTagCount() + " tags ("
                            + updates / speed + " updates/ms)");
     }
 
-    private void fill(int completeRuns) {
+    private void fill(int completeRuns) throws IOException {
         for (int complete = 0 ; complete < completeRuns ; complete++) {
-            for (int facetID = 0 ; facetID < fn.length ; facetID++) {
+            for (int facetID = 0 ; facetID < bo.facetNames.length ; facetID++) {
                 for (int tagID = 0 ;
-                     tagID < tagHandler.getFacetSize(facetID) ;
+                     tagID < bo.getTagHandler().getFacetSize(facetID) ;
                      tagID++) {
-                    tagCounter.increment(facetID, tagID);
+                    bo.getTagCounter().increment(facetID, tagID);
                 }
             }
         }
@@ -137,62 +130,58 @@ public class TagCounterTest extends TestCase {
 
         System.out.println("Testing getFirst performance for POPULARITY");
         Profiler profiler = new Profiler();
+        Request popularityOrderRequest = new Request(
+                null, 0, 0, Strings.join(bo.getFacetNames(), " (POPULARITY), "),
+                bo.getStructure());
         for (int i = 0 ; i < retries ; i++) {
-            throw new UnsupportedOperationException("Change to new api");
-//            tagCounter.getFirst(FacetResult.TagSortOrder.popularity);
-//            profiler.beat();
+            bo.getTagCounter().getFirst(popularityOrderRequest);
+            profiler.beat();
         }
         double speed = 1000 / profiler.getBps(true);
         System.out.println("Average speed: " + speed
                            + " ms for POPULARITY getFirst in "
-                           + tagHandler.getTagCount() + " touched tags ("
+                           + bo.getTagHandler().getTagCount() + " touched tags ("
                            + 1000 / speed + " fills/ms)");
 
         System.out.println("Testing getFirst performance for ALPHA");
         profiler = new Profiler();
+        Request tagOrderRequest = new Request(
+                null, 0, 0, Strings.join(bo.getFacetNames(), " (ALPHA), "),
+                bo.getStructure());
         for (int i = 0 ; i < retries * 100; i++) {
-            throw new UnsupportedOperationException("Change to new api");
-//            tagCounter.getFirst(FacetResult.TagSortOrder.tag);
-//            profiler.beat();
+            bo.getTagCounter().getFirst(tagOrderRequest);
+            profiler.beat();
         }
         speed = 1000 / profiler.getBps(true);
         System.out.println("Average speed: " + speed
                            + " ms for ALPHA getFirst in "
-                           + tagHandler.getTagCount() + " touched tags ("
+                           + bo.getTagHandler().getTagCount() + " touched tags ("
                            + 1000 / speed + " fills/ms)");
     }
 
     public void dumpBigSpeed() throws Exception {
-        System.out.println("Building TagHandler...");
+        System.out.println("Building bo.getTagHandler()...");
         int tagcount = 2000000;
         int runs = 5;
         int maxTagCount = 100;
         int chanceForHit = 50;
 
         Random random = new Random();
-        String[] fn = new String[]{IndexBuilder.AUTHOR, IndexBuilder.GENRE,
-                                   IndexBuilder.TITLE, IndexBuilder.FREETEXT,
-                                   IndexBuilder.VARIABLE};
-        List<String> facetNames = new ArrayList<String>(fn.length);
-        String[][] tags = new String[fn.length][];
+        String[][] tags = new String[bo.facetNames.length][];
         int facetPos = 0;
-        for (String f: fn) {
-            facetNames.add(f);
+        for (String f: bo.facetNames) {
             tags[facetPos] = new String[tagcount];
             for (int i = 0 ; i < tagcount ; i++) {
                 tags[facetPos][i] = Integer.toString(random.nextInt(1000000));
             }
             facetPos++;
         }
-        StructureDescription structure = new StructureDescription(facetNames);
-        MemoryTagHandler handler =
-                new MemoryTagHandler(structure, tags);
-        throw new UnsupportedOperationException("Change to new api");
-/*        TagCounter counter = new TagCounterArray(structure, handler);
+
+        TagCounter counter = bo.getTagCounter();
 
         int markedTags = 0;
-        System.out.println("Filling TagCounter...");
-        for (int facetID = 0 ; facetID < fn.length ; facetID++) {
+        System.out.println("Filling bo.getTagCounter()...");
+        for (int facetID = 0 ; facetID < bo.facetNames.length ; facetID++) {
             for (int tagID = 0 ; tagID < tagcount ; tagID++) {
                 if (random.nextInt(100) < chanceForHit) {
                     markedTags++;
@@ -203,26 +192,23 @@ public class TagCounterTest extends TestCase {
                 }
             }
         }
-        System.out.println("Warming up TagCounter...");
+        System.out.println("Warming up bo.getTagCounter()...");
         for (int i = 0 ; i < 5 ; i++) {
-            throw new UnsupportedOperationException("Change to new api");
-//            counter.getFirst(FacetResult.TagSortOrder.popularity);
+            counter.getFirst(bo.getStructure());
         }
         System.out.println("Running getFirst tests...");
         Profiler profiler = new Profiler();
         profiler.setExpectedTotal(runs);
         for (int i = 0 ; i < runs ; i++) {
-            throw new UnsupportedOperationException("Change to new api");
-//            counter.getFirst(FacetResult.TagSortOrder.popularity);
-//            profiler.beat();
+            counter.getFirst(null);
+            profiler.beat();
         }
         double bps = profiler.getBps(true);
         System.out.println("Extracted first from " + markedTags
                            + " marked tags in "
-                           + fn.length + " facets "
+                           + bo.facetNames.length + " facets "
                            + bps + " times/second, "
                            + 1000 / bps + " ms/extraction");
-                           */
     }
 
     public static Test suite() {

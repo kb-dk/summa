@@ -31,20 +31,10 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.facetbrowser.IndexBuilder;
-import dk.statsbiblioteket.summa.facetbrowser.core.StructureDescription;
-import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandlerFactory;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexConnector;
-import dk.statsbiblioteket.summa.common.util.PriorityQueueLong;
 
-/**
- * BrowserImpl Tester.
- *
- * @author <Authors name>
- * @since <pre>04/16/2007</pre>
- * @version 1.0
- */
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class BrowserImplTest extends TestCase {
     public BrowserImplTest(String name) {
@@ -59,53 +49,6 @@ public class BrowserImplTest extends TestCase {
         super.tearDown();
     }
 
-    public void testPriorityQueue() throws Exception {
-        long[] input = new long[] { 5, 7, 3, 10, 12, 2, 5, 2 };
-        long[] expected = input.clone();
-        Arrays.sort(expected);
-        PriorityQueueLong queue = new PriorityQueueLong();
-        for (long element: input) {
-            queue.insert(element);
-        }
-        for (long element: expected) {
-            assertEquals("The order of the output should be as expected",
-                         element, queue.removeMin());
-        }
-
-    }
-
-    public void testPriorityQueueRandom() throws Exception {
-        int maxLength = 100;
-        int maxValue = 100;
-        int reRuns = 100;
-        Random random = new Random();
-        for (int i = 0 ; i < reRuns ; i++) {
-            long[] input = new long[random.nextInt(maxLength)];
-            for (int j = 0 ; j < input.length ; j++) {
-                input[j] = random.nextInt(maxValue);
-            }
-            long[] expected = input.clone();
-            Arrays.sort(expected);
-            PriorityQueueLong queue = new PriorityQueueLong();
-            for (long element: input) {
-                queue.insert(element);
-            }
-            for (long element: expected) {
-                assertEquals("The order of the output should be as expected "
-                             + "by using insert",
-                             element, queue.removeMin());
-            }
-
-            queue = new PriorityQueueLong();
-            queue.setValues(input, input.length, false, input.length);
-            for (long element: expected) {
-                assertEquals("The order of the output should be as expected "
-                             + "by using setValues",
-                             element, queue.removeMin());
-            }
-        }
-
-    }
 
     private String arrayToString(String[] strings) {
         StringWriter sw = new StringWriter(strings.length * 10);
@@ -118,6 +61,7 @@ public class BrowserImplTest extends TestCase {
         return sw.toString();
     }
 
+    // TODO: Rewrite this
     private Configuration getConfiguration() {
         String[] facets = new String[]{ IndexBuilder.AUTHOR,
                                         IndexBuilder.AUTHOR_NORMALISED,
@@ -125,16 +69,16 @@ public class BrowserImplTest extends TestCase {
                                         IndexBuilder.GENRE,
                                         IndexBuilder.VARIABLE };
         MemoryStorage memStore = new MemoryStorage();
-        memStore.put(StructureDescription.FACETS, arrayToString(facets));
+//        memStore.put(StructureDescription.FACETS, arrayToString(facets));
         memStore.put(IndexConnector.INDEXROOT + IndexConnector.TYPE,
                      IndexConnector.INDEXTYPE.singleIndex);
         memStore.put(IndexConnector.INDEXROOT + IndexConnector.LINKS,
                      IndexBuilder.INDEXLOCATION);
-        memStore.put(TagHandlerFactory.FORCE_REBUILD, true);
+/*        memStore.put(TagHandlerFactory.FORCE_REBUILD, true);
         memStore.put(TagHandlerFactory.TAG_HANDLER,
                      TagHandlerFactory.TAGHANDLERS.MemoryTagHandler);
         memStore.put(TagHandlerFactory.TAG_DATA_LOCATION,
-                     new File(IndexBuilder.INDEXLOCATION, "facets").toString());
+                     new File(IndexBuilder.INDEXLOCATION, "facets").toString());*/
         return new Configuration(memStore);
     }
 

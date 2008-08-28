@@ -61,7 +61,8 @@ public interface TagCounter {
      * Get a map with Facets containing Tags, sorted by sortOrder. See
      * {@link FacetResult} for obvious use of this.
      * @param request the facets and max tags to return together with sort order
-     *                and similar options.
+     *                and similar options. If this is null, the default
+     *                structure will be used.
      * @return a representation of the first elements, as specified by the
      *         structureDescription and the request.
      */

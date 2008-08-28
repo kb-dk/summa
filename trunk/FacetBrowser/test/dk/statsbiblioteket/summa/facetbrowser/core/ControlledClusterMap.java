@@ -26,15 +26,14 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.core;
 
-import java.util.List;
-import java.util.ArrayList;
-
 import dk.statsbiblioteket.summa.facetbrowser.browse.TagCounter;
 import dk.statsbiblioteket.summa.facetbrowser.browse.TagCounterArray;
-import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
-import dk.statsbiblioteket.summa.facetbrowser.core.tags.MemoryTagHandler;
-import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMapBitStuffed;
 import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMap;
+import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMapBitStuffed;
+import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -74,8 +73,9 @@ public class ControlledClusterMap {
         for (int i = 0 ; i < facets.length ; i++) {
             tagNames[i] = facets[i][1];
         }
-        return new MemoryTagHandler(new StructureDescription(facetNames),
-                                    tagNames);
+        // TODO: Implement this
+        return null;//new TagHandlerImpl(new StructureDescription(facetNames),
+                     //               tagNames);
     }
 
     public TagCounter constructTagCounter() {
@@ -91,6 +91,8 @@ public class ControlledClusterMap {
     }
 
     public CoreMap constructCoreMap(int documents) {
+        throw new UnsupportedOperationException("Not implemented yet");
+        /*
         List<String> facetNames = getFacetNames();
         CoreMap coreMap = new CoreMapBitStuffed(documents, facetNames.size());
         for (int document = 0 ; document < documents ; document++) {
@@ -112,6 +114,6 @@ public class ControlledClusterMap {
             }
         }
 //            coreMap.add();
-        return null;
+        return null; */
 }
 }

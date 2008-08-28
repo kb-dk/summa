@@ -26,19 +26,19 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.browse;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
-import dk.statsbiblioteket.summa.facetbrowser.core.StructureDescription;
-import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMap;
-import dk.statsbiblioteket.summa.common.lucene.search.SlimCollector;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.lucene.search.SlimCollector;
 import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
+import dk.statsbiblioteket.summa.facetbrowser.Structure;
+import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMap;
+import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.lucene.search.IndexSearcher;
 import org.apache.log4j.Logger;
+import org.apache.lucene.search.IndexSearcher;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The default browser implementation is synchronized and thus does only
@@ -52,7 +52,7 @@ import org.apache.log4j.Logger;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class BrowserImpl implements Browser {
+public abstract class BrowserImpl implements Browser {
     private static Logger log = Logger.getLogger(BrowserImpl.class);
     public static final String BROWSERTHREADS_PROPERTY =
             "FacetBrowser.browserThreads";
@@ -64,7 +64,7 @@ public class BrowserImpl implements Browser {
 
     private IndexSearcher searcher;
     private TagHandler tagHandler;
-    private StructureDescription structure;
+    private Structure structure;
     private CoreMap coreMap;
     private Configuration configuration;
     private SummaQueryParser queryParser;
@@ -82,7 +82,7 @@ public class BrowserImpl implements Browser {
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public BrowserImpl(Configuration configuration, IndexSearcher searcher,
                        SummaQueryParser queryParser, TagHandler tagHandler,
-                       StructureDescription structure, CoreMap coreMap) {
+                       Structure structure, CoreMap coreMap) {
         this.configuration = configuration;
         this.searcher = searcher;
         this.queryParser = queryParser;

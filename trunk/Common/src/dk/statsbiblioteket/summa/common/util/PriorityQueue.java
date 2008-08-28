@@ -43,13 +43,11 @@ import dk.statsbiblioteket.util.qa.QAInfo;
  *
  * see http://en.wikibooks.org/wiki/Wikiversity:Data_Structures#Heaps
  * and http://www.personal.kent.edu/~rmuhamma/Algorithms/MyAlgorithms/Sorting/heapSort.htm
- *
- * IMPORTANT: This class has not yet been unit-tested!
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class PriorityQueue<T extends Comparable<T>> {
+public class PriorityQueue<T extends Comparable<? super T>> {
     private Object[] heap;
     private int size = 0;
     private int maxCapacity;

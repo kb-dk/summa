@@ -106,8 +106,7 @@ public class PriorityQueueLong {
         }
         
         // This is O(n), although it looks like O(n*log(n))
-        // TODO: This seems wrong. Shouldn't position change?
-        for (int position = size / 2 - 1 ; size >= 0 ; size--) {
+        for (int position = size / 2 - 1 ; position >= 0 ; position--) {
             siftDown(position);
         }
     }
