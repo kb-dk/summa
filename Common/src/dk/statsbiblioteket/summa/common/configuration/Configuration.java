@@ -263,6 +263,8 @@ public class Configuration implements Serializable,
     public String getString(String key, String defaultValue) {
         Object val = get(key);
         if (val == null) {
+            log.debug("Unable to find property '" + key + "', using default "
+                      + defaultValue);
             return defaultValue;
         }
         return val.toString().trim();
