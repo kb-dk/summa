@@ -33,6 +33,7 @@ import org.apache.commons.logging.LogFactory;
 public class FilterPump extends StateThread implements Configurable {
     /* We delay the creation of the log until we know the name of the chain. */
     private Log log;
+    private static Log classLog = LogFactory.getLog(FilterPump.class);
 
     public static final String CONF_FILTERS = "FilterPump.Filters";
     /**
@@ -50,8 +51,11 @@ public class FilterPump extends StateThread implements Configurable {
     long streamBytesCounter = 0;
 
     public FilterPump(Configuration configuration) throws IOException {
+        classLog.trace ("Constructing FilterPump with config class "
+                        + configuration.getClass());
         chainName = configuration.getString(CONF_CHAIN_NAME, chainName);
-        log = LogFactory.getLog(FilterPump.class + "." + chainName);
+        classLog.trace ("Creating chain log for chain: " + chainName);
+        log = LogFactory.getLog(FilterPump.class.getName() + "." + chainName);
         log.info("Constructing FilterPump for chain '" + chainName + "'");
         List<String> filterNames;
         try {
@@ -90,7 +94,7 @@ public class FilterPump extends StateThread implements Configurable {
                     filters.add(lastFilter);
                 } catch (Exception e) {
                     throw new IOException(String.format(
-                            "Could not create and create filter '%s' to chain",
+                            "Could not create filter '%s'",
                             filterName), e);
                 }
             }

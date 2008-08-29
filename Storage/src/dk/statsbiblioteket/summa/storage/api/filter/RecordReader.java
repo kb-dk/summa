@@ -40,6 +40,7 @@ import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.util.GregorianCalendar;
 import java.util.NoSuchElementException;
+import java.net.ConnectException;
 
 /**
  * Retrieves Records from storage based on the criteria given in the properties.
@@ -158,11 +159,16 @@ public class RecordReader implements ObjectFilter {
      * @see {@link #CONF_START_FROM_SCRATCH}.
      * @see {@link #CONF_USE_PERSISTENCE}.
      */
-    public RecordReader(Configuration configuration) {
+    public RecordReader(Configuration configuration) throws IOException {
         log.trace("Constructing RecordReader");
         accessContext =
                 FilterCommons.getAccess(configuration, CONF_METADATA_STORAGE);
          // TODO: Consider if this should be requested for every call to Storage
+
+        if (accessContext == null) {
+            throw new ConnectException("Unnable to connect to storage at");
+        }
+
         storage = accessContext.getConnection();
         base = configuration.getString(CONF_BASE, DEFAULT_BASE);
         String progressFileString =
@@ -191,7 +197,8 @@ public class RecordReader implements ObjectFilter {
             recordIterator =
                     storage.getRecordsModifiedAfter(getStartTime(), base);
         } catch (IOException e) {
-            throw new ConfigurationException("RemoteException while getting "
+            FilterCommons.reportError(accessContext, e);
+            throw new ConfigurationException("Exception while getting "
                                              + "recordIterator for time "
                                              + getStartTime() + " and base '"
                                              + base +"'", e);

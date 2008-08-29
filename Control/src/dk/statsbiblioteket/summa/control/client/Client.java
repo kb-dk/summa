@@ -769,6 +769,13 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         return getServiceConnection(id, 0);
     }
 
+    /**
+     * This method will call itselfup to 10 times trying to reconnect
+     * if the client connection fails.
+     * @param id the instance id of the service to connect to
+     * @param numRetries external callers should pass 0 here
+     * @return a connection to the service
+     */
     private Service getServiceConnection (String id, int numRetries)
                                                         throws RemoteException {
         final int maxRetries = 10;
