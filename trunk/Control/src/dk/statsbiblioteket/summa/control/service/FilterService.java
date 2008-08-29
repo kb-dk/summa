@@ -31,6 +31,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.Logs;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -72,27 +73,36 @@ public class FilterService extends ServiceBase implements FilterChainHandler {
     public void start() throws RemoteException {
         if (filterControl == null) {
             setStatusRunning("Creating filterControl");
-            filterControl = new FilterControl(conf) {
-                protected void finishedCallback() {
-                    switch (getStatus()) {
-                        case error:
-                            setStatus(Status.CODE.crashed, "Crashed",
-                                      Logging.LogLevel.ERROR);
-                            break;
-                        case ready:
-                        case stopping:
-                        case stopped:
-                            setStatus(Status.CODE.stopped,
-                                      "Stopped with substatus " + getStatus(),
-                                      Logging.LogLevel.DEBUG);
-                            break;
-                        default:
-                            setStatus(Status.CODE.stopped,
-                                      "Stopped with unknown state " + getStatus(),
-                                      Logging.LogLevel.WARN);
+            try {
+                filterControl = new FilterControl(conf) {
+                    protected void finishedCallback() {
+                        switch (getStatus()) {
+                            case error:
+                                setStatus(Status.CODE.crashed, "Crashed",
+                                          Logging.LogLevel.ERROR);
+                                break;
+                            case ready:
+                            case stopping:
+                            case stopped:
+                                setStatus(Status.CODE.stopped,
+                                          "Stopped with substatus "
+                                          + getStatus(),
+                                          Logging.LogLevel.DEBUG);
+                                break;
+                            default:
+                                setStatus(Status.CODE.stopped,
+                                          "Stopped with unknown state "
+                                          + getStatus(),
+                                          Logging.LogLevel.WARN);
+                        }
                     }
-                }
-            };
+                };
+            } catch (Exception e) {
+                setStatus(Status.CODE.crashed,
+                          "Failed to create filter control: " + e.getMessage(),
+                          Logging.LogLevel.ERROR, e);
+                throw new RuntimeException(e.getMessage(), e);
+            }
             setStatusIdle();
         }
 

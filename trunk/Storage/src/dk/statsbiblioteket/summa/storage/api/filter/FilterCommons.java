@@ -79,4 +79,26 @@ public class FilterCommons {
                                            ConnectionContext<Storage> context) {
         accessConnectionManager.release(context);
     }
+
+    /**
+     * Notify the underlying connection manager that the connection wrapped
+     * by {code context} is broken.
+     * @param context the connection context which is broken
+     * @param t a throwable indicating the error cause
+     */
+    public static void reportError (ConnectionContext<Storage> context,
+                                    Throwable t) {
+        accessConnectionManager.reportError(context, t);
+    }
+
+    /**
+     * Notify the underlying connection manager that the connection wrapped
+     * by {code context} is broken.
+     * @param context the connection context which is broken
+     * @param msg a message indicating the error cause
+     */
+    public static void reportError (ConnectionContext<Storage> context,
+                                    String msg) {
+        accessConnectionManager.reportError(context, msg);
+    }
 }

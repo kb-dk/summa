@@ -91,12 +91,10 @@ public class FilterControl extends StateThread implements Configurable,
                 log.trace("Got configuration for chain '" + chain + "'");
                 FilterPump pump = new FilterPump(subConfiguration);
                 pumps.add(pump);
-            } catch (IOException e) {
-                throw new ConfigurationException(String.format(
-                        "IOException while creating chain '%s'", chain), e);
             } catch (Exception e) {
                 throw new ConfigurationException(String.format(
-                        "Could not create chain '%s'", chain), e);
+                         "Error creating chain '%s': " + e.getMessage(), chain),
+                          e);
             }
         }
         try {

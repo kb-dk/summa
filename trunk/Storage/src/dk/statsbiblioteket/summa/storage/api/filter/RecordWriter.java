@@ -23,6 +23,7 @@
 package dk.statsbiblioteket.summa.storage.api.filter;
 
 import java.io.IOException;
+import java.net.ConnectException;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -64,14 +65,17 @@ public class RecordWriter extends ObjectFilterImpl {
      * @param configuration contains setup information.
      * @see {@link #CONF_STORAGE}.
      */
-    public RecordWriter(Configuration configuration) {
+    public RecordWriter(Configuration configuration) throws IOException {
         log.trace("Constructing RecordWriter");
         try {
             accessContext =
                     FilterCommons.getAccess(configuration, CONF_STORAGE);
-            // TODO: Consider if this should be requested for every Storage-use
-            Object o = accessContext.getConnection();
-            storage = (Storage) o; 
+
+            if (accessContext == null) {
+                throw new ConnectException ("Failed to connect to storage");
+            }
+
+            storage = accessContext.getConnection();
         } catch (Exception e) {
             throw new ConfigurationException(
                     "Could not get storage for Filtercommons with property key '"
@@ -99,6 +103,7 @@ public class RecordWriter extends ObjectFilterImpl {
             }
             storage.flush(record);
         } catch (IOException e) {
+            FilterCommons.reportError(accessContext, e);
             log.error("Exception flushing " + record, e);
             // TODO: Consider checking for fatal errors (the connection is down)
         }
