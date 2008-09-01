@@ -1,0 +1,43 @@
+package dk.statsbiblioteket.summa.search.api;
+
+import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
+import dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory;
+import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+
+import java.io.IOException;
+
+/**
+ * A helper class utilizing a stateless connection to a search engine exposing
+ * a {@link SummaSearcher} interface. Unless you needs are very advanced
+ * or you have to do manual connection management, this is by far the
+ * easiest way to use a remote {@link SummaSearcher}.
+ * <p></p>
+ * It is modelled as a {@link ConnectionConsumer} meaning that you can tweak
+ * its behavior by changing the configuration parameters
+ * {@link GenericConnectionFactory#RETRIES},
+ * {@link GenericConnectionFactory#GRACE_TIME},
+ * {@link GenericConnectionFactory#FACTORY}, and
+ * {@link ConnectionConsumer#PROP_RPC_TARGET}
+ */
+public class SearchClient extends ConnectionConsumer<SummaSearcher>
+                          implements Configurable {
+
+    public SearchClient (Configuration conf) {
+        super (conf);
+    }
+
+    public ResponseCollection search (Request request) throws IOException {
+        SummaSearcher searcher = getConnection();
+
+        try {
+            return searcher.search(request);
+        } catch (Throwable t) {
+            connectionError(t);
+            throw new IOException("Search failed: " + t.getMessage(), t);
+        } finally {
+            releaseConnection();
+        }
+    }
+
+}

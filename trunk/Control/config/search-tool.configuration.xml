@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+
+<!-- Sample configuration used by search-tool.sh -->
+<properties>
+
+    <entry key="summa.rpc.vendor">//localhost:28000/summa-searcher</entry>
+
+</properties>

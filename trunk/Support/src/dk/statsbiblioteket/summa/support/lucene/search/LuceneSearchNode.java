@@ -36,7 +36,7 @@ import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
 import dk.statsbiblioteket.summa.common.index.IndexException;
-import dk.statsbiblioteket.summa.search.api.document.DocumentSearcherImpl;
+import dk.statsbiblioteket.summa.search.document.DocumentSearcherImpl;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import org.apache.commons.logging.Log;
