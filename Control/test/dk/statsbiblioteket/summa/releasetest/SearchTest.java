@@ -54,7 +54,7 @@ import dk.statsbiblioteket.summa.ingest.stream.FileReader;
 import dk.statsbiblioteket.summa.search.*;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.api.Request;
-import dk.statsbiblioteket.summa.search.api.document.DocumentSearcher;
+import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.index.XMLTransformer;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import org.apache.commons.logging.Log;
@@ -204,7 +204,7 @@ public class SearchTest extends NoExitTestCase {
 
     private Request simpleRequest(String query) {
         Request request = new Request();
-        request.put(DocumentSearcher.SEARCH_QUERY, query);
+        request.put(DocumentKeys.SEARCH_QUERY, query);
         return request;
     }
 

@@ -40,13 +40,18 @@ DEPLOY=`dirname $0`/..
 # EDIT HERE
 #
 
-MAINJAR=@summa.ilib.search@
-MAINCLASS=dk.statsbiblioteket.summa.search.tools.SearchInspector
-CONFIGURATION=configuration-server.xml
+if [ "$CONFIGURATION" != "" ]; then
+    CONFIGURATION="-Dsumma.configuration=$CONFIGURATION"
+else
+    CONFIGURATION="-Dsumma.configuration=config/search-tool.configuration.xml"
+fi;
+
+MAINJAR=@summa.ilib.search.api@
+MAINCLASS=dk.statsbiblioteket.summa.search.api.tools.SearchTool
 #LIBDIRS=lib
 PRINT_CONFIG=
 #JAVA_HOME=/usr/lib/jvm/java
-JVM_OPTS="-server -Xmx64m -Dsumma.configuration=$CONFIGURATION"
+JVM_OPTS="$JVM_OPTS -server -Xmx64m $CONFIGURATION"
 SECURITY_POLICY="$DEPLOY/config/.server.policy"
 #ENABLE_JMX=true
 

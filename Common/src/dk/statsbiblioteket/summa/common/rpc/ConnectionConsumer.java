@@ -8,7 +8,7 @@ import dk.statsbiblioteket.util.rpc.ConnectionFactory;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
 
 /**
- * A generic base class for application wanting to consume a single connection
+ * A generic base class for applications wanting to consume a single connection
  * managed by a {@link ConnectionManager}.
  * <p></p>
  * Example illustrating a class to fetch the message of the day as broadcasted
@@ -33,6 +33,8 @@ import dk.statsbiblioteket.util.rpc.ConnectionContext;
  *             return msg.getMessageOfTheDay ();
  *         } catch (Throwable t) {
  *             connectionError (t);
+ *             throw new IOException ("Failed to read MOTD: " + t.getMessage(),
+ *                                    t);
  *         } finally {
  *             releaseConnection ();
  *         }
@@ -89,7 +91,7 @@ public class ConnectionConsumer<E> implements Configurable {
     }
 
     /**
-     * Look up a connection. When done using the connection it is the callers
+     * Look up a connection. When done using the connection it is the caller's
      * duty to release it again using {@link #releaseConnection()}. This is
      * typically done in a {@code finally} clause.
      * <p></p>

@@ -14,7 +14,7 @@ import dk.statsbiblioteket.summa.common.index.IndexCommon;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
-import dk.statsbiblioteket.summa.search.api.document.DocumentSearcher;
+import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.IndexReader;
@@ -96,7 +96,7 @@ public class LuceneSearchNodeTest extends TestCase {
         Configuration conf = Configuration.load(basicSetup().getAbsolutePath());
         SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
         Request request = new Request();
-        request.put(DocumentSearcher.SEARCH_QUERY, "hans");
+        request.put(DocumentKeys.SEARCH_QUERY, "hans");
         log.debug("Search for 'hans' gave\n" 
                   + searcher.search(request).toXML());
         searcher.close();
@@ -106,7 +106,7 @@ public class LuceneSearchNodeTest extends TestCase {
         Configuration conf = Configuration.load(basicSetup().getAbsolutePath());
         SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
         Request request = new Request();
-        request.put(DocumentSearcher.SEARCH_QUERY, "hans");
+        request.put(DocumentKeys.SEARCH_QUERY, "hans");
         try {
             searcher.search(request).toXML();
             fail("An IndexException should be thrown as no index data are"
