@@ -97,7 +97,7 @@ public class StartServiceCommand extends RemoteCommand<ClientConnection> {
             monThread.setDaemon (true); // Allow the JVM to exit
             monThread.start();
         } catch (Exception e) {
-            checkConnectionError(e);
+            connectionError(e);
             throw new RuntimeException ("Start of service failed: "
                                         + e.getMessage(), e);
         } finally {
