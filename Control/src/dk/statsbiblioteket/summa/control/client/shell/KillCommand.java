@@ -1,15 +1,12 @@
 package dk.statsbiblioteket.summa.control.client.shell;
 
-import dk.statsbiblioteket.summa.common.shell.Command;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.common.shell.RemoteCommand;
 import dk.statsbiblioteket.summa.control.api.Service;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.api.NoSuchServiceException;
 import dk.statsbiblioteket.summa.control.api.InvalidServiceStateException;
-import dk.statsbiblioteket.summa.control.client.Client;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
-import dk.statsbiblioteket.util.rpc.ConnectionContext;
 
 /**
  * Send a kill command to the client or a service under the client
@@ -55,7 +52,7 @@ public class KillCommand extends RemoteCommand<ClientConnection> {
                 ctx.info ("OK");
             }
         } catch (Exception e) {
-            reportConnectionError(e);
+            connectionError(e);
             throw new RuntimeException(e.getMessage(), e);
         } finally {
             releaseConnection();
