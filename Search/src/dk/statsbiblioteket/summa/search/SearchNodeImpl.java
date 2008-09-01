@@ -36,7 +36,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.ChangingSemaphore;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
-import dk.statsbiblioteket.summa.search.api.SearchNode;
+import dk.statsbiblioteket.summa.search.SearchNode;
 
 /**
  * Handles the logic of controlling concurrent searches, open, close and
@@ -211,9 +211,9 @@ public abstract class SearchNodeImpl implements SearchNode {
     }
 
     /**
-     * A managed version of {@link dk.statsbiblioteket.summa.search.api.SearchNode#warmup(String)}. Implementations
+     * A managed version of {@link SearchNode#warmup(String)}. Implementations
      * are free to ignore threading and locking-issues.
-     * @param request as specified in {@link dk.statsbiblioteket.summa.search.api.SearchNode#warmup(String)}.
+     * @param request as specified in {@link SearchNode#warmup(String)}.
      */
     protected abstract void managedWarmup(String request);
 
@@ -261,9 +261,9 @@ public abstract class SearchNodeImpl implements SearchNode {
     }
 
     /**
-     * A managed version of {@link dk.statsbiblioteket.summa.search.api.SearchNode#open(String)}. Implementations
+     * A managed version of {@link SearchNode#open(String)}. Implementations
      * are free to ignore threading and locking-issues.
-     * @param location as specified in {@link dk.statsbiblioteket.summa.search.api.SearchNode#open(String)}.
+     * @param location as specified in {@link SearchNode#open(String)}.
      * @throws RemoteException if the index could not be opened.
      */
     protected abstract void managedOpen(String location) throws RemoteException;
@@ -307,7 +307,7 @@ public abstract class SearchNodeImpl implements SearchNode {
     }
 
     /**
-     * A managed version of {@link dk.statsbiblioteket.summa.search.api.SearchNode#close()}. Implementations are free
+     * A managed version of {@link SearchNode#close()}. Implementations are free
      * to ignore threading and locking-issues.
      * @throws RemoteException if there was an exception closing.
      */
@@ -337,14 +337,14 @@ public abstract class SearchNodeImpl implements SearchNode {
 
     /**
      * A managed version of
-     * {@link dk.statsbiblioteket.summa.search.api.SearchNode#search(Request, dk.statsbiblioteket.summa.search.api.ResponseCollection)} open(String)}.
+     * {@link SearchNode#search(Request, dk.statsbiblioteket.summa.search.api.ResponseCollection)} open(String)}.
      * Implementations are free to ignore threading and locking-issues.
      * @param request   as specified in
-     *                  {@link dk.statsbiblioteket.summa.search.api.SearchNode#search(Request, dk.statsbiblioteket.summa.search.api.ResponseCollection)}
+     *                  {@link SearchNode#search(Request, dk.statsbiblioteket.summa.search.api.ResponseCollection)}
      * @param responses as specified in
-     *                  {@link dk.statsbiblioteket.summa.search.api.SearchNode#search(Request, ResponseCollection)}
+     *                  {@link SearchNode#search(Request, ResponseCollection)}
      * @throws RemoteException as specified in
-     *                  {@link dk.statsbiblioteket.summa.search.api.SearchNode#search(dk.statsbiblioteket.summa.search.api.Request , ResponseCollection)}
+     *                  {@link SearchNode#search(dk.statsbiblioteket.summa.search.api.Request , ResponseCollection)}
      */
     protected abstract void managedSearch(Request request,
                                           ResponseCollection responses) throws

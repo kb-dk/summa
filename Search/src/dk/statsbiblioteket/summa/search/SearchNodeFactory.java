@@ -30,7 +30,7 @@ import java.io.IOException;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
-import dk.statsbiblioteket.summa.search.api.SearchNode;
+import dk.statsbiblioteket.summa.search.SearchNode;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
