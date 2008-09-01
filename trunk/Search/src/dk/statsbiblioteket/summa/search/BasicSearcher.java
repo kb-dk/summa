@@ -27,7 +27,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 /**
  * Fairly minimal interface for searchers. This is normally only used directly
  * for search-nodes under a full-scale {@link dk.statsbiblioteket.summa.search.api.SummaSearcher}.
- * @deprecated in favor of {@link dk.statsbiblioteket.summa.search.api.SummaSearcher} and {@link dk.statsbiblioteket.summa.search.api.SearchNode}.
+ * @deprecated in favor of {@link dk.statsbiblioteket.summa.search.api.SummaSearcher} and {@link SearchNode}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,

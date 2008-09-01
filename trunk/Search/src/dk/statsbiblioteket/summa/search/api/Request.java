@@ -34,15 +34,19 @@ import dk.statsbiblioteket.summa.common.util.ConvenientMap;
 /**
  * A request to a SummaSearcher contains arguments to every SearchNode under
  * the Searcher.
+ * <p></p>
+ * The key-value map of the {@code Request} object is known as the
+ * <i>search keys</i>. It is common pratice that searcher implementations
+ * supply a {@code SearcherNameKeys} interface defining all the public
+ * search keys as {@code static final} strings. See fx.
+ * {@link dk.statsbiblioteket.summa.search.api.document.DocumentKeys}
  * </p><p>
  * Note: Underlying empty String-values are equalled to null in getString,
  * getInt, getLong and getBoolean. 
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te",
-        comment="Better class description needed")
+        state = QAInfo.State.QA_OK,
+        author = "te")
 public class Request extends ConvenientMap {
-//    private static Log log = LogFactory.getLog(Request.class);
 
 }

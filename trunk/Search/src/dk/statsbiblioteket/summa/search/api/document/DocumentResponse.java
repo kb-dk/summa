@@ -43,7 +43,7 @@ import org.apache.commons.logging.LogFactory;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class DocumentResponse implements Response {
+public class DocumentResponse implements Response, DocumentKeys {
     private static Log log = LogFactory.getLog(DocumentResponse.class);
 
     /**
@@ -218,7 +218,7 @@ public class DocumentResponse implements Response {
         Collator collator = null;
 /*     * @param collator determines the order of Records, based on their
      *                 sortValue. If no collator is given or sortKey equals
-     *                 {@link DocumentSearcher#SORT_ON_SCORE} or sortKey equals
+     *                 {@link #SORT_ON_SCORE} or sortKey equals
      *                 null, the values of {@link Record#score} are compared in
      *                 natural order.<br />
      *                 Note that the collator should ignore the property
@@ -228,7 +228,7 @@ public class DocumentResponse implements Response {
 
         records.addAll(docResponse.getRecords());
         if (collator == null || sortKey == null
-            || DocumentSearcher.SORT_ON_SCORE.equals(sortKey)) {
+            || SORT_ON_SCORE.equals(sortKey)) {
             Collections.sort(records, scoreComparator);
         } else {
             Comparator<Record> collatorComparator = new Comparator<Record>() {

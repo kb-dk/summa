@@ -50,8 +50,13 @@ public interface SummaSearcher extends Configurable {
     public static final String PROP_CLASS = "summa.searcher.class";
 
     /**
+     * Perform a search and collect the output from all sub-searchers.
+     * The {@link Request} argument contains a list of key-value pairs,
+     * also known as <i>search keys</i> from which the sub searchers will
+     * extract their arguments.
+     * <p></p>
      * A search will normally involve the addition of an implementation-specific
-     * Response to responses.  Some searchers (notably the FacetSearcher)
+     * {@link Response} to responses.  Some searchers (notably the FacetSearcher)
      * requires data from previous Searchers (DocumentSearcher, in the case of
      * FacetSearcher).
      * @param request   contains SearchNode-specific request-data.

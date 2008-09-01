@@ -20,13 +20,15 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.summa.search.api.document;
+package dk.statsbiblioteket.summa.search.document;
 
 import java.rmi.RemoteException;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.search.api.SearchNode;
+import dk.statsbiblioteket.summa.search.SearchNode;
 import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
+import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 
 /**
  * A DocumentSearcher performs a query-based search and returns a set of fields
@@ -39,23 +41,7 @@ import dk.statsbiblioteket.summa.search.api.Request;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public interface DocumentSearcher extends SearchNode {
-    public static final String SEARCH_FILTER = "search.document.filter";
-    public static final String SEARCH_QUERY = "search.document.query";
-    public static final String SEARCH_START_INDEX="search.document.start-index";
-    public static final String SEARCH_MAX_RECORDS="search.document.max-records";
-    public static final String SEARCH_SORTKEY = "search.document.sortkey";
-    public static final String SEARCH_REVERSE = "search.document.reverse-sort";
-    public static final String SEARCH_RESULT_FIELDS =
-            "search.document.result-fields";
-    public static final String SEARCH_FALLBACK_VALUES =
-            "search.document.fallback-values";
-
-    /**
-     * The special sortKey signifying that sorting should be done on score,
-     * thus making the search return records in order of relevance.
-     */
-    public static final String SORT_ON_SCORE = "summa-score";
+public interface DocumentSearcher extends SearchNode, DocumentKeys {
 
     /**
      * The default sort option. This can either be the name of a field or
@@ -66,7 +52,7 @@ public interface DocumentSearcher extends SearchNode {
      */
     public static final String CONF_DEFAULT_SORTKEY =
             "summa.search.default-sortkey";
-    public static final String DEFAULT_DEFAULT_SORTKEY = SORT_ON_SCORE;
+    public static final String DEFAULT_DEFAULT_SORTKEY = DocumentKeys.SORT_ON_SCORE;
 
     /**
      * The maximum number of records to return, as a long. This takes precedence

@@ -20,7 +20,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.summa.search.api.document;
+package dk.statsbiblioteket.summa.search.document;
 
 import java.rmi.RemoteException;
 import java.util.Arrays;
@@ -29,6 +29,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
+import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -100,8 +101,8 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements
      */
     protected void managedSearch(Request request, ResponseCollection responses)
                                                         throws RemoteException {
-        String query = request.getString(SEARCH_QUERY, null);
-        String filter = request.getString(SEARCH_FILTER, null);
+        String query = request.getString(DocumentKeys.SEARCH_QUERY, null);
+        String filter = request.getString(DocumentKeys.SEARCH_FILTER, null);
         if ((query == null || "".equals(query)) &&
             (filter == null || "".equals(filter))) {
             log.warn("No query and no filter specified for document search, "
@@ -110,9 +111,9 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements
         }
         //noinspection OverlyBroadCatchBlock
         try {
-            long startIndex = request.getLong(SEARCH_START_INDEX,
+            long startIndex = request.getLong(DocumentKeys.SEARCH_START_INDEX,
                                               this.startIndex);
-            long records = request.getLong(SEARCH_MAX_RECORDS,
+            long records = request.getLong(DocumentKeys.SEARCH_MAX_RECORDS,
                                               this.records);
             if (records > maxRecords) {
                 log.debug("requested records was " + records
@@ -120,11 +121,11 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements
                           ". Adjusting records to max");
                 records = maxRecords;
             }
-            String sortKey = request.getString(SEARCH_SORTKEY, this.sortKey);
-            Boolean reverse = request.getBoolean(SEARCH_REVERSE, false);
-            String[] resultFields = request.getStrings(SEARCH_RESULT_FIELDS,
+            String sortKey = request.getString(DocumentKeys.SEARCH_SORTKEY, this.sortKey);
+            Boolean reverse = request.getBoolean(DocumentKeys.SEARCH_REVERSE, false);
+            String[] resultFields = request.getStrings(DocumentKeys.SEARCH_RESULT_FIELDS,
                                                        this.resultFields);
-            String[] fallbackValues = request.getStrings(SEARCH_FALLBACK_VALUES,
+            String[] fallbackValues = request.getStrings(DocumentKeys.SEARCH_FALLBACK_VALUES,
                                                          this.fallbackValues);
             responses.add(fullSearch(filter, query, startIndex, records,
                                      sortKey, reverse,

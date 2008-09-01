@@ -26,7 +26,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.util.ChangingSemaphore;
-import dk.statsbiblioteket.summa.search.api.dummy.SearchNodeDummy;
+import dk.statsbiblioteket.summa.search.dummy.SearchNodeDummy;
 import dk.statsbiblioteket.summa.search.api.*;
 
 import java.util.concurrent.atomic.AtomicLong;
@@ -87,10 +87,10 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
      * Extracts basic settings from the configuration and constructs the
      * underlying tree of SearchNodes.
      * <p></p>
-     * The searcher will instantiate a {@link dk.statsbiblioteket.summa.search.api.SearchNode} based on the
+     * The searcher will instantiate a {@link SearchNode} based on the
      * property {@link SearchNodeFactory#CONF_NODE_CLASS}. If this property
      * is not defined the searcher will fall back to using a
-     * {@link dk.statsbiblioteket.summa.search.api.dummy.SearchNodeDummy}
+     * {@link dk.statsbiblioteket.summa.search.dummy.SearchNodeDummy}
      * @param conf the configuration for the searcher.
      * @throws RemoteException if the underlying SearchNode could not be
      *                         constructed.
