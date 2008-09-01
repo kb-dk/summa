@@ -983,6 +983,9 @@ public class Configuration implements Serializable,
      * true, use an empty memory based configuration instead.</p>
      * @see #getSystemConfiguration(String, boolean)
      * @param allowUnset if {@code true}
+     * @throws ConfigurationException if {@code allowUnset == false} and the
+     *                                system property
+     *                                {@code summa.configuration} is not set
      * @return a newly instantiated configuration
      */
     public static Configuration getSystemConfiguration (boolean allowUnset) {
