@@ -31,6 +31,8 @@ import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * FlexiblePair Tester.
@@ -39,6 +41,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class FlexiblePairTest extends TestCase {
+    private Log log = LogFactory.getLog(FlexiblePairTest.class);
+
     public FlexiblePairTest(String name) {
         super(name);
     }
@@ -51,7 +55,7 @@ public class FlexiblePairTest extends TestCase {
         super.tearDown();
     }
 
-    public void dumpPerformance() throws Exception {
+    public void testPerformance() throws Exception {
         int size = 100000;
         Random random = new Random();
         Profiler pf = new Profiler();
@@ -63,11 +67,11 @@ public class FlexiblePairTest extends TestCase {
                     random.nextInt(10000000),
                     FlexiblePair.SortType.PRIMARY_ASCENDING));
         }
-        System.out.println("Finished adding " + size + " pairs " +
+        log.info("Finished adding " + size + " pairs " +
                            "in " + pf.getSpendTime());
         pf.reset();
         Collections.sort(alphaResult);
-        System.out.println("Sorted in " + pf.getSpendTime());
+        log.info("Sorted in " + pf.getSpendTime());
     }
 
     public static Test suite() {

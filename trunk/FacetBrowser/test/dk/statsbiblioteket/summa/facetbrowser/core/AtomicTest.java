@@ -41,8 +41,9 @@ import java.util.concurrent.atomic.AtomicIntegerArray;
  * takes far too much time and reallocating every time taxes the garbage
  * collector. Seems like we're stuck with traditional intarrays...
  */
+@SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class AtomicTest extends TestCase {
-    private static final int SIZE = 10 * 1000 * 1000;
+    private static final int SIZE = 2 * 1000 * 1000;
     private static final int WARMUP = 1;
     private static final int RUNS = 3;
 
@@ -64,7 +65,7 @@ public class AtomicTest extends TestCase {
 
     public void testDumpSpeed() throws Exception {
         Random random = new Random();
-        System.out.println("Creating");
+        System.out.println("Creating arrays of size " + SIZE);
         int[] l = new int[SIZE];
         AtomicInteger[] al = new AtomicInteger[SIZE];
         for (int i = 0 ; i < SIZE ; i++) {
@@ -111,6 +112,20 @@ public class AtomicTest extends TestCase {
             System.gc();
             startTime = System.currentTimeMillis();
             for (int j = 0 ; j < SIZE ; j++) {
+                l[random.nextInt(SIZE)]++;
+            }
+            spend = (System.currentTimeMillis() - startTime -randomTime);
+            System.out.println("Plain int take 2:  "
+                               + Math.round(SIZE / spend)
+                               + " increments/ms");
+            startTime = System.currentTimeMillis();
+            clear(l);
+            spend = (System.currentTimeMillis() - startTime);
+            System.out.println("Plain int custom clear in " + spend + " ms");
+
+            System.gc();
+            startTime = System.currentTimeMillis();
+            for (int j = 0 ; j < SIZE ; j++) {
                 al[random.nextInt(SIZE)].getAndIncrement();
             }
             spend = (System.currentTimeMillis() - startTime - randomTime);
@@ -146,6 +161,18 @@ public class AtomicTest extends TestCase {
     public static void main(String[] args) {
         new AtomicTest().dumpThreadSpeed();
     }
+
+    private static final int[] ZERO = new int[20000];
+    public static void clear(int[] list) {
+        int listLength = list.length;
+        for (int i = 0 ; i < listLength / ZERO.length ; i++) {
+            System.arraycopy(ZERO, 0, list, i * ZERO.length, ZERO.length);
+        }
+        Arrays.fill(list,
+                    listLength / ZERO.length * ZERO.length, listLength,
+                    0);
+    }
+
 
     public void dumpThreadSpeed() {
         int[] THREADS = new int[]{1, 2, 3, 4, 5};
