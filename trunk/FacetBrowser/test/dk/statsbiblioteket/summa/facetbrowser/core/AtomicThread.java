@@ -27,20 +27,26 @@
 package dk.statsbiblioteket.summa.facetbrowser.core;
 
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.Random;
+import java.util.Arrays;
 
 /**
  * Helper class to test the speed of operations on AtomicInteger vs. int.
  */
 public class AtomicThread extends Thread {
     public int[] plain;
-    AtomicInteger[] atomic;
+    AtomicIntegerArray atomic;
     Random random = new Random();
     int runs;
     TYPE type;
-    enum TYPE {SIMULATE, PLAIN, ATOMIC}
+    enum TYPE {SIMULATE, PLAIN, ATOMIC,
+        CLEAR_PLAIN, CLEAR_ATOMIC, CLEAR_SIMULATE}
+    public int atomicClearStart;
+    public int atomicClearEnd;
 
-    public AtomicThread(int[] plain, AtomicInteger[] atomic, TYPE type,
+
+    public AtomicThread(int[] plain, AtomicIntegerArray atomic, TYPE type,
                         int runs) {
         this.plain = plain;
         this.atomic = atomic;
@@ -53,20 +59,30 @@ public class AtomicThread extends Thread {
         switch (type) {
             case PLAIN:
                 length = plain.length;
-                for (int i = 0 ; i < runs ; i++) {
+                for (int i = 0; i < runs; i++) {
                     plain[random.nextInt(length)]++;
                 }
                 break;
+            case CLEAR_PLAIN:
+                Arrays.fill(plain, 0);
+                break;
             case ATOMIC:
-                length = atomic.length;
-                for (int i = 0 ; i < runs ; i++) {
-                    atomic[random.nextInt(length)].incrementAndGet();
+                length = atomic.length();
+                for (int i = 0; i < runs; i++) {
+                    atomic.incrementAndGet(random.nextInt(length));
                 }
                 break;
             case SIMULATE:
-                for (int i = 0 ; i < runs ; i++) {
+                for (int i = 0; i < runs; i++) {
                     random.nextInt();
                 }
+                break;
+            case CLEAR_ATOMIC:
+                for (int i = atomicClearStart ; i < atomicClearEnd ; i++) {
+                    atomic.set(i, 0);
+                }
+                break;
+            case CLEAR_SIMULATE:
                 break;
         }
     }

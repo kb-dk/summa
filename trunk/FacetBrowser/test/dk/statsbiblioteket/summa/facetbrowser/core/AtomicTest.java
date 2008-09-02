@@ -43,7 +43,7 @@ import java.util.concurrent.atomic.AtomicIntegerArray;
  */
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class AtomicTest extends TestCase {
-    private static final int SIZE = 2 * 1000 * 1000;
+    private static final int SIZE = 100 * 1000 * 1000;
     private static final int WARMUP = 1;
     private static final int RUNS = 3;
 
@@ -158,8 +158,10 @@ public class AtomicTest extends TestCase {
     }
 
 
-    public static void main(String[] args) {
-        new AtomicTest().dumpThreadSpeed();
+    public static void main(String[] args) throws Exception {
+        AtomicTest t = new AtomicTest();
+        t.dumpThreadSpeed();
+        t.testDumpSpeed();
     }
 
     private static final int[] ZERO = new int[20000];
@@ -176,38 +178,134 @@ public class AtomicTest extends TestCase {
 
     public void dumpThreadSpeed() {
         int[] THREADS = new int[]{1, 2, 3, 4, 5};
-        int[] UPDATES = new int[]{100, 1000, 10000, 100000, 1000000, 10000000};
-        System.out.println("Updates\tThreads\tType\tUpd/sec\tRel.time");
+        int[] UPDATES = new int[]{100, 1000, 10000, 100000, 1000000, 10000000,
+                                  100000000};
+        System.out.println(
+                "Updates\tThreads\tType\tUpd/sec\tRel.time\tClearOnGet");
         for (int threads : THREADS) {
             for (int updates: UPDATES) {
+                for (boolean cleanOnGet: new boolean[]{true, false}) {
 //                System.out.println("\nTrying with " + threads + " threads, "
 //                                   + updates + " updates");
 //                long sim = time(AtomicThread.TYPE.SIMULATE, threads, updates);
-                long plain =
-                        time(AtomicThread.TYPE.PLAIN, threads, updates, -1);
-                time(AtomicThread.TYPE.ATOMIC, threads, updates, plain);
+//                    time(AtomicThread.TYPE.SIMULATE, threads, updates,
+//                         -1, cleanOnGet);
+                    long plain = time(AtomicThread.TYPE.PLAIN, threads, updates,
+                                      -1, cleanOnGet);
+                    time(AtomicThread.TYPE.ATOMIC, threads, updates, plain,
+                         cleanOnGet);
 //                System.out.println("Atomic time was "
 //                                   + Math.round(1.0 * plain  / atomic * 100)
 //                                   + "% of plain time");
+                }
             }
         }
     }
 
     protected long time(AtomicThread.TYPE type, int threadCount, int updates,
-                        long previous) {
+                        long previous, boolean clearOnGet) {
         ArrayList<AtomicThread> threads =
                 new ArrayList<AtomicThread>(threadCount);
-        AtomicInteger[] al = new AtomicInteger[SIZE];
-        for (int j = 0 ; j < SIZE ; j++) {
-            al[j] = new AtomicInteger(0);
-        }
+        AtomicIntegerArray al = new AtomicIntegerArray(SIZE);
+
+        int[][] plains = new int[threadCount][SIZE];
 
         for (int j = 0 ; j < threadCount ; j++) {
-            threads.add(new AtomicThread(new int[SIZE], al, type,
+            threads.add(new AtomicThread(plains[j], al, type,
                                          updates / threadCount));
         }
         System.gc();
         long startTime = System.currentTimeMillis();
+        executeThreads(threads);
+
+        long mergeStart = System.currentTimeMillis();
+        if (type == AtomicThread.TYPE.PLAIN && threadCount > 1) {
+            // Merge
+            int[] first = threads.get(0).plain;
+            for (int i = 1 ; i < threadCount ; i++) {
+                int[] another = threads.get(i).plain;
+                if (clearOnGet) {
+                    for (int j = 0 ; j < first.length ; j++) {
+                        int t = another[j];
+                        if (t != 0) {
+                            first[j] += t;
+                            another[j] = 0;
+                        }
+                    }
+                } else {
+                    for (int j = 0 ; j < first.length ; j++) {
+                        first[j] += another[j];
+                    }
+                }
+            }
+        }
+        long mergeTime = System.currentTimeMillis()-mergeStart;
+
+        // Iterate
+
+        if (type == AtomicThread.TYPE.PLAIN) {
+            int[] first = threads.get(0).plain;
+            long temp = 0;
+            for (int i = 0 ; i < SIZE ; i++) {
+                temp = first[i];
+                first[i] = 0;
+            }
+            if (temp == 0) { temp += 1; } // Dummy
+        }
+
+        if (type == AtomicThread.TYPE.ATOMIC) {
+            long temp = 0;
+            if (clearOnGet)  {
+                for (int i = 0 ; i < SIZE ; i++) {
+                    int t = al.get(i);
+                    if (t != 0) {
+                        temp += t;
+                        al.set(i, 0);
+                    }
+                }
+            } else {
+                for (int i = 0 ; i < SIZE ; i++) {
+                    temp = al.get(i);
+                }
+            }
+            if (temp == 0) { temp += 1; } // Dummy
+        }
+
+        // Clear
+        AtomicThread.TYPE clearType = AtomicThread.TYPE.PLAIN;
+
+        if (type == AtomicThread.TYPE.ATOMIC) {
+            clearType = AtomicThread.TYPE.CLEAR_ATOMIC;
+        }
+        if (type == AtomicThread.TYPE.SIMULATE) {
+            clearType = AtomicThread.TYPE.CLEAR_SIMULATE;
+        }
+        threads.clear();
+        if (!clearOnGet) {
+            for (int j = 0 ; j < threadCount ; j++) {
+                AtomicThread at = new AtomicThread(
+                        plains[j], al, clearType,
+                        updates / threadCount);
+                at.atomicClearStart = j * SIZE / threadCount;
+                at.atomicClearEnd = Math.min(SIZE, (j+1) * SIZE / threadCount);
+                threads.add(at);
+            }
+            executeThreads(threads);
+        }
+
+        double spend = (System.currentTimeMillis()-startTime) / 1000.0;
+        long speed = Math.round(updates / spend);
+        System.out.println(updates + "\t" + threadCount + "\t" + type + "\t"
+                           + speed + "\t" +
+                           (previous == -1 ? "" :
+                            Math.round(1.0 * previous  / speed * 100) + "%")
+                           + "\t" + clearOnGet);
+//        System.out.println(type + ": " + Math.round(updates / spend)
+//                           + " updates/sec"); //. Merge time: " + mergeTime + " ms");
+        return speed;
+    }
+
+    private void executeThreads(ArrayList<AtomicThread> threads) {
         for (AtomicThread thread: threads) {
             thread.start();
         }
@@ -218,45 +316,6 @@ public class AtomicTest extends TestCase {
                 e.printStackTrace();
             }
         }
-        long mergeStart = System.currentTimeMillis();
-        if (type == AtomicThread.TYPE.PLAIN && threadCount > 1) {
-            // Merge
-            int[] first = threads.get(0).plain;
-            for (int i = 1 ; i < threadCount ; i++) {
-                int[] another = threads.get(i).plain;
-                for (int j = 0 ; j < first.length ; j++) {
-                    first[j] += another[j];
-                }
-            }
-        }
-        long mergeTime = System.currentTimeMillis()-mergeStart;
-
-        if (type == AtomicThread.TYPE.PLAIN) {
-            int[] first = threads.get(0).plain;
-            long temp = 0;
-            for (int i = 0 ; i < SIZE ; i++) {
-                temp = first[i];
-            }
-            if (temp == 0) { temp += 1; } // Dummy
-        }
-
-        if (type == AtomicThread.TYPE.ATOMIC) {
-            long temp = 0;
-            for (int i = 0 ; i < SIZE ; i++) {
-                temp = al[i].get();
-            }
-            if (temp == 0) { temp += 1; } // Dummy
-        }
-
-        double spend = (System.currentTimeMillis()-startTime) / 1000.0;
-        long speed = Math.round(updates / spend);
-        System.out.println(updates + "\t" + threadCount + "\t" + type + "\t"
-                           + speed + "\t" +
-                           (previous == -1 ? "" :
-                            Math.round(1.0 * previous  / speed * 100) + "%"));
-//        System.out.println(type + ": " + Math.round(updates / spend)
-//                           + " updates/sec"); //. Merge time: " + mergeTime + " ms");
-        return speed;
     }
 
     private String mem() {

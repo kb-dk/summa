@@ -58,6 +58,6 @@ import dk.statsbiblioteket.summa.facetbrowser.core.FacetCore;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public interface FacetControl extends Browser, Builder, FacetCore {
+public interface FacetControl extends Browser, Builder {
 
 }
