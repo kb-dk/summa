@@ -24,9 +24,11 @@ package dk.statsbiblioteket.summa.facetbrowser.util.pool;
 
 import dk.statsbiblioteket.util.CachedCollator;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.facetbrowser.BaseObjects;
 import junit.framework.TestCase;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.Collator;
 import java.util.Arrays;
 import java.util.Locale;
@@ -79,7 +81,8 @@ public class CollatorSortedPoolTest extends TestCase {
         }
     }
 
-    public void testMutation(CollatorSortedPool pool) {
+    public void testMutation(CollatorSortedPool pool) throws IOException {
+        pool.open(StringPoolSuperTest.poolDir, "foo", false, true);
         pool.clear();
         pool.setCollator(null);
         assertEquals(new String[0], pool);
@@ -111,14 +114,13 @@ public class CollatorSortedPoolTest extends TestCase {
         }
         pool.clear();
         assertEquals(new String[0], pool);
+        pool.close();
     }
     public void testMemoryBasedMutation() throws Exception {
-        MemoryStringPool pool = MemoryPoolTest.getPool();
-        testMutation(pool);
+        testMutation(new MemoryStringPool(defaultCollator));
     }
     public void testDiskBasedMutation() throws Exception {
-        DiskStringPool pool = DiskPoolTest.getPool();
-        testMutation(pool);
+        testMutation(new DiskStringPool(defaultCollator));
     }
 
     // TODO: Save with disk, open with mem - check order
