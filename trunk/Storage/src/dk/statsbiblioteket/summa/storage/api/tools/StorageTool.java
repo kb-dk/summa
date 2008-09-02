@@ -88,6 +88,12 @@ public class StorageTool {
         }
     }
 
+    private static void actionTouch (String[] argv, StorageReaderClient storage)
+                                                             throws IOException{
+        System.err.println("Sorry, 'touch' not implemented yet");
+        return;
+    }
+
     private static void actionPeek (String[] argv, StorageReaderClient storage)
                                                              throws IOException{
 
@@ -132,7 +138,8 @@ public class StorageTool {
                             "storage-tool.sh <action> [arg]...");
         System.err.println ("Actions:\n"
                             + "\tget  <record_id>\n"
-                            + "\tpeek <base> [max_count=5]\n");
+                            + "\tpeek <base> [max_count=5]\n"
+                            + "\ttouch <record_id> [record_id...]\n");        
     }
 
     public static void main (String[] args) throws Exception {
@@ -178,6 +185,8 @@ public class StorageTool {
             actionGet(args, storage);
         } else if ("peek".equals(action)) {
             actionPeek(args, storage);
+        } else if ("touch".equals(action)) {
+            actionTouch(args, storage);
         } else {
             System.err.println ("Unknown action '" + action + "'");
             printUsage();
