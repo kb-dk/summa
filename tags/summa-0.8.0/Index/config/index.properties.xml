@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+
+    <!-- debug -->
+    <!-- <entry key="indexPath">/home/hal/persistentFiles/index</entry> -->
+    <entry key="indexPath">/home/summa/persistentFiles/index</entry>
+    <entry key="mergedIndex">/full</entry>
+    <entry key="withCluster">/full_with_cluster</entry>
+    <entry key="clusterMapGenerated">true</entry>
+
+    <entry key="resume">false</entry>
+    <entry key="buildCluster">false</entry>
+    <entry key="indexService">6</entry>
+
+    <!-- setup a path to each indexService -->
+    <entry key="indexPath_1"></entry>
+    <entry key="indexPath_1"></entry>
+    <entry key="indexPath_1"></entry>
+    <entry key="indexPath_1"></entry>
+
+    <entry key="nat_run">true</entry>
+    <entry key="nat_io_storage">//atria:8400/summa_io_postgres</entry>
+    <entry key="nat_xslt_url">http://pc134.sb.statsbiblioteket.dk/~mikkel/targets/aleph/aleph_index.xsl</entry>
+    <entry key="nat_last_id"></entry>
+    <entry key="nat_complete_full_index">false</entry>
+    <entry key="nat_time"></entry>
+
+    <entry key="reklamefilm_run">true</entry>
+    <entry key="reklamefilm_io_storage">//atria:8400/summa_io_postgres</entry>
+    <entry key="reklamefilm_xslt_url">http://pc134.sb.statsbiblioteket.dk/~mikkel/targets/DanskReklameFilm/reklamefilm_index.xsl</entry>
+    <entry key="reklamefilm_last_id"></entry>
+    <entry key="reklamefilm_complete_full_index">false</entry>
+    <entry key="reklamefilm_time"></entry>
+
+    <entry key="fagref_run">true</entry>
+    <entry key="fagref_io_storage">//atria:8400/summa_io_postgres</entry>
+    <entry key="fagref_xslt_url">http://pc134.sb.statsbiblioteket.dk/~mikkel/targets/fagreferent/fagref_index.xsl</entry>
+    <entry key="fagref_last_id"></entry>
+    <entry key="fagref_complete_full_index">false</entry>
+    <entry key="fagref_time"></entry>
+
+    <entry key="llba_run">true</entry>
+    <entry key="llba_io_storage">//atria:8400/summa_io_postgres</entry>
+    <entry key="llba_xslt_url">http://pc134.sb.statsbiblioteket.dk/~mikkel/targets/csa/csa_index.xsl</entry>
+    <entry key="llba_last_id"></entry>
+    <entry key="llba_complete_full_index">false</entry>
+    <entry key="llba_time"></entry>
+
+    <entry key="horizon_run">true</entry>
+    <entry key="horizon_io_storage">//atria:8400/summa_io_postgres</entry>
+    <entry key="horizon_xslt_url">http://pc134.sb.statsbiblioteket.dk/~mikkel/targets/horizon/horizon_index.xsl</entry>
+    <entry key="horizon_last_id"></entry>
+    <entry key="horizion_complete_full_index">false</entry>
+    <entry key="horizon_time"></entry>
+
+    <entry key="OpenArchive_run">true</entry>
+    <entry key="OpenArchive_io_storage">//atria:8400/summa_io_postgres</entry>
+    <entry key="OpenArchive_xslt_url">http://pc134.sb.statsbiblioteket.dk/~mikkel/targets/oai/oai_index.xsl</entry>
+    <entry key="OpenArchive_last_id"></entry>
+    <entry key="OpenArchive_complete_full_index">true</entry>
+    <entry key="OpenArchive_time"></entry>
+
+
+
+
+</properties>

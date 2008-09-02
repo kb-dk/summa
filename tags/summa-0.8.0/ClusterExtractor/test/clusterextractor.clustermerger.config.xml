@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+    <!-- ****************************************************************** -->
+    <!-- ******** clusterextractor clusterbuilder test properties ********* -->
+    <!-- ****************************************************************** -->
+
+    <!-- cluster sets path property -->
+    <entry key="clustermerger.clustersetspath">/tmp/clustersets/</entry>
+
+    <!-- dendrogram path property -->
+    <entry key="clustermerger.dendrogrampath">/tmp/dendrogram/</entry>
+
+    <!-- ****************************************************************** -->
+    <!-- ************* SIMILARITY THRESHOLDS FOR JOIN METHOD ************** -->
+    <!-- ****************************************************************** -->
+
+    <!-- How 'dis-similar' should the (normalised) centroids of two different
+         clusters be? If two centroids are more similar than this threshold
+         the two centroids are joined. -->
+    <entry key="clustermerger.joinSimilarityThreshold">.9</entry>
+
+    <!-- How 'dis-similar' should the centroids of two different clusters
+         with the same name be? -->
+    <entry key="clustermerger.joinSimilarityThresholdSameName">.8</entry>
+
+</properties>

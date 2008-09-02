@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bundle>
+	<mainJar>lib/@release.jar@</mainJar>
+	<mainClass>dk.statsbiblioteket.summa.control.client.Client</mainClass>
+    <property name="com.sun.management.jmxremote.port" value="2765"/>
+    <property name="com.sun.management.jmxremote.ssl" value="false"/>
+    <description>A sample Client bundle for the Summa Control</description>
+	<bundleId>test-client-1</bundleId>
+    <publicApi>
+        <file>lib/summa-common-@summa.version@.jar</file>
+        <file>lib/summa-control-api-@summa.version@.jar</file>
+    </publicApi>
+</bundle>

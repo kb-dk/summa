@@ -1,0 +1,52 @@
+
+#
+# This is automatically appended to setup_slave.sh
+#
+
+function ensure_rsa_key () {
+    AUTHORIZED_KEYS=$HOME/.ssh/authorized_keys
+
+    echo -n "Setting up RSA key $RSA_KEY_URL: "
+
+    # Create necessary files and dirs
+    if [ "`stat $HOME/.ssh`" == "" ]; then
+        mkdir -p $HOME/.ssh
+        chmod a=,g=,u=rxw $HOME/.ssh
+    fi;
+    if [ "`stat $AUTHORIZED_KEYS`" == "" ]; then
+        touch $AUTHORIZED_KEYS
+        chmod a=,g=,u=rw $AUTHORIZED_KEYS
+    fi;
+
+
+    RSA_KEY=`wget -q $RSA_KEY_URL -O -`
+    TEST=`grep "$RSA_KEY" $AUTHORIZED_KEYS`
+
+    if [ "$TEST" != "" ]; then
+       echo "Already deployed. Skipping."
+       return;
+    fi;
+
+    echo "Appending to $AUTHORIZED_KEYS"
+    echo $RSA_KEY >> $AUTHORIZED_KEYS
+
+}
+
+function update_wec_package () {
+    TARGET=`echo $TARBALL | sed -e "s@.tgz@@g"`
+
+    echo `hostname`": Cleaning $TARGET"
+    mkdir -p $TARGET
+    rm -rf $TARGET/*
+    rm $TARBALL
+
+    echo -n "Downloading $TARBALL_URL "
+    wget -q --progress=dot $TARBALL_URL
+
+    echo $USER@`hostname` ": Unpacking package"
+    cd $TARGET
+    tar xzf ../$TARBALL
+}
+
+ensure_rsa_key;
+update_wec_package;

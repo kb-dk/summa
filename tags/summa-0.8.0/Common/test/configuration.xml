@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+
+<!-- This is an EXAMPLE Dice configuration -->
+<properties>
+
+    <entry key="summa.configuration.service.port">2768</entry>
+    <entry key="summa.configuration.service.name">ConfigurationStorage</entry>
+    <entry key="summa.configuration.registry.port">2767</entry>
+    <entry key="summa.configuration.registry.host">localhost</entry>
+
+</properties>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  boost: optional - index-time boost for the document.
+  id: optional - stating this is good form as it eases debugging.
+                 However, the authoritative id is taken from Record.
+-->
+<SummaDocument version="1.0" id="mybase:grimme_aellinger" boost="2.0" xmlns="http://statsbiblioteket.dk/2008/Index">
+    <fields>
+        <!-- Valid attributes for fields:
+          name: mandatory - the name for the field (aliases are not allowed)
+          boost: optional - index-time boost of the term
+        -->
+
+        <field name="author" boost="2.0">Jens Hansen</field>
+        <field name="author">Hans Jensen</field>
+        <field name="title" boost="1.5">Grimme ællinger</field>
+        <field name="freetext">Der var så kedeligt ude på landet. Hvepsene summede og blomsterne støvede...</field>
+    </fields>
+</SummaDocument>
