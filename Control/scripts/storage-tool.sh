@@ -43,11 +43,11 @@ DEPLOY=`dirname $0`/..
 if [ "$CONFIGURATION" != "" ]; then
     CONFIGURATION="-Dsumma.configuration=$CONFIGURATION"
 else
-    CONFIGURATION="-Dsumma.configuration=config/search-tool.configuration.xml"
+    CONFIGURATION="-Dsumma.configuration=config/storage-tool.configuration.xml"
 fi;
 
-MAINJAR=@summa.ilib.search.api@
-MAINCLASS=dk.statsbiblioteket.summa.search.api.tools.SearchTool
+MAINJAR=@summa.ilib.storage.api@
+MAINCLASS=dk.statsbiblioteket.summa.storage.api.tools.StorageTool
 #LIBDIRS=lib
 PRINT_CONFIG=
 #JAVA_HOME=/usr/lib/jvm/java

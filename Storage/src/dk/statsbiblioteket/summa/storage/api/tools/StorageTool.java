@@ -77,6 +77,12 @@ public class StorageTool {
         for (int i = 1; i < argv.length; i++) {
             System.err.println("Getting '" + argv[i] + "'");
             Record rec = storage.getRecord (argv[i]);
+
+            if (rec == null) {
+                System.err.println ("No such record: " + argv[i]);
+                continue;
+            }
+
             printRecord(rec, true);
             System.out.println ("===================");
         }
