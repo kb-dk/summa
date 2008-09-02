@@ -778,7 +778,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
      */
     private Service getServiceConnection (String id, int numRetries)
                                                         throws RemoteException {
-        final int maxRetries = 10;
+        final int maxRetries = 5;
 
         log.trace("Getting service connection for " + id
                   + (numRetries == 0 ? "" : ". Retry: " + numRetries));
