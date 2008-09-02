@@ -84,8 +84,8 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
         sorter = new ListSorter() {
             protected <T> void swap(List<T> list, int pos1, int pos2) {
                 long temp = indexes[pos1];
-                indexes[pos2] = indexes[pos1];
-                indexes[pos1] = temp;
+                indexes[pos1] = indexes[pos2];
+                indexes[pos2] = temp;
             }
         };
     }
@@ -237,7 +237,7 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
     }
 
     protected void expandIfNeeded() {
-        if (size() == indexes.length) {
+        if (size() >= indexes.length - 1) {
             int newSize = Math.min(size() + MAX_INCREMENT, size() * 2);
             log.debug("Expanding internal arrays of indexes to length "
                       + newSize);
@@ -250,8 +250,16 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
     public E remove(int position) {
         log.trace("Removing value at position " + position);
         E e = get(position);
-        System.arraycopy(indexes, position + 1, indexes, position,
-                         size() - position + 1);
+        try {
+            System.arraycopy(indexes, position + 1, indexes, position,
+                             size() - position + 1);
+        } catch (ArrayIndexOutOfBoundsException ex) {
+            throw new ArrayIndexOutOfBoundsException(String.format(
+                    "Exception performing System.arraycopy(indexes, %d, indexes"
+                    + ", %d, %d) with indexes.length=%d and valueCount=%d",
+                    position+1, position, size()-position+1,
+                    indexes.length, valueCount));
+        }
         valueCount--;
         return e;
      }

@@ -43,6 +43,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.LineReader;
+import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
@@ -266,17 +267,12 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
         remove(getIndexFile(), "old index");
         log.trace(String.format("store: Renaming index '%s' to '%s'",
                                 tmpIndex, getIndexFile()));
-        if (!tmpIndex.renameTo(getIndexFile())) {
-            throw new IOException(String.format("Unable to rename '%s' to '%s'",
-                                                tmpIndex, getIndexFile()));
-        }
+        Files.move(tmpIndex, getIndexFile(), true);
+
         remove(getValueFile(), "old values");
         log.trace(String.format("store: Renaming values '%s' to '%s'",
                                 tmpValues, getValueFile()));
-        if (!tmpValues.renameTo(getValueFile())) {
-            throw new IOException(String.format("Unable to rename '%s' to '%s'",
-                                                tmpValues, getValueFile()));
-        }
+        Files.move(tmpValues, getValueFile(), true);
         log.debug("Finished storing pool '" + poolName + "' to location '"
                   + location + "'");
     }
@@ -370,9 +366,9 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
             BUFFER = new byte[length];
         }
         reader.readFully(BUFFER, 0, length);
-        for (int i = 0 ; i < length ; i++) {
+/*        for (int i = 0 ; i < length ; i++) {
             System.out.println(BUFFER[i]);
-        }
+        }                                                       */
         return getValueConverter().bytesToValue(BUFFER, length);
     }
 

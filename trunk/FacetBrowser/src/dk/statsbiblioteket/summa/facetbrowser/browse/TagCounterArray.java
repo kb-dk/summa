@@ -286,7 +286,6 @@ public class TagCounterArray implements TagCounter, Runnable {
                                         FacetResultLocal result,
                                         int facetID) {
         int minPop = 0;
-        System.out.println("1");
         //noinspection unchecked
         FlexiblePair<Integer, Integer>[] popResult =
                 (FlexiblePair<Integer, Integer>[])new FlexiblePair[maxTags+1];
