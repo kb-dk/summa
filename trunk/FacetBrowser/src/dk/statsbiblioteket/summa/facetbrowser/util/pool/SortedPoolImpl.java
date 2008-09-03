@@ -129,6 +129,11 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
 
     public File getPoolPersistenceFile(String postfix) {
         checkBase();
+        return getPoolPersistenceFile(location, poolName, postfix);
+    }
+
+    public File getPoolPersistenceFile(File location, String poolName,
+                                       String postfix) {
         return new File(location, poolName + postfix);
     }
 
@@ -164,7 +169,7 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
         log.debug(String.format("Starting load of %d index data (longs)",
                                 size));
         long[] indexData = new long[size];
-        long feedback = Math.max(size() / 100, 1);
+        long feedback = Math.max(size / 100, 1);
         Profiler profiler = new Profiler();
         profiler.setExpectedTotal(size);
         for (int i = 0 ; i < size ; i++) {
@@ -188,7 +193,7 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
         return indexData;
     }
 
-    private void checkLocation(File location, String poolName) throws
+    protected void checkLocation(File location, String poolName) throws
                                                                IOException {
         if (!location.exists()) {
             if (!location.mkdirs()) {

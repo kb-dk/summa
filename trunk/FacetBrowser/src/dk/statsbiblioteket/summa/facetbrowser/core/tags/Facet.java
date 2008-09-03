@@ -35,6 +35,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.FileOutputStream;
 import java.text.Collator;
 import java.util.*;
 
@@ -159,7 +160,8 @@ public class Facet implements CollatorSortedPool {
      */
     public boolean open(File location) throws IOException {
         boolean forceNew = true;
-        File metaFile = pool.getPoolPersistenceFile(META_FILE_POSTFIX);
+        File metaFile = getPoolPersistenceFile(location, structure.getName(),
+                                               META_FILE_POSTFIX);
         try {
             //noinspection MismatchedQueryAndUpdateOfCollection
             XProperties xp = new XProperties(metaFile.toString());
@@ -233,7 +235,19 @@ public class Facet implements CollatorSortedPool {
         xp.put(META_LOCALE, l);
         log.trace(String.format("Storing meta file '%s' for Facet '%s'",
                                 metaFile, structure.getName()));
-        xp.store(metaFile.toString());
+        System.out.println(metaFile.getParentFile());
+        if (!metaFile.getParentFile().exists()) {
+            //noinspection DuplicateStringLiteralInspection
+            log.debug("store: Folder '" + metaFile.getParentFile()
+                      + " does not exist. Attempting creation");
+            if (!metaFile.getParentFile().mkdirs()) {
+                throw new IOException(String.format(
+                        "Unable to create folder '%s' for Facet '%s'",
+                        metaFile.getParentFile(), getName()));
+            }
+        }
+        xp.store(new FileOutputStream(metaFile), null);
+
         log.trace(String.format("Storing pool data for Facet '%s'",
                                 structure.getName()));
         pool.store();
@@ -241,6 +255,11 @@ public class Facet implements CollatorSortedPool {
 
     public File getPoolPersistenceFile(String postfix) {
         return pool.getPoolPersistenceFile(postfix);
+    }
+
+    public File getPoolPersistenceFile(File location, String poolName,
+                                       String postfix) {
+        return pool.getPoolPersistenceFile(location, poolName, postfix);
     }
 
     public void close() {
