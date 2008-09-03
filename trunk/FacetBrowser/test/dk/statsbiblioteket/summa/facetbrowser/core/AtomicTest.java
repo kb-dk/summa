@@ -47,6 +47,57 @@ public class AtomicTest extends TestCase {
     private static final int WARMUP = 1;
     private static final int RUNS = 3;
 
+    // Run this with -Xmx512m -Xms512m
+    public void testClear() throws Exception {
+        long mb = 4 * SIZE / 1048576;
+        long startTime = System.nanoTime();
+        int[] plain = new int[SIZE];
+        long allocateTime = System.nanoTime() - startTime;
+        System.out.println(mb + " MB allocated in "
+                           + allocateTime / 1000000.0 + " ms");
+        System.gc();
+
+        startTime = System.nanoTime();
+        fillWithGarbage(plain);
+        long fillTime = System.nanoTime() - startTime;
+        System.out.println(mb + " MB filled with garbage in "
+                           + fillTime / 1000000.0 + " ms");
+        
+        startTime = System.nanoTime();
+        Arrays.fill(plain, 0);
+        long fillNS = System.nanoTime() - startTime;
+        double fillMS = fillNS / 1000000.0;
+        System.out.println(
+                "Array.fill(array, 0) of " + mb + " MB finished in "
+                + fillMS  + " ms => "
+                + Math.round(mb / fillMS * 1000) + " MB/second");
+
+        startTime = System.nanoTime();
+        Arrays.fill(plain, 0);
+        fillNS = System.nanoTime() - startTime;
+        fillMS = fillNS / 1000000.0;
+        System.out.println(
+                "Array.fill(array, 0) of " + mb + " MB take 2 finished in "
+                + fillMS  + " ms => "
+                + Math.round(mb / fillMS * 1000) + " MB/second");
+
+        startTime = System.nanoTime();
+        clear(plain);
+        long clearNS = System.nanoTime() - startTime;
+        double clearMS = clearNS / 1000000.0;
+        System.out.println(
+                "System.arraycopy(...) clear of " + mb + " MB finished in "
+                + clearMS  + " ms => "
+                + Math.round(mb / clearMS * 1000) + " MB/second");
+    }
+
+    private void fillWithGarbage(int[] array) {
+        int counter = 0;
+        for (int i = 0 ; i < array.length ; i++) {
+            array[i] = counter++;
+        }
+    }
+    
     public void testDumpMemoryUsage() throws Exception {
         System.out.println("Initial mem: " + mem());
         int[] l = new int[SIZE];
