@@ -68,7 +68,7 @@ public interface CoreMap {
     public static final int PERSISTENT_FACET_BITS = 32;
     public static final int PERSISTENT_FACET_SHIFT = 64 - PERSISTENT_FACET_BITS;
     public static final long PERSISTENT_TAG_MASK =
-         0xFFFFFFFFFFFFFFFFl << PERSISTENT_FACET_BITS >>> PERSISTENT_FACET_BITS;
+         0xFFFFFFFFFFFFFFFFL << PERSISTENT_FACET_BITS >>> PERSISTENT_FACET_BITS;
     /**
      * The empty facet signifies that the facet/tag is to be ignored.
      */
