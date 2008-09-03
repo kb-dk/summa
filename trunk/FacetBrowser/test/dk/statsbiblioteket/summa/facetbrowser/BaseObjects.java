@@ -65,17 +65,21 @@ public class BaseObjects {
         return structure;
     }
 
+    public TagHandler getTagHandler() throws IOException {
+        return getMemoryTagHandler();
+    }
+
     private TagHandler memoryTagHandler = null;
     public TagHandler getMemoryTagHandler() throws IOException {
         Random random = new Random();
-        if (memoryTagHandler != null) {
+        if (memoryTagHandler == null) {
             memoryTagHandler = getMemoryTagHandler(random.nextInt());
             memoryTagHandler.clearTags();
         }
         return memoryTagHandler;
     }
-    public TagHandler getMemoryTagHandler(int id) throws
-                                                                  IOException {
+
+    public TagHandler getMemoryTagHandler(int id) throws IOException {
         Configuration conf = Configuration.newMemoryBased();
         conf.set(TagHandler.CONF_USE_MEMORY, true);
         TagHandler memoryTagHandler =
@@ -87,6 +91,7 @@ public class BaseObjects {
         return memoryTagHandler;
     }
 
+    private Random random = new Random();
 
     private TagHandler diskTagHandler = null;
     public TagHandler getDiskTagHandler() throws IOException {
@@ -94,7 +99,6 @@ public class BaseObjects {
             Configuration conf = Configuration.newMemoryBased();
             conf.set(TagHandler.CONF_USE_MEMORY, false);
             diskTagHandler = new TagHandlerImpl(conf, getStructure(), false);
-            Random random = new Random();
             File location = new File(System.getProperty("java.io.tmpdir"),
                                      "tagHandlerTest_" + random.nextInt());
             openedFiles.add(location);
@@ -102,15 +106,22 @@ public class BaseObjects {
         }
         return diskTagHandler;
     }
-    public TagHandler getTagHandler() throws IOException {
-        return getMemoryTagHandler();
-    }
 
     private CoreMap coreMap = null;
     public CoreMap getCoreMap() throws IOException {
         if (coreMap == null) {
+            coreMap = getCoreMap(random.nextInt(), true);
+        }
+        return coreMap;
+    }
+    public CoreMap getCoreMap(int id, boolean forceNew) throws IOException {
+        if (coreMap == null) {
             Configuration conf = Configuration.newMemoryBased();
             coreMap = new CoreMapBitStuffed(conf, getStructure());
+            File location = new File(System.getProperty("java.io.tmpdir"),
+                                     "coreMapTest_" + id);
+            openedFiles.add(location);
+            coreMap.open(location, forceNew);
         }
         return coreMap;
     }
