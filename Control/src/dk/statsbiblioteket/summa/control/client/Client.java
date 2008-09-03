@@ -29,12 +29,7 @@ import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
 import dk.statsbiblioteket.summa.common.configuration.Configurable.ConfigurationException;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.control.api.*;
-import dk.statsbiblioteket.summa.control.bundle.BundleLoader;
-import dk.statsbiblioteket.summa.control.bundle.BundleLoadingException;
-import dk.statsbiblioteket.summa.control.bundle.BundleRepository;
-import dk.statsbiblioteket.summa.control.bundle.BundleStub;
-import dk.statsbiblioteket.summa.control.bundle.BundleSpecBuilder;
-import dk.statsbiblioteket.summa.control.bundle.URLRepository;
+import dk.statsbiblioteket.summa.control.bundle.*;
 import dk.statsbiblioteket.util.*;
 import dk.statsbiblioteket.util.console.ProcessRunner;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
@@ -153,7 +148,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                                     conf.getClass(
                                             REPOSITORY_CLASS_PROPERTY,
                                             BundleRepository.class,
-                                            URLRepository.class);
+                                            RemoteURLRepositoryClient.class);
         repository = Configuration.create(repositoryClass, conf);
 
         /* Create bundle loader */
@@ -867,7 +862,24 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         return id;
     }
 
-    public BundleRepository getRepository() {
+    public BundleRepository getRepository() throws RemoteException {
+        log.trace ("getRepository() called");
+
+        /* We special case the case of RMI repositories and return
+         * a connection to the server. This allows the consumer
+         * to use the repository.list() method */
+        if (repository instanceof RemoteURLRepositoryClient) {
+            log.debug ("Returning connection to remote repository");
+            try {
+                return
+              ((RemoteURLRepositoryClient)repository).getRepositoryConnection();
+            } catch (IOException e) {
+                throw new RemoteException("Failed to connect to remote "
+                                          + "repository: " + e.getMessage(),
+                                          e);
+            }
+
+        }
         return repository;
     }
 

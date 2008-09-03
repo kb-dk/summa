@@ -9,6 +9,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.control.bundle.*;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
+import dk.statsbiblioteket.summa.control.client.Client;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -32,13 +33,6 @@ import org.apache.commons.logging.LogFactory;
         comment="Unfinished")
 public class RepositoryManager implements Configurable,
                                           Iterable<String> {
-
-    /**
-     * Configuration property defining the path to the sourceRoot directory of the
-     * Control server's {@link BundleRepository}. The default value is
-     * <code>${user.home}/public_html/control/repo</code>.
-     */
-    public static final String BASE_PATH_PROPERTY = "summa.control.repository.dir";
 
     /**
      * Configuration property defining the class clients should use to download
@@ -79,12 +73,11 @@ public class RepositoryManager implements Configurable,
     public static final String WATCHER_POLL_INTERVAL_PROPERTY =
                                   "summa.control.repository.watcher.pollInterval";
 
-    private File repoBaseDir;
     private File controlBaseDir;
     private String address;
     private Class<? extends BundleRepository> clientRepoClass;
     private String clientDownloadDir;
-    private BundleRepository repo;
+    private WritableBundleRepository repo;
     private Log log = LogFactory.getLog (RepositoryManager.class);
     private File incomingDir;
     private FolderWatcher incomingWatcher;
@@ -127,15 +120,12 @@ public class RepositoryManager implements Configurable,
 
     public RepositoryManager (Configuration conf) {
         /* Configure base path */
-        repoBaseDir = ControlUtils.getRepositoryBaseDir(conf);
-        log.debug ("Using repository base dir: '" + repoBaseDir + "'");
-
         controlBaseDir = ControlUtils.getControlBaseDir(conf);
 
         /* Configure the local BundleRepository impl */
-        Class<? extends BundleRepository> repoClass =
+        Class<? extends WritableBundleRepository> repoClass =
                 conf.getClass(SERVER_REPO_PROPERTY,
-                              BundleRepository.class,
+                              WritableBundleRepository.class,
                               RemoteURLRepositoryServer.class);
         repo = Configuration.create (repoClass, conf);
 
@@ -260,30 +250,117 @@ public class RepositoryManager implements Configurable,
      */
     public void importBundle (File prospectBundle) throws IOException {
         log.info ("Preparing to import bundle file '" + prospectBundle + "'");
-        File updatedBundle;
-        File repoDest = new File(repoBaseDir, Files.baseName(prospectBundle));
-
-        /* Make sure we don't already know the bundle */
-        if (repoDest.exists()) {
-            throw new FileAlreadyExistsException (repoDest);
-        }
-        log.trace ("Bundle " + repoDest + " is not already in repo. Good");
+        File stagingBundle;
+        BundleSpecBuilder builder;
 
         /* Make sure the file is a-ok */
         checkBundleFile(prospectBundle);
 
         /* Make sure bundle contents and spec is ok */
-        updatedBundle = checkBundle(prospectBundle, true);
+        stagingBundle = checkBundle(prospectBundle, true);
+
+        /* Make sure we don't have internal bugs */
+        if (!stagingBundle.isDirectory()) {
+            throw new BundleLoadingException ("Internal error. Staging area "
+                                              + stagingBundle
+                                              + " should be a directory");
+        }
+
+        builder = BundleSpecBuilder.open (stagingBundle);
+
+        /* Apply any needed customizations to the bundle before submission
+         * to the repo */
+        updateBundle (builder, stagingBundle);
+
+        /* Extract publicApi declarations and store them in the designated
+         * public API location */
+        extractPublicApi(builder, stagingBundle);
+
+        /* Rebuild the .bundle file */
+        File packedBundle = builder.buildBundle(stagingBundle,
+                                                new File (controlBaseDir, "tmp"));
+
 
         /* Add to repo */
-        log.info ("Importing " + updatedBundle + ", to: " + repoDest);
-        Files.move (updatedBundle, repoDest);
+        log.debug ("Importing " + packedBundle);
+        if (repo.installBundle(packedBundle)) {
+            log.info ("Bundle" + packedBundle + " installed");
+        } else {
+            log.info ("Bundle" + packedBundle + " already in repository");
+        }
 
         /* Clean up */
-        log.debug ("Deleting '" + prospectBundle + "' (successfully imported)");
+        log.debug ("Deleting '" + prospectBundle + "'");
         Files.delete (prospectBundle);
-        log.info ("'" + Files.baseName(prospectBundle)
+        log.debug ("Deleting '" + stagingBundle + "'");
+        Files.delete (stagingBundle);
+        log.info ("'" + prospectBundle.getName()
                   + "' imported successfully");
+    }
+
+    /**
+     * Update any parameters needed by the bundle. Currently this method does
+     * not do anything
+     */
+    private void updateBundle(BundleSpecBuilder builder, File bundle) {
+        log.trace ("Updating bundle " + bundle);
+
+        if (!bundle.isDirectory()) {
+            throw new BundleLoadingException("Internal error. "
+                                             +"Can not extract public API. "
+                                             + bundle +  " Is not a directory");
+        }
+
+        if (builder.getBundleType() == Bundle.Type.CLIENT) {
+            log.trace ("Updating client bundle " + bundle);
+
+            /* TODO: Do something if we need to */
+
+        } else {
+            log.trace ("Updating service bundle " + bundle);
+
+            /* TODO: Do something if we need to */
+        }
+
+
+    }
+
+    /**
+     * Extract any publicApi declarations from a bundle and store them in the
+     * location designated for public API jar files
+     */
+    private void extractPublicApi(BundleSpecBuilder builder, File bundle) {
+        log.trace ("Extracting API declarations for " + bundle);
+
+        /* Scan all declared publicApi members */
+        for (String apiFileName : builder.getApi()) {
+            log.trace ("Handling API declaration of " + apiFileName);
+
+            File apiFile = new File (bundle, apiFileName);
+
+            /* Make sure the file is in the bundle */
+            if (!apiFile.exists()) {
+                throw new BundleLoadingException("Unable to find declared API "
+                                                 + apiFileName + " for bundle "
+                                                 + bundle);
+            }
+
+            try {
+                if (repo.installApi(apiFile)) {
+                    log.info("Installed API file: " + apiFile);
+                } else {
+                    log.info("API file: " + apiFile + " already installed");
+                }
+            } catch (IOException e) {
+                throw new BundleLoadingException("Error when installing API file "
+                                                 + apiFile + ": " + e.getMessage(),
+                                                 e);
+            }
+
+
+        }
+
+        log.trace ("API extraction complete for bundle: " + bundle);
     }
 
     /**
@@ -296,7 +373,8 @@ public class RepositoryManager implements Configurable,
      * @throws BundleFormatException if the bundle is readable, but the spec
      *                               is bad
      * @throws java.io.IOException of there are errors handling the bundle file
-     * @return Temporary unpacked bundle used by the inspection.
+     * @return Temporary directory containing the unpacked bundle used by the
+     *         inspection.
      *         If {@code update == true} the bundle spec of the temporary bundle
      *         will also be updated. The method consumer is responsible for
      *         deleting the temporary bundle
@@ -401,8 +479,7 @@ public class RepositoryManager implements Configurable,
                                             + " bundle '" + bundleId + "'");
         }
 
-        return builder.buildBundle (stagingDir,
-                                    new File (controlBaseDir, "tmp"));
+        return stagingDir;
     }
 
     /**

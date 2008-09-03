@@ -46,31 +46,7 @@ public class ControlUtils {
 
         log.trace ("Calculated control base dir '" + baseDir + "'");
         return baseDir;
-    }
-
-    /**
-     * <p>Get the base directory for the repository - ie where bundles are stored.
-     * This is calculated from the {@link RepositoryManager#BASE_PATH_PROPERTY}.
-     * </p>
-     * <p>If the directory does not exist it will be created.</p>
-     *
-     * @param conf configuration to extract the properties from
-     * @return a file pointing at the base directory for the bundle repository
-     */
-    public static File getRepositoryBaseDir (Configuration conf) {
-        String basePath = conf.getString (RepositoryManager.BASE_PATH_PROPERTY,
-                                          new File(getControlBaseDir(conf),
-                                                   "repo").toString());
-
-        File baseDir = new File (basePath);
-        if (!baseDir.exists()) {
-            if (baseDir.mkdirs()) {
-                log.debug ("Created repository base dir '" + baseDir + "'");
-            }
-        }
-        log.trace ("Calculated repository base dir '" + baseDir + "'");
-        return baseDir;
-    }
+    }    
 
     /**
      * <p>Get the directory used to store incoming bundles uploaded by the

@@ -165,6 +165,13 @@ public class BundleSpecBuilder {
         if (outputFile == null) {
             throw new NullPointerException("outputFile argument is null");
         }
+
+        if (outputFile.isDirectory()) {
+            outputFile = new File (outputFile, getFilename());
+        }
+
+        log.trace ("Writing spec to file: " + outputFile);
+
         write (new FileOutputStream(outputFile));
     }
 

@@ -6,18 +6,11 @@
 
     <entry key="summa.configuration.service.port">2768</entry>
     <entry key="summa.configuration.service.name">ConfigurationStorage</entry>
-
+    
     <!--<entry key="summa.control.client.id">test-client-1</entry>
     <entry key="summa.control.client.basepath">summa-control</entry>
     <entry key="summa.control.client.service.port">5536</entry>-->
     
-    <entry key="summa.control.repository.clientClass">dk.statsbiblioteket.summa.control.bundle.RemoteURLRepositoryClient</entry>
-    <entry key="summa.control.client.repository.class">dk.statsbiblioteket.summa.control.bundle.URLRepository</entry>
-
-    <entry key="summa.control.repository.download.dir">tmp</entry>
-    <entry key="summa.control.repository.address">file:///tmp/summatest</entry>
-    <entry key="summa.control.repository.api.baseurl">file:///tmp/summatest/api</entry>
-    <entry key="summa.control.repository.dir">/tmp/summatest</entry>
 
 
 </properties>
