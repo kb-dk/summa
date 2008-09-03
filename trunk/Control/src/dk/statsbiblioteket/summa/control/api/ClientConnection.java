@@ -90,7 +90,7 @@ public interface ClientConnection extends Monitorable {
      * a {@link Client} should use for fetching bundles.</p>
      *
      * <p>Default is to use a
-     * {@link dk.statsbiblioteket.summa.control.bundle.URLRepository}</p>
+     * {@link dk.statsbiblioteket.summa.control.bundle.RemoteURLRepositoryClient}</p>
      */
     public static final String REPOSITORY_CLASS_PROPERTY =
                                           "summa.control.client.repository.class";

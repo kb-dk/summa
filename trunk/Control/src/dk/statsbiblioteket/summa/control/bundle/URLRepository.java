@@ -48,8 +48,8 @@ public class URLRepository implements BundleRepository {
 
     private String tmpDir;
     private Log log = LogFactory.getLog(this.getClass());
-    private String baseUrl;
-    public String apiBaseUrl;
+    protected String baseUrl;
+    protected String apiBaseUrl;
 
     /**
      * Configuration property defining the base URL from which jar files are
@@ -57,11 +57,16 @@ public class URLRepository implements BundleRepository {
      * {@code <baseUrl>/<jarFileName>}. This controls the behavior of
      * {@link #expandApiUrl}.
      * <p></p>
-     * If this property is unset {@link #REPO_ADDRESS_PROPERTY}{@code ../api}
+     * If this property is unset {@link #REPO_ADDRESS_PROPERTY}{@code /api}
      * will be used.
      */
     public static final String API_BASE_URL_PROPERTY =
                                          "summa.control.repository.api.baseurl";
+
+    public static final String DEFAULT_REPO_URL = "file://"
+                                                  + System.getProperty("user.home")
+                                                  + "/summa-control"
+                                                  + "/repository";
 
     /**
      * <p>Create a new URLRepository. If the {@link #DOWNLOAD_DIR_PROPERTY} is
@@ -72,32 +77,27 @@ public class URLRepository implements BundleRepository {
      * @param conf
      */
     public URLRepository (Configuration conf) {
-        String defaultRepo = "file://" + System.getProperty("user.home")
-                             + File.separator + "summa-control" + File.separator
-                             + "repo";
-
-        String defaultApiUrl = defaultRepo + File.separator + ".."
-                               + File.separator + "api";
-
         this.tmpDir = conf.getString(DOWNLOAD_DIR_PROPERTY, "tmp");
+
         this.baseUrl = conf.getString (BundleRepository.REPO_ADDRESS_PROPERTY,
-                                       defaultRepo);
-        this.apiBaseUrl = conf.getString (URLRepository.API_BASE_URL_PROPERTY,
-                                          defaultApiUrl);
+                                       DEFAULT_REPO_URL);
 
-
-        /* make sure baseurl ends with a slash */
+        /* make sure baseUrl ends with a slash */
         if (!baseUrl.endsWith("/")) {
             baseUrl += "/";
         }
 
-        /* make sure apiBaseurl ends with a slash */
+        this.apiBaseUrl = conf.getString (URLRepository.API_BASE_URL_PROPERTY,
+                                          baseUrl + "api");
+
+        /* make sure apiBaseUrl ends with a slash */
         if (!apiBaseUrl.endsWith("/")) {
             apiBaseUrl += "/";
         }
 
         log.debug ("Created " + this.getClass().getName()
-                 + " instance with base url " + baseUrl);
+                 + " instance with base URL " + baseUrl + " and API URL "
+                 + apiBaseUrl);
     }
 
     public File get(String bundleId) throws IOException {
@@ -174,12 +174,15 @@ public class URLRepository implements BundleRepository {
             jarFileName.startsWith("https://")||
             jarFileName.startsWith("ftp://")  ||
             jarFileName.startsWith("sftp://")) {
+            log.trace ("Returning AIP URL of jar file as is: " + jarFileName);
             return jarFileName;
         }
 
         /* Only take the basename into account */
         jarFileName = new File (jarFileName).getName();
 
-        return apiBaseUrl + jarFileName;
+        String result = apiBaseUrl + jarFileName;
+        log.trace ("API URL of " + jarFileName + " is: " + result);
+        return result;
     }
 }

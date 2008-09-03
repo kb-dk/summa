@@ -18,10 +18,11 @@ import org.apache.commons.logging.LogFactory;
  * a child {@link URLRepository} soring the bundles.
  */
 public class RemoteURLRepositoryServer extends UnicastRemoteObject
-                                       implements RemoteRepository {
+                                       implements RemoteRepository,
+                                                  WritableBundleRepository {
     private static final Log log =
                              LogFactory.getLog(RemoteURLRepositoryServer.class);
-    private BundleRepository localRepo;
+    private WritableBundleRepository localRepo;
 
     /**
      * Configuraion property defining the port on which RMI communications
@@ -29,6 +30,8 @@ public class RemoteURLRepositoryServer extends UnicastRemoteObject
      */
     public static final String PROP_SERVICE_PORT =
                                           "summa.control.repository.service.port";
+
+    public static final int DEFAULT_SERVICE_PORT = 27045;
 
     /**
      * Configuraion property defining the name which the repository should
@@ -38,6 +41,8 @@ public class RemoteURLRepositoryServer extends UnicastRemoteObject
     public static final String PROP_SERVICE_NAME =
                                           "summa.control.repository.service.name";
 
+    public static final String DEFAULT_SERVICE_NAME = "remoteURLRepository";
+
     /**
      * Configuraion property defining the port on which RMI registry should run
      * or can be found. The default is 27000.
@@ -45,9 +50,11 @@ public class RemoteURLRepositoryServer extends UnicastRemoteObject
     public static final String PROP_REGISTRY_PORT =
                                           "summa.control.repository.registry.port";
 
+    public static final int DEFAULT_REGISTRY_PORT = 27000;
+
     /**
      * Create a new {@code RemoteURLRepository}. The passed in configuration
-     * will be passed unmodified to an underlying {@link URLRepository}.
+     * will be passed unmodified to an underlying {@link LocalURLRepository}.
      *
      * @param conf configuration from which to read properties. This
      *             configuration will also be passed directly to the underlying
@@ -59,12 +66,14 @@ public class RemoteURLRepositoryServer extends UnicastRemoteObject
 
         log.debug ("Creating RemoteURLRepositoryServer");
 
-        localRepo = new URLRepository(conf);
+        localRepo = new LocalURLRepository(conf);
 
         log.debug ("Exporting remote interfaces");
         RemoteHelper.exportRemoteInterface(this,
-                                           conf.getInt(PROP_REGISTRY_PORT, 27000),
-                                           conf.getString(PROP_SERVICE_NAME, "remoteURLRepository"));
+                                           conf.getInt(PROP_REGISTRY_PORT,
+                                                       DEFAULT_REGISTRY_PORT),
+                                           conf.getString(PROP_SERVICE_NAME,
+                                                          DEFAULT_SERVICE_NAME));
     }
 
     private static int getServicePort(Configuration conf) {
@@ -103,5 +112,17 @@ public class RemoteURLRepositoryServer extends UnicastRemoteObject
             throw new RemoteException("Failed to expand API URL for '"
                                       + jarFileName + "'", e);
         }
+    }
+
+    // Note that this method is intentionally not exported over rmi
+    // since the RemoteRepository interface does not declare it
+    public boolean installBundle(File bundle) throws IOException {
+        return localRepo.installBundle(bundle);
+    }
+
+    // Note that this method is intentionally not exported over rmi
+    // since the RemoteRepository interface does not declare it
+    public boolean installApi(File apiFile) throws IOException {
+        return localRepo.installApi(apiFile);
     }
 }

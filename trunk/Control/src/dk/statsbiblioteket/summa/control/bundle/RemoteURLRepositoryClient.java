@@ -5,24 +5,37 @@ import dk.statsbiblioteket.summa.common.rpc.SummaRMIConnectionFactory;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
 
-import java.rmi.Remote;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * A {@link BundleRepository} talking to a RemoteURLRepositoryServer}.
  * The primary purpose of this is to allow repository listing.
  */
-public class RemoteURLRepositoryClient implements BundleRepository, Remote {
+public class RemoteURLRepositoryClient implements BundleRepository {
+
+    private static final Log log = LogFactory.getLog (RemoteURLRepositoryClient.class);
 
     /**
      * The value of this property will be passed in as
      * {@link URLRepository#REPO_ADDRESS_PROPERTY} to the underlying
-     * {@link URLRepository}. This property must be supplied.
+     * {@link URLRepository}.
      */
     public static final String PROP_REMOTE_URL =
                                       "summa.control.repository.remote.address";
+
+    public static final String DEFAULT_REMOTE_URL =
+                                        URLRepository.DEFAULT_REPO_URL;
+
+    public static final String DEFAULT_REPO_ADDRESS =
+                                "//localhost:"
+                              + RemoteURLRepositoryServer.DEFAULT_REGISTRY_PORT
+                              + "/"
+                              + RemoteURLRepositoryServer.DEFAULT_SERVICE_NAME;
 
     private String repoAddress;
     private String remoteUrl;
@@ -32,8 +45,10 @@ public class RemoteURLRepositoryClient implements BundleRepository, Remote {
     private ConnectionContext<BundleRepository> connCtx;
 
     public RemoteURLRepositoryClient (Configuration conf) {
-        downloadDir = conf.getString(BundleRepository.DOWNLOAD_DIR_PROPERTY);
-        repoAddress = conf.getString(BundleRepository.REPO_ADDRESS_PROPERTY);
+        downloadDir = conf.getString(BundleRepository.DOWNLOAD_DIR_PROPERTY,
+                                     DEFAULT_DOWNLOAD_DIR);
+        repoAddress = conf.getString(BundleRepository.REPO_ADDRESS_PROPERTY,
+                                     DEFAULT_REPO_ADDRESS);
 
         /* Sanity check properties */
         if (!repoAddress.startsWith("//")) {
@@ -66,7 +81,7 @@ public class RemoteURLRepositoryClient implements BundleRepository, Remote {
     }
 
     public List<String> list(String regex) throws IOException {
-        BundleRepository repo = getConnetion();
+        BundleRepository repo = getConnection();
         try {
             return repo.list(regex);
         } finally {
@@ -75,15 +90,32 @@ public class RemoteURLRepositoryClient implements BundleRepository, Remote {
     }
 
     public String expandApiUrl (String jarFileName) throws IOException {
-        BundleRepository repo = getConnetion();
+        BundleRepository repo = getConnection();
         try {
-            return repo.expandApiUrl(jarFileName);
+            String url = repo.expandApiUrl(jarFileName);
+            log.trace ("Expanded API url of " + jarFileName + ": "
+                       +url);
+            return url;
         } finally {
             releaseConnection();
         }
     }
 
-    private synchronized BundleRepository getConnetion () throws IOException {
+    /**
+     * Return a connection to the remote repository used by this
+     * repository client.
+     * @return a connection to the remote repository
+     * @throws IOException on communication errors
+     */
+    public BundleRepository getRepositoryConnection () throws IOException {
+        try {
+            return getConnection();
+        } finally {
+            releaseConnection();
+        }
+    }
+
+    private synchronized BundleRepository getConnection() throws IOException {
         if (connCtx == null) {
             connCtx = connMgr.get(repoAddress);
         }

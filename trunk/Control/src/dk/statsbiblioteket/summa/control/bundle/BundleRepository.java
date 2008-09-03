@@ -46,11 +46,19 @@ public interface BundleRepository extends Configurable, Serializable {
     public static final String DOWNLOAD_DIR_PROPERTY =
                                           "summa.control.repository.download.dir";
 
+    public static final String DEFAULT_DOWNLOAD_DIR =
+                                                System.getProperty("user.home")
+                                              + File.separator
+                                              + "tmp";
+
     /**
      * Configuration property defining the address the repository is
      * reachable on. If the repository is a {@link URLRepository} this should
      * be an URI, if it is a repository exposed over RMI it should be the
      * RMI address etc.
+     * <p></p>
+     * Implementation should assume sensible default values if this property
+     * is unset. 
      */
     public static final String REPO_ADDRESS_PROPERTY =
                                            "summa.control.repository.address";
