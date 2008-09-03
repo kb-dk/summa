@@ -117,6 +117,17 @@ public interface SortedPool<E extends Comparable<E>> extends List<E>,
     public File getPoolPersistenceFile(String postfix);
 
     /**
+     * Construct a File object based on the stated location, poolname and
+     *  postfix. This method is to be used if {@link #open} has not been called.
+     * @param location the folder with the persistent data.
+     * @param poolName the name of the pool.
+     * @param postfix the postfix for the pool-specific persistent file.
+     * @return a File for the pool with the given postfix.
+     */
+    public File getPoolPersistenceFile(File location, String poolName,
+                                       String postfix);
+
+    /**
      * Close down any connections to persistent files and call remove.
      * In order to use the Pool for further work, open must be called.
      * </p><p>
