@@ -41,6 +41,8 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The BitStuffed CoreMap packs pointers from document-id's to facet/tags in an
@@ -53,7 +55,7 @@ import java.io.StringWriter;
  * @see {@link #add}.
  */
 // TODO: Handle emptyFacet translation int<->long for open and store
-public class CoreMapBitStuffed extends CoreMapImpl implements CoreMap {
+public class CoreMapBitStuffed extends CoreMapImpl {
     private static Logger log = Logger.getLogger(CoreMapBitStuffed.class);
 
 //    private static final int VERSION = 10000;
@@ -75,7 +77,7 @@ public class CoreMapBitStuffed extends CoreMapImpl implements CoreMap {
     /**
      * Mapping from docID => start position in {@link #values}. The end position
      * is index[docID+1]. If the document has been removed and no shifting has
-     * been performed, index[docID] == Integer.MAX_VALUE. The last valud element
+     * been performed, index[docID] == Integer.MAX_VALUE. The last value-element
      * in the list will always point to the next free position in values.
      * </p><p>
      * The amount of documents mapped in index is {@link #highestDocID}+1.
@@ -130,21 +132,32 @@ public class CoreMapBitStuffed extends CoreMapImpl implements CoreMap {
      */
     public void add(int docID, int facetID, int[] tagIDs) {
         if (facetID >= structure.getFacets().size()) {
-            //noinspection DuplicateStringLiteralInspection
             throw new IllegalArgumentException(String.format(
                     "This core map only allows %d facets. The ID for the facet "
                     + "in add was %d", FACET_LIMIT, facetID));
         }
-        if (docID > getDocCount()) {
-            // We could auto expand, but gaps indicate problems with the feeder
-            throw new ArrayIndexOutOfBoundsException(String.format(
-                    "Adding new documents require the doc-id to be <= (the "
-                    + "largest existing doc-id + 1). The doc-id was %d"
-                    + " and the highest legalvalue is %d",
-                    docID, getDocCount()));
-        }
+
         // Check index capacity
         fitStructure(docID, tagIDs);
+
+        if (docID > highestDocID) {
+            /* The docID is larger than any previously encountered, so we
+               extend the active index by setting the pointers for the
+               indexes in between to the end of the value-list. */
+            for (int i = highestDocID + 2 ; i <= docID + 1 ; i++) {
+                index[i] = valuePos;
+            }
+            highestDocID = docID;
+        }
+
+        if (tagIDs.length == 0) {
+            log.trace("No tags specified for doc #" + docID
+                      + " and facet #" + facetID);
+            return;
+        }
+
+        // Make new value-list for the doc
+        List<Integer> newValues = getValues(docID, facetID);
 
         int insertPos = index[docID + 1];
         if (docID == getDocCount()) { // New at the end
@@ -271,6 +284,7 @@ public class CoreMapBitStuffed extends CoreMapImpl implements CoreMap {
                     "Requested %d out of %d documents", docID, getDocCount()));
         }
         int to = index[docID + 1];
+        // TODO: Handle MAX_VALUE here
         int[] result = new int[to-index[docID]];
         int resultPos = 0;
         for (int i = index[docID] ; i < to ; i++) {
@@ -282,6 +296,21 @@ public class CoreMapBitStuffed extends CoreMapImpl implements CoreMap {
         int[] reducedResult = new int[resultPos];
         System.arraycopy(result, 0, reducedResult, 0, resultPos);
         return reducedResult;
+    }
+
+    private List<Integer> getValues(int docID, int facetID) {
+        if (docID > highestDocID) {
+            //noinspection DuplicateStringLiteralInspection
+            throw new ArrayIndexOutOfBoundsException(String.format(
+                    "Requested %d out of %d documents", docID, getDocCount()));
+        }
+        int to = index[docID + 1];
+        // TODO: Handle MAX_VALUE here
+        List<Integer> result = new ArrayList<Integer>((to-index[docID]) * 2);
+        for (int i = index[docID] ; i < to ; i++) {
+            result.add(values[i]);
+        }
+        return result;
     }
 
     public void store() throws IOException {
