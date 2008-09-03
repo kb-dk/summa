@@ -35,6 +35,7 @@ import java.util.Iterator;
 import java.util.HashMap;
 import java.util.Properties;
 import java.util.List;
+import java.util.ArrayList;
 import java.net.URL;
 import java.net.URLConnection;
 
@@ -126,22 +127,64 @@ public class MemoryStorage implements ConfigurationStorage {
     }
 
     public boolean supportsSubStorage() {
-        return false;
+        return true;
     }
 
-    public ConfigurationStorage getSubStorage(String key) {
-        throw new UnsupportedOperationException(NOT_SUBSTORAGE_CAPABLE);
+    public ConfigurationStorage getSubStorage(String key) throws IOException {
+        try {
+            Object sub = get(key);
+            if (!(sub instanceof MemoryStorage)) {
+                throw new IOException(String.format(
+                        "The value for '%s' was of class '%s'. "
+                        + "Expected MemoryStorage", key, sub.getClass()));
+            }
+
+            return (MemoryStorage)sub;
+        } catch (NullPointerException e) {
+            throw new IOException(String.format(
+                    "Could not locate value for key '%s'", key));
+        }
     }
 
-    public ConfigurationStorage createSubStorage(String key) {
-        throw new UnsupportedOperationException(NOT_SUBSTORAGE_CAPABLE);
+    public ConfigurationStorage createSubStorage(String key) throws
+                                                                   IOException {
+        put(key, new MemoryStorage());
+        return getSubStorage(key);
     }
     public List<ConfigurationStorage> createSubStorages(String key, int count)
                                                             throws IOException {
-        throw new UnsupportedOperationException(NOT_SUBSTORAGE_CAPABLE);
+        ArrayList<MemoryStorage> subProperties =
+                new ArrayList<MemoryStorage>(count);
+        List<ConfigurationStorage> storages =
+                new ArrayList<ConfigurationStorage>(count);
+        for (int i = 0 ; i < count ; i++) {
+            subProperties.add(new MemoryStorage());
+            storages.add(subProperties.get(i));
+        }
+        put(key, subProperties);
+        return storages;
     }
     public List<ConfigurationStorage> getSubStorages(String key) throws
                                                                  IOException {
-        throw new UnsupportedOperationException(NOT_SUBSTORAGE_CAPABLE);
+        Object sub = get(key);
+        if (!(sub instanceof List)) {
+            //noinspection DuplicateStringLiteralInspection
+            throw new IOException(String.format(
+                    "The value for '%s' was of class '%s'. Expected List",
+                    key, sub.getClass()));
+        }
+        List list = (List)sub;
+        List<ConfigurationStorage> storages =
+                new ArrayList<ConfigurationStorage>(list.size());
+        for (Object o: list) {
+            if (!(o instanceof MemoryStorage)) {
+                //noinspection DuplicateStringLiteralInspection
+                throw new IOException(String.format(
+                        "A class in the list for '%s' was '%s'. Expected "
+                        + "MemoryStorage", key, o.getClass()));
+            }
+            storages.add((MemoryStorage)o);
+        }
+        return storages;
     }
 }
