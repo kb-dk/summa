@@ -32,10 +32,7 @@ import java.util.Date;
 import java.util.Properties;
 
 
-import dk.statsbiblioteket.summa.storage.api.Storage;
-import dk.statsbiblioteket.summa.storage.api.StorageConnectionFactory;
-import dk.statsbiblioteket.summa.storage.api.RecordIterator;
-import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
+import dk.statsbiblioteket.summa.storage.api.*;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
@@ -70,7 +67,8 @@ public class StorageTool {
     private static void actionGet (String[] argv, StorageReaderClient storage)
                                                              throws IOException{
         if (argv.length == 1) {
-            System.err.println("You must specify a record id to the 'get' action");
+            System.err.println("You must specify at least one record id to "
+                               + "the 'get' action");
             return;
         }
 
@@ -88,10 +86,28 @@ public class StorageTool {
         }
     }
 
-    private static void actionTouch (String[] argv, StorageReaderClient storage)
+    private static void actionTouch (String[] argv,
+                                     StorageReaderClient reader,
+                                     StorageWriterClient writer)
                                                              throws IOException{
-        System.err.println("Sorry, 'touch' not implemented yet");
-        return;
+        if (argv.length == 1) {
+            System.err.println("You must specify at least one record id to"
+                               + " the 'touch' action");
+            return;
+        }
+
+        for (int i = 1; i < argv.length; i++) {
+            System.err.println("Touching '" + argv[i] + "'");
+            Record rec = reader.getRecord (argv[i]);
+
+            if (rec == null) {
+                System.err.println ("No such record: " + argv[i]);
+                continue;
+            }
+
+            rec.touch();
+            writer.flush(rec);
+        }
     }
 
     private static void actionPeek (String[] argv, StorageReaderClient storage)
@@ -179,14 +195,15 @@ public class StorageTool {
         System.err.println("Using storage on: "
                            + conf.getString(ConnectionConsumer.PROP_RPC_TARGET));
 
-        StorageReaderClient storage = new StorageReaderClient (conf);
+        StorageReaderClient reader = new StorageReaderClient (conf);
+        StorageWriterClient writer = new StorageWriterClient (conf);
 
         if ("get".equals(action)) {
-            actionGet(args, storage);
+            actionGet(args, reader);
         } else if ("peek".equals(action)) {
-            actionPeek(args, storage);
+            actionPeek(args, reader);
         } else if ("touch".equals(action)) {
-            actionTouch(args, storage);
+            actionTouch(args, reader, writer);
         } else {
             System.err.println ("Unknown action '" + action + "'");
             printUsage();
