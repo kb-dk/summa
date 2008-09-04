@@ -31,6 +31,7 @@ import dk.statsbiblioteket.summa.facetbrowser.build.BuilderImpl;
 import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMap;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.Facet;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
+import dk.statsbiblioteket.summa.facetbrowser.core.FacetCore;
 import dk.statsbiblioteket.util.Profiler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -47,13 +48,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * The LuceneFacetBuilder works correctly with non-tokenized fields in the
  * current implementation. This is due to the building of the facet map can be
  * done either from non-indexed Documents or a Lucene Index.
  * Fields can be both stored and indexed. Special data-types, such as numbers,
- * aren't currently supported as anything else than text.
+ * isn't currently supported as anything else than text.
  */
 public class LuceneFacetBuilder extends BuilderImpl {
     private static Log log = LogFactory.getLog(LuceneFacetBuilder.class);
@@ -87,6 +90,11 @@ public class LuceneFacetBuilder extends BuilderImpl {
         super(conf, structure, coreMap, tagHandler);
         docsToTerms = conf.getBoolean(CONF_BUILD_DOCS_TO_TERMS, docsToTerms);
         termsToDocs = conf.getBoolean(CONF_BUILD_TERMS_TO_DOCS, termsToDocs);
+    }
+
+    public synchronized void open(File location) throws IOException {
+        super.open(new File(location, FacetCore.FACET_FOLDER));
+        setLuceneIndexPath(new File(location, LuceneIndexUtils.LUCENE_FOLDER));
     }
 
     /**
@@ -201,6 +209,7 @@ public class LuceneFacetBuilder extends BuilderImpl {
         int maxDoc = ir.maxDoc();
 
         log.trace("buildDocsToTerms: Iterating documents=>tags");
+        noTermFreqVectorSet.clear();
         Profiler progress = new Profiler();
         progress.setExpectedTotal(maxDoc);
         int feedbackEvery = maxDoc / 100;
@@ -218,6 +227,9 @@ public class LuceneFacetBuilder extends BuilderImpl {
         log.debug("buildDocsToTerms: Finished iteration of documents=>tags in "
                   + totalProgress.getSpendTime());
     }
+
+    /* Keeps track of issued warnings due to missing term frequency vectors */
+    private Set<String> noTermFreqVectorSet = new HashSet<String>(10);
 
     /**
      * Extracts tags from the given document and inserts them in the FacetMap.
@@ -238,8 +250,14 @@ public class LuceneFacetBuilder extends BuilderImpl {
             TermFreqVector concreteVector =
                     ir.getTermFreqVector(docID, facet.getName());
             if (concreteVector == null) {
-                log.debug("No termFreqVector found for facet " + facet.getName()
-                          + " with document " + docID);
+                if (!noTermFreqVectorSet.contains(facet.getName())) {
+                    log.debug(String.format(
+                            "No termFreqVector found for facet %s in document "
+                            + "%d. This warning will be supressed for the "
+                            + "remainder of the build", 
+                            facet.getName(), docID));
+                    noTermFreqVectorSet.add(facet.getName());
+                }
                 continue;
             }
             String[] terms = concreteVector.getTerms();
@@ -250,7 +268,7 @@ public class LuceneFacetBuilder extends BuilderImpl {
                     log.trace("Adding " + term + " to " + facet.getName()
                               + " for doc " + docID);
                 }
-                tags.add((term));
+                tags.add(term);
             }
             if (tags.size() > 0) {
                 facetTags.put(facet.getName(), tags);
@@ -332,5 +350,14 @@ public class LuceneFacetBuilder extends BuilderImpl {
                       + addID + " in " + (System.nanoTime() - startTime)
                       + "ms");
         }
+    }
+
+    /* Package private getters - primarily used for debugging */
+    Structure getStructure() {
+        return structure;
+    }
+
+    CoreMap getCoreMap() {
+        return coreMap;
     }
 }

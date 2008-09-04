@@ -36,6 +36,7 @@ package dk.statsbiblioteket.summa.facetbrowser.core.map;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.browse.TagCounter;
+import dk.statsbiblioteket.util.Logs;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -46,6 +47,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * The BitStuffed CoreMap packs pointers from document-id's to facet/tags in an
@@ -65,7 +67,8 @@ public class CoreMapBitStuffed extends CoreMapImpl {
 
     private static final int CONTENT_INITIAL_SIZE = 10000;
     private static final int MIN_GROWTH_SIZE = 1000;
-    private static final double CONTENT_GROWTHFACTOR = 1.2;
+    private static final int MAX_GROWTH_SIZE = 1000 * 1000;
+    private static final double CONTENT_GROWTHFACTOR = 1.5;
     /* If true, the order of the values for a given docID are sorted */
     private static final boolean SORT_VALUES = true;
 
@@ -232,8 +235,10 @@ public class CoreMapBitStuffed extends CoreMapImpl {
 
     private void fitStructure(int docID, int[] tagIDs) {
         if (docID > index.length - 2) {
-            int newSize = Math.max(MIN_GROWTH_SIZE,
-                                   (int)(index.length * CONTENT_GROWTHFACTOR));
+            int newSize = Math.min(
+                    MAX_GROWTH_SIZE, Math.max(
+                    MIN_GROWTH_SIZE,
+                    (int)(index.length * CONTENT_GROWTHFACTOR)));
             //noinspection DuplicateStringLiteralInspection
             log.debug("Expanding index array from " + index.length
                       + " to " + newSize);
@@ -290,8 +295,12 @@ public class CoreMapBitStuffed extends CoreMapImpl {
     protected String exposeInternalState() {
         StringWriter sw = new StringWriter(500);
         //noinspection DuplicateStringLiteralInspection
-        sw.append("Index: ").append(dump(index, highestDocID+2));
-        sw.append(", Values: ").append(dump(values, valuePos));
+        // TODO: Make a better toString (make a List with array as backing)
+        sw.append("Index: ").append(Logs.expand(Arrays.asList(index),
+                                                Math.min(20, highestDocID+2)));
+        sw.append(", Values: ");
+        sw.append(Logs.expand(Arrays.asList(values), 
+                              Math.min(20, valuePos)));
         return sw.toString();
     }
 

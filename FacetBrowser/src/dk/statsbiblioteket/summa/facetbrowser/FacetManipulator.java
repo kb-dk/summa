@@ -33,6 +33,7 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMap;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandlerFactory;
+import dk.statsbiblioteket.summa.facetbrowser.core.FacetCore;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
 
@@ -52,11 +53,6 @@ import org.apache.log4j.Logger;
         author = "te")
 public abstract class FacetManipulator implements IndexManipulator {
     private static Logger log = Logger.getLogger(FacetManipulator.class);
-
-    /**
-     * The folder containing all persistent facet-information.
-     */
-    public static final String FACET_FOLDER = "facet";
 
     /**
      * If true, both the mapping from docID=>Tag and the Tags themselves are
@@ -186,6 +182,6 @@ public abstract class FacetManipulator implements IndexManipulator {
             throw new IllegalStateException("indexRoot not specified. "
                                             + "open(File) must be called");
         }
-        return new File(indexRoot, FACET_FOLDER);
+        return new File(indexRoot, FacetCore.FACET_FOLDER);
     }
 }

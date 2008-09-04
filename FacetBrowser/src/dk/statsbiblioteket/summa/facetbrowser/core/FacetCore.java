@@ -39,6 +39,11 @@ import java.io.IOException;
         author = "te")
 public interface FacetCore extends Configurable {
     /**
+     * The folder containing all persistent facet-information.
+     */
+    String FACET_FOLDER = "facet";
+
+    /**
      * Open a Facet structure at the given location. If there is no existing
      * structure, .
      * @param directory the location of the data.
