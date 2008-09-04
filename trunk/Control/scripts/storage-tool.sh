@@ -43,7 +43,7 @@ DEPLOY=`dirname $0`/..
 if [ "$CONFIGURATION" != "" ]; then
     CONFIGURATION="-Dsumma.configuration=$CONFIGURATION"
 else
-    CONFIGURATION="-Dsumma.configuration=config/storage-tool.configuration.xml"
+    CONFIGURATION="-Dsumma.configuration=storage-tool.configuration.xml"
 fi;
 
 MAINJAR=@summa.ilib.storage.api@

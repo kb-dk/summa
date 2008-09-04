@@ -43,7 +43,7 @@ DEPLOY=`dirname $0`/..
 if [ "$CONFIGURATION" != "" ]; then
     CONFIGURATION="-Dsumma.configuration=$CONFIGURATION"
 else
-    CONFIGURATION="-Dsumma.configuration=config/search-tool.configuration.xml"
+    CONFIGURATION="-Dsumma.configuration=search-tool.configuration.xml"
 fi;
 
 MAINJAR=@summa.ilib.search.api@
