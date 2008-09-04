@@ -24,8 +24,6 @@ package dk.statsbiblioteket.summa.facetbrowser;
 
 import java.io.IOException;
 import java.io.File;
-import java.io.StringWriter;
-import java.io.FileWriter;
 import java.util.Random;
 
 import org.apache.lucene.index.IndexWriter;
@@ -34,9 +32,12 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexConnector;
+import dk.statsbiblioteket.summa.common.index.IndexCommon;
 import dk.statsbiblioteket.util.Profiler;
+import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
@@ -48,10 +49,17 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class IndexBuilder {
-    public static final String INDEXLOCATION = 
-            new File(new File(System.getProperty("java.io.tmpdir")),
-                     "lucene").getAbsolutePath();
-    public static final int REPLICATIONCOUNT = 50000;
+    public static final File INDEX_ROOT =
+            new File(System.getProperty("java.io.tmpdir"), "index_root");
+    public static final File DESCRIPTOR =
+            new File(INDEX_ROOT, "TestIndexDescriptor.xml");
+    public static final File DATE_LOCATION =
+            new File(INDEX_ROOT, "20080904-143735");
+    public static final String INDEXLOCATION =
+            new File(DATE_LOCATION, "lucene").getAbsolutePath();
+    public static final int REPLICATIONCOUNT = 500;
+    public static final File TIMESTAMP_FILE =
+            new File(DATE_LOCATION, IndexCommon.VERSION_FILE);
 
     public static final String AUTHOR = "author";
     public static final String AUTHOR_NORMALISED = "author_normalised";
@@ -69,12 +77,17 @@ public class IndexBuilder {
      * If VERSION is changed, a new test index will be build upon call
      * to checkIndex(), if the old index does not correspond to VERSION.
      */
-    private static final String VERSION = "1.7";
+    private static final String VERSION = "1.8";
     // 1.3: Added TermFrequencyVectors
     // 1.4: Added non-stored STATUS
     // 1.5: Added feedback
     // 1.6: Added variable field
     // 1.7: Added static field
+    // Changed to Summa format
+
+    public static void main(String[] args) throws IOException {
+        checkIndex();
+    }
 
     /**
      * Check if the test index exists and is up to date. If not, a new index
@@ -151,81 +164,72 @@ public class IndexBuilder {
             }
             int j = 0;
             for (String[] comic : comics) {
-                Document doc = new Document();
-                doc.add(new Field(TITLE, comic[0],
-                                  Field.Store.YES, Field.Index.TOKENIZED,
-                                  Field.TermVector.WITH_POSITIONS_OFFSETS));
-                doc.add(new Field(ID, String.format("%d-%d", i, j),
-                                  Field.Store.YES, Field.Index.UN_TOKENIZED,
-                                  Field.TermVector.WITH_POSITIONS_OFFSETS));
-                doc.add(new Field(AUTHOR, comic[1],
-                                  Field.Store.YES, Field.Index.TOKENIZED,
-                                  Field.TermVector.WITH_POSITIONS_OFFSETS));
-                doc.add(new Field(STATIC, STATIC_CONTENT,
-                                  Field.Store.YES, Field.Index.UN_TOKENIZED,
-                                  Field.TermVector.YES));
-                doc.add(new Field(AUTHOR_NORMALISED, comic[1],
-                                  Field.Store.YES, Field.Index.UN_TOKENIZED,
-                                  Field.TermVector.YES));
-                doc.add(new Field(GENRE, comic[2],
-                                  Field.Store.YES, Field.Index.TOKENIZED,
-                                  Field.TermVector.WITH_POSITIONS_OFFSETS));
-                doc.add(new Field(STATUS, comic[3],
-                                  Field.Store.YES, //or NO?
-                                  Field.Index.TOKENIZED,
-                                  Field.TermVector.NO));
-                doc.add(new Field(VARIABLE, "Variable_" +
-                                            random.nextInt(REPLICATIONCOUNT/2),
-                                  Field.Store.YES,
-                                  Field.Index.TOKENIZED,
-                                  Field.TermVector.NO));
-                doc.add(new Field(FREETEXT, comic[0] + " " + comic[1] + " "+
-                                            comic[2],
-                                  Field.Store.YES, //or NO?
-                                  Field.Index.TOKENIZED,
-                                  Field.TermVector.WITH_POSITIONS_OFFSETS));
+                String id = String.format("%d-%d", i, j);
+                Document doc = createDocument(comic, id);
                 writer.addDocument(doc);
                 j++;
             }
         }
+        writer.optimize();
         writer.close();
         versionFile().createNewFile();
-        StringWriter description = new StringWriter(1000);
-        //noinspection StringConcatenationInsideStringBufferAppend
-        description.append(
-"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-"<IndexDescriptor indexPath=\"" + INDEXLOCATION + "\">\n" +
-"<singleFields>\n" +
-"<field hasSuggest=\"false\" isInFreetext=\"true\" isRepeated=\"false\" name=\"" + AUTHOR + "\">\n" +
-"<resolver/>\n" +
-"<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>\n" +
-"<type>text</type>\n" +
-"<boost>2.0</boost>\n" +
-"</field>\n");
-        for (String field:
-                new String[]{TITLE, GENRE, AUTHOR_NORMALISED, VARIABLE}) {
-            //noinspection StringConcatenationInsideStringBufferAppend
-            description.append(
-                    "<field hasSuggest=\"false\" isInFreetext=\"true\" isRepeated=\"false\" name=\"" + field + "\">\n" +
-                    "<resolver/>\n" +
-                    "<analyzer>dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer</analyzer>\n" +
-                    "<type>text</type>\n" +
-                    "<boost>1.0</boost>\n" +
-                    "</field>\n");
-        }
-        description.append(
-"</singleFields>\n" +
-"</IndexDescriptor>"
-        );
-        FileWriter descWriter =
-                new FileWriter(new File(INDEXLOCATION, "searchDesc.xml"));
-        descWriter.append(description.toString());
-        descWriter.close();
+
+        Files.saveString(Long.toString(System.currentTimeMillis()),
+                         TIMESTAMP_FILE);
+
+        Files.saveString(
+                Resolver.getUTF8Content("data/TestIndexDescriptor.xml"),
+                DESCRIPTOR);
 
         System.out.println("Finished creating test-index in "
                            + profiler.getSpendTime() + " (" + 
                            + profiler.getBps(true) + ". It can be found in"
                            + INDEXLOCATION);
+    }
+
+    public static Document createDocument() {
+        return createDocument("random" + random.nextInt());
+    }
+    public static Document createDocument(String id) {
+        return createDocument(comics[random.nextInt(comics.length)], id);
+    }
+
+    private static Random random = new Random();
+    private static Document createDocument(String[] comic, String id) {
+        Document doc = new Document();
+        doc.add(new Field(TITLE, comic[0],
+                          Field.Store.YES, Field.Index.TOKENIZED,
+                          Field.TermVector.WITH_POSITIONS_OFFSETS));
+        doc.add(new Field(ID, id,
+                          Field.Store.YES, Field.Index.UN_TOKENIZED,
+                          Field.TermVector.WITH_POSITIONS_OFFSETS));
+        doc.add(new Field(AUTHOR, comic[1],
+                          Field.Store.YES, Field.Index.TOKENIZED,
+                          Field.TermVector.WITH_POSITIONS_OFFSETS));
+        doc.add(new Field(STATIC, STATIC_CONTENT,
+                          Field.Store.YES, Field.Index.UN_TOKENIZED,
+                          Field.TermVector.YES));
+        doc.add(new Field(AUTHOR_NORMALISED, comic[1],
+                          Field.Store.YES, Field.Index.UN_TOKENIZED,
+                          Field.TermVector.YES));
+        doc.add(new Field(GENRE, comic[2],
+                          Field.Store.YES, Field.Index.TOKENIZED,
+                          Field.TermVector.WITH_POSITIONS_OFFSETS));
+        doc.add(new Field(STATUS, comic[3],
+                          Field.Store.YES, //or NO?
+                          Field.Index.TOKENIZED,
+                          Field.TermVector.NO));
+        doc.add(new Field(VARIABLE, "Variable_" +
+                                    random.nextInt(REPLICATIONCOUNT/2),
+                          Field.Store.YES,
+                          Field.Index.TOKENIZED,
+                          Field.TermVector.NO));
+        doc.add(new Field(FREETEXT, comic[0] + " " + comic[1] + " "+
+                                    comic[2],
+                          Field.Store.YES, //or NO?
+                          Field.Index.TOKENIZED,
+                          Field.TermVector.WITH_POSITIONS_OFFSETS));
+        return doc;
     }
 
     public static int getDocumentCount() {
