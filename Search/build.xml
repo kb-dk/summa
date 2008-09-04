@@ -65,20 +65,20 @@
 
     <target name=".phony"><!-- Dummy target --></target>
 
-    <target name=".compileStorage">
-        <ant inheritAll="false" dir="../Storage" target="compile"/>
-    </target>
-
-    <target name=".releaseStorage">
-        <ant inheritAll="false" dir="../Storage" target="release"/>
-    </target>
-
     <target name=".compileCommon">
         <ant inheritAll="false" dir="../Common" target="compile"/>
     </target>
 
     <target name=".releaseCommon">
         <ant inheritAll="false" dir="../Common" target="release"/>
+    </target>
+
+    <target name=".compileStorage">
+        <ant inheritAll="false" dir="../Storage" target="compile"/>
+    </target>
+
+    <target name=".releaseStorage">
+        <ant inheritAll="false" dir="../Storage" target="release"/>
     </target>
 
     <target name="depends">
@@ -126,7 +126,7 @@
         </condition>
         <antcall target="${releaseCommonTask}"/>
 
-        <!-- Check that Metadata release is compiled -->
+        <!-- Check that Storage release is compiled -->
         <condition property="releaseStorageTask" value=".phony" else=".releaseStorage">
             <available file="../${summa.ilib.storage}"/>
         </condition>
