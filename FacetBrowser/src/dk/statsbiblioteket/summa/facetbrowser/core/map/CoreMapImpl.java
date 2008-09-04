@@ -61,14 +61,25 @@ public abstract class CoreMapImpl implements CoreMap {
      * @throws IOException if the data could not be stored.
      */
     protected void storeMeta() throws IOException {
-        log.trace("Storing meta data to '"
+        log.trace("Storing meta data for CoreMap to '"
                   + getPersistenceFile(META_FILE) + "'");
         XProperties xp = new XProperties();
         xp.put(META_VERSION, PERSISTENCE_VERSION);
         xp.put(META_DOCUMENTS, getDocCount());
         xp.put(META_FACETS, Strings.join(structure.getFacetNames(), ", "));
-        remove(getPersistenceFile(META_FILE), "meta-file");
-        xp.store(getPersistenceFile(META_FILE).toString());
+        File metaFile = getPersistenceFile(META_FILE);
+        if (!metaFile.getParentFile().exists()) {
+            //noinspection DuplicateStringLiteralInspection
+            log.debug("store: Folder '" + metaFile.getParentFile()
+                      + " does not exist. Attempting creation");
+            if (!metaFile.getParentFile().mkdirs()) {
+                throw new IOException(String.format(
+                        "Unable to create folder '%s' for CoreMap",
+                        metaFile.getParentFile()));
+            }
+        }
+        remove(metaFile, "meta-file");
+        xp.store(new FileOutputStream(metaFile), null);
     }
 
     /**
