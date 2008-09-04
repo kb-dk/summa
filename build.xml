@@ -59,6 +59,7 @@
         <ant dir="Support" inheritall="false"/>
         <ant dir="Control" inheritall="false"/>
         <ant dir="FacetBrowser" inheritall="false"/>
+        <ant dir="Web" inheritall="false"/>
         
         <!-- Legacy modules not build : -->
         <!-- <ant dir="Dice" inheritall="false"/> -->
@@ -101,6 +102,9 @@
             <packageset dir="${basedir}/FacetBrowser/src">
                 <include name="dk/statsbiblioteket/**/*"/>
             </packageset>
+            <packageset dir="${basedir}/Web/src">
+                <include name="dk/statsbiblioteket/**/*"/>
+            </packageset>
             <!-- Legacy modules not build : -->
             <!-- <packageset dir="${basedir}/ClusterExtractor/src">
                 <include name="dk/statsbiblioteket/**/*"/>
@@ -121,6 +125,7 @@
         <ant dir="Support" inheritall="false" target="clean"/>
         <ant dir="Control" inheritall="false" target="clean"/>
         <ant dir="FacetBrowser" inheritall="false" target="clean"/>
+        <ant dir="Web" inheritall="false" target="clean"/>
         <delete dir="${dist.dir}" />
 
         <!-- Legacy modules not built: -->
@@ -138,6 +143,7 @@
         <ant dir="Support" inheritall="false" target="distclean"/>
         <ant dir="Control" inheritall="false" target="distclean"/>
         <ant dir="FacetBrowser" inheritall="false" target="distclean"/>
+        <ant dir="Web" inheritall="false" target="distclean"/>
 
         <!-- Legacy modules not built: -->
         <!-- <ant dir="Dice" inheritall="false" target="distclean"/> -->
