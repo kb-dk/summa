@@ -32,6 +32,7 @@ import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMap;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
+import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
@@ -52,7 +53,7 @@ import java.util.List;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public abstract class BrowserImpl implements Browser {
+public abstract class BrowserImpl extends SearchNodeImpl implements Browser {
     private static Logger log = Logger.getLogger(BrowserImpl.class);
     public static final String BROWSERTHREADS_PROPERTY =
             "FacetBrowser.browserThreads";
@@ -83,6 +84,7 @@ public abstract class BrowserImpl implements Browser {
     public BrowserImpl(Configuration configuration, IndexSearcher searcher,
                        SummaQueryParser queryParser, TagHandler tagHandler,
                        Structure structure, CoreMap coreMap) {
+        super(configuration);
         this.configuration = configuration;
         this.searcher = searcher;
         this.queryParser = queryParser;
