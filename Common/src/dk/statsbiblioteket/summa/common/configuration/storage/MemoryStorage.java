@@ -119,7 +119,7 @@ public class MemoryStorage implements ConfigurationStorage {
     }
 
     public void purge(String key) {
-        map.clear();
+        map.remove(key);
     }
 
     public int size () {
