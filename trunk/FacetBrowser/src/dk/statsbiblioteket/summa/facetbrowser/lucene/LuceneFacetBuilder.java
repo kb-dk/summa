@@ -92,6 +92,13 @@ public class LuceneFacetBuilder extends BuilderImpl {
         termsToDocs = conf.getBoolean(CONF_BUILD_TERMS_TO_DOCS, termsToDocs);
     }
 
+    /**
+     * Open persistent data (or create new data is empty) at the given location.
+     * Note: All persistent Facet-data are stored in the sub-folder "facet" in
+     * the location folder.
+     * @param location     the root for the data.
+     * @throws IOException if existing data was malformed.
+     */
     public synchronized void open(File location) throws IOException {
         super.open(new File(location, FacetCore.FACET_FOLDER));
         setLuceneIndexPath(new File(location, LuceneIndexUtils.LUCENE_FOLDER));
@@ -282,7 +289,7 @@ public class LuceneFacetBuilder extends BuilderImpl {
         log.fatal("buildTermsToDocs not implemented yet");
     }
 
-    public void update(Payload payload) {
+    public boolean update(Payload payload) {
         Integer deleteID = payload.getData().getInt(
                 LuceneIndexUtils.META_DELETE_DOCID, null);
         Integer addID = payload.getData().getInt(
@@ -293,7 +300,7 @@ public class LuceneFacetBuilder extends BuilderImpl {
                     LuceneIndexUtils.META_ADD_DOCID,
                     LuceneIndexUtils.META_DELETE_DOCID,
                     payload));
-            return;
+            return false;
         }
         if (deleteID != null) {
             log.trace("Calling remove for " + deleteID);
@@ -303,7 +310,7 @@ public class LuceneFacetBuilder extends BuilderImpl {
             Object docObject = payload.getData(Payload.LUCENE_DOCUMENT);
             if (docObject == null) {
                 log.warn("No Document stored in " + payload);
-                return;
+                return false;
             }
             try {
                 addDocument(addID, (Document)docObject);
@@ -311,8 +318,10 @@ public class LuceneFacetBuilder extends BuilderImpl {
                 log.warn(String.format(
                         "Expected class %s, got %s",
                         Document.class, docObject.getClass()), e);
+                return false;
             }
         }
+        return true;
     }
 
     private void addDocument(Integer addID, Document document) {
