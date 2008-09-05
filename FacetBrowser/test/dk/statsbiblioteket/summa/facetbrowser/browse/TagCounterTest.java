@@ -130,7 +130,7 @@ public class TagCounterTest extends TestCase {
 
         System.out.println("Testing getFirst performance for POPULARITY");
         Profiler profiler = new Profiler();
-        Request popularityOrderRequest = new Request(
+        FacetRequest popularityOrderRequest = new FacetRequest(
                 null, 0, 0, Strings.join(bo.getFacetNames(), " (POPULARITY), "),
                 bo.getStructure());
         for (int i = 0 ; i < retries ; i++) {
@@ -145,7 +145,7 @@ public class TagCounterTest extends TestCase {
 
         System.out.println("Testing getFirst performance for ALPHA");
         profiler = new Profiler();
-        Request tagOrderRequest = new Request(
+        FacetRequest tagOrderRequest = new FacetRequest(
                 null, 0, 0, Strings.join(bo.getFacetNames(), " (ALPHA), "),
                 bo.getStructure());
         for (int i = 0 ; i < retries * 100; i++) {

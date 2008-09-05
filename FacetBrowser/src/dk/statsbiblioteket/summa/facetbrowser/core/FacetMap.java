@@ -34,6 +34,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -222,5 +223,16 @@ public class FacetMap {
      */
     public int getDocCount() {
         return coreMap.getDocCount();
+    }
+
+    public void close() {
+        // TODO: Consider adding close to CoreMap
+        coreMap.clear();
+        tagHandler.close();
+    }
+
+    public void open(File location) throws IOException {
+        tagHandler.open(location);
+        coreMap.open(location, false);
     }
 }

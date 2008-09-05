@@ -100,7 +100,6 @@ public class FacetManipulator implements IndexManipulator {
         CoreMap coreMap = CoreMapFactory.getCoreMap(conf, structure);
         builder =
                 BuilderFactory.getBuilder(conf, structure, coreMap, tagHandler);
-
     }
 
     public void clear() throws IOException {

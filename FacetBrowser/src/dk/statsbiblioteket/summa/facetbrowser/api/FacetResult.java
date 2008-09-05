@@ -24,7 +24,7 @@
  * The State and University Library of Denmark
  * CVS:  $Id: FacetResult.java,v 1.5 2007/10/05 10:20:22 te Exp $
  */
-package dk.statsbiblioteket.summa.facetbrowser.browse;
+package dk.statsbiblioteket.summa.facetbrowser.api;
 
 import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.util.qa.QAInfo;
