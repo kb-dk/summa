@@ -73,6 +73,10 @@ public class StorageTool {
         }
 
         for (int i = 1; i < argv.length; i++) {
+            if (i > 1) {
+                System.out.println ("===================");
+            }
+            
             System.err.println("Getting '" + argv[i] + "'");
             Record rec = storage.getRecord (argv[i]);
 
@@ -82,7 +86,6 @@ public class StorageTool {
             }
 
             printRecord(rec, true);
-            System.out.println ("===================");
         }
     }
 
