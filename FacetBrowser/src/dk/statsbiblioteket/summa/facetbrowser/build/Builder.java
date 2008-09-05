@@ -43,8 +43,9 @@ public interface Builder extends FacetCore {
      * {@link LuceneIndexUtils#META_DELETE_DOCID} or both, depending on whether
      * it is an addition, a deletion or an update.
      * @param payload used as basis for the update.
+     * @return if the underlying structure was updated as expected.
      */
-    public void update(Payload payload);
+    public boolean update(Payload payload);
 
     /**
      * Discard any previous mapping and optionally tags and perform a complete

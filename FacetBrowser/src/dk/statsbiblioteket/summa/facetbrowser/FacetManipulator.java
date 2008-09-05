@@ -27,13 +27,14 @@ import java.io.File;
 import java.rmi.RemoteException;
 
 import dk.statsbiblioteket.summa.index.IndexManipulator;
-import dk.statsbiblioteket.summa.index.lucene.LuceneManipulator;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMap;
+import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMapFactory;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandlerFactory;
-import dk.statsbiblioteket.summa.facetbrowser.core.FacetCore;
+import dk.statsbiblioteket.summa.facetbrowser.build.Builder;
+import dk.statsbiblioteket.summa.facetbrowser.build.BuilderFactory;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
 
@@ -51,7 +52,7 @@ import org.apache.log4j.Logger;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public abstract class FacetManipulator implements IndexManipulator {
+public class FacetManipulator implements IndexManipulator {
     private static Logger log = Logger.getLogger(FacetManipulator.class);
 
     /**
@@ -76,16 +77,15 @@ public abstract class FacetManipulator implements IndexManipulator {
             "summa.facet.clear-tags-on-consolidate";
     public static final boolean DEFAULT_CLEAR_TAGS_ON_CONSOLIDATE = false;
 
-    protected boolean clearTagsOnClear =
-            DEFAULT_CLEAR_TAGS_ON_CLEAR;
+    protected boolean clearTagsOnClear = DEFAULT_CLEAR_TAGS_ON_CLEAR;
     protected boolean clearTagsOnConsolidate =
             DEFAULT_CLEAR_TAGS_ON_CONSOLIDATE;
 
-    protected TagHandler tagHandler;
-    protected CoreMap core;
-    protected Structure structure;
-
-    private File indexRoot = null;
+    /**
+     * The builder is responsible for all manipulations of the structure for
+     * facet/tags. The FacetManipulator is just a wrapper.
+     */
+    protected Builder builder;
 
     public FacetManipulator(Configuration conf) throws RemoteException {
         log.info("Constructing FacetManipulator");
@@ -94,94 +94,47 @@ public abstract class FacetManipulator implements IndexManipulator {
         clearTagsOnConsolidate =
                 conf.getBoolean(CONF_CLEAR_TAGS_ON_CONSOLIDATE,
                                 DEFAULT_CLEAR_TAGS_ON_CONSOLIDATE);
-        structure = new Structure(conf);
-        try {
-            tagHandler = TagHandlerFactory.getTagHandler(conf);
-        } catch (IOException e) {
-            throw new RemoteException("Unable to create TagHandler", e);
-        }
+        Structure structure = new Structure(conf);
+        TagHandler tagHandler =
+                TagHandlerFactory.getTagHandler(conf, structure, false);
+        CoreMap coreMap = CoreMapFactory.getCoreMap(conf, structure);
+        builder =
+                BuilderFactory.getBuilder(conf, structure, coreMap, tagHandler);
+
     }
 
     public void clear() throws IOException {
-        tagHandler.clearTags();
-        core.clear();
+        builder.clear(!clearTagsOnClear);
     }
 
     public void close() throws IOException {
-        tagHandler.close();
-        core.clear(); // TODO: Consider adding a close to CoreMap
-        //noinspection AssignmentToNull
-        indexRoot = null;
+        builder.close();
     }
 
     public void commit() throws IOException {
-        log.trace("Committing Tags to '" + getLocation() + "'");
-        tagHandler.store();
-        log.trace("Committing CoreMap to '" + getLocation() + "'");
-        core.store();
-        log.trace("Commit finished");
+        builder.store();
     }
 
+    public void consolidate() throws IOException {
+        builder.build(!clearTagsOnConsolidate);
+    }
+
+    // TODO: Auto-rebuild on missing facets
     public void open(File indexRoot) throws IOException {
         //noinspection DuplicateStringLiteralInspection
         log.debug("open(" + indexRoot + ") called");
-        this.indexRoot = indexRoot;
         if (indexRoot == null) {
             log.debug("open(null) called, which is equivalent to close()");
             close();
             return;
         }
-
-        // TODO: Trigger rebuild on failed open
-        tagHandler.open(getLocation());
-        core.open(getLocation(), false);
+        builder.open(indexRoot);
         //noinspection DuplicateStringLiteralInspection
         log.trace("open(" + indexRoot + ") finished");
     }
 
     public boolean update(Payload payload) throws IOException {
-        boolean handled = false;
-        Integer deletePos = payload.getData().getInt(
-                LuceneManipulator.MARK_DELETE_ID, null);
-        if (deletePos != null) {
-            if (log.isDebugEnabled()) {
-                log.debug(payload + " marked as deleted at position "
-                          + deletePos);
-            }
-            core.remove(deletePos);
-            handled = true;
-        }
-        Integer addPos = payload.getData().getInt(
-                LuceneManipulator.MARK_ADD_ID, null);
-        if (addPos != null) {
-            if (log.isDebugEnabled()) {
-                log.debug(payload + " marked as added at position "
-                          + deletePos);
-            }
-            add(payload, addPos);
-            handled = true;
-        }
-        if (!handled) {
-            log.warn(payload + " did not have delete nor add marker. Facet "
-                     + "structure is not updated - this will probably lead to "
-                     + "inconsistency");
-            // TODO: Consider marking everything as dirty and cleanup at commit
-        }
-        return handled;
+        return builder.update(payload);
     }
 
-    /**
-     * Add the content of the Payload.
-     * @param payload the data to add.
-     * @param docID   the document ID for the data.
-     */
-    protected abstract void add(Payload payload, int docID);
-
-    private File getLocation() {
-        if (indexRoot == null) {
-            throw new IllegalStateException("indexRoot not specified. "
-                                            + "open(File) must be called");
-        }
-        return new File(indexRoot, FacetCore.FACET_FOLDER);
-    }
 }

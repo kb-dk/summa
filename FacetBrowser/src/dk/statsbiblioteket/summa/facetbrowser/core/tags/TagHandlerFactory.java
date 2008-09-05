@@ -56,11 +56,15 @@ public class TagHandlerFactory {
     /**
      * Construct a TagHandler. Note that the TagHandler does not open any
      * persistent state from storage as part of construction.
-     * @param conf setup for the TagHandler.
+     * @param conf      setup for the TagHandler.
+     * @param structure definition of Facets et al.
+     * @param readOnly  if true, the TagHandler is opened as read only.
      * @return a TagHandler ready for use.
      * @throws RemoteException if the TagHandler could not be created.
      */
-    public static TagHandler getTagHandler(Configuration conf)
+    public static TagHandler getTagHandler(Configuration conf,
+                                           Structure structure,
+                                           Boolean readOnly)
                                                         throws RemoteException {
         Class<? extends TagHandler> tagHandlerClass =
                 Configuration.getClass(CONF_TAG_HANDLER, TagHandler.class,
@@ -79,7 +83,7 @@ public class TagHandlerFactory {
         }
         Exception ex;
         try {
-            return con.newInstance(conf);
+            return con.newInstance(conf, structure, readOnly);
         } catch (InstantiationException e) {
             ex = e;
         } catch (IllegalAccessException e) {

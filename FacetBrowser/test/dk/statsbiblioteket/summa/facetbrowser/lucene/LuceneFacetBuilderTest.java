@@ -70,7 +70,6 @@ public class LuceneFacetBuilderTest extends TestCase {
         }
     }
 
-
     public void testBasicConstructionAndOpen() throws Exception {
         getBuilder();
     }

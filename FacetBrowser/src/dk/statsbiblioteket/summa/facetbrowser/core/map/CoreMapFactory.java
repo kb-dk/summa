@@ -72,7 +72,7 @@ public class CoreMapFactory {
         }
         Exception ex;
         try {
-            return con.newInstance(conf);
+            return con.newInstance(conf, structure);
         } catch (InstantiationException e) {
             ex = e;
         } catch (IllegalAccessException e) {
