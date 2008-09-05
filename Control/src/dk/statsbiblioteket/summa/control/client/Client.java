@@ -235,7 +235,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
      */
     private static int getServicePort (Configuration conf) {
         try {
-            return conf.getInt(CLIENT_PORT_PROPERTY);
+            return conf.getInt(CLIENT_PORT_PROPERTY, DEFAULT_CLIENT_PORT);
         } catch (Exception e) {
             log.fatal("Unable to read " + CLIENT_PORT_PROPERTY
                       + "from configuration", e);
