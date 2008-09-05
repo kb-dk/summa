@@ -27,19 +27,27 @@
 package dk.statsbiblioteket.summa.facetbrowser.browse;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.lucene.search.SlimCollector;
-import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
+import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult;
 import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMap;
+import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMapFactory;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
+import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandlerFactory;
+import dk.statsbiblioteket.summa.facetbrowser.core.FacetMap;
+import dk.statsbiblioteket.summa.facetbrowser.core.FacetCore;
 import dk.statsbiblioteket.summa.search.SearchNodeImpl;
+import dk.statsbiblioteket.summa.search.api.*;
+import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
-import org.apache.lucene.search.IndexSearcher;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.rmi.RemoteException;
+import java.io.File;
+import java.io.IOException;
 
 /**
  * The default browser implementation is synchronized and thus does only
@@ -53,112 +61,84 @@ import java.util.List;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public abstract class BrowserImpl extends SearchNodeImpl implements Browser {
+public class BrowserImpl extends SearchNodeImpl implements Browser {
     private static Logger log = Logger.getLogger(BrowserImpl.class);
-    public static final String BROWSERTHREADS_PROPERTY =
-            "FacetBrowser.browserThreads";
-    public static final String BROWSERTHREADS_TIMEOUT_PROPERTY =
-            "FacetBrowser.browserThreadTimeout";
 
-    private static final int SINGLE_THREAD_THRESHOLD = 1000;
-    private static final int DEFAULT_THREAD_TIMEOUT = 10000; // 10 seconds
+    /**
+     * Each concurrent search costs total number of tags * 4 bytes of memory.
+     */
+    public static final int DEFAULT_NUMBER_OF_CONCURRENT_SEARCHES = 1;
 
-    private IndexSearcher searcher;
-    private TagHandler tagHandler;
     private Structure structure;
-    private CoreMap coreMap;
-    private Configuration configuration;
-    private SummaQueryParser queryParser;
+    private FacetMap facetMap;
 
-    private Profiler profiler = new Profiler();
+    private BlockingQueue<BrowserThread> browsers;
 
-    private int timeout = DEFAULT_THREAD_TIMEOUT;
-
-    private ArrayList<BrowserThread> browsers;
-    private SlimCollector slimCollector = new SlimCollector();
-
-    private static final int DEFAULT_BROWSERTHREADS = 2;
-
-    // TODO: Should this use a SummaSearcher?
-    @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    public BrowserImpl(Configuration configuration, IndexSearcher searcher,
-                       SummaQueryParser queryParser, TagHandler tagHandler,
-                       Structure structure, CoreMap coreMap) {
-        super(configuration);
-        this.configuration = configuration;
-        this.searcher = searcher;
-        this.queryParser = queryParser;
-        this.tagHandler = tagHandler;
-        this.structure = structure;
-        this.coreMap = coreMap;
-        int browserThreads = DEFAULT_BROWSERTHREADS;
-        try {
-            browserThreads = configuration.getInt(BROWSERTHREADS_PROPERTY);
-        } catch (Exception e) {
-            log.warn("Could not get " + BROWSERTHREADS_PROPERTY
-                     + " from the configuration. Defaulting to "
-                     + DEFAULT_BROWSERTHREADS);
+    public BrowserImpl(Configuration conf) throws RemoteException {
+        super(conf);
+        log.info("Constructing BrowserImpl");
+        structure = new Structure(conf);
+        TagHandler tagHandler =
+                TagHandlerFactory.getTagHandler(conf, structure, false);
+        CoreMap coreMap = CoreMapFactory.getCoreMap(conf, structure);
+        facetMap = new FacetMap(structure, coreMap, tagHandler, true);
+        browsers = new ArrayBlockingQueue<BrowserThread>(
+                getMaxConcurrentSearches(), true);
+        for (int i = 0 ; i < getMaxConcurrentSearches() ; i++) {
+            try {
+                browsers.put(new BrowserThread(tagHandler, coreMap));
+            } catch (InterruptedException e) {
+                throw new RemoteException("Interrupted while trying to add"
+                                          + " BrowserThread to queue");
+            }
         }
-        try {
-            timeout = configuration.getInt(BROWSERTHREADS_TIMEOUT_PROPERTY);
-        } catch (Exception e) {
-            log.warn("Could not get " + BROWSERTHREADS_TIMEOUT_PROPERTY
-                     + " from the configuration. Defaulting to "
-                     + DEFAULT_THREAD_TIMEOUT);
-        }
-
-        browsers = new ArrayList<BrowserThread>(browserThreads);
-        for (int i = 0 ; i < browserThreads ; i++) {
-            browsers.add(new BrowserThread(tagHandler, coreMap));
-        }
+        log.trace("BrowserImpl constructed. Awaiting open");
     }
 
-/*    public String getFacetXML(String query, String filterQuery,
-                              String queryLang,
-                              FacetResult.TagSortOrder sortOrder) {
-        return getFacetMap(filterQuery, query, sortOrder).toXML();
+    public void open(File directory) throws IOException {
+        super.open(directory.toString());
     }
-  */
-  /*  public synchronized FacetResult getFacetMap(String filter,
-                                                   String query,
-                                                   String
-                                                           sort, String facets) {
-        profiler.reset();
-        slimCollector.clean();
-        Query query;
+
+    protected void managedWarmup(String request) {
+        log.trace("managedWarmup(" + request + ") called. No effect for "
+                  + "BrowserImpl as it relies on previously chained "
+                  + "DocumentSearcher");
+    }
+
+    protected void managedClose() throws RemoteException {
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("close() called");
+        facetMap.close();
+    }
+
+    protected void managedOpen(String location) throws RemoteException {
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("managedOpen(" + location + ") called");
         try {
-            // TODO: Use queryLang here
-            query = queryParser.parse(query);
-        } catch (ParseException e) {
-            log.warn("Query ParseException with query \"" + query
-                     + "\": " + e.getMessage(), e);
-            return null;
-        }
-        Filter filter = null;
-        try {
-            // TODO: Use queryLang here, cache filters?
-            if (filter != null && !"".equals(filter)) {
-                filter = new QueryFilter(queryParser.parse(query));
-            }
-        } catch (ParseException e) {
-            log.warn("Query ParseException with filter \"" + filter
-                     + "\": " + e.getMessage(), e);
-            return null;
-        }
-        try {
-            // TODO: Speed up collection by bypassing score calculation
-            if (filter == null) {
-                searcher.search(query, slimCollector);
-            } else {
-                searcher.search(query, filter, slimCollector);
-            }
+            Profiler profiler = new Profiler();
+            facetMap.open(new File(location, FacetCore.FACET_FOLDER));
+            log.debug(String.format(
+                    "managedOpen(%s) finished in %s",
+                    location, profiler.getSpendTime()));
         } catch (IOException e) {
-            log.error("IOException perforimg search: " + e.getMessage(), e);
-            return null;
+            throw new RemoteException(String.format(
+                    "Unable to open facetMap at location '%s'", location));
         }
-        return getFacetMap(query, sort, slimCollector);
     }
 
+    protected void managedSearch(Request request, ResponseCollection responses)
+                                                        throws RemoteException {
+        //FacetRequest facetRequest = new FacetRequest()
+    }
+
+    public List<String> getFacetNames() {
+        return structure.getFacetNames();
+    }
+
+    public FacetResult getFacetMap(int[] docIDs, int startPos, int length,
+                              String facets) {
+        return null;
+        /*
     protected synchronized FacetResult getFacetMap(String query,
                                        FacetResult.TagSortOrder sortOrder,
                                        SlimCollector slimCollector) {
@@ -202,15 +182,7 @@ public abstract class BrowserImpl extends SearchNodeImpl implements Browser {
                   + " (" + slimCollector.getDocumentCount() + " documents) "
                   + " in " + profiler.getSpendTime());
         return structure;
-    }
-    */
 
-    public List<String> getFacetNames() {
-        return null;
-    }
-
-    public FacetResult getFacetMap(int[] docIDs, int startPos, int length,
-                              String facets) {
-        return null;
+         */
     }
 }

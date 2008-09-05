@@ -23,6 +23,7 @@
 package dk.statsbiblioteket.summa.facetbrowser.browse;
 
 import dk.statsbiblioteket.summa.facetbrowser.core.FacetCore;
+import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.util.List;
@@ -53,7 +54,7 @@ public interface Browser extends FacetCore {
      * @param startPos  the start-position within the docIDs.
      * @param length    the number of docIDs to use.
      * @param facets    a comma-separated list with the names and optionally
-     *                  max tag count of the wanted Facets. See {@link Request}
+     *                  max tag count of the wanted Facets. See {@link FacetRequest}
      *                  for details. If null is specified, the default Facets
      *                  are returned.
      * @return a machine-oriented representation of the facet browser structure
