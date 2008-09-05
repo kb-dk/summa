@@ -64,10 +64,15 @@ public interface ClientConnection extends Monitorable {
     /** <p>Property defining the port on which the client's rmi service
      * should run</p>
      *
-     * <p>Default is 27002</p>
+     * <p>The default value is defined in {@link #DEFAULT_CLIENT_PORT}</p>
      */
     public static final String CLIENT_PORT_PROPERTY =
                                             "summa.control.client.service.port";
+
+    /**
+     * The default value for the {@link #CLIENT_PORT_PROPERTY} 
+     */
+    public static final int DEFAULT_CLIENT_PORT = 27002;
 
     /** <p>Property defining the port on which the client should contact or create
      * an rmi registry, see {@link #REGISTRY_HOST_PROPERTY}</p>
