@@ -1,8 +1,13 @@
 package dk.statsbiblioteket.summa.search.api.document;
 
+import dk.statsbiblioteket.util.qa.QAInfo;
+
 /**
  * Interface defining the search keys used by Summa's {@code DocumentSearcher}.
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.IN_DEVELOPMENT,
+        author = "mke")
 public interface DocumentKeys {
     public static final String SEARCH_FILTER = "search.document.filter";
 
