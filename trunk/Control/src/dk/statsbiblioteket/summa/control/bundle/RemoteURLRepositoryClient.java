@@ -20,17 +20,6 @@ public class RemoteURLRepositoryClient implements BundleRepository {
 
     private static final Log log = LogFactory.getLog (RemoteURLRepositoryClient.class);
 
-    /**
-     * The value of this property will be passed in as
-     * {@link URLRepository#REPO_ADDRESS_PROPERTY} to the underlying
-     * {@link URLRepository}.
-     */
-    public static final String PROP_REMOTE_URL =
-                                      "summa.control.repository.remote.address";
-
-    public static final String DEFAULT_REMOTE_URL =
-                                        URLRepository.DEFAULT_REPO_URL;
-
     public static final String DEFAULT_REPO_ADDRESS =
                                 "//localhost:"
                               + RemoteURLRepositoryServer.DEFAULT_REGISTRY_PORT
@@ -44,10 +33,16 @@ public class RemoteURLRepositoryClient implements BundleRepository {
     private ConnectionManager<BundleRepository> connMgr;
     private ConnectionContext<BundleRepository> connCtx;
 
+    /**
+     * Create new repository client. The {@code conf} argument should set
+     * the {@link URLRepository#BASE_URL_PROPERTY} as this class utilizes
+     * a {@link URLRepository} underneath to do bundle downloads.
+     * @param conf
+     */
     public RemoteURLRepositoryClient (Configuration conf) {
-        downloadDir = conf.getString(BundleRepository.DOWNLOAD_DIR_PROPERTY,
+        downloadDir = conf.getString(DOWNLOAD_DIR_PROPERTY,
                                      DEFAULT_DOWNLOAD_DIR);
-        repoAddress = conf.getString(BundleRepository.REPO_ADDRESS_PROPERTY,
+        repoAddress = conf.getString(REPO_ADDRESS_PROPERTY,
                                      DEFAULT_REPO_ADDRESS);
 
         /* Sanity check properties */
@@ -62,18 +57,12 @@ public class RemoteURLRepositoryClient implements BundleRepository {
                new SummaRMIConnectionFactory<RemoteRepository> (conf));
 
         /* Prepare a configuration for the underlying URLRepo */
-        Configuration localConf = Configuration.newMemoryBased(
-                   RemoteURLRepositoryServer.DOWNLOAD_DIR_PROPERTY, downloadDir);
-
-        /* If there is no explicit remote URL supplied use the URLRepo's default
-         * Ie. don't specify it */
-        if (conf.valueExists(PROP_REMOTE_URL)) {
-                localConf.set (REPO_ADDRESS_PROPERTY,
-                               conf.getString(PROP_REMOTE_URL));
-        }        
+        Configuration localConf = Configuration.newMemoryBased();
+        localConf.importConfiguration(conf);
+        localConf.purge(REPO_ADDRESS_PROPERTY);        
 
         /* Create the URLRepo with the custom config */
-        localRepo = new URLRepository(localConf);
+        localRepo = new URLRepository(conf);
     }
 
     public File get(String bundleId) throws IOException {

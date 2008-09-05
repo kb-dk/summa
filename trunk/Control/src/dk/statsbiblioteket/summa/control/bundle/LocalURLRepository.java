@@ -23,18 +23,19 @@ public class LocalURLRepository extends URLRepository
      * Configuration property defining the directory in which to install
      * bundles. Given as a {@code file://} url.
      * <p></p>
-     * Defaults to {@link #BUNDLE_DIR_PROPERTY}{@code /api}.
+     * Defaults to {@link #LOCAL_URL_PROPERTY}{@code /api}.
      */
-    public static final String API_DIR_PROPERTY =
+    public static final String API_LOCAL_URL_PROPERTY =
                                          "summa.control.repository.api.localurl";
 
     /**
      * Configuration property defining the directory in which to install
-     * bundles. Given as a {@code file://} url.
+     * bundles. Given as a {@code file://} url. This must point to a location
+     * writable by the user running the repository.
      * <p></p>
-     * Defaults to {@link #DEFAULT_REPO_URL}
+     * Defaults to {@link #baseUrl} if this property unset.
      */
-    public static final String BUNDLE_DIR_PROPERTY =
+    public static final String LOCAL_URL_PROPERTY =
                                          "summa.control.repository.localurl";
 
     private static final Log log = LogFactory.getLog(LocalURLRepository.class);
@@ -46,22 +47,22 @@ public class LocalURLRepository extends URLRepository
      * <p>Create a new URLRepository. If the {@link #DOWNLOAD_DIR_PROPERTY} is
      * not set {@code tmp/} relative to the working directory will be used.</p>
      * <p/>
-     * <p>If {@link #REPO_ADDRESS_PROPERTY} is not set in the configuration
-     * <code>file://${user.home}/summa-control/repo</code> is used.</p>
+     * <p>If {@link #LOCAL_URL_PROPERTY} is not set in the configuration
+     * the value {@link URLRepository#baseUrl} will be used.
      *
      * @param conf
      */
     public LocalURLRepository(Configuration conf) {
         super(conf);
 
-        String bundlePath = conf.getString(BUNDLE_DIR_PROPERTY,
-                                           DEFAULT_REPO_URL);
+        String bundlePath = conf.getString(LOCAL_URL_PROPERTY,
+                                           baseUrl);
 
         if (!bundlePath.endsWith("/")) {
             bundlePath = bundlePath + "/";
         }
 
-        String apiPath = conf.getString(API_DIR_PROPERTY,
+        String apiPath = conf.getString(API_LOCAL_URL_PROPERTY,
                                         bundlePath + "api");
 
         if (!apiPath.endsWith("/")) {
@@ -75,8 +76,8 @@ public class LocalURLRepository extends URLRepository
         bundleDir = new File (bundlePath);
         apiDir = new File (apiPath);
 
-        log.trace ("Bundle dir: " + bundleDir);
-        log.trace ("API dir: " + apiDir);
+        log.trace ("Install bundles in: " + bundleDir);
+        log.trace ("Install API in    : " + apiDir);
 
     }
 
