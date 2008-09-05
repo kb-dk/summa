@@ -55,6 +55,9 @@ public class RemoteURLRepositoryServer extends UnicastRemoteObject
     /**
      * Create a new {@code RemoteURLRepository}. The passed in configuration
      * will be passed unmodified to an underlying {@link LocalURLRepository}.
+     * <p></p>
+     * The {@link #REPO_ADDRESS_PROPERTY} will be passed down to an embedded
+     * {@link
      *
      * @param conf configuration from which to read properties. This
      *             configuration will also be passed directly to the underlying

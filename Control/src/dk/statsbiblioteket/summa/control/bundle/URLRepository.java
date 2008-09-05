@@ -48,8 +48,28 @@ public class URLRepository implements BundleRepository {
 
     private String tmpDir;
     private Log log = LogFactory.getLog(this.getClass());
+
+    /**
+     * Set from the {@link #BASE_URL_PROPERTY} property
+     */
     protected String baseUrl;
+
+    /**
+     * Set from the {@link #API_BASE_URL_PROPERTY}
+     */
     protected String apiBaseUrl;
+
+    /**
+     * Configuration property defining the base URL from bundles are
+     * downloaded. Consumers will download the bundle files from
+     * {@code <baseUrl>/<bundleId>.bundle}.
+     * <p></p>
+     * If this property is unset the value {@link #REPO_ADDRESS_PROPERTY} of
+     * will be used. If this property again is unset, the fallback value will be
+     * {@link #DEFAULT_REPO_URL}
+     */
+    public static final String BASE_URL_PROPERTY =
+                                         "summa.control.repository.baseurl";
 
     /**
      * Configuration property defining the base URL from which jar files are
@@ -57,12 +77,16 @@ public class URLRepository implements BundleRepository {
      * {@code <baseUrl>/<jarFileName>}. This controls the behavior of
      * {@link #expandApiUrl}.
      * <p></p>
-     * If this property is unset {@link #REPO_ADDRESS_PROPERTY}{@code /api}
-     * will be used.
+     * If this property is unset {@link #baseUrl}{@code /api}
+     * will be used as fallback.
      */
     public static final String API_BASE_URL_PROPERTY =
                                          "summa.control.repository.api.baseurl";
 
+    /**
+     * Fallback value for the {@link #BASE_URL_PROPERTY} used if the
+     * initial fallback property {@link #REPO_ADDRESS_PROPERTY} is also unset.
+     */
     public static final String DEFAULT_REPO_URL = "file://"
                                                   + System.getProperty("user.home")
                                                   + "/summa-control"
@@ -79,8 +103,10 @@ public class URLRepository implements BundleRepository {
     public URLRepository (Configuration conf) {
         this.tmpDir = conf.getString(DOWNLOAD_DIR_PROPERTY, "tmp");
 
-        this.baseUrl = conf.getString (BundleRepository.REPO_ADDRESS_PROPERTY,
-                                       DEFAULT_REPO_URL);
+        String repoAddress = conf.getString (BundleRepository.REPO_ADDRESS_PROPERTY,
+                                             DEFAULT_REPO_URL);
+        this.baseUrl = conf.getString (BASE_URL_PROPERTY,
+                                       repoAddress);
 
         /* make sure baseUrl ends with a slash */
         if (!baseUrl.endsWith("/")) {
