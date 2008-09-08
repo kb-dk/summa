@@ -128,7 +128,8 @@ public class BrowserImpl extends SearchNodeImpl implements Browser {
 
     protected void managedSearch(Request request, ResponseCollection responses)
                                                         throws RemoteException {
-        //FacetRequest facetRequest = new FacetRequest()
+        // TODO: Add here
+//        FacetRequest facetRequest = new FacetRequest(request.)
     }
 
     public List<String> getFacetNames() {
