@@ -24,9 +24,6 @@ package dk.statsbiblioteket.summa.releasetest;
 
 import java.io.File;
 import java.io.IOException;
-import java.rmi.RMISecurityManager;
-import java.rmi.RemoteException;
-import java.security.Permission;
 import java.net.URL;
 
 import org.apache.commons.logging.Log;
@@ -36,7 +33,6 @@ import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.index.IndexException;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;

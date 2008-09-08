@@ -27,7 +27,6 @@ import java.util.List;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
-import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorageTestCase;
@@ -38,6 +37,7 @@ import dk.statsbiblioteket.util.XProperties;
 /**
  * XStorage Tester.
  */
+@SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
@@ -68,6 +68,7 @@ public class XStorageTest extends ConfigurationStorageTestCase {
         // pass
     }
 
+    @SuppressWarnings({"RedundantCast"})
     public void testGetSubStorage() throws Exception {
         XStorage xs = new XStorage(subLocation);
         assertEquals("The storage should contain the number 7",
