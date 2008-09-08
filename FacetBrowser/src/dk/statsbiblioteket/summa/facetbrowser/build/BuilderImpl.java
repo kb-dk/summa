@@ -27,7 +27,6 @@
 package dk.statsbiblioteket.summa.facetbrowser.build;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.facetbrowser.FacetControlImpl;
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.core.FacetMap;
 import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMap;
