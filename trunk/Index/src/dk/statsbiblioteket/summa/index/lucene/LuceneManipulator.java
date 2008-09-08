@@ -67,6 +67,7 @@ import org.apache.lucene.document.Document;
 // TODO: Add maximum number of segments property for consolidate
 // TODO: Add memory based flushing policy
 // TODO: Mark handled records with Lucene-DocID from LuceneIndexUtil
+// TODO: Make this handle deletes properly (no shifting)
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
@@ -82,24 +83,6 @@ public class LuceneManipulator implements IndexManipulator {
     public static final String CONF_BUFFER_SIZE_PAYLOADS =
             "summa.index.lucene.BUFFER_SIZE_PAYLOADS";
     public static final int DEFAULT_BUFFER_SIZE_PAYLOADS = -1;
-
-    /**
-     * If the document is added, the meta data for the Record will be marked
-     * with an add_id, specifying the internal docID from Lucene for the newly
-     * added document. This is useful for IndexManipulators that needs to be
-     * correlated with the Lucene index, such as the Facet system.
-     */
-    public static final String MARK_ADD_ID = "summa.index.document.add-id";
-    /**
-     * If the document is deleted, the meta data for the Record will be marked
-     * with a delete_id, specifying the internal docID from Lucene for the newly
-     * deleted document. This is useful for IndexManipulators that needs to be
-     * correlated with the Lucene index, such as the Facet system.
-     * </p><p>
-     * Note: Updates count as a deletion followed by an add.
-     */
-    public static final String MARK_DELETE_ID =
-            "summa.index.document.delete-id";
 
     /** The index descriptor, used for providing Analyzers et al. */
     private LuceneIndexDescriptor descriptor;
@@ -330,7 +313,8 @@ public class LuceneManipulator implements IndexManipulator {
             // TODO: Add support for Tokenizer and Filters
             writer.addDocument(document, descriptor.getIndexAnalyzer());
             // TODO: Verify that docCount is trustable with regard to deletes
-            payload.getData().put(MARK_ADD_ID, writer.docCount()-1);
+            payload.getData().put(LuceneIndexUtils.META_ADD_DOCID,
+                                  writer.docCount()-1);
             idMapper.put(id, writer.docCount()-1);
         } else {
             if (deletions.containsKey(id)) {
@@ -404,14 +388,15 @@ public class LuceneManipulator implements IndexManipulator {
 
     public synchronized void commit() throws IOException {
         //noinspection DuplicateStringLiteralInspection
-        log.trace("commit() called");
+        log.trace("commit() called for '" + indexRoot + "'");
         long startTime = System.currentTimeMillis();
         closeWriter();
         flushDeletions();
         flushAdditions();
-        log.debug("commit: Flushing index");
+        log.debug("commit: Flushing index at '" + indexRoot + "' with docCount "
+                  + (writer == null ? "NA" : writer.docCount()));
         closeWriter();
-        log.trace("Commit finished in "
+        log.trace("Commit finished for '" + indexRoot + "' in "
                   + (System.currentTimeMillis() - startTime) + " ms");
     }
 
