@@ -210,12 +210,36 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
 
     /* MBean implementations */
 
+    /**
+     * Reloads the index from the last known location. This method blocks until
+     * the reload has been performed.
+     * </p><p>
+     * Note: The reloadIndex() does not check for new indexes under the root.
+     * @throws RemoteException if the index could not be reloaded.
+     * @see {@link #checkIndex()}.
+     */
     public void reloadIndex() throws RemoteException {
         try {
             indexChanged(indexFolder);
         } catch (Exception e) {
             throw new RemoteException(
                     "Exception while forcing reload of index", e);
+        }
+    }
+
+    /**
+     * Forces a check for new or updated index. If a change is detected, the
+     * searcher connectes to the index.
+     * This method blocks until checking and potentially reloading has been
+     * performed.
+     * @throws RemoteException if the check or reload could not be performed.
+     */
+    public void checkIndex() throws RemoteException {
+        try {
+            watcher.updateAndReturnCurrentState();
+        } catch (Exception e) {
+            throw new RemoteException(
+                    "Exception while checking for new index", e);
         }
     }
 

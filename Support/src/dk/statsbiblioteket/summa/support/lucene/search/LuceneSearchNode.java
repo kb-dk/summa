@@ -139,7 +139,14 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                     "Could not create an IndexSearcher for '%s'",
                     urlLocation.getFile()), e);
         }
-        log.debug("Open finished for location '" + location + "'");
+        try {
+            log.debug("Open finished for location '" + location
+                      + "'. The searcher maxDoc is " + searcher.maxDoc());
+        } catch (IOException e) {
+            throw new RemoteException(String.format(
+                    "Unable to determine searcher.maxDoc for searcher opened at"
+                    + " location '%s'", location), e);
+        }
     }
 
     public void managedClose() {

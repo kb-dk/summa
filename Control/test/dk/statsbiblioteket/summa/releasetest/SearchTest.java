@@ -94,10 +94,10 @@ public class SearchTest extends NoExitTestCase {
         }
     }
 
-    private File root = new File(Resolver.getURL(
+    public static File root = new File(Resolver.getURL(
             "data/search/SearchTest_IngestConfiguration.xml").
             getFile()).getParentFile();
-    private String BASE = "fagref";
+    public static String BASE = "fagref";
 
     private static void checkSecurityManager() {
         if (System.getSecurityManager() == null) {
@@ -111,17 +111,16 @@ public class SearchTest extends NoExitTestCase {
         }
     }
 
-    public Storage startStorage() throws Exception {
+    public static Storage startStorage() throws Exception {
         Configuration storageConf = IngestTest.getStorageConfiguration();
         storageConf.set(DatabaseStorage.PROP_CREATENEW, true);
         storageConf.set(DatabaseStorage.PROP_FORCENEW, true);
-        Storage storage = StorageFactory.createStorage(storageConf);
-        return storage;
+        return StorageFactory.createStorage(storageConf);
     }
         
     /* ingest the data in the given folder to Storage, assuming that Storage
      * is running. */
-    private void ingest(File folder) throws Exception {
+    public static void ingest(File folder) throws Exception {
 
         Configuration conf = Configuration.load(
                 "data/search/SearchTest_IngestConfiguration.xml");
@@ -137,7 +136,7 @@ public class SearchTest extends NoExitTestCase {
     /* Connects to Storage, iterates all records and verifies that the given
        id exists.
      */
-    private void verifyStorage(Storage storage, String id) throws
+    public static void verifyStorage(Storage storage, String id) throws
                                                                      Exception {
         RecordIterator recordIterator =
                 storage.getRecordsModifiedAfter(0, BASE);
@@ -160,13 +159,11 @@ public class SearchTest extends NoExitTestCase {
         storage.close();
     }
 
-    File INDEX_ROOT = new File(System.getProperty("java.io.tmpdir"),
+    public static File INDEX_ROOT = new File(System.getProperty("java.io.tmpdir"),
                                "testindex");
 
     private SummaSearcher createSearchService() throws Exception {
-        SummaSearcher searcher = SummaSearcherFactory.createSearcher(
-                                                    getSearcherConfiguration());
-        return searcher;
+        return SummaSearcherFactory.createSearcher(getSearcherConfiguration());
     }
 
     private SummaSearcher createSearcher() throws Exception {
@@ -202,7 +199,7 @@ public class SearchTest extends NoExitTestCase {
         }
     }
 
-    private Request simpleRequest(String query) {
+    public static Request simpleRequest(String query) {
         Request request = new Request();
         request.put(DocumentKeys.SEARCH_QUERY, query);
         return request;
@@ -244,7 +241,7 @@ public class SearchTest extends NoExitTestCase {
         }
 
 
-    private void updateIndex() throws Exception {
+    public static void updateIndex() throws Exception {
         URL xsltLocation = Resolver.getURL(
                 "data/search/fagref_xslt/fagref_index.xsl");
         assertNotNull("The fagref xslt location should not be null",
@@ -278,7 +275,7 @@ public class SearchTest extends NoExitTestCase {
         indexService.stop();
     }
 
-    private void verifySearch(SummaSearcher searcher, String query,
+    public static void verifySearch(SummaSearcher searcher, String query,
                               int results) throws Exception {
         log.debug("Verifying existence of " + results
                   + " documents with query '" + query + "'");
@@ -287,9 +284,10 @@ public class SearchTest extends NoExitTestCase {
                      results, getHits(searcher, query));
     }
 
-    private Pattern hitPattern =
+    private static Pattern hitPattern =
             Pattern.compile(".*hitCount\\=\\\"([0-9]+)\\\".*", Pattern.DOTALL);
-    private int getHits(SummaSearcher searcher, String query) throws Exception {
+    public static int getHits(SummaSearcher searcher, String query) throws
+                                                                    Exception {
         String result = searcher.search(simpleRequest(query)).toXML();
         log.debug("Result from search: " + result);
         Matcher matcher = hitPattern.matcher(result);
@@ -310,6 +308,11 @@ public class SearchTest extends NoExitTestCase {
     }
 
 
+    public void testFullSearcher() throws Exception {
+        testFullSearcher(createSearcher());
+        log.debug("Calling close on Storage");
+    }
+
     // Set up searcher, check for null
      // Set up storage
      // Exec index w/ update on storage
@@ -320,9 +323,9 @@ public class SearchTest extends NoExitTestCase {
      // Delete record in storage
      // Exec index w/ update on storage, verify result in searcher
 
-    // TODO: The test fails sometimes, probably a race-condition. Fix it! 
-    public void testFull() throws Exception {
-        SummaSearcher searcher = createSearcher();
+    // TODO: The test fails sometimes, probably a race-condition. Fix it!
+    public static void testFullSearcher(SummaSearcher searcher) throws
+                                                                Exception {
         try {
             searcher.search(simpleRequest("hans"));
             fail("A RemoteException should be thrown after timeout as no index"
@@ -365,7 +368,6 @@ public class SearchTest extends NoExitTestCase {
         } catch (IndexException e) {
             fail("Failed search 2 for Gurli: " + e.getMessage());
         }
-        log.debug("Calling close on Storage");
         storage.close();
     }
 }

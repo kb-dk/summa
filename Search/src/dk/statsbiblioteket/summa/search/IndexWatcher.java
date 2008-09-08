@@ -164,7 +164,12 @@ public class IndexWatcher extends Observable<IndexListener> implements
         log.debug("Stopping watch for index changes");
     }
 
-    private File updateAndReturnCurrentState() {
+    /**
+     * Check for indexes and notify all listeners is a change is discovered.
+     * This method blocks until the job is done.
+     * @return the location of the current index after the check.
+     */
+    public synchronized File updateAndReturnCurrentState() {
 //        log.trace("updateAndReturnCurrentState called");
         File newChecked = getCurrentIndexLocation();
         if (checkHasBeenPerformed && equals(lastCheckedLocation, newChecked)) {
