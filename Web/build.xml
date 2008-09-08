@@ -226,6 +226,9 @@
             <lib dir="${lib.dir}">
                 <include name="${lib.files}"/>
             </lib>
+            <webinf dir="${basedir}/config/search">
+                <include name="server-config.wsdd"/>
+            </webinf>
             <classes dir="${basedir}/config/search">
                 <include name="log4j.xml"/>
                 <include name="configuration.xml"/>
