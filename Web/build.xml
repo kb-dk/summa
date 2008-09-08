@@ -117,6 +117,7 @@
                 <available file="${summa.lib.log4j}"/>
                 <available file="${summa.lib.sbutil}"/>
                 <available file="${summa.lib.commons-logging}"/>
+                <available file="${summa.lib.axis.axis}"/>
             </and>
         </condition>
         <antcall target="${newTask}"/>
