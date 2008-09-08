@@ -103,6 +103,18 @@
         <ant inheritAll="false" dir="../Search" target="release"/>
     </target>
 
+    <target name=".getFacetBrowser">
+        <condition property="releaseFacetBrowserTask" value=".phony" else=".releaseFacetBrowser">
+            <available file="../${summa.ilib.facetbrowser.api}"/>
+        </condition>
+        <antcall target="${releaseFacetBrowserTask}"/>
+        <copy file="../${summa.ilib.facetbrowser.api}" todir="${lib.dir}"/>
+    </target>
+
+    <target name=".releaseFacetBrowser">
+        <ant inheritAll="false" dir="../FacetBrowser" target="release"/>
+    </target>
+
     <target name="depends">
         <!-- Check global dependencies -->
         <ant inheritall="false" dir=".." target="depends"/>
@@ -139,6 +151,12 @@
             <available file="lib/summa-search-api-${summa.version}.jar"/>
         </condition>
         <antcall target="${getSearchTask}"/>
+
+        <!-- Check that FacetBrowser release is compiled -->
+        <condition property="getFacetBrowserTask" value=".phony" else=".getFacetBrowser">
+            <available file="lib/summa-facetbrowser-api-${summa.version}.jar"/>
+        </condition>
+        <antcall target="${getFacetBrowserTask}"/>
 
         <!-- Store space-separated list of lib-filenames in lib.files -->
         <pathconvert refid="lib.path" property="lib.files" pathsep=" ">
