@@ -65,7 +65,8 @@ public class BuilderFactory {
         Constructor<? extends Builder> con;
         try {
             con = builderClass.getConstructor(
-                    Configuration.class, Structure.class);
+                    Configuration.class, Structure.class, CoreMap.class,
+                    TagHandler.class);
         } catch (NoSuchMethodException e) {
             throw new RemoteException(String.format(
                     "Constructor(Configuration, Structure, CoreMap, TagHandler)"
