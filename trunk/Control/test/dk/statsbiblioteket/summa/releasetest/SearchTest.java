@@ -242,6 +242,12 @@ public class SearchTest extends NoExitTestCase {
 
 
     public static void updateIndex() throws Exception {
+        Configuration indexConf = Configuration.load(
+                "data/search/SearchTest_IndexConfiguration.xml");
+        updateIndex(indexConf);
+    }
+
+    public static void updateIndex(Configuration conf) throws Exception {
         URL xsltLocation = Resolver.getURL(
                 "data/search/fagref_xslt/fagref_index.xsl");
         assertNotNull("The fagref xslt location should not be null",
@@ -251,9 +257,7 @@ public class SearchTest extends NoExitTestCase {
         assertNotNull("The descriptor location should not be null",
                       descriptorLocation);
 
-        Configuration indexConf = Configuration.load(
-                "data/search/SearchTest_IndexConfiguration.xml");
-        Configuration chain = indexConf.getSubConfiguration("SingleChain");
+        Configuration chain = conf.getSubConfiguration("SingleChain");
         chain.getSubConfiguration("FagrefTransformer").
                 set(XMLTransformer.CONF_XSLT, xsltLocation.getFile());
         chain.getSubConfiguration("DocumentCreator").getSubConfiguration(
@@ -268,8 +272,7 @@ public class SearchTest extends NoExitTestCase {
                 getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
                     descriptorLocation.getFile());
-
-        FilterService indexService = new FilterService(indexConf);
+        FilterService indexService = new FilterService(conf);
         indexService.start();
         IndexTest.waitForService(indexService);
         indexService.stop();

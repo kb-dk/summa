@@ -100,23 +100,35 @@ public class FacetTest extends NoExitTestCase {
         SummaSearcherImpl searcher =
                 new SummaSearcherImpl(getSearcherConfiguration());
         Storage storage = SearchTest.startStorage();
-        SearchTest.updateIndex();
+        updateIndex();
         searcher.checkIndex();
         assertNotNull("Searching should provide a result (we don't care what)",
                       searcher.search(SearchTest.simpleRequest("dummy")));
         SearchTest.ingest(new File(
                 Resolver.getURL("data/search/input/part1").getFile()));
-        SearchTest.updateIndex();
+        updateIndex();
         searcher.checkIndex();
         SearchTest.verifySearch(searcher, "Hans", 1);
         log.debug("Adding new material");
         SearchTest.ingest(new File(
                 Resolver.getURL("data/search/input/part2").getFile()));
-        SearchTest.updateIndex();
+        updateIndex();
         searcher.checkIndex();
         Thread.sleep(3000); // Why do we need to do this?
         SearchTest.verifySearch(searcher, "Hans", 1);
         SearchTest.verifySearch(searcher, "Gurli", 1);
         storage.close();
+    }
+
+    public void testFacetBuild() throws Exception {
+        Storage storage = SearchTest.startStorage();
+        updateIndex();
+        storage.close();
+    }
+
+    private void updateIndex() throws Exception {
+        Configuration indexConf = Configuration.load(
+                "data/search/FacetTest_IndexConfiguration.xml");
+        SearchTest.updateIndex(indexConf);
     }
 }

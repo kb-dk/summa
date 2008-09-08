@@ -23,6 +23,7 @@
 package dk.statsbiblioteket.summa.common.configuration.storage;
 
 import java.io.File;
+import java.util.List;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -32,6 +33,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorageTestCase;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.XProperties;
 
 /**
  * XStorage Tester.
@@ -89,5 +91,14 @@ public class XStorageTest extends ConfigurationStorageTestCase {
 
     public static Test suite() {
         return new TestSuite(XStorageTest.class);
+    }
+
+    public void testDumpSubList() throws Exception {
+        XStorage xs = new XStorage();
+        Configuration configuration = new Configuration(xs);
+        List<Configuration> subConfs =
+                configuration.createSubConfigurations("foo", 1);
+        subConfs.get(0).set("bar", "baz");
+        System.out.println(new XProperties().getXStream().toXML(xs));
     }
 }
