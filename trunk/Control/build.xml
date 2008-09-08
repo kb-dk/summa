@@ -645,7 +645,7 @@
         <delete dir="${tmp.dir}"/>
     </target>
 
-    <target name="bundle-storage" depends=".jar, compile">
+    <target name="test-storage-1.bundle" depends=".jar, compile">
         <mkdir dir="${tmp.dir}"/>
 
         <!-- Create jar file for Storage service -->
@@ -668,11 +668,11 @@
                 value="${summa.version}"/>
         </replace>
 
-        <zip destfile="${dist.dir}/storage.bundle">
+        <zip destfile="${dist.dir}/test-storage-1.bundle">
 
             <zipfileset file="${tmp.dir}/storage-service-${summa.version}.jar"/>
 
-            <zipfileset file="${tmp.dir}/bundles/storage/service.xml"/>
+            <zipfileset file="${tmp.dir}/bundles/test-storage-1/service.xml"/>
             <zipfileset prefix="lib" file="../${summa.ilib.common}"/>
             <zipfileset prefix="lib" file="../${summa.ilib.storage}"/>
             <zipfileset prefix="lib" file="../${summa.ilib.storage.api}"/>
@@ -682,10 +682,10 @@
             <zipfileset prefix="lib" file="${summa.lib.sbutil}"/>
             <zipfileset prefix="lib" file="${release.jar}"/>
 
-            <zipfileset prefix="config" file="${src.dir}/bundles/storage/config/configuration.xml"/>
+            <zipfileset prefix="config" file="${src.dir}/bundles/test-storage-1/config/configuration.xml"/>
             <zipfileset prefix="config" file="${basedir}/config/log4j.xml"/>
 
-            <zipfileset dir="${src.dir}/bundles/storage/config" prefix="config" filemode="600">
+            <zipfileset dir="${src.dir}/bundles/test-storage-storage/config" prefix="config" filemode="600">
                 <include name="jmx.password"/>
                 <include name="jmx.access"/>
                 <include name="policy"/>
