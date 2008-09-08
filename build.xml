@@ -57,8 +57,8 @@
         <ant dir="Index" inheritall="false"/>
         <ant dir="Search" inheritall="false"/>
         <ant dir="Support" inheritall="false"/>
-        <ant dir="Control" inheritall="false"/>
         <ant dir="FacetBrowser" inheritall="false"/>
+        <ant dir="Control" inheritall="false"/>
         <ant dir="Web" inheritall="false"/>
         
         <!-- Legacy modules not build : -->
@@ -96,10 +96,10 @@
             <packageset dir="${basedir}/Support/src">
                 <include name="dk/statsbiblioteket/**/*"/>
             </packageset>
-            <packageset dir="${basedir}/Control/src">
+            <packageset dir="${basedir}/FacetBrowser/src">
                 <include name="dk/statsbiblioteket/**/*"/>
             </packageset>
-            <packageset dir="${basedir}/FacetBrowser/src">
+            <packageset dir="${basedir}/Control/src">
                 <include name="dk/statsbiblioteket/**/*"/>
             </packageset>
             <packageset dir="${basedir}/Web/src">
@@ -123,8 +123,8 @@
         <ant dir="Index" inheritall="false" target="clean"/>
         <ant dir="Search" inheritall="false" target="clean"/>
         <ant dir="Support" inheritall="false" target="clean"/>
-        <ant dir="Control" inheritall="false" target="clean"/>
         <ant dir="FacetBrowser" inheritall="false" target="clean"/>
+        <ant dir="Control" inheritall="false" target="clean"/>
         <ant dir="Web" inheritall="false" target="clean"/>
         <delete dir="${dist.dir}" />
 
@@ -141,8 +141,8 @@
         <ant dir="Index" inheritall="false" target="distclean"/>
         <ant dir="Search" inheritall="false" target="distclean"/>
         <ant dir="Support" inheritall="false" target="distclean"/>
-        <ant dir="Control" inheritall="false" target="distclean"/>
         <ant dir="FacetBrowser" inheritall="false" target="distclean"/>
+        <ant dir="Control" inheritall="false" target="distclean"/>
         <ant dir="Web" inheritall="false" target="distclean"/>
 
         <!-- Legacy modules not built: -->

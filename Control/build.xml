@@ -113,6 +113,14 @@
         <ant inheritAll="false" dir="../Support" target="release"/>
     </target>
 
+    <target name=".compileFacetBrowser">
+        <ant inheritAll="false" dir="../facetBrowser" target="compile"/>
+    </target>
+
+    <target name=".releaseFacetBrowser">
+        <ant inheritAll="false" dir="../FacetBrowser" target="release"/>
+    </target>
+
     <target name="depends">
         <!-- Check global dependencies -->
         <ant inheritall="false" dir=".." target="depends"/>
@@ -173,6 +181,13 @@
         </condition>
         <antcall target="${compileSupportTask}"/>
 
+        <!-- Check that FacetBrowser is compiled -->
+        <echo message="Checking whether FacetBrowser is compiled"/>
+        <condition property="compileFacetBrowserTask" value=".phony" else=".compileFacetBrowser">
+            <available file="../FacetBrowser/${summa.classes.dir}"/>
+        </condition>
+        <antcall target="${compileSupportTask}"/>
+
         <!-- Store space-separated list of lib-filenames in lib.files -->
         <pathconvert refid="lib.path" property="lib.files" pathsep=" ">
             <map from="${lib.dir}/" to=""/>
@@ -215,6 +230,12 @@
             <available file="../${summa.ilib.support}"/>
         </condition>
         <antcall target="${releaseSupportTask}"/>
+
+        <!-- Check that FacetBrowser release is compiled -->
+        <condition property="releaseFacetBrowserTask" value=".phony" else=".releaseFacetBrowser">
+            <available file="../${summa.ilib.facetbrowser}"/>
+        </condition>
+        <antcall target="${releaseFacetBrowserTask}"/>
     </target>
 
     <target name="clean">
@@ -411,6 +432,58 @@
             <zipfileset prefix="config" file="${basedir}/config/log4j.xml"/>
 
             <zipfileset dir="${test.src.dir}/test-search-1/config" prefix="config" filemode="600">
+                <include name="jmx.password"/>
+                <include name="jmx.access"/>
+                <include name="policy"/>
+            </zipfileset>
+
+        </zip>
+
+        <delete dir="${tmp.dir}"/>
+    </target>
+
+    <target name=".test-facet-1.bundle" depends=".jar, test.compile">
+        <mkdir dir="${tmp.dir}"/>
+
+        <!-- Create jar file for test service -->
+        <jar basedir="${test.build.dir}" compress="true" jarfile="${tmp.dir}/test.jar"/>
+
+        <!-- Roll service bundle -->
+        <copy todir="${tmp.dir}">
+            <fileset dir="${test.src.dir}" includes="**/*.xml"/>
+        </copy>
+        <replace value="!not found!" propertyfile="../build.properties"
+                 dir="${tmp.dir}">
+            <replacefilter
+                token="@project.version@"
+                value="lib/summa-common-${summa.version}.jar"/>
+            <replacefilter
+                token="@release.jar@"
+                value="${release.jar}"/>
+            <replacefilter
+                token="@summa.version@"
+                value="${summa.version}"/>
+        </replace>
+
+        <zip destfile="${dist.dir}/test-facet-1.bundle">
+
+            <zipfileset file="${tmp.dir}/test-facet-1/service.xml"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.common}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.search}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.search.api}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.support}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.facetbrowser}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.facetbrowser.api}"/>
+            <zipfileset prefix="lib" file="${summa.lib.commons-logging}"/>
+            <zipfileset prefix="lib" file="${summa.lib.log4j}"/>
+            <zipfileset prefix="lib" file="${summa.lib.sbutil}"/>
+            <zipfileset prefix="lib" file="${summa.lib.lucene}"/>
+            <zipfileset prefix="lib" file="${release.jar}"/>
+
+            <zipfileset prefix="config" file="${test.src.dir}/test-facet-1/config/configuration.xml"/>
+            <zipfileset prefix="config" file="${basedir}/config/log4j.xml"/>
+
+            <zipfileset dir="${test.src.dir}/test-facet-1/config" prefix="config" filemode="600">
                 <include name="jmx.password"/>
                 <include name="jmx.access"/>
                 <include name="policy"/>
