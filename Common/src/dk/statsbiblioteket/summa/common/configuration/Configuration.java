@@ -1119,10 +1119,15 @@ public class Configuration implements Serializable,
     /**
      * @param key the key for the underlying sub storage.
      * @return a sub configuration, based on the sub storage.
-     * @throws IOException if the sub configuration could not be created.
+     * @throws IOException if the sub configuration could not be extracted.
      */
     public Configuration getSubConfiguration(String key) throws IOException {
-        return new Configuration(storage.getSubStorage(key));
+        try {
+            return new Configuration(storage.getSubStorage(key));
+        } catch (NullPointerException e) {
+            throw new IOException(String.format(
+                    "Unable to extract subConfiguration '%s'", key), e);
+        }
     }
 
     /**
@@ -1152,14 +1157,20 @@ public class Configuration implements Serializable,
      */
     public List<Configuration> getSubConfigurations(String key) throws 
                                                                 IOException {
-        List<ConfigurationStorage> storages =
-                storage.getSubStorages(key);
-        List<Configuration> configurations =
-                new ArrayList<Configuration>(storages.size());
-        for (ConfigurationStorage storage: storages) {
-            configurations.add(new Configuration(storage));
+        try {
+            List<ConfigurationStorage> storages =
+                    storage.getSubStorages(key);
+            List<Configuration> configurations =
+                    new ArrayList<Configuration>(storages.size());
+            for (ConfigurationStorage storage: storages) {
+                configurations.add(new Configuration(storage));
+            }
+            return Collections.unmodifiableList(configurations);
+        } catch (NullPointerException e) {
+            throw new IOException(String.format(
+                    "Unable to extract subconfigurations for key '%s'", key),
+                                  e);
         }
-        return Collections.unmodifiableList(configurations);
     }
 
     /**
