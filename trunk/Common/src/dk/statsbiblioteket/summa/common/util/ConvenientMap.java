@@ -68,7 +68,11 @@ public class ConvenientMap extends HashMap<String, Serializable> {
     }
 
     public String getString(String key) {
-        return (String)get(key);
+        Object o = get(key);
+        if (o instanceof String) {
+            return (String)o;
+        }
+        return o.toString();
     }
     public String getString(String key, String defaultValue) {
         String res = getStringNONPE(key);
@@ -79,10 +83,12 @@ public class ConvenientMap extends HashMap<String, Serializable> {
         Object o = get(key);
         //noinspection OverlyBroadCatchBlock
         try {
-            if (o instanceof String) {
-                return Integer.parseInt(getStringNONPE(key));
+            if (o instanceof Integer) {
+                return (Integer)o;
             }
-            return (Integer)o;
+            /* Converting to a String and parsing that is a catch-all method
+             * for cases where the value is an Long or Character */
+            return Integer.parseInt(o.toString());
         } catch (Exception e) {
             log.warn(String.format(
                     "Exception extracting int for key '%s'", key), e);
@@ -101,10 +107,12 @@ public class ConvenientMap extends HashMap<String, Serializable> {
         Object o = get(key);
         //noinspection OverlyBroadCatchBlock
         try {
-            if (o instanceof String) {
-                return Long.parseLong(getString(key));
+            if (o instanceof Long) {
+                return (Long)o;
             }
-            return (Long)o;
+            /* Converting to a String and parsing that is a catch-all method
+             * for cases where the value is an Integer or Character */
+            return Long.parseLong(o.toString());
         } catch (Exception e) {
             log.warn(String.format(
                     "Exception extracting long for key '%s'", key), e);
@@ -122,10 +130,12 @@ public class ConvenientMap extends HashMap<String, Serializable> {
     public Boolean getBoolean(String key) {
         Object o = get(key);
         try {
-            if (o instanceof String) {
-                return Boolean.parseBoolean(getString(key));
+            if (o instanceof Boolean) {
+                return (Boolean)o;
             }
-            return (Boolean)o;
+            /* Converting to a String and parsing that is a catch-all method
+             * for cases where the value is an Integer or Character */
+            return Boolean.parseBoolean(o.toString());
         } catch (Exception e) {
             log.warn(String.format(
                     "Exception extracting boolean for key '%s'", key), e);
