@@ -30,7 +30,6 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.build.Builder;
-import dk.statsbiblioteket.summa.facetbrowser.lucene.LuceneFacetBuilder;
 import dk.statsbiblioteket.summa.facetbrowser.util.pool.SortedPool;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
