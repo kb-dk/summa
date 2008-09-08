@@ -672,7 +672,7 @@
 
             <zipfileset file="${tmp.dir}/storage-service-${summa.version}.jar"/>
 
-            <zipfileset file="${test.src.dir}/test-storage-1/service.xml"/>
+            <zipfileset file="${tmp.dir}/test-storage-1/service.xml"/>
             <zipfileset prefix="lib" file="../${summa.ilib.common}"/>
             <zipfileset prefix="lib" file="../${summa.ilib.storage}"/>
             <zipfileset prefix="lib" file="../${summa.ilib.storage.api}"/>
@@ -682,10 +682,10 @@
             <zipfileset prefix="lib" file="${summa.lib.sbutil}"/>
             <zipfileset prefix="lib" file="${release.jar}"/>
 
-            <zipfileset prefix="config" file="${test.src.dir}/test-storage-1/config/configuration.xml"/>
+            <zipfileset prefix="config" file="${tmp.dir}/test-storage-1/config/configuration.xml"/>
             <zipfileset prefix="config" file="${basedir}/config/log4j.xml"/>
 
-            <zipfileset dir="${test.src.dir}/test-storage-1/config" prefix="config" filemode="600">
+            <zipfileset dir="${tmp.dir}/test-storage-1/config" prefix="config" filemode="600">
                 <include name="jmx.password"/>
                 <include name="jmx.access"/>
                 <include name="policy"/>
@@ -693,7 +693,7 @@
 
         </zip>
 
-        <delete dir="${tmp.dir}"/>
+        <!--<delete dir="${tmp.dir}"/>-->
     </target>
 
     <target name=".test-client-1.bundle" depends=".jar, test.compile">
