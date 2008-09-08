@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deployment xmlns="http://xml.apache.org/axis/wsdd/" xmlns:java="http://xml.apache.org/axis/wsdd/providers/java">
+    <globalConfiguration>
+        <parameter name="sendXsiTypes" value="true"/>
+        <parameter name="sendMultiRefs" value="true"/>
+        <parameter name="axis.enableListQuery" value="true" />
+        <parameter name="sendXMLDeclaration" value="true"/>
+        <parameter name="axis.sendMinimizedElements" value="true"/>
+        <requestFlow>
+            <handler type="java:org.apache.axis.handlers.JWSHandler">
+                <parameter name="scope" value="session"/>
+            </handler>
+            <handler type="java:org.apache.axis.handlers.JWSHandler">
+                <parameter name="scope" value="request"/>
+                <parameter name="extension" value=".jwr"/>
+            </handler>
+        </requestFlow>
+    </globalConfiguration>
+
+    <handler name="LocalResponder" type="java:org.apache.axis.transport.local.LocalResponder"/>
+    <handler name="URLMapper" type="java:org.apache.axis.handlers.http.URLMapper"/>
+    <handler name="Authenticate" type="java:org.apache.axis.handlers.SimpleAuthenticationHandler"/>
+    <!--
+    <service name="AdminService" provider="java:MSG">
+        <parameter name="allowedMethods" value="AdminService"/>
+        <parameter name="enableRemoteAdmin" value="false"/>
+        <parameter name="className" value="org.apache.axis.utils.Admin"/>
+        <namespace>http://xml.apache.org/axis/wsdd/</namespace>
+    </service>
+    -->
+    <!--
+    <service name="Version" provider="java:RPC">
+        <parameter name="allowedMethods" value="getVersion"/>
+        <parameter name="className" value="org.apache.axis.Version"/>
+    </service>
+    -->
+
+    <service name="SearchWS" provider="java:RPC" style="wrapped" use="literal">
+        <parameter name="typeMappingVersion" value="1.2"/>
+
+        <documentation>Search web service for the Summa system</documentation>
+        <parameter name="className" value="dk.statsbiblioteket.summa.web.services.SearchWS"/>
+
+        <parameter name="allowedMethods" value="simpleSearch simpleSearchSorted"/>
+        <namespace>http://statsbiblioteket.dk/summa/search</namespace>
+
+        <operation name="simpleSearch">
+            <documentation>
+                This method executes the given query and returns a search result ranked by relevancy.
+
+                query: The query string.
+                numberOfRecords: The maximum number of records returned in the search result.
+                startIndex: The number of the first record to return.
+            </documentation>
+            <parameter name="query" type="tns:string" />
+            <parameter name="numberOfRecords" type="tns:int" />
+            <parameter name="startIndex" type="tns:int" />
+        </operation>
+
+        <operation name="simpleSearchSorted">
+            <documentation>
+                This method executes the given query and returns a search result ranked by the given sort key.
+
+                query: The query string.
+                numberOfRecords: The maximum number of records returned in the search result.
+                startIndex: The number of the first record to return.
+                sortKey: The key to sort by.
+                reverse: A boolean indication whether or not to sort in reverse.
+            </documentation>
+            <parameter name="query" type="tns:string" />
+            <parameter name="numberOfRecords" type="tns:int" />
+            <parameter name="startIndex" type="tns:int" />
+            <parameter name="sortKey" type="tns:string" />
+            <parameter name="reverse" type="tns:boolean" />
+        </operation>
+    </service>
+    <transport name="http">
+        <requestFlow>
+            <handler type="URLMapper"/>
+            <handler type="java:org.apache.axis.handlers.http.HTTPAuthHandler"/>
+        </requestFlow>
+    </transport>
+    <transport name="local">
+        <responseFlow>
+            <handler type="LocalResponder"/>
+        </responseFlow>
+    </transport>
+</deployment>
