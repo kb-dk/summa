@@ -29,6 +29,7 @@ package dk.statsbiblioteket.summa.facetbrowser.core.tags;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
+import dk.statsbiblioteket.summa.facetbrowser.build.Builder;
 import dk.statsbiblioteket.summa.facetbrowser.lucene.LuceneFacetBuilder;
 import dk.statsbiblioteket.summa.facetbrowser.util.pool.SortedPool;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -47,7 +48,7 @@ import java.util.Map;
  * Provides (optionally persistent) maps of tags in facets. The mapping is
  * optimised towards access-speed. Incremental updates of the map is
  * possible, although significantly slower than a complete
- * {@link LuceneFacetBuilder#fill} if the whole map needs to be build.
+ * {@link Builder#build(boolean)} if the whole map needs to be build.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -69,7 +70,7 @@ public class TagHandlerImpl implements TagHandler {
      *                             be constructed.
      */
     public TagHandlerImpl(Configuration conf, Structure structure,
-                          boolean readOnly) throws IOException {
+                          Boolean readOnly) throws IOException {
         log.debug("Creating TagHandlerImpl");
         this.structure = structure;
         facets = new Facet[structure.getFacetNames().size()];
