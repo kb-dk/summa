@@ -4,8 +4,8 @@
 	<mainClass>dk.statsbiblioteket.summa.control.service.Launcher</mainClass>
     <property name="com.sun.management.jmxremote.port" value="2771"/>
     <property name="com.sun.management.jmxremote.ssl" value="false"/>
-    <description>The Storage module</description>
-	<bundleId>storage</bundleId>
+    <description>Test bundle for a Storage service</description>
+	<bundleId>test-storage-1</bundleId>
 	<publicApi>
         <file>lib/summa-common-@summa.version@.jar</file>
         <file>lib/summa-storage-api-@summa.version@.jar</file>
