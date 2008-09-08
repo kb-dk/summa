@@ -36,10 +36,8 @@
 
     <!-- Path definitions -->
     <path id="lib.path">
-        <fileset dir="${lib.dir}">
-            <include name="**/summa-common-*.jar"/>
-            <include name="**/summa-storage-api-*.jar"/>
-            <include name="**/summa-search-api-*.jar"/>
+        <fileset dir="${lib.dir}">            
+            <include name="**/*.jar"/>
             <exclude name="junit*"/>
         </fileset>
     </path>
