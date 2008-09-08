@@ -685,7 +685,7 @@
             <zipfileset prefix="config" file="${tmp.dir}/test-storage-1/config/configuration.xml"/>
             <zipfileset prefix="config" file="${basedir}/config/log4j.xml"/>
 
-            <zipfileset dir="${tmp.dir}/test-storage-1/config" prefix="config" filemode="600">
+            <zipfileset dir="${test.src.dir}/test-storage-1/config" prefix="config" filemode="600">
                 <include name="jmx.password"/>
                 <include name="jmx.access"/>
                 <include name="policy"/>
