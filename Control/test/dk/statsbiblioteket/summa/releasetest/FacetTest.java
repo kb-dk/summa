@@ -113,6 +113,9 @@ public class FacetTest extends NoExitTestCase {
         Thread.sleep(3000); // Why do we need to do this?
         SearchTest.verifySearch(searcher, "Hans", 1);
         SearchTest.verifySearch(searcher, "Gurli", 1);
+        log.debug("Sample output from search: "
+                  + searcher.search(SearchTest.simpleRequest("Hans")).toXML());
+
         storage.close();
     }
 
