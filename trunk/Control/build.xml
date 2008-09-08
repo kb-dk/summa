@@ -645,7 +645,7 @@
         <delete dir="${tmp.dir}"/>
     </target>
 
-    <target name="test-storage-1.bundle" depends=".jar, compile">
+    <target name=".test-storage-1.bundle" depends=".jar, compile">
         <mkdir dir="${tmp.dir}"/>
 
         <!-- Create jar file for Storage service -->
@@ -653,7 +653,7 @@
 
         <!-- Roll service bundle -->
         <copy todir="${tmp.dir}">
-            <fileset dir="${src.dir}" includes="**/*.xml"/>
+            <fileset dir="${test.src.dir}" includes="**/*.xml"/>
         </copy>
         <replace value="!not found!" propertyfile="../build.properties"
                  dir="${tmp.dir}">
@@ -672,7 +672,7 @@
 
             <zipfileset file="${tmp.dir}/storage-service-${summa.version}.jar"/>
 
-            <zipfileset file="${tmp.dir}/bundles/test-storage-1/service.xml"/>
+            <zipfileset file="${test.src.dir}/test-storage-1/service.xml"/>
             <zipfileset prefix="lib" file="../${summa.ilib.common}"/>
             <zipfileset prefix="lib" file="../${summa.ilib.storage}"/>
             <zipfileset prefix="lib" file="../${summa.ilib.storage.api}"/>
@@ -682,10 +682,10 @@
             <zipfileset prefix="lib" file="${summa.lib.sbutil}"/>
             <zipfileset prefix="lib" file="${release.jar}"/>
 
-            <zipfileset prefix="config" file="${src.dir}/bundles/test-storage-1/config/configuration.xml"/>
+            <zipfileset prefix="config" file="${test.src.dir}/test-storage-1/config/configuration.xml"/>
             <zipfileset prefix="config" file="${basedir}/config/log4j.xml"/>
 
-            <zipfileset dir="${src.dir}/bundles/test-storage-storage/config" prefix="config" filemode="600">
+            <zipfileset dir="${test.src.dir}/test-storage-1/config" prefix="config" filemode="600">
                 <include name="jmx.password"/>
                 <include name="jmx.access"/>
                 <include name="policy"/>
@@ -744,6 +744,6 @@
         <delete dir="${tmp.dir}"/>
     </target>
 
-    <target name="all" depends="release, .test-facet-1.bundle, .test-search-1.bundle, .test-client-1.bundle, test-storage-1.bundle, .test-data, .test-ingest-1.bundle, .test-ingest-fagref.bundle, .test-index-fagref.bundle"/>
+    <target name="all" depends="release, .test-facet-1.bundle, .test-search-1.bundle, .test-client-1.bundle, .test-storage-1.bundle, .test-data, .test-ingest-1.bundle, .test-ingest-fagref.bundle, .test-index-fagref.bundle"/>
 
 </project>
