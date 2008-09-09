@@ -97,7 +97,7 @@ public class IndexReducer {
             System.out.println("Reducing '" + location + "' to " + fraction
                                + " size (" + ir.maxDoc() + " => "
                                + (int)(ir.maxDoc() * fraction) + " documents)");
-            int feedback = docCount / 100;
+            int feedback = Math.max(1, docCount / 100);
             int lastReduction = -1;
             double fractionCounter = 0.0;
             for (int i = docCount-1; i >= 0; i--) {

@@ -68,8 +68,11 @@ public class SearchNodeAggregator extends ArrayList<SearchNode> implements
         sequential = conf.getBoolean(CONF_SEQUENTIAL, DEFAULT_SEQUENTIAL);
         List<SearchNode> nodes = SearchNodeFactory.createSearchNodes(conf);
         log.debug(String.format(
-                "Constructing %s SearchNodeAggregator with %d SearchNodes",
+                "Constructed %s SearchNodeAggregator with %d SearchNodes",
                 sequential ? "sequential" : "parallel", nodes.size()));
+        for (SearchNode node: nodes) {
+            log.trace("Sub-node: " + node.getClass().getName());
+        }
         addAll(nodes);
     }
 

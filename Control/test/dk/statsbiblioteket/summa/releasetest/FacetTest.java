@@ -92,17 +92,62 @@ public class FacetTest extends NoExitTestCase {
         SearchTest.testFullSearcher(searcher);
     }
 
+    public void testCreateSearcher() throws Exception {
+        SummaSearcherImpl searcher =
+                new SummaSearcherImpl(getSearcherConfiguration());
+        log.debug("Searcher created: " + searcher);
+        searcher.close();
+    }
+
+    public void testUpdateBlankIndex() throws Exception {
+        Storage storage = SearchTest.startStorage();
+        log.debug("Storage started");
+        updateIndex();
+        storage.close();
+    }
+
+    public void testIngest() throws Exception {
+        Storage storage = SearchTest.startStorage();
+        log.debug("Storage started");
+        SearchTest.ingest(new File(
+                Resolver.getURL("data/search/input/part1").getFile()));
+        assertNotNull("Hans Jensen data should be ingested",
+                      storage.getRecord("fagref:hj@example.com"));
+        storage.close();
+    }
+
+    public void testSimpleSearch() throws Exception {
+        Storage storage = SearchTest.startStorage();
+        SearchTest.ingest(new File(
+                Resolver.getURL("data/search/input/part1").getFile()));
+        updateIndex();
+        log.debug("Index updated. Creating searcher");
+        SummaSearcherImpl searcher =
+                new SummaSearcherImpl(getSearcherConfiguration());
+        log.debug("Searcher created. Verifying existence of Hans Jensen data");
+        SearchTest.verifySearch(searcher, "Hans", 1);
+        log.debug("All OK. Closing searcher, storage and returning");
+        searcher.close();
+        storage.close();
+    }
+
     public void testFacetSearch() throws Exception {
         SummaSearcherImpl searcher =
                 new SummaSearcherImpl(getSearcherConfiguration());
+        log.debug("Searcher created");
         Storage storage = SearchTest.startStorage();
+        log.debug("Storage started");
         updateIndex();
+        log.debug("Update 1 performed");
         searcher.checkIndex();
+        log.debug("CheckIndex called");
         assertNotNull("Searching should provide a result (we don't care what)",
                       searcher.search(SearchTest.simpleRequest("dummy")));
         SearchTest.ingest(new File(
                 Resolver.getURL("data/search/input/part1").getFile()));
+        log.debug("Ingest 1 performed");
         updateIndex();
+        log.debug("Update 2 performed");
         searcher.checkIndex();
         SearchTest.verifySearch(searcher, "Hans", 1);
         log.debug("Adding new material");
@@ -116,6 +161,7 @@ public class FacetTest extends NoExitTestCase {
         log.debug("Sample output from search: "
                   + searcher.search(SearchTest.simpleRequest("Hans")).toXML());
 
+        searcher.close();
         storage.close();
     }
 

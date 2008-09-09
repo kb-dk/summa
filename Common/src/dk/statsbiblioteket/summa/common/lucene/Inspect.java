@@ -148,7 +148,7 @@ public class Inspect {
     }
 
     private void stats(String[] strings) throws IOException {
-        int feedback = ir.maxDoc() / 50;
+        int feedback = Math.max(1, ir.maxDoc() / 50);
         if (strings.length != 2) {
             System.err.println("STATS expected 2 arguments: field and divider");
             return;

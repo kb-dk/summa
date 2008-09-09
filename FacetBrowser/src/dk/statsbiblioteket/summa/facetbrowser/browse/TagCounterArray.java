@@ -66,6 +66,7 @@ public class TagCounterArray implements TagCounter, Runnable {
      * tag array, in order to allow for expansion.
      */
     private static final double expansionFactor = 1.2;
+    private static final int MIN_EXPANSION = 10;
 
     /**
      * Ensures that the cleaning of the tagCounter has finished before the
@@ -153,8 +154,9 @@ public class TagCounterArray implements TagCounter, Runnable {
             for (String facetName: tagHandler.getFacetNames()) {
                 int tagCount = tagHandler.getTagCount(facetName);
                 if (tags[pos] == null || tags[pos].length < tagCount) {
-                    int newCount = (int)(tagHandler.getTagCount(facetName)
-                                         * expansionFactor);
+                    int newCount = (int)Math.max(
+                            MIN_EXPANSION, tagHandler.getTagCount(facetName)
+                                           * expansionFactor);
                     log.debug("Increasing tag-array for Facet " + facetName
                               + " to max " + newCount + " with " + tagCount
                               + " active tags");

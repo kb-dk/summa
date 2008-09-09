@@ -329,6 +329,7 @@ public class SearchTest extends NoExitTestCase {
     // TODO: The test fails sometimes, probably a race-condition. Fix it!
     public static void testFullSearcher(SummaSearcher searcher) throws
                                                                 Exception {
+        log.debug("testFullSearcher started. Performing search");
         try {
             searcher.search(simpleRequest("hans"));
             fail("A RemoteException should be thrown after timeout as no index"
@@ -337,7 +338,9 @@ public class SearchTest extends NoExitTestCase {
             // Expected
         }
         Storage storage = startStorage();
+        log.debug("Storage started");
         updateIndex();
+        log.debug("updateIndex called");
         Thread.sleep(3000); // Wait for searcher to discover new content
         assertNotNull("Searching should provide a result (we don't care what)",
                       searcher.search(simpleRequest("dummy")));

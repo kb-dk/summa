@@ -233,7 +233,7 @@ public class CoreMapBitStuffedTest extends TestCase {
         int MAX_TAG_ID = 10000;
         int MAX_TAG_ADDITIONS = 10;
         int maxFacet = bo.getStructure().getFacets().size();
-        int feedback = RUNS / 100;
+        int feedback = Math.max(1, RUNS / 100);
         double removeChance = 0.01;
         for (int i = 0 ; i< RUNS ; i++) {
             if (random.nextDouble() < removeChance && map.getDocCount() > 0) {

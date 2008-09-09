@@ -86,7 +86,7 @@ public class BuildPerformance {
                                              new StandardAnalyzer(),
                                              true);
         writer.setMaxBufferedDocs(1000);
-        int feedback = documents / 100;
+        int feedback = Math.max(1, documents / 100);
         Profiler profiler = new Profiler();
         profiler.setExpectedTotal(documents);
         profiler.setBpsSpan(1000);

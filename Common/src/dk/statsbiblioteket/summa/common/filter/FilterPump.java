@@ -121,11 +121,14 @@ public class FilterPump extends StateThread implements Configurable {
     protected void runMethod() {
         log.debug("Running FilterChain '" + chainName + "'");
         try {
+            long pumpActions = 0;
             while (getStatus() == STATUS.running) {
                 if (!lastFilter.pump()) {
-                    log.info("Finished pumping '" + chainName + "'");
+                    log.info(String.format("Finished pumping '%s' %d times",
+                                           chainName, pumpActions));
                     break;
                 }
+                pumpActions++;
             }
         } catch (IOException e) {
             String error = "IOException caught running FilterPump";

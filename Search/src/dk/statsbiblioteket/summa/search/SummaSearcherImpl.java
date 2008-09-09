@@ -104,6 +104,8 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
         searcherAvailabilityTimeout =
                 conf.getInt(CONF_SEARCHER_AVAILABILITY_TIMEOUT,
                             searcherAvailabilityTimeout);
+        log.trace("searcherAvailabilityTimeout=" + searcherAvailabilityTimeout 
+                  + " ms");
 
         searchQueue = new ChangingSemaphore(searchQueueMaxSize, true);
         log.trace("Constructing search node");
@@ -117,6 +119,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
     }
 
     public ResponseCollection search(Request request) throws RemoteException {
+        log.trace("Search called");
         long fullStartTime = System.nanoTime();
         if (searchQueue.availablePermits() == 0) {
             throw new RemoteException(
@@ -124,6 +127,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
                     + searchQueue.getOverallPermits());
         }
         try {
+            log.trace("Acquiring token from searchQueue");
             searchQueue.acquire();
         } catch (InterruptedException e) {
             throw new RemoteException(
@@ -134,12 +138,14 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
             try {
                 if (freeSlots.getOverallPermits() == 0) {
                     // To kickstart in case of lockout due to open or crashes
+                    log.trace("search: getting free slots");
                     freeSlots.setOverallPermits(searchNode.getFreeSlots());
                 }
                 if (log.isTraceEnabled() && freeSlots.availablePermits() <= 0) {
                     log.trace("No free slots. Entering wait-mode with timeout "
                               + searcherAvailabilityTimeout + " ms");
                 }
+                log.trace("Acquiring free searcher slot");
                 if (!freeSlots.tryAcquire(1, searcherAvailabilityTimeout,
                                           TimeUnit.MILLISECONDS)) {
                     throw new RemoteException(

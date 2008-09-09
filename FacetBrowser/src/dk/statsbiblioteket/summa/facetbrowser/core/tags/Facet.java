@@ -235,7 +235,7 @@ public class Facet implements CollatorSortedPool {
         xp.put(META_LOCALE, l);
         log.trace(String.format("Storing meta file '%s' for Facet '%s'",
                                 metaFile, structure.getName()));
-        System.out.println(metaFile.getParentFile());
+        //System.out.println(metaFile.getParentFile());
         if (!metaFile.getParentFile().exists()) {
             //noinspection DuplicateStringLiteralInspection
             log.debug("store: Folder '" + metaFile.getParentFile()

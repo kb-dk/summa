@@ -219,7 +219,7 @@ public class LuceneFacetBuilder extends BuilderImpl {
         noTermFreqVectorSet.clear();
         Profiler progress = new Profiler();
         progress.setExpectedTotal(maxDoc);
-        int feedbackEvery = maxDoc / 100;
+        int feedbackEvery = Math.max(1, maxDoc / 100);
         progress.setBpsSpan(Math.min(10000, feedbackEvery));
         for (int docID = 0 ; docID < maxDoc ; docID++) {
             buildDocToTerms(ir, docID);
