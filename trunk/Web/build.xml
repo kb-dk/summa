@@ -25,6 +25,7 @@
     <!-- Compiled sub-packages -->
     <property name="release.search.war" value="${dist.dir}/${project.name}-search.war"/>
     <property name="release.storage.war" value="${dist.dir}/${project.name}-storage.war"/>
+    <property name="release.website.war" value="${dist.dir}/${project.name}-website.war"/>
 
     <!-- Compilation properties -->
     <property name="compiler" value="${summa.compiler}"/>
@@ -235,8 +236,7 @@
 
     <target name=".search.war" depends=".release.depends, clean, compile">
         <mkdir dir="${dist.dir}"/>
-        <war basedir="${build.dir}"
-             destfile="${release.search.war}"
+        <war destfile="${release.search.war}"
              webxml="config/search/web.xml">
             <lib dir="${lib.dir}">
                 <include name="*.jar"/>
@@ -252,15 +252,14 @@
                 <include name="configuration.xml"/>
             </classes>
             <classes dir="${build.dir}">
-                <include name="**/*"/>
+                <include name="**/SearchWS*"/>
             </classes>
         </war>
     </target>
 
     <target name=".storage.war" depends=".release.depends, clean, compile">
         <mkdir dir="${dist.dir}"/>
-        <war basedir="${build.dir}"
-             destfile="${release.storage.war}"
+        <war destfile="${release.storage.war}"
              webxml="config/storage/web.xml">
             <lib dir="${lib.dir}">
                 <include name="*.jar"/>
@@ -276,12 +275,26 @@
                 <include name="configuration.xml"/>
             </classes>
             <classes dir="${build.dir}">
-                <include name="**/*"/>
+                <include name="**/StorageWS*"/>
             </classes>
         </war>
     </target>
 
-    <target name=".release.search" depends=".release.depends, .search.war, .storage.war, doc">
+    <target name=".website.war" depends=".release.depends, clean, compile">
+        <mkdir dir="${dist.dir}"/>
+        <war destfile="${release.website.war}"
+             webxml="config/website/web.xml">
+            <fileset dir="resources" />
+            <classes dir="${basedir}/config/website">
+                <include name="services.xml"/>
+            </classes>
+            <classes dir="${build.dir}">
+                <include name="**/*"/>
+                <exclude name="**/*WS.class" />
+            </classes>
+        </war>
+    </target>
+    <target name=".release.search" depends=".release.depends, .search.war, .storage.war, .website.war, doc">
 
         <mkdir dir="${dist.dir}"/>
 
@@ -295,6 +308,7 @@
 
             <zipfileset prefix="${prefix}" file="${release.search.war}"/>
             <zipfileset prefix="${prefix}" file="${release.storage.war}"/>
+            <zipfileset prefix="${prefix}" file="${release.website.war}"/>
 
             <zipfileset prefix="${prefix}" file="${basedir}/../${summa.license}"/>
 
