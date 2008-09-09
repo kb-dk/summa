@@ -47,6 +47,7 @@ public class FacetStructure implements Serializable {
     private String locale = null;
     private String sortType = DEFAULT_FACET_SORT_TYPE;
     private Integer id = null;
+
     /**
      * The returned Tags should be sorted in order with the most popular Tags
      * first. Popularity translates directly to the number of occurences.

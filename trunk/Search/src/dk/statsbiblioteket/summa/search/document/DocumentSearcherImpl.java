@@ -26,7 +26,8 @@ import java.rmi.RemoteException;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.HashSet;
-import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.io.IOException;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.search.SearchNodeImpl;
@@ -36,6 +37,8 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.search.Filter;
+import org.apache.lucene.search.Query;
 
 /**
  * Default implementation of {@link DocumentSearcher} that handles
@@ -59,8 +62,11 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements
     private long maxRecords = DEFAULT_MAX_NUMBER_OF_RECORDS;
     private long startIndex = DEFAULT_START_INDEX;
     private long records = DEFAULT_RECORDS;
+    private boolean collectDocIDs = DEFAULT_COLLECT_DOCIDS;
 
-    public DocumentSearcherImpl(Configuration conf) {
+    protected ArrayBlockingQueue<DocIDCollector> collectors;
+
+    public DocumentSearcherImpl(Configuration conf) throws RemoteException {
         super(conf);
         log.trace("Constructing DocumentSearcherImpl");
         resultFields = conf.getStrings(CONF_RESULT_FIELDS, resultFields);
@@ -90,6 +96,16 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements
         }
         startIndex = conf.getLong(CONF_START_INDEX, DEFAULT_START_INDEX);
         records = conf.getLong(CONF_RECORDS, DEFAULT_RECORDS);
+        collectDocIDs = conf.getBoolean(CONF_COLLECT_DOCIDS, collectDocIDs);
+        if (getMaxConcurrentSearches() == 0) {
+            throw new RemoteException("The number of maxConcurrentSearches is "
+                                      + "0. No searches can be performed");
+        }
+        collectors = new ArrayBlockingQueue<DocIDCollector>(
+                getMaxConcurrentSearches());
+        for (int i = 0 ; i < getMaxConcurrentSearches() ; i++) {
+            new DocIDCollector(collectors);
+        }
     }
 
     public String simpleSearch(String query, long startIndex,
@@ -145,7 +161,21 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements
                     "Unable to perform search for query '%s' with filter '%s'",
                     query, filter), e);
         }
+        if (collectDocIDs) {
+            try {
+                responses.getTransient().put(DOCIDS,
+                                             collectDocIDs(query, filter));
+            } catch (IOException e) {
+                throw new RemoteException(String.format(
+                        "Unable to collect doc ids for query '%s', filter '%s'",
+                        query, filter), e);
+            }
+        }
     }
+
+    protected abstract DocIDCollector collectDocIDs(String query, String filter)
+                                                            throws IOException;
+
 
     /* Mutators */
 
@@ -195,5 +225,21 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements
 
     public void setStartIndex(long startIndex) {
         this.startIndex = startIndex;
+    }
+
+    public boolean isCollectDocIDs() {
+        return collectDocIDs;
+    }
+
+    public void setCollectDocIDs(boolean collectDocIDs) {
+        this.collectDocIDs = collectDocIDs;
+    }
+
+    public Set<String> getNonescapedFields() {
+        return nonescapedFields;
+    }
+
+    public void setNonescapedFields(Set<String> nonescapedFields) {
+        this.nonescapedFields = nonescapedFields;
     }
 }

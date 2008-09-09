@@ -116,6 +116,23 @@ public interface DocumentSearcher extends SearchNode, DocumentKeys {
     public static final long DEFAULT_RECORDS = 20;
 
     /**
+     * If true, docIDs for all hits in the search are collected and send on
+     * through the chain of search-nodes. This enables later nodes to piggy-back
+     * on the search.
+     * </p><p>
+     * This must be true for the FacetBrowser search node to work.
+     * </p><p>
+     * The document ids are collected in a {@link DocIDCollector} which is
+     * stored temporarily with the key "documentsearcher.docids".
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_COLLECT_DOCIDS =
+            "summa.search.collect-docids";
+    public static final boolean DEFAULT_COLLECT_DOCIDS = false;
+    public static final String DOCIDS = "documentsearcher.docids";
+
+    /**
      * The result fields are the fields extracted from each hit from a search.
      * @return The result fields for the searcher.
      * @throws RemoteException if the fields could not be retrieved.
