@@ -36,6 +36,7 @@ package dk.statsbiblioteket.summa.facetbrowser.core.map;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.browse.TagCounter;
+import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.util.Logs;
 import org.apache.log4j.Logger;
 
@@ -48,6 +49,7 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.BitSet;
 
 /**
  * The BitStuffed CoreMap packs pointers from document-id's to facet/tags in an
@@ -393,19 +395,18 @@ public class CoreMapBitStuffed extends CoreMapImpl {
         return highestDocID + 1;
     }
 
-    public void markCounterLists(TagCounter tagCounter, int[] docIDs,
+    public void markCounterLists(TagCounter tagCounter, DocIDCollector docIDs,
                                  int startPos, int endPos) {
         if (log.isTraceEnabled()) {
             //noinspection DuplicateStringLiteralInspection
-            log.trace("Marking " + docIDs.length +" docs " +
-                      startPos + "=>" + endPos);
+            log.trace("Marking " + docIDs.getDocCount() +" docs " + startPos
+                      + " => " + endPos);
         }
-        int hitID;
+        BitSet ids = docIDs.getBits();
+        int hitID = startPos;
         int to;
-//        int value;
-        for (int hitPos = startPos ; hitPos <= endPos ; hitPos++) {
+        while ((hitID = ids.nextSetBit(hitID)) != -1 && hitID <= endPos) {
   //          System.out.println("- Get hitID " + hitPos + "/" + docIDs.length);
-            hitID = docIDs[hitPos];
             try {
   //              System.out.println("- Getting to at " + (hitID + 1) + "/" + index.length);
                 to = index[hitID+1];

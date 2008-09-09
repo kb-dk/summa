@@ -24,9 +24,11 @@ package dk.statsbiblioteket.summa.facetbrowser.browse;
 
 import dk.statsbiblioteket.summa.facetbrowser.core.FacetCore;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult;
+import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.util.List;
+import java.rmi.RemoteException;
 
 
 /**
@@ -50,21 +52,18 @@ public interface Browser extends FacetCore {
      * The parameters of this call are fairly low-level. It is recommended that
      * implementations of Browser also supply a query-based method for
      * requesting facet/tag information, as it eases experiments.
-     * @param docIDs    the ids for the documents to calculate Tags for.
-     * @param startPos  the start-position within the docIDs.
-     * @param length    the number of docIDs to use.
-     * @param facets    a comma-separated list with the names and optionally
-     *                  max tag count of the wanted Facets. See {@link FacetRequest}
-     *                  for details. If null is specified, the default Facets
-     *                  are returned.
+     * @param docIDs the ids for the documents to calculate Tags for.
+     * @param facets a comma-separated list with the names and optionally
+     *              max tag count of the wanted Facets. See {@link FacetRequest}
+     *              for details. If null is specified, the default Facets
+     *              are returned.
      * @return a machine-oriented representation of the facet browser structure
      *         corresponding to the given query. Note that the result need not
      *         be directly Serializable, but that calling 
      *         {@link FacetResult#externalize()} on the result should produce
      *         a Serializable version.
      */
-    public FacetResult getFacetMap(int[] docIDs, int startPos, int length,
-                              String facets);
+    public FacetResult getFacetMap(DocIDCollector docIDs, String facets) throws RemoteException;
 
     // TODO: Add index-lookup
 }

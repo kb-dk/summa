@@ -33,6 +33,7 @@ import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
 import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMap;
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult;
+import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
 
@@ -45,12 +46,13 @@ import org.apache.log4j.Logger;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
+// TODO: Make this a Future
 public class BrowserThread implements Runnable {
     private static Logger log = Logger.getLogger(BrowserThread.class);
     private CoreMap coreMap;
     private TagCounter tagCounter;
 
-    private int[] docIDs;
+    private DocIDCollector docIDs;
     private int startPos;
     private int endPos;
     private Structure request;
@@ -73,7 +75,7 @@ public class BrowserThread implements Runnable {
      * @param endPos   the end position for the IDs to use (inclusive).
      * @param request  details on the facets to return.
      */
-    public synchronized void startRequest(int[] docIDs, int startPos,
+    public synchronized void startRequest(DocIDCollector docIDs, int startPos,
                                           int endPos, Structure request) {
         lock.lock();
         try {
@@ -97,7 +99,7 @@ public class BrowserThread implements Runnable {
 
     /**
      * @return a FacetStructure with facets and tags, derived from the data
-     *         given in {@link #startRequest(int[], int, int, Structure)}.
+     *         given in {@link #startRequest}.
      *         null if an exception occured.
      */
     public synchronized FacetResult getResult() {
@@ -144,8 +146,8 @@ public class BrowserThread implements Runnable {
                 coreMap.markCounterLists(tagCounter, docIDs, startPos, endPos);
             } catch (Exception e) {
                 log.error("Exception calling markCounterLists with "
-                          + (docIDs == null ? "null" : docIDs.length) + " docIDs, "
-                          + "startPos " + startPos + ", " + endPos, e);
+                          + (docIDs == null ? "null" : docIDs.getDocCount())
+                          + " docIDs, startPos " + startPos + ", " + endPos, e);
                 //noinspection AssignmentToNull
                 result = null; // There really is no result!
                 return;

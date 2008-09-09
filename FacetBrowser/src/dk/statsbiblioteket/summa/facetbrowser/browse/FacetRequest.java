@@ -24,6 +24,7 @@ package dk.statsbiblioteket.summa.facetbrowser.browse;
 
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
+import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
 
@@ -37,15 +38,11 @@ import org.apache.log4j.Logger;
 public class FacetRequest extends Structure {
     private static Logger log = Logger.getLogger(FacetRequest.class);
 
-    private int[] docIDs;
-    private int startPos;
-    private int length;
+    private DocIDCollector docIDs;
 
     /**
      * Construct a request for a Facet structure, based on the given data.
      * @param docIDs   the ids for the documents to calculate Tags for.
-     * @param startPos the start-position within the docIDs.
-     * @param length   the number of docIDs to use.
      * @param facets   a comma-separeted list with the names of the wanted
      *                 Facets.
      *                 Optionally, the maximum Tag-count for a given Facet can
@@ -62,12 +59,10 @@ public class FacetRequest extends Structure {
      *                 Example: "Title (ALPHA), Author (5 POPULARITY), City"
      * @param defaults the base for building the request.
      */
-    public FacetRequest(int[] docIDs, int startPos, int length,
+    public FacetRequest(DocIDCollector docIDs,
                    String facets, Structure defaults) {
         super(defaults.getFacets().size());
         this.docIDs = docIDs;
-        this.startPos = startPos;
-        this.length = length;
         parse(facets, defaults);
     }
 
@@ -131,13 +126,7 @@ public class FacetRequest extends Structure {
 
     /* Getters */
 
-    public int[] getDocIDs() {
+    public DocIDCollector getDocIDs() {
         return docIDs;
-    }
-    public int getLength() {
-        return length;
-    }
-    public int getStartPos() {
-        return startPos;
     }
 }
