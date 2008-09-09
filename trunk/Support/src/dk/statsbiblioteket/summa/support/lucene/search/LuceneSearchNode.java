@@ -353,7 +353,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                   + (System.currentTimeMillis() - startTime)
                   + " ms with " + collector.getDocCount()
                   + " documents collected and the highest bit being "
-                  + (collector.getBits().length() - 1);
+                  + (collector.getBits().length() - 1));
         return collector;
     }
 }
