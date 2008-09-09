@@ -123,7 +123,7 @@
                                     <value class="string">author</value>
                                 </entry>
                                 <entry>
-                                    <key>fields</key>
+                                    <key>summa.facet.fields</key>
                                     <value class="list">
                                         <item class="string">author_person</item>
                                     </value>
@@ -135,7 +135,7 @@
                                     <value class="string">title</value>
                                 </entry>
                                 <entry>
-                                    <key>fields</key>
+                                    <key>summa.facet.fields</key>
                                     <value class="list">
                                         <item class="string">sort_title</item>
                                     </value>

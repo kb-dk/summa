@@ -435,11 +435,13 @@ public class TagCounterArray implements TagCounter, Runnable {
 
     public void run() {
         try {
-            log.debug("Clearing counter lists...");
+            log.trace("Clearing counter lists...");
             for (int[] tag : tags) {
-                Arrays.fill(tag, 0);
+                if (tag != null) {
+                    Arrays.fill(tag, 0);
+                }
             }
-            log.debug("Clearing finished");
+            log.trace("Clearing finished");
         } finally {
             lock.unlock();
         }

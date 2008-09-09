@@ -29,6 +29,7 @@ package dk.statsbiblioteket.summa.facetbrowser.util.pool;
 import dk.statsbiblioteket.summa.common.util.ListSorter;
 import dk.statsbiblioteket.util.LineReader;
 import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -48,6 +49,9 @@ import java.util.Arrays;
  * While care has been taken to optimize the speed of this pool, it is
  * significantly slower than the equivalent {@link MemoryPool}.
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.QA_NEEDED,
+        author = "te")
 public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
     private Log log = LogFactory.getLog(DiskPool.class);
     private static final int DEFAULT_SIZE = 1000;
@@ -90,6 +94,10 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
         };
     }
 
+    @QAInfo(level = QAInfo.Level.FINE,
+            state = QAInfo.State.QA_NEEDED,
+            author = "te",
+            comment = "Verify that valueCount is correct after load")
     public boolean open(File location, String poolName, boolean readOnly,
                         boolean forceNew) throws IOException {
         if (values != null) {
@@ -125,6 +133,8 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
         } else {
             log.trace("Loading index");
             indexes = loadIndex();
+            valueCount = indexes.length;
+            log.trace("Index loaded with indexes.length " + indexes.length);
         }
         connectToValues();
         return !forceNew;

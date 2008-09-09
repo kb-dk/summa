@@ -238,7 +238,8 @@ public class TagHandlerImpl implements TagHandler {
     public int insertTag(int facetID, String tagName) {
         failIfDirty();
         if (log.isTraceEnabled()) {
-            log.trace("Adding \"" + tagName + " to facet "
+            //noinspection DuplicateStringLiteralInspection
+            log.trace("Adding '" + tagName + "' to facet "
                       + facets[facetID].getName());
         }
         return facets[facetID].insert(tagName);

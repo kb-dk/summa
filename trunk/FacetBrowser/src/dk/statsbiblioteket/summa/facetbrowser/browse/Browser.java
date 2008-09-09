@@ -57,11 +57,9 @@ public interface Browser extends FacetCore {
      *              max tag count of the wanted Facets. See {@link FacetRequest}
      *              for details. If null is specified, the default Facets
      *              are returned.
-     * @return a machine-oriented representation of the facet browser structure
-     *         corresponding to the given query. Note that the result need not
-     *         be directly Serializable, but that calling 
-     *         {@link FacetResult#externalize()} on the result should produce
-     *         a Serializable version.
+     * @return FacetResult with a serializable representation of the wanted
+     *         facets.
+     * @throws RemoteException if the request could not be handled.
      */
     public FacetResult getFacetMap(DocIDCollector docIDs, String facets) throws RemoteException;
 

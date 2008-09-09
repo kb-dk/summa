@@ -150,11 +150,12 @@ public class LuceneFacetBuilder extends BuilderImpl {
         if (termsToDocs) {
             buildTermsToDocs(ir);
         }
-        log.debug("Filling tag handler from index");
+        log.debug("Filled tag handler from index");
     }
 
     // Note: This only catches indexable. Stored-only are added in core build
     private void buildTagsFromIndex(IndexReader ir) throws IOException {
+        log.debug("buildtagsFromIndex called");
         log.trace("Clearing tags");
         tagHandler.clearTags();
         Profiler profiler = new Profiler();
@@ -290,6 +291,10 @@ public class LuceneFacetBuilder extends BuilderImpl {
     }
 
     public boolean update(Payload payload) {
+        if (log.isTraceEnabled()) {
+            //noinspection DuplicateStringLiteralInspection
+            log.trace("update(" + payload + ") called");
+        }
         Integer deleteID = payload.getData().getInt(
                 LuceneIndexUtils.META_DELETE_DOCID, null);
         Integer addID = payload.getData().getInt(
@@ -325,23 +330,32 @@ public class LuceneFacetBuilder extends BuilderImpl {
     }
 
     private void addDocument(Integer addID, Document document) {
+        if (log.isTraceEnabled()) {
+            //noinspection DuplicateStringLiteralInspection
+            log.trace("addDocument(" + addID + ", ...) called");
+        }
         long startTime = System.nanoTime();
         Map<String, List<String>> facetTags = new HashMap<String,List<String>>(
                 structure.getFacets().size());
         for (Map.Entry<String, FacetStructure> entry:
                 structure.getFacets().entrySet()) {
             FacetStructure facet = entry.getValue();
-            Field[] fields = document.getFields(facet.getName());
-            if (fields == null || fields.length == 0) {
-                log.trace("No " + facet.getName() + " fields in doc #" + addID);
-                continue;
-            }
-            List<String> tags = new ArrayList<String>(fields.length);
-            for (Field field: fields) {
-                if (!field.isBinary()) {
-                    String value = field.stringValue();
-                    if (value != null && !"".equals(value)) {
-                        tags.add(value);
+            List<String> tags = new ArrayList<String>(50);
+            for (String facetField: facet.getFields()) {
+                Field[] docFields = document.getFields(facetField);
+                if (docFields == null || docFields.length == 0) {
+                    if (log.isTraceEnabled()) {
+                        log.trace("No " + facetField + " field in doc #"
+                                  + addID);
+                    }
+                    continue;
+                }
+                for (Field docField: docFields) {
+                    if (!docField.isBinary()) {
+                        String value = docField.stringValue();
+                        if (value != null && !"".equals(value)) {
+                            tags.add(value);
+                        }
                     }
                 }
             }

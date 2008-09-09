@@ -134,7 +134,6 @@ public class FacetStructure implements Serializable {
             if (conf.valueExists(CONF_FACET_SORT_TYPE)) {
                 setSortType(conf.getString(CONF_FACET_SORT_TYPE));
             }
-
         } catch (Exception e) {
             throw new Configurable.ConfigurationException(String.format(
                     "Unable to construct FacetStructure for '%s'", name),
