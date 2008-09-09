@@ -839,8 +839,8 @@ public class Configuration implements Serializable,
                 }
             });
         } else {
-            log.info("SecurityManager '" + System.getSecurityManager()
-                     + "' present");
+            log.debug("SecurityManager '" + System.getSecurityManager()
+                      + "' present");
         }
     }
 
