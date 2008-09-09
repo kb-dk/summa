@@ -26,6 +26,9 @@ public interface DocumentKeys {
 
     public static final String SEARCH_FALLBACK_VALUES =
                     "search.document.fallback-values";
+
+    public static final String SEARCH_COLLECT_DOCIDS = "search.document.collect-docids";
+
     /**
      * The special sortKey signifying that sorting should be done on score,
      * thus making the search return records in order of relevance.
