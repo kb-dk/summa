@@ -452,8 +452,11 @@ public class XMLSplitterParser extends DefaultHandler2 implements
         }
         String chars = new String(ch, start, length);
         if (inId) {
+            // Append the unescaped characters as the id
             id.append(chars);
         }
+
+        // Append escaped characters to the body
         sw.append(ParseUtil.encode(chars));
     }
 
