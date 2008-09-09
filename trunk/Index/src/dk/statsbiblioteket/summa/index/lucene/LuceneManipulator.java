@@ -393,8 +393,13 @@ public class LuceneManipulator implements IndexManipulator {
         closeWriter();
         flushDeletions();
         flushAdditions();
+        if (writer == null) {
+            log.trace("commit: No writer, commit finished in "
+                  + (System.currentTimeMillis() - startTime) + " ms");
+            return;
+        }
         log.debug("commit: Flushing index at '" + indexRoot + "' with docCount "
-                  + (writer == null ? "NA" : writer.docCount()));
+                  + writer.docCount());
         closeWriter();
         log.trace("Commit finished for '" + indexRoot + "' in "
                   + (System.currentTimeMillis() - startTime) + " ms");
@@ -403,7 +408,7 @@ public class LuceneManipulator implements IndexManipulator {
     /* Note: The flush does not call commit */
     private void flushAdditions() throws IOException {
         if (additions.size() == 0) {
-            log.debug("No additions to flush");
+            log.trace("No additions to flush");
             return;
         }
         log.debug("Flushing  " + additions.size() + " additions");
@@ -423,7 +428,7 @@ public class LuceneManipulator implements IndexManipulator {
 
     private void flushDeletions() throws IOException {
         if (deletions.size() == 0) {
-            log.debug("No deletions to flush");
+            log.trace("No deletions to flush");
             return;
         }
         log.trace("Calling close(true)");

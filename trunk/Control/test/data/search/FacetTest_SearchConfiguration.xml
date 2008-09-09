@@ -14,6 +14,24 @@
             <key>summa.control.service.id</key>
             <value class="string">Search</value>
         </entry>
+        <!-- IndexWatcher -->
+        <entry>
+            <key>summa.index-watcher.check-interval</key>
+            <value class="int">1000</value>
+        </entry>
+        <entry>
+            <key>summa.index-watcher.index-root</key>
+            <value class="string">/tmp/summatest/index</value>
+        </entry>
+        <entry>
+            <key>summa.index-watcher.min-retention</key>
+            <!-- Very aggressive value - probably too low for production -->
+            <value class="int">1000</value>
+        </entry>
+        <entry>
+            <key>summa.search.searcher-availability.timeout</key>
+            <value class="int">5000</value>
+        </entry>
 
         <entry>
             <key>summa.search.node.class</key>
@@ -31,7 +49,10 @@
                         <key>summa.search.node.class</key>
                         <value class="string">dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode</value>
                     </entry>
-
+                    <entry>
+                        <key>summa.search.collect-docids</key>
+                        <value class="string">true</value>
+                    </entry>
 
                     <entry>
                         <key>search.clauses.max</key>
@@ -67,7 +88,7 @@
                     </entry>
                     <entry>
                         <key>summa.search.maxRecords</key>
-                        <value class="int">10000</value>
+                        <value class="int">10002</value>
                     </entry>
                     <entry>
                         <key>summa.search.number-of-searchers</key>
@@ -84,20 +105,6 @@
                     <entry>
                         <key>summa.search.searcher-availability.timeout</key>
                         <value class="int">5000</value>
-                    </entry>
-                    <!-- IndexWatcher -->
-                    <entry>
-                        <key>summa.index-watcher.check-interval</key>
-                        <value class="int">1000</value>
-                    </entry>
-                    <entry>
-                        <key>summa.index-watcher.index-root</key>
-                        <value class="string">/tmp/summatest/index</value>
-                    </entry>
-                    <entry>
-                        <key>summa.index-watcher.min-retention</key>
-                        <!-- Very aggressive value - probably too low for production -->
-                        <value class="int">1000</value>
                     </entry>
                 </xproperties>
 

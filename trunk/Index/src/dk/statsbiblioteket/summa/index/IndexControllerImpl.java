@@ -302,11 +302,13 @@ public class IndexControllerImpl extends StateThread implements ObjectFilter,
     }
 
     private synchronized void triggerCheck() throws IOException {
-        log.trace("Triggercheck called");
         if (!indexIsOpen) {
-            log.trace("No index open");
+            log.trace("triggerCheck: No index open");
+            lastCommit = System.currentTimeMillis();
+            lastConsolidate = System.currentTimeMillis();
             return;
         }
+        log.trace("Triggercheck called");
         if (commitTimeout != -1 &&
             lastCommit + commitTimeout < System.currentTimeMillis()
             || commitMaxDocuments != -1 &&
@@ -341,7 +343,7 @@ public class IndexControllerImpl extends StateThread implements ObjectFilter,
                           + "Exiting thread.");
                 break;
             }
-            long wakeupTime = commitTimeout == -1 ? 0 :
+            long wakeupTime = commitTimeout == -1 ? Long.MAX_VALUE :
                               lastCommit + commitTimeout;
             wakeupTime = consolidateTimeout == -1 ? wakeupTime :
                          Math.min(wakeupTime,
@@ -356,16 +358,17 @@ public class IndexControllerImpl extends StateThread implements ObjectFilter,
                                                + "Stopping timer-based "
                                                + "watchdog", e);
                 }
+            } else {
+                log.trace("No sleep-time in Watchdog. This eats a lot of "
+                          + "resources");
             }
-            if (isRunning()) {
-                try {
-                    triggerCheck();
-                } catch (IOException e) {
-                    throw new RuntimeException("IOException during triggerCheck"
-                                               + " from watchdog thread. "
-                                               + "Stopping timer-based "
-                                               + "watchdog");
-                }
+            try {
+                triggerCheck();
+            } catch (IOException e) {
+                throw new RuntimeException("IOException during triggerCheck"
+                                           + " from watchdog thread. "
+                                           + "Stopping timer-based "
+                                           + "watchdog");
             }
         }
     }
@@ -511,7 +514,13 @@ public class IndexControllerImpl extends StateThread implements ObjectFilter,
     public synchronized void commit() throws IOException {
         long startTime = System.currentTimeMillis();
         //noinspection DuplicateStringLiteralInspection
-        log.debug("commit() called");
+        log.trace("commit() called");
+        if (updatesSinceLastCommit == 0) {
+            log.trace("No updates since last commit");
+            lastCommit = System.currentTimeMillis();
+            return;
+        }
+        log.debug("Performing commit");
         for (IndexManipulator manipulator: manipulators) {
             manipulator.commit();
         }
@@ -525,7 +534,14 @@ public class IndexControllerImpl extends StateThread implements ObjectFilter,
 
     public synchronized void consolidate() throws IOException {
         long startTime = System.currentTimeMillis();
-        log.debug("consolidate() called");
+        log.trace("consolidate() called");
+        if (updatesSinceLastConsolidate == 0) {
+            log.trace("No updates since last Consolidate");
+            lastConsolidate = System.currentTimeMillis();
+            lastCommit = System.currentTimeMillis(); // Consolidate includes commit
+            return;
+        }
+        log.debug("Performing consolidate");
         for (IndexManipulator manipulator: manipulators) {
             manipulator.consolidate();
         }

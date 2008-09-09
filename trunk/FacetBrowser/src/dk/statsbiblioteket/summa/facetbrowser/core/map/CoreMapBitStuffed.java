@@ -371,7 +371,7 @@ public class CoreMapBitStuffed extends CoreMapImpl {
         try {
             openMeta();
             index = openIndex();
-            highestDocID = index[index.length-2];
+            highestDocID = index.length-2;
             valuePos = index[index.length-1];
             int valueSize = (int)Math.max(MIN_GROWTH_SIZE,
                                         valuePos * CONTENT_GROWTHFACTOR);
@@ -402,9 +402,11 @@ public class CoreMapBitStuffed extends CoreMapImpl {
             log.trace("Marking " + docIDs.getDocCount() +" docs " + startPos
                       + " => " + endPos);
         }
+        tagCounter.verify();
         BitSet ids = docIDs.getBits();
         int hitID = startPos;
         int to;
+        boolean outOfBoundsHandled = false;
         while ((hitID = ids.nextSetBit(hitID)) != -1 && hitID <= endPos) {
   //          System.out.println("- Get hitID " + hitPos + "/" + docIDs.length);
             try {
@@ -425,10 +427,16 @@ public class CoreMapBitStuffed extends CoreMapImpl {
 //                    counterLists[value >>> FACETSHIFT]
 //                                [value &  TAG_MASK]++;
                 }
-            } catch (Exception ex) {
-                if (log.isTraceEnabled()) {
+            } catch (ArrayIndexOutOfBoundsException ex) {
+                if (log.isTraceEnabled() && !outOfBoundsHandled) {
                     //noinspection DuplicateStringLiteralInspection
-                    log.trace("Index out of bounds for doc " + hitID, ex);
+                    log.debug(String.format(
+                            "Index out of bounds for doc %d with "
+                            + "index.length=%s, values.length=%s. Ignoring "
+                            + "subsequent out-of-bounds for this search",
+                            hitID, index == null ? "null" : index.length,
+                            values == null ? "null" : values.length), ex);
+                    outOfBoundsHandled = true;
                 }
 /*                System.out.println("Exception for hitID " + hitID);
                 ex.printStackTrace();
@@ -437,6 +445,7 @@ public class CoreMapBitStuffed extends CoreMapImpl {
                 // We throw an error upon open, if the index is larger than
                 // the map, so we'll live
             }
+            hitID++;
         }
         //noinspection DuplicateStringLiteralInspection
         log.trace("Marking finished");

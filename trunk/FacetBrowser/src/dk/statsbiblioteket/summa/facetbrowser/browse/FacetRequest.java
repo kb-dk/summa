@@ -67,12 +67,12 @@ public class FacetRequest extends Structure {
     }
 
     private void parse(String wantedFacets, Structure defaults) {
-        log.debug("Parsing '" + wantedFacets + "'");
         if (wantedFacets == null || "".equals(wantedFacets)) {
             log.trace("No Facets requested, using defaults");
             getFacets().putAll(defaults.getFacets());
             return;
         }
+        log.debug("Parsing '" + wantedFacets + "'");
         try {
             String[] tokens = wantedFacets.split(" *, *");
             for (String facetToken: tokens) {

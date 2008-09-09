@@ -47,6 +47,8 @@ import java.util.ArrayList;
 public class XStorage implements ConfigurationStorage {
     public static final String DEFAULT_RESOURCE = "xconfiguration.xml";
 
+    private static boolean unclearSemanticsWarned = false;
+
     private File storageFile;
     private XProperties xprops;
     private static Log log = LogFactory.getLog(XStorage.class);
@@ -167,9 +169,12 @@ public class XStorage implements ConfigurationStorage {
             }
 
             // TODO: Solve https://gforge.statsbiblioteket.dk/tracker/index.php?aid=1186
-            log.warn("Unclear semantics. "
-                     + "See https://gforge.statsbiblioteket.dk/"
-                     + "tracker/index.php?aid=1186");
+            if (!unclearSemanticsWarned) {
+                log.warn("Unclear semantics. "
+                         + "See https://gforge.statsbiblioteket.dk/"
+                         + "tracker/index.php?aid=1186");
+                unclearSemanticsWarned = true;
+            }
             return new XStorage((XProperties)sub);
         } catch (NullPointerException e) {
             throw new IOException("Could not locate value for key '" + key
