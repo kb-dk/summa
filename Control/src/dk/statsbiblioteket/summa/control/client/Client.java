@@ -281,6 +281,13 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
     public String deployService(String bundleId,
                                 String instanceId,
                                 String configLocation) {
+
+        if (serviceMan.knows (instanceId)) {
+            throw new ServiceDeploymentException ("A service with instance id "
+                                                  + "'" + instanceId + "' "
+                                                  + "already exists");
+        }
+
         setStatusRunning("Deploying service '" + bundleId + "' with config "
                         + configLocation + ", and instanceId '"
                         + instanceId + "'");

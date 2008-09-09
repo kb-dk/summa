@@ -27,7 +27,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.control.client.Client;
 import dk.statsbiblioteket.summa.control.api.ClientDeployer;
 import dk.statsbiblioteket.summa.control.api.NoSuchServiceException;
-import dk.statsbiblioteket.summa.control.server.ClientDeploymentException;
+import dk.statsbiblioteket.summa.control.api.ClientDeploymentException;
 
 import java.io.IOException;
 import java.util.List;
