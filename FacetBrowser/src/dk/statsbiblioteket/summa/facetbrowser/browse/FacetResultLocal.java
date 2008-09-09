@@ -62,10 +62,6 @@ public class FacetResultLocal extends FacetResultImpl<Integer> {
         return o1.compareTo(o2);
     }
 
-    protected String getTagString(String facet, Integer tag) {
-        return ParseUtil.encode(resolveTagString(facet, tag));
-    }
-
     protected String getQueryString(String facet, Integer tag) {
         FacetStructure fc = structure.getFacet(facet);
         if (fc == null) {
@@ -80,8 +76,7 @@ public class FacetResultLocal extends FacetResultImpl<Integer> {
         }
 
         // TODO: Should # be excaped too?
-        String escapedTag =
-                ParseUtil.encode(resolveTagString(facet, tag));
+        String cleanTag = ParseUtil.encode(resolveTagString(fc, tag));
         StringWriter sw = new StringWriter(100);
         if (fc.getFields().length > 1) {
             sw.append("(");
@@ -89,7 +84,7 @@ public class FacetResultLocal extends FacetResultImpl<Integer> {
         for (int i = 0 ; i < fc.getFields().length ; i++) {
             sw.append(fc.getFields()[i]);
             sw.append(":\"");
-            sw.append(escapedTag);
+            sw.append(cleanTag);
             sw.append("\"");
             if (i < fc.getFields().length - 1) {
                 sw.append(" OR ");
@@ -102,8 +97,12 @@ public class FacetResultLocal extends FacetResultImpl<Integer> {
         return sw.toString();
     }
 
-    protected String resolveTagString(String facet, Integer tag) {
-        return tagHandler.getTagName(tagHandler.getFacetID(facet), tag);
+    protected String getTagString(FacetStructure facet, Integer tag) {
+        return resolveTagString(facet, tag);
+    }
+
+    protected String resolveTagString(FacetStructure facet, Integer tag) {
+        return tagHandler.getTagName(facet.getFacetID(), tag);
     }
 
     /**

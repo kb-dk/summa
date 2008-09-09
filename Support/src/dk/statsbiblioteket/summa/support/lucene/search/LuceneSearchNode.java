@@ -27,6 +27,7 @@ import java.net.URL;
 import java.rmi.RemoteException;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.concurrent.TimeUnit;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -37,6 +38,7 @@ import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
 import dk.statsbiblioteket.summa.common.index.IndexException;
 import dk.statsbiblioteket.summa.search.document.DocumentSearcherImpl;
+import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import org.apache.commons.logging.Log;
@@ -85,6 +87,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
     private IndexSearcher searcher;
     private String location = null;
     private static final long WARMUP_MAX_HITS = 50;
+    private static final int COLLECTOR_REQUEST_TIMEOUT = 20 * 1000;
 
     /**
      * Constructs a Lucene search node from the given configuration. This
@@ -301,13 +304,56 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
         }
     }
 
-    private static String encode(String in) {
-        in = in.replaceAll("&", "&amp;");
-        in = in.replaceAll("\"", "&quot;");
-        in = in.replaceAll("<", "&lt;");
-        return in.replaceAll(">", "&gt;");
+    protected DocIDCollector collectDocIDs(String query,
+                                           String filter) throws IOException {
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("collectDocIDs(" + filter + ", " + query + ") called");
+        Filter luceneFilter;
+        Query luceneQuery;
+        try {
+            //noinspection AssignmentToNull
+            luceneFilter = filter == null || "".equals(filter) ? null :
+                             new QueryWrapperFilter(parser.parse(filter));
+        } catch (ParseException e) {
+            throw new RemoteException(String.format(
+                    "Unable to parse filter '%s'", query), e);
+        }
+        try {
+            luceneQuery = parser.parse(query);
+        } catch (ParseException e) {
+            throw new RemoteException(String.format(
+                    "Unable to parse query '%s'", query), e);
+        }
+        return collectDocIDs(luceneFilter, luceneQuery);
     }
 
-
-
+    private DocIDCollector collectDocIDs(Filter filter, Query query) throws
+                                                                   IOException {
+        log.trace("collectDocIDs() called");
+        long startTime = System.currentTimeMillis();
+        DocIDCollector collector;
+        try {
+            collector = collectors.poll(COLLECTOR_REQUEST_TIMEOUT,
+                                                       TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            throw new RemoteException("Interrupted qhile requesting a "
+                                      + "DocIDCollector from the queue");
+        }
+        if (collector == null) {
+            throw new RemoteException(String.format(
+                    "Timeout after %d milliseconds, while requesting a "
+                    + "DocIDCollector", COLLECTOR_REQUEST_TIMEOUT));
+        }
+        if (filter == null) {
+            searcher.search(query, collector);
+        } else {
+            searcher.search(query, filter, collector);
+        }
+        log.trace("Finished collectDocIDs in "
+                  + (System.currentTimeMillis() - startTime)
+                  + " ms with " + collector.getDocCount()
+                  + " documents collected and the highest bit being "
+                  + (collector.getBits().length() - 1);
+        return collector;
+    }
 }

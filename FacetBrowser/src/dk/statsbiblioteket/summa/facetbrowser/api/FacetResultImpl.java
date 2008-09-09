@@ -56,6 +56,7 @@ import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.util.FlexiblePair;
 import dk.statsbiblioteket.summa.facetbrowser.util.Pair;
 import dk.statsbiblioteket.summa.search.api.Response;
+import dk.statsbiblioteket.summa.common.util.ParseUtil;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -106,7 +107,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
                 map.entrySet()) {
             if (facet.getValue().size() > 0) {
                 sw.write("  <facet name=\"");
-                sw.write(simpleEntityEscape(facet.getKey()));
+                sw.write(urlEntityEscape(facet.getKey()));
                 // TODO: Preserve scoring
                 sw.write("\">\n");
 
@@ -118,7 +119,8 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
                 for (FlexiblePair<T, Integer> tag: facet.getValue()) {
                     if (tagCount++ < maxTags) {
                         sw.write("    <tag name=\"");
-                        sw.write(getTagString(facet.getKey(), tag.getKey()));
+                        sw.write(urlEntityEscape(getTagString(facet.getKey(),
+                                                              tag.getKey())));
         /*                if (!Element.NOSCORE.equals(tag.getScore())) {
                             sw.write("\" score=\"");
                             sw.write(Float.toString(tag.getScore()));
@@ -317,7 +319,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
      * @return a String-representation of the Tag.
      */
     protected String getTagString(String facet, T tag) {
-        return simpleEntityEscape(String.valueOf(tag));
+        return urlEntityEscape(String.valueOf(tag));
     }
     /**
      * This should be overridet when subclassing, if the tags does not resolve
@@ -328,7 +330,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
      */
     protected String getQueryString(String facet, T tag) {
         return facet + ":\"" +
-               simpleEntityEscape(String.valueOf(tag)) + "\"";
+               urlEntityEscape(String.valueOf(tag)) + "\"";
     }
 
     /**
@@ -413,7 +415,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
                                    FlexiblePair.SortType.SECONDARY_DESCENDING));
     }
 
-    public static String simpleEntityEscape(String text) {
+    public static String urlEntityEscape(String text) {
         return text.replaceAll("&",  "&amp;").
                     replaceAll("<",  "&lt;").
                     replaceAll(">",  "&gt;").

@@ -28,6 +28,8 @@ import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.util.ChangingSemaphore;
 import dk.statsbiblioteket.summa.search.dummy.SearchNodeDummy;
 import dk.statsbiblioteket.summa.search.api.*;
+import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
+import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.TimeUnit;
@@ -127,6 +129,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
             throw new RemoteException(
                     "Interrupted while waiting for search queue access", e);
         }
+        ResponseCollection responses = new ResponseCollection();
         try {
             try {
                 if (freeSlots.getOverallPermits() == 0) {
@@ -149,7 +152,6 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
                         "Interrupted while waiting for free slot", e);
             }
             try {
-                ResponseCollection responses = new ResponseCollection();
                 searchNode.search(request, responses);
                 long responseTime = System.nanoTime() - fullStartTime;
                 lastResponseTime = responseTime;
@@ -168,6 +170,14 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
             }
         } finally {
             searchQueue.release();
+            // TODO: Make this cleaner with no explicit dependency
+            if (responses.getTransient().containsKey(DocumentSearcher.DOCIDS)) {
+                Object o =
+                        responses.getTransient().get(DocumentSearcher.DOCIDS);
+                if (o instanceof DocIDCollector) {
+                    ((DocIDCollector)o).close();
+                }
+            }
         }
     }
 

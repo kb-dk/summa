@@ -13,7 +13,10 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.index.IndexCommon;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
+import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
+import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -97,8 +100,25 @@ public class LuceneSearchNodeTest extends TestCase {
         SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
         Request request = new Request();
         request.put(DocumentKeys.SEARCH_QUERY, "hans");
-        log.debug("Search for 'hans' gave\n" 
+        log.debug("Search for 'hans' gave\n"
                   + searcher.search(request).toXML());
+        searcher.close();
+    }
+
+    public void testDocIDCollector() throws Exception {
+        makeIndex();
+        Configuration conf = Configuration.load(basicSetup().getAbsolutePath());
+        conf.set(DocumentSearcher.CONF_COLLECT_DOCIDS, true);
+        SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
+        Request request = new Request();
+        request.put(DocumentKeys.SEARCH_QUERY, "hans");
+        ResponseCollection responses = searcher.search(request);
+        log.debug("Search for 'hans' gave\n" + responses.toXML());
+        // TODO: Inject fake searcher that tests for docID count
+//        DocIDCollector collector = (DocIDCollector)
+//                responses.getTransient().get(DocumentSearcher.DOCIDS);
+//        assertEquals("The right number of docIDs should be collected",
+//                     1, collector.getDocCount());
         searcher.close();
     }
 
