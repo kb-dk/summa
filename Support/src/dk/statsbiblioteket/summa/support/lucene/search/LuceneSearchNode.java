@@ -260,11 +260,13 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                         "".equals(iField.stringValue())) {
                         if (fallbacks != null && fallbacks.length != 0) {
                             record.addField(new DocumentResponse.Field(
-                                    field, fallbacks[i]));
+                                    field, fallbacks[i],
+                                    !nonescapedFields.contains(field)));
                         }
                     } else {
                         record.addField(new DocumentResponse.Field(
-                                field, encode(iField.stringValue())));
+                                field, iField.stringValue(),
+                                !nonescapedFields.contains(field)));
                     }
                 }
                 result.addRecord(record);

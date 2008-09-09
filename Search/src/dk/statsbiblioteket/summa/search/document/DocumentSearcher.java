@@ -90,6 +90,15 @@ public interface DocumentSearcher extends SearchNode, DocumentKeys {
     public static final String[] DEFAULT_FALLBACK_VALUES = null;
 
     /**
+     * A list of the result-fields that should not be entity-escaped.
+     * </p><p>
+     * Optional. If not specified, all result-fields are entity-escaped when
+     * Response-XML is generated.
+     */
+    public static final String CONF_NONESCAPED_FIELDS =
+            "summa.search.non-escaped-fields";
+
+    /**
      * If a start-index is not specified in the Request, this value is used.
      * </p></p>
      * Optional. Default is {@link #DEFAULT_START_INDEX} (0).

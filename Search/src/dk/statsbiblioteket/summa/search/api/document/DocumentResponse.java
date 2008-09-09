@@ -155,10 +155,12 @@ public class DocumentResponse implements Response, DocumentKeys {
     public static class Field implements Serializable {
         private String name;
         private String content;
+        private boolean escapeContent;
 
-        public Field(String name, String content) {
+        public Field(String name, String content, boolean escapeContent) {
             this.name = name;
             this.content = content;
+            this.escapeContent = escapeContent;
         }
 
         public void toXML(StringWriter sw) {
@@ -166,7 +168,11 @@ public class DocumentResponse implements Response, DocumentKeys {
                 return;
             }
             sw.append("    <field name=\"").append(name).append("\">");
-            sw.append(ParseUtil.encode(content)).append("</field>\n");
+            if (escapeContent) {
+                sw.append(ParseUtil.encode(content)).append("</field>\n");
+            } else {
+                sw.append(content).append("</field>\n");
+            }
         }
     }
 

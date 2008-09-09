@@ -24,6 +24,9 @@ package dk.statsbiblioteket.summa.search.document;
 
 import java.rmi.RemoteException;
 import java.util.Arrays;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.List;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.search.SearchNodeImpl;
@@ -37,7 +40,6 @@ import org.apache.commons.logging.LogFactory;
 /**
  * Default implementation of {@link DocumentSearcher} that handles
  * transformation of a {@link Request} to a method call with specific arguments.
- *
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -48,6 +50,11 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements
 
     private String[] resultFields = DEFAULT_RESULT_FIELDS;
     private String[] fallbackValues = DEFAULT_FALLBACK_VALUES;
+    /**
+     * The result-fields that should not be entity-escaped (normally used for
+     * inline XML).
+     */
+    protected Set<String> nonescapedFields = new HashSet<String>(10);
     private String sortKey = DEFAULT_DEFAULT_SORTKEY;
     private long maxRecords = DEFAULT_MAX_NUMBER_OF_RECORDS;
     private long startIndex = DEFAULT_START_INDEX;
@@ -57,6 +64,9 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements
         super(conf);
         log.trace("Constructing DocumentSearcherImpl");
         resultFields = conf.getStrings(CONF_RESULT_FIELDS, resultFields);
+        if (conf.valueExists(CONF_NONESCAPED_FIELDS)) {
+            nonescapedFields.addAll(conf.getStrings(CONF_NONESCAPED_FIELDS));
+        }
         fallbackValues = conf.getStrings(CONF_FALLBACK_VALUES, fallbackValues);
         sortKey = conf.getString(CONF_DEFAULT_SORTKEY, sortKey);
         if (fallbackValues != null
