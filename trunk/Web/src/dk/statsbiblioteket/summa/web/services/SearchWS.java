@@ -22,12 +22,14 @@
  */
 package dk.statsbiblioteket.summa.web.services;
 
-import dk.statsbiblioteket.summa.search.api.SearchClient;
-import dk.statsbiblioteket.summa.search.api.ResponseCollection;
-import dk.statsbiblioteket.summa.search.api.Request;
-import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.ResponseCollection;
+import dk.statsbiblioteket.summa.search.api.SearchClient;
+import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 
@@ -37,28 +39,53 @@ import java.io.IOException;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mv")
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "mv")
 public class SearchWS {
+    private Log log;
+
     SearchClient searcher;
     Configuration conf;
 
-    private SearchClient getSearchClient() {
-        if (this.searcher == null) {
-            if (this.conf == null) {
-                this.conf = Configuration.getSystemConfiguration(true);
-            }
-            this.searcher = new SearchClient(this.conf);
-        }
-        return this.searcher;
+    public SearchWS() {
+        log = LogFactory.getLog(SearchWS.class);
     }
 
-    public String simpleSearch(String query, int numberOfRecords, int startIndex) {
+    /**
+     * Get a single SearchClient based on the system configuration.
+     * @return A SearchClient.
+     */
+    private synchronized SearchClient getSearchClient() {
+        if (searcher == null) {
+            if (conf == null) {
+                conf = Configuration.getSystemConfiguration(true);
+            }
+            searcher = new SearchClient(conf);
+        }
+        return searcher;
+    }
+
+    /**
+     * A simple way to query the index returning results sorted by relevance. The same as calling
+     * simpleSearchSorted while specifying a normal sort on relevancy.
+     * @param query The query to perform.
+     * @param numberOfRecords The maximum number of records to return.
+     * @param startIndex Where to start returning records from (used to implement paging).
+     * @return An XML string containing the result or an error description.
+     */
+    public String simpleSearch(String query, long numberOfRecords, long startIndex) {
         return simpleSearchSorted(query, numberOfRecords, startIndex, DocumentKeys.SORT_ON_SCORE, false);
     }
 
-    public String simpleSearchSorted(String query, int numberOfRecords, int startIndex, String sortKey, boolean reverse) {
+    /**
+     * A simple way to query the index wile being able to specify which field to sort by and whether the sorting
+     * should be reversed.
+     * @param query The query to perform.
+     * @param numberOfRecords The maximum number of records to return.
+     * @param startIndex Where to start returning records from (used to implement paging).
+     * @param sortKey The field to sort by.
+     * @param reverse Whether or not the sort should be reversed.
+     * @return An XML string containing the result or an error description.
+     */
+    public String simpleSearchSorted(String query, long numberOfRecords, long startIndex, String sortKey, boolean reverse) {
         String retXML;
 
         ResponseCollection res;
@@ -68,13 +95,19 @@ public class SearchWS {
         req.put(DocumentKeys.SEARCH_MAX_RECORDS, numberOfRecords);
         req.put(DocumentKeys.SEARCH_START_INDEX, startIndex);
         req.put(DocumentKeys.SEARCH_SORTKEY, sortKey);
-        req.put(DocumentKeys.SEARCH_REVERSE, reverse);
+        req.put(DocumentKeys.SEARCH_REVERSE, reverse);        
 
         try {
             res = getSearchClient().search(req);
             retXML = res.toXML();
         } catch (IOException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            log.error("Error executing query: '" + query + "', " +
+                    numberOfRecords + ", " +
+                    startIndex + ", " +
+                    sortKey + ", " +
+                    reverse +
+                    ". Error was: ", e);
+            // TODO: return a nicer error xml block
             retXML = "<error>Error performing query</error>";
         }
 

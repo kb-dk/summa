@@ -53,8 +53,8 @@
                 startIndex: The number of the first record to return.
             </documentation>
             <parameter name="query" type="tns:string" />
-            <parameter name="numberOfRecords" type="tns:int" />
-            <parameter name="startIndex" type="tns:int" />
+            <parameter name="numberOfRecords" type="tns:long" />
+            <parameter name="startIndex" type="tns:long" />
         </operation>
 
         <operation name="simpleSearchSorted">
@@ -68,8 +68,8 @@
                 reverse: A boolean indication whether or not to sort in reverse.
             </documentation>
             <parameter name="query" type="tns:string" />
-            <parameter name="numberOfRecords" type="tns:int" />
-            <parameter name="startIndex" type="tns:int" />
+            <parameter name="numberOfRecords" type="tns:long" />
+            <parameter name="startIndex" type="tns:long" />
             <parameter name="sortKey" type="tns:string" />
             <parameter name="reverse" type="tns:boolean" />
         </operation>
