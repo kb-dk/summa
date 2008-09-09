@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bundle>
-	<mainJar>test-index-fagref-service-@summa.version@.jar</mainJar>
+	<mainJar>test-index-oai-service-@summa.version@.jar</mainJar>
 	<mainClass>dk.statsbiblioteket.summa.control.service.Launcher</mainClass>
     <property name="com.sun.management.jmxremote.port" value="2773"/>
     <property name="com.sun.management.jmxremote.ssl" value="false"/>

@@ -39,6 +39,10 @@ public class KillCommand extends RemoteCommand<ClientConnection> {
                         ctx.prompt ("\t" + serviceId + "  ... ");
                         service.kill();
                         ctx.info("Killed");
+
+                        /* Tell the client to reset all connections to
+                         * the service */
+                        client.reportError(serviceId);
                     } catch (NoSuchServiceException e) {
                         ctx.info ("\t" + serviceId + "  No such service");
                     } catch (InvalidServiceStateException e) {
@@ -49,6 +53,7 @@ public class KillCommand extends RemoteCommand<ClientConnection> {
                 // No services specified kill the client
                 ctx.prompt ("Killing client '" + client.getId() + "'... ");
                 client.stop ();
+                connectionError("Client killed. Connection reset");
                 ctx.info ("OK");
             }
         } catch (Exception e) {

@@ -845,6 +845,6 @@
         <delete dir="${tmp.dir}"/>
     </target>
 
-    <target name="all" depends="release, .test-facet-1.bundle, .test-search-1.bundle, .test-client-1.bundle, .test-storage-1.bundle, .test-data, .test-ingest-1.bundle, .test-ingest-fagref.bundle, .test-ingest-oai.bundle, .test-index-fagref.bundle"/>
+    <target name="all" depends="release, .test-facet-1.bundle, .test-search-1.bundle, .test-client-1.bundle, .test-storage-1.bundle, .test-data, .test-ingest-oai.bundle, .test-index-oai.bundle"/>
 
 </project>
