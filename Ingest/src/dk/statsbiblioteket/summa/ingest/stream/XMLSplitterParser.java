@@ -39,6 +39,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.util.ParseUtil;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Streams;
@@ -363,7 +364,7 @@ public class XMLSplitterParser extends DefaultHandler2 implements
         }
         for (int i = 0 ; i < atts.getLength() ; i++) {
             sw.append(" ").append(atts.getQName(i)).append("=\"");
-            sw.append(atts.getValue(i)).append("\"");
+            sw.append(ParseUtil.encode(atts.getValue(i))).append("\"");
             if (inId && !"".equals(target.idTag) &&
                 equalsAny(target.idTag,
                           atts.getQName(i), atts.getLocalName(i))) {
@@ -437,7 +438,7 @@ public class XMLSplitterParser extends DefaultHandler2 implements
         if (inId) {
             id.append(chars);
         }
-        sw.append(chars);
+        sw.append(ParseUtil.encode(chars));
     }
 
 
