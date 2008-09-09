@@ -12,9 +12,15 @@
             <value class="int">27000</value>
         </entry>
 
+        <!-- The class implementing the Service interface -->
+        <entry>
+            <key>control.launcher.service.class</key>
+            <value class="string">dk.statsbiblioteket.summa.control.service.FilterService</value>
+        </entry>
+
         <entry>
             <key>FilterPump.ChainName</key>
-            <value class="string">Simple fagref index</value>
+            <value class="string">Simple faceted indexer</value>
         </entry>
         <entry>
             <key>FilterControl.Chains</key>
@@ -50,7 +56,7 @@
                         </entry>
                         <entry>
                             <key>summa.storage.RecordReader.base</key>
-                            <value class="string">fagref</value>
+                            <value class="string">oai</value>
                         </entry>
                     </value>
                 </entry>
