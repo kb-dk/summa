@@ -25,6 +25,7 @@ package dk.statsbiblioteket.summa.releasetest;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.rmi.RemoteException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -128,6 +129,27 @@ public class FacetTest extends NoExitTestCase {
         SearchTest.verifySearch(searcher, "Hans", 1);
         log.debug("Sample output from search: "
                   + searcher.search(SearchTest.simpleRequest("Hans")).toXML());
+        SearchTest.verifySearch(searcher, "Hans", 1);
+        log.debug("Second test-search performed with success");
+        log.debug("All OK. Closing searcher, storage and returning");
+        searcher.close();
+        storage.close();
+    }
+
+    public void testTwoSearch() throws Exception {
+        Storage storage = SearchTest.startStorage();
+        SearchTest.ingest(new File(
+                Resolver.getURL("data/search/input/part2").getFile()));
+        updateIndex();
+        log.debug("Index updated. Creating searcher");
+        SummaSearcherImpl searcher =
+                new SummaSearcherImpl(getSearcherConfiguration());
+        log.debug("Searcher created. Verifying existence of Gurli data");
+        SearchTest.verifySearch(searcher, "Gurli", 1);
+        log.debug("Sample output from search: "
+                  + searcher.search(SearchTest.simpleRequest("Gurli")).toXML());
+        SearchTest.verifySearch(searcher, "Gurli", 1);
+        log.debug("Second test-search performed with success");
         log.debug("All OK. Closing searcher, storage and returning");
         searcher.close();
         storage.close();
@@ -143,14 +165,20 @@ public class FacetTest extends NoExitTestCase {
         log.debug("Update 1 performed");
         searcher.checkIndex();
         log.debug("CheckIndex called");
-        assertNotNull("Searching should provide a result (we don't care what)",
-                      searcher.search(SearchTest.simpleRequest("dummy")));
+        try {
+            searcher.search(SearchTest.simpleRequest("dummy"));
+            // TODO: Check if this is what we want
+            fail("An timeout-Exceptions hould be thrown with empty index");
+        } catch (RemoteException e) {
+            // Expected
+        }
         SearchTest.ingest(new File(
                 Resolver.getURL("data/search/input/part1").getFile()));
         log.debug("Ingest 1 performed");
         updateIndex();
         log.debug("Update 2 performed");
         searcher.checkIndex();
+        log.debug("Checkindex after Update 2 performed, verifying...");
         SearchTest.verifySearch(searcher, "Hans", 1);
         log.debug("Adding new material");
         SearchTest.ingest(new File(

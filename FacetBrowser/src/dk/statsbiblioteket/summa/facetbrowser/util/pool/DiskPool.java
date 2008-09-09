@@ -134,6 +134,7 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
             log.trace("Loading index");
             indexes = loadIndex();
             valueCount = indexes.length;
+            expandIfNeeded();
             log.trace("Index loaded with indexes.length " + indexes.length);
         }
         connectToValues();
