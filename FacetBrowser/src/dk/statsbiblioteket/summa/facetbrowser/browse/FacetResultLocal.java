@@ -40,6 +40,8 @@ import java.io.StringWriter;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+
 /**
  * The local FacetStructure is optimized towards compact and fast implementation
  * at the cost of serializability. Down to earth, this means that Strings are
@@ -50,6 +52,8 @@ import java.util.Map;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class FacetResultLocal extends FacetResultImpl<Integer> {
+    private static Logger log = Logger.getLogger(FacetResultLocal.class);
+
     private TagHandler tagHandler;
 
     public FacetResultLocal(Structure structure, TagHandler tagHandler) {
@@ -97,6 +101,10 @@ public class FacetResultLocal extends FacetResultImpl<Integer> {
         return sw.toString();
     }
 
+    protected String getTagString(String facet, Integer tag) {
+        return resolveTagString(structure.getFacet(facet), tag);
+    }
+
     protected String getTagString(FacetStructure facet, Integer tag) {
         return resolveTagString(facet, tag);
     }
@@ -111,6 +119,7 @@ public class FacetResultLocal extends FacetResultImpl<Integer> {
      * @return a version of the FacetStructure suitable for external use.
      */
     public FacetResult externalize() {
+        log.trace("externalize() called");
         FacetResultExternal external = new FacetResultExternal(structure);
         for (Map.Entry<String, List<FlexiblePair<Integer, Integer>>> entry:
                 map.entrySet()) {
