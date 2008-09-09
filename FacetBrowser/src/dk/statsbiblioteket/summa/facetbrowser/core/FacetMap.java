@@ -113,7 +113,7 @@ public class FacetMap {
                     new ArrayList<Integer>(facet.getValue().size());
             for (String tag: facet.getValue()) {
                 int tagID = tagHandler.insertTag(facetID, tag);
-                if (tagID > 0) {
+                if (tagID >= 0) {
                     coreMap.adjustPositions(facetID, tagID, 1);
                     // Adjust already resolved tagIDs
                     for (int i = 0 ; i < tagIDs.size() ; i++) {

@@ -248,8 +248,8 @@ public class Facet implements CollatorSortedPool {
         }
         xp.store(new FileOutputStream(metaFile), null);
 
-        log.trace(String.format("Storing pool data for Facet '%s'",
-                                structure.getName()));
+        log.trace(String.format("Storing %d Tags for Facet '%s'",
+                                size(), structure.getName()));
         pool.store();
     }
 

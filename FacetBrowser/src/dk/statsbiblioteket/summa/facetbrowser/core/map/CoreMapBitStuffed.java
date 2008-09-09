@@ -48,7 +48,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.BitSet;
 
 /**
@@ -232,6 +231,14 @@ public class CoreMapBitStuffed extends CoreMapImpl {
     }
 
     private int calculateValue(int facetID, int tagID) {
+        if (facetID < 0) {
+            throw new IllegalArgumentException(String.format(
+                    "The facetID must be >= 0. It was %d", facetID));
+        }
+        if (tagID < 0) {
+            throw new IllegalArgumentException(String.format(
+                    "The tagID must be >= 0. It was %d", tagID));
+        }
         return facetID << FACETSHIFT | tagID & TAG_MASK;
     }
 
@@ -377,6 +384,9 @@ public class CoreMapBitStuffed extends CoreMapImpl {
                                         valuePos * CONTENT_GROWTHFACTOR);
             values = new int[valueSize];
             openValues(index[index.length-1]);
+            log.debug(String.format(
+                    "open(%s, %b) got highestDocID=%d, valuePos=%d",
+                    location,  forceNew, highestDocID, valuePos));
         } catch (IOException e) {
             log.warn(String.format(
                     "Could not load persistent data for core map at '%s'."
@@ -402,7 +412,6 @@ public class CoreMapBitStuffed extends CoreMapImpl {
             log.trace("Marking " + docIDs.getDocCount() +" docs " + startPos
                       + " => " + endPos);
         }
-        tagCounter.verify();
         BitSet ids = docIDs.getBits();
         int hitID = startPos;
         int to;
@@ -419,8 +428,8 @@ public class CoreMapBitStuffed extends CoreMapImpl {
                 for (int i = index[hitID] ; i < to ; i++) {
 //                    System.out.println("- Fetching value " + i + "/" + values.length);
 //                    value = values[i]; // Seems slower than 2 * direct access
-/*                    System.out.println("Marking " + (value >>> FACETSHIFT) +
-                                       " to " + (value & TAG_MASK));*/
+//                    System.out.println("Marking " + (values[i] >>> FACETSHIFT) +
+//                                       " to " + (values[i] & TAG_MASK));
                     tagCounter.increment(values[i] >>> FACETSHIFT,
                                          values[i] & TAG_MASK);
 //                    System.out.println("Marked");

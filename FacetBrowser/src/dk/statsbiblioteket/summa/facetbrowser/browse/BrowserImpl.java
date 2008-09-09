@@ -182,7 +182,7 @@ public class BrowserImpl extends SearchNodeImpl implements Browser {
             log.trace("Waiting for browserThread");
             browserThread.waitForResult(BROWSER_THREAD_MARK_TIMEOUT);
             log.trace("Finished waiting for BrowserThread");
-            return browserThread.getResult();
+            return browserThread.getResult().externalize();
         } finally {
             browsers.offer(browserThread);
         }

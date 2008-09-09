@@ -161,8 +161,9 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
                 searchNode.search(request, responses);
                 long responseTime = System.nanoTime() - fullStartTime;
                 lastResponseTime = responseTime;
-                log.trace("Query performed in " + responseTime
-                          + " nanoseconds");
+                //noinspection DuplicateStringLiteralInspection
+                log.trace("Query performed in " + responseTime / 1000000.0
+                          + " milliseconds");
                 queryCount.incrementAndGet();
                 totalResponseTime.addAndGet(responseTime);
                 return responses;

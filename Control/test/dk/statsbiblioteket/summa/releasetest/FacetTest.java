@@ -126,6 +126,8 @@ public class FacetTest extends NoExitTestCase {
                 new SummaSearcherImpl(getSearcherConfiguration());
         log.debug("Searcher created. Verifying existence of Hans Jensen data");
         SearchTest.verifySearch(searcher, "Hans", 1);
+        log.debug("Sample output from search: "
+                  + searcher.search(SearchTest.simpleRequest("Hans")).toXML());
         log.debug("All OK. Closing searcher, storage and returning");
         searcher.close();
         storage.close();
