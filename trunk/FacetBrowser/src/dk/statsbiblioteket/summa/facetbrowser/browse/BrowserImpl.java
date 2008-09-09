@@ -29,6 +29,7 @@ package dk.statsbiblioteket.summa.facetbrowser.browse;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult;
+import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMap;
 import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMapFactory;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
@@ -36,6 +37,8 @@ import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandlerFactory;
 import dk.statsbiblioteket.summa.facetbrowser.core.FacetMap;
 import dk.statsbiblioteket.summa.facetbrowser.core.FacetCore;
 import dk.statsbiblioteket.summa.search.SearchNodeImpl;
+import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
+import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.summa.search.api.*;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.util.Profiler;
@@ -45,18 +48,18 @@ import org.apache.log4j.Logger;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.rmi.RemoteException;
 import java.io.File;
 import java.io.IOException;
 
 /**
- * The default browser implementation is synchronized and thus does only
- * support one thread at a time. This is due to caching of tag counters,
- * in order to minimise garbage collections.
  * The implementation uses threading and should scale well on a multi-processor
  * machine, if the architecture supports parallel RAM access. On a machine
  * with multiple processors, but old-style access to RAM, the increase in
  * performance is smaller.
+ * </p><p>
+ * @see {@link FacetKeys} for query-syntax.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -68,6 +71,8 @@ public class BrowserImpl extends SearchNodeImpl implements Browser {
      * Each concurrent search costs total number of tags * 4 bytes of memory.
      */
     public static final int DEFAULT_NUMBER_OF_CONCURRENT_SEARCHES = 1;
+    public static final int BROWSER_THREAD_QUEUE_TIMEOUT = 20 * 1000;
+    private static final long BROWSER_THREAD_MARK_TIMEOUT = 30 * 1000;
 
     private Structure structure;
     private FacetMap facetMap;
@@ -128,17 +133,59 @@ public class BrowserImpl extends SearchNodeImpl implements Browser {
 
     protected void managedSearch(Request request, ResponseCollection responses)
                                                         throws RemoteException {
-        // TODO: Add here
-//        FacetRequest facetRequest = new FacetRequest(request.)
+        if (!responses.getTransient().containsKey(DocumentSearcher.DOCIDS)) {
+            log.debug("No " + DocumentSearcher.DOCIDS + " from a previous "
+                      + "DocumentSearcher in responses. Skipping faceting");
+            return;
+        }
+        Object o = responses.getTransient().get(DocumentSearcher.DOCIDS);
+        if (!(o instanceof DocIDCollector)) {
+            throw new RemoteException(String.format(
+                    "Found transient data for key '%s'. Expected class %s, "
+                    + "but got %s", DocumentSearcher.DOCIDS,
+                                    DocIDCollector.class.getName(),
+                                    o.getClass().getName()));
+        }
+        DocIDCollector collector = (DocIDCollector)o;
+        responses.add(getFacetMap(
+                collector, request.containsKey(FacetKeys.SEARCH_FACET_FACETS) ?
+                           request.getString(FacetKeys.SEARCH_FACET_FACETS) :
+                           null));
     }
 
     public List<String> getFacetNames() {
         return structure.getFacetNames();
     }
 
-    public FacetResult getFacetMap(int[] docIDs, int startPos, int length,
-                              String facets) {
-        return null;
+    public FacetResult getFacetMap(DocIDCollector docIDs, String facets) throws
+                                                               RemoteException {
+        FacetRequest facetRequest = new FacetRequest(docIDs, facets, structure);
+        log.trace("Requesting BrowserThread");
+        BrowserThread browserThread;
+        try {
+            browserThread = browsers.poll(BROWSER_THREAD_QUEUE_TIMEOUT,
+                                          TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            throw new RemoteException("Interrupted while waiting for a "
+                                      + "free BrowserThread", e);
+        }
+        if (browserThread == null) {
+            throw new RemoteException(String.format(
+                    "Timeout after %d ms while waiting for a free BrowserThread",
+                    BROWSER_THREAD_QUEUE_TIMEOUT));
+        }
+        try {
+            // TODO: Make this threaded
+            log.trace("Activating BrowserThread");
+            browserThread.startRequest(docIDs, 0, docIDs.getDocCount(),
+                                   facetRequest);
+            log.trace("Waiting for browserThread");
+            browserThread.waitForResult(BROWSER_THREAD_MARK_TIMEOUT);
+            log.trace("Finished waiting for BrowserThread");
+            return browserThread.getResult();
+        } finally {
+            browsers.offer(browserThread);
+        }
         /*
     protected synchronized FacetResult getFacetMap(String query,
                                        FacetResult.TagSortOrder sortOrder,

@@ -129,7 +129,7 @@ public class TagCounterTest extends TestCase {
         int retries = 2000;
 
         System.out.println("Testing getFirst performance for POPULARITY");
-        Profiler profiler = new Profiler();
+/*        Profiler profiler = new Profiler();
         FacetRequest popularityOrderRequest = new FacetRequest(
                 null, 0, 0, Strings.join(bo.getFacetNames(), " (POPULARITY), "),
                 bo.getStructure());
@@ -157,7 +157,7 @@ public class TagCounterTest extends TestCase {
                            + " ms for ALPHA getFirst in "
                            + bo.getTagHandler().getTagCount() + " touched tags ("
                            + 1000 / speed + " fills/ms)");
-    }
+  */  }
 
     public void dumpBigSpeed() throws Exception {
         System.out.println("Building bo.getTagHandler()...");

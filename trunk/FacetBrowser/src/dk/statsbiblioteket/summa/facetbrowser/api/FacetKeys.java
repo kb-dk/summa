@@ -11,9 +11,18 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
+import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
+import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
 
 /**
  * Interface defining the search keys used by Summa's {@code BrowserImpl}.
+ * </p><p>
+ * The FacetBrowser piggy-backs on a DocumentSearcher, from which the query
+ * and filter is used. See {@link DocumentKeys} for details.
+ * </p><p>
+ * Note: in order to enable the generation of docIDs for the FacetBrowser,
+ * the DocumentSearcher needs to have the property
+ * {@link DocumentKeys#SEARCH_COLLECT_DOCIDS} set to true.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -36,5 +45,5 @@ public interface FacetKeys {
      * This is all optional. If no facets are specified, the default facets
      * are requested.
      */
-    public static final String SEARCH_FILTER = "search.facet.facets";
+    public static final String SEARCH_FACET_FACETS = "search.facet.facets";
 }

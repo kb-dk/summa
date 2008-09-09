@@ -26,6 +26,7 @@ import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.browse.TagCounter;
 import dk.statsbiblioteket.summa.facetbrowser.browse.TagCounterArray;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
+import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.File;
@@ -192,7 +193,7 @@ public interface CoreMap {
      * @param startPos   only use the docIDs from this position (inclusive).
      * @param endPos     only use the docIDs up to this position (inclusive).
      */
-    public void markCounterLists(TagCounter tagCounter, int[] docIDs,
+    public void markCounterLists(TagCounter tagCounter, DocIDCollector docIDs,
                                  int startPos, int endPos);
 
     /**
