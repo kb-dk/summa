@@ -234,7 +234,7 @@ public class XMLSplitterParser extends DefaultHandler2 implements
                 return false;
             }
         }
-        log.warn("hasNext taited more than '" + QUEUE_TIMEOUT
+        log.warn("hasNext waited more than '" + QUEUE_TIMEOUT
                   + "' ms for status and got none. Returning false");
         return false;
     }
@@ -358,10 +358,26 @@ public class XMLSplitterParser extends DefaultHandler2 implements
         if (!rootRecordElement) { // Only clear inside prefixes
             prefixes.clear();
         }
-        if (equalsAny(target.idElement, qName, local)) {
-            // We have an ID
-            inId = true;
+
+        // Check if this is an id element. If we already have an id just
+        // move along
+        if (id.getBuffer().length() == 0) {
+            if (target.idNamespace == null) {
+                // Do sloppy id element extraction
+                if (equalsAny(target.idElement, qName, local)) {
+                    log.trace ("Found record ID by sloppy matching");
+                    inId = true;
+                }
+            } else {
+                // Me must match against the namespaced element
+                if (uri.equals(target.idNamespace) &&
+                    target.idElement.equals(local)) {
+                    log.trace ("Found record ID by strict matching");
+                    inId = true;
+                }
+            }
         }
+
         for (int i = 0 ; i < atts.getLength() ; i++) {
             sw.append(" ").append(atts.getQName(i)).append("=\"");
             sw.append(ParseUtil.encode(atts.getValue(i))).append("\"");
