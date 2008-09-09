@@ -181,9 +181,15 @@ public class ClientManager extends ConnectionManager<ClientConnection>
      * @return the bundle id or null if the instance id is not known
      */
     public String getBundleId (String instanceId) {
+        if (!knowsClient (instanceId)) {
+            throw new NoSuchClientException ("No such client '"
+                                             + instanceId + "'");
+        }
+
         try {
             File clientMeta = getClientMetaFile(instanceId);
             Configuration conf = new Configuration (new FileStorage(clientMeta));
+
             return conf.getString(ClientDeployer.DEPLOYER_BUNDLE_PROPERTY);
         } catch (IOException e) {
             log.error ("Error while looking up bundle id for '"
