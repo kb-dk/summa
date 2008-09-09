@@ -35,7 +35,7 @@
     </service>
     -->
 
-    <service name="SearchWS" provider="java:RPC" style="wrapped" use="literal">
+    <service name="StorageWS" provider="java:RPC" style="wrapped" use="literal">
         <parameter name="typeMappingVersion" value="1.2"/>
 
         <documentation>Storage web service for the Summa system</documentation>
