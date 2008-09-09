@@ -47,12 +47,22 @@ public class XMLSplitterFilter implements ObjectFilter {
     private static Log log = LogFactory.getLog(XMLSplitterFilter.class);
 
     /**
-     * The prefix to prepend to any calcuopenilated Record-ids.
+     * The prefix to prepend to the extracted Record-ids.
      * </p><p>
      * Default: "".
      */
     public static final String CONF_ID_PREFIX =
             "summa.ingest.xmlsplitter.id_prefix";
+
+    /**
+     * The XML namespace of the ID element matched by {@link #CONF_ID_ELEMENT}.
+     * If this property is unset IDs will be extracted as descibed in
+     * {@link #CONF_ID_ELEMENT}.
+     * </p><p>
+     * Default: {@code null}.
+     */
+    public static final String CONF_ID_NAMESPACE =
+            "summa.ingest.xmlsplitter.id_element_namespace";
 
     /**
      * If true, extracted ids which beginning matches {@link #CONF_ID_PREFIX}
@@ -84,7 +94,7 @@ public class XMLSplitterFilter implements ObjectFilter {
     /**
      * The id-element containing the id for a given record. The element must be
      * present inside the record-element. If a tag inside an element is used for
-     * id, the syntag is element#tag.
+     * id, the syntax is element#tag.
      * </p><p>
      * Example 1: "foo" matches <foo>myid</foo> and returns myid.<br />
      * Example 2: "foo#bar" matches <foo bar="myid">whatever</foo> and returns
@@ -148,6 +158,7 @@ public class XMLSplitterFilter implements ObjectFilter {
         public String recordElement = "record";
         public String idElement ="id";
         public String idTag = "";
+        public String idNamespace = null;
         public String base;
         public boolean preserveNamespaces = true;
         public boolean requireValid = false;
@@ -159,6 +170,7 @@ public class XMLSplitterFilter implements ObjectFilter {
          */
         public Target(Configuration configuration) {
             idPrefix = configuration.getString(CONF_ID_PREFIX, idPrefix);
+            idNamespace = configuration.getString(CONF_ID_NAMESPACE, idNamespace);
             collapsePrefix =
                     configuration.getBoolean(CONF_COLLAPSE_PREFIX, collapsePrefix);
             recordElement =
