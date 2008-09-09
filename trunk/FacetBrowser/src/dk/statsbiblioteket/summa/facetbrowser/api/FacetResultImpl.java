@@ -312,13 +312,15 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
     }
 
     /**
-     * This should be overridet when subclassing, if the tags does not resolve
+     * This should be overridden when subclassing, if the tags does not resolve
      * naturally to Strings.
      * @param facet the facet that contains the tag.
      * @param tag the tag to convert to String.
      * @return a String-representation of the Tag.
      */
     protected String getTagString(String facet, T tag) {
+        log.trace("Default-implementation of getTagString called with Tag " 
+                  + tag);
         return urlEntityEscape(String.valueOf(tag));
     }
     /**
