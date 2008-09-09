@@ -38,6 +38,12 @@
                 <string>NoShortformat</string>
             </value>
         </entry>
+        <entry>
+            <key>summa.search.non-escaped-fields</key>
+            <value class="string-array">
+                <string>shortformat</string>
+            </value>
+        </entry>
         <!--        <entry>
                     <key>summa.search.warmup.data</key>
                     <value class="string">/tmp/warmup...</value>
