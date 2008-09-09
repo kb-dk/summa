@@ -6,16 +6,12 @@
         <!-- The class implementing the Service interface -->
         <entry>
             <key>control.launcher.service.class</key>
-            <value class="string-array">
-                <string>dk.statsbiblioteket.summa.control.service.SearchService</string>
-            </value>
+            <value class="string">dk.statsbiblioteket.summa.control.service.SearchService</value>
         </entry>
 
         <entry>
             <key>summa.search.node.class</key>
-            <value class="string-array">
-                <string>dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode</string>
-            </value>
+            <value class="string">dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode</value>
         </entry>
 
         <entry>
