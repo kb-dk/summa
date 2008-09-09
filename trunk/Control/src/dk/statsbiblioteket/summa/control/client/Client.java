@@ -298,7 +298,8 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         } catch (IOException e) {
             setStatusIdle ();
             throw new BundleLoadingException ("Failed to retrieve " + bundleId
-                                            + "from repository", e);
+                                            + "from repository: "
+                                            + e.getMessage (), e);
         }
 
         deployServiceFromLocalFile(instanceId, tmpBundleFile, configLocation);
