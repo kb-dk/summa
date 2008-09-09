@@ -10,12 +10,38 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public interface DocumentKeys {
-    public static final String SEARCH_FILTER = "search.document.filter";
-
+    /**
+     * String ("foo"). Mandatory.
+     * </p><p>
+     * The query is the basic request for a DocumentSearcher. It follows the
+     * syntax of Lucene.
+     * @see {@link #SEARCH_FILTER}.
+     * @see {@url http://lucene.apache.org/java/docs/queryparsersyntax.html}.
+     */
     public static final String SEARCH_QUERY = "search.document.query";
 
+    /**
+     * String ("foo"). Optional.
+     * </p><p>
+     * The filter limits the amount of possible documents from a search.
+     * It has the exact same syntax as a Query.
+     * @see {@link #SEARCH_QUERY}.
+     */
+    public static final String SEARCH_FILTER = "search.document.filter";
+
+    /**
+     * Integer ("10"). Optional.
+     * </p><p>
+     * Used for paging. States the first hit to return from the whole set of
+     * documents matching the filter and the query.
+     */
     public static final String SEARCH_START_INDEX="search.document.start-index";
 
+    /**
+     * Integer ("20"). Optional.
+     * </p><p>
+     * Used to limit the amount of hits that is returned for a given search.
+     */
     public static final String SEARCH_MAX_RECORDS="search.document.max-records";
 
     /**
@@ -27,6 +53,11 @@ public interface DocumentKeys {
      */
     public static final String SEARCH_SORTKEY = "search.document.sortkey";
 
+    /**
+     * Boolean ("true" or "false"). Optional.
+     * </p><p>
+     * If true, sorting is performed in reverse.
+     */
     public static final String SEARCH_REVERSE = "search.document.reverse-sort";
 
     /**
