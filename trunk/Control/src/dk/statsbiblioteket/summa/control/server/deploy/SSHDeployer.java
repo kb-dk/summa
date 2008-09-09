@@ -31,7 +31,7 @@ import java.util.Arrays;
 import java.util.ArrayList;
 
 import dk.statsbiblioteket.summa.control.api.ClientDeployer;
-import dk.statsbiblioteket.summa.control.server.ClientDeploymentException;
+import dk.statsbiblioteket.summa.control.api.ClientDeploymentException;
 import dk.statsbiblioteket.summa.control.server.ControlUtils;
 import dk.statsbiblioteket.summa.control.api.feedback.Feedback;
 import dk.statsbiblioteket.summa.control.api.feedback.Message;
@@ -126,7 +126,7 @@ public class SSHDeployer implements ClientDeployer {
         log.debug("Unpacking '" + archivePath + "' with login '" + login + "'");
         runner = new ProcessRunner(Arrays.asList("ssh", login,
                                                  "cd", destination,
-                                                 ";", "unzip", "-u",
+                                                 ";", "unzip", "-o",
                                                  archive));
         String error = null;
         try {
@@ -259,7 +259,7 @@ public class SSHDeployer implements ClientDeployer {
         if (error != null) {
             log.error(error);
             feedback.putMessage(new Message(Message.MESSAGE_ALERT, error));
-            throw new ClientDeploymentException(error);
+            throw new ClientDeploymentException (error);
         }
         log.trace ("File permissions fixed for client '" + clientId + "'");
     }

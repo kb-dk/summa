@@ -146,6 +146,13 @@ public class ControlCore extends UnicastRemoteObject
 
         String instanceId = conf.getString(ClientDeployer.INSTANCE_ID_PROPERTY);
 
+        /* Make sure that a client with the given id isn't already deployed */
+        if (clientManager.knowsClient (instanceId)) {
+            throw new ClientDeploymentException ("A client with instance id '"
+                                                 +instanceId
+                                                 + "' already exists");
+        }
+
         setStatusRunning ("Deploying client '" + instanceId + "'. "
                           + "Waiting for deployer");
         try {
@@ -269,38 +276,38 @@ public class ControlCore extends UnicastRemoteObject
      */
     private void validateClientConf(Configuration conf) {
         log.trace("validateClientConf called");
-        try {
-            String bdl =  conf.getString(ClientDeployer.DEPLOYER_BUNDLE_PROPERTY);
+        String bdl =  conf.getString(ClientDeployer.DEPLOYER_BUNDLE_PROPERTY,
+                                     null);
 
-            File bdlFile = repoManager.getBundle(bdl);
-
-            if (!bdlFile.exists()) {
-                throw new BadConfigurationException("Bundle file '" + bdlFile
-                                                  + "' to deploy does not "
-                                                  + "exist");
-            }
-
-            /* Set bundle file prop if it is not already set */
-            String bdlFileProp =
-                   conf.getString (ClientDeployer.DEPLOYER_BUNDLE_FILE_PROPERTY,
-                                   bdlFile.getAbsolutePath());
-            log.trace ("Setting " + ClientDeployer.DEPLOYER_BUNDLE_FILE_PROPERTY
-                       + " = " + bdlFileProp);
-            conf.set(ClientDeployer.DEPLOYER_BUNDLE_FILE_PROPERTY,
-                     bdlFileProp);
-
+        if (bdl == null) {
+            throw new BadConfigurationException ("No bundle id specified in "
+                                                 + "deployment "
+                                                 + "configuration");
         }
-        catch (NullPointerException e) {
-            throw new BadConfigurationException("Required property: "
-                                                + ClientDeployer.DEPLOYER_BUNDLE_PROPERTY
-                                                + " not set ");
+
+        File bdlFile = repoManager.getBundle(bdl);
+
+        if (!bdlFile.exists()) {
+            throw new BadConfigurationException("Bundle file '" + bdlFile
+                                                + "' to deploy does not "
+                                                + "exist");
         }
+
+        /* Set bundle file prop if it is not already set */
+        String bdlFileProp =
+                conf.getString (ClientDeployer.DEPLOYER_BUNDLE_FILE_PROPERTY,
+                                bdlFile.getAbsolutePath());
+        log.trace ("Setting " + ClientDeployer.DEPLOYER_BUNDLE_FILE_PROPERTY
+                   + " = " + bdlFileProp);
+        conf.set(ClientDeployer.DEPLOYER_BUNDLE_FILE_PROPERTY,
+                 bdlFileProp);
+
+
 
         try { conf.getString(ClientDeployer.INSTANCE_ID_PROPERTY); }
         catch (NullPointerException e) {
-            throw new BadConfigurationException("Required property: "
-                                                + ClientDeployer.INSTANCE_ID_PROPERTY
-                                                + " not set ");
+            throw new BadConfigurationException("No instance id defined in "
+                                                + "deployment configuration");
         }
 
         try { conf.getString(ClientDeployer.DEPLOYER_CLASS_PROPERTY); }
