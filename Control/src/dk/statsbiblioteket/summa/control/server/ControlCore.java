@@ -287,6 +287,11 @@ public class ControlCore extends UnicastRemoteObject
 
         File bdlFile = repoManager.getBundle(bdl);
 
+        if (bdlFile == null) {
+            throw new BadConfigurationException ("No such bundle '"
+                                                 + bdl + "'");
+        }
+
         if (!bdlFile.exists()) {
             throw new BadConfigurationException("Bundle file '" + bdlFile
                                                 + "' to deploy does not "
