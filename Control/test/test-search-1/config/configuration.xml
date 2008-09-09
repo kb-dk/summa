@@ -1,16 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
-
 <!-- Test configuration -->
-<properties>
+<xproperties>
+    <xproperties>
 
-    <!-- The class implementing the Service interface -->
-    <entry key="control.launcher.service.class">
-        dk.statsbiblioteket.summa.control.service.SearchService
-    </entry>
+        <!-- The class implementing the Service interface -->
+        <entry>
+            <key>control.launcher.service.class</key>
+            <value class="string-array">
+                <string>dk.statsbiblioteket.summa.control.service.SearchService</string>
+            </value>
+        </entry>
 
-    <entry key="summa.search.node.class">
-        dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode
-    </entry>
+        <entry>
+            <key>summa.search.node.class</key>
+            <value class="string-array">
+                <string>dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode</string>
+            </value>
+        </entry>
 
-</properties>
+        <entry>
+            <key>summa.search.non-escaped-fields</key>
+            <value class="string-array">
+                <string>shortformat</string>
+            </value>
+        </entry>
+
+    </xproperties>
+</xproperties>
