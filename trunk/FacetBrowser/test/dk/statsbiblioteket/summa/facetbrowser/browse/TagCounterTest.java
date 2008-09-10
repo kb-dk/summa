@@ -24,6 +24,7 @@ package dk.statsbiblioteket.summa.facetbrowser.browse;
 
 import dk.statsbiblioteket.summa.facetbrowser.BaseObjects;
 import dk.statsbiblioteket.summa.facetbrowser.IndexBuilder;
+import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -74,17 +75,19 @@ public class TagCounterTest extends TestCase {
 
     public void testGetFirst() throws Exception {
         setupSample();
+        TagCounter tc = bo.getTagCounter();
+        tc.verify();
         for (int facetID = 0 ; facetID < bo.facetNames.length ; facetID++) {
             for (int tagID = 0 ;
                  tagID < bo.getTagHandler().getFacetSize(facetID) ;
                  tagID++) {
-                bo.getTagCounter().increment(facetID, tagID);
+                tc.increment(facetID, tagID);
             }
         }
-        throw new UnsupportedOperationException("Update this to new API");
-//        FacetResult first = bo.getTagCounter().getFirst(structure);
-//        assertTrue("The result should be something",
-//                   !"".equals(first.toXML()));
+        //throw new UnsupportedOperationException("Update this to new API");
+        FacetResult first = tc.getFirst(bo.getStructure());
+        assertTrue("The result should be something",
+                   !"".equals(first.toXML()));
     }
 
     public void dumpPerformance() throws Exception {
