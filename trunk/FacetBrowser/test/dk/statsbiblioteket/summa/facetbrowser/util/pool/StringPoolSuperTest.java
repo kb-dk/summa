@@ -544,4 +544,33 @@ public abstract class StringPoolSuperTest extends TestCase {
             }
         }
     }
+
+    public void testResourceFreeing() throws Exception {
+        SortedPool<String> pool = getPool(87);
+        pool.add("Duksedreng");
+        pool.store();
+        pool.close();
+        File indexFile = new File(poolDir, pool.getName() + ".index");
+        assertTrue("An index-file should be created", indexFile.exists());
+        assertTrue("The index-file should be deleted", indexFile.delete());
+        File datFile = new File(poolDir, pool.getName() + ".dat");
+        assertTrue("An data-file should be created", datFile.exists());
+        assertTrue("The data-file should be deleted", datFile.delete());
+
+        pool = getPool(88);
+        pool.add("Duksedreng");
+        datFile = new File(poolDir, pool.getName() + ".dat");
+        assertTrue("An data-file should be created", datFile.exists());
+        try {
+            datFile.delete();
+            System.out.println(
+                    "The datFile could be deleted even though it was in use. "
+                    + "This is probably on a system without file-locking");
+        } catch (Exception e) {
+            System.out.println(
+                    "The datFile could not be deleted. This is probably "
+                    + "running under Windows with a file-locking file-system, "
+                    + "such as NTFS");
+        }
+    }
 }
