@@ -70,8 +70,10 @@
                     <entry>
                         <key>summa.search.result-fields</key>
                         <value class="string-array">
-                            <string>recordID</string>
-                            <string>shortformat</string>
+                            <string>main_titel</string>
+                            <string>lsubject</string>
+                            <string>lsu_oai</string>
+                            <string>author_normalised</string>
                         </value>
                     </entry>
                     <entry>
@@ -123,6 +125,7 @@
                         <value class="string">dk.statsbiblioteket.summa.facetbrowser.browse.BrowserImpl</value>
                     </entry>
 
+                    <!-- Default facets to return when searching -->
                     <entry>
                         <key>summa.facet.facets</key>
                         <value class="list">
@@ -134,7 +137,7 @@
                                 <entry>
                                     <key>summa.facet.fields</key>
                                     <value class="list">
-                                        <item class="string">author_person</item>
+                                        <item class="string">author_normalised</item>
                                     </value>
                                 </entry>
                             </xproperties>
@@ -146,12 +149,25 @@
                                 <entry>
                                     <key>summa.facet.fields</key>
                                     <value class="list">
-                                        <item class="string">sort_title</item>
+                                        <item class="string">main_titel</item>
+                                    </value>
+                                </entry>
+                            </xproperties>
+                            <xproperties>
+                                <entry>
+                                    <key>summa.facet.name</key>
+                                    <value class="string">subject</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.facet.fields</key>
+                                    <value class="list">
+                                        <item class="string">lsubject</item>
                                     </value>
                                 </entry>
                             </xproperties>
                         </value>
                     </entry>
+
                 </xproperties>
             </value>
         </entry>

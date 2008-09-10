@@ -21,5 +21,15 @@
             </value>
         </entry>
 
+        <entry>
+            <key>summa.search.result-fields</key>
+            <value class="string-array">
+                <string>main_titel</string>
+                <string>lsubject</string>
+                <string>lsu_oai</string>
+                <string>author_normalised</string>
+            </value>
+        </entry>
+
     </xproperties>
 </xproperties>
