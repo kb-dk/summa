@@ -186,7 +186,9 @@ public class FacetTest extends NoExitTestCase {
         updateIndex();
         searcher.checkIndex();
         Thread.sleep(3000); // Why do we need to do this?
+        log.debug("Verify final index");
         SearchTest.verifySearch(searcher, "Gurli", 1);
+        SearchTest.verifySearch(searcher, "Gurli", 1); // Yes, we try again
         SearchTest.verifySearch(searcher, "Hans", 1);
         log.debug("Sample output from search: "
                   + searcher.search(SearchTest.simpleRequest("Hans")).toXML());
