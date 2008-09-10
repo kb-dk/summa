@@ -211,6 +211,7 @@ public class IngestTest extends NoExitTestCase {
         Configuration conf = Configuration.newMemoryBased();
         conf.set(DatabaseStorage.PROP_LOCATION,
                  getStorageLocation().toString());
+        conf.set(DatabaseStorage.PROP_FORCENEW, true);
         conf.set(Service.SERVICE_PORT, 27003);
         conf.set(Service.REGISTRY_PORT, 27000);
         conf.set(Service.SERVICE_ID, "TestStorage");

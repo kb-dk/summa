@@ -178,6 +178,8 @@ public class RecordReader implements ObjectFilter {
                                     + DEFAULT_PROGRESS_FILE_POSTFIX);
             log.debug("No progress-file defined in key " + CONF_PROGRESS_FILE
                       + ". Constructing progress file '" + progressFile + "'");
+        } else {
+            log.debug("Progress.file is " + progressFile.getCanonicalFile());
         }
         progressFile = progressFile.getAbsoluteFile();
         usePersistence = configuration.getBoolean(CONF_USE_PERSISTENCE,
@@ -194,8 +196,10 @@ public class RecordReader implements ObjectFilter {
         }
 
         try {
-            recordIterator =
-                    storage.getRecordsModifiedAfter(getStartTime(), base);
+            long startTime = getStartTime();
+            log.debug(String.format("Getting Records modified after "
+                                    + ISO_TIME, startTime));
+            recordIterator = storage.getRecordsModifiedAfter(startTime, base);
         } catch (IOException e) {
             FilterCommons.reportError(accessContext, e);
             throw new ConfigurationException("Exception while getting "
@@ -213,11 +217,10 @@ public class RecordReader implements ObjectFilter {
                             + "([0-9]{4})([0-9]{2})([0-9]{2})-"
                             + "([0-9]{2})([0-9]{2})([0-9]{2})"
                             + "</" + TAG + ">.*", Pattern.DOTALL);
+    private static final String ISO_TIME = "%1$tY%1$tm%1$td-%1$tH%1$tM%1$tS";
     public static final String TIMESTAMP_FORMAT =
             "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n"
-            +"<" + TAG + ">"
-            + "%1$tY%1$tm%1$td-%1$tH%1$tM%1$tS"
-            + "</" + TAG + ">\n";
+            +"<" + TAG + ">" + ISO_TIME + "</" + TAG + ">\n";
     /**
      * If !START_FROM_SCRATCH && USE_PERSISTENCE then get last timestamp
      * from persistence file, else return 0.
@@ -228,7 +231,8 @@ public class RecordReader implements ObjectFilter {
             log.trace("getStartTime: Starttime set to 0");
             return 0;
         }
-
+        log.debug("Attempting to get previous progress stored in file "
+                  + progressFile);
         if (progressFile.exists() && progressFile.isFile() &&
             progressFile.canRead()) {
             log.trace("getStartTime has persistence file");
@@ -237,10 +241,9 @@ public class RecordReader implements ObjectFilter {
                                               Files.loadString(progressFile));
                 if (log.isDebugEnabled()) {
                     try {
-                        log.debug(String.format("Extracted timestamp %1$tY%1$tm"
-                                                + "%1$td-%1$tH%1$tM%1$tS from "
-                                                + "'" + progressFile + "'",
-                                                startTime));
+                        log.debug(String.format(
+                                "Extracted timestamp " + ISO_TIME
+                                + " from '%2$s'", startTime, progressFile));
                     } catch (Exception e) {
                         log.warn("Could not output properly formatted timestamp"
                                  + " for " + startTime + " ms");
@@ -300,6 +303,11 @@ public class RecordReader implements ObjectFilter {
         Payload payload = new Payload(recordIterator.next());
         recordCounter++;
         lastRecordTimestamp = payload.getRecord().getLastModified();
+        if (log.isTraceEnabled()) {
+            log.trace("next(): Got lastModified timestamp "
+                      + String.format(ISO_TIME, lastRecordTimestamp)
+                      + " for " + payload);
+        }
         if (maxReadRecords != -1 && maxReadRecords <= recordCounter) {
             log.debug("Reached maximum number of Records to read ("
                       + maxReadRecords + ")");
@@ -355,13 +363,22 @@ public class RecordReader implements ObjectFilter {
         if (usePersistence && recordCounter > 0) {
             log.debug("Storing progress in '" + progressFile + "'");
             try {
-                Files.saveString(String.format(TIMESTAMP_FORMAT,
-                                               lastRecordTimestamp),
-                                 progressFile);
+                Files.saveString(
+                        String.format(TIMESTAMP_FORMAT, lastRecordTimestamp),
+                        progressFile);
             } catch (IOException e) {
                 log.error("close(true): Unable to store progress in file '"
                           + progressFile + "'");
             }
+        }
+    }
+
+    /**
+     * If a progress-files is existing, it is cleared.
+     */
+    public void clearProgressFile() {
+        if (progressFile != null && progressFile.exists()) {
+            progressFile.delete();
         }
     }
 }
