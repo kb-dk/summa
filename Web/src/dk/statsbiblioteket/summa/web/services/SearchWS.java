@@ -71,7 +71,7 @@ public class SearchWS {
      * @param startIndex Where to start returning records from (used to implement paging).
      * @return An XML string containing the result or an error description.
      */
-    public String simpleSearch(String query, long numberOfRecords, long startIndex) {
+    public String simpleSearch(String query, int numberOfRecords, int startIndex) {
         return simpleSearchSorted(query, numberOfRecords, startIndex, DocumentKeys.SORT_ON_SCORE, false);
     }
 
@@ -85,7 +85,7 @@ public class SearchWS {
      * @param reverse Whether or not the sort should be reversed.
      * @return An XML string containing the result or an error description.
      */
-    public String simpleSearchSorted(String query, long numberOfRecords, long startIndex, String sortKey, boolean reverse) {
+    public String simpleSearchSorted(String query, int numberOfRecords, int startIndex, String sortKey, boolean reverse) {
         String retXML;
 
         ResponseCollection res;
