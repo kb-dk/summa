@@ -169,7 +169,7 @@
                                             <entry>
                                                 <key>summa.facet.fields</key>
                                                 <value class="list">
-                                                    <item class="string">author_person</item>
+                                                    <item class="string">author_normalised</item>
                                                 </value>
                                             </entry>
                                         </xproperties>
@@ -181,7 +181,19 @@
                                             <entry>
                                                 <key>summa.facet.fields</key>
                                                 <value class="list">
-                                                    <item class="string">sort_title</item>
+                                                    <item class="string">main_titel</item>
+                                                </value>
+                                            </entry>
+                                        </xproperties>
+                                        <xproperties>
+                                            <entry>
+                                                <key>summa.facet.name</key>
+                                                <value class="string">subject</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.facet.fields</key>
+                                                <value class="list">
+                                                    <item class="string">lsubject</item>
                                                 </value>
                                             </entry>
                                         </xproperties>
