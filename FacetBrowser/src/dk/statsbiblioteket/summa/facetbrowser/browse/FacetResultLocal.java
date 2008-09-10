@@ -32,8 +32,8 @@ import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultImpl;
+import dk.statsbiblioteket.summa.facetbrowser.api.FlexiblePair;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
-import dk.statsbiblioteket.summa.facetbrowser.util.FlexiblePair;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.StringWriter;
@@ -55,9 +55,11 @@ public class FacetResultLocal extends FacetResultImpl<Integer> {
     private static Logger log = Logger.getLogger(FacetResultLocal.class);
 
     private TagHandler tagHandler;
+    private Structure structure;
 
     public FacetResultLocal(Structure structure, TagHandler tagHandler) {
-        super(structure);
+        super(structure.getMaxTags(), structure.getFacetIDs());
+        this.structure = structure;
         this.tagHandler = tagHandler;
     }
 
@@ -120,7 +122,8 @@ public class FacetResultLocal extends FacetResultImpl<Integer> {
      */
     public FacetResult externalize() {
         log.trace("externalize() called");
-        FacetResultExternal external = new FacetResultExternal(structure);
+        FacetResultExternal external = new FacetResultExternal(
+                structure.getMaxTags(), structure.getFacetIDs());
         for (Map.Entry<String, List<FlexiblePair<Integer, Integer>>> entry:
                 map.entrySet()) {
             String facet = entry.getKey();

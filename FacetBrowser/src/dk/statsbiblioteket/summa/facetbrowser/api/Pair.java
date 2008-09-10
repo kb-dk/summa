@@ -1,6 +1,6 @@
-/* $Id: FacetResultExternal.java,v 1.7 2007/10/05 10:20:22 te Exp $
- * $Revision: 1.7 $
- * $Date: 2007/10/05 10:20:22 $
+/* $Id: Pair.java,v 1.3 2007/10/05 10:20:24 te Exp $
+ * $Revision: 1.3 $
+ * $Date: 2007/10/05 10:20:24 $
  * $Author: te $
  *
  * The Summa project.
@@ -20,35 +20,48 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-/*
- * The State and University Library of Denmark
- * CVS:  $Id: FacetResultExternal.java,v 1.7 2007/10/05 10:20:22 te Exp $
- */
 package dk.statsbiblioteket.summa.facetbrowser.api;
-
-import java.util.HashMap;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
- * This facet structure representation is suitable for serializing and other
- * external use. It does not rely on String pool or similar index-specific
- * resources.
+ * A standard pair that compares on key.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class FacetResultExternal extends FacetResultImpl<String> {
-    public FacetResultExternal(HashMap<String, Integer> maxTags,
-                           HashMap<String, Integer> facetIDs) {
-        super(maxTags, facetIDs);
-    }
+public class Pair <T extends Comparable<T> , S>
+        implements Comparable<Pair<T, S>> {
+    protected T key;
+    protected S value;
 
-    public FacetResult externalize() {
-        return this;
+    public Pair(T key, S value) {
+        this.key = key;
+        this.value = value;
     }
-
-    public String getName() {
-        return "FacetResult";
+    public int compareTo(Pair<T, S> o) {
+        if (!o.getClass().equals(getClass())) {
+            return 0;
+        }
+        if (!o.getKey().getClass().equals(key.getClass())) {
+            return 0;
+        }
+        return key.compareTo(o.getKey());
+    }
+    public void setKey(T key) {
+        this.key = key;
+    }
+    public T getKey() {
+        return key;
+    }
+    public void setValue(S value) {
+        this.value = value;
+    }
+    public S getValue() {
+        return value;
+    }
+    public String toString() {
+        //noinspection ObjectToString
+        return value + "(" + key + ")";
     }
 }

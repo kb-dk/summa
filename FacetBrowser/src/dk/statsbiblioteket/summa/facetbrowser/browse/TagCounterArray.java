@@ -31,8 +31,8 @@ import dk.statsbiblioteket.summa.common.util.PriorityQueueLong;
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult;
+import dk.statsbiblioteket.summa.facetbrowser.api.FlexiblePair;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
-import dk.statsbiblioteket.summa.facetbrowser.util.FlexiblePair;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
 

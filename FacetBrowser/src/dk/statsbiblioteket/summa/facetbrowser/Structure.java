@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 
 /**
  * The Facet Structure holds top-level information, such as the Facet names
@@ -178,4 +179,27 @@ public class Structure implements Configurable, Serializable {
         return facetNames;
     }
 
+    /**
+     * @return a map from Facet-names to maximum tags.
+     */
+    public HashMap<String, Integer> getMaxTags() {
+        HashMap<String, Integer> map =
+                new HashMap<String, Integer>(facets.size());
+        for (Map.Entry<String, FacetStructure> entry: facets.entrySet()) {
+            map.put(entry.getValue().getName(), entry.getValue().getMaxTags());
+        }
+        return map;
+    }
+
+    /**
+     * @return a map from Facet-names to Facet-ids.
+     */
+    public HashMap<String, Integer> getFacetIDs() {
+        HashMap<String, Integer> map =
+                new HashMap<String, Integer>(facets.size());
+        for (Map.Entry<String, FacetStructure> entry: facets.entrySet()) {
+            map.put(entry.getValue().getName(), entry.getValue().getFacetID());
+        }
+        return map;
+    }
 }
