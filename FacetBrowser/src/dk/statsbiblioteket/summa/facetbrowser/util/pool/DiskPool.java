@@ -145,7 +145,7 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
         log.debug(String.format("Storing pool '%s' to location '%s'",
                                 poolName, location));
         File tmpIndex = new File(getIndexFile().toString() + ".tmp");
-        remove(tmpIndex, "previously stored index");
+        remove(tmpIndex, "previously stored temporary index");
 
         FileOutputStream indexOut = new FileOutputStream(tmpIndex);
         BufferedOutputStream indexBuf = new BufferedOutputStream(indexOut);
@@ -157,7 +157,7 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
         for (int i = 0 ; i < size() ; i++) {
             index.writeLong(indexes[i]);
         }
-        log.trace("Stored all values for '" + poolName + "', closing streams");
+        log.trace("Stored all indexes for '" + poolName + "', closing streams");
         index.flush();
         index.close();
         indexBuf.close();
@@ -168,7 +168,6 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
         tmpIndex.renameTo(getIndexFile());
         log.debug("Finished storing pool '" + poolName + "' to location '"
                   + location + "'");
-
     }
 
     private void connectToValues() throws IOException {
@@ -180,6 +179,7 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
         log.trace("Close called");
         if (values != null) {
             try {
+                log.trace("Calling values.close()");
                 values.close();
             } catch (IOException e) {
                 log.warn(String.format(
@@ -190,10 +190,6 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
         }
         values = null;
         valueCount = 0;
-    }
-
-    public String getName() {
-        return "Generic Disk Pool";
     }
 
     protected void sort() {
