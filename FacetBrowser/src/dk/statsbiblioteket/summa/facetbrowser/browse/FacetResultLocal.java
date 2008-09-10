@@ -32,7 +32,7 @@ import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultExternal;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultImpl;
-import dk.statsbiblioteket.summa.facetbrowser.api.FlexiblePair;
+import dk.statsbiblioteket.summa.common.util.FlexiblePair;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
 import dk.statsbiblioteket.util.qa.QAInfo;
 

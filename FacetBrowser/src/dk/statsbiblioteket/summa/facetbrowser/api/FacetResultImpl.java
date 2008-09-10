@@ -53,6 +53,8 @@
 package dk.statsbiblioteket.summa.facetbrowser.api;
 
 import dk.statsbiblioteket.summa.search.api.Response;
+import dk.statsbiblioteket.summa.common.util.FlexiblePair;
+import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
