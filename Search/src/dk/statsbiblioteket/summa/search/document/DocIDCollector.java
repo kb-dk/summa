@@ -24,6 +24,7 @@ package dk.statsbiblioteket.summa.search.document;
 
 import java.util.BitSet;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.io.StringWriter;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -87,5 +88,19 @@ public class DocIDCollector extends HitCollector {
      */
     public int getDocCount() {
         return docCount;
+    }
+
+    public String toString() {
+        int MAX_BITS = 10;
+        StringWriter sw = new StringWriter(300);
+        sw.append("DocIDCollector ").append(Integer.toString(getDocCount()));
+        sw.append("(");
+        int foundCount = 0;
+        int id = 0;
+        while ((id = bits.nextSetBit(id))!= -1 && foundCount++ < MAX_BITS) {
+            sw.append(Integer.toString(id++)).append(" ");
+        }
+        sw.append(")");
+        return sw.toString();
     }
 }

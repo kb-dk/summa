@@ -383,10 +383,7 @@ public class CoreMapBitStuffed extends CoreMapImpl {
             int valueSize = (int)Math.max(MIN_GROWTH_SIZE,
                                         valuePos * CONTENT_GROWTHFACTOR);
             values = new int[valueSize];
-            openValues(index[index.length-1]);
-            log.debug(String.format(
-                    "open(%s, %b) got highestDocID=%d, valuePos=%d",
-                    location,  forceNew, highestDocID, valuePos));
+            openValues(valuePos);
         } catch (IOException e) {
             log.warn(String.format(
                     "Could not load persistent data for core map at '%s'."
@@ -395,9 +392,10 @@ public class CoreMapBitStuffed extends CoreMapImpl {
             clear();
             return false;
         }
-        log.debug(String.format("Retrieved %d indexes and %d values in %s ms",
-                                index.length, values.length,
-                                System.currentTimeMillis() - startTime));
+        log.debug(String.format(
+                "open(%s, %b) got highestDocID=%d, valuePos=%d in %s ms",
+                location,  forceNew, highestDocID, valuePos,
+                System.currentTimeMillis() - startTime));
         return true;
     }
 
@@ -410,14 +408,15 @@ public class CoreMapBitStuffed extends CoreMapImpl {
         if (log.isTraceEnabled()) {
             //noinspection DuplicateStringLiteralInspection
             log.trace("Marking " + docIDs.getDocCount() +" docs " + startPos
-                      + " => " + endPos);
+                      + " => " + endPos + " from " + docIDs);
         }
+//        System.out.println("*** " + docIDs);
         BitSet ids = docIDs.getBits();
         int hitID = startPos;
         int to;
         boolean outOfBoundsHandled = false;
         while ((hitID = ids.nextSetBit(hitID)) != -1 && hitID <= endPos) {
-  //          System.out.println("- Get hitID " + hitPos + "/" + docIDs.length);
+//            System.out.println("- Get hitID " + hitID + "/" + docIDs.getDocCount());
             try {
   //              System.out.println("- Getting to at " + (hitID + 1) + "/" + index.length);
                 to = index[hitID+1];
@@ -480,6 +479,11 @@ public class CoreMapBitStuffed extends CoreMapImpl {
     }
 
     protected void putValue(int position, long value) {
+        if (log.isTraceEnabled()) {
+            log.trace("putValue(" + position + ", " + value + " has facetID " 
+                      + persistentValueToFacetID(value) + " and tagID "
+                      + persistentValueToTagID(value));
+        }
         values[position] = calculateValue(persistentValueToFacetID(value),
                                     persistentValueToTagID(value));
     }

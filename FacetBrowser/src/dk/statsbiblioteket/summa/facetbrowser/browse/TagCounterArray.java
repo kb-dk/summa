@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
+import java.io.StringWriter;
 
 /**
  * A tag-counter optimized for medium to large search-results. The performance
@@ -252,6 +253,7 @@ public class TagCounterArray implements TagCounter, Runnable {
             log.trace("getFirst: Specified requestStructure was null, using "
                       + "default structure");
         }
+//        System.out.println("GetFirst called: " + this);
         try {
             FacetResultLocal result =
                     new FacetResultLocal(requestStructure, tagHandler);
@@ -261,6 +263,7 @@ public class TagCounterArray implements TagCounter, Runnable {
                 int facetID = facet.getFacetID();
                 int maxTags = facet.getMaxTags();
                 String facetName = facet.getName();
+//                System.out.println("Before getFirst" + this);
                 int[] counterList = tags[facetID];
                 if (FacetStructure.SORT_ALPHA.equals(facet.getSortType())) {
                     addFirstTagsAlpha(maxTags, counterList,
@@ -288,6 +291,12 @@ public class TagCounterArray implements TagCounter, Runnable {
                                         int counterLength,
                                         FacetResultLocal result,
                                         int facetID) {
+        if (log.isTraceEnabled()) {
+            log.trace(String.format(
+                    "addFirstTagsPopularity(maxTags %d, counterList.length %d, "
+                    + "counterLength %d, result, facetID %d) called",
+                    maxTags, counterList.length, counterLength, facetID));
+        }
         int minPop = 0;
         //noinspection unchecked
         FlexiblePair<Integer, Integer>[] popResult =
@@ -296,7 +305,7 @@ public class TagCounterArray implements TagCounter, Runnable {
         // TODO: Check for 1-off error in counterlength
         for (int i = 0 ; i < counterLength ; i++) {
             int currentPop = counterList[i];
-            if (currentPop > minPop || tagCount < maxTags) {
+            if (currentPop != 0 && (currentPop > minPop || tagCount < maxTags)){
                 if (tagCount <= maxTags) {
                     popResult[tagCount] =
                             new FlexiblePair<Integer, Integer>(
@@ -445,5 +454,30 @@ public class TagCounterArray implements TagCounter, Runnable {
         } finally {
             lock.unlock();
         }
+    }
+
+    public String toString() {
+        int MAX_TAGS = 10;
+        if (tags == null) {
+            return "TagCounterArray: No facet/tag pairs";
+        }
+        StringWriter sw = new StringWriter(1000);
+        sw.append("TagCounterArray ");
+        for (int i = 0 ; i < tags.length && i < facetCount; i++) {
+            sw.append("Facet #").append(Integer.toString(i)).append(": ");
+            if (tags[i] == null) {
+                sw.append("null");
+            } else {
+                sw.append(Integer.toString(tags[i].length)).append("(");
+                for (int t = 0 ; t < MAX_TAGS && t < tags[i].length
+                                 && t < tagHandler.getTagCount(
+                        tagHandler.getFacetNames().get(i)); t++) {
+                    sw.append(Integer.toString(tags[i][t])).append(" ");
+                }
+                sw.append(")");
+            }
+            sw.append(" ");
+        }
+        return sw.toString();
     }
 }

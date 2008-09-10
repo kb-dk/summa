@@ -211,7 +211,7 @@ public abstract class CoreMapImpl implements CoreMap {
      * @throws java.io.IOException if the index could not be stored.
      */
     protected void storeIndex(int[] index, int length) throws IOException {
-        log.trace("Storing index data to '"
+        log.trace("Storing " + length + " index data to '"
                   + getPersistenceFile(INDEX_FILE) + "'");
         File tmpIndex = new File(getPersistenceFile(
                 INDEX_FILE).toString() + ".tmp");
