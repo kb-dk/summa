@@ -1,16 +1,62 @@
+<%@ page import="java.io.File" %>
+<%@ page import="dk.statsbiblioteket.gwsc.WebServices" %>
+<%@ page import="org.w3c.dom.Document" %>
+<%@ page import="dk.statsbiblioteket.commons.XmlOperations" %>
+<%@ page import="java.util.Properties" %>
 <%@ page pageEncoding="UTF-8" %>
 <%
     response.setContentType("text/html; charset=UTF-8");
     request.setCharacterEncoding("UTF-8");
+
+    String basepath = request.getSession().getServletContext().getRealPath("/");
+    WebServices services = WebServices.getInstance();
+
+    String search_html = "";
+
+    String query = request.getParameter("query");
+    if (query != null && !query.equals("")) {
+        int per_page = 10;
+        int startIndex = 0;
+        int current_page;
+        try {
+            current_page = Integer.parseInt(request.getParameter("page"));
+            if (current_page < 0) {
+                current_page = 0;
+            }
+        }
+        catch (NumberFormatException e) {
+            current_page = 0;
+        }
+
+        String xml_search_result = (String) services.execute("summasimplesearch", query, per_page, current_page * per_page);
+
+        if (xml_search_result == null) {
+            search_html = "Error executing query";
+        } else {
+            Document dom_search_result = XmlOperations.stringToDOM(xml_search_result);
+            File search_xslt = new File(basepath + "xslt/short_records.xsl");
+
+            Properties search_prop = new Properties();
+            search_prop.put("query", query);
+            search_prop.put("per_page", per_page);
+            search_prop.put("current_page", current_page);
+
+            search_html = XmlOperations.xsltTransform(dom_search_result, search_xslt, search_prop);
+            //search_html = xml_search_result;
+        }
+    }
 %>
+
 <html>
 <head>
     <title>summa example website</title>
+    <link rel="stylesheet" type="text/css" href="css/project.css"/>
 </head>
 <body>
-<form action="search.jsp">
+<form action="index.jsp">
     <input type="text" name="query" />
     <input type="submit" value="Search" />
 </form>
+<%= search_html %>
 </body>
 </html>

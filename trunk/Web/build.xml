@@ -285,7 +285,14 @@
         <war destfile="${release.website.war}"
              webxml="config/website/web.xml">
             <fileset dir="resources" />
+            <lib dir="${lib.dir}">
+                <include name="*.jar"/>
+            </lib>
+            <lib dir="${lib.dir}">
+                <include name="${lib.files}"/>
+            </lib>
             <classes dir="${basedir}/config/website">
+                <include name="log4j.xml"/>
                 <include name="services.xml"/>
             </classes>
             <classes dir="${build.dir}">
