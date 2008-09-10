@@ -18,7 +18,7 @@
                 
                 <div class="shortNavigation">
                     <xsl:choose>
-                        <xsl:when test="$current_page &gt; 1">
+                        <xsl:when test="$current_page &gt; 0">
                             <a href="?query={$query}&amp;page={$current_page - 1}">Previous</a>
                         </xsl:when>
                         <xsl:otherwise>
