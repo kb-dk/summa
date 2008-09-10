@@ -22,7 +22,6 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -39,8 +38,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
-import dk.statsbiblioteket.summa.facetbrowser.util.FlexiblePair;
-import dk.statsbiblioteket.summa.facetbrowser.util.Pair;
+import dk.statsbiblioteket.summa.facetbrowser.api.FlexiblePair;
+import dk.statsbiblioteket.summa.facetbrowser.api.Pair;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
 import org.apache.lucene.index.IndexReader;

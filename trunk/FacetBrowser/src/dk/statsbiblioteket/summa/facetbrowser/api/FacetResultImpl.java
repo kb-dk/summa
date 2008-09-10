@@ -52,11 +52,7 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.api;
 
-import dk.statsbiblioteket.summa.facetbrowser.Structure;
-import dk.statsbiblioteket.summa.facetbrowser.util.FlexiblePair;
-import dk.statsbiblioteket.summa.facetbrowser.util.Pair;
 import dk.statsbiblioteket.summa.search.api.Response;
-import dk.statsbiblioteket.summa.common.util.ParseUtil;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -85,12 +81,19 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
      * significant.
      */
     protected LinkedHashMap<String, List<FlexiblePair<T, Integer>>> map;
-    protected Structure structure;
+    protected HashMap<String, Integer> maxTags;
+    protected HashMap<String, Integer> facetIDs;
 
-    public FacetResultImpl(Structure structure) {
+    /**
+     * @param maxTags  a map from Facet-name to max tags for the facet.
+     * @param facetIDs a map from Facet-name to facetID.
+     */
+    public FacetResultImpl(HashMap<String, Integer> maxTags,
+                           HashMap<String, Integer> facetIDs) {
         map = new LinkedHashMap<String, List<FlexiblePair<T, Integer>>>(
                 DEFAULTFACETCAPACITY);
-        this.structure = structure;
+        this.maxTags = maxTags;
+        this.facetIDs = facetIDs;
     }
 
     /**
@@ -114,8 +117,8 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
     //            sw.write(facet.getCustomString());
                 int tagCount = 0;
 
-                Integer maxTags =
-                        structure.getFacets().get(facet.getKey()).getMaxTags();
+                Integer maxTags = this.maxTags.get(facet.getKey());
+//                        structure.getFacets().get(facet.getKey()).getMaxTags();
                 for (FlexiblePair<T, Integer> tag: facet.getValue()) {
                     if (tagCount++ < maxTags) {
                         sw.write("    <tag name=\"");
@@ -156,8 +159,8 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
                         List<FlexiblePair<T, Integer>>>(map.size());
         for (Map.Entry<String, List<FlexiblePair<T, Integer>>> entry:
                 map.entrySet()) {
-            int maxTags =
-                    structure.getFacets().get(entry.getKey()).getMaxTags();
+            int maxTags = this.maxTags.get(entry.getKey());
+//                    structure.getFacets().get(entry.getKey()).getMaxTags();
             if (entry.getValue().size() <= maxTags) {
                 newMap.put(entry.getKey(), entry.getValue());
             } else {
@@ -265,7 +268,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
     }
 
     protected void sortFacets() {
-        final Structure s2 = structure;
+        //final Structure s2 = structure;
         // construct list
         List<Pair<String, List<FlexiblePair<T, Integer>>>> ordered =
                 new ArrayList<Pair<String, List<FlexiblePair<T, Integer>>>>(
@@ -282,10 +285,10 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
                                         List<FlexiblePair<T, Integer>>> o1,
                                    Pair<String,
                                         List<FlexiblePair<T, Integer>>> o2) {
-                    Integer score1 =
-                            s2.getFacet(o1.getKey()).getFacetID();
-                    Integer score2 =
-                            s2.getFacet(o2.getKey()).getFacetID();
+                    Integer score1 = facetIDs.get(o1.getKey());
+//                            s2.getFacet(o1.getKey()).getFacetID();
+                    Integer score2 = facetIDs.get(o2.getKey());
+//                            s2.getFacet(o2.getKey()).getFacetID();
                     if (score1 != null && score2 != null) {
                         return score1.compareTo(score2);
                     } else if (score1 != null) {
