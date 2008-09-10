@@ -41,37 +41,52 @@
         <documentation>Search web service for the Summa system</documentation>
         <parameter name="className" value="dk.statsbiblioteket.summa.web.services.SearchWS"/>
 
-        <parameter name="allowedMethods" value="simpleSearch simpleSearchSorted"/>
+        <parameter name="allowedMethods" value="simpleSearch simpleSearchSorted simpleFacet"/>
         <namespace>http://statsbiblioteket.dk/summa/search</namespace>
 
         <operation name="simpleSearch">
             <documentation>
                 This method executes the given query and returns a search result ranked by relevancy.
-
-                query: The query string.
-                numberOfRecords: The maximum number of records returned in the search result.
-                startIndex: The number of the first record to return.
             </documentation>
-            <parameter name="query" type="tns:string" />
-            <parameter name="numberOfRecords" type="tns:int" />
-            <parameter name="startIndex" type="tns:int" />
+            <parameter name="query" type="tns:string">
+                <documentation>The query string.</documentation>
+            </parameter>
+            <parameter name="numberOfRecords" type="tns:int">
+                <documentation>The maximum number of records returned in the search result.</documentation>
+            </parameter>
+            <parameter name="startIndex" type="tns:int">
+                <documentation>The number of the first record to return.</documentation>
+            </parameter>
         </operation>
 
         <operation name="simpleSearchSorted">
             <documentation>
                 This method executes the given query and returns a search result ranked by the given sort key.
-
-                query: The query string.
-                numberOfRecords: The maximum number of records returned in the search result.
-                startIndex: The number of the first record to return.
-                sortKey: The key to sort by.
-                reverse: A boolean indication whether or not to sort in reverse.
             </documentation>
-            <parameter name="query" type="tns:string" />
-            <parameter name="numberOfRecords" type="tns:int" />
-            <parameter name="startIndex" type="tns:int" />
-            <parameter name="sortKey" type="tns:string" />
-            <parameter name="reverse" type="tns:boolean" />
+            <parameter name="query" type="tns:string">
+                <documentation>The query string.</documentation>
+            </parameter>
+            <parameter name="numberOfRecords" type="tns:int">
+                <documentation>The maximum number of records returned in the search result.</documentation>
+            </parameter>
+            <parameter name="startIndex" type="tns:int">
+                <documentation>The number of the first record to return.</documentation>
+            </parameter>
+            <parameter name="sortKey" type="tns:string">
+                <documentation>The key to sort by.</documentation>
+            </parameter>
+            <parameter name="reverse" type="tns:boolean">
+                <documentation>A boolean indication whether or not to sort in reverse.</documentation>
+            </parameter>
+        </operation>
+
+        <operation name="simpleFacet">
+            <documentation>
+                This method executes the given query and returns a facet result.
+            </documentation>
+            <parameter name="query" type="tns:string">
+                <documentation>The query string.</documentation>
+            </parameter>
         </operation>
     </service>
     <transport name="http">

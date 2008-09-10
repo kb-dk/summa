@@ -113,4 +113,32 @@ public class SearchWS {
 
         return retXML;
     }
+
+    /**
+     * A simple way to query the facet browser.
+     * @param query The query to perform.
+     * @return An XML string containing the facet result or an error description.
+     */
+    public String simpleFacet(String query) {
+        String retXML;
+
+        ResponseCollection res;
+
+        Request req = new Request();
+        req.put(DocumentKeys.SEARCH_QUERY, query);
+        req.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
+
+        try {
+            res = getSearchClient().search(req);
+            retXML = res.toXML();
+            // TODO: cut out the search result part of the xml so we only return facets
+        } catch (IOException e) {
+            log.error("Error faceting query: '" + query + "'" +
+                    ". Error was: ", e);
+            // TODO: return a nicer error xml block
+            retXML = "<error>Error performing query</error>";
+        }
+
+        return retXML;
+    }
 }
