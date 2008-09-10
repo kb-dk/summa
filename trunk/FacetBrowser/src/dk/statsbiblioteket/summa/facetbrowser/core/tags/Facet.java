@@ -29,6 +29,7 @@ import dk.statsbiblioteket.summa.facetbrowser.util.pool.MemoryStringPool;
 import dk.statsbiblioteket.util.CachedCollator;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.XProperties;
+import dk.statsbiblioteket.util.InvalidPropertiesException;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -179,10 +180,21 @@ public class Facet implements CollatorSortedPool {
                         + "the structure for Facet '%s' at '%s', forcing new",
                         structure.getName(), location));
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             log.debug(String.format(
                     "Could not open facet meta data for pool '%s' at '%s', "
                     + "no persistent data will be loaded",
+                    pool.getName(), metaFile), e);
+        } catch (InvalidPropertiesException e) {
+            log.warn(String.format(
+                    "Invalid properties detected while attempting to open facet"
+                    + " meta data for pool '%s' at '%s', no persistent data"
+                    + " loaded",
+                    pool.getName(), metaFile), e);
+        } catch (Exception e) {
+            log.warn(String.format(
+                    "Exception while attempting to open facet meta data for "
+                    + "pool '%s' at '%s', no persistent data loaded",
                     pool.getName(), metaFile), e);
         }
         try {

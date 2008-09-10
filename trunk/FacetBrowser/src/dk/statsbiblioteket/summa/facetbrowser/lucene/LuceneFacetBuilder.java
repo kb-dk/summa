@@ -370,8 +370,9 @@ public class LuceneFacetBuilder extends BuilderImpl {
         facetMap.addToDocument(addID, facetTags);
         if (log.isTraceEnabled()) {
             log.trace("Extracted and added Facet-information from doc #"
-                      + addID + " in " + (System.nanoTime() - startTime)
-                      + "ms");
+                      + addID + " in "
+                      + (System.nanoTime() - startTime) / 1000000.0
+                      + " ms");
         }
     }
 

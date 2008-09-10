@@ -142,10 +142,11 @@ public class BrowserThread implements Runnable {
     public void run() {
         lock.lock();
         try {
-            log.trace("Varifying tagCounter structure");
+            log.trace("Verifying tagCounter structure");
             tagCounter.verify();
             try {
                 coreMap.markCounterLists(tagCounter, docIDs, startPos, endPos);
+//                System.out.println("After mark: " + tagCounter);
             } catch (Exception e) {
                 log.error("Exception calling markCounterLists with "
                           + (docIDs == null ? "null" : docIDs.getDocCount())
