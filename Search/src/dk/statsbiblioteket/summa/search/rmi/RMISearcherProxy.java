@@ -5,6 +5,7 @@ import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
 import dk.statsbiblioteket.summa.search.api.*;
 import dk.statsbiblioteket.summa.search.api.rmi.RemoteSearcher;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.storage.XStorage;
 import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
 
 import java.rmi.server.UnicastRemoteObject;
@@ -74,7 +75,7 @@ public class RMISearcherProxy extends UnicastRemoteObject
 
         /* Create configuration for the backend, based on our own,
          * rewriting the class property if necessary */
-        Configuration backendConf = Configuration.newMemoryBased ();
+        Configuration backendConf = new Configuration (new XStorage ());
         backendConf.importConfiguration (conf);
         if (conf.valueExists (PROP_BACKEND)) {
             backendConf.set (PROP_CLASS, conf.getString (PROP_BACKEND));
