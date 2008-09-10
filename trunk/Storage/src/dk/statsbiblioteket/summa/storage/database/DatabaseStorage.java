@@ -374,6 +374,8 @@ public abstract class DatabaseStorage extends StorageBase {
                                                         throws RemoteException {
         log.debug("getRecordsModifiedAfter('" + time + "', " + base
                   + ") entered");
+        // TODO: Fix the SQL with a WHERE != time instead of hacking this way
+        time += 1000;
         try {
             stmtGetModifiedAfter.setString(1, base);
             stmtGetModifiedAfter.setTimestamp(2, new Timestamp(time));

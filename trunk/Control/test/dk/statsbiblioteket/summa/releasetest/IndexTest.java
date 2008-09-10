@@ -147,7 +147,7 @@ public class IndexTest extends NoExitTestCase {
      * @return the StorageService containing the filled Storage.
      * @throws Exception if the fill failed.
      */
-    public Storage fillStorage() throws Exception {
+    public static Storage fillStorage() throws Exception {
         // Storage
         Configuration storageConf = IngestTest.getStorageConfiguration();
         Storage storage = StorageFactory.createStorage(storageConf);

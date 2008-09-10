@@ -1,7 +1,7 @@
-/* $Id: RecordReaderTest.java 321 2008-08-07 13:14:56Z mke $
- * $Revision: 321 $
- * $Date: 2008-08-07 13:14:56 +0000 (Thu, 07 Aug 2008) $
- * $Author: mke $
+/* $Id$
+ * $Revision$
+ * $Date$
+ * $Author$
  *
  * The Summa project.
  * Copyright (C) 2005-2007  The State and University Library
@@ -61,6 +61,7 @@ public class RecordReaderTest extends TestCase {
                      expected,
                      String.format(RecordReader.TIMESTAMP_FORMAT, t));
     }
+
     public void testTimestampExtraction() throws Exception {
         Calendar t = new GregorianCalendar(2008, 3, 17, 21, 50, 57);
         long expectedMS = t.getTimeInMillis();
