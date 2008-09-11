@@ -26,9 +26,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Collections;
+import java.util.Arrays;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Pattern;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -51,7 +53,9 @@ import org.apache.commons.logging.LogFactory;
  * files are closed immediately.
  * </p><p>
  * Meta-info for delivered payloads will contain {@link #ORIGIN} which states
- * the opriginating file for the stream.
+ * the originating file for the stream.
+ * </p><p>
+ * The files are processed breadth-first in unicode-sorted order.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -88,22 +92,23 @@ public class FileReader implements ObjectFilter {
      */
     public static final String CONF_COMPLETED_POSTFIX =
             "summa.ingest.filereader.completedpostfix";
+    public static final String DEFAULT_COMPLETED_POSTFIX =
+            ".completed";
 
     /**
      * The key for the filename-value, added to meta-info in delivered payloads.
      */
     public static final String ORIGIN = "filename";
 
-    private File root;
+    protected File root;
     private boolean recursive = true;
     private Pattern filePattern;
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    private String postfix = ".completed";
+    private String postfix = DEFAULT_COMPLETED_POSTFIX;
 
-    private boolean started = false;
-    private List<File> todo;
+    protected boolean started = false;
+    protected LinkedBlockingQueue<File> todo;
     private List<Payload> delivered;
-    private boolean closedWithSuccess = false;
 
     /**
      * Sets up the properties for the FileReader. Scanning for files are
@@ -143,42 +148,79 @@ public class FileReader implements ObjectFilter {
     }
 
     public void setSource(Filter source) {
-        throw new UnsupportedOperationException("A FileReader must be "
-                                                + "positioned at the start of "
-                                                + "a filter chain");
+        throw new UnsupportedOperationException(String.format(
+                "A %s must be positioned at the start of a filter chain",
+                getClass().getName()));
     }
 
+    private FileFilter folderFilter = new FileFilter() {
+        public boolean accept(File pathname) {
+            return pathname.isDirectory();
+        }
+    };
+    private FileFilter dataFilter = new FileFilter() {
+        public boolean accept(File pathname) {
+            return !pathname.isDirectory()
+                   && pathname.canRead()
+                   && filePattern.matcher(pathname.getName()).matches();
+        }
+    };
+
     /* Recursive file adder */
-    private void fillToDo(File start) {
+    protected void updateToDo(File start) {
         try {
             if (start.isDirectory()) {
-                log.debug("fillTodo: Listing files in '" + start + "'");
-                File files[] = start.listFiles();
+                File files[] = start.listFiles(dataFilter);
+                log.debug("fillTodo: Got " + files.length + " data files from '"
+                          + start + "'");
+                Arrays.sort(files);
                 for (File file: files) {
-                    fillToDo(file);
+                    if (!alreadyHandled(file)) {
+                        todo.offer(file);
+                    }
+                }
+                File folders[] = start.listFiles(folderFilter);
+                log.debug("fillTodo: Found " + folders.length
+                          + " subfolders in '" + start + "'");
+                Arrays.sort(folders);
+                for (File folder: folders) {
+                    updateToDo(folder);
                 }
             } else {
                 if (filePattern.matcher(start.getName()).matches()) {
-                    log.debug("fillToDo: Adding '" + start + "' to todo");
-                    todo.add(start);
+                    log.debug("updateToDo: Adding '" + start + "' to todo");
+                    todo.offer(start);
                 } else {
-                    log.trace("fillToDo: Skipping '" + start + "'");
+                    log.trace("updateToDo: Skipping '" + start + "'");
                 }
             }
         } catch (Exception e) {
-            log.warn("fillToDo: Could not process '" + start + ". Skipping");
+            log.warn("updateToDo: Could not process '" + start + ". Skipping", e);
         }
     }
 
+    /**
+     * @param file a file to check.
+     * @return true if the file is in the todo, delivered or otherwise handled.
+     */
+    protected boolean alreadyHandled(File file) {
+        for (Payload payload: delivered) {
+            if (((RenamingFileStream)payload.getStream()).getFile().
+                    equals(file)) {
+                return true;
+            }
+        }
+        return todo.contains(file);
+    }
+
     /* One-time setup */
-    private void checkInit() {
+    protected void checkInit() {
         if (started) {
             return;
         }
         log.trace("checkInit: Filling todo");
-        todo = new ArrayList<File>(100);
-        fillToDo(root);
-        Collections.sort(todo);
+        todo = new LinkedBlockingQueue<File>();
+        updateToDo(root);
         delivered = new ArrayList<Payload>(Math.max(1, todo.size()));
         started = true;
         log.info("Located " + todo.size() + " files matching pattern '"
@@ -221,8 +263,13 @@ public class FileReader implements ObjectFilter {
             rename();
         }
 
+        public File getFile() {
+            return file;
+        }
+
         private void rename() {
             if (renamed) {
+                log.trace("File '" + file + "' already closed");
                 return;
             }
             if (closed && success && postfix != null && !"".equals(postfix)) {
@@ -250,7 +297,17 @@ public class FileReader implements ObjectFilter {
             log.info("next: No more files available");
             return null;
         }
-        File current = todo.remove(0);
+        File current = todo.poll();
+        return deliverFile(current);
+    }
+
+    /**
+     * Wrap the current file in a Payload with a RenamingFilestream.
+     * When the Payload is closed, the file will be renamed automatically.
+     * @param current a file to wrap.
+     * @return a Payload with a stream for the file.
+     */
+    protected Payload deliverFile(File current) {
         log.info("Opening file '" + current + "'");
         try {
             RenamingFileStream in = new RenamingFileStream(current, postfix);
@@ -280,6 +337,15 @@ public class FileReader implements ObjectFilter {
         log.debug("close(" + success + ") called");
         checkInit();
         //noinspection DuplicateStringLiteralInspection
+        closeDelivered(success);
+        if (todo.size() > 0) {
+            log.debug("close: Discarding " + todo + " files from todo");
+            todo.clear();
+        }
+        // Note: if success, some streams might still be open.
+    }
+
+    protected void closeDelivered(boolean success) {
         for (Payload payload: delivered) {
             if (payload.getStream() == null) {
                 log.warn("close: Encountered payload without stream");
@@ -291,6 +357,8 @@ public class FileReader implements ObjectFilter {
                 continue;
             }
             RenamingFileStream stream = (RenamingFileStream)payload.getStream();
+            log.debug("Closing stream " + stream.file + " with success "
+                      + success);
             stream.setSuccess(success);
             if (!success) {
                 // Force close
@@ -298,12 +366,7 @@ public class FileReader implements ObjectFilter {
                 payload.close();
             }
         }
-        if (todo.size() > 0) {
-            log.debug("close: Discarding " + todo + " files from todo");
-            todo.clear();
-        }
-        closedWithSuccess = success;
-        // Note: if success, some streams might still be open.
+        delivered.clear();
     }
 
     /**
@@ -330,7 +393,7 @@ public class FileReader implements ObjectFilter {
     }
 
     public void remove() {
-        log.warn("Remove not implemented for FileReader");
+        log.warn("Remove not implemented for " + getClass().getName());
     }
 }
 
