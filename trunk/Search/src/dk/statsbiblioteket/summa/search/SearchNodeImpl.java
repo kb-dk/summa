@@ -143,12 +143,12 @@ public abstract class SearchNodeImpl implements SearchNode {
      */
     public void warmup() {
         log.trace("warmup() called");
-        if (slots.getOverallPermits() == 0) {
-            log.warn("No warmup as open has no index is open");
-            return;
-        }
         if (warmupData == null || "".equals(warmupData)) {
             log.trace("No warmup-data defined. Skipping warmup");
+            return;
+        }
+        if (slots.getOverallPermits() == 0) {
+            log.warn("No warmup as no permits are available");
             return;
         }
         log.trace("Warming up with data from '" + warmupData + "'");

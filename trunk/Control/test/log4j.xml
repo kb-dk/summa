@@ -62,6 +62,16 @@
 
 
     <logger name="dk.statsbiblioteket.summa">
+        <level value="warn" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
+    <logger name="dk.statsbiblioteket.summa.facetbrowser">
+        <level value="trace" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
+    <logger name="dk.statsbiblioteket.summa.releasetest">
         <level value="trace" />
         <appender-ref ref="CONSOLE" />
     </logger>

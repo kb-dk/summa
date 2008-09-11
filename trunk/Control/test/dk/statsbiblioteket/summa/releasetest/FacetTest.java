@@ -59,7 +59,7 @@ public class FacetTest extends NoExitTestCase {
 
     public void tearDown() throws Exception {
         super.tearDown();
-        cleanup();
+//        cleanup();
     }
 
     private void cleanup() throws Exception {
@@ -131,12 +131,22 @@ public class FacetTest extends NoExitTestCase {
                   + searcher.search(SearchTest.simpleRequest("Hans")).toXML());
         SearchTest.verifySearch(searcher, "Hans", 1);
         log.debug("Second test-search performed with success");
+        verifyFacetResult(searcher, "Hans");
         log.debug("All OK. Closing searcher, storage and returning");
         searcher.close();
         storage.close();
     }
 
-    public void testTwoSearch() throws Exception {
+    private void verifyFacetResult(SummaSearcher searcher,
+                                   String query) throws IOException {
+        String res = searcher.search(SearchTest.simpleRequest(query)).toXML();
+        if (!res.contains("<facet name=\"author\">")) {
+            fail("Search for '" + query
+                 + "' did not produce any facets. Result was:\n" + res);
+        }
+    }
+
+    public void testTwoDocumentsOneHitSearch() throws Exception {
         Storage storage = SearchTest.startStorage();
         SearchTest.ingest(new File(
                 Resolver.getURL("data/search/input/part2").getFile()));
@@ -149,7 +159,10 @@ public class FacetTest extends NoExitTestCase {
         log.debug("Sample output from search: "
                   + searcher.search(SearchTest.simpleRequest("Gurli")).toXML());
         SearchTest.verifySearch(searcher, "Gurli", 1);
+        SearchTest.verifySearch(searcher, "Jens", 1);
         log.debug("Second test-search performed with success");
+        verifyFacetResult(searcher, "Jens");
+        verifyFacetResult(searcher, "Gurli");
         log.debug("All OK. Closing searcher, storage and returning");
         searcher.close();
         storage.close();
@@ -184,14 +197,19 @@ public class FacetTest extends NoExitTestCase {
         SearchTest.ingest(new File(
                 Resolver.getURL("data/search/input/part2").getFile()));
         updateIndex();
+        log.debug("Waiting for the searcher to discover the new index");
         searcher.checkIndex();
-        Thread.sleep(3000); // Why do we need to do this?
+        Thread.sleep(5000); // Why do we need to do this?
+        searcher.checkIndex(); // Make double sure
+        Thread.sleep(5000); // Why do we need to do this?
         log.debug("Verify final index");
         SearchTest.verifySearch(searcher, "Gurli", 1);
         SearchTest.verifySearch(searcher, "Gurli", 1); // Yes, we try again
         SearchTest.verifySearch(searcher, "Hans", 1);
-        log.debug("Sample output from search: "
-                  + searcher.search(SearchTest.simpleRequest("Hans")).toXML());
+        verifyFacetResult(searcher, "Hans");
+        verifyFacetResult(searcher, "Gurli");
+        log.debug("Sample output from large search: "
+                  + searcher.search(SearchTest.simpleRequest("fagekspert")).toXML());
 
         searcher.close();
         storage.close();
