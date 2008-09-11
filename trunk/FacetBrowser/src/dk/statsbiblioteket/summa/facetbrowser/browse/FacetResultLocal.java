@@ -123,7 +123,8 @@ public class FacetResultLocal extends FacetResultImpl<Integer> {
     public FacetResult externalize() {
         log.trace("externalize() called");
         FacetResultExternal external = new FacetResultExternal(
-                structure.getMaxTags(), structure.getFacetIDs());
+                structure.getMaxTags(), structure.getFacetIDs(),
+                structure.getFacetFields());
         for (Map.Entry<String, List<FlexiblePair<Integer, Integer>>> entry:
                 map.entrySet()) {
             String facet = entry.getKey();
