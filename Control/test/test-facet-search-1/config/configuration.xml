@@ -79,8 +79,10 @@
                     <entry>
                         <key>summa.search.fallbackvalues</key>
                         <value class="string-array">
-                            <string>NoID</string>
-                            <string>NoShortformat</string>
+                            <string>NoTitle</string>
+                            <string>NoSubject</string>
+                            <string>NoOAI</string>
+                            <string>NoAuthor</string>
                         </value>
                     </entry>
                     <entry>
