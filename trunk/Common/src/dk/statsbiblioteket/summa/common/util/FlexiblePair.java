@@ -22,6 +22,8 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
+import java.io.Serializable;
+
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
@@ -30,8 +32,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class FlexiblePair<T extends Comparable<T> , S extends Comparable<S>>
-        implements Comparable<FlexiblePair<T, S>> {
+public class FlexiblePair<T extends Comparable<T>, S extends Comparable<S>>
+        implements Comparable<FlexiblePair<T, S>>, Serializable {
     public enum SortType {PRIMARY_ASCENDING, PRIMARY_DESCENDING,
                           SECONDARY_ASCENDING, SECONDARY_DESCENDING}
     protected T key;

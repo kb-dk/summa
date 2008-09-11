@@ -38,8 +38,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
-import dk.statsbiblioteket.summa.facetbrowser.api.FlexiblePair;
-import dk.statsbiblioteket.summa.facetbrowser.api.Pair;
+import dk.statsbiblioteket.summa.common.util.FlexiblePair;
+import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
 import org.apache.lucene.index.IndexReader;
