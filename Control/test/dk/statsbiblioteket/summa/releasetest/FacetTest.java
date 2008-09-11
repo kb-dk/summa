@@ -82,15 +82,21 @@ public class FacetTest extends NoExitTestCase {
                 "data/search/FacetTest_SearchConfiguration.xml");
         assertNotNull("The Facet configuration should not be empty",
                       searcherConf);
-        List<Configuration> searcherConfs =
+        List<Configuration> subSearcherConfs =
                 searcherConf.getSubConfigurations(SearchNodeFactory.CONF_NODES);
-        for (Configuration conf: searcherConfs) {
-            if (conf.getString(SearchNodeFactory.CONF_NODE_CLASS).equals(
+        for (Configuration subSearcherConf: subSearcherConfs) {
+            if (subSearcherConf.getString(
+                    SearchNodeFactory.CONF_NODE_CLASS).equals(
                     LuceneSearchNode.class.getName())) {
+                Configuration descConf = subSearcherConf.getSubConfiguration(
+                        LuceneIndexUtils.CONF_DESCRIPTOR);
                 log.debug("Updating the location of the IndexDescriptor to "
                           + descriptorLocation.getFile());
-                conf.set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
-                    descriptorLocation.getFile());
+                assertTrue("The descriptorlocation should be present",
+                           descConf.valueExists(
+                                   IndexDescriptor.CONF_ABSOLUTE_LOCATION));
+                descConf.set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
+                             descriptorLocation.getFile());
             }
         }
         searcherConf.set(IndexWatcher.CONF_INDEX_WATCHER_INDEX_ROOT,
@@ -223,7 +229,7 @@ public class FacetTest extends NoExitTestCase {
         SearchTest.verifySearch(searcher, "Gurli", 1); // Yes, we try again
         SearchTest.verifySearch(searcher, "Hans", 1);
         verifyFacetResult(searcher, "Gurli");
-        //verifyFacetResult(searcher, "Hans"); // Why is Hans especially a problem?
+        verifyFacetResult(searcher, "Hans"); // Why is Hans especially a problem?
         log.debug("Sample output from large search: "
                   + searcher.search(SearchTest.simpleRequest("fagekspert")).
                 toXML());
