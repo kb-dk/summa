@@ -28,10 +28,29 @@ import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.SearchClient;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.commons.XmlOperations;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.NamedNodeMap;
+import org.xml.sax.SAXException;
+import org.xml.sax.InputSource;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathFactory;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.transform.*;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.dom.DOMSource;
 import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.util.Map;
 
 /**
  * A class containing methods meant to be exposed as a web service
@@ -95,7 +114,8 @@ public class SearchWS {
         req.put(DocumentKeys.SEARCH_MAX_RECORDS, numberOfRecords);
         req.put(DocumentKeys.SEARCH_START_INDEX, startIndex);
         req.put(DocumentKeys.SEARCH_SORTKEY, sortKey);
-        req.put(DocumentKeys.SEARCH_REVERSE, reverse);        
+        req.put(DocumentKeys.SEARCH_REVERSE, reverse);
+        req.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);        
 
         try {
             res = getSearchClient().search(req);
@@ -130,9 +150,56 @@ public class SearchWS {
 
         try {
             res = getSearchClient().search(req);
-            retXML = res.toXML();
-            // TODO: cut out the search result part of the xml so we only return facets
+
+            // parse string into dom
+            Document dom;
+            InputSource in = new InputSource();
+            in.setCharacterStream(new StringReader(res.toXML()));
+            dom = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in);
+
+            // remove any response not related to FacetResult
+            XPath xp = XPathFactory.newInstance().newXPath();
+            NodeList nl = (NodeList) xp.evaluate("/responsecollection/response", dom, XPathConstants.NODESET);
+            for (int i = 0; i < nl.getLength(); i++) {
+                Node n = nl.item(i);
+                NamedNodeMap attr = n.getAttributes();
+                Node attr_name = attr.getNamedItem("name");
+                if (attr_name != null) {
+                    if (!"FacetResult".equals(attr_name.getNodeValue())) {
+                        // this is not FacetResult so we remove it
+                        n.getParentNode().removeChild(n);
+                    }
+                }
+            }
+
+            // transform dom back into a string
+            Transformer tran = TransformerFactory.newInstance().newTransformer();
+            tran.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+            StringWriter sw = new StringWriter();
+            tran.transform(new DOMSource(dom), new StreamResult(sw));
+
+            retXML = sw.toString();
         } catch (IOException e) {
+            log.error("Error faceting query: '" + query + "'" +
+                    ". Error was: ", e);
+            // TODO: return a nicer error xml block
+            retXML = "<error>Error performing query</error>";
+        } catch (TransformerException e) {
+            log.error("Error faceting query: '" + query + "'" +
+                    ". Error was: ", e);
+            // TODO: return a nicer error xml block
+            retXML = "<error>Error performing query</error>";
+        } catch (SAXException e) {
+            log.error("Error faceting query: '" + query + "'" +
+                    ". Error was: ", e);
+            // TODO: return a nicer error xml block
+            retXML = "<error>Error performing query</error>";
+        } catch (XPathExpressionException e) {
+            log.error("Error faceting query: '" + query + "'" +
+                    ". Error was: ", e);
+            // TODO: return a nicer error xml block
+            retXML = "<error>Error performing query</error>";
+        } catch (ParserConfigurationException e) {
             log.error("Error faceting query: '" + query + "'" +
                     ". Error was: ", e);
             // TODO: return a nicer error xml block
