@@ -69,7 +69,10 @@ public class Payload {
      * data. The map can be accessed by {@link #getData}.
      */
     private ConvenientMap data;
-
+    /**
+     * EOF should be returned by read() when the filter is depleted.
+     */
+    public static final int EOF = -1;
 
     /* Constructors */
 

@@ -10,7 +10,6 @@ import java.util.Random;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.filter.stream.StreamFilter;
 import dk.statsbiblioteket.util.Files;
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -111,11 +110,11 @@ public class FileReaderTest extends TestCase {
         for (int i = 0 ; i < 20 ; i++) {
             assertTrue("reader should not be empty at position " + i + "/"
                        + 20,
-                       payload.getStream().read() != StreamFilter.EOF);
+                       payload.getStream().read() != Payload.EOF);
         }
         assertEquals("The reader should be empty after "
                      + 20 + " bytes has been read",
-                     StreamFilter.EOF, payload.getStream().read());
+                     Payload.EOF, payload.getStream().read());
         payload.close();
         reader.close(true);
         assertTrue("The file should be renamed after close(true)",

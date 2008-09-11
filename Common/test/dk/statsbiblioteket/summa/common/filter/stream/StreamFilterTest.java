@@ -113,7 +113,7 @@ public class StreamFilterTest extends TestCase {
                          content[i], (byte)sequence.read());
         }
         assertEquals("EOF should be reached after the content",
-                     StreamFilter.EOF, sequence.read());
+                     Payload.EOF, sequence.read());
     }
 
     public void testMetaInfo() throws Exception {

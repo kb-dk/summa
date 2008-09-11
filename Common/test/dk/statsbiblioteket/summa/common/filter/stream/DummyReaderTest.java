@@ -2,6 +2,7 @@ package dk.statsbiblioteket.summa.common.filter.stream;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
+import dk.statsbiblioteket.summa.common.filter.Payload;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -53,10 +54,10 @@ public class DummyReaderTest extends TestCase {
             }
             for (int i = 0 ; i < BODY_SIZE ; i++) {
                 assertTrue("Content must not be EOF",
-                           dummy.read() != StreamFilter.EOF);
+                           dummy.read() != Payload.EOF);
             }
         }
-        assertEquals("Last value must be EOF", StreamFilter.EOF, dummy.read());
+        assertEquals("Last value must be EOF", Payload.EOF, dummy.read());
     }
 }
 
