@@ -17,7 +17,7 @@
 <log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/" debug="false">
 
     <appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
-        <param name="Threshold" value="TRACE"/><!-- or ERROR or INFO -->
+        <param name="Threshold" value="debug"/><!-- or ERROR or INFO -->
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
         </layout>
@@ -49,7 +49,17 @@
 
 
     <logger name="dk.statsbiblioteket.summa.ingest.stream.FileReader">
-        <level value="info" />
+        <level value="trace" />
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
+    <logger name="dk.statsbiblioteket.summa.ingest.stream.FileWatcher">
+        <level value="debug" />
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
+    <logger name="dk.statsbiblioteket.summa.ingest.stream.FileWatcherTest">
+        <level value="debug" />
         <appender-ref ref="CONSOLE"/>
     </logger>
 
