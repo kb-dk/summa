@@ -95,7 +95,7 @@ public class DummyStreamToRecords implements ObjectFilter {
         }
         ByteArrayOutputStream content = new ByteArrayOutputStream(dataSize);
         int value;
-        while ((value = source.read()) != StreamFilter.EOF) {
+        while ((value = source.read()) != Payload.EOF) {
             content.write(value);
             if (content.size() == dataSize) break;
         }

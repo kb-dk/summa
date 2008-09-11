@@ -28,6 +28,7 @@ import java.util.Random;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Filter;
+import dk.statsbiblioteket.summa.common.filter.Payload;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -68,7 +69,7 @@ public class DummyReader extends StreamFilter {
     }
 
     public boolean pump() throws IOException {
-        return read() != EOF;
+        return read() != Payload.EOF;
     }
 
     public void close(boolean success) {
@@ -93,7 +94,7 @@ public class DummyReader extends StreamFilter {
      */
     public int read() throws IOException {
         if (content == null) {
-            return StreamFilter.EOF;
+            return Payload.EOF;
         }
         if (content.size() > 0) {
             // Inside a body
@@ -108,7 +109,7 @@ public class DummyReader extends StreamFilter {
         // No more bodies or bytes
         //noinspection AssignmentToNull
         content = null;
-        return StreamFilter.EOF;
+        return Payload.EOF;
     }
 }
 

@@ -33,6 +33,7 @@ import java.nio.ByteBuffer;
 
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.filter.Filter;
+import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 
 /**
@@ -69,10 +70,6 @@ import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
  */
 public abstract class StreamFilter extends InputStream implements Configurable,
                                                                   Filter {
-    /**
-     * EOF should be returned by read() when the filter is depleted.
-     */
-    public static final int EOF = -1;
 
     /**
      * @return the next long in the stream if present. If EOF was reached
@@ -88,7 +85,7 @@ public abstract class StreamFilter extends InputStream implements Configurable,
         ByteBuffer bb = ByteBuffer.allocate(8);
         for (int i = 0 ; i < 8 ; i++) {
             int value = in.read();
-            if (value == EOF) {
+            if (value == Payload.EOF) {
                 throw new EOFException("Attempting to read past EOF");
             }
             bb.put((byte)value);
@@ -114,7 +111,7 @@ public abstract class StreamFilter extends InputStream implements Configurable,
      * @throws IOException in case of read error.
      */
     public boolean pump() throws IOException {
-        return read() != EOF;
+        return read() != Payload.EOF;
     }
 
 
