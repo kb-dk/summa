@@ -161,7 +161,7 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements
                     "Unable to perform search for query '%s' with filter '%s'",
                     query, filter), e);
         }
-        if (collectDocIDs) {
+        if (request.getBoolean(SEARCH_COLLECT_DOCIDS, collectDocIDs)) {
             try {
                 responses.getTransient().put(DOCIDS,
                                              collectDocIDs(query, filter));
