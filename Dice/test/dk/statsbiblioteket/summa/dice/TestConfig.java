@@ -42,9 +42,12 @@ public class TestConfig extends Config implements Constants {
         setEmployerHostname("pc134");
         setConsumerHostname("pc134");
 
-        set (WORKER_CACHE_PATH, "/home/mikkel/tmp/worker_cache");
-        set (CONSUMER_CACHE_PATH, "/home/mikkel/tmp/consumer_cache");
-        set (CONSUMER_CACHE_PORT, 25000);
-        set (CONSUMER_CACHE_SERVICE, "consumer_cache");
+        set (CONF_WORKER_CACHE_PATH, "/home/mikkel/tmp/worker_cache");
+        set (CONF_CONSUMER_CACHE_PATH, "/home/mikkel/tmp/consumer_cache");
+        set (CONF_CONSUMER_CACHE_PORT, 25000);
+        set (CONF_CONSUMER_CACHE_SERVICE, "consumer_cache");
     }
 }
+
+
+

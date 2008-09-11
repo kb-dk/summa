@@ -25,21 +25,21 @@
             <value class="int">20000</value>
         </entry>
         <entry>
-            <key>summa.search.result-fields</key>
+            <key>summa.search.resultfields</key>
             <value class="string-array">
                 <string>recordID</string>
                 <string>shortformat</string>
             </value>
         </entry>
         <entry>
-            <key>summa.search.fallback-values</key>
+            <key>summa.search.fallbackvalues</key>
             <value class="string-array">
                 <string>NoID</string>
                 <string>NoShortformat</string>
             </value>
         </entry>
         <entry>
-            <key>summa.search.non-escaped-fields</key>
+            <key>summa.search.nonescapedfields</key>
             <value class="string-array">
                 <string>shortformat</string>
             </value>
@@ -53,7 +53,7 @@
             <value class="string">10000</value>
         </entry>
         <entry>
-            <key>summa.search.maxRecords</key>
+            <key>summa.search.maxrecords</key>
             <value class="int">10000</value>
         </entry>
         <entry>
@@ -61,40 +61,42 @@
             <value class="int">2</value>
         </entry>
         <entry>
-            <key>summa.search.number-of-concurrent-searches</key>
+            <key>summa.search.numberofconcurrentsearches</key>
             <value class="int">4</value>
         </entry>
         <entry>
-            <key>summa.search.search-queue.max-size</key>
+            <key>summa.search.searchqueue.maxsize</key>
             <value class="int">50</value>
         </entry>
         <entry>
-            <key>summa.search.searcher-availability.timeout</key>
+            <key>summa.search.searcheravailability.timeout</key>
             <value class="int">5000</value>
         </entry>
         <!-- IndexWatcher -->
         <entry>
-            <key>summa.index-watcher.check-interval</key>
+            <key>summa.indexwatcher.checkinterval</key>
             <value class="int">1000</value>
         </entry>
         <entry>
-            <key>summa.index-watcher.index-root</key>
+            <key>summa.indexwatcher.indexroot</key>
             <value class="string">/tmp/summatest/index</value>
         </entry>
         <entry>
-            <key>summa.index-watcher.min-retention</key>
+            <key>summa.indexwatcher.minretention</key>
             <!-- Very aggressive value - probably too low for production -->
             <value class="int">1000</value>
         </entry>
         <!-- LuceneIndexUtils -->
         <entry>
-            <key>summa.index.descriptor-setup</key>
+            <key>summa.index.descriptorsetup</key>
             <value class="xproperties">
                 <entry>
-                    <key>summa.common.index-descriptor.absolute-location</key>
+                    <key>summa.common.indexdescriptor.absolutelocation</key>
                     <value class="string">/tmp/summatest/data/search/SearchTest_IndexDescriptor.xml</value>
                 </entry>
             </value>
         </entry>
     </xproperties>
 </xproperties>
+
+

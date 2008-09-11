@@ -64,7 +64,7 @@ public class Configuration implements Serializable,
 
     /**
      * Set of system resource names used to look for a configuration if none
-     * can be found under {@link #CONFIGURATION_PROPERTY}.
+     * can be found under {@link #CONF_CONFIGURATION_PROPERTY}.
      */
     public static final String[] DEFAULT_RESOURCES = {
                                                       "configuration.xml",
@@ -81,12 +81,12 @@ public class Configuration implements Serializable,
 
     /** System property defining where to fetch the configuration.
      * This can be a normal URL or an rmi path.*/
-    public static final String CONFIGURATION_PROPERTY = "summa.configuration";
+    public static final String CONF_CONFIGURATION_PROPERTY = "summa.configuration";
 
     /** System property defining the root directory from which persistent
      * data should be read and stored to. The default value is
      * {@code $HOME/summa-control/persistent */
-    public static final String PERSISTENT_DIR_PROPERTY = "summa.persistent";
+    public static final String CONF_PERSISTENT_DIR = "summa.persistent";
 
     /**
      * Create a {@code Configuraion} with the given {@link ConfigurationStorage}
@@ -969,16 +969,16 @@ public class Configuration implements Serializable,
 
     /**
      * Get the default system configuration as specified in the system
-     * property {@link #CONFIGURATION_PROPERTY}
+     * property {@link #CONF_CONFIGURATION_PROPERTY}
      * @return a newly instantiated configuration
      */
     public static Configuration getSystemConfiguration () {
-        return getSystemConfiguration(CONFIGURATION_PROPERTY);
+        return getSystemConfiguration(CONF_CONFIGURATION_PROPERTY);
     }
 
     /**
      * <p>Get the default system configuration as specified in the system
-     * property {@link #CONFIGURATION_PROPERTY}.</p>
+     * property {@link #CONF_CONFIGURATION_PROPERTY}.</p>
      * <p>If the system configuration is not set, and {@code allowUnset} is
      * true, use an empty memory based configuration instead.</p>
      * @see #getSystemConfiguration(String, boolean)
@@ -989,7 +989,7 @@ public class Configuration implements Serializable,
      * @return a newly instantiated configuration
      */
     public static Configuration getSystemConfiguration (boolean allowUnset) {
-        return getSystemConfiguration(CONFIGURATION_PROPERTY, allowUnset);
+        return getSystemConfiguration(CONF_CONFIGURATION_PROPERTY, allowUnset);
     }
 
     /**
@@ -1175,7 +1175,7 @@ public class Configuration implements Serializable,
 
     /**
      * Convenience method to look up the system global directory for persistent
-     * data. This is defined by the property {@link #PERSISTENT_DIR_PROPERTY}.
+     * data. This is defined by the property {@link #CONF_PERSISTENT_DIR}.
      * <p></p>
      * If the configuration does not define the property the system property
      * with the same name will be checked. If that fails too the default
@@ -1186,21 +1186,24 @@ public class Configuration implements Serializable,
      */
     public File getPeristentDir () {
         try {
-            return new File (getString(PERSISTENT_DIR_PROPERTY));
+            return new File (getString(CONF_PERSISTENT_DIR));
         } catch (NullPointerException e) {
-            log.debug (PERSISTENT_DIR_PROPERTY + " not defined in configuration");
-            String loc = System.getProperty(PERSISTENT_DIR_PROPERTY);
+            log.debug (CONF_PERSISTENT_DIR + " not defined in configuration");
+            String loc = System.getProperty(CONF_PERSISTENT_DIR);
             if (loc == null) {
                 loc = System.getProperty("user.home") + File.separator
                         + "summa-control" + File.separator + "persistent";
-                log.debug ("System property " + PERSISTENT_DIR_PROPERTY + "not"
+                log.debug ("System property " + CONF_PERSISTENT_DIR + "not"
                            + " defined. Using default: " + loc);
                 return new File (loc);
             }
-            log.debug ("Using system property " + PERSISTENT_DIR_PROPERTY + " "
+            log.debug ("Using system property " + CONF_PERSISTENT_DIR + " "
                        +  "for persistent data: " + loc);
             return new File (loc);
         }
     }
 }
+
+
+
 

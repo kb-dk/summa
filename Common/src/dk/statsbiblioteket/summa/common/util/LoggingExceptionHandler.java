@@ -35,3 +35,6 @@ public class LoggingExceptionHandler implements Thread.UncaughtExceptionHandler 
         log.fatal ("Uncaught exception in thread '" + thread + "'", e);
     }
 }
+
+
+

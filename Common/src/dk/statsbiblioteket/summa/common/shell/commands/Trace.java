@@ -19,3 +19,6 @@ public class Trace extends Command {
         throw new TraceNotification (this);
     }
 }
+
+
+

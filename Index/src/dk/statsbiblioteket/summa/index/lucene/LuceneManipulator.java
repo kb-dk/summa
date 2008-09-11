@@ -81,7 +81,7 @@ public class LuceneManipulator implements IndexManipulator {
      * This property is optional. Default is -1.
      */
     public static final String CONF_BUFFER_SIZE_PAYLOADS =
-            "summa.index.lucene.BUFFER_SIZE_PAYLOADS";
+            "summa.index.lucene.buffersizepayloads";
     public static final int DEFAULT_BUFFER_SIZE_PAYLOADS = -1;
 
     /** The index descriptor, used for providing Analyzers et al. */
@@ -545,4 +545,7 @@ public class LuceneManipulator implements IndexManipulator {
     }
 
 }
+
+
+
 

@@ -31,3 +31,6 @@ package dk.statsbiblioteket.summa.control.rmid;
  */
 public class Controller {
 }
+
+
+

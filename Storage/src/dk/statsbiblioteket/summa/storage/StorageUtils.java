@@ -19,7 +19,7 @@ public class StorageUtils {
     /**
      * <p>Work out what root directory a service installed under. This is
      * extracted from the
-     * {@link Storage#DATA_DIR_PROP} property.</p>
+     * {@link Storage#CONF_DATA_DIR} property.</p>
      *
      * <p>The service itself is installed under {@code <rootDir>/<service_id>}</p>
      *
@@ -29,7 +29,7 @@ public class StorageUtils {
      * @return base directory for installation
      */
     public static File getRootDir (Configuration conf) {
-        String basePath = conf.getString (Storage.DATA_DIR_PROP,
+        String basePath = conf.getString (Storage.CONF_DATA_DIR,
                                           System.getProperty("user.home")
                                         + File.separator
                                         + "summa-control");
@@ -77,4 +77,7 @@ public class StorageUtils {
 
 
 }
+
+
+
 

@@ -38,8 +38,8 @@ public class ServiceManager extends ConnectionManager<Service>
      * Configuration property defining the class of the
      * {@link ConnectionFactory} to use for creating service connections.
      */
-    public static final String CONNECTION_FACTORY_PROP =
-                                               GenericConnectionFactory.FACTORY;
+    public static final String CONF_CONNECTION_FACTORY =
+                                               GenericConnectionFactory.CONF_FACTORY;
     private String clientId;
     private String basePath;
     private String servicePath;
@@ -50,17 +50,17 @@ public class ServiceManager extends ConnectionManager<Service>
 
         services = new ArrayList<String>();
 
-        registryPort = conf.getInt(Client.REGISTRY_PORT_PROPERTY, 27000);
-        clientId = System.getProperty(Client.CLIENT_ID);
+        registryPort = conf.getInt(Client.CONF_REGISTRY_PORT, 27000);
+        clientId = System.getProperty(Client.CONF_CLIENT_ID);
 
         if (clientId == null) {
             throw new BadConfigurationException("System property '"
-                                                + Client.CLIENT_ID + "' not set");
+                                                + Client.CONF_CLIENT_ID + "' not set");
         }
 
         basePath = System.getProperty("user.home") + File.separator
                                      + conf.getString(
-                                               Client.CLIENT_BASEPATH_PROPERTY,
+                                               Client.CONF_CLIENT_BASEPATH,
                                                "summa-control")
                                      + File.separator + clientId;
 
@@ -79,7 +79,7 @@ public class ServiceManager extends ConnectionManager<Service>
     private static ConnectionFactory<? extends Service>
                                      getConnectionFactory (Configuration conf) {
         Class<? extends ConnectionFactory> connFactClass =
-                conf.getClass(CONNECTION_FACTORY_PROP, ConnectionFactory.class,
+                conf.getClass(CONF_CONNECTION_FACTORY, ConnectionFactory.class,
                               SummaRMIConnectionFactory.class);
 
         ConnectionFactory connFact = Configuration.create(connFactClass, conf);
@@ -147,3 +147,6 @@ public class ServiceManager extends ConnectionManager<Service>
         return serviceList;
     }
 }
+
+
+

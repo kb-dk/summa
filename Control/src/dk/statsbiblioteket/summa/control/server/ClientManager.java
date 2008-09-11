@@ -51,8 +51,8 @@ public class ClientManager extends ConnectionManager<ClientConnection>
      * Configuration property defining the class of the
      * {@link ConnectionFactory} to use for creating client connections.
      */
-    public static final String CONNECTION_FACTORY_PROP =
-                                               GenericConnectionFactory.FACTORY;
+    public static final String CONF_CONNECTION_FACTORY =
+                                               GenericConnectionFactory.CONF_FACTORY;
 
     /**
      * Configuration property defining in what directory to store
@@ -78,7 +78,7 @@ public class ClientManager extends ConnectionManager<ClientConnection>
     private static ConnectionFactory<? extends ClientConnection>
                                      getConnectionFactory (Configuration conf) {
         Class<? extends ConnectionFactory> connFactClass =
-                conf.getClass(CONNECTION_FACTORY_PROP, ConnectionFactory.class,
+                conf.getClass(CONF_CONNECTION_FACTORY, ConnectionFactory.class,
                               SummaRMIConnectionFactory.class);
 
         ConnectionFactory connFact = Configuration.create(connFactClass, conf);
@@ -125,10 +125,10 @@ public class ClientManager extends ConnectionManager<ClientConnection>
             Configuration conf = new Configuration (
                                                 new FileStorage(clientMeta));
             conf.importConfiguration(deployConfig);
-            conf.set (ClientConnection.REGISTRY_HOST_PROPERTY, clientHost);
+            conf.set (ClientConnection.CONF_REGISTRY_HOST, clientHost);
 
             int regPort = getClientRegistryPort (instanceId, deployConfig);
-            conf.set (ClientConnection.REGISTRY_PORT_PROPERTY, new Integer(regPort).toString());
+            conf.set (ClientConnection.CONF_REGISTRY_PORT, new Integer(regPort).toString());
 
         } catch (IOException e) {
             log.error ("Failed to write client registration for '"
@@ -138,7 +138,7 @@ public class ClientManager extends ConnectionManager<ClientConnection>
     }
 
     /**
-     * Return the value of {@link ClientDeployer#DEPLOYER_TARGET_PROPERTY}
+     * Return the value of {@link ClientDeployer#CONF_DEPLOYER_TARGET}
      * as set when the client was deployed.
      * @param instanceId the instance id of the client to look uo deployment
      *                   target for
@@ -148,7 +148,7 @@ public class ClientManager extends ConnectionManager<ClientConnection>
         try {
             File clientMeta = getClientMetaFile(instanceId);
             Configuration conf = new Configuration (new FileStorage(clientMeta));
-            return conf.getString(ClientDeployer.DEPLOYER_TARGET_PROPERTY);
+            return conf.getString(ClientDeployer.CONF_DEPLOYER_TARGET);
         } catch (IOException e) {
             log.error ("Error while looking up deployment target for '"
                        + instanceId + "'");
@@ -190,7 +190,7 @@ public class ClientManager extends ConnectionManager<ClientConnection>
             File clientMeta = getClientMetaFile(instanceId);
             Configuration conf = new Configuration (new FileStorage(clientMeta));
 
-            return conf.getString(ClientDeployer.DEPLOYER_BUNDLE_PROPERTY);
+            return conf.getString(ClientDeployer.CONF_DEPLOYER_BUNDLE);
         } catch (IOException e) {
             log.error ("Error while looking up bundle id for '"
                        + instanceId + "'");
@@ -204,7 +204,7 @@ public class ClientManager extends ConnectionManager<ClientConnection>
     }
 
     private String getClientHost (Configuration deployConfig) {
-        return deployConfig.getString(ClientConnection.REGISTRY_HOST_PROPERTY);
+        return deployConfig.getString(ClientConnection.CONF_REGISTRY_HOST);
     }
 
     /**
@@ -216,7 +216,7 @@ public class ClientManager extends ConnectionManager<ClientConnection>
     private int getClientRegistryPort(String instanceId,
                                       Configuration deployConfig) {
         String clientConfLocation = deployConfig.getString (
-                                           ClientDeployer.CLIENT_CONF_PROPERTY);
+                                           ClientDeployer.CONF_CLIENT_CONF);
 
        /* TODO:
         * if clientConfLocation starts with // create remote storage
@@ -228,7 +228,7 @@ public class ClientManager extends ConnectionManager<ClientConnection>
         *     by using ControlUtils.getZipEntry
         *
         * Create a Configuration on the previsouly created storage.
-        * Retrieve ClientConnection.REGISTRY_HOST_PROPERTY and return it
+        * Retrieve ClientConnection.CONF_REGISTRY_HOST and return it
         * */
 
         log.error ("WARNING - HARDCODED CLIENT REG. PORT 2700");
@@ -308,3 +308,6 @@ public class ClientManager extends ConnectionManager<ClientConnection>
         return clients;
     }
 }
+
+
+

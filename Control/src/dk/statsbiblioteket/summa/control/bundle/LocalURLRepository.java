@@ -23,9 +23,9 @@ public class LocalURLRepository extends URLRepository
      * Configuration property defining the directory in which to install
      * bundles. Given as a {@code file://} url.
      * <p></p>
-     * Defaults to {@link #LOCAL_URL_PROPERTY}{@code /api}.
+     * Defaults to {@link #CONF_LOCAL_URL}{@code /api}.
      */
-    public static final String API_LOCAL_URL_PROPERTY =
+    public static final String CONF_API_LOCAL_URL =
                                          "summa.control.repository.api.localurl";
 
     /**
@@ -35,7 +35,7 @@ public class LocalURLRepository extends URLRepository
      * <p></p>
      * Defaults to {@link #baseUrl} if this property unset.
      */
-    public static final String LOCAL_URL_PROPERTY =
+    public static final String CONF_LOCAL_URL =
                                          "summa.control.repository.localurl";
 
     private static final Log log = LogFactory.getLog(LocalURLRepository.class);
@@ -44,10 +44,10 @@ public class LocalURLRepository extends URLRepository
     private File apiDir;
 
     /**
-     * <p>Create a new URLRepository. If the {@link #DOWNLOAD_DIR_PROPERTY} is
+     * <p>Create a new URLRepository. If the {@link #CONF_DOWNLOAD_DIR} is
      * not set {@code tmp/} relative to the working directory will be used.</p>
      * <p/>
-     * <p>If {@link #LOCAL_URL_PROPERTY} is not set in the configuration
+     * <p>If {@link #CONF_LOCAL_URL} is not set in the configuration
      * the value {@link URLRepository#baseUrl} will be used.
      *
      * @param conf
@@ -55,14 +55,14 @@ public class LocalURLRepository extends URLRepository
     public LocalURLRepository(Configuration conf) {
         super(conf);
 
-        String bundlePath = conf.getString(LOCAL_URL_PROPERTY,
+        String bundlePath = conf.getString(CONF_LOCAL_URL,
                                            baseUrl);
 
         if (!bundlePath.endsWith("/")) {
             bundlePath = bundlePath + "/";
         }
 
-        String apiPath = conf.getString(API_LOCAL_URL_PROPERTY,
+        String apiPath = conf.getString(CONF_API_LOCAL_URL,
                                         bundlePath + "api");
 
         if (!apiPath.endsWith("/")) {
@@ -111,3 +111,6 @@ public class LocalURLRepository extends URLRepository
         return true;
     }
 }
+
+
+

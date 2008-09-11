@@ -429,3 +429,6 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
                     replaceAll("#",  "%23"). // Escaping for URL
                     replaceAll("\"", "&quot;");
     }}
+
+
+

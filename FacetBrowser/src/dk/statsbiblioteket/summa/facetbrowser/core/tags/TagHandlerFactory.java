@@ -49,7 +49,7 @@ public class TagHandlerFactory {
      * <p><p>
      * Optional. Default is {@link TagHandlerImpl}.
      */
-    public static final String CONF_TAG_HANDLER = "summa.facet.tag-handler";
+    public static final String CONF_TAG_HANDLER = "summa.facet.taghandler";
     public static final String DEFAULT_TAG_HANDLER =
             TagHandlerImpl.class.toString();
 
@@ -97,3 +97,6 @@ public class TagHandlerFactory {
     }
 
 }
+
+
+

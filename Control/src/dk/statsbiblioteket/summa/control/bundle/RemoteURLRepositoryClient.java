@@ -35,19 +35,19 @@ public class RemoteURLRepositoryClient implements BundleRepository {
 
     /**
      * Create new repository client. The {@code conf} argument should set
-     * the {@link URLRepository#BASE_URL_PROPERTY} as this class utilizes
+     * the {@link URLRepository#CONF_BASE_URL} as this class utilizes
      * a {@link URLRepository} underneath to do bundle downloads.
      * @param conf
      */
     public RemoteURLRepositoryClient (Configuration conf) {
-        downloadDir = conf.getString(DOWNLOAD_DIR_PROPERTY,
+        downloadDir = conf.getString(CONF_DOWNLOAD_DIR,
                                      DEFAULT_DOWNLOAD_DIR);
-        repoAddress = conf.getString(REPO_ADDRESS_PROPERTY,
+        repoAddress = conf.getString(CONF_REPO_ADDRESS,
                                      DEFAULT_REPO_ADDRESS);
 
         /* Sanity check properties */
         if (!repoAddress.startsWith("//")) {
-            throw new ConfigurationException("The value of " + REPO_ADDRESS_PROPERTY
+            throw new ConfigurationException("The value of " + CONF_REPO_ADDRESS
                                              +": '" + repoAddress + "' does "
                                              + "not look like an RMI address");
         }
@@ -59,7 +59,7 @@ public class RemoteURLRepositoryClient implements BundleRepository {
         /* Prepare a configuration for the underlying URLRepo */
         Configuration localConf = Configuration.newMemoryBased();
         localConf.importConfiguration(conf);
-        localConf.purge(REPO_ADDRESS_PROPERTY);        
+        localConf.purge(CONF_REPO_ADDRESS);        
 
         /* Create the URLRepo with the custom config */
         localRepo = new URLRepository(conf);
@@ -125,3 +125,6 @@ public class RemoteURLRepositoryClient implements BundleRepository {
     }
 
 }
+
+
+

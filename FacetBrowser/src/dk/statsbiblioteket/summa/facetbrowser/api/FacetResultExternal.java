@@ -52,3 +52,6 @@ public class FacetResultExternal extends FacetResultImpl<String> {
         return "FacetResult";
     }
 }
+
+
+

@@ -61,3 +61,6 @@ public interface FieldProvider<F extends IndexField> {
      */
     F createNewField(Node node) throws ParseException;
 }
+
+
+

@@ -113,3 +113,6 @@ public interface Cache<E> {
      */
     public String getDataURL (long id) throws IOException;
 }
+
+
+

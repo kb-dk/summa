@@ -34,19 +34,19 @@ public class ControlCore extends UnicastRemoteObject
      * Configuration property defining which port the
      * {@link ControlCore} should communicate. Default is 27001.
      */
-    public static final String CONTROL_CORE_PORT = "summa.control.core.port";
+    public static final String CONF_CONTROL_CORE_PORT = "summa.control.core.port";
 
     /**
      * Configuration property defining which port the
      * {@link ControlCore}s registry should run. Default is 27000.
      */
-    public static final String CONTROL_REGISTRY_PORT = "summa.control.core.registryPort";
+    public static final String CONF_CONTROL_REGISTRY_PORT = "summa.control.core.registryport";
 
     /**
      * Configuration property defining the base directory for the ControlCore.
      * Default is <code>${user.home}/summa-control</code>.
      */
-    public static final String CONTROL_BASE_DIR = "summa.control.core.dir";
+    public static final String CONF_CONTROL_BASE_DIR = "summa.control.core.dir";
 
     private Log log = LogFactory.getLog (ControlCore.class);
     private File baseDir;
@@ -71,7 +71,7 @@ public class ControlCore extends UnicastRemoteObject
         setStatus(Status.CODE.not_instantiated,
                   "Exporting remote interfaces", Logging.LogLevel.DEBUG);
         RemoteHelper.exportRemoteInterface(this,
-                                        conf.getInt(CONTROL_REGISTRY_PORT, 27000),
+                                        conf.getInt(CONF_CONTROL_REGISTRY_PORT, 27000),
                                         "summa-control");
 
         try {
@@ -87,7 +87,7 @@ public class ControlCore extends UnicastRemoteObject
     }
 
     private static int getServicePort(Configuration conf) {
-        return conf.getInt(CONTROL_CORE_PORT, 27001);
+        return conf.getInt(CONF_CONTROL_CORE_PORT, 27001);
     }
 
     public ClientConnection getClient(String instanceId) {
@@ -144,7 +144,7 @@ public class ControlCore extends UnicastRemoteObject
         ClientDeployer deployer = DeployerFactory.createClientDeployer(conf);
         Feedback feedback = FeedbackFactory.createFeedback(conf);
 
-        String instanceId = conf.getString(ClientDeployer.INSTANCE_ID_PROPERTY);
+        String instanceId = conf.getString(ClientDeployer.CONF_INSTANCE_ID);
 
         /* Make sure that a client with the given id isn't already deployed */
         if (clientManager.knowsClient (instanceId)) {
@@ -175,7 +175,7 @@ public class ControlCore extends UnicastRemoteObject
     public void startClient(Configuration conf) {
         setStatusRunning("Starting client");
 
-        String instanceId = conf.getString(ClientDeployer.INSTANCE_ID_PROPERTY);
+        String instanceId = conf.getString(ClientDeployer.CONF_INSTANCE_ID);
         String bundleId = clientManager.getBundleId(instanceId);
         log.trace("startClient: got bundleId '" + bundleId + "'");
 
@@ -195,13 +195,13 @@ public class ControlCore extends UnicastRemoteObject
                   + instanceId
                   + "' with deployment configuration:\n" + conf.dumpString());
 
-        conf.set(ClientDeployer.DEPLOYER_TARGET_PROPERTY,
+        conf.set(ClientDeployer.CONF_DEPLOYER_TARGET,
                  clientManager.getDeployTarget(instanceId));
 
-        conf.set (ClientDeployer.DEPLOYER_BUNDLE_PROPERTY,
+        conf.set (ClientDeployer.CONF_DEPLOYER_BUNDLE,
                   bundleId);
 
-        conf.set (ClientDeployer.DEPLOYER_BUNDLE_FILE_PROPERTY,
+        conf.set (ClientDeployer.CONF_DEPLOYER_BUNDLE_FILE,
                   repoManager.getBundle(bundleId).getAbsolutePath());
 
         log.debug ("Modified deployment configuration:\n" + conf.dumpString());
@@ -261,12 +261,12 @@ public class ControlCore extends UnicastRemoteObject
      * <p>Return true <i>iff</i> the provided {@link Configuration} contains the
      * required properties listed in {@link ClientDeployer}.</p>
      *
-     * <p>If the {@link ClientDeployer#CLIENT_CONF_PROPERTY} is not set,
+     * <p>If the {@link ClientDeployer#CONF_CLIENT_CONF} is not set,
      * it will be set to point at the configuration of this Control instance.</p>
      *
-     * <p>If the {@link ClientDeployer#DEPLOYER_BUNDLE_FILE_PROPERTY} is not
+     * <p>If the {@link ClientDeployer#CONF_DEPLOYER_BUNDLE_FILE} is not
      * set it will be calculated from the
-     * {@link ClientDeployer#DEPLOYER_BUNDLE_PROPERTY} and set in the
+     * {@link ClientDeployer#CONF_DEPLOYER_BUNDLE} and set in the
      * configuration.</p>
      *
      * @param conf the configuration to validate
@@ -276,7 +276,7 @@ public class ControlCore extends UnicastRemoteObject
      */
     private void validateClientConf(Configuration conf) {
         log.trace("validateClientConf called");
-        String bdl =  conf.getString(ClientDeployer.DEPLOYER_BUNDLE_PROPERTY,
+        String bdl =  conf.getString(ClientDeployer.CONF_DEPLOYER_BUNDLE,
                                      null);
 
         if (bdl == null) {
@@ -300,50 +300,50 @@ public class ControlCore extends UnicastRemoteObject
 
         /* Set bundle file prop if it is not already set */
         String bdlFileProp =
-                conf.getString (ClientDeployer.DEPLOYER_BUNDLE_FILE_PROPERTY,
+                conf.getString (ClientDeployer.CONF_DEPLOYER_BUNDLE_FILE,
                                 bdlFile.getAbsolutePath());
-        log.trace ("Setting " + ClientDeployer.DEPLOYER_BUNDLE_FILE_PROPERTY
+        log.trace ("Setting " + ClientDeployer.CONF_DEPLOYER_BUNDLE_FILE
                    + " = " + bdlFileProp);
-        conf.set(ClientDeployer.DEPLOYER_BUNDLE_FILE_PROPERTY,
+        conf.set(ClientDeployer.CONF_DEPLOYER_BUNDLE_FILE,
                  bdlFileProp);
 
 
 
-        try { conf.getString(ClientDeployer.INSTANCE_ID_PROPERTY); }
+        try { conf.getString(ClientDeployer.CONF_INSTANCE_ID); }
         catch (NullPointerException e) {
             throw new BadConfigurationException("No instance id defined in "
                                                 + "deployment configuration");
         }
 
-        try { conf.getString(ClientDeployer.DEPLOYER_CLASS_PROPERTY); }
+        try { conf.getString(ClientDeployer.CONF_DEPLOYER_CLASS); }
         catch (NullPointerException e) {
             throw new BadConfigurationException("Required property: "
-                                                + ClientDeployer.DEPLOYER_CLASS_PROPERTY
+                                                + ClientDeployer.CONF_DEPLOYER_CLASS
                                                 + " not set ");
         }
 
-        try { conf.getString(ClientDeployer.DEPLOYER_TARGET_PROPERTY); }
+        try { conf.getString(ClientDeployer.CONF_DEPLOYER_TARGET); }
         catch (NullPointerException e) {
             throw new BadConfigurationException("Required property: "
-                                                + ClientDeployer.DEPLOYER_TARGET_PROPERTY
+                                                + ClientDeployer.CONF_DEPLOYER_TARGET
                                                 + " not set ");
         }
 
-        try { conf.getString(ClientDeployer.DEPLOYER_FEEDBACK_PROPERTY); }
+        try { conf.getString(ClientDeployer.CONF_DEPLOYER_FEEDBACK); }
         catch (NullPointerException e) {
             throw new BadConfigurationException("Required property: "
-                                                + ClientDeployer.DEPLOYER_FEEDBACK_PROPERTY
+                                                + ClientDeployer.CONF_DEPLOYER_FEEDBACK
                                                 + " not set ");
         }
 
         try {
-            conf.getString(ClientDeployer.CLIENT_CONF_PROPERTY);
+            conf.getString(ClientDeployer.CONF_CLIENT_CONF);
         } catch (NullPointerException e) {
-            // The ClientDeployer.CLIENT_CONF_PROPERTY is not set, set it as
+            // The ClientDeployer.CONF_CLIENT_CONF is not set, set it as
             // specified by our contract (see javadoc for said property)
-            log.debug (ClientDeployer.CLIENT_CONF_PROPERTY + " not set, "
+            log.debug (ClientDeployer.CONF_CLIENT_CONF + " not set, "
                        + "setting to " + confManager.getPublicAddress());
-            conf.set(ClientDeployer.CLIENT_CONF_PROPERTY,
+            conf.set(ClientDeployer.CONF_CLIENT_CONF,
                      confManager.getPublicAddress());
         }
     }
@@ -398,3 +398,6 @@ public class ControlCore extends UnicastRemoteObject
         }
     }
 }
+
+
+

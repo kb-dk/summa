@@ -183,7 +183,7 @@ public class Merger extends CachingConsumer {
         String output = null;
 
         try {
-            cacheFile = cache.getPath(Long.parseLong(job.getHint(JOB_CACHE_ID)));
+            cacheFile = cache.getPath(Long.parseLong(job.getHint(CONF_JOB_CACHE_ID)));
         } catch (IOException e) {
             log.error ("Error getting cache file for job " + job, e);
             return;
@@ -545,3 +545,6 @@ public class Merger extends CachingConsumer {
         }
     }
 }
+
+
+

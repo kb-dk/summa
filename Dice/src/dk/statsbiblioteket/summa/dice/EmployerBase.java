@@ -213,7 +213,7 @@ abstract public class EmployerBase extends UnicastRemoteObject
                 // job in its local cache. Such jobs are not stored on the Employer
                 // anymore - we're screwed.
                 log.fatal ("Consumer failed to handle job: " + status);
-                SimpleLog lostJobLog = new SimpleLog(conf.getString(Constants.EMPLOYER_DATA_PATH)  + File.separator + "lost_jobs.log");
+                SimpleLog lostJobLog = new SimpleLog(conf.getString(Constants.CONF_EMPLOYER_DATA_PATH)  + File.separator + "lost_jobs.log");
                 lostJobLog.log (status.getName());
                 return;
             }
@@ -430,12 +430,12 @@ abstract public class EmployerBase extends UnicastRemoteObject
             job = new Job ((Serializable)job.getData(), hints, job.getName());
         }
 
-        if (conf.get(EMPLOYER_CACHE_SERVICE) != null && job.getHint(EMPLOYER_CACHE_SERVICE) == null) {
-            job.getHints().put(EMPLOYER_CACHE_SERVICE, conf.getString(EMPLOYER_CACHE_SERVICE));
+        if (conf.get(CONF_EMPLOYER_CACHE_SERVICE) != null && job.getHint(CONF_EMPLOYER_CACHE_SERVICE) == null) {
+            job.getHints().put(CONF_EMPLOYER_CACHE_SERVICE, conf.getString(CONF_EMPLOYER_CACHE_SERVICE));
         }
 
-        if (conf.get(CONSUMER_CACHE_SERVICE) != null && job.getHint(CONSUMER_CACHE_SERVICE) == null) {
-            job.getHints().put(CONSUMER_CACHE_SERVICE, conf.getString(CONSUMER_CACHE_SERVICE));
+        if (conf.get(CONF_CONSUMER_CACHE_SERVICE) != null && job.getHint(CONF_CONSUMER_CACHE_SERVICE) == null) {
+            job.getHints().put(CONF_CONSUMER_CACHE_SERVICE, conf.getString(CONF_CONSUMER_CACHE_SERVICE));
         }
 
         return job;
@@ -498,3 +498,6 @@ abstract public class EmployerBase extends UnicastRemoteObject
 
     }
 }
+
+
+

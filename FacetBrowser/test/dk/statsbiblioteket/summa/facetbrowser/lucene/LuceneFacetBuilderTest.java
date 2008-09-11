@@ -140,3 +140,6 @@ public class LuceneFacetBuilderTest extends TestCase {
         return new TestSuite(LuceneFacetBuilderTest.class);
     }
 }
+
+
+

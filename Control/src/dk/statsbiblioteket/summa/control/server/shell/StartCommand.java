@@ -61,20 +61,20 @@ public class StartCommand extends Command {
         transport = ControlUtils.getDeployerClassName(transport);
 
         String confLocation = getOption("c"); // This is allowed to be unset
-                                              // - see ClientDeployer#CLIENT_CONF_PROPERTY
+                                              // - see ClientDeployer#CONF_CLIENT_CONF
 
         /* Set up a configuration for the startClient request */
         Configuration conf =
                 Configuration.newMemoryBased(
-                        ClientDeployer.CLIENT_CONF_PROPERTY,
+                        ClientDeployer.CONF_CLIENT_CONF,
                         confLocation,
-                        ClientDeployer.INSTANCE_ID_PROPERTY,
+                        ClientDeployer.CONF_INSTANCE_ID,
                         instanceId,
-                        ClientDeployer.DEPLOYER_CLASS_PROPERTY,
+                        ClientDeployer.CONF_DEPLOYER_CLASS,
                         transport,
-                        ClientDeployer.DEPLOYER_FEEDBACK_PROPERTY,
+                        ClientDeployer.CONF_DEPLOYER_FEEDBACK,
                         "dk.statsbiblioteket.summa.control.api.feedback.rmi.RemoteFeedbackClient",
-                        RemoteFeedback.REGISTRY_HOST_PROPERTY,
+                        RemoteFeedback.CONF_REGISTRY_HOST,
                         hostname);
 
         log.trace("Configuration initialized");
@@ -111,3 +111,6 @@ public class StartCommand extends Command {
 
     }
 }
+
+
+

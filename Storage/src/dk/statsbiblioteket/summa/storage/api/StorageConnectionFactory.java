@@ -37,7 +37,7 @@ public class StorageConnectionFactory extends ConnectionFactory<Storage>
      * Configuration property specifying which {@link ConnectionFactory} class
      * to use for storage connections. Default is {@link RMIConnectionFactory}.
      */
-    public static final String CONN_FACT_CLASS = "summa.storage.connectionFactory.class";
+    public static final String CONN_FACT_CLASS = "summa.storage.connectionfactory.class";
 
     private ConnectionFactory<? extends Storage> backend;
     private ConnectionManager<Storage> connMgr;
@@ -80,3 +80,6 @@ public class StorageConnectionFactory extends ConnectionFactory<Storage>
         return (Storage) o;
     }
 }
+
+
+

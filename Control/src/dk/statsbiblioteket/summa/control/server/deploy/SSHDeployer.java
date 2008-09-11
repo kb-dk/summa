@@ -70,11 +70,11 @@ public class SSHDeployer implements ClientDeployer {
     protected Configuration configuration;
 
     public SSHDeployer(Configuration conf) {
-        login = conf.getString(DEPLOYER_TARGET_PROPERTY);
-        destination = conf.getString(BASEPATH_PROPERTY, "summa-control");
-        source = conf.getString(DEPLOYER_BUNDLE_FILE_PROPERTY);
-        clientId = conf.getString (INSTANCE_ID_PROPERTY);
-        confLocation = conf.getString (CLIENT_CONF_PROPERTY,
+        login = conf.getString(CONF_DEPLOYER_TARGET);
+        destination = conf.getString(CONF_BASEPATH, "summa-control");
+        source = conf.getString(CONF_DEPLOYER_BUNDLE_FILE);
+        clientId = conf.getString (CONF_INSTANCE_ID);
+        confLocation = conf.getString (CONF_CLIENT_CONF,
                                        "configuration.xml");
 
         destination += File.separator + clientId;
@@ -84,7 +84,7 @@ public class SSHDeployer implements ClientDeployer {
         log.info("Deploying client");
 
         if (source == null) {
-            throw new BadConfigurationException(DEPLOYER_BUNDLE_FILE_PROPERTY
+            throw new BadConfigurationException(CONF_DEPLOYER_BUNDLE_FILE
                                                 + " not set");
         }
 
@@ -286,9 +286,9 @@ public class SSHDeployer implements ClientDeployer {
 
         log.trace("Adding properties to command line");
         /* Add properties to the command line as we are obliged to */
-        stub.addSystemProperty(Configuration.CONFIGURATION_PROPERTY,
+        stub.addSystemProperty(Configuration.CONF_CONFIGURATION_PROPERTY,
                                confLocation);
-        stub.addSystemProperty(ClientConnection.CLIENT_ID,
+        stub.addSystemProperty(ClientConnection.CONF_CLIENT_ID,
                                clientId);
 
         log.debug("Building command line for " + clientId + " with login "
@@ -428,3 +428,6 @@ public class SSHDeployer implements ClientDeployer {
         throw new ClientDeploymentException("Unable to detect JRE on " + login);
     }
 }
+
+
+

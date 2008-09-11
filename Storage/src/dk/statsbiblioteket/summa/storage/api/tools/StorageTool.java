@@ -183,20 +183,20 @@ public class StorageTool {
         }
 
         /* Make sure the summa.rpc.vendor property is set */
-        if (!conf.valueExists(ConnectionConsumer.PROP_RPC_TARGET)) {
-            rpcVendor = System.getProperty(ConnectionConsumer.PROP_RPC_TARGET);
+        if (!conf.valueExists(ConnectionConsumer.CONF_RPC_TARGET)) {
+            rpcVendor = System.getProperty(ConnectionConsumer.CONF_RPC_TARGET);
 
             if (rpcVendor != null) {
-                conf.set (ConnectionConsumer.PROP_RPC_TARGET, rpcVendor);
+                conf.set (ConnectionConsumer.CONF_RPC_TARGET, rpcVendor);
             } else {
-                conf.set (ConnectionConsumer.PROP_RPC_TARGET,
+                conf.set (ConnectionConsumer.CONF_RPC_TARGET,
                           "//localhost:28000/summa-storage");
             }
         }
 
 
         System.err.println("Using storage on: "
-                           + conf.getString(ConnectionConsumer.PROP_RPC_TARGET));
+                           + conf.getString(ConnectionConsumer.CONF_RPC_TARGET));
 
         StorageReaderClient reader = new StorageReaderClient (conf);
         StorageWriterClient writer = new StorageWriterClient (conf);
@@ -215,4 +215,7 @@ public class StorageTool {
     }
 
 }
+
+
+
 

@@ -55,7 +55,7 @@ public class RecordWriter extends ObjectFilterImpl {
      * Example: //localhost:27000/summa-storage;
      */
     public static final String CONF_STORAGE =
-            "summa.storage.RecordWriter.Storage";
+            "summa.storage.recordwriter.storage";
 
     private ConnectionContext<Storage> accessContext;
     private Storage storage;
@@ -116,3 +116,5 @@ public class RecordWriter extends ObjectFilterImpl {
 
     // TODO: Close connection on EOF
 }
+
+

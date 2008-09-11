@@ -31,6 +31,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 public class IndexConnectionFactoryController {
     public static void setControlledIndex() throws Exception {
         IndexBuilder.checkIndex();
-        IndexConnectionFactory._instance = new IndexConnectionImplLocal(IndexBuilder.INDEXLOCATION);
+        IndexConnectionFactory._instance = new IndexConnectionImplLocal(IndexBuilder.INDEX_LOCATION);
     }
 }
+
+

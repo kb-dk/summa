@@ -76,7 +76,7 @@ public class IndexControllerImpl extends StateThread implements ObjectFilter,
      * This property is optional. Default is "index".
      */
     public static final String CONF_INDEX_ROOT_LOCATION =
-            "summa.index.index-root-location";
+            "summa.index.indexrootlocation";
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public static final String DEFAULT_INDEX_ROOT_LOCATION = "index";
 
@@ -87,7 +87,7 @@ public class IndexControllerImpl extends StateThread implements ObjectFilter,
      * This property is optional. Default is false.
      */
     public static final String CONF_CREATE_NEW_INDEX =
-            "summa.index.create-new-index";
+            "summa.index.createnewindex";
     public static final boolean DEFAULT_CREATE_NEW_INDEX = false;
 
 
@@ -117,7 +117,7 @@ public class IndexControllerImpl extends StateThread implements ObjectFilter,
      * This property is optional. Default is 1000.
      */
     public static final String CONF_COMMIT_MAX_DOCUMENTS =
-            "summa.index.commit-max-documents";
+            "summa.index.commitmaxdocuments";
     public static final int DEFAULT_COMMIT_MAX_DOCUMENTS = 1000;
 
     /**
@@ -131,7 +131,7 @@ public class IndexControllerImpl extends StateThread implements ObjectFilter,
      * This property is optional. Default is -1 (disabled).
      */
     public static final String CONF_CONSOLIDATE_TIMEOUT =
-            "summa.index.consolidate-timeout";
+            "summa.index.consolidatetimeout";
     public static final int DEFAULT_CONSOLIDATE_TIMEOUT = -1;
 
     /**
@@ -146,7 +146,7 @@ public class IndexControllerImpl extends StateThread implements ObjectFilter,
      * This property is optional. Default is -1 (disabled).
      */
     public static final String CONF_CONSOLIDATE_MAX_DOCUMENTS =
-            "summa.index.consolidate-max-documents";
+            "summa.index.consolidatemaxdocuments";
     public static final int DEFAULT_CONSOLIDATE_MAX_DOCUMENTS = -1;
 
     /**
@@ -161,7 +161,7 @@ public class IndexControllerImpl extends StateThread implements ObjectFilter,
      * This property is optional. Default is 100.
      */
     public static final String CONF_CONSOLIDATE_MAX_COMMITS =
-            "summa.index.consolidate-max-commits";
+            "summa.index.consolidatemaxcommits";
     public static final int DEFAULT_CONSOLIDATE_MAX_COMMITS = 100;
 
     /**
@@ -172,7 +172,7 @@ public class IndexControllerImpl extends StateThread implements ObjectFilter,
      * This property is mandatory. No default.
      */
     public static final String CONF_MANIPULATOR_CLASS =
-            "summa.index.manipulator-class";
+            "summa.index.manipulatorclass";
 
     private static final int PROFILER_SPAN = 1000;
 
@@ -670,3 +670,6 @@ public class IndexControllerImpl extends StateThread implements ObjectFilter,
         return manipulators.remove(manipulator);
     }
 }
+
+
+

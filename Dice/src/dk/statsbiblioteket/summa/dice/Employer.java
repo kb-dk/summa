@@ -42,3 +42,6 @@ public interface Employer extends Remote {
 
     public void stop() throws RemoteException;
 }
+
+
+

@@ -37,3 +37,6 @@ public interface IndexListener {
      */
     public void indexChanged(File indexFolder);
 }
+
+
+

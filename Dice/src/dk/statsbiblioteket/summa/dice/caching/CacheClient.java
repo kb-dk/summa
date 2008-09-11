@@ -59,3 +59,6 @@ public interface CacheClient<E> {
     public String getPath (long id) throws IOException;
 
 }
+
+
+

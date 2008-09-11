@@ -128,3 +128,6 @@ public interface ResponseReader extends Response {
     public byte[] getNextContent() throws IOException;
 
 }
+
+
+

@@ -76,26 +76,26 @@ public class DeployCommand extends Command {
         String basePath =
                 getOption("b") != null ? getOption("b") : "summa-control";
         String confLocation = getOption("c"); // This is allowed to be unset
-                                    // - see ClientDeployer#CLIENT_CONF_PROPERTY
+                                    // - see ClientDeployer#CONF_CLIENT_CONF
 
         /* Set up a configuration for the deployment request */
         Configuration conf =
                 Configuration.newMemoryBased(
-                        ClientDeployer.BASEPATH_PROPERTY,
+                        ClientDeployer.CONF_BASEPATH,
                         basePath,
-                        ClientDeployer.CLIENT_CONF_PROPERTY,
+                        ClientDeployer.CONF_CLIENT_CONF,
                         confLocation,
-                        ClientDeployer.DEPLOYER_BUNDLE_PROPERTY,
+                        ClientDeployer.CONF_DEPLOYER_BUNDLE,
                         bundleId,
-                        ClientDeployer.INSTANCE_ID_PROPERTY,
+                        ClientDeployer.CONF_INSTANCE_ID,
                         instanceId,
-                        ClientDeployer.DEPLOYER_CLASS_PROPERTY,
+                        ClientDeployer.CONF_DEPLOYER_CLASS,
                         transport,
-                        ClientDeployer.DEPLOYER_TARGET_PROPERTY,
+                        ClientDeployer.CONF_DEPLOYER_TARGET,
                         target,
-                        ClientDeployer.DEPLOYER_FEEDBACK_PROPERTY,
+                        ClientDeployer.CONF_DEPLOYER_FEEDBACK,
                 "dk.statsbiblioteket.summa.control.api.feedback.rmi.RemoteFeedbackClient",
-                        RemoteFeedback.REGISTRY_HOST_PROPERTY,
+                        RemoteFeedback.CONF_REGISTRY_HOST,
                         hostname);
 
         log.trace ("Created deployment config:\n" + conf.dumpString());
@@ -134,3 +134,6 @@ public class DeployCommand extends Command {
 
     }
 }
+
+
+

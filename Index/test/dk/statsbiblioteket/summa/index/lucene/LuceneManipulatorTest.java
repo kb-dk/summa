@@ -251,3 +251,6 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
         hasMore = false;
     }
 }
+
+
+

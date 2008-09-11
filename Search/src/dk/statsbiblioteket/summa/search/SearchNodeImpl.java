@@ -53,7 +53,7 @@ public abstract class SearchNodeImpl implements SearchNode {
      * This is optional. Default is 2.
      */
     public static final String CONF_NUMBER_OF_CONCURRENT_SEARCHES =
-            "summa.search.number-of-concurrent-searches";
+            "summa.search.numberofconcurrentsearches";
     public static final int DEFAULT_NUMBER_OF_CONCURRENT_SEARCHES = 2;
 
     /**
@@ -86,7 +86,7 @@ public abstract class SearchNodeImpl implements SearchNode {
      * This is optional. Default is false.
      */
     public static final String CONF_SEARCH_WHILE_OPENING =
-            "summa.search.search-while-openING";
+            "summa.search.searchwhileopening";
     public static final boolean DEFAULT_SEARCH_WHILE_OPENING = false;
 
     /**
@@ -382,3 +382,6 @@ public abstract class SearchNodeImpl implements SearchNode {
         }
     }
 }
+
+
+

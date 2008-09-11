@@ -47,3 +47,6 @@ public class ConfigTest extends TestCase {
         assertTrue(conf.getClass("hello.class").equals(TestWorker.class));
     }
 }
+
+
+

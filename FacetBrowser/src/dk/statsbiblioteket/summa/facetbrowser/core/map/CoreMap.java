@@ -115,7 +115,7 @@ public interface CoreMap {
      * Optional. Default is false.
      */
     public static final String CONF_SHIFT_ON_REMOVE =
-            "summa.facet.core.shift-on-remove";
+            "summa.facet.core.shiftonremove";
     public static final boolean DEFAULT_SHIFT_ON_REMOVE = false;
 
     /**
@@ -222,3 +222,6 @@ public interface CoreMap {
      */
     public int getEmptyFacet();
 }
+
+
+

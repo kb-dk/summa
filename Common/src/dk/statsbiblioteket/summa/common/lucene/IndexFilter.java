@@ -28,3 +28,6 @@ package dk.statsbiblioteket.summa.common.lucene;
 public interface IndexFilter {
     // TODO: Introduce filters, preferably SOLR-filters
 }
+
+
+

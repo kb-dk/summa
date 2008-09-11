@@ -812,3 +812,6 @@ public class IndexField<A, T, F> {
         queryAnalyzer = analyzer;
     }
 }
+
+
+

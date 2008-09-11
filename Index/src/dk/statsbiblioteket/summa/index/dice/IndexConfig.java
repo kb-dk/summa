@@ -48,9 +48,12 @@ public class IndexConfig extends Config {
         /* Config options that needs runtime info */
         String diceDataDir = System.getProperty("user.home") + File.separator + "tmp" + File.separator + "dice_data_" + getStartDate();
         set (DATA_DIR, diceDataDir);
-        set (EMPLOYER_CACHE_PATH, diceDataDir + File.separator + "indexer_cache");
-        set (WORKER_CACHE_PATH, diceDataDir + File.separator + "worker_cache");
-        set (CONSUMER_CACHE_PATH, diceDataDir + File.separator + "merger_cache");
+        set (CONF_EMPLOYER_CACHE_PATH, diceDataDir + File.separator + "indexer_cache");
+        set (CONF_WORKER_CACHE_PATH, diceDataDir + File.separator + "worker_cache");
+        set (CONF_CONSUMER_CACHE_PATH, diceDataDir + File.separator + "merger_cache");
 
     }
 }
+
+
+

@@ -110,3 +110,5 @@ public class SearchEngineWebService {
         return SearchEngineImpl.getInstance().getItemCounts(recordIDs);
     }
 }
+
+

@@ -85,7 +85,7 @@ public class IndexWorker extends CachingWorker {
 
     private String getCachePath (Job job) {
         try {
-            return cache.getPath(Long.parseLong(job.getHint(IndexConfig.JOB_CACHE_ID)));
+            return cache.getPath(Long.parseLong(job.getHint(IndexConfig.CONF_JOB_CACHE_ID)));
         } catch (IOException e) {
             log.error ("Failed to obtain path to job data in cache", e);
             return null;
@@ -179,3 +179,6 @@ public class IndexWorker extends CachingWorker {
     }
 
 }
+
+
+

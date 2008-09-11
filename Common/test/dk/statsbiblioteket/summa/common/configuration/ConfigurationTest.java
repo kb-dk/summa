@@ -159,7 +159,7 @@ public class ConfigurationTest extends TestCase {
 
     public void testGetSystemConfigLocal () throws Exception {
         String confPath = "configuration.xml";//Thread.currentThread().getContextClassLoader().getResource("configuration.xml").toString();
-        System.setProperty(Configuration.CONFIGURATION_PROPERTY, confPath);
+        System.setProperty(Configuration.CONF_CONFIGURATION_PROPERTY, confPath);
 
         Configuration conf = Configuration.getSystemConfiguration();
         Configuration originalConf = new Configuration (new FileStorage("configuration.xml"));
@@ -168,7 +168,7 @@ public class ConfigurationTest extends TestCase {
                      + "result in identical configurations",
                      conf.equals(originalConf));
 
-        System.clearProperty(Configuration.CONFIGURATION_PROPERTY);
+        System.clearProperty(Configuration.CONF_CONFIGURATION_PROPERTY);
     }
 
     public void testGetSystemConfigRemote () throws Exception {
@@ -177,7 +177,7 @@ public class ConfigurationTest extends TestCase {
         String serviceUrl = remote.direct_storage.getServiceUrl();
         System.out.println ("Service URL is: " + serviceUrl);
 
-        System.setProperty(Configuration.CONFIGURATION_PROPERTY, serviceUrl);
+        System.setProperty(Configuration.CONF_CONFIGURATION_PROPERTY, serviceUrl);
 
         Configuration testConf = Configuration.getSystemConfiguration();
         Configuration originalConf = new Configuration (new FileStorage("configuration.xml"));
@@ -186,7 +186,7 @@ public class ConfigurationTest extends TestCase {
                      + "result in identical configurations",
                      testConf.equals(originalConf));
 
-        System.clearProperty(Configuration.CONFIGURATION_PROPERTY);
+        System.clearProperty(Configuration.CONF_CONFIGURATION_PROPERTY);
     }
 
     public void testGetSystemConfigUnset () throws Exception {
@@ -299,3 +299,6 @@ public class ConfigurationTest extends TestCase {
         return new TestSuite(ConfigurationTest.class);
     }
 }
+
+
+

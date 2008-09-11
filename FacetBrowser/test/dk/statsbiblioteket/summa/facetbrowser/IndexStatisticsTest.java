@@ -61,7 +61,7 @@ public class IndexStatisticsTest extends TestCase {
     public void testUnique() throws Exception {
 //        String[] facets = {"author_normalised", "location_normalised", "series_normalised", "llcl", "lnlm", "ldbk", "ludk", "ldds", "lkl", "lfn", "linst", "ldk5", "lma_long", "su_pe", "su_corp", "su_lc", "mesh", "su_dk", "lsu_oai", "llang"};
         String[] facets = {"freetext"};
-        IndexReader ir = null; //new IndexSearcher(ClusterCommon.getProperties().getProperty(ClusterCommon.INDEXLOCATION)).getIndexReader();
+        IndexReader ir = null; //new IndexSearcher(ClusterCommon.getProperties().getProperty(ClusterCommon.INDEX_LOCATION)).getIndexReader();
 //        Term searchTerm = new Term(facet, "");
 //        TermEnum terms = ir.terms(searchTerm);
         Vector<HashSet<String>> sets = new Vector<HashSet<String>>(facets.length);
@@ -221,7 +221,7 @@ public class IndexStatisticsTest extends TestCase {
     /*
     public void countTerms(String field) throws IOException {
         IndexReader ir = new IndexSearcher(ClusterCommon.getProperties().
-                getProperty(ClusterCommon.INDEXLOCATION)).getIndexReader();
+                getProperty(ClusterCommon.INDEX_LOCATION)).getIndexReader();
         // termcount, doccount_with_this_termcount
         HashMap<Integer, Pair<Integer, String>> map = new HashMap<Integer, Pair<Integer, String>>(2000);
         Profiler pf = new Profiler();
@@ -277,7 +277,7 @@ public class IndexStatisticsTest extends TestCase {
                                  "cluster").split(", ");
 
         IndexSearcher is = new IndexSearcher(ClusterCommon.getProperties().
-                getProperty(ClusterCommon.INDEXLOCATION));
+                getProperty(ClusterCommon.INDEX_LOCATION));
         IndexReader ir = is.getIndexReader();
 
         int facetCount = 1;
@@ -311,7 +311,7 @@ public class IndexStatisticsTest extends TestCase {
         int[] MAXS = new int[] {10, 100, 1000, 10000};
 
         String indexLocation = ClusterCommon.getProperties().
-                getProperty(ClusterCommon.INDEXLOCATION);
+                getProperty(ClusterCommon.INDEX_LOCATION);
         IndexSearcher is = new IndexSearcher(indexLocation);
         SearchDescriptor d = new SearchDescriptor(indexLocation);
         d.loadDescription(indexLocation);
@@ -411,7 +411,7 @@ public class IndexStatisticsTest extends TestCase {
       /*
     public void testNullThingie() throws Exception {
         IndexSearcher is = new IndexSearcher(ClusterCommon.getProperties().
-                getProperty(ClusterCommon.INDEXLOCATION));
+                getProperty(ClusterCommon.INDEX_LOCATION));
         IndexReader ir = is.getIndexReader();
         String facet = "lma_long";
 
@@ -433,7 +433,7 @@ public class IndexStatisticsTest extends TestCase {
     public void matchLang() throws Exception {
         String LANG = "llang";
         IndexSearcher is = new IndexSearcher(ClusterCommon.getProperties().
-                getProperty(ClusterCommon.INDEXLOCATION));
+                getProperty(ClusterCommon.INDEX_LOCATION));
         IndexReader ir = is.getIndexReader();
 
         System.out.println("Count\tTag\tISO639-2");
@@ -457,7 +457,7 @@ public class IndexStatisticsTest extends TestCase {
      */
 //    public void testUniqueChars() throws Exception {
 //        testUniqueChars(ClusterCommon.getProperties().
-//                getProperty(ClusterCommon.INDEXLOCATION));
+//                getProperty(ClusterCommon.INDEX_LOCATION));
 //    }
 
     public void testUniqueCharsInRealIndex() throws Exception {
@@ -616,7 +616,7 @@ public class IndexStatisticsTest extends TestCase {
         int limit = Integer.MAX_VALUE;
         int maxRecords = Integer.MAX_VALUE;
         IndexReader ir = null;//new IndexSearcher(ClusterCommon.getProperties().
-                //getProperty(ClusterCommon.INDEXLOCATION)).getIndexReader();
+                //getProperty(ClusterCommon.INDEX_LOCATION)).getIndexReader();
         Map<String, Set<Character>> foundRecords =
                 new HashMap<String, Set<Character>>(10000);
         int fieldcount = 1;
@@ -722,7 +722,7 @@ public class IndexStatisticsTest extends TestCase {
         int maxResults = 10000;
         int maxRecords = Integer.MAX_VALUE;
         IndexReader ir = null;//new IndexSearcher(ClusterCommon.getProperties().
-                //getProperty(ClusterCommon.INDEXLOCATION)).getIndexReader();
+                //getProperty(ClusterCommon.INDEX_LOCATION)).getIndexReader();
         Collection fieldNames = ir.getFieldNames(IndexReader.FieldOption.ALL);
         int hits = 0;
         StringWriter sw = new StringWriter(20000);
@@ -854,3 +854,6 @@ public class IndexStatisticsTest extends TestCase {
                            Character.toString((char)0x035B) + "ke");
     }
 }
+
+
+

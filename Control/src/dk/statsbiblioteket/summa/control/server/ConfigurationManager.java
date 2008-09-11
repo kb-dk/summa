@@ -23,8 +23,8 @@ public class ConfigurationManager implements Runnable, Configurable {
      * Default is
      * {@link dk.statsbiblioteket.summa.common.configuration.storage.XStorage}.
      */
-    public static final String PROP_STORAGE =
-                                    "summa.control.configurationManager.storage";
+    public static final String CONF_STORAGE =
+                                    "summa.control.configurationmanager.storage";
 
     private Log log = LogFactory.getLog (ConfigurationManager.class);
     private ConfigurationStorage storage;
@@ -38,7 +38,7 @@ public class ConfigurationManager implements Runnable, Configurable {
 
     private void setupStorage (Configuration conf) {
         Class<? extends ConfigurationStorage> storageClass =
-                                       conf.getClass(PROP_STORAGE,
+                                       conf.getClass(CONF_STORAGE,
                                                      ConfigurationStorage.class,
                                                      XStorage.class);
         log.debug ("Using configuration storage class: "
@@ -87,3 +87,6 @@ public class ConfigurationManager implements Runnable, Configurable {
         cm.run();
     }
 }
+
+
+

@@ -91,3 +91,6 @@ public class TestVectorMapMemory  extends TestCase {
         return new TestSuite(ClusterBuilderImplTest.class);
     }
 }
+
+
+

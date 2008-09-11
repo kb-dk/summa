@@ -100,7 +100,7 @@ public abstract class ClusterMapComplete {
             ir = ClusterCommon.getIndexReaderParallelIndex();
         } catch (IOException e) {
             log.fatal("Could not connect to the index specified in " +
-                      ClusterCommon.INDEXLOCATION);
+                      ClusterCommon.INDEX_LOCATION);
             return;
         }*/
         tvHandler = new ClusterEngineTVHandler();
@@ -559,3 +559,5 @@ public abstract class ClusterMapComplete {
 
     protected abstract int[] getCounterList(int facetID);
 }
+
+

@@ -85,3 +85,6 @@ public class FacetManipulator implements IndexManipulator {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 }
+
+
+

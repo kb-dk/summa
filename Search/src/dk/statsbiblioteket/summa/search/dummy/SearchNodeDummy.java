@@ -66,3 +66,6 @@ public class SearchNodeDummy extends SearchNodeImpl {
         searchCount++;
     }
 }
+
+
+

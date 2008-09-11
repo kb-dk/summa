@@ -65,3 +65,6 @@ public class IndexControllerTest extends TestCase {
                      String.format(IndexCommon.TIMESTAMP_FORMAT, t));
     }
 }
+
+
+

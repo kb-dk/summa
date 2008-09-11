@@ -357,3 +357,6 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
         return collector;
     }
 }
+
+
+

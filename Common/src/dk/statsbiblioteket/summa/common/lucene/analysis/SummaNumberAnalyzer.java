@@ -90,3 +90,6 @@ public class SummaNumberAnalyzer extends Analyzer {
 
 
 }
+
+
+

@@ -13,3 +13,6 @@ import java.rmi.RemoteException;
 public interface SomeInterface extends Remote {
     public int getNext() throws RemoteException;
 }
+
+
+

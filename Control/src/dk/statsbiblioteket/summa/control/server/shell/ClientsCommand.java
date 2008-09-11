@@ -83,13 +83,13 @@ public class ClientsCommand extends Command {
                     try {
                         Configuration conf = control.getDeployConfiguration(client);
 
-                        String bundleId = conf.getString (ClientDeployer.DEPLOYER_BUNDLE_PROPERTY,
+                        String bundleId = conf.getString (ClientDeployer.CONF_DEPLOYER_BUNDLE,
                                                           "ERROR");
-                        String confLoc = conf.getString (ClientDeployer.CLIENT_CONF_PROPERTY,
+                        String confLoc = conf.getString (ClientDeployer.CONF_CLIENT_CONF,
                                                          "ERROR");
-                        String host = conf.getString (ClientConnection.REGISTRY_HOST_PROPERTY,
+                        String host = conf.getString (ClientConnection.CONF_REGISTRY_HOST,
                                                       "ERROR");
-                        String port = conf.getString (ClientConnection.REGISTRY_PORT_PROPERTY,
+                        String port = conf.getString (ClientConnection.CONF_REGISTRY_PORT,
                                                       "ERROR");
                         String address = "ERROR";
                         if (!"ERROR".equals(host) && !"ERROR".equals(port)) {
@@ -114,3 +114,6 @@ public class ClientsCommand extends Command {
         }
     }
 }
+
+
+

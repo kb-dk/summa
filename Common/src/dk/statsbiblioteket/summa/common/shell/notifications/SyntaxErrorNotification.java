@@ -12,3 +12,6 @@ public class SyntaxErrorNotification extends Notification {
         super(msg);
     }
 }
+
+
+

@@ -57,3 +57,6 @@ public class DumpIndex {
         System.out.println("Total: " + counter + " Field/Term pairs");
     }
 }
+
+
+

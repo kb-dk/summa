@@ -77,7 +77,7 @@ public class IndexConnectionImplLocalTest extends TestCase {
         //TODO: searchDesc.xml (the following only works with default add to genre)
         String queryString = String.format("%s:fantasy", IndexBuilder.GENRE);
         IndexConnectionImplLocal connection =
-                new IndexConnectionImplLocal(IndexBuilder.INDEXLOCATION);
+                new IndexConnectionImplLocal(IndexBuilder.INDEX_LOCATION);
         TopDocs topDocs = connection.getTopResults(queryString, MAXHITS);
         assertEquals("Search for " + queryString + "; " + MAXHITS + " top " +
                      "results; total results = 3*REPLICATIONCOUNT",
@@ -494,7 +494,7 @@ Top loop01 used an average of 0.0453 ms
         //try using TopDocs directly
         IndexSearcher is;
         try {
-            is = new IndexSearcher(IndexBuilder.INDEXLOCATION);
+            is = new IndexSearcher(IndexBuilder.INDEX_LOCATION);
         } catch (IOException e) {
             System.out.println("e = " + e);
             return;
@@ -550,7 +550,7 @@ Top loop01 used an average of 0.0453 ms
         // First we perform a standard search
         IndexSearcher is;
         try {
-            is = new IndexSearcher(IndexBuilder.INDEXLOCATION);
+            is = new IndexSearcher(IndexBuilder.INDEX_LOCATION);
         } catch (IOException e) {
             System.out.println("e = " + e);
             return;
@@ -610,7 +610,7 @@ Top loop01 used an average of 0.0453 ms
     private void usingHits(String queryString) {
         System.out.println("usingHits");
         IndexConnectionImplLocal connection =
-                new IndexConnectionImplLocal(IndexBuilder.INDEXLOCATION);
+                new IndexConnectionImplLocal(IndexBuilder.INDEX_LOCATION);
 
         // Use Hits through index connection
         long startTime = System.nanoTime();
@@ -643,7 +643,7 @@ Top loop01 used an average of 0.0453 ms
     private void usingTopDocsV2(String queryString) {
         System.out.println("usingTopDocsV2");
         IndexConnectionImplLocal connection =
-                new IndexConnectionImplLocal(IndexBuilder.INDEXLOCATION);
+                new IndexConnectionImplLocal(IndexBuilder.INDEX_LOCATION);
 
         long startTime = System.nanoTime();
         TopDocs topDocs = connection.getTopResults(queryString, MAXHITS);
@@ -677,7 +677,7 @@ Top loop01 used an average of 0.0453 ms
     private void usingTopDocs(String queryString) {
         System.out.println("usingTopDocs");
         IndexConnectionImplLocal connection =
-                new IndexConnectionImplLocal(IndexBuilder.INDEXLOCATION);
+                new IndexConnectionImplLocal(IndexBuilder.INDEX_LOCATION);
 
         long startTime = System.nanoTime();
         TopDocs topDocs = connection.getTopResults(queryString, MAXHITS);
@@ -709,13 +709,15 @@ Top loop01 used an average of 0.0453 ms
     }
 
     public void testConnect() throws Exception {
-        new IndexConnectionImplLocal(IndexBuilder.INDEXLOCATION);
+        new IndexConnectionImplLocal(IndexBuilder.INDEX_LOCATION);
     }
 
     public void testDisconnect() throws Exception {
         IndexConnectionImplLocal connection;
-        connection = new IndexConnectionImplLocal(IndexBuilder.INDEXLOCATION,
+        connection = new IndexConnectionImplLocal(IndexBuilder.INDEX_LOCATION,
                                                   IndexBuilder.AUTHOR);
         connection.disconnect();
     }
 }
+
+

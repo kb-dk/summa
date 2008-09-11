@@ -45,25 +45,25 @@ public interface RemoteStorageMBean extends Remote, ConfigurationStorage {
      * Property defining which port to export the RMI service on.
      * Default is 27007.
      */
-    public static final String PROP_PORT = "summa.configuration.service.port";
+    public static final String CONF_PORT = "summa.configuration.service.port";
 
     /**
      * Property defining what name to bind the exposed RMI service under.
      * Default is {@code configurationStorage}.
      */
-    public static final String PROP_NAME = "summa.configuration.service.name";
+    public static final String CONF_NAME = "summa.configuration.service.name";
 
     /**
      * Property defining on what port the registry runs. Default is
      * 27000.
      */
-    public static final String PROP_REGISTRY_PORT = "summa.configuration.registry.port";
+    public static final String CONF_REGISTRY_PORT = "summa.configuration.registry.port";
 
     /**
      * Property defining the name of the host on which the registry runs.
      * Default is {@code localhost}. 
      */
-    public static final String PROP_REGISTRY_HOST = "summa.configuration.registry.host";
+    public static final String CONF_REGISTRY_HOST = "summa.configuration.registry.host";
 
     public void put(String key, Serializable value) throws RemoteException;
 
@@ -90,3 +90,6 @@ public interface RemoteStorageMBean extends Remote, ConfigurationStorage {
     public List<ConfigurationStorage> getSubStorages(String key) throws
                                                                 RemoteException;
 }
+
+
+

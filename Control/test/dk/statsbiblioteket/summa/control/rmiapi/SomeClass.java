@@ -13,3 +13,5 @@ public class SomeClass implements SomeInterface {
         return counter++;
     }
 }
+
+

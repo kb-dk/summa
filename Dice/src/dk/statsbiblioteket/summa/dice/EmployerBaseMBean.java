@@ -72,3 +72,6 @@ public interface EmployerBaseMBean {
      */
     public double getMeanFetchingSpeed ();
 }
+
+
+

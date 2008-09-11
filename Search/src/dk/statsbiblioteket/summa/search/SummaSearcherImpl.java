@@ -60,7 +60,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
      * This is optional. Default is 50.
      */
     public static final String CONF_SEARCH_QUEUE_MAX_SIZE =
-            "summa.search.search-queue.max-size";
+            "summa.search.searchqueue.maxsize";
     public static final int DEFAULT_SEARCH_QUEUE_MAX_SIZE = 50;
 
     /**
@@ -69,7 +69,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
      * at that time, an exception will be thrown.
      */
     public static final String CONF_SEARCHER_AVAILABILITY_TIMEOUT =
-            "summa.search.searcher-availability.timeout";
+            "summa.search.searcheravailability.timeout";
     public static final int DEFAULT_SEARCHER_AVAILABILITY_TIMEOUT = 5 * 60000;
 
     private int searcherAvailabilityTimeout =
@@ -316,3 +316,6 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
     }
 
 }
+
+
+

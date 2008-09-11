@@ -56,8 +56,8 @@ import org.apache.commons.logging.LogFactory;
  *              The index will be loaded into RAM upon connection.
  *
  * An example setup for a parallel index;
- * facetbrowser.INDEXROOTTYPE=ParallelIndex
- * facetbrowser.INDEXROOTLINKS=facetbrowser.mainindex, facetbrowser.clusterindex
+ * facetbrowser.indexrootTYPE=ParallelIndex
+ * facetbrowser.indexrootLINKS=facetbrowser.mainindex, facetbrowser.clusterindex
  * facetbrowser.mainindexTYPE=SingleIndex
  * facetbrowser.mainindexLINKS=/tmp/mainindexfolder
  * facetbrowser.clusterindexTYPE=SingleIndex
@@ -92,7 +92,7 @@ public class IndexConnector {
      * is singleIndex) or a list of property keys. The keys must be prefixes for
      * property entries keynameTYPE and keynameLINKS.
      */
-    public static final String INDEXROOT = "facetbrowser.INDEXROOT";
+    public static final String INDEXROOT = "facetbrowser.indexroot";
     public static final String TYPE = "TYPE";
     public static final String LINKS = "LINKS";
 
@@ -213,3 +213,6 @@ public class IndexConnector {
         }
     }
 }
+
+
+

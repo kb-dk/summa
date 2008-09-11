@@ -37,3 +37,6 @@ public interface RemoteStorage extends Storage, Remote {
     void flush(Record record) throws RemoteException;
 
 }
+
+
+

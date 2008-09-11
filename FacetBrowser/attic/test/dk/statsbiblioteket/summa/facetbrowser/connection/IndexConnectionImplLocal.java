@@ -100,7 +100,7 @@ public class IndexConnectionImplLocal implements IndexConnection {
      */
     private void init() {
         log.info("init: load properties.");
-        index_directory_name = ClusterCommon.getProperty(ClusterCommon.INDEXLOCATION);
+        index_directory_name = ClusterCommon.getProperty(ClusterCommon.INDEX_LOCATION);
         if (index_directory_name==null) {
             log.fatal("No directory name for an index is known.");
             System.exit(1);
@@ -109,12 +109,12 @@ public class IndexConnectionImplLocal implements IndexConnection {
         parallel_index_directories = new LinkedList<String>();
         int count = 1;
         String parallelIndexPath =
-                ClusterCommon.getProperty(ClusterCommon.INDEXLOCATION+count);
+                ClusterCommon.getProperty(ClusterCommon.INDEX_LOCATION+count);
         while (parallelIndexPath!=null) {
             parallel_index_directories.add(parallelIndexPath);
             count++;
             parallelIndexPath =
-                    ClusterCommon.getProperty(ClusterCommon.INDEXLOCATION+count);
+                    ClusterCommon.getProperty(ClusterCommon.INDEX_LOCATION+count);
         }
 
         default_field = ClusterCommon.getProperty(default_field_string);
@@ -322,3 +322,5 @@ public class IndexConnectionImplLocal implements IndexConnection {
         // TODO: Implement this
     }
 }
+
+

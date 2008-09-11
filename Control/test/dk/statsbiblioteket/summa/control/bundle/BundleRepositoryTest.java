@@ -28,7 +28,7 @@ public class BundleRepositoryTest extends TestCase {
 
         Class<? extends BundleRepository> repositoryClass =
                                     conf.getClass(
-                                            ClientConnection.REPOSITORY_CLASS_PROPERTY,
+                                            ClientConnection.CONF_REPOSITORY_CLASS,
                                             BundleRepository.class,
                                             URLRepository.class);
         repo = Configuration.create(repositoryClass, conf);
@@ -40,7 +40,7 @@ public class BundleRepositoryTest extends TestCase {
 
     public void testList () throws Exception {
         Configuration localConf = Configuration.newMemoryBased(
-                                         BundleRepository.REPO_ADDRESS_PROPERTY,
+                                         BundleRepository.CONF_REPO_ADDRESS,
                                          "file:///tmp/summatest");
         BundleRepository remoteRepo = new RemoteURLRepositoryServer (localConf);
 
@@ -62,3 +62,6 @@ public class BundleRepositoryTest extends TestCase {
 
     }
 }
+
+
+

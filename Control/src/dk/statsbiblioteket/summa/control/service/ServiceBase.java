@@ -85,15 +85,15 @@ public abstract class ServiceBase extends UnicastRemoteObject
             log.debug ("Codebase not set");
         }
 
-        id = System.getProperty(SERVICE_ID);
+        id = System.getProperty(CONF_SERVICE_ID);
         if (id == null) {
-            id = conf.getString(Service.SERVICE_ID, null);
+            id = conf.getString(Service.CONF_SERVICE_ID, null);
         }
         if (id == null) {
             log.warn(String.format(
                     "The property '%s' was not present and no service id was"
                     + " specified in system properties '%s'. id could not be"
-                    + " determined", Service.SERVICE_ID, SERVICE_ID));
+                    + " determined", Service.CONF_SERVICE_ID, CONF_SERVICE_ID));
         }
         if (System.getSecurityManager() == null) {
             log.info ("No security manager found. "
@@ -104,8 +104,8 @@ public abstract class ServiceBase extends UnicastRemoteObject
                      + "' present");
         }
 
-        registryPort = conf.getInt(REGISTRY_PORT, 27000);
-        servicePort = conf.getInt(SERVICE_PORT, 28003);
+        registryPort = conf.getInt(CONF_REGISTRY_PORT, 27000);
+        servicePort = conf.getInt(CONF_SERVICE_PORT, 28003);
         log.info("ServiceBase constructor finished with registryPort "
                  + registryPort + ", servicePort " + servicePort
                  + " and id '" + id + "'");
@@ -127,15 +127,15 @@ public abstract class ServiceBase extends UnicastRemoteObject
      * This method is mainly here to be able to retrieve the service
      * port in the super() call in the constructor.
      *
-     * @param conf the configuration from which to read {@link #SERVICE_PORT}
+     * @param conf the configuration from which to read {@link #CONF_SERVICE_PORT}
      * @return the port
-     * @throws BadConfigurationException if {@link #SERVICE_PORT} cannot be read
+     * @throws BadConfigurationException if {@link #CONF_SERVICE_PORT} cannot be read
      */
     protected static int getServicePort(Configuration conf) {
         try {
-            return conf.getInt(SERVICE_PORT);
+            return conf.getInt(CONF_SERVICE_PORT);
         } catch (Exception e) {
-            log.warn ("No service port specified in " + SERVICE_PORT + ". "
+            log.warn ("No service port specified in " + CONF_SERVICE_PORT + ". "
                       + "Defaulting to anonymous service port");
             return 0;
         }
@@ -260,3 +260,6 @@ public abstract class ServiceBase extends UnicastRemoteObject
         new DeferredSystemExit(exitCode);
     }
 }
+
+
+

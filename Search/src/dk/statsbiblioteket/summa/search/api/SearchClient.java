@@ -15,10 +15,10 @@ import java.io.IOException;
  * <p></p>
  * It is modelled as a {@link ConnectionConsumer} meaning that you can tweak
  * its behavior by changing the configuration parameters
- * {@link GenericConnectionFactory#RETRIES},
- * {@link GenericConnectionFactory#GRACE_TIME},
- * {@link GenericConnectionFactory#FACTORY}, and
- * {@link ConnectionConsumer#PROP_RPC_TARGET}
+ * {@link GenericConnectionFactory#CONF_RETRIES},
+ * {@link GenericConnectionFactory#CONF_GRACE_TIME},
+ * {@link GenericConnectionFactory#CONF_FACTORY}, and
+ * {@link ConnectionConsumer#CONF_RPC_TARGET}
  */
 public class SearchClient extends ConnectionConsumer<SummaSearcher>
                           implements Configurable {
@@ -49,3 +49,6 @@ public class SearchClient extends ConnectionConsumer<SummaSearcher>
     }
 
 }
+
+
+

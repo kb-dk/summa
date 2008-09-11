@@ -98,3 +98,6 @@ public class SummaQueryParserTest extends TestCase {
         return new TestSuite(SummaQueryParserTest.class);
     }
 }
+
+
+

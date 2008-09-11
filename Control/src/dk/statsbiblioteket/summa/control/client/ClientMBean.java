@@ -34,3 +34,6 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         author = "mke")
 public interface ClientMBean extends ClientRMIConnection {
 }
+
+
+

@@ -32,3 +32,6 @@ public class DiscardingCollector extends HitCollector {
         // Do nothing
     }
 }
+
+
+

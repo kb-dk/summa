@@ -56,3 +56,5 @@ public interface ObjectFilter extends Configurable, Filter, Iterator<Payload> {
      */
     public boolean hasNext();
 }
+
+

@@ -59,3 +59,5 @@ public class DummyReaderTest extends TestCase {
         assertEquals("Last value must be EOF", StreamFilter.EOF, dummy.read());
     }
 }
+
+

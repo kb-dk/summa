@@ -116,3 +116,6 @@ public interface IndexManipulator extends Configurable {
      */
     public void close() throws IOException;
 }
+
+
+

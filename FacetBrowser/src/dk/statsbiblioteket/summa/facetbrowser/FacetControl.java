@@ -61,3 +61,6 @@ import dk.statsbiblioteket.summa.facetbrowser.core.FacetCore;
 public interface FacetControl extends Browser, Builder {
 
 }
+
+
+

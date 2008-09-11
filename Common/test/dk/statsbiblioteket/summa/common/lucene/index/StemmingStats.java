@@ -82,3 +82,6 @@ public class StemmingStats extends TestCase {
         countTermsInFields("middel");
     }
 }
+
+
+

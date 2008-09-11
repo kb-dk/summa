@@ -24,3 +24,5 @@
     <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">fagekspert</Index:field>
   </Index:group>
 </Index:document>
+
+

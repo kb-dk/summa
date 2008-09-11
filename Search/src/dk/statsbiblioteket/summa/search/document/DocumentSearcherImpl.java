@@ -243,3 +243,6 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements
         this.nonescapedFields = nonescapedFields;
     }
 }
+
+
+

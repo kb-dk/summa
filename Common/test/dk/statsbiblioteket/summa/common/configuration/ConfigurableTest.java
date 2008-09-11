@@ -60,3 +60,6 @@ public class ConfigurableTest extends TestCase {
         assertTrue (base.equals(remoteConf));
     }
 }
+
+
+

@@ -56,7 +56,7 @@ public class ConnectionConsumer<E> implements Configurable {
      * This property <i>must</i> must be set in the {@link Configuration}
      * passed to the constructor {@link #ConnectionConsumer(Configuration)}.
      */
-    public static final String PROP_RPC_TARGET = "summa.rpc.vendor";
+    public static final String CONF_RPC_TARGET = "summa.rpc.vendor";
 
     private ConnectionManager<E> connMan;
     private ConnectionContext<E> conn;
@@ -66,15 +66,15 @@ public class ConnectionConsumer<E> implements Configurable {
      * Instantiate a new {@code ConnectionConsumer} based on {@code conf}.
      * <p></p>
      * Note that {@code conf} <i>must</i> define the
-     * {@link #PROP_RPC_TARGET} property.
+     * {@link #CONF_RPC_TARGET} property.
      * <p></p>
      * The {@code ConnectionConsumer} utilizes a {@link GenericConnectionFactory}
      * underneath so the configuration may override any of the standard
      * properties for this class to customize the behavior of the connection
      * consumer. These include
-     * {@link GenericConnectionFactory#RETRIES},
-     * {@link GenericConnectionFactory#GRACE_TIME},
-     * and {@link GenericConnectionFactory#FACTORY}.
+     * {@link GenericConnectionFactory#CONF_RETRIES},
+     * {@link GenericConnectionFactory#CONF_GRACE_TIME},
+     * and {@link GenericConnectionFactory#CONF_FACTORY}.
      *
      * @param conf configuration used to instantiate the connection consumer
      */
@@ -82,9 +82,9 @@ public class ConnectionConsumer<E> implements Configurable {
         ConnectionFactory<E> connFact = new GenericConnectionFactory<E> (conf);
         connMan = new ConnectionManager<E>(connFact);
         try {
-            connId = conf.getString(PROP_RPC_TARGET);
+            connId = conf.getString(CONF_RPC_TARGET);
         } catch (NullPointerException e) {
-            throw new ConfigurationException(PROP_RPC_TARGET + " not set. No"
+            throw new ConfigurationException(CONF_RPC_TARGET + " not set. No"
                                              + "RPC vendor");
         }
         conn = null;
@@ -171,11 +171,14 @@ public class ConnectionConsumer<E> implements Configurable {
 
     /**
      * Return the vendor id as defined by the configuration's
-     * {@link #PROP_RPC_TARGET} property.
-     * @return the value of the {@link #PROP_RPC_TARGET} from the configuration
+     * {@link #CONF_RPC_TARGET} property.
+     * @return the value of the {@link #CONF_RPC_TARGET} from the configuration
      *         passed to the constructor
      */
     public String getVendorId () {
         return connId;
     }
 }
+
+
+

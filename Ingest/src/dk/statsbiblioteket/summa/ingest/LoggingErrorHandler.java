@@ -120,3 +120,6 @@ public class LoggingErrorHandler implements ErrorHandler {
         log.fatal(exception);
     }
 }
+
+
+

@@ -50,10 +50,10 @@ public interface ClientDeployer extends Configurable {
      *
      * <p>This property <i>must</i> be provided by the configuration.</p>
      *
-     * @see ClientConnection#CLIENT_ID 
+     * @see ClientConnection#CONF_CLIENT_ID 
      */
-    public static final String INSTANCE_ID_PROPERTY =
-                                                     ClientConnection.CLIENT_ID;
+    public static final String CONF_INSTANCE_ID =
+                                                     ClientConnection.CONF_CLIENT_ID;
 
     /**
      * <p>Configuration property defining a path relative to the system
@@ -62,10 +62,10 @@ public interface ClientDeployer extends Configurable {
      *
      * <p>Default is {@code summa-control}.</p>
      *
-     * @see ClientConnection#CLIENT_BASEPATH_PROPERTY
+     * @see ClientConnection#CONF_CLIENT_BASEPATH
      */
-    public static final String BASEPATH_PROPERTY =
-                                               ClientConnection.CLIENT_BASEPATH_PROPERTY;
+    public static final String CONF_BASEPATH =
+                                               ClientConnection.CONF_CLIENT_BASEPATH;
 
     /**
      * <p>Configuration property defining the class name of the
@@ -74,7 +74,7 @@ public interface ClientDeployer extends Configurable {
      *
      * <p>This property <i>must</i> be provided by the configuration.</p>
      */
-    public static final String DEPLOYER_CLASS_PROPERTY =
+    public static final String CONF_DEPLOYER_CLASS =
                                                   "summa.control.deployer.class";
 
     /**
@@ -87,7 +87,7 @@ public interface ClientDeployer extends Configurable {
      *
      * <p>This property <i>must</i> be provided by the configuration.</p>
      */
-    public static final String DEPLOYER_TARGET_PROPERTY =
+    public static final String CONF_DEPLOYER_TARGET =
                                                   "summa.control.deployer.target";
 
     /**
@@ -100,8 +100,8 @@ public interface ClientDeployer extends Configurable {
      *
      * {@link Configuration#getSystemConfiguration()}. 
      */
-    public static final String CLIENT_CONF_PROPERTY =
-                                                  Configuration.CONFIGURATION_PROPERTY;
+    public static final String CONF_CLIENT_CONF =
+                                                  Configuration.CONF_CONFIGURATION_PROPERTY;
 
     /**
      * <p>Configuration property defining the bundle to deploy. The
@@ -111,14 +111,14 @@ public interface ClientDeployer extends Configurable {
      *
      * <p>This property <i>must</i> be provided by the configuration.</p>
      */
-    public static final String DEPLOYER_BUNDLE_PROPERTY =
+    public static final String CONF_DEPLOYER_BUNDLE =
                                                "summa.control.deployer.bundle.id";
 
     /**
      * Configuration property set by the Control server. It contains the absolute
      * path to the .bundle file to deploy.
      */
-    public static final String DEPLOYER_BUNDLE_FILE_PROPERTY =
+    public static final String CONF_DEPLOYER_BUNDLE_FILE =
                                              "summa.control.deployer.bundle.file";
 
     /**
@@ -127,7 +127,7 @@ public interface ClientDeployer extends Configurable {
      *
      * <p>This property <i>must</i> be provided by the configuration.</p>
      */
-    public static final String DEPLOYER_FEEDBACK_PROPERTY =
+    public static final String CONF_DEPLOYER_FEEDBACK =
                                           "summa.control.deployer.feedback.class";
 
     /**
@@ -172,3 +172,6 @@ public interface ClientDeployer extends Configurable {
      */
     public String getTargetHost ();
 }
+
+
+

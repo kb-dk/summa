@@ -73,12 +73,12 @@ public class BrowserImplTest extends TestCase {
         memStore.put(IndexConnector.INDEXROOT + IndexConnector.TYPE,
                      IndexConnector.INDEXTYPE.singleIndex);
         memStore.put(IndexConnector.INDEXROOT + IndexConnector.LINKS,
-                     IndexBuilder.INDEXLOCATION);
+                     IndexBuilder.INDEX_LOCATION);
 /*        memStore.put(TagHandlerFactory.FORCE_REBUILD, true);
         memStore.put(TagHandlerFactory.TAG_HANDLER,
                      TagHandlerFactory.TAGHANDLERS.MemoryTagHandler);
         memStore.put(TagHandlerFactory.TAG_DATA_LOCATION,
-                     new File(IndexBuilder.INDEXLOCATION, "facets").toString());*/
+                     new File(IndexBuilder.INDEX_LOCATION, "facets").toString());*/
         return new Configuration(memStore);
     }
 
@@ -201,8 +201,8 @@ public class BrowserImplTest extends TestCase {
                                config, false);
 //        TagCounter tagCounter = new TagCounterArray(structure, tagHandler);
         SearchDescriptor descriptor =
-                new SearchDescriptor(IndexBuilder.INDEXLOCATION);
-        descriptor.loadDescription(IndexBuilder.INDEXLOCATION);
+                new SearchDescriptor(IndexBuilder.INDEX_LOCATION);
+        descriptor.loadDescription(IndexBuilder.INDEX_LOCATION);
 
         SummaQueryParser queryParser =
                 new SummaQueryParser(new String[]{"foo", "bar"},
@@ -254,3 +254,6 @@ public class BrowserImplTest extends TestCase {
         return new TestSuite(BrowserImplTest.class);
     }
 }
+
+
+

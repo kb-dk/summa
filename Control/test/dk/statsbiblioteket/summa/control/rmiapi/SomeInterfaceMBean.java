@@ -6,3 +6,6 @@ package dk.statsbiblioteket.summa.control.rmiapi;
 
 public interface SomeInterfaceMBean extends SomeInterface {
 }
+
+
+

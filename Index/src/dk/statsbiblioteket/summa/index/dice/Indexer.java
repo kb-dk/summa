@@ -84,14 +84,14 @@ public class Indexer extends EmployerBase {
         currentTarget = null;
 
         // TODO: Replace cache R/W with memory backed ones and store GZipBlobs instead
-        Cache<Record> gzippingCache = new CacheService<Record>(conf.getClass(EMPLOYER_CACHE_WRITER),
-                                                                conf.getClass(EMPLOYER_CACHE_READER),
-                                                                conf.getString(EMPLOYER_CACHE_PATH));
+        Cache<Record> gzippingCache = new CacheService<Record>(conf.getClass(CONF_EMPLOYER_CACHE_WRITER),
+                                                                conf.getClass(CONF_EMPLOYER_CACHE_READER),
+                                                                conf.getString(CONF_EMPLOYER_CACHE_PATH));
 
-        log.info ("Exporting cache as " + conf.getString(EMPLOYER_CACHE_SERVICE) + " on port " + conf.getInt(EMPLOYER_CACHE_PORT));
+        log.info ("Exporting cache as " + conf.getString(CONF_EMPLOYER_CACHE_SERVICE) + " on port " + conf.getInt(CONF_EMPLOYER_CACHE_PORT));
         Cache<Record> remoteCache = new RemoteCacheService<Record>(gzippingCache,
-                                                                    conf.getString (IndexConfig.EMPLOYER_CACHE_SERVICE),
-                                                                    conf.getInt (IndexConfig.EMPLOYER_CACHE_PORT),
+                                                                    conf.getString (IndexConfig.CONF_EMPLOYER_CACHE_SERVICE),
+                                                                    conf.getInt (IndexConfig.CONF_EMPLOYER_CACHE_PORT),
                                                                     conf.getClientSocketFactory(),
                                                                     conf.getServerSocketFactory());
         cache = new GenericCacheClient<Record>(gzippingCache);
@@ -138,12 +138,12 @@ public class Indexer extends EmployerBase {
         hints.put(IndexConfig.LAST_RECORD_ID, data.get(data.size()-1).getId());
         hints.put(IndexConfig.FIRST_RECORD_ID, data.get(0).getId());
 
-        // Upload data to cache, and set the JOB_CACHE_ID job hint so that
+        // Upload data to cache, and set the CONF_JOB_CACHE_ID job hint so that
         // the workers can retrieve it
         try {
             // TODO: Employer should use a memory backed cache where it stores GZipBlobs (see constructor)
             long id = cache.put (data);
-            hints.put (JOB_CACHE_ID, "" + id);
+            hints.put (CONF_JOB_CACHE_ID, "" + id);
         } catch (IOException e) {
             log.fatal ("Failed to cache job data", e);
             throw new RuntimeException("Failed to cache job data", e);
@@ -262,8 +262,8 @@ public class Indexer extends EmployerBase {
         HashMap<String,String> info = new HashMap<String,String>();
 
         info.put(IndexConfig.BASE, targetName);
-        info.put (EMPLOYER_CACHE_SERVICE, conf.getString(EMPLOYER_CACHE_SERVICE));
-        info.put (CONSUMER_CACHE_SERVICE, conf.getString(CONSUMER_CACHE_SERVICE));
+        info.put (CONF_EMPLOYER_CACHE_SERVICE, conf.getString(CONF_EMPLOYER_CACHE_SERVICE));
+        info.put (CONF_CONSUMER_CACHE_SERVICE, conf.getString(CONF_CONSUMER_CACHE_SERVICE));
 
         for (Map.Entry entry : targetProps.entrySet()) {
             String key = (String) entry.getKey();
@@ -281,3 +281,6 @@ public class Indexer extends EmployerBase {
         return info;
     }
 }
+
+
+
