@@ -146,7 +146,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
     private String uniqueKey = "id";
     private List<String> defaultFields = Arrays.asList(IndexField.FREETEXT,
                                                        uniqueKey);
-    private OPERATOR defaultOperator = OPERATOR.or;
+    private OPERATOR defaultOperator = OPERATOR.and;
 
     /**
      * Extracts a locationRoot or an absoluteLocation from configuration,
