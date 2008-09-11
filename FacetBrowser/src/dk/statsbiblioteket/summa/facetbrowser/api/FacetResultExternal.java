@@ -27,8 +27,10 @@
 package dk.statsbiblioteket.summa.facetbrowser.api;
 
 import java.util.HashMap;
+import java.io.StringWriter;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.common.util.ParseUtil;
 
 /**
  * This facet structure representation is suitable for serializing and other
@@ -39,9 +41,13 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class FacetResultExternal extends FacetResultImpl<String> {
+    private HashMap<String, String[]> fields;
+
     public FacetResultExternal(HashMap<String, Integer> maxTags,
-                           HashMap<String, Integer> facetIDs) {
+                               HashMap<String, Integer> facetIDs,
+                               HashMap<String, String[]> fields) {
         super(maxTags, facetIDs);
+        this.fields = fields;
     }
 
     public FacetResult externalize() {
@@ -51,6 +57,36 @@ public class FacetResultExternal extends FacetResultImpl<String> {
     public String getName() {
         return "FacetResult";
     }
+
+    protected String getQueryString(String facet, String tag) {
+        if (fields.get(facet) == null) {
+            throw new IllegalStateException(String.format(
+                    "No fields specified in facet '%s'", facet));
+        }
+
+        // TODO: Should # be excaped too?
+        String cleanTag = getTagString(facet, tag);
+        StringWriter sw = new StringWriter(100);
+        String[] fields = this.fields.get(facet);
+        if (fields.length > 1) {
+            sw.append("(");
+        }
+        for (int i = 0 ; i < fields.length ; i++) {
+            sw.append(fields[i]);
+            sw.append(":\"");
+            sw.append(cleanTag);
+            sw.append("\"");
+            if (i < fields.length - 1) {
+                sw.append(" OR ");
+            }
+        }
+        if (fields.length > 1) {
+            sw.append(")");
+        }
+
+        return sw.toString();
+    }
+
 }
 
 
