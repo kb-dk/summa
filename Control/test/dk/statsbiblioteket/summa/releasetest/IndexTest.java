@@ -35,6 +35,7 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.common.unittest.LuceneTestHelper;
@@ -44,6 +45,8 @@ import dk.statsbiblioteket.summa.storage.api.RecordIterator;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
+import dk.statsbiblioteket.summa.index.XMLTransformer;
+import dk.statsbiblioteket.summa.index.IndexController;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -60,14 +63,60 @@ public class IndexTest extends NoExitTestCase {
     public void setUp () throws Exception {
         super.setUp();
         IngestTest.deleteOldStorages();
+        if (INDEX_ROOT.exists()) {
+            Files.delete(INDEX_ROOT);
+        }
+        INDEX_ROOT.mkdirs();
     }
 
     public void testIngest() throws Exception {
         fillStorage();
     }
 
+    public void testNonIterativeIndexing() throws Exception {
+        Storage storage = fillStorage();
+
+        assertEquals("There should be no existing indexes", 0, countIndexes());
+        Configuration indexConf = Configuration.load(
+                "data/search/IndexTest_IndexConfiguration.xml");
+        updateIndex(indexConf);
+        assertEquals("After update one the number of indexes should be correct",
+                     1, countIndexes());
+        updateIndex(indexConf);
+        assertEquals("After update two the number of indexes should be correct",
+                     2, countIndexes());
+        storage.close();
+    }
+
+    public void testIterativeIndexing() throws Exception {
+        Storage storage = fillStorage();
+
+        assertEquals("There should be no existing indexes", 0, countIndexes());
+        Configuration indexConf = Configuration.load(
+                "data/search/IndexTest_IndexConfiguration.xml");
+        indexConf.getSubConfiguration("SingleChain").
+                getSubConfiguration("IndexUpdate").
+                set(IndexControllerImpl.CONF_CREATE_NEW_INDEX, false);
+        updateIndex(indexConf);
+        assertEquals("After update one the number of indexes should be correct",
+                     1, countIndexes());
+        updateIndex(indexConf);
+        assertEquals("After update two the number of indexes should be correct",
+                     1, countIndexes());
+        storage.close();
+    }
+
+    private int countIndexes() {
+        if (!INDEX_ROOT.exists()) {
+            return 0;
+        }
+        return INDEX_ROOT.listFiles().length;
+    }
+
     // TODO: Implement proper shutdown of single tests
 
+    public static final File INDEX_ROOT = new File(
+            System.getProperty("java.io.tmpdir"), "testindex");
     /**
      * Tests the workflow from files on disk to finished index.
      * @throws Exception if the workflow failed.
@@ -75,8 +124,6 @@ public class IndexTest extends NoExitTestCase {
     public void testWorkflow() throws Exception {
         Storage storage = fillStorage();
 
-        File INDEX_ROOT = new File(System.getProperty("java.io.tmpdir"),
-                                   "testindex");
 
         // Index chain setup
         URL xsltLocation =
@@ -213,5 +260,36 @@ public class IndexTest extends NoExitTestCase {
         }
         assertTrue("The service '" + service + "' should have stopped by now",
                    service.getStatus().getCode().equals(Status.CODE.stopped));
+    }
+
+    public static void updateIndex(Configuration conf) throws Exception {
+        URL xsltLocation = Resolver.getURL(
+                "data/search/fagref_xslt/fagref_index.xsl");
+        assertNotNull("The fagref xslt location should not be null",
+                      xsltLocation);
+        URL descriptorLocation = Resolver.getURL(
+                "data/search/SearchTest_IndexDescriptor.xml");
+        assertNotNull("The descriptor location should not be null",
+                      descriptorLocation);
+
+        Configuration chain = conf.getSubConfiguration("SingleChain");
+        chain.getSubConfiguration("FagrefTransformer").
+                set(XMLTransformer.CONF_XSLT, xsltLocation.getFile());
+        chain.getSubConfiguration("DocumentCreator").getSubConfiguration(
+                LuceneIndexUtils.CONF_DESCRIPTOR).
+                set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
+                    descriptorLocation.getFile());
+        chain.getSubConfiguration("IndexUpdate").
+                set(IndexControllerImpl.CONF_INDEX_ROOT_LOCATION,
+                    SearchTest.INDEX_ROOT.toString());
+        chain.getSubConfiguration("IndexUpdate").
+                getSubConfiguration("LuceneUpdater").
+                getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR).
+                set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
+                    descriptorLocation.getFile());
+        FilterService indexService = new FilterService(conf);
+        indexService.start();
+        waitForService(indexService);
+        indexService.stop();
     }
 }
