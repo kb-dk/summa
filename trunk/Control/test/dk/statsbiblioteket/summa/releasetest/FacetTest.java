@@ -22,27 +22,28 @@
  */
 package dk.statsbiblioteket.summa.releasetest;
 
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
+import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
+import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
+import dk.statsbiblioteket.summa.search.IndexWatcher;
+import dk.statsbiblioteket.summa.search.SearchNodeFactory;
+import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
+import dk.statsbiblioteket.summa.search.api.SummaSearcher;
+import dk.statsbiblioteket.summa.storage.api.RecordIterator;
+import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode;
+import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.rmi.RemoteException;
 import java.util.List;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Files;
-import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
-import dk.statsbiblioteket.summa.common.configuration.Resolver;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
-import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
-import dk.statsbiblioteket.summa.search.api.SummaSearcher;
-import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
-import dk.statsbiblioteket.summa.search.IndexWatcher;
-import dk.statsbiblioteket.summa.search.SearchNodeFactory;
-import dk.statsbiblioteket.summa.storage.api.Storage;
-import dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode;
 
 /**
  * Tests a ingest => storage => index => search chain with facets.
@@ -183,6 +184,44 @@ public class FacetTest extends NoExitTestCase {
         log.debug("All OK. Closing searcher, storage and returning");
         searcher.close();
         storage.close();
+    }
+
+    public void testDualIngest() throws Exception {
+        Storage storage = SearchTest.startStorage();
+        SearchTest.ingest(new File(
+                Resolver.getURL("data/search/input/part1").getFile()));
+        assertEquals("The Records-count should be correct after first ingest",
+                     1, countRecords(storage, "fagref"));
+        SearchTest.ingest(new File(
+                Resolver.getURL("data/search/input/part2").getFile()));
+        assertEquals("The Records-count should be correct after second ingest",
+                     3, countRecords(storage, "fagref"));
+
+        updateIndex();
+        Thread.sleep(5000); // Why do we need to do this?
+        log.debug("Index updated. Creating searcher");
+        SummaSearcherImpl searcher =
+                new SummaSearcherImpl(getSearcherConfiguration());
+        Thread.sleep(5000); // Why do we need to do this?
+        searcher.checkIndex(); // Make double sure
+        log.debug("Searcher created");
+        for (String name: "Jens Gurli Hans".split(" ")) {
+            log.debug(String.format("Verifying existence of %s data", name));
+            SearchTest.verifySearch(searcher, name, 1);
+            verifyFacetResult(searcher, name);
+        }
+        searcher.close();
+        storage.close();
+    }
+
+    private int countRecords(Storage storage, String base) throws IOException {
+        RecordIterator i = storage.getRecords(base);
+        int counter = 0;
+        while (i.hasNext()) {
+            counter++;
+            i.next();
+        }
+        return counter;
     }
 
     public void testFacetSearch() throws Exception {
