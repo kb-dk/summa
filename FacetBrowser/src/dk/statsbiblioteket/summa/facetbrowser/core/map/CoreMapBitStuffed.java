@@ -421,9 +421,9 @@ public class CoreMapBitStuffed extends CoreMapImpl {
   //              System.out.println("- Getting to at " + (hitID + 1) + "/" + index.length);
                 to = index[hitID+1];
 /*                System.out.println("\nHitID: " + hitID +
-                                   "(" + index[hitID] +
-                                   ") to " + to +
-                                   " range: " + (to - index[hitID]));*/
+                                   "resolved to values (" + index[hitID] +
+                                   " to " + to +
+                                   ") = " + (to - index[hitID]));*/
                 for (int i = index[hitID] ; i < to ; i++) {
 //                    System.out.println("- Fetching value " + i + "/" + values.length);
 //                    value = values[i]; // Seems slower than 2 * direct access

@@ -39,7 +39,7 @@
                         </entry>
                         <entry>
                             <key>summa.storage.RecordReader.start-from-scratch</key>
-                            <value class="boolean">false</value>
+                            <value class="boolean">true</value>
                         </entry>
                         <entry>
                             <key>summa.storage.RecordReader.max-read.records</key>
