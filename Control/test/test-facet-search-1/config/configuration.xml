@@ -83,6 +83,8 @@
                             <string>lsubject</string>
                             <string>lsu_oai</string>
                             <string>author_normalised</string>
+                            <string>recordID</string>
+                            <string>shortformat</string>
                         </value>
                     </entry>
                     <entry>
@@ -92,6 +94,8 @@
                             <string>NoSubject</string>
                             <string>NoOAI</string>
                             <string>NoAuthor</string>
+                            <string>NoID</string>
+                            <string>NoShortformat</string>
                         </value>
                     </entry>
                     <entry>
