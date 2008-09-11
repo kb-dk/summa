@@ -15,7 +15,7 @@
                 No hits
             </xsl:when>
             <xsl:otherwise>
-                
+
                 <div class="shortNavigation">
                     <xsl:choose>
                         <xsl:when test="$current_page &gt; 0">

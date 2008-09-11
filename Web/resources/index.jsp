@@ -12,6 +12,7 @@
     WebServices services = WebServices.getInstance();
 
     String search_html = "";
+    String facet_html = "";
 
     String query = request.getParameter("query");
     if (query != null && !query.equals("")) {
@@ -42,8 +43,22 @@
             search_prop.put("current_page", current_page);
 
             search_html = XmlOperations.xsltTransform(dom_search_result, search_xslt, search_prop);
-            //search_html = xml_search_result;
         }
+
+        String xml_facet_result = (String) services.execute("summasimplefacet", query);
+
+        if (xml_facet_result == null) {
+            facet_html = "Error faceting query";
+        } else {
+            Document dom_facet_result = XmlOperations.stringToDOM(xml_facet_result);
+            File facet_xslt = new File(basepath + "xslt/facet_overview.xsl");
+
+            Properties facet_prop = new Properties();
+            facet_prop.put("query", query);
+
+            facet_html = XmlOperations.xsltTransform(dom_facet_result, facet_xslt, facet_prop);
+        }
+
     }
 %>
 
@@ -54,9 +69,10 @@
 </head>
 <body>
 <form action="index.jsp">
-    <input type="text" name="query" />
+    <input type="text" name="query" value="<%= query.replaceAll("\"", "&quot;") %>" />
     <input type="submit" value="Search" />
 </form>
 <%= search_html %>
+<%= facet_html %>
 </body>
 </html>
