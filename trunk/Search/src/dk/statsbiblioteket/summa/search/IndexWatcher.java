@@ -23,9 +23,11 @@
 package dk.statsbiblioteket.summa.search;
 
 import java.io.File;
+import java.io.IOException;
 
 import dk.statsbiblioteket.util.watch.Observable;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
@@ -91,6 +93,7 @@ public class IndexWatcher extends Observable<IndexListener> implements
     private String indexRoot = DEFAULT_INDEX_ROOT;
     private File absoluteIndexRoot;
     private File lastCheckedLocation = null;
+    private long lastCheckedTimestamp = -1;
 
     private boolean checkHasBeenPerformed = false;
     private boolean continueWatching = false;
@@ -172,13 +175,44 @@ public class IndexWatcher extends Observable<IndexListener> implements
     public synchronized File updateAndReturnCurrentState() {
 //        log.trace("updateAndReturnCurrentState called");
         File newChecked = getCurrentIndexLocation();
-        if (checkHasBeenPerformed && equals(lastCheckedLocation, newChecked)) {
+        long timestamp = getTimestamp(newChecked);
+        if (checkHasBeenPerformed
+            && equals(lastCheckedLocation, newChecked)
+            && lastCheckedTimestamp == timestamp) {
             return lastCheckedLocation;
         }
         checkHasBeenPerformed = true;
         lastCheckedLocation = newChecked;
+        lastCheckedTimestamp = timestamp;
         notifyListeners();
         return lastCheckedLocation;
+    }
+
+    private long getTimestamp(File newChecked) {
+        if (newChecked == null) {
+            return -1;
+        }
+        File vFile = new File(newChecked, IndexCommon.VERSION_FILE);
+        if (!vFile.exists()) {
+            return -1;
+        }
+        String content = null;
+        try {
+            content = Files.loadString(vFile);
+            long v = Long.parseLong(content);
+            if (log.isTraceEnabled()) {
+                log.trace("Got version " + v + " from '" + vFile + "'");
+            }
+            return v;
+        } catch (IOException e) {
+            log.warn(String.format("Unable to load content of '%s'", vFile), e);
+            return -1;
+        } catch (NumberFormatException e) {
+            log.warn(String.format(
+                    "Unable to parse content '%s' of '%s' as a long",
+                    content, vFile), e);
+            return -1;
+        }
     }
 
     private boolean equals(File f1, File f2) {
@@ -197,7 +231,8 @@ public class IndexWatcher extends Observable<IndexListener> implements
 
     private void notifyListeners() {
         log.trace("notifying listeners with index location '"
-                  + lastCheckedLocation + "'");
+                  + lastCheckedLocation + "' and timestamp "
+                  + lastCheckedTimestamp);
         for (IndexListener listener: getListeners()) {
             try {
                 listener.indexChanged(lastCheckedLocation);

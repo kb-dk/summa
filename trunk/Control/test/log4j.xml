@@ -23,7 +23,7 @@
     <!-- -->
 
     <appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
-        <param name="Threshold" value="trace"/><!-- or ERROR or INFO -->
+        <param name="Threshold" value="info"/><!-- or ERROR or INFO -->
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
         </layout>
@@ -58,8 +58,8 @@
      <!-- use the async wrapper on logging
      <appender name="ASYNC" class="org.apache.log4j.AsyncAppender">
         <appender-ref ref="FILE"/>
-    </appender>  -->
-
+    </appender>
+      -->
 
     <logger name="dk.statsbiblioteket.summa">
         <level value="warn" />
@@ -75,7 +75,7 @@
         <level value="trace" />
         <appender-ref ref="CONSOLE" />
     </logger>
-
+                               
     <!-- all loggeres inherit the root logger - so don't include the root appenders in the other loggers (will duplicate log entries in the log file) -->
     <root>
         <level value="FATAL" />

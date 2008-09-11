@@ -112,7 +112,7 @@
                         </entry>
                         <entry>
                             <key>summa.index.createnewindex</key>
-                            <value class="boolean">true</value>
+                            <value class="boolean">false</value>
                         </entry>
                         <entry>
                             <key>summa.index.indexrootlocation</key>
@@ -120,6 +120,10 @@
                         </entry>
                         <entry>
                             <key>summa.index.consolidatetimeout</key>
+                            <value class="int">-1</value>
+                        </entry>
+                        <entry>
+                            <key>summa.index.commit-timeout</key>
                             <value class="int">1000</value>
                         </entry>
                         <entry>

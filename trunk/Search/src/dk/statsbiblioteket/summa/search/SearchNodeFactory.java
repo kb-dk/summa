@@ -92,14 +92,14 @@ public class SearchNodeFactory {
      * @return a newly instantiated {@link SearchNode}
      * @throws RemoteException if the SearchNode could not be created.
      */
-    public static SearchNode createSearchNode(Configuration conf,
-                                              Class<?extends SearchNode> defaultClass)
-                                              {
+    public static SearchNode createSearchNode(
+            Configuration conf, Class<?extends SearchNode> defaultClass) {
+        log.trace("createSearchNode called");
 
         Class<? extends SearchNode> searchNodeClass =
                 Configuration.getClass(CONF_NODE_CLASS, SearchNode.class,
                                        defaultClass, conf);
-
+        log.debug("Creating SearchNode '" + searchNodeClass.getName() + "'");
         return Configuration.create (searchNodeClass, conf);
     }
 

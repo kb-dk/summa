@@ -98,7 +98,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
      *                         constructed.
      */
     public SummaSearcherImpl(Configuration conf) throws RemoteException {
-        log.trace("Constructor(Configuration) called");
+        log.info("Constructing SummaSearcherImpl");
         int searchQueueMaxSize = conf.getInt(CONF_SEARCH_QUEUE_MAX_SIZE,
                                              DEFAULT_SEARCH_QUEUE_MAX_SIZE);
         searcherAvailabilityTimeout =
@@ -116,6 +116,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
         watcher = new IndexWatcher(conf);
         watcher.addIndexListener(this);
         watcher.startWatching(); // This fires an open to the indexes
+        log.debug("Finsihed constructing SummaSearcherImpl");
     }
 
     public ResponseCollection search(Request request) throws RemoteException {
