@@ -204,6 +204,9 @@ public class FileReader implements ObjectFilter {
      * @return true if the file is in the todo, delivered or otherwise handled.
      */
     protected boolean alreadyHandled(File file) {
+        if (delivered == null) {
+            return false;
+        }
         for (Payload payload: delivered) {
             if (((RenamingFileStream)payload.getStream()).getFile().
                     equals(file)) {
