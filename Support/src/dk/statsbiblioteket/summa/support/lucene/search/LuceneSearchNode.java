@@ -257,13 +257,15 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                                 scoreDoc.score, null);
                 Document doc =
                      searcher.getIndexReader().document(scoreDoc.doc, selector);
-                for (String field : fields) {
+                for (int fieldIndex = 0; fieldIndex < fields.length;
+                     fieldIndex++) {
+                    String field = fields[fieldIndex];
                     Field iField = doc.getField(field);
                     if (iField == null || iField.stringValue() == null ||
                         "".equals(iField.stringValue())) {
                         if (fallbacks != null && fallbacks.length != 0) {
                             record.addField(new DocumentResponse.Field(
-                                    field, fallbacks[i],
+                                    field, fallbacks[fieldIndex],
                                     !nonescapedFields.contains(field)));
                         }
                     } else {
