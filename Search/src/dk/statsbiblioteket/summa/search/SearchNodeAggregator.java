@@ -67,7 +67,7 @@ public class SearchNodeAggregator extends ArrayList<SearchNode> implements
     public SearchNodeAggregator(Configuration conf) throws RemoteException {
         sequential = conf.getBoolean(CONF_SEQUENTIAL, DEFAULT_SEQUENTIAL);
         List<SearchNode> nodes = SearchNodeFactory.createSearchNodes(conf);
-        log.debug(String.format(
+        log.info(String.format(
                 "Constructed %s SearchNodeAggregator with %d SearchNodes",
                 sequential ? "sequential" : "parallel", nodes.size()));
         for (SearchNode node: nodes) {

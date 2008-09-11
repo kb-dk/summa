@@ -563,6 +563,7 @@ public class IndexControllerImpl extends StateThread implements ObjectFilter,
     private void markAsUpdated(long timestamp) {
         File currentFile = new File(indexLocation, IndexCommon.VERSION_FILE);
         try {
+            log.trace("Marking index as updated to file '" + currentFile + "'");
             Files.saveString(Long.toString(timestamp), currentFile);
         } catch (IOException e) {
             log.error("Could not mark '" + currentFile + "' with timestamp " +

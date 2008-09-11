@@ -92,7 +92,7 @@ public class LuceneIndexUtils {
         } catch (IOException e) {
             //noinspection DuplicateStringLiteralInspection
             log.error("Exception requesting '" + CONF_DESCRIPTOR
-                      + "' from properties");
+                      + "' from properties", e);
         } catch (UnsupportedOperationException e) {
             //noinspection DuplicateStringLiteralInspection
             log.debug("The configuration does not support sub-storages. "

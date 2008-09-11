@@ -122,6 +122,7 @@ public class LuceneFacetBuilder extends BuilderImpl {
      */
     public void build(boolean keepTags) throws IOException {
         log.info(String.format("build(%b) called", keepTags));
+
         if (!docsToTerms && !termsToDocs) {
             log.warn("Neither docs=>terms or terms=>docs was specified. "
                      + "No building will be done");
@@ -247,7 +248,7 @@ public class LuceneFacetBuilder extends BuilderImpl {
      */
     private void buildDocToTerms(IndexReader ir, int docID) throws IOException {
         if (ir.isDeleted(docID)) {
-            log.trace("The docID " + docID + " redered to a deleted document");
+            log.trace("The docID " + docID + " refered to a deleted document");
             return;
         }
         Map<String, List<String>> facetTags = new HashMap<String, List<String>>(

@@ -55,8 +55,6 @@ import dk.statsbiblioteket.summa.search.*;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
-import dk.statsbiblioteket.summa.index.XMLTransformer;
-import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -244,38 +242,7 @@ public class SearchTest extends NoExitTestCase {
     public static void updateIndex() throws Exception {
         Configuration indexConf = Configuration.load(
                 "data/search/SearchTest_IndexConfiguration.xml");
-        updateIndex(indexConf);
-    }
-
-    public static void updateIndex(Configuration conf) throws Exception {
-        URL xsltLocation = Resolver.getURL(
-                "data/search/fagref_xslt/fagref_index.xsl");
-        assertNotNull("The fagref xslt location should not be null",
-                      xsltLocation);
-        URL descriptorLocation = Resolver.getURL(
-                "data/search/SearchTest_IndexDescriptor.xml");
-        assertNotNull("The descriptor location should not be null",
-                      descriptorLocation);
-
-        Configuration chain = conf.getSubConfiguration("SingleChain");
-        chain.getSubConfiguration("FagrefTransformer").
-                set(XMLTransformer.CONF_XSLT, xsltLocation.getFile());
-        chain.getSubConfiguration("DocumentCreator").getSubConfiguration(
-                LuceneIndexUtils.CONF_DESCRIPTOR).
-                set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
-                    descriptorLocation.getFile());
-        chain.getSubConfiguration("IndexUpdate").
-                set(IndexControllerImpl.CONF_INDEX_ROOT_LOCATION,
-                    INDEX_ROOT.toString());
-        chain.getSubConfiguration("IndexUpdate").
-                getSubConfiguration("LuceneUpdater").
-                getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR).
-                set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
-                    descriptorLocation.getFile());
-        FilterService indexService = new FilterService(conf);
-        indexService.start();
-        IndexTest.waitForService(indexService);
-        indexService.stop();
+        IndexTest.updateIndex(indexConf);
     }
 
     public static void verifySearch(SummaSearcher searcher, String query,
@@ -292,7 +259,7 @@ public class SearchTest extends NoExitTestCase {
     public static int getHits(SummaSearcher searcher, String query) throws
                                                                     Exception {
         String result = searcher.search(simpleRequest(query)).toXML();
-        log.debug("Result from search: " + result);
+        log.debug("Result from search for '" + query + "': " + result);
         Matcher matcher = hitPattern.matcher(result);
         if (!matcher.matches()) {
             throw new NullPointerException("Could not locate hitcount in " 

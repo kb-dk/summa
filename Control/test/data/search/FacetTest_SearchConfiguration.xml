@@ -50,6 +50,15 @@
                         <value class="string">dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode</value>
                     </entry>
                     <entry>
+                        <key>summa.index.descriptorsetup</key>
+                        <value class="xproperties">
+                            <entry>
+                                <key>summa.common.indexdescriptor.absolutelocation</key>
+                                <value class="string">/tmp/summatest/data/search/SearchTest_IndexDescriptor.xml</value>
+                            </entry>
+                        </value>
+                    </entry>
+                    <entry>
                         <key>summa.search.collectdocids</key>
                         <value class="string">true</value>
                     </entry>
@@ -146,17 +155,5 @@
                 </xproperties>
             </value>
         </entry>
-        <!-- LuceneIndexUtils -->
-        <entry>
-            <key>summa.index.descriptorsetup</key>
-            <value class="xproperties">
-                <entry>
-                    <key>summa.common.indexdescriptor.absolutelocation</key>
-                    <value class="string">/tmp/summatest/data/search/SearchTest_IndexDescriptor.xml</value>
-                </entry>
-            </value>
-        </entry>
     </xproperties>
 </xproperties>
-
-

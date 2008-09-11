@@ -187,9 +187,17 @@ public abstract class CoreMapImpl implements CoreMap {
             indexData.close();
             indexBuf.close();
             indexIn.close();
+        } catch (FileNotFoundException e) {
+            throw new IOException(String.format(
+                    "File not found, attempting to retrieve values from '%s'",
+                    valuesFile), e);
+        } catch (IOException e) {
+            throw new IOException(String.format(
+                    "IOException, attempting to retrieve values from '%s'",
+                    valuesFile), e);
         } catch (Exception e) {
             throw new IOException(String.format(
-                    "Unable to retrieve all values from '%s'", valueCount), e);
+                    "Unable to retrieve all values from '%s'", valuesFile), e);
         }
     }
 

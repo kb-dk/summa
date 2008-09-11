@@ -99,7 +99,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
      */
     public LuceneSearchNode(Configuration conf) throws RemoteException {
         super(conf);
-        log.debug("Constructing LuceneSearchNode");
+        log.info("Constructing LuceneSearchNode");
         maxBooleanClauses =
                 conf.getInt(CONF_MAX_BOOLEAN_CLAUSES, maxBooleanClauses);
         log.trace("Setting max boolean clauses to " + maxBooleanClauses);
