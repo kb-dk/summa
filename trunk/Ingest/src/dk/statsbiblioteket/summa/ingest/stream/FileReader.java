@@ -92,8 +92,8 @@ public class FileReader implements ObjectFilter {
      */
     public static final String CONF_COMPLETED_POSTFIX =
             "summa.ingest.filereader.completedpostfix";
-    public static final String DEFAULT_COMPLETED_POSTFIX =
-            ".completed";
+    @SuppressWarnings({"DuplicateStringLiteralInspection"})
+    public static final String DEFAULT_COMPLETED_POSTFIX = ".completed";
 
     /**
      * The key for the filename-value, added to meta-info in delivered payloads.
@@ -108,6 +108,8 @@ public class FileReader implements ObjectFilter {
 
     protected boolean started = false;
     protected LinkedBlockingQueue<File> todo;
+    // TODO: Avoid the ever-growing lists
+    protected List<File> encountered = new ArrayList<File>(100);
     private List<Payload> delivered;
 
     /**
@@ -175,9 +177,7 @@ public class FileReader implements ObjectFilter {
                           + start + "'");
                 Arrays.sort(files);
                 for (File file: files) {
-                    if (!alreadyHandled(file)) {
-                        todo.offer(file);
-                    }
+                    addToTodo(file);
                 }
                 File folders[] = start.listFiles(folderFilter);
                 log.debug("fillTodo: Found " + folders.length
@@ -189,7 +189,7 @@ public class FileReader implements ObjectFilter {
             } else {
                 if (filePattern.matcher(start.getName()).matches()) {
                     log.debug("updateToDo: Adding '" + start + "' to todo");
-                    todo.offer(start);
+                    addToTodo(start);
                 } else {
                     log.trace("updateToDo: Skipping '" + start + "'");
                 }
@@ -199,21 +199,30 @@ public class FileReader implements ObjectFilter {
         }
     }
 
-    /**
-     * @param file a file to check.
-     * @return true if the file is in the todo, delivered or otherwise handled.
-     */
-    protected boolean alreadyHandled(File file) {
-        if (delivered == null) {
-            return false;
-        }
-        for (Payload payload: delivered) {
-            if (((RenamingFileStream)payload.getStream()).getFile().
-                    equals(file)) {
-                return true;
+    private void addToTodo(File file) {
+        if (!alreadyHandled(file)) {
+            try {
+                todo.put(file);
+            } catch (InterruptedException e) {
+                log.warn(String.format(
+                        "Interrupted while trying to add '%s' to todo", file),
+                         e);
             }
         }
-        return todo.contains(file);
+    }
+
+    /**
+     * Checks whether the file has been encountered before and remembers it
+     * for subsequent checks if it hasn't.
+     * @param file a file to check.
+     * @return true if the file has been encountered before.
+     */
+    protected boolean alreadyHandled(File file) {
+        if (encountered.contains(file)) {
+            return true;
+        }
+        encountered.add(file);
+        return false;
     }
 
     /* One-time setup */
@@ -226,8 +235,9 @@ public class FileReader implements ObjectFilter {
         updateToDo(root);
         delivered = new ArrayList<Payload>(Math.max(1, todo.size()));
         started = true;
-        log.info("Located " + todo.size() + " files matching pattern '"
-                 + filePattern.pattern() + "' from root " + root.getPath());
+        log.info(String.format(
+                "Located %d files matching pattern '%s' from root %s",
+                todo.size(), filePattern.pattern(), root.getPath()));
     }
 
     /**
@@ -236,7 +246,7 @@ public class FileReader implements ObjectFilter {
     class RenamingFileStream extends FileInputStream {
         private Log log = LogFactory.getLog(RenamingFileStream.class);
 
-        private boolean success = false;
+        private boolean success = true;
         private File file;
         private boolean closed = false;
         private boolean renamed = false;
@@ -300,8 +310,7 @@ public class FileReader implements ObjectFilter {
             log.info("next: No more files available");
             return null;
         }
-        File current = todo.poll();
-        return deliverFile(current);
+        return deliverFile(getNextFromTodo());
     }
 
     /**
@@ -328,6 +337,23 @@ public class FileReader implements ObjectFilter {
         }
     }
 
+    protected File getNextFromTodo() {
+        int retry = 10;
+        while (retry-- != 0) {
+            try {
+                return todo.take();
+            } catch (InterruptedException e) {
+                log.warn(String.format(
+                        "hasNext(): Got InterruptedException while waiting for "
+                        + "element from todo. Retrying %d more times"
+                        + retry--), e);
+            }
+        }
+        throw new IllegalStateException(
+                "Interupted too many times while attempting to take a File "
+                + "from todo");
+    }
+
     /**
      * Graceful shutdown of opened files.
      * @param success if false, all opened files are closed immediately. If
@@ -335,7 +361,7 @@ public class FileReader implements ObjectFilter {
      *                and any currently opened files are kept open until they
      *                are emptied.
      */
-    public synchronized void close(boolean success) {
+    public void close(boolean success) {
         //noinspection DuplicateStringLiteralInspection
         log.debug("close(" + success + ") called");
         checkInit();
@@ -363,7 +389,8 @@ public class FileReader implements ObjectFilter {
             log.debug("Closing stream " + stream.file + " with success "
                       + success);
             stream.setSuccess(success);
-            if (!success) {
+            payload.close(); // TODO: Do we want close always?
+            if (!success) {  // Or only on failure?
                 // Force close
                 log.debug("Forcing close on payload " + payload);
                 payload.close();

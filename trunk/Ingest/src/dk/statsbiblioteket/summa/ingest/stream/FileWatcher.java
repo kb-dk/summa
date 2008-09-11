@@ -22,16 +22,15 @@
  */
 package dk.statsbiblioteket.summa.ingest.stream;
 
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.NoSuchElementException;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
-import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 
 /**
  * The FileWatcher is a persistent wrapper for the FileReader.
@@ -90,10 +89,15 @@ public class FileWatcher extends FileReader implements Runnable {
             return toDeliver != END_FILE;
         }
         log.trace("hasNext(): polling todo");
-        toDeliver = todo.poll();
+        toDeliver = getNextFromTodo();
         log.trace("hasNext(): polling finished. Got " + toDeliver);
-        return hasNext();
+        if (toDeliver == null) {
+            throw new IllegalStateException("The FileWatcher should never get "
+                                            + "null for delivery");
+        }
+        return toDeliver != END_FILE;
     }
+
 
     public synchronized Payload next() {
         //noinspection DuplicateStringLiteralInspection
@@ -102,7 +106,10 @@ public class FileWatcher extends FileReader implements Runnable {
         if (!hasNext()) {
             throw new NoSuchElementException("No more streams in FileWatcher");
         }
-        return deliverFile(toDeliver);
+        log.trace("next(): toDeliver set to '" + toDeliver + "'");
+        File file = toDeliver;
+        toDeliver = null;
+        return deliverFile(file);
     }
 
     public synchronized boolean pump() throws IOException {
@@ -113,15 +120,10 @@ public class FileWatcher extends FileReader implements Runnable {
         return false;
     }
 
-    public synchronized void close(boolean success) {
-        super.close(success);
+    public void close(boolean success) {
         doRun = false;
+        super.close(success);
         toDeliver = END_FILE;
-    }
-
-    protected boolean alreadyHandled(File file) {
-        //noinspection ObjectEquality
-        return super.alreadyHandled(file) || file != null && file == END_FILE;
     }
 
     public void run() {
