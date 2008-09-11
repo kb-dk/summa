@@ -22,6 +22,8 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
+import java.io.Serializable;
+
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
@@ -31,7 +33,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class Pair <T extends Comparable<T> , S>
-        implements Comparable<Pair<T, S>> {
+        implements Comparable<Pair<T, S>>, Serializable {
     protected T key;
     protected S value;
 

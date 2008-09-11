@@ -31,7 +31,7 @@ import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.facetbrowser.api.FlexiblePair;
+import dk.statsbiblioteket.summa.common.util.FlexiblePair;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
