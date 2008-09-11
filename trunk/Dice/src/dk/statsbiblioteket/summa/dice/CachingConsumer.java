@@ -37,13 +37,13 @@ import java.io.File;
  * {@link Consumer} base class storing job data members in a {@link dk.statsbiblioteket.summa.dice.caching.Cache}.
  * This means that the data member of all incomming jobs must be an {@link Iterable}.
  * The {@link Config} object passed to the constructor must have the
- * {@link Constants#CONSUMER_CACHE_PATH}, {@link Constants#CONSUMER_CACHE_PORT},
- * {@link Constants#CONSUMER_CACHE_SERVICE} properties set.
+ * {@link Constants#CONF_CONSUMER_CACHE_PATH}, {@link Constants#CONF_CONSUMER_CACHE_PORT},
+ * {@link Constants#CONF_CONSUMER_CACHE_SERVICE} properties set.
  *
  * Any {@link Worker} connecting to this Consumer must upload job data members to
- * the service specified in the {@link Constants#CONSUMER_CACHE_SERVICE}, by issuing
+ * the service specified in the {@link Constants#CONF_CONSUMER_CACHE_SERVICE}, by issuing
  * a {@link dk.statsbiblioteket.summa.dice.caching.CacheClient#put} and setting the returned <code>id</code> as the
- * {@link Constants#JOB_CACHE_ID} job hint. Upon processing a job the CachingConsumer
+ * {@link Constants#CONF_JOB_CACHE_ID} job hint. Upon processing a job the CachingConsumer
  * will look up data given by this id in the cache.
  *
  * The general contract is that the worker only calls {@link #consumeJob} when it is done
@@ -69,32 +69,32 @@ public abstract class CachingConsumer extends ConsumerBase implements Constants 
 
         validateConfig(conf);
 
-        log.info("Creating cache with " + conf.getClass(CONSUMER_CACHE_WRITER).getSimpleName() + ", "
-                                        + conf.getClass(CONSUMER_CACHE_READER).getSimpleName() + ", on path "
-                                        + conf.getString (CONSUMER_CACHE_PATH));
+        log.info("Creating cache with " + conf.getClass(CONF_CONSUMER_CACHE_WRITER).getSimpleName() + ", "
+                                        + conf.getClass(CONF_CONSUMER_CACHE_READER).getSimpleName() + ", on path "
+                                        + conf.getString (CONF_CONSUMER_CACHE_PATH));
 
-        dk.statsbiblioteket.summa.dice.caching.Cache<Object> store = new dk.statsbiblioteket.summa.dice.caching.CacheService<Object>(conf.getClass(CONSUMER_CACHE_WRITER),
-                                                        conf.getClass(CONSUMER_CACHE_READER),
-                                                        conf.getString(CONSUMER_CACHE_PATH));
+        dk.statsbiblioteket.summa.dice.caching.Cache<Object> store = new dk.statsbiblioteket.summa.dice.caching.CacheService<Object>(conf.getClass(CONF_CONSUMER_CACHE_WRITER),
+                                                        conf.getClass(CONF_CONSUMER_CACHE_READER),
+                                                        conf.getString(CONF_CONSUMER_CACHE_PATH));
 
         Cache<Object> blockingCache = new BlockingCacheService<Object> (store);
 
         /* Expose the blocking cache over rmi */
-        log.info ("Exporting cache as " + conf.getString (CONSUMER_CACHE_SERVICE) + " on port " + conf.getInt (CONSUMER_CACHE_PORT));
+        log.info ("Exporting cache as " + conf.getString (CONF_CONSUMER_CACHE_SERVICE) + " on port " + conf.getInt (CONF_CONSUMER_CACHE_PORT));
         Cache<Object> remoteCache = new RemoteCacheService<Object>
                                                             (blockingCache,
-                                                            conf.getString (CONSUMER_CACHE_SERVICE),
-                                                            conf.getInt (CONSUMER_CACHE_PORT),
+                                                            conf.getString (CONF_CONSUMER_CACHE_SERVICE),
+                                                            conf.getInt (CONF_CONSUMER_CACHE_PORT),
                                                             conf.getClientSocketFactory(),
                                                             conf.getServerSocketFactory());
 
         cache = new GenericCacheClient<Object> (blockingCache);
 
-        cacheMapLog = new SimpleLog(conf.get(Constants.CONSUMER_DATA_PATH) + File.separator + CACHEMAP_LOG_FILE);
+        cacheMapLog = new SimpleLog(conf.get(Constants.CONF_CONSUMER_DATA_PATH) + File.separator + CACHEMAP_LOG_FILE);
     }
 
     /**
-     * The <code>job</code> parameter is guarantted to have the job hint {@link Constants#JOB_CACHE_ID}
+     * The <code>job</code> parameter is guarantted to have the job hint {@link Constants#CONF_JOB_CACHE_ID}
      * set to the <code>id</code> of the corresponding data in the cache.
      * You can obtain an {@link Iterator} over the data parts by calling <code>cache.get(id)</code>.
      * @param job job to be processed.
@@ -103,7 +103,7 @@ public abstract class CachingConsumer extends ConsumerBase implements Constants 
 
     public void consumeJob (Job job) {
         super.consumeJob(job);
-        cacheMapLog.log (job.getName() + " -> " + job.getHint(JOB_CACHE_ID));
+        cacheMapLog.log (job.getName() + " -> " + job.getHint(CONF_JOB_CACHE_ID));
     }
 
     /**
@@ -113,12 +113,12 @@ public abstract class CachingConsumer extends ConsumerBase implements Constants 
     protected Job nextJob () {
         Job job = super.nextJob();
 
-        if (job.getHint(JOB_CACHE_ID) == null) {
-            log.error(JOB_CACHE_ID + " job hint not set. Unable to retrieve data from cache");
-            throw new NullPointerException(JOB_CACHE_ID + " job hint is not set");
+        if (job.getHint(CONF_JOB_CACHE_ID) == null) {
+            log.error(CONF_JOB_CACHE_ID + " job hint not set. Unable to retrieve data from cache");
+            throw new NullPointerException(CONF_JOB_CACHE_ID + " job hint is not set");
         }
 
-        ProxyCacheItem proxyData = new ProxyCacheItem(cache, Long.parseLong(job.getHint(JOB_CACHE_ID)));
+        ProxyCacheItem proxyData = new ProxyCacheItem(cache, Long.parseLong(job.getHint(CONF_JOB_CACHE_ID)));
 
         return new Job (proxyData, job.getHints(), job.getName());
     }
@@ -128,28 +128,31 @@ public abstract class CachingConsumer extends ConsumerBase implements Constants 
      * @param conf the configuration to check
      */
     private void validateConfig (Config conf) {
-        String serviceName = conf.getString (CONSUMER_CACHE_SERVICE);
-        String cachePath = conf.getString (CONSUMER_CACHE_PATH);
-        int cachePort = conf.getInt (CONSUMER_CACHE_PORT);
+        String serviceName = conf.getString (CONF_CONSUMER_CACHE_SERVICE);
+        String cachePath = conf.getString (CONF_CONSUMER_CACHE_PATH);
+        int cachePort = conf.getInt (CONF_CONSUMER_CACHE_PORT);
 
         if (serviceName == null) {
-            throw new NullPointerException(CONSUMER_CACHE_SERVICE + " not set in config");
+            throw new NullPointerException(CONF_CONSUMER_CACHE_SERVICE + " not set in config");
         }
 
         if (cachePath == null) {
-            throw new NullPointerException(CONSUMER_CACHE_PATH + " not set in config");
+            throw new NullPointerException(CONF_CONSUMER_CACHE_PATH + " not set in config");
         }
 
         if (cachePort == NO_SUCH_INT) {
-            throw new NullPointerException(CONSUMER_CACHE_PORT + " not set in config");
+            throw new NullPointerException(CONF_CONSUMER_CACHE_PORT + " not set in config");
         }
 
-        if (conf.get(CONSUMER_CACHE_READER) == null) {
-            conf.set (CONSUMER_CACHE_READER, ObjectCacheReader.class);
+        if (conf.get(CONF_CONSUMER_CACHE_READER) == null) {
+            conf.set (CONF_CONSUMER_CACHE_READER, ObjectCacheReader.class);
         }
 
-        if (conf.get(CONSUMER_CACHE_WRITER) == null) {
-            conf.set (CONSUMER_CACHE_WRITER, ObjectCacheWriter.class);
+        if (conf.get(CONF_CONSUMER_CACHE_WRITER) == null) {
+            conf.set (CONF_CONSUMER_CACHE_WRITER, ObjectCacheWriter.class);
         }
     }
 }
+
+
+

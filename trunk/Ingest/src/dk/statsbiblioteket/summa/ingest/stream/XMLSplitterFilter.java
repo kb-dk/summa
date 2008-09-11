@@ -52,7 +52,7 @@ public class XMLSplitterFilter implements ObjectFilter {
      * Default: "".
      */
     public static final String CONF_ID_PREFIX =
-            "summa.ingest.xmlsplitter.id_prefix";
+            "summa.ingest.xmlsplitter.idprefix";
 
     /**
      * The XML namespace of the ID element matched by {@link #CONF_ID_ELEMENT}.
@@ -62,7 +62,7 @@ public class XMLSplitterFilter implements ObjectFilter {
      * Default: {@code null}.
      */
     public static final String CONF_ID_NAMESPACE =
-            "summa.ingest.xmlsplitter.id_element_namespace";
+            "summa.ingest.xmlsplitter.idelementnamespace";
 
     /**
      * If true, extracted ids which beginning matches {@link #CONF_ID_PREFIX}
@@ -78,7 +78,7 @@ public class XMLSplitterFilter implements ObjectFilter {
      * Default: "true".
      */
     public static final String CONF_COLLAPSE_PREFIX =
-            "summa.ingest.xmlsplitter.collapse_profix";
+            "summa.ingest.xmlsplitter.collapseprefix";
 
 
     /**
@@ -89,7 +89,7 @@ public class XMLSplitterFilter implements ObjectFilter {
      * Default: "record".
      */
     public static final String CONF_RECORD_ELEMENT =
-            "summa.ingest.xmlsplitter.record_element";
+            "summa.ingest.xmlsplitter.recordelement";
 
     /**
      * The id-element containing the id for a given record. The element must be
@@ -109,7 +109,7 @@ public class XMLSplitterFilter implements ObjectFilter {
      * Default: "id".
      */
     public static final String CONF_ID_ELEMENT =
-            "summa.ingest.xmlsplitter.id_element";
+            "summa.ingest.xmlsplitter.idelement";
 
     /**
      * The base for the constructed Records.
@@ -125,7 +125,7 @@ public class XMLSplitterFilter implements ObjectFilter {
      * Default: "true".
      */
     public static final String CONF_PRESERVE_NAMESPACES =
-            "summa.ingest.xmlsplitter.preserve_namespaces";
+            "summa.ingest.xmlsplitter.preservenamespaces";
 
     /**
      * If true, the XML-blocks must be valid. That means, other than being
@@ -139,7 +139,7 @@ public class XMLSplitterFilter implements ObjectFilter {
      * Default: "false".
      */
     public static final String CONF_REQUIRE_VALID =
-            "summa.ingest.xmlsplitter.require_valid";
+            "summa.ingest.xmlsplitter.requirevalid";
 
     // TODO: Properties with default namespaces?
 
@@ -332,3 +332,6 @@ public class XMLSplitterFilter implements ObjectFilter {
     }
 
 }
+
+
+

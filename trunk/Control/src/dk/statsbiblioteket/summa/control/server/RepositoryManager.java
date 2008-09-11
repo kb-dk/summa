@@ -39,21 +39,21 @@ public class RepositoryManager implements Configurable,
      * bundles from the Control's repository. The default is
      * {@link RemoteURLRepositoryClient}.
      */
-    public static final String CLIENT_REPO_PROPERTY =
-                                           "summa.control.repository.clientClass";
+    public static final String CONF_CLIENT_REPO =
+                                           "summa.control.repository.clientclass";
 
     /**
      * Configuration property defining the class the repository manager should
      * use itself. The default is {@link RemoteURLRepositoryServer}.
      */
-    public static final String SERVER_REPO_PROPERTY =
-                                           "summa.control.repository.serverClass";
+    public static final String CONF_SERVER_REPO =
+                                           "summa.control.repository.serverclass";
 
     /**
      * Configuration property defining the directory used for incoming bundles
      * to be stored in the repository.
      */
-    public static final String INCOMING_DIR_PROPERTY =
+    public static final String CONF_INCOMING_DIR =
                                           "summa.control.repository.incoming.dir";
 
     /**
@@ -62,16 +62,16 @@ public class RepositoryManager implements Configurable,
      * milliseconds a newly added file should be unchanged before it is
      * transfered to the repository. Default is 3000.
      */
-    public static final String WATCHER_GRACETIME_PROPERTY =
-                                     "summa.control.repository.watcher.graceTime";
+    public static final String CONF_WATCHER_GRACETIME =
+                                     "summa.control.repository.watcher.gracetime";
 
     /**
      * Configuration property defining the number of seconds between each
      * scan of the incoming directory, when watching for incoming bundles.
      * Default is 5.
      */
-    public static final String WATCHER_POLL_INTERVAL_PROPERTY =
-                                  "summa.control.repository.watcher.pollInterval";
+    public static final String CONF_WATCHER_POLL_INTERVAL =
+                                  "summa.control.repository.watcher.pollinterval";
 
     private File controlBaseDir;
     private String address;
@@ -124,7 +124,7 @@ public class RepositoryManager implements Configurable,
 
         /* Configure the local BundleRepository impl */
         Class<? extends WritableBundleRepository> repoClass =
-                conf.getClass(SERVER_REPO_PROPERTY,
+                conf.getClass(CONF_SERVER_REPO,
                               WritableBundleRepository.class,
                               RemoteURLRepositoryServer.class);
         repo = Configuration.create (repoClass, conf);
@@ -132,7 +132,7 @@ public class RepositoryManager implements Configurable,
         random = new Random ();
 
         /* Configure Client Repo Class */
-        clientRepoClass = conf.getClass (CLIENT_REPO_PROPERTY,
+        clientRepoClass = conf.getClass (CONF_CLIENT_REPO,
                                          BundleRepository.class,
                                          RemoteURLRepositoryClient.class);
         log.debug ("Using client repository class: "
@@ -142,15 +142,15 @@ public class RepositoryManager implements Configurable,
         address = ControlUtils.getRepositoryAddress(conf);
         log.debug ("Using repository address: '" + address + "'");
 
-        clientDownloadDir = conf.getString(BundleRepository.DOWNLOAD_DIR_PROPERTY,
+        clientDownloadDir = conf.getString(BundleRepository.CONF_DOWNLOAD_DIR,
                                            "tmp");
 
         incomingDir = ControlUtils.getIncomingDir(conf);
         try {
             incomingWatcher =
                new FolderWatcher(incomingDir,
-                                 conf.getInt(WATCHER_POLL_INTERVAL_PROPERTY, 5),
-                                 conf.getInt(WATCHER_GRACETIME_PROPERTY, 3000));
+                                 conf.getInt(CONF_WATCHER_POLL_INTERVAL, 5),
+                                 conf.getInt(CONF_WATCHER_GRACETIME, 3000));
             incomingWatcher.addFolderListener(new IncomingListener(this));
 
         } catch (IOException e) {
@@ -233,9 +233,9 @@ public class RepositoryManager implements Configurable,
     public Configuration getClientRepositoryConfig () {
         Configuration conf = Configuration.newMemoryBased();
 
-        conf.set (BundleRepository.DOWNLOAD_DIR_PROPERTY, clientDownloadDir);
-        conf.set (ClientConnection.REPOSITORY_CLASS_PROPERTY, clientRepoClass.getName());
-        conf.set (BundleRepository.REPO_ADDRESS_PROPERTY, address);
+        conf.set (BundleRepository.CONF_DOWNLOAD_DIR, clientDownloadDir);
+        conf.set (ClientConnection.CONF_REPOSITORY_CLASS, clientRepoClass.getName());
+        conf.set (BundleRepository.CONF_REPO_ADDRESS, address);
 
         return conf;
     }
@@ -547,3 +547,6 @@ public class RepositoryManager implements Configurable,
         /* Bundle is ok */
     }
 }
+
+
+

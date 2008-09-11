@@ -53,3 +53,6 @@ public class SummaStandardAnalyzer extends SummaAnalyzer {
    }
 
 }
+
+
+

@@ -296,3 +296,5 @@ public class CoreMapBitStuffedLong implements CoreMap {
     }
 
 }
+
+

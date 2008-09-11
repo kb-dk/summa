@@ -95,3 +95,6 @@ public interface ClusterBuilder extends Configurable {
 
     //TODO: register merger with builder or?
 }
+
+
+

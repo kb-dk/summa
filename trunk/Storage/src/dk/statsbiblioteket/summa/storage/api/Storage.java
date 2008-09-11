@@ -66,5 +66,8 @@ public interface Storage extends ReadableStorage, WritableStorage {
      * Configuration property specifying where the storage should store
      * persistent data. Default is {@code ~/summa-control/persistent}.
      */
-    public static final String DATA_DIR_PROP = "summa.storage.data.dir";
+    public static final String CONF_DATA_DIR = "summa.storage.data.dir";
 }
+
+
+

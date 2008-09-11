@@ -35,3 +35,6 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 public interface BasicSearcher {
     
 }
+
+
+

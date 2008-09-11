@@ -15,18 +15,18 @@ public class FeedbackFactory {
 
     /**
      * Instantiate a new {@link Feedback} of the class defined in
-     * {@link dk.statsbiblioteket.summa.control.api.ClientDeployer#DEPLOYER_FEEDBACK_PROPERTY}. If this property
+     * {@link dk.statsbiblioteket.summa.control.api.ClientDeployer#CONF_DEPLOYER_FEEDBACK}. If this property
      * is not defined the factory will default to a {@link ConsoleFeedback}.
      *
      * @param conf the configuration used to look up the value of the
-     *             {@link dk.statsbiblioteket.summa.control.api.ClientDeployer#DEPLOYER_FEEDBACK_PROPERTY} property
+     *             {@link dk.statsbiblioteket.summa.control.api.ClientDeployer#CONF_DEPLOYER_FEEDBACK} property
      * @return a newly created {@code Feedvback} instance
      */
     public static Feedback createFeedback (Configuration conf) {
          log.debug("Creating deployer feedback from class: "
-                  + conf.getString(ClientDeployer.DEPLOYER_FEEDBACK_PROPERTY));
+                  + conf.getString(ClientDeployer.CONF_DEPLOYER_FEEDBACK));
         Class<? extends Feedback> feedbackClass =
-                           conf.getClass(ClientDeployer.DEPLOYER_FEEDBACK_PROPERTY,
+                           conf.getClass(ClientDeployer.CONF_DEPLOYER_FEEDBACK,
                                          Feedback.class,
                                          ConsoleFeedback.class);
         Feedback feedback = Configuration.create(feedbackClass, conf);
@@ -34,3 +34,6 @@ public class FeedbackFactory {
         return feedback;
     }
 }
+
+
+

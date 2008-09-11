@@ -29,3 +29,6 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         author = "hal")
 public class SearchProtocol {
 }
+
+
+

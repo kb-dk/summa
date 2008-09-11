@@ -35,12 +35,12 @@ public class FilterPump extends StateThread implements Configurable {
     private Log log;
     private static Log classLog = LogFactory.getLog(FilterPump.class);
 
-    public static final String CONF_FILTERS = "FilterPump.Filters";
+    public static final String CONF_FILTERS = "filterpump.filters";
     /**
      * The name of the chain is used for feedback and debugging.
      */
-    public static final String CONF_CHAIN_NAME =   "FilterPump.ChainName";
-    public static final String CONF_FILTER_CLASS = "FilterPump.FilterClass";
+    public static final String CONF_CHAIN_NAME =   "filterpump.chainname";
+    public static final String CONF_FILTER_CLASS = "filterpump.filterclass";
 
     private ArrayList<Filter> filters = new ArrayList<Filter>(10);
     private Filter lastFilter;
@@ -168,3 +168,5 @@ public class FilterPump extends StateThread implements Configurable {
     }
 
 }
+
+

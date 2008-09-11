@@ -37,8 +37,8 @@ import org.apache.commons.logging.LogFactory;
 public class DummyReader extends StreamFilter {
     private static Log log = LogFactory.getLog(DummyReader.class);
 
-    public static final String CONF_BODY_COUNT = "DummyReader.bodyCount";
-    public static final String CONF_BODY_SIZE  = "DummyReader.bodySize";
+    public static final String CONF_BODY_COUNT = "dummyreader.bodycount";
+    public static final String CONF_BODY_SIZE  = "dummyreader.bodysize";
 
     private int bodyCount = 2;
     private int bodySize = 2000;
@@ -111,3 +111,5 @@ public class DummyReader extends StreamFilter {
         return StreamFilter.EOF;
     }
 }
+
+

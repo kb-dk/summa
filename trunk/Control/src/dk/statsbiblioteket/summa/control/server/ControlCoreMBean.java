@@ -8,3 +8,6 @@ import dk.statsbiblioteket.summa.control.api.ControlConnection;
  */
 public interface ControlCoreMBean extends ControlConnection {
 }
+
+
+

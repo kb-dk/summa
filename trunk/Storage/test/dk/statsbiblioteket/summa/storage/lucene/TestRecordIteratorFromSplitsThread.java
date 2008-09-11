@@ -55,3 +55,6 @@ public class TestRecordIteratorFromSplitsThread extends Thread{
         log.debug("Thread with id '"+id+"' has run out...");
     }
 }
+
+
+

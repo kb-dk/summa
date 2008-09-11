@@ -53,7 +53,7 @@ public class SummaQueryParser {
      * given in the query-string as defined by the class {@link LuceneBooster}.
      */
     public static final String CONF_QUERY_TIME_FIELD_BOOSTS =
-            "summa.common.query-parser.query-time-field-boosts";
+            "summa.common.queryparser.querytimefieldboosts";
     public static final boolean DEFAULT_QUERY_TIME_FIELD_BOOSTS = false;
     private boolean supportQueryTimeBoosts = DEFAULT_QUERY_TIME_FIELD_BOOSTS;
 
@@ -348,3 +348,5 @@ public class SummaQueryParser {
         this.supportQueryTimeBoosts = supportQueryTimeBoosts;
     }
 }
+
+

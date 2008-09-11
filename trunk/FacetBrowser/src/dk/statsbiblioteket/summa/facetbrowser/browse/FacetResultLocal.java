@@ -141,3 +141,6 @@ public class FacetResultLocal extends FacetResultImpl<Integer> {
         return "FacetResultLocal";
     }
 }
+
+
+

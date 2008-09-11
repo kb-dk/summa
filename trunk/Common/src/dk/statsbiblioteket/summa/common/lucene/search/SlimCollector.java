@@ -105,3 +105,6 @@ public class SlimCollector extends HitCollector {
         pos = 0;
     }
 }
+
+
+

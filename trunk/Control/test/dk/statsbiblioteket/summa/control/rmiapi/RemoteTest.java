@@ -35,11 +35,11 @@ public class RemoteTest extends TestCase {
     }
     public void testRemote() throws Exception {
         Configuration someConf = Configuration.newMemoryBased();
-        someConf.set(ServiceBase.REGISTRY_PORT, 27000);
-        someConf.set(ServiceBase.SERVICE_BASEPATH, "Whereever");
-        someConf.set(ServiceBase.SERVICE_ID, "some");
-        someConf.set(ServiceBase.SERVICE_PORT, 27003);
-        System.setProperty(ServiceBase.SERVICE_ID, "some");
+        someConf.set(ServiceBase.CONF_REGISTRY_PORT, 27000);
+        someConf.set(ServiceBase.CONF_SERVICE_BASEPATH, "Whereever");
+        someConf.set(ServiceBase.CONF_SERVICE_ID, "some");
+        someConf.set(ServiceBase.CONF_SERVICE_PORT, 27003);
+        System.setProperty(ServiceBase.CONF_SERVICE_ID, "some");
         SomeService service = new SomeService(someConf);
 
         // Connect so that we can start
@@ -77,3 +77,6 @@ public class RemoteTest extends TestCase {
     }
 
 }
+
+
+

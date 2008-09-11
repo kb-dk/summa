@@ -167,3 +167,6 @@ public class LuceneIndexField extends
         return super.filterToXMLFragment(filter);
     }
 }
+
+
+

@@ -25,7 +25,7 @@ public class ControlUtils {
 
     /**
      * <p>Work out what base dir to use given a configuration. This is
-     * extracted from the {@link ControlCore#CONTROL_BASE_DIR} property.</p>
+     * extracted from the {@link ControlCore#CONF_CONTROL_BASE_DIR} property.</p>
      *
      * <p>If the directory does not exist it will be created.</p>
      *
@@ -33,7 +33,7 @@ public class ControlUtils {
      * @return base directory for installation
      */
     public static File getControlBaseDir (Configuration conf) {
-        String basePath = conf.getString (ControlCore.CONTROL_BASE_DIR,
+        String basePath = conf.getString (ControlCore.CONF_CONTROL_BASE_DIR,
                                           System.getProperty("user.home")
                                         + File.separator
                                         + "summa-control");
@@ -58,7 +58,7 @@ public class ControlUtils {
      * @return file pointing at the directory for incoming bundles
      */
     public static File getIncomingDir (Configuration conf) {
-        String incPath = conf.getString (RepositoryManager.INCOMING_DIR_PROPERTY,
+        String incPath = conf.getString (RepositoryManager.CONF_INCOMING_DIR,
                                          new File(getControlBaseDir(conf),
                                                    "incoming").toString());
 
@@ -98,7 +98,7 @@ public class ControlUtils {
      */
     public static String getRepositoryAddress (Configuration conf) {
         String address =
-                  conf.getString(BundleRepository.REPO_ADDRESS_PROPERTY,
+                  conf.getString(BundleRepository.CONF_REPO_ADDRESS,
                                  "http://"
                                  + RemoteHelper.getHostname() + ":8080"
                                  + "/summa-control/repo");
@@ -152,3 +152,6 @@ public class ControlUtils {
         return null;
     }
 }
+
+
+

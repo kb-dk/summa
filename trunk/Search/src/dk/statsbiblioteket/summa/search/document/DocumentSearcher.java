@@ -51,14 +51,14 @@ public interface DocumentSearcher extends SearchNode, DocumentKeys {
      * This is optional. Default is {@link #SORT_ON_SCORE}.
      */
     public static final String CONF_DEFAULT_SORTKEY =
-            "summa.search.default-sortkey";
+            "summa.search.defaultsortkey";
     public static final String DEFAULT_DEFAULT_SORTKEY = DocumentKeys.SORT_ON_SCORE;
 
     /**
      * The maximum number of records to return, as a long. This takes precedence
      * over the value specified in the method {@link #fullSearch}.
      */
-    public static final String CONF_MAX_RECORDS = "summa.search.maxRecords";
+    public static final String CONF_MAX_RECORDS = "summa.search.maxrecords";
     public long DEFAULT_MAX_NUMBER_OF_RECORDS = Long.MAX_VALUE;
 
     /**
@@ -70,7 +70,7 @@ public interface DocumentSearcher extends SearchNode, DocumentKeys {
      * {@link dk.statsbiblioteket.summa.common.configuration.Configuration#getStrings(String)}.
      */
     public static final String CONF_RESULT_FIELDS =
-            "summa.search.result-fields";
+            "summa.search.resultfields";
     public static final String[] DEFAULT_RESULT_FIELDS =
             "recordID shortformat".split(" ");
 
@@ -86,7 +86,7 @@ public interface DocumentSearcher extends SearchNode, DocumentKeys {
      *       as the number of result-fields.
      */
     public static final String CONF_FALLBACK_VALUES =
-            "summa.search.fallback-values";
+            "summa.search.fallbackvalues";
     public static final String[] DEFAULT_FALLBACK_VALUES = null;
 
     /**
@@ -96,7 +96,7 @@ public interface DocumentSearcher extends SearchNode, DocumentKeys {
      * Response-XML is generated.
      */
     public static final String CONF_NONESCAPED_FIELDS =
-            "summa.search.non-escaped-fields";
+            "summa.search.nonescapedfields";
 
     /**
      * If a start-index is not specified in the Request, this value is used.
@@ -104,7 +104,7 @@ public interface DocumentSearcher extends SearchNode, DocumentKeys {
      * Optional. Default is {@link #DEFAULT_START_INDEX} (0).
      */
     public static final String CONF_START_INDEX =
-            "summa.search.start-index";
+            "summa.search.startindex";
     public static final long DEFAULT_START_INDEX = 0;
 
     /**
@@ -128,7 +128,7 @@ public interface DocumentSearcher extends SearchNode, DocumentKeys {
      * Optional. Default is false.
      */
     public static final String CONF_COLLECT_DOCIDS =
-            "summa.search.collect-docids";
+            "summa.search.collectdocids";
     public static final boolean DEFAULT_COLLECT_DOCIDS = false;
     public static final String DOCIDS = "documentsearcher.docids";
 
@@ -318,3 +318,5 @@ public interface DocumentSearcher extends SearchNode, DocumentKeys {
             throws RemoteException;
 
 }
+
+

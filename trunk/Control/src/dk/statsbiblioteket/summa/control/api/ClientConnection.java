@@ -47,7 +47,7 @@ public interface ClientConnection extends Monitorable {
      *
      * <p>The client's RMI service will also run under this name.</p> 
      * */
-    public static final String CLIENT_ID = "summa.control.client.id";
+    public static final String CONF_CLIENT_ID = "summa.control.client.id";
 
     /** <p>Property defining the relative path under which the client
      * should install itself. The path is relative to the system property
@@ -58,7 +58,7 @@ public interface ClientConnection extends Monitorable {
      *
      * <p>The default value is {@code summa-control}</p>
      */
-    public static final String CLIENT_BASEPATH_PROPERTY =
+    public static final String CONF_CLIENT_BASEPATH =
                                                   "summa.control.client.basepath";
 
     /** <p>Property defining the port on which the client's rmi service
@@ -66,20 +66,20 @@ public interface ClientConnection extends Monitorable {
      *
      * <p>The default value is defined in {@link #DEFAULT_CLIENT_PORT}</p>
      */
-    public static final String CLIENT_PORT_PROPERTY =
+    public static final String CONF_CLIENT_PORT =
                                             "summa.control.client.service.port";
 
     /**
-     * The default value for the {@link #CLIENT_PORT_PROPERTY} 
+     * The default value for the {@link #CONF_CLIENT_PORT} 
      */
     public static final int DEFAULT_CLIENT_PORT = 27002;
 
     /** <p>Property defining the port on which the client should contact or create
-     * an rmi registry, see {@link #REGISTRY_HOST_PROPERTY}</p>
+     * an rmi registry, see {@link #CONF_REGISTRY_HOST}</p>
      *
      * <p>Default is 27000</p>
      */
-    public static final String REGISTRY_PORT_PROPERTY =
+    public static final String CONF_REGISTRY_PORT =
                                              "summa.control.client.registry.port";
 
     /** <p>Property defining the host on which the client can find the rmi registry.
@@ -88,7 +88,7 @@ public interface ClientConnection extends Monitorable {
      *
      * <p>Default is localhost</p>
      */
-    public static final String REGISTRY_HOST_PROPERTY =
+    public static final String CONF_REGISTRY_HOST =
                                             "summa.control.client.registry.host";
 
     /** <p>Property containing the class of {@link dk.statsbiblioteket.summa.control.bundle.BundleRepository}
@@ -97,14 +97,14 @@ public interface ClientConnection extends Monitorable {
      * <p>Default is to use a
      * {@link dk.statsbiblioteket.summa.control.bundle.RemoteURLRepositoryClient}</p>
      */
-    public static final String REPOSITORY_CLASS_PROPERTY =
+    public static final String CONF_REPOSITORY_CLASS =
                                           "summa.control.client.repository.class";
 
     /**
      * Property defining the path uner which persisten files for Clients as
      * well as Services should be stored.
      */
-    public static final String CLIENT_PERSISTENT_DIR_PROPERTY =
+    public static final String CONF_CLIENT_PERSISTENT_DIR =
             Resolver.SYSPROP_PERSISTENT_DIR;
 
     /**
@@ -203,7 +203,7 @@ public interface ClientConnection extends Monitorable {
 
     /**
      * Return the id of the client as set through the configuration property
-     * {@link #CLIENT_ID}
+     * {@link #CONF_CLIENT_ID}
      * @return the id
      * @throws IOException in case of communication errors.
      */
@@ -222,3 +222,6 @@ public interface ClientConnection extends Monitorable {
      */
     public void reportError (String id) throws IOException;
 }
+
+
+

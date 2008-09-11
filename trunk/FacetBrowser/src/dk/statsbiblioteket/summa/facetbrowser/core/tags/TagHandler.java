@@ -55,7 +55,7 @@ public interface TagHandler {
      * @see {@link Facet}.
      */
     public static final String CONF_USE_MEMORY =
-            "summa.facet.taghandler.use-memory";
+            "summa.facet.taghandler.usememory";
     public static final boolean DEFAULT_USE_MEMORY = false;
 
     /**
@@ -217,3 +217,6 @@ public interface TagHandler {
     public void clearTags();
 
 }
+
+
+

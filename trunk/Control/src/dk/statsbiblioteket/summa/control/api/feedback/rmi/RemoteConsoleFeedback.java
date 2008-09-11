@@ -38,8 +38,8 @@ public class RemoteConsoleFeedback extends UnicastRemoteObject
             feedback = new VoidFeedback();
         }
         closed = false;
-        registryPort = conf.getInt (REGISTRY_PORT_PROPERTY, 27000);
-        serviceName = conf.getString(SERVICE_NAME_PROPERTY,
+        registryPort = conf.getInt (CONF_REGISTRY_PORT, 27000);
+        serviceName = conf.getString(CONF_SERVICE_NAME,
                                      "remoteConsole");
 
         RemoteHelper.exportRemoteInterface(this, registryPort, serviceName);
@@ -50,7 +50,7 @@ public class RemoteConsoleFeedback extends UnicastRemoteObject
     }
 
     private static int getServicePort (Configuration conf) {
-        return conf.getInt(SERVICE_PORT_PROPERTY, 27091);
+        return conf.getInt(CONF_SERVICE_PORT, 27091);
     }
 
     public void putMessages(List<Message> messages) throws RemoteException {
@@ -76,3 +76,6 @@ public class RemoteConsoleFeedback extends UnicastRemoteObject
         RemoteHelper.unExportRemoteInterface(serviceName, registryPort);
     }
 }
+
+
+

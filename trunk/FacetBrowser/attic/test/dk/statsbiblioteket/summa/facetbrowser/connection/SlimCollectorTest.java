@@ -123,13 +123,13 @@ public class SlimCollectorTest extends TestCase {
         SlimCollector slimCollector = new SlimCollector();
         IndexBuilder.checkIndex();
         SearchDescriptor descriptor =
-                new SearchDescriptor(IndexBuilder.INDEXLOCATION);
-        descriptor.loadDescription(IndexBuilder.INDEXLOCATION);
+                new SearchDescriptor(IndexBuilder.INDEX_LOCATION);
+        descriptor.loadDescription(IndexBuilder.INDEX_LOCATION);
         // TODO: Implement this
 /*        SummaQueryParser queryParser =
                 new SummaQueryParser(new String[]{"foo", "bar"},
                                      new SimpleAnalyzer(), descriptor);
-        IndexSearcher searcher = new IndexSearcher(IndexBuilder.INDEXLOCATION);
+        IndexSearcher searcher = new IndexSearcher(IndexBuilder.INDEX_LOCATION);
 
         Query query = queryParser.parse(IndexBuilder.STATIC
                                         + ":" + IndexBuilder.STATIC_CONTENT);
@@ -147,14 +147,14 @@ public class SlimCollectorTest extends TestCase {
         SlimCollector slimCollector = new SlimCollector();
         IndexBuilder.checkIndex();
         SearchDescriptor descriptor =
-                new SearchDescriptor(IndexBuilder.INDEXLOCATION);
-        descriptor.loadDescription(IndexBuilder.INDEXLOCATION);
+                new SearchDescriptor(IndexBuilder.INDEX_LOCATION);
+        descriptor.loadDescription(IndexBuilder.INDEX_LOCATION);
         // TODO: Implement this
 /*
         SummaQueryParser queryParser =
                 new SummaQueryParser(new String[]{"foo", "bar"},
                                      new SimpleAnalyzer(), descriptor);
-        IndexSearcher searcher = new IndexSearcher(IndexBuilder.INDEXLOCATION);
+        IndexSearcher searcher = new IndexSearcher(IndexBuilder.INDEX_LOCATION);
 
         for (int i = 0 ; i < warmup ; i++) {
             slimCollector.clean();
@@ -200,3 +200,5 @@ public class SlimCollectorTest extends TestCase {
         return new TestSuite(SlimCollectorTest.class);
     }
 }
+
+

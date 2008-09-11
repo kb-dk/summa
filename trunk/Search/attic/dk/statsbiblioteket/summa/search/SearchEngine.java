@@ -40,7 +40,7 @@ public interface SearchEngine {
     public static final String CONFIG = "search.properties.xml";
 
     /** Property name for the number of retries if there are errors reading the index */
-    public static final String RETRIES = "search.retries";
+    public static final String CONF_RETRIES = "search.retries";
 
     /** Property name for the location of the main index */
     public static final String INDEX_MAIN = "search.index.main";
@@ -183,3 +183,5 @@ public interface SearchEngine {
 
     public int[] getItemCounts(String[] recordIDs);
 }
+
+

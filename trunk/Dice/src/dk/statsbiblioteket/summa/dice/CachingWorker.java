@@ -59,13 +59,13 @@ abstract public class CachingWorker extends Worker implements Constants {
         // Ensure we have enough information to set up the worker
         validateConfig ();
 
-        log.info("Creating cache with " + conf.getClass(WORKER_CACHE_WRITER).getSimpleName() + ", "
-                                        + conf.getClass(WORKER_CACHE_READER).getSimpleName() + ", on path "
-                                        + conf.getString (WORKER_CACHE_PATH));
+        log.info("Creating cache with " + conf.getClass(CONF_WORKER_CACHE_WRITER).getSimpleName() + ", "
+                                        + conf.getClass(CONF_WORKER_CACHE_READER).getSimpleName() + ", on path "
+                                        + conf.getString (CONF_WORKER_CACHE_PATH));
 
-        Cache<Object> cacheBackend = new CacheService<Object> (conf.getClass(WORKER_CACHE_WRITER),
-                                                               conf.getClass(WORKER_CACHE_READER),
-                                                               conf.getString (WORKER_CACHE_PATH));
+        Cache<Object> cacheBackend = new CacheService<Object> (conf.getClass(CONF_WORKER_CACHE_WRITER),
+                                                               conf.getClass(CONF_WORKER_CACHE_READER),
+                                                               conf.getString (CONF_WORKER_CACHE_PATH));
 
         Cache<Object> blockingDataCache = new BlockingCacheService<Object> (cacheBackend);
 
@@ -95,12 +95,12 @@ abstract public class CachingWorker extends Worker implements Constants {
             bufferJob(job);
         }
 
-        if (job.getHint(JOB_CACHE_ID) == null) {
-            log.error(JOB_CACHE_ID + " job hint not set. Unable to retrieve data from cache");
-            throw new JobFailedException(JOB_CACHE_ID + " job hint is not set");
+        if (job.getHint(CONF_JOB_CACHE_ID) == null) {
+            log.error(CONF_JOB_CACHE_ID + " job hint not set. Unable to retrieve data from cache");
+            throw new JobFailedException(CONF_JOB_CACHE_ID + " job hint is not set");
         }
 
-        ProxyCacheItem proxyData = new ProxyCacheItem(cache, Long.parseLong(job.getHint(JOB_CACHE_ID)));
+        ProxyCacheItem proxyData = new ProxyCacheItem(cache, Long.parseLong(job.getHint(CONF_JOB_CACHE_ID)));
 
         return new Job (proxyData, job.getHints(), job.getName());
 
@@ -118,7 +118,7 @@ abstract public class CachingWorker extends Worker implements Constants {
             return;
         }
 
-        String serviceName = job.getHint(EMPLOYER_CACHE_SERVICE);
+        String serviceName = job.getHint(CONF_EMPLOYER_CACHE_SERVICE);
         Iterator parts;
         if (serviceName == null) {
             parts = ((Iterable)job.getData()).iterator();
@@ -128,9 +128,9 @@ abstract public class CachingWorker extends Worker implements Constants {
                 lookupEmployerCache(serviceName);
             }
 
-            String jobId = job.getHint(JOB_CACHE_ID);
+            String jobId = job.getHint(CONF_JOB_CACHE_ID);
             if (jobId == null) {
-                throw new JobFailedException (JOB_CACHE_ID + " not set for job " + job);
+                throw new JobFailedException (CONF_JOB_CACHE_ID + " not set for job " + job);
             }
 
             try {
@@ -151,7 +151,7 @@ abstract public class CachingWorker extends Worker implements Constants {
         }
 
         // Store the cache id in the job hints and reset the data field
-        job.getHints().put (JOB_CACHE_ID, ""+localCacheId);
+        job.getHints().put (CONF_JOB_CACHE_ID, ""+localCacheId);
         job = new Job (null, job.getHints(), job.getName());
 
         // Make sure we respect the job queue size, this call blocks until there is room in the queue
@@ -160,13 +160,13 @@ abstract public class CachingWorker extends Worker implements Constants {
 
     /**
      * Upload the job to the consumer. If the consumer is caching (detected via the
-     * {@link Constants#CONSUMER_CACHE_SERVICE} job hint) upload job data to the
+     * {@link Constants#CONF_CONSUMER_CACHE_SERVICE} job hint) upload job data to the
      * consumer's cache and don't pass the job's data member over the wire at all.
      * @param job Job to send of to the {@link Consumer}
      * @throws IOException if there are errors contacting the {@link Consumer}
      */
     protected void dispatchJob (Job job) throws IOException {
-        String serviceName = job.getHint(CONSUMER_CACHE_SERVICE);
+        String serviceName = job.getHint(CONF_CONSUMER_CACHE_SERVICE);
         if (!serviceName.equals (consumerCacheServiceName) || consumerCache == null) {
                 // We have a new consumerCache service or there is none set
                 lookupConsumerCache(serviceName);
@@ -176,11 +176,11 @@ abstract public class CachingWorker extends Worker implements Constants {
             // Consumer does indeed use a cache, upload job data and store the id in the jobHints,
             // finally reset the job data so we don't pass it over the rmi connection
             long id = consumerCache.put((Iterable<Object>)job.getData());
-            job.getHints().put(JOB_CACHE_ID, "" + id);
+            job.getHints().put(CONF_JOB_CACHE_ID, "" + id);
             job = new Job (null, job.getHints(), job.getName());
         } else {
             // Make sure we don't pass any confusing hints to the consumer
-            job.getHints().remove(JOB_CACHE_ID);
+            job.getHints().remove(CONF_JOB_CACHE_ID);
         }
 
         getConsumer().consumeJob(job);
@@ -216,16 +216,19 @@ abstract public class CachingWorker extends Worker implements Constants {
      * Ensure we have enough information to set up the worker
      */
     private void validateConfig () {
-        if (conf.get(WORKER_CACHE_PATH) == null) {
-            throw new NullPointerException(WORKER_CACHE_PATH + " not set");
+        if (conf.get(CONF_WORKER_CACHE_PATH) == null) {
+            throw new NullPointerException(CONF_WORKER_CACHE_PATH + " not set");
         }
 
-        if (conf.get(WORKER_CACHE_READER) == null) {
-            conf.set (WORKER_CACHE_READER, ObjectCacheReader.class);
+        if (conf.get(CONF_WORKER_CACHE_READER) == null) {
+            conf.set (CONF_WORKER_CACHE_READER, ObjectCacheReader.class);
         }
 
-        if (conf.get(WORKER_CACHE_WRITER) == null) {
-            conf.set (WORKER_CACHE_WRITER, ObjectCacheWriter.class);
+        if (conf.get(CONF_WORKER_CACHE_WRITER) == null) {
+            conf.set (CONF_WORKER_CACHE_WRITER, ObjectCacheWriter.class);
         }
     }
 }
+
+
+

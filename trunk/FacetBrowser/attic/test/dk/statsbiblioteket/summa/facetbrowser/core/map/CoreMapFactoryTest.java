@@ -103,3 +103,5 @@ public class CoreMapFactoryTest extends TestCase {
         return new TestSuite(CoreMapFactoryTest.class);
     }
 }
+
+

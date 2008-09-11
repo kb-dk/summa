@@ -17,3 +17,6 @@ public interface RemoteSearcher extends Remote, SummaSearcher {
     public void close() throws RemoteException;
 
 }
+
+
+

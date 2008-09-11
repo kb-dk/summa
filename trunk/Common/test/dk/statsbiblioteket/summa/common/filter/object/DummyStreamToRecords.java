@@ -25,7 +25,7 @@ public class DummyStreamToRecords implements ObjectFilter {
     private static final Log log =
             LogFactory.getLog(DummyStreamToRecords.class);
 
-    public static final String CONF_DATA_SIZE = "DummyStreamToRecords.DataSize";
+    public static final String CONF_DATA_SIZE = "dummystreamtorecords.datasize";
 
     private StreamFilter source;
     private int dataSize = 100;
@@ -120,3 +120,5 @@ public class DummyStreamToRecords implements ObjectFilter {
         idCounter.set(0);
     }
 }
+
+

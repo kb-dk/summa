@@ -227,3 +227,6 @@ public class FacetTest extends NoExitTestCase {
         SearchTest.updateIndex(indexConf);
     }
 }
+
+
+

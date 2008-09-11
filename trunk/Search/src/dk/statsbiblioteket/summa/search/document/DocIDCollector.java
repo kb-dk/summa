@@ -104,3 +104,6 @@ public class DocIDCollector extends HitCollector {
         return sw.toString();
     }
 }
+
+
+

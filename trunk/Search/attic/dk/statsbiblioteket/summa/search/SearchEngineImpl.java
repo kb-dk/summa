@@ -129,9 +129,9 @@ public class SearchEngineImpl implements SearchEngineImplMBean, SearchEngine, Lo
         }
 
         try {
-            retries = Integer.parseInt(p.getProperty(RETRIES, "2"));
+            retries = Integer.parseInt(p.getProperty(CONF_RETRIES, "2"));
         } catch (NumberFormatException e) {
-            log.warn(RETRIES + " was not a number. Defaulting to 2 retries.", e);
+            log.warn(CONF_RETRIES + " was not a number. Defaulting to 2 retries.", e);
         }
         BooleanQuery.setMaxClauseCount(Integer.parseInt(p.getProperty(MAX_BOOLEAN_CLAUSES, "10000")));
 
@@ -1272,3 +1272,5 @@ public class SearchEngineImpl implements SearchEngineImplMBean, SearchEngine, Lo
     }
 
 }
+
+

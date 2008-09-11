@@ -79,3 +79,6 @@ public abstract class AbstractSparseVector implements SparseVector{
     protected abstract double dotProduct(SparseVector o);
 
 }
+
+
+

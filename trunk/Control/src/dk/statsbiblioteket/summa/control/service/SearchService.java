@@ -47,7 +47,7 @@ public class SearchService extends ServiceBase {
 
     /**
      * The search service will fall back to this class if the configuration does
-     * not specify {@link dk.statsbiblioteket.summa.search.api.SummaSearcher#PROP_CLASS}
+     * not specify {@link dk.statsbiblioteket.summa.search.api.SummaSearcher#CONF_CLASS}
      */
     public static final Class<? extends SummaSearcher> DEFAULT_SEARCHER_CLASS =
                                                         RMISearcherProxy.class;
@@ -78,8 +78,8 @@ public class SearchService extends ServiceBase {
         setStatusRunning("Creating Searcher");
         Class<? extends SummaSearcher> searcherClass;
 
-        if (!conf.valueExists (SummaSearcher.PROP_CLASS)) {
-            conf.set (SummaSearcher.PROP_CLASS,
+        if (!conf.valueExists (SummaSearcher.CONF_CLASS)) {
+            conf.set (SummaSearcher.CONF_CLASS,
                       RMISearcherProxy.class.getName());
         }
 
@@ -88,14 +88,14 @@ public class SearchService extends ServiceBase {
         } catch (IllegalArgumentException e) {
             String message = String.format(
                     "The SummaSearcher-class '%s' was not a Configurable: %s",
-                    conf.getString (SummaSearcher.PROP_CLASS),
+                    conf.getString (SummaSearcher.CONF_CLASS),
                     e.getMessage ());
             setStatus(Status.CODE.crashed, message, Logging.LogLevel.ERROR, e);
             throw new RemoteException(message, e);
         } catch (Exception e) {
             String message = String.format(
                     "Exception creating instance of SummaSearcher class '%s': %s",
-                    conf.getString (SummaSearcher.PROP_CLASS),
+                    conf.getString (SummaSearcher.CONF_CLASS),
                     e.getMessage());
             setStatus(Status.CODE.crashed, message, Logging.LogLevel.ERROR, e);
             throw new RemoteException(message, e);
@@ -130,3 +130,6 @@ public class SearchService extends ServiceBase {
     }
 
 }
+
+
+

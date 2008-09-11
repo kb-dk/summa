@@ -236,3 +236,6 @@ public class FacetMap {
         coreMap.open(location, false);
     }
 }
+
+
+

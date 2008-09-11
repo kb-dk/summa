@@ -14,19 +14,19 @@ public class DeployerFactory {
 
     /**
      * Instantiate a new {@link ClientDeployer} based on the the
-     * {@link ClientDeployer#DEPLOYER_CLASS_PROPERTY} of {@code conf}.
+     * {@link ClientDeployer#CONF_DEPLOYER_CLASS} of {@code conf}.
      * If this property is not defined the factory will default to using a
      * {@link SSHDeployer}.
      *
      * @param conf the configuration used to look up the
-     *             {@link ClientDeployer#DEPLOYER_CLASS_PROPERTY} property
+     *             {@link ClientDeployer#CONF_DEPLOYER_CLASS} property
      * @return a newly instantiated {@link ClientDeployer}
      */
     public static ClientDeployer createClientDeployer (Configuration conf) {
         log.debug("Creating deployer from class: "
-                  + conf.getString(ClientDeployer.DEPLOYER_CLASS_PROPERTY));
+                  + conf.getString(ClientDeployer.CONF_DEPLOYER_CLASS));
         Class<? extends ClientDeployer> deployerClass =
-                           conf.getClass(ClientDeployer.DEPLOYER_CLASS_PROPERTY,
+                           conf.getClass(ClientDeployer.CONF_DEPLOYER_CLASS,
                                          ClientDeployer.class,
                                          SSHDeployer.class);
         ClientDeployer deployer = Configuration.create(deployerClass, conf);
@@ -35,3 +35,6 @@ public class DeployerFactory {
     }
 
 }
+
+
+

@@ -48,3 +48,6 @@ public class FreeTextAnalyzer extends SummaAnalyzer {
     }
 
 }
+
+
+

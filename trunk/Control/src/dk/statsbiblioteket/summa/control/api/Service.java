@@ -43,25 +43,25 @@ public interface Service extends Configurable, Remote, Monitorable {
      *
      * <p>The service's RMI service will also run under this name.</p>
      * */
-    public static final String SERVICE_ID = "summa.control.service.id";
+    public static final String CONF_SERVICE_ID = "summa.control.service.id";
 
     /**
      * Property defining the relative path under which the service
      * should install itself. The path is relative to the system property
      * {@code user.home} of the service's jvm<br/>
      */
-    public static final String SERVICE_BASEPATH = "summa.control.service.basepath";
+    public static final String CONF_SERVICE_BASEPATH = "summa.control.service.basepath";
 
     /**
      * Property defining the port on which the service's rmi service should
      * communicate. Default should be 28003.
      */
-    public static final String SERVICE_PORT = "summa.control.service.port";
+    public static final String CONF_SERVICE_PORT = "summa.control.service.port";
 
     /**
      * Property defining the port on which the service should contact or create
      * an rmi registry. Default should be 27000. */
-    public static final String REGISTRY_PORT = "summa.control.service.registry.port";
+    public static final String CONF_REGISTRY_PORT = "summa.control.service.registry.port";
 
     /**
      * Start the service. All relevant properties should be read from the
@@ -113,3 +113,6 @@ public interface Service extends Configurable, Remote, Monitorable {
      */
     public void kill() throws RemoteException;
 }
+
+
+

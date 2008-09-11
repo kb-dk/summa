@@ -130,3 +130,6 @@ public class FacetRequest extends Structure {
         return docIDs;
     }
 }
+
+
+

@@ -65,7 +65,7 @@ public class FileReader implements ObjectFilter {
      * This property must be specified.
      */
     public static final String CONF_ROOT_FOLDER =
-            "summa.ingest.filereader.root_folder";
+            "summa.ingest.filereader.rootfolder";
     /**
      * Whether to perform a recursive scan or not (valid values: true, false).
      * </p><p>
@@ -79,7 +79,7 @@ public class FileReader implements ObjectFilter {
      * This property is optional. Default is ".*\.xml".
      */
     public static final String CONF_FILE_PATTERN =
-            "summa.ingest.filereader.file_pattern";
+            "summa.ingest.filereader.filepattern";
     private static final String DEFAULT_FILE_PATTERN = ".*\\.xml";
     /**
      * The postfix for the file when it has been fully processed.
@@ -87,7 +87,7 @@ public class FileReader implements ObjectFilter {
      * This property is optional. Default is ".completed".
      */
     public static final String CONF_COMPLETED_POSTFIX =
-            "summa.ingest.filereader.completed_postfix";
+            "summa.ingest.filereader.completedpostfix";
 
     /**
      * The key for the filename-value, added to meta-info in delivered payloads.
@@ -333,3 +333,6 @@ public class FileReader implements ObjectFilter {
         log.warn("Remove not implemented for FileReader");
     }
 }
+
+
+

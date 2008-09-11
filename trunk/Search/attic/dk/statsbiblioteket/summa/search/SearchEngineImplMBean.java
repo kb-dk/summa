@@ -58,3 +58,5 @@ public interface SearchEngineImplMBean {
      */
     String getRegistryServiceName();
 }
+
+

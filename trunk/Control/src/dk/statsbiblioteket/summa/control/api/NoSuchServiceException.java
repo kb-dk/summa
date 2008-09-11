@@ -43,3 +43,6 @@ public class NoSuchServiceException extends ClientException {
         super (client, "Request '" + action + "' on unknown service '" + serviceId + "'");
     }
 }
+
+
+

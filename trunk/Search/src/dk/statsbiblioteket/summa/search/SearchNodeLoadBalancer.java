@@ -67,7 +67,7 @@ public class SearchNodeLoadBalancer implements SearchNode {
      * This is optional. The default is 2.
      */
     public static final String CONF_SEARCHER_INSTANCES =
-            "summa.search.searcher-instances";
+            "summa.search.searcherinstances";
     public static final int DEFAULT_SEARCHER_INSTANCES = 2;
 
     private int instances = DEFAULT_SEARCHER_INSTANCES;
@@ -166,3 +166,6 @@ public class SearchNodeLoadBalancer implements SearchNode {
         return slots;
     }
 }
+
+
+

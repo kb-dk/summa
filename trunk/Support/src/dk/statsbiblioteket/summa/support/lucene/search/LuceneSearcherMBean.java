@@ -34,3 +34,6 @@ import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
         author = "te")
 public interface LuceneSearcherMBean extends DocumentSearcher {
 }
+
+
+

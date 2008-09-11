@@ -16,28 +16,31 @@ public interface RemoteFeedback extends Remote, Feedback {
      * Configuration property naming the port on which the RMI service should
      * communicate. Default is 27091.
      */
-    public static final String SERVICE_PORT_PROPERTY = "summa.control.remoteConsole.service.port";
+    public static final String CONF_SERVICE_PORT = "summa.control.remoteconsole.service.port";
 
     /**
      * Configuration property specifying the name of the service exposing the
      * {@link Feedback} interface. Default is "remoteConsole".
      */
-    public static final String SERVICE_NAME_PROPERTY = "summa.control.remoteConsole.service.name";
+    public static final String CONF_SERVICE_NAME = "summa.control.remoteconsole.service.name";
 
     /**
      * Configuration property specifying the port on which the registry should
      * run. Default is 27000.
      */
-    public static final String REGISTRY_PORT_PROPERTY = "summa.control.remoteConsole.registry.port";
+    public static final String CONF_REGISTRY_PORT = "summa.control.remoteconsole.registry.port";
 
     /**
      * Configuration property specifying the host on which the registry should
      * run. Default is "localhost".
      */
-    public static final String REGISTRY_HOST_PROPERTY = "summa.control.remoteConsole.registry.host";
+    public static final String CONF_REGISTRY_HOST = "summa.control.remoteconsole.registry.host";
 
     public void putMessages(List<Message> messages) throws RemoteException;
 
     public void putMessage(Message message) throws RemoteException;
 
 }
+
+
+

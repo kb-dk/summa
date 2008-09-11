@@ -35,14 +35,14 @@ public interface DocumentKeys {
      * Used for paging. States the first hit to return from the whole set of
      * documents matching the filter and the query.
      */
-    public static final String SEARCH_START_INDEX="search.document.start-index";
+    public static final String SEARCH_START_INDEX="search.document.startindex";
 
     /**
      * Integer ("20"). Optional.
      * </p><p>
      * Used to limit the amount of hits that is returned for a given search.
      */
-    public static final String SEARCH_MAX_RECORDS="search.document.max-records";
+    public static final String SEARCH_MAX_RECORDS="search.document.maxrecords";
 
     /**
      * String ("myfield" or "summa-score"). Optional.
@@ -58,7 +58,7 @@ public interface DocumentKeys {
      * </p><p>
      * If true, sorting is performed in reverse.
      */
-    public static final String SEARCH_REVERSE = "search.document.reverse-sort";
+    public static final String SEARCH_REVERSE = "search.document.reversesort";
 
     /**
      * Comma-separated Strings ("foo, bar, zoo"). Optional.
@@ -67,7 +67,7 @@ public interface DocumentKeys {
      * the content of these fields should be returned.
      */
     public static final String SEARCH_RESULT_FIELDS =
-            "search.document.result-fields";
+            "search.document.resultfields";
 
     /**
      * Comma-separated Strings ("foo, bar, zoo"). Optional.
@@ -80,7 +80,7 @@ public interface DocumentKeys {
      *       as the number of result-fields.
      */
     public static final String SEARCH_FALLBACK_VALUES =
-                    "search.document.fallback-values";
+                    "search.document.fallbackvalues";
 
     /**
      * Boolean ("true" or "false"). Optional.
@@ -92,7 +92,7 @@ public interface DocumentKeys {
      * This must be true for the FacetBrowser search node to work.
      */
     public static final String SEARCH_COLLECT_DOCIDS =
-            "search.document.collect-docids";
+            "search.document.collectdocids";
 
     /**
      * The special sortKey signifying that sorting should be done on score,
@@ -100,3 +100,8 @@ public interface DocumentKeys {
      */
     public static final String SORT_ON_SCORE = "summa-score";
 }
+
+
+
+
+

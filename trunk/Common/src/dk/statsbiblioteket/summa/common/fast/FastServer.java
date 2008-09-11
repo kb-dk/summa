@@ -50,3 +50,6 @@ public interface FastServer {
      */
     public void sendResponse(Telegram response) throws IOException;
 }
+
+
+

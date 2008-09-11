@@ -98,88 +98,88 @@ public class Config implements Serializable, Constants {
     }
 
     public void setEmployerClass (Class employer) {
-        map.put(EMPLOYER_CLASS, employer);
+        map.put(CONF_EMPLOYER_CLASS, employer);
     }
 
     public void setConsumerClass (Class consumer) {
-        map.put (CONSUMER_CLASS, consumer);
+        map.put (CONF_CONSUMER_CLASS, consumer);
     }
 
     public void setWorkerClass (Class worker) {
-        map.put (WORKER_CLASS, worker);
+        map.put (CONF_WORKER_CLASS, worker);
     }
 
     public void setSocketType (String type) {
-        map.put (SOCKET_TYPE, type);
+        map.put (CONF_SOCKET_TYPE, type);
     }
 
     public void setEmployerHostname (String hostname) {
-        map.put (EMPLOYER_HOSTNAME, hostname);
+        map.put (CONF_EMPLOYER_HOSTNAME, hostname);
     }
 
     public void setConsumerHostname (String hostname) {
-        map.put (CONSUMER_HOSTNAME, hostname);
+        map.put (CONF_CONSUMER_HOSTNAME, hostname);
     }
 
     public void setEmployerServiceName (String serviceName) {
-        map.put (EMPLOYER_SERVICE, serviceName);
+        map.put (CONF_EMPLOYER_SERVICE, serviceName);
     }
 
     public void setConsumerServiceName (String serviceName) {
-        map.put (CONSUMER_SERVICE, serviceName);
+        map.put (CONF_CONSUMER_SERVICE, serviceName);
     }
 
     public void setEmployerPort (int port) {
-        map.put(EMPLOYER_PORT, port);
+        map.put(CONF_EMPLOYER_PORT, port);
     }
 
     public void setConsumerPort (int port) {
-        map.put (CONSUMER_PORT, port);
+        map.put (CONF_CONSUMER_PORT, port);
     }
 
     public void setRegistryPort (int port) {
-        map.put(REGISTRY_PORT, port);
+        map.put(CONF_REGISTRY_PORT, port);
     }
 
     public void setEmployerQueueSize (int size) {
-        map.put (EMPLOYER_QUEUE_SIZE, size);
+        map.put (CONF_EMPLOYER_QUEUE_SIZE, size);
     }
 
     public void setConsumerQueueSize (int size) {
-        map.put (CONSUMER_QUEUE_SIZE, size);
+        map.put (CONF_CONSUMER_QUEUE_SIZE, size);
     }
 
     public void setWorkerQueueSize (int size) {
-        map.put (WORKER_QUEUE_SIZE, size);
+        map.put (CONF_WORKER_QUEUE_SIZE, size);
     }
 
-    public Class getEmployerClass () { return getClass(EMPLOYER_CLASS); }
+    public Class getEmployerClass () { return getClass(CONF_EMPLOYER_CLASS); }
 
-    public Class getConsumerClass () { return getClass(CONSUMER_CLASS); }
+    public Class getConsumerClass () { return getClass(CONF_CONSUMER_CLASS); }
 
-    public Class getWorkerClass () { return getClass(WORKER_CLASS); }
+    public Class getWorkerClass () { return getClass(CONF_WORKER_CLASS); }
 
-    public String getSocketType () { return getString(SOCKET_TYPE); }
+    public String getSocketType () { return getString(CONF_SOCKET_TYPE); }
 
-    public String getEmployerHostname () { return getString(EMPLOYER_HOSTNAME); }
+    public String getEmployerHostname () { return getString(CONF_EMPLOYER_HOSTNAME); }
 
-    public String getConsumerHostname () { return getString(CONSUMER_HOSTNAME); }
+    public String getConsumerHostname () { return getString(CONF_CONSUMER_HOSTNAME); }
 
-    public String getEmployerServiceName () { return getString(EMPLOYER_SERVICE); }
+    public String getEmployerServiceName () { return getString(CONF_EMPLOYER_SERVICE); }
 
-    public String getConsumerServiceName () { return getString(CONSUMER_SERVICE); }
+    public String getConsumerServiceName () { return getString(CONF_CONSUMER_SERVICE); }
 
-    public int getEmployerPort () { return getInt(EMPLOYER_PORT); }
+    public int getEmployerPort () { return getInt(CONF_EMPLOYER_PORT); }
 
-    public int getConsumerPort () { return getInt(CONSUMER_PORT); }
+    public int getConsumerPort () { return getInt(CONF_CONSUMER_PORT); }
 
-    public int getRegistryPort () { return getInt(REGISTRY_PORT); }
+    public int getRegistryPort () { return getInt(CONF_REGISTRY_PORT); }
 
-    public int getEmployerQueueSize () { return getInt(EMPLOYER_QUEUE_SIZE); }
+    public int getEmployerQueueSize () { return getInt(CONF_EMPLOYER_QUEUE_SIZE); }
 
-    public int getConsumerQueueSize () { return getInt(CONSUMER_QUEUE_SIZE); }
+    public int getConsumerQueueSize () { return getInt(CONF_CONSUMER_QUEUE_SIZE); }
 
-    public int getWorkerQueueSize () { return getInt(WORKER_QUEUE_SIZE); }
+    public int getWorkerQueueSize () { return getInt(CONF_WORKER_QUEUE_SIZE); }
 
     public void setDefaults () {
         setSocketType("normal");
@@ -208,13 +208,13 @@ public class Config implements Serializable, Constants {
         setConsumerQueueSize(200);
         setWorkerQueueSize(1);
 
-        set (EMPLOYER_DATA_PATH, System.getProperty("user.home") + File.separator + "tmp" + File.separator + "dice_data_" + getStartDate() + File.separator + "employer");
-        set (CONSUMER_DATA_PATH, System.getProperty("user.home") + File.separator + "tmp" + File.separator + "dice_data_" + getStartDate() + File.separator + "employer");
-        set (WORKER_DATA_PATH, System.getProperty("user.home") + File.separator + "tmp" + File.separator + "dice_data_" + getStartDate() + File.separator + "employer");
+        set (CONF_EMPLOYER_DATA_PATH, System.getProperty("user.home") + File.separator + "tmp" + File.separator + "dice_data_" + getStartDate() + File.separator + "employer");
+        set (CONF_CONSUMER_DATA_PATH, System.getProperty("user.home") + File.separator + "tmp" + File.separator + "dice_data_" + getStartDate() + File.separator + "employer");
+        set (CONF_WORKER_DATA_PATH, System.getProperty("user.home") + File.separator + "tmp" + File.separator + "dice_data_" + getStartDate() + File.separator + "employer");
 
-        set (EMPLOYER_CACHE_PATH, getString(EMPLOYER_DATA_PATH) + File.separator + "cache");
-        set (CONSUMER_CACHE_PATH, getString(EMPLOYER_DATA_PATH) + File.separator + "cache");
-        set (WORKER_CACHE_PATH, getString(EMPLOYER_DATA_PATH) + File.separator + "cache");
+        set (CONF_EMPLOYER_CACHE_PATH, getString(CONF_EMPLOYER_DATA_PATH) + File.separator + "cache");
+        set (CONF_CONSUMER_CACHE_PATH, getString(CONF_EMPLOYER_DATA_PATH) + File.separator + "cache");
+        set (CONF_WORKER_CACHE_PATH, getString(CONF_EMPLOYER_DATA_PATH) + File.separator + "cache");
     }
 
     public RMIClientSocketFactory getClientSocketFactory () {
@@ -295,3 +295,6 @@ public class Config implements Serializable, Constants {
 
     }
 }
+
+
+

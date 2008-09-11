@@ -23,7 +23,7 @@ import org.apache.commons.logging.LogFactory;
         author = "mke",
         comment="Unfinished")
 public class Launcher {
-    public static final String SERVICE_CLASS = "control.launcher.service.class";
+    public static final String CONF_SERVICE_CLASS = "control.launcher.service.class";
 
     public static void main(String[] args) {
         Log log = LogFactory.getLog(Launcher.class);
@@ -41,18 +41,18 @@ public class Launcher {
 
             Class<? extends Service> serviceClass = null;
             try {
-                serviceClass = Configuration.getClass(SERVICE_CLASS,
+                serviceClass = Configuration.getClass(CONF_SERVICE_CLASS,
                                                       Service.class,
                                                       conf);
             } catch (NullPointerException e) {
-                log.fatal ("Property '" + SERVICE_CLASS + "' not defined " +
+                log.fatal ("Property '" + CONF_SERVICE_CLASS + "' not defined " +
                            "in configuration. Config was:\n\n"
                            + conf.dumpString());
 
                 System.exit (2);
             }
             
-            log.debug ("Using service class " + SERVICE_CLASS
+            log.debug ("Using service class " + CONF_SERVICE_CLASS
                        + " = " + serviceClass);
 
             Service service = Configuration.create(serviceClass, conf);
@@ -67,3 +67,6 @@ public class Launcher {
     }
 
 }
+
+
+

@@ -5,33 +5,33 @@
             <value class="int">27072</value>
         </entry>
         <entry>
-            <key>FilterPump.ChainName</key>
+            <key>filterpump.chainname</key>
             <value class="string">Simple file-based ingest</value>
         </entry>
         <entry>
-            <key>FilterControl.Chains</key>
+            <key>filtercontrol.chains</key>
             <value class="string">SingleChain</value>
         </entry>
         <entry>
-            <key>FilterControl.Sequential</key>
+            <key>filtercontrol.sequential</key>
             <value class="boolean">true</value>
         </entry>
         <entry>
             <key>SingleChain</key>
             <value class="xproperties">
                 <entry>
-                    <key>FilterPump.Filters</key>
+                    <key>filterpump.filters</key>
                     <value class="string">Reader, Splitter, Writer</value>
                 </entry>
                 <entry>
                     <key>Reader</key>
                     <value class="xproperties">
                         <entry>
-                            <key>FilterPump.FilterClass</key>
+                            <key>filterpump.filterclass</key>
                             <value class="string">dk.statsbiblioteket.summa.ingest.stream.FileReader</value>
                         </entry>
                         <entry>
-                            <key>summa.ingest.filereader.root_folder</key>
+                            <key>summa.ingest.filereader.rootfolder</key>
                             <value class="string">/tmp/summatest/data/5records</value>
                         </entry>
                         <entry>
@@ -39,11 +39,11 @@
                             <value class="boolean">true</value>
                         </entry>
                         <entry>
-                            <key>summa.ingest.filereader.file_pattern</key>
+                            <key>summa.ingest.filereader.filepattern</key>
                             <value class="string">.*\.xml</value>
                         </entry>
                         <entry>
-                            <key>summa.ingest.filereader.completed_postfix</key>
+                            <key>summa.ingest.filereader.completedpostfix</key>
                             <value class="string">.completed</value>
                         </entry>
                     </value>
@@ -52,23 +52,23 @@
                     <key>Splitter</key>
                     <value class="xproperties">
                         <entry>
-                            <key>FilterPump.FilterClass</key>
+                            <key>filterpump.filterclass</key>
                             <value class="string">dk.statsbiblioteket.summa.ingest.stream.XMLSplitterFilter</value>
                         </entry>
                         <entry>
-                            <key>summa.ingest.xmlsplitter.id_prefix</key>
+                            <key>summa.ingest.xmlsplitter.idprefix</key>
                             <value class="string">myprefix</value>
                         </entry>
                         <entry>
-                            <key>summa.ingest.xmlsplitter.collapse_profix</key>
+                            <key>summa.ingest.xmlsplitter.collapseprefix</key>
                             <value class="boolean">true</value>
                         </entry>
                         <entry>
-                            <key>summa.ingest.xmlsplitter.record_element</key>
+                            <key>summa.ingest.xmlsplitter.recordelement</key>
                             <value class="string">record</value>
                         </entry>
                         <entry>
-                            <key>summa.ingest.xmlsplitter.id_element</key>
+                            <key>summa.ingest.xmlsplitter.idelement</key>
                             <value class="string">record#id</value>
                         </entry>
                         <entry>
@@ -76,11 +76,11 @@
                             <value class="string">testbase</value>
                         </entry>
                         <entry>
-                            <key>summa.ingest.xmlsplitter.preserve_namespaces</key>
+                            <key>summa.ingest.xmlsplitter.preservenamespaces</key>
                             <value class="boolean">true</value>
                         </entry>
                         <entry>
-                            <key>summa.ingest.xmlsplitter.require_valid</key>
+                            <key>summa.ingest.xmlsplitter.requirevalid</key>
                             <value class="boolean">false</value>
                         </entry>
                     </value>
@@ -89,7 +89,7 @@
                     <key>Writer</key>
                     <value class="xproperties">
                         <entry>
-                            <key>FilterPump.FilterClass</key>
+                            <key>filterpump.filterclass</key>
                             <value class="string">
                                 dk.statsbiblioteket.summa.storage.api.filter.RecordWriter
                             </value>
@@ -100,3 +100,5 @@
         </entry>
     </xproperties>
 </xproperties>
+
+

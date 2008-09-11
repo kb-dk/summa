@@ -41,20 +41,20 @@ public class SearchTool {
         }
 
         /* Make sure the summa.rpc.vendor property is set */
-        if (!conf.valueExists(ConnectionConsumer.PROP_RPC_TARGET)) {
-            rpcVendor = System.getProperty(ConnectionConsumer.PROP_RPC_TARGET);
+        if (!conf.valueExists(ConnectionConsumer.CONF_RPC_TARGET)) {
+            rpcVendor = System.getProperty(ConnectionConsumer.CONF_RPC_TARGET);
 
             if (rpcVendor != null) {
-                conf.set (ConnectionConsumer.PROP_RPC_TARGET, rpcVendor);
+                conf.set (ConnectionConsumer.CONF_RPC_TARGET, rpcVendor);
             } else {
-                conf.set (ConnectionConsumer.PROP_RPC_TARGET,
+                conf.set (ConnectionConsumer.CONF_RPC_TARGET,
                           "//localhost:28000/summa-searcher");
             }
         }
 
 
         System.err.println("Using searcher on: "
-                           + conf.getString(ConnectionConsumer.PROP_RPC_TARGET));
+                           + conf.getString(ConnectionConsumer.CONF_RPC_TARGET));
 
         SearchClient searcher = new SearchClient (conf);
         Request rq = parseArgs (args);
@@ -89,3 +89,6 @@ public class SearchTool {
         return rq;
     }
 }
+
+
+

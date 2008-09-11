@@ -41,7 +41,7 @@ public class StorageFactory {
     /**
      * The fully classified class name for the wanted Storage implementation.
      */
-    public static final String PROP_STORAGE = "summa.storage.class";
+    public static final String CONF_STORAGE = "summa.storage.class";
 
     private static final Class<? extends StorageBase> DEFAULT_STORAGE =
             DerbyStorage.class;
@@ -50,11 +50,11 @@ public class StorageFactory {
      * <p>Construct a storage instance based on the given properties.
      * The properties are also passed to the constructor for the storage.</p>
      *
-     * <p>Most interestingly is probably the property {@link #PROP_STORAGE}
+     * <p>Most interestingly is probably the property {@link #CONF_STORAGE}
      * used to specify the class of the storage implementation to use.</p>
      *
      * @param conf setup for the wanted storage along with the
-     *        property {@link #PROP_STORAGE} which should hold the class-name
+     *        property {@link #CONF_STORAGE} which should hold the class-name
      *        for the wanted {@link Storage}. If no storage is specified,
      *        the {@code StorageFactory} defaults to {@link DerbyStorage}.
      * @return an object implementing the {@link Storage} interface.
@@ -65,13 +65,13 @@ public class StorageFactory {
 
         Class<? extends Storage> storageClass;
         try {
-            storageClass = conf.getClass(PROP_STORAGE,
+            storageClass = conf.getClass(CONF_STORAGE,
                                          Storage.class,
                                          DEFAULT_STORAGE);
         } catch (Exception e) {
             throw new RemoteException("Could not get metadata storage control"
                                       + " class from property "
-                                      + PROP_STORAGE, e);
+                                      + CONF_STORAGE, e);
         }
         //noinspection DuplicateStringLiteralInspection
         log.debug("Instantiating storage class " + storageClass);
@@ -86,3 +86,6 @@ public class StorageFactory {
     }
 
 }
+
+
+

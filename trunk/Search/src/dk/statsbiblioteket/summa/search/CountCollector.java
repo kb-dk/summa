@@ -44,3 +44,6 @@ public class CountCollector extends HitCollector {
         return count;
     }
 }
+
+
+

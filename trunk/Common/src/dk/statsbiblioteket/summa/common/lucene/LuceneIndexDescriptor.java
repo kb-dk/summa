@@ -215,3 +215,6 @@ public class LuceneIndexDescriptor
         queryAnalyzer = queryWrapper;
     }
 }
+
+
+

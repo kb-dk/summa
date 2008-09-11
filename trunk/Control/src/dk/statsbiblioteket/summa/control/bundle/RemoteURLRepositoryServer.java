@@ -28,7 +28,7 @@ public class RemoteURLRepositoryServer extends UnicastRemoteObject
      * Configuraion property defining the port on which RMI communications
      * with this repo should proceed. The default is 27045.
      */
-    public static final String PROP_SERVICE_PORT =
+    public static final String CONF_SERVICE_PORT =
                                           "summa.control.repository.service.port";
 
     public static final int DEFAULT_SERVICE_PORT = 27045;
@@ -38,7 +38,7 @@ public class RemoteURLRepositoryServer extends UnicastRemoteObject
      * register itself on the RMI registry with. The default is
      * {@code remoteURLRepository}
      */
-    public static final String PROP_SERVICE_NAME =
+    public static final String CONF_SERVICE_NAME =
                                           "summa.control.repository.service.name";
 
     public static final String DEFAULT_SERVICE_NAME = "remoteURLRepository";
@@ -47,7 +47,7 @@ public class RemoteURLRepositoryServer extends UnicastRemoteObject
      * Configuraion property defining the port on which RMI registry should run
      * or can be found. The default is 27000.
      */
-    public static final String PROP_REGISTRY_PORT =
+    public static final String CONF_REGISTRY_PORT =
                                           "summa.control.repository.registry.port";
 
     public static final int DEFAULT_REGISTRY_PORT = 27000;
@@ -56,7 +56,7 @@ public class RemoteURLRepositoryServer extends UnicastRemoteObject
      * Create a new {@code RemoteURLRepository}. The passed in configuration
      * will be passed unmodified to an underlying {@link LocalURLRepository}.
      * <p></p>
-     * The {@link #REPO_ADDRESS_PROPERTY} will be passed down to an embedded
+     * The {@link #CONF_REPO_ADDRESS} will be passed down to an embedded
      * {@link
      *
      * @param conf configuration from which to read properties. This
@@ -73,14 +73,14 @@ public class RemoteURLRepositoryServer extends UnicastRemoteObject
 
         log.debug ("Exporting remote interfaces");
         RemoteHelper.exportRemoteInterface(this,
-                                           conf.getInt(PROP_REGISTRY_PORT,
+                                           conf.getInt(CONF_REGISTRY_PORT,
                                                        DEFAULT_REGISTRY_PORT),
-                                           conf.getString(PROP_SERVICE_NAME,
+                                           conf.getString(CONF_SERVICE_NAME,
                                                           DEFAULT_SERVICE_NAME));
     }
 
     private static int getServicePort(Configuration conf) {
-        return conf.getInt (PROP_SERVICE_PORT, 27045);
+        return conf.getInt (CONF_SERVICE_PORT, 27045);
     }
 
     /**
@@ -129,3 +129,6 @@ public class RemoteURLRepositoryServer extends UnicastRemoteObject
         return localRepo.installApi(apiFile);
     }
 }
+
+
+

@@ -75,14 +75,14 @@ public interface ControlConnection extends Monitorable {
      *
      * <p>What the control server does is to instantiate a {@link ClientDeployer}
      * as described by the configuration's
-     * {@link ClientDeployer#DEPLOYER_CLASS_PROPERTY} property.</p>
+     * {@link ClientDeployer#CONF_DEPLOYER_CLASS} property.</p>
      *
-     * <p>If the {@link ClientDeployer#CLIENT_CONF_PROPERTY} is not set in the
+     * <p>If the {@link ClientDeployer#CONF_CLIENT_CONF} is not set in the
      * configuration the Control server will set it to point at the Control server's
      * configuration server before passing the configuration to the deployer
      * class.</p>
      *
-     * <p>The {@link ClientDeployer#DEPLOYER_BUNDLE_PROPERTY} should contain the
+     * <p>The {@link ClientDeployer#CONF_DEPLOYER_BUNDLE} should contain the
      * <i>bundle id</i> of the bundle to deploy. Before passing the configuration
      * to the ClientDeployer's constructor the Control server will replace it
      * with the full path to the bundle file to deploy.</p>
@@ -165,3 +165,6 @@ public interface ControlConnection extends Monitorable {
                                                             throws IOException;
 
 }
+
+
+

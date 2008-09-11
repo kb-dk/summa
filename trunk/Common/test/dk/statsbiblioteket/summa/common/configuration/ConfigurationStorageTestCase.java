@@ -46,8 +46,8 @@ public class ConfigurationStorageTestCase extends TestCase {
 
         System.out.println (testName + ": Testing set()");
         String resultValue, testValue = "MyTestValue";
-        storage.put (RemoteStorageMBean.PROP_NAME, testValue);
-        resultValue = (String) storage.get (RemoteStorageMBean.PROP_NAME);
+        storage.put (RemoteStorageMBean.CONF_NAME, testValue);
+        resultValue = (String) storage.get (RemoteStorageMBean.CONF_NAME);
 
         assertTrue ("Setting and getting a property should leave it unchanged", testValue.equals(resultValue));
     }
@@ -75,3 +75,6 @@ public class ConfigurationStorageTestCase extends TestCase {
 
     
 }
+
+
+

@@ -58,8 +58,8 @@ public class RecordReader implements ObjectFilter {
      * </p><p>
      * This property is mandatory.
      */
-    public static final String CONF_METADATA_STORAGE =
-            "summa.storage.RecordReader.Storage";
+    public static final String CONF_STORAGE =
+            "summa.storage.recordreader.storage";
 
     /**
      * The state of progress is stored in this file upon close. This allows
@@ -72,7 +72,7 @@ public class RecordReader implements ObjectFilter {
      * If no base is defined, the default value is "progress.xml".
      */
     public static final String CONF_PROGRESS_FILE =
-            "summa.storage.RecordReader.progress-file";
+            "summa.storage.recordreader.progressfile";
     public static final String DEFAULT_PROGRESS_FILE_POSTFIX = "progress.xml";
 
     /**
@@ -86,7 +86,7 @@ public class RecordReader implements ObjectFilter {
      * This property is optional. Default is true.
      */
     public static final String CONF_USE_PERSISTENCE =
-            "summa.storage.RecordReader.use-persistence";
+            "summa.storage.recordreader.usepersistence";
     public static final boolean DEFAULT_USE_PERSISTENCE = true;
 
     /**
@@ -96,7 +96,7 @@ public class RecordReader implements ObjectFilter {
      * This property is optional. Default is false.
      */
     public static final String CONF_START_FROM_SCRATCH =
-            "summa.storage.RecordReader.start-from-scratch";
+            "summa.storage.recordreader.startfromscratch";
     public static final boolean DEFAULT_START_FROM_SCRATCH = false;
 
     /**
@@ -106,7 +106,7 @@ public class RecordReader implements ObjectFilter {
      * This property is optional. Default is -1 (disabled).
      */
     public static final String CONF_MAX_READ_RECORDS =
-            "summa.storage.RecordReader.max-read.records";
+            "summa.storage.recordreader.maxread.records";
     public static final int DEFAULT_MAX_READ_RECORDS = -1;
 
     /**
@@ -116,7 +116,7 @@ public class RecordReader implements ObjectFilter {
      * This property is optional. Default is -1 (disabled).
      */
     public static final String CONF_MAX_READ_SECONDS =
-            "summa.storage.RecordReader.max-read.seconds";
+            "summa.storage.recordreader.maxread.seconds";
     public static final int DEFAULT_MAX_READ_SECONDS = -1;
 
     /**
@@ -126,7 +126,7 @@ public class RecordReader implements ObjectFilter {
      * This property is optional. Default is "" (all records).  
      */
     public static final String CONF_BASE =
-            "summa.storage.RecordReader.base";
+            "summa.storage.recordreader.base";
     public static final String DEFAULT_BASE = "";
 
     @SuppressWarnings({"FieldCanBeLocal"})
@@ -154,7 +154,7 @@ public class RecordReader implements ObjectFilter {
      * @see {@link #CONF_BASE}.
      * @see {@link #CONF_MAX_READ_RECORDS}.
      * @see {@link #CONF_MAX_READ_SECONDS}.
-     * @see {@link #CONF_METADATA_STORAGE}.
+     * @see {@link #CONF_STORAGE}.
      * @see {@link #CONF_PROGRESS_FILE}.
      * @see {@link #CONF_START_FROM_SCRATCH}.
      * @see {@link #CONF_USE_PERSISTENCE}.
@@ -162,7 +162,7 @@ public class RecordReader implements ObjectFilter {
     public RecordReader(Configuration configuration) throws IOException {
         log.trace("Constructing RecordReader");
         accessContext =
-                FilterCommons.getAccess(configuration, CONF_METADATA_STORAGE);
+                FilterCommons.getAccess(configuration, CONF_STORAGE);
          // TODO: Consider if this should be requested for every call to Storage
 
         if (accessContext == null) {
@@ -382,3 +382,6 @@ public class RecordReader implements ObjectFilter {
         }
     }
 }
+
+
+

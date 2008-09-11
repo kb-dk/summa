@@ -50,3 +50,5 @@ public class LuceneSearcher {/*extends SummaSearcherImpl implements
 //                new LuceneSearchNode(this, conf, descriptor));
     }
 }
+
+

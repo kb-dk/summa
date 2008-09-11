@@ -56,7 +56,7 @@ public class FilterControl extends StateThread implements Configurable,
      * name as key and that configuration will be used for creating a
      * FilterPump.
      */
-    public static final String CONF_CHAINS = "FilterControl.Chains";
+    public static final String CONF_CHAINS = "filtercontrol.chains";
 
     /**
      * If true, the chains will be started in order of appearance, the FilterControl
@@ -65,7 +65,7 @@ public class FilterControl extends StateThread implements Configurable,
      * </p><p>
      * Default: True.
      */
-    public static final String CONF_SEQUENTIAL = "FilterControl.Sequential";
+    public static final String CONF_SEQUENTIAL = "filtercontrol.sequential";
 
     private boolean sequential = true;
 
@@ -181,3 +181,5 @@ public class FilterControl extends StateThread implements Configurable,
         return pumps;
     }
 }
+
+

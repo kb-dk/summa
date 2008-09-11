@@ -98,7 +98,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      * Either this property or {@link #CONF_ABSOLUTE_LOCATION} must be present.
      */
     public static final String CONF_LOCATION_ROOT =
-            "summa.common.index-descriptor.location-root";
+            "summa.common.indexdescriptor.locationroot";
     public static final String CURRENT = "current.txt";
 
     /**
@@ -110,7 +110,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      * Either this property or {@link #CONF_LOCATION_ROOT} must be present.
      */
     public static final String CONF_ABSOLUTE_LOCATION =
-            "summa.common.index-descriptor.absolute-location";
+            "summa.common.indexdescriptor.absolutelocation";
 
     /**
      * How often the IndexDescriptor should be re-read from the resolved
@@ -119,7 +119,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      * This property is optional. Default is -1.
      */
     public static final String CONF_CHECK_INTERVAL =
-            "summa.common.index.check-interval";
+            "summa.common.index.checkinterval";
     public static final int DEFAULT_CHECK_INTERVAL = -1;
 
     public static enum OPERATOR {and, or}
@@ -715,3 +715,6 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         return allFields;
     }
 }
+
+
+

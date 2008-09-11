@@ -91,3 +91,6 @@ public interface SearchNode extends Configurable {
      */
     public int getFreeSlots();
 }
+
+
+

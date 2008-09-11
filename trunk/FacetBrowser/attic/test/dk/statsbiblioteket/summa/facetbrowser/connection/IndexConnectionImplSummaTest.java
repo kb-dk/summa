@@ -101,3 +101,5 @@ public class IndexConnectionImplSummaTest extends TestCase {
         return new TestSuite(IndexConnectionImplSummaTest.class);
     }
 }
+
+

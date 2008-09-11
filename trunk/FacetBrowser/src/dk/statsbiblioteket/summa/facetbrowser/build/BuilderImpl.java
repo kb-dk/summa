@@ -107,3 +107,6 @@ public abstract class BuilderImpl implements Builder {
         facetMap.removeDocument(docID);
     }
 }
+
+
+

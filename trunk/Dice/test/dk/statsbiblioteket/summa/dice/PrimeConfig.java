@@ -48,9 +48,12 @@ public class PrimeConfig extends Config {
 
         String homeDir = System.getProperty("user.home");
 
-        set (WORKER_CACHE_PATH, homeDir + File.separator + "tmp/worker_cache");
-        set (CONSUMER_CACHE_PATH, homeDir + File.separator + "tmp/consumer_cache");
-        set (CONSUMER_CACHE_PORT, 26000);
-        set (CONSUMER_CACHE_SERVICE, "consumer_cache");
+        set (CONF_WORKER_CACHE_PATH, homeDir + File.separator + "tmp/worker_cache");
+        set (CONF_CONSUMER_CACHE_PATH, homeDir + File.separator + "tmp/consumer_cache");
+        set (CONF_CONSUMER_CACHE_PORT, 26000);
+        set (CONF_CONSUMER_CACHE_SERVICE, "consumer_cache");
     }
 }
+
+
+

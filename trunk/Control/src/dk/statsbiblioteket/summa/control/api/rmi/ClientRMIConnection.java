@@ -45,3 +45,6 @@ public interface ClientRMIConnection extends Remote, ClientConnection {
     public void reportError (String id) throws RemoteException;
 
 }
+
+
+

@@ -64,7 +64,7 @@ public class FacetManipulator implements IndexManipulator {
      * Optional. Default is true.
      */
     public static final String CONF_CLEAR_TAGS_ON_CLEAR =
-            "summa.facet.clear-tags-on-clear";
+            "summa.facet.cleartagsonclear";
     public static final boolean DEFAULT_CLEAR_TAGS_ON_CLEAR = true;
 
     /**
@@ -74,7 +74,7 @@ public class FacetManipulator implements IndexManipulator {
      * of increased consolidate-time.
      */
     public static final String CONF_CLEAR_TAGS_ON_CONSOLIDATE =
-            "summa.facet.clear-tags-on-consolidate";
+            "summa.facet.cleartagsonconsolidate";
     public static final boolean DEFAULT_CLEAR_TAGS_ON_CONSOLIDATE = false;
 
     protected boolean clearTagsOnClear = DEFAULT_CLEAR_TAGS_ON_CLEAR;
@@ -137,3 +137,6 @@ public class FacetManipulator implements IndexManipulator {
     }
 
 }
+
+
+

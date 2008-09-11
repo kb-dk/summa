@@ -16,10 +16,10 @@ import java.util.List;
  * <p></p>
  * This class is modelled as a {@link ConnectionConsumer} meaning that you can
  * tweak its behavior by changing the configuration parameters
- * {@link dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory#RETRIES},
- * {@link dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory#GRACE_TIME},
- * {@link dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory#FACTORY}, and
- * {@link ConnectionConsumer#PROP_RPC_TARGET}
+ * {@link dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory#CONF_RETRIES},
+ * {@link dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory#CONF_GRACE_TIME},
+ * {@link dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory#CONF_FACTORY}, and
+ * {@link ConnectionConsumer#CONF_RPC_TARGET}
  */
 public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
                                  implements Configurable {
@@ -145,3 +145,6 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
     }
 
 }
+
+
+

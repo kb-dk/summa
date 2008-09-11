@@ -61,3 +61,6 @@ public interface Telegram {
      */
     public boolean isFullyFormed();
 }
+
+
+

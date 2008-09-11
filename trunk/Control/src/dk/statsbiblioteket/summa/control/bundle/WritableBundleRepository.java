@@ -9,10 +9,10 @@ import java.io.IOException;
  */
 public interface WritableBundleRepository extends BundleRepository {
 
-    public static final String PROP_BUNDLE_DIR =
+    public static final String CONF_BUNDLE_DIR =
                                      "summa.control.repository.storage.bundle";
 
-    public static final String PROP_API_DIR =
+    public static final String CONF_API_DIR =
                                        "summa.control.repository.storage.api";
 
     /**
@@ -21,7 +21,7 @@ public interface WritableBundleRepository extends BundleRepository {
      * is the caller's.
      * <p></p>
      * The bundle will be installed locally in the repository in the directory
-     * specified in {@link #PROP_BUNDLE_DIR}.
+     * specified in {@link #CONF_BUNDLE_DIR}.
      * <p></p>
      * If the installation succeeds the repository should delete {@code bundle}
      * @param bundle the file to install in the repository
@@ -35,7 +35,7 @@ public interface WritableBundleRepository extends BundleRepository {
      * Install an API file in the repository's API file container.
      * <p></p>
      * The API file will be installed locally in the repository in the directory
-     * specified in {@link #PROP_API_DIR}.
+     * specified in {@link #CONF_API_DIR}.
      * <p></p>
      * In contrast to {@link #installBundle(java.io.File)} the installation
      * will <i>not</i> delete {@code apiFile} on success.
@@ -47,3 +47,6 @@ public interface WritableBundleRepository extends BundleRepository {
      */
     public boolean installApi (File apiFile) throws IOException;
 }
+
+
+

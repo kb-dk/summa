@@ -59,3 +59,6 @@ public class VoidShellContext implements ShellContext {
         log.debug("Prompt: " + msg);
     }
 }
+
+
+

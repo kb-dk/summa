@@ -58,3 +58,6 @@ public interface FacetResult<T> extends Response {
      */
     public FacetResult externalize();
 }
+
+
+

@@ -56,7 +56,7 @@ public class IndexWatcher extends Observable<IndexListener> implements
      * @see {@link #CONF_INDEX_WATCHER_MIN_RETENTION}.
      */
     public static final String CONF_INDEX_WATCHER_CHECK_INTERVAL =
-            "summa.index-watcher.check-interval";
+            "summa.indexwatcher.checkinterval";
     public static final int DEFAULT_CHECK_INTERVAL = 1000 * 30; // Every 30 sec.
 
     /**
@@ -66,7 +66,7 @@ public class IndexWatcher extends Observable<IndexListener> implements
      * This is optional. Default is "index".
      */
     public static final String CONF_INDEX_WATCHER_INDEX_ROOT =
-            "summa.index-watcher.index-root";
+            "summa.indexwatcher.indexroot";
     // TODO: Consider creating a class with Summa constants
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public static final String DEFAULT_INDEX_ROOT = "index";
@@ -83,7 +83,7 @@ public class IndexWatcher extends Observable<IndexListener> implements
      *
      */
     public static final String CONF_INDEX_WATCHER_MIN_RETENTION =
-            "summa.index-watcher.min-retention";
+            "summa.indexwatcher.minretention";
     public static final int DEFAULT_MIN_RETENTION = 1000 * 60 * 5; // 5 min.
 
     private int indexCheckInterval = DEFAULT_CHECK_INTERVAL;
@@ -215,3 +215,6 @@ public class IndexWatcher extends Observable<IndexListener> implements
         removeListener(listener);
     }
 }
+
+
+

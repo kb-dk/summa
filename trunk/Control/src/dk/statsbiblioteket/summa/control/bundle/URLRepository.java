@@ -39,7 +39,7 @@ import org.apache.commons.logging.LogFactory;
  * <p>A {@link BundleRepository} fetching bundles via Java {@link URL}s.</p>
  *
  * <p>Given a bundle id it is mapped to a URL as specified by the
- * {@link #REPO_ADDRESS_PROPERTY} property in the {@link Configuration}.</p>
+ * {@link #CONF_REPO_ADDRESS} property in the {@link Configuration}.</p>
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -50,12 +50,12 @@ public class URLRepository implements BundleRepository {
     private Log log = LogFactory.getLog(this.getClass());
 
     /**
-     * Set from the {@link #BASE_URL_PROPERTY} property
+     * Set from the {@link #CONF_BASE_URL} property
      */
     protected String baseUrl;
 
     /**
-     * Set from the {@link #API_BASE_URL_PROPERTY}
+     * Set from the {@link #CONF_API_BASE_URL}
      */
     protected String apiBaseUrl;
 
@@ -64,11 +64,11 @@ public class URLRepository implements BundleRepository {
      * downloaded. Consumers will download the bundle files from
      * {@code <baseUrl>/<bundleId>.bundle}.
      * <p></p>
-     * If this property is unset the value {@link #REPO_ADDRESS_PROPERTY} of
+     * If this property is unset the value {@link #CONF_REPO_ADDRESS} of
      * will be used. If this property again is unset, the fallback value will be
      * {@link #DEFAULT_REPO_URL}
      */
-    public static final String BASE_URL_PROPERTY =
+    public static final String CONF_BASE_URL =
                                          "summa.control.repository.baseurl";
 
     /**
@@ -80,12 +80,12 @@ public class URLRepository implements BundleRepository {
      * If this property is unset {@link #baseUrl}{@code /api}
      * will be used as fallback.
      */
-    public static final String API_BASE_URL_PROPERTY =
+    public static final String CONF_API_BASE_URL =
                                          "summa.control.repository.api.baseurl";
 
     /**
-     * Fallback value for the {@link #BASE_URL_PROPERTY} used if the
-     * initial fallback property {@link #REPO_ADDRESS_PROPERTY} is also unset.
+     * Fallback value for the {@link #CONF_BASE_URL} used if the
+     * initial fallback property {@link #CONF_REPO_ADDRESS} is also unset.
      */
     public static final String DEFAULT_REPO_URL = "file://"
                                                   + System.getProperty("user.home")
@@ -93,19 +93,19 @@ public class URLRepository implements BundleRepository {
                                                   + "/repository";
 
     /**
-     * <p>Create a new URLRepository. If the {@link #DOWNLOAD_DIR_PROPERTY} is
+     * <p>Create a new URLRepository. If the {@link #CONF_DOWNLOAD_DIR} is
      * not set {@code tmp/} relative to the working directory will be used.</p>
      *
-     * <p>If {@link #REPO_ADDRESS_PROPERTY} is not set in the configuration
+     * <p>If {@link #CONF_REPO_ADDRESS} is not set in the configuration
      * <code>file://${user.home}/summa-control/repo</code> is used.</p>
      * @param conf
      */
     public URLRepository (Configuration conf) {
-        this.tmpDir = conf.getString(DOWNLOAD_DIR_PROPERTY, "tmp");
+        this.tmpDir = conf.getString(CONF_DOWNLOAD_DIR, "tmp");
 
-        String repoAddress = conf.getString (BundleRepository.REPO_ADDRESS_PROPERTY,
+        String repoAddress = conf.getString (BundleRepository.CONF_REPO_ADDRESS,
                                              DEFAULT_REPO_URL);
-        this.baseUrl = conf.getString (BASE_URL_PROPERTY,
+        this.baseUrl = conf.getString (CONF_BASE_URL,
                                        repoAddress);
 
         /* make sure baseUrl ends with a slash */
@@ -113,7 +113,7 @@ public class URLRepository implements BundleRepository {
             baseUrl += "/";
         }
 
-        this.apiBaseUrl = conf.getString (URLRepository.API_BASE_URL_PROPERTY,
+        this.apiBaseUrl = conf.getString (URLRepository.CONF_API_BASE_URL,
                                           baseUrl + "api");
 
         /* make sure apiBaseUrl ends with a slash */
@@ -212,3 +212,6 @@ public class URLRepository implements BundleRepository {
         return result;
     }
 }
+
+
+

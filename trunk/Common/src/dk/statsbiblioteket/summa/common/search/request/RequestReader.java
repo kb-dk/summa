@@ -28,3 +28,6 @@ package dk.statsbiblioteket.summa.common.search.request;
 */
 public interface RequestReader {
 }
+
+
+

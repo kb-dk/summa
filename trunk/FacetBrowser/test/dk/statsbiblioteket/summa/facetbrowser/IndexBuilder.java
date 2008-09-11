@@ -55,7 +55,7 @@ public class IndexBuilder {
             new File(INDEX_ROOT, "TestIndexDescriptor.xml");
     public static final File DATE_LOCATION =
             new File(INDEX_ROOT, "20080904-143735");
-    public static final String INDEXLOCATION =
+    public static final String INDEX_LOCATION =
             new File(DATE_LOCATION, "lucene").getAbsolutePath();
     public static final int REPLICATIONCOUNT = 500;
     public static final File TIMESTAMP_FILE =
@@ -100,7 +100,7 @@ public class IndexBuilder {
     }
 
 //    public static IndexConnectionImplLocal getConnection() {
-//        return new IndexConnectionImplLocal(IndexBuilder.INDEXLOCATION);
+//        return new IndexConnectionImplLocal(IndexBuilder.INDEX_LOCATION);
 //    }
 
     public static IndexReader getReader() throws IOException {
@@ -109,7 +109,7 @@ public class IndexBuilder {
         conf.set(IndexConnector.INDEXROOT + "TYPE",
                  IndexConnector.INDEXTYPE.singleIndex);
         conf.set(IndexConnector.INDEXROOT + "LINKS",
-                 INDEXLOCATION);
+                 INDEX_LOCATION);
         return new IndexConnector(conf).getReader();
 
     //    return getConnection().getIndexReader();
@@ -147,9 +147,9 @@ public class IndexBuilder {
                            + " replications");
 
         // Delete the old
-        deleteDir(new File(INDEXLOCATION));
+        deleteDir(new File(INDEX_LOCATION));
 
-        IndexWriter writer = new IndexWriter(new File(INDEXLOCATION),
+        IndexWriter writer = new IndexWriter(new File(INDEX_LOCATION),
                                              new StandardAnalyzer(),
                                              true);
         writer.setUseCompoundFile(false);
@@ -184,7 +184,7 @@ public class IndexBuilder {
         System.out.println("Finished creating test-index in "
                            + profiler.getSpendTime() + " (" + 
                            + profiler.getBps(true) + ". It can be found in"
-                           + INDEXLOCATION);
+                           + INDEX_LOCATION);
     }
 
     public static Document createDocument() {
@@ -237,7 +237,7 @@ public class IndexBuilder {
     }
 
     public static File versionFile() {
-        return new File(String.format("%s/%s", INDEXLOCATION, VERSION));
+        return new File(String.format("%s/%s", INDEX_LOCATION, VERSION));
     }
 
     // http://javaalmanac.com/egs/java.io/DeleteDir.html
@@ -256,3 +256,6 @@ public class IndexBuilder {
         return dir.delete();
     }
 }
+
+
+

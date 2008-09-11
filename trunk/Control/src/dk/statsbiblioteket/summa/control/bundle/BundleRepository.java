@@ -43,7 +43,7 @@ public interface BundleRepository extends Configurable, Serializable {
      *
      * <p>If unset {@code ${user.home}/tmp} should be used.</p>
      */
-    public static final String DOWNLOAD_DIR_PROPERTY =
+    public static final String CONF_DOWNLOAD_DIR =
                                           "summa.control.repository.download.dir";
 
     public static final String DEFAULT_DOWNLOAD_DIR =
@@ -60,7 +60,7 @@ public interface BundleRepository extends Configurable, Serializable {
      * Implementation should assume sensible default values if this property
      * is unset. 
      */
-    public static final String REPO_ADDRESS_PROPERTY =
+    public static final String CONF_REPO_ADDRESS =
                                            "summa.control.repository.address";
 
     /**
@@ -120,3 +120,6 @@ public interface BundleRepository extends Configurable, Serializable {
     public String expandApiUrl (String jarFileName) throws IOException;
 
 }
+
+
+

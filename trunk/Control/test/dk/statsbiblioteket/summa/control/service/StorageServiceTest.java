@@ -140,11 +140,14 @@ public class StorageServiceTest extends NoExitTestCase {
     private Configuration createconfiguration() {
         Configuration conf = Configuration.newMemoryBased();
         conf.set(DatabaseStorage.PROP_LOCATION, location.toString());
-        conf.set(Service.SERVICE_PORT, 27003);
-        conf.set(Service.REGISTRY_PORT, 27000);
-        conf.set(Service.SERVICE_ID, "TestStorage");
-        System.setProperty(Service.SERVICE_ID, "TestStorage");
+        conf.set(Service.CONF_SERVICE_PORT, 27003);
+        conf.set(Service.CONF_REGISTRY_PORT, 27000);
+        conf.set(Service.CONF_SERVICE_ID, "TestStorage");
+        System.setProperty(Service.CONF_SERVICE_ID, "TestStorage");
         return conf;
     }
 
 }
+
+
+

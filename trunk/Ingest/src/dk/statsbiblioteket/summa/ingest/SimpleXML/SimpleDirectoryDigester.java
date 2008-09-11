@@ -40,3 +40,6 @@ public class SimpleDirectoryDigester extends Digester {
         return new SimpleParserTask(f, target, in);
     }
 }
+
+
+

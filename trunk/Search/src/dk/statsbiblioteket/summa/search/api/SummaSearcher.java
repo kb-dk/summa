@@ -41,13 +41,13 @@ public interface SummaSearcher extends Configurable {
      * The port on which the searcher service should communicate.
      * The default is 28020.
      */
-    public static final String PROP_SERVICE_PORT = "summa.searcher.port";
+    public static final String CONF_SERVICE_PORT = "summa.searcher.port";
 
     /**
      * The class used to instantiate the searcher. Default is
      * {@link dk.statsbiblioteket.summa.search.SummaSearcherImpl}
      */
-    public static final String PROP_CLASS = "summa.searcher.class";
+    public static final String CONF_CLASS = "summa.searcher.class";
 
     /**
      * Perform a search and collect the output from all sub-searchers.
@@ -72,3 +72,6 @@ public interface SummaSearcher extends Configurable {
      */
     public void close() throws IOException;
 }
+
+
+

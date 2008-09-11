@@ -55,7 +55,7 @@ public class LuceneIndexUtils {
      * The property-key for the substorage containing the setup for the
      * LuceneIndexDescriptor.
      */
-    public static final String CONF_DESCRIPTOR = "summa.index.descriptor-setup";
+    public static final String CONF_DESCRIPTOR = "summa.index.descriptorsetup";
     /**
      * The subfolder in the index root containing the lucene index.
      * This will be appended to {@link #indexRoot}.
@@ -177,3 +177,6 @@ public class LuceneIndexUtils {
         return sw.toString();
     }
 }
+
+
+

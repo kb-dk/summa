@@ -36,3 +36,6 @@ import java.rmi.RemoteException;
 public interface RemoteHello extends Remote {
     public Object hello() throws RemoteException; 
 }
+
+
+

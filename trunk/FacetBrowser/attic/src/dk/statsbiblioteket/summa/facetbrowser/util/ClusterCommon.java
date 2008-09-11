@@ -69,7 +69,7 @@ public class ClusterCommon {
     public static final String MANYINONE =   "ManyInOne";
     public static final String AUTOCLUSTER =   "autoCluster";
 //    public static final String AUTOCLUSTER =   "autoCluster";
-    public static final String INDEXLOCATION = "directory_name";
+    public static final String INDEX_LOCATION = "directory_name";
     public static final String SEARCH_INDEXLOCATION = "indexPath";
     public static final String INDEX_INDEXLOCATION = "indexPath";
     public static final String INDEX_POSTFIX = "mergedIndex";
@@ -383,10 +383,10 @@ public class ClusterCommon {
      * @throws IOException if the index could not be openeds
      */
     public static IndexReader getIndexReaderInitialIndex() throws IOException {
-        String index_location = getProperty(INDEXLOCATION);
+        String index_location = getProperty(INDEX_LOCATION);
         if (index_location==null) {
             log.fatal("No directory name for an index is known. " +
-                      "Add the right location for " + INDEXLOCATION);
+                      "Add the right location for " + INDEX_LOCATION);
             return null;
         }
 
@@ -440,7 +440,7 @@ public class ClusterCommon {
         List<String> parallel_index_locations = new LinkedList<String>();
         int count = 1;
         String parallelIndexPath =
-                ClusterCommon.getProperty(ClusterCommon.INDEXLOCATION+count);
+                ClusterCommon.getProperty(ClusterCommon.INDEX_LOCATION+count);
         while (parallelIndexPath!=null) {
             if (new File(parallelIndexPath).exists()) {
                 parallel_index_locations.add(parallelIndexPath);
@@ -450,7 +450,7 @@ public class ClusterCommon {
             }
             count++;
             parallelIndexPath =
-               ClusterCommon.getProperty(ClusterCommon.INDEXLOCATION+count);
+               ClusterCommon.getProperty(ClusterCommon.INDEX_LOCATION+count);
         }
 
         if (!parallel_index_locations.isEmpty()) {
@@ -983,3 +983,5 @@ public class ClusterCommon {
     {"zza", "", "Zaza; Dimili; Dimli; Kirdki; Kirmanjki; Zazaki", "zaza; dimili; dimli; kirdki; kirmanjki; zazaki", ""}
     };
 }
+
+

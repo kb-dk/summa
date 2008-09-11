@@ -68,7 +68,7 @@ public class LuceneFacetBuilder extends BuilderImpl {
      * Optional. Default is true.
      */
     public static final String CONF_BUILD_DOCS_TO_TERMS =
-            "summa.facet.lucene.build.docs-to-terms";
+            "summa.facet.lucene.build.docstoterms";
     public static final boolean DEFAULT_BUILD_DOCS_TO_TERMS = true;
 
     /**
@@ -78,7 +78,7 @@ public class LuceneFacetBuilder extends BuilderImpl {
      * Optional. Default is true.
      */
     public static final String CONF_BUILD_TERMS_TO_DOCS =
-            "summa.facet.lucene.build.terms-to-docs";
+            "summa.facet.lucene.build.termstodocs";
     public static final boolean DEFAULT_BUILD_TERMS_TO_DOC = true;
 
     private File luceneIndex;
@@ -385,3 +385,6 @@ public class LuceneFacetBuilder extends BuilderImpl {
         return coreMap;
     }
 }
+
+
+

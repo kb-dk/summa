@@ -38,28 +38,28 @@ public interface Bundle {
     /**
      * Configuration used to instantiate the {@link Client} or {@link Service}
      */
-    public static final String BUNDLE_CONFIGURATION = "summa.control.bundle.configuration";
+    public static final String CONF_BUNDLE_CONFIGURATION = "summa.control.bundle.configuration";
 
     /**
      * Configuration used for the {@link BundleStub}
      */
-    public static final String STUB_CONFIGURATION = "summa.control.bundle.stub.configuration";
+    public static final String CONF_STUB_CONFIGURATION = "summa.control.bundle.stub.configuration";
 
     /**
      * The id, passed as a system property, to a {@link Client}
      */
-    public static final String CLIENT_ID = "summa.control.client.id";
+    public static final String CONF_CLIENT_ID = "summa.control.client.id";
 
     /**
      * The id, passed as a system property, to a {@link Service}
      */
-    public static final String SERVICE_ID = "summa.control.service.id";
+    public static final String CONF_SERVICE_ID = "summa.control.service.id";
 
     /**
      * The full path to the sourceRoot of the bundle installation, passed as a
      * system property.
      */
-    public static final String BUNDLE_DIR = "summa.control.bundle.dir";
+    public static final String CONF_BUNDLE_DIR = "summa.control.bundle.dir";
 
     /**
      * Extension used for bundle files.
@@ -78,3 +78,6 @@ public interface Bundle {
     }
 
 }
+
+
+

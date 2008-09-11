@@ -127,3 +127,6 @@ public interface SummaSearcherMBean {
      */
     public void clearStatistics() throws RemoteException;
 }
+
+
+

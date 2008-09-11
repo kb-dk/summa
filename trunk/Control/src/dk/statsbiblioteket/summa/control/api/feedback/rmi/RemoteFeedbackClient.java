@@ -33,13 +33,13 @@ public class RemoteFeedbackClient implements Feedback {
 
 
         remoteAddress = "//" 
-                       + conf.getString(RemoteFeedback.REGISTRY_HOST_PROPERTY,
+                       + conf.getString(RemoteFeedback.CONF_REGISTRY_HOST,
                                         "localhost")
                        + ":"
-                       + conf.getInt(RemoteFeedback.REGISTRY_PORT_PROPERTY,
+                       + conf.getInt(RemoteFeedback.CONF_REGISTRY_PORT,
                                      27000)
                        + "/"
-                       + conf.getString(RemoteFeedback.SERVICE_NAME_PROPERTY,
+                       + conf.getString(RemoteFeedback.CONF_SERVICE_NAME,
                                         "remoteConsole");
 
         log.debug ("Using remote console on '" + remoteAddress + "'");
@@ -96,3 +96,6 @@ public class RemoteFeedbackClient implements Feedback {
         }
     }
 }
+
+
+

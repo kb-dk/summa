@@ -48,3 +48,6 @@ public interface IndexController {
     public boolean removeManipulator(IndexManipulator manipulator);
 
 }
+
+
+

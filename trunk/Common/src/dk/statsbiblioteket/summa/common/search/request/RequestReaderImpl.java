@@ -31,3 +31,6 @@ package dk.statsbiblioteket.summa.common.search.request;
  */
 public class RequestReaderImpl implements RequestReader {
 }
+
+
+

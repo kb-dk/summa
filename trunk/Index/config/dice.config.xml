@@ -32,3 +32,4 @@
     <entry key="worker.cache.reader">dk.statsbiblioteket.summa.dice.caching.GZipCacheReader</entry>
 
 </properties>
+

@@ -70,7 +70,7 @@ public class SearchDescriptor {
      * for the query parser and analyzer.
      */
     public static final String SEARCHDESCRIPTORLOCATION =
-            "facetbrowser.SEARCHDESCRIPTORLOCATION";
+            "facetbrowser.searchdescriptorlocation";
 
     /**
      * List of all fields.
@@ -503,3 +503,6 @@ public class SearchDescriptor {
         this.groups = groups;
     }
 }
+
+
+

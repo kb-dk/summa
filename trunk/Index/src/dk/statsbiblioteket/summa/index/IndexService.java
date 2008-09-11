@@ -100,3 +100,6 @@ public interface IndexService extends Remote {
 
     SearchDescriptor getDescriptor() throws RemoteException;
 }
+
+
+

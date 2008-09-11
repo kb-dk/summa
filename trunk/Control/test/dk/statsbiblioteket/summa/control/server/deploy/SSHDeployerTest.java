@@ -100,11 +100,11 @@ public class SSHDeployerTest extends TestCase {
 
     private Configuration makeConfiguration() {
         MemoryStorage storage = new MemoryStorage();
-        storage.put(SSHDeployer.DEPLOYER_BUNDLE_PROPERTY, PROPERTY_SOURCE);
-        storage.put(SSHDeployer.BASEPATH_PROPERTY, PROPERTY_DESTINATION);
-        storage.put(SSHDeployer.DEPLOYER_TARGET_PROPERTY, PROPERTY_LOGIN);
-        storage.put(SSHDeployer.CLIENT_CONF_PROPERTY, PROPERTY_START_CONFSERVER);
-        storage.put(SSHDeployer.INSTANCE_ID_PROPERTY, "test-client-1");
+        storage.put(SSHDeployer.CONF_DEPLOYER_BUNDLE, PROPERTY_SOURCE);
+        storage.put(SSHDeployer.CONF_BASEPATH, PROPERTY_DESTINATION);
+        storage.put(SSHDeployer.CONF_DEPLOYER_TARGET, PROPERTY_LOGIN);
+        storage.put(SSHDeployer.CONF_CLIENT_CONF, PROPERTY_START_CONFSERVER);
+        storage.put(SSHDeployer.CONF_INSTANCE_ID, "test-client-1");
         new FakeThinClient();
         return new Configuration(storage);
     }
@@ -148,22 +148,25 @@ public class SSHDeployerTest extends TestCase {
     public void testGetHostname () throws Exception {
         Configuration conf = makeConfiguration();
 
-        conf.set (SSHDeployer.DEPLOYER_TARGET_PROPERTY, "user@host:~/dir");
+        conf.set (SSHDeployer.CONF_DEPLOYER_TARGET, "user@host:~/dir");
         SSHDeployer deployer = new SSHDeployer(conf);
         assertEquals("host", deployer.getTargetHost());
 
 
-        conf.set (SSHDeployer.DEPLOYER_TARGET_PROPERTY, "host:~/dir");
+        conf.set (SSHDeployer.CONF_DEPLOYER_TARGET, "host:~/dir");
         deployer = new SSHDeployer(conf);
         assertEquals("host", deployer.getTargetHost());
 
-        conf.set (SSHDeployer.DEPLOYER_TARGET_PROPERTY, "host");
+        conf.set (SSHDeployer.CONF_DEPLOYER_TARGET, "host");
         deployer = new SSHDeployer(conf);
         assertEquals("host", deployer.getTargetHost());
 
-        conf.set (SSHDeployer.DEPLOYER_TARGET_PROPERTY, "user@host");
+        conf.set (SSHDeployer.CONF_DEPLOYER_TARGET, "user@host");
         deployer = new SSHDeployer(conf);
         assertEquals("host", deployer.getTargetHost());
 
     }
 }
+
+
+

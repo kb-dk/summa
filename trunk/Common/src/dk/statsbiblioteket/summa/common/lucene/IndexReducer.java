@@ -130,3 +130,6 @@ public class IndexReducer {
                            + fraction + " took " + minutes + " minutes.");
     }
 }
+
+
+

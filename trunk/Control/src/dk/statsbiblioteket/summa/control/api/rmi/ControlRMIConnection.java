@@ -35,3 +35,6 @@ public interface ControlRMIConnection extends ControlConnection, Remote {
     public Status getStatus () throws RemoteException;
 
 }
+
+
+

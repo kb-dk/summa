@@ -69,3 +69,5 @@ public interface LowLevelSearchEngine {
      */
     public TermFreqVector getTermFreqVector(int docNumber, String field);
 }
+
+

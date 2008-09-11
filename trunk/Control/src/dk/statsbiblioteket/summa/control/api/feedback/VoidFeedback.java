@@ -17,7 +17,7 @@ public class VoidFeedback implements Feedback, Configurable {
      * Configuration property defining the string to return to any plain message
      * requiring a response. The default value is the empty string.
      */
-    public static final String PROP_PLAIN_RESPONSE =
+    public static final String CONF_PLAIN_RESPONSE =
                                         "summa.control.feedback.response.plain";
 
     /**
@@ -25,15 +25,15 @@ public class VoidFeedback implements Feedback, Configurable {
      * requiring a a secret response. The common case here is passwords.
      * The default value is the empty string.
      */
-    public static final String PROP_SECRET_RESPONSE =
+    public static final String CONF_SECRET_RESPONSE =
                                        "summa.control.feedback.response.secret";
 
     private String plainResponse;
     private String secretResponse;
 
     public VoidFeedback (Configuration conf) {
-        plainResponse = conf.getString(PROP_PLAIN_RESPONSE, "");
-        plainResponse = conf.getString(PROP_SECRET_RESPONSE, "");
+        plainResponse = conf.getString(CONF_PLAIN_RESPONSE, "");
+        plainResponse = conf.getString(CONF_SECRET_RESPONSE, "");
     }
 
     public VoidFeedback () {
@@ -64,3 +64,6 @@ public class VoidFeedback implements Feedback, Configurable {
         }
     }
 }
+
+
+

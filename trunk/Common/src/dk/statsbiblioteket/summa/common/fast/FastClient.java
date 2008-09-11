@@ -46,3 +46,6 @@ public interface FastClient {
      */
     public Telegram sendRequest(Telegram request) throws IOException;
 }
+
+
+

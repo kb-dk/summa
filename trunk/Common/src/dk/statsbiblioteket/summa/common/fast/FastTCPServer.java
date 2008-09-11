@@ -45,7 +45,7 @@ import org.apache.commons.logging.LogFactory;
 public class FastTCPServer implements FastServer, Runnable {
     public Log log = LogFactory.getLog(FastTCPServer.class);
 
-    public static final String PROPERTY_PORT = "summa.fastserver.serverport";
+    public static final String CONF_PORT = "summa.fastserver.serverport";
     private static final int DEFAULT_PORT = 17001;
 
     private ServerSocket socket;
@@ -57,9 +57,9 @@ public class FastTCPServer implements FastServer, Runnable {
         log.trace("Creating Fast server");
         this.configuration = configuration;
         try {
-            port = configuration.getInt(PROPERTY_PORT);
+            port = configuration.getInt(CONF_PORT);
         } catch (Exception e) {
-            log.warn("Could not retrieve port from property " + PROPERTY_PORT
+            log.warn("Could not retrieve port from property " + CONF_PORT
                      + ". Defaulting to " + DEFAULT_PORT);
         }
         log.debug("Connecting Fast server to port " + port);
@@ -117,3 +117,6 @@ public class FastTCPServer implements FastServer, Runnable {
         }
     }
 }
+
+
+

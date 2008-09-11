@@ -55,3 +55,6 @@ public interface RemoteCache<E> extends Cache<E>, Remote {
 
     public String getDataURL (long id) throws RemoteException;
 }
+
+
+

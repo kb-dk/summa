@@ -428,3 +428,5 @@ public class ClusterMapCompleteArray extends ClusterMapComplete {
         return new int[expandedFacets.getFacetSize(facetID)];
     }
 }
+
+

@@ -17,13 +17,13 @@ public class SummaSearcherFactory {
 
     /**
      * Create a {@link SummaSearcher} instance of the class specified by the
-     * {@link SummaSearcher#PROP_CLASS} in {@code conf}. If this property
+     * {@link SummaSearcher#CONF_CLASS} in {@code conf}. If this property
      * is not defined the method will default to a {@link SummaSearcherImpl}
      *
      * @param conf the configuration used to look up
-     *             {@link SummaSearcher#PROP_CLASS}
+     *             {@link SummaSearcher#CONF_CLASS}
      * @param defaultClass the class to instantiate if
-     *                     {@link SummaSearcher#PROP_CLASS} is not set in
+     *                     {@link SummaSearcher#CONF_CLASS} is not set in
      *                     {@code conf}
      * @return a newly created {@code SummaSearcher}
      * @throws Configurable.ConfigurationException if there is an error reading
@@ -37,13 +37,13 @@ public class SummaSearcherFactory {
 
         Class<? extends SummaSearcher> seacherClass;
         try {
-            seacherClass = conf.getClass(SummaSearcher.PROP_CLASS,
+            seacherClass = conf.getClass(SummaSearcher.CONF_CLASS,
                                          SummaSearcher.class,
                                          defaultClass);
         } catch (Exception e) {
             throw new Configurable.ConfigurationException ("Could not get searcher"
                                                            + " class from property "
-                                                           + SummaSearcher.PROP_CLASS,
+                                                           + SummaSearcher.CONF_CLASS,
                                                            e);
         }
         
@@ -69,3 +69,6 @@ public class SummaSearcherFactory {
         return createSearcher (conf, SummaSearcherImpl.class);
     }
 }
+
+
+

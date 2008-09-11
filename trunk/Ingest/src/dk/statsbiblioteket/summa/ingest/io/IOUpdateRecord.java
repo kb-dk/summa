@@ -38,3 +38,6 @@ public class IOUpdateRecord extends IOTask {
         super(io, new Record(id, base, content, System.currentTimeMillis()));
     }
 }
+
+
+

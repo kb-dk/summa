@@ -49,7 +49,7 @@ public class CoreMapFactory {
      * Optional. Default is {@link CoreMapBitStuffed}.
      */
     public static final String CONF_COREMAP_CLASS =
-            "summa.facet.core-map.class";
+            "summa.facet.coremap.class";
     public static final Class<? extends CoreMap> DEFAULT_CLASS =
             CoreMapBitStuffed.class;
 
@@ -87,3 +87,6 @@ public class CoreMapFactory {
 
 
 }
+
+
+

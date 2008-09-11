@@ -143,3 +143,6 @@ public class BinaryCollector extends HitCollector {
         return sw.toString();
     }
 }
+
+
+

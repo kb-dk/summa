@@ -70,8 +70,8 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
      * so don't set this value to high. 5-10 ought to do it. 30 should be
      * absolute max.</p>
      */
-    public static final String SERVICE_TIMEOUT =
-            "summa.control.client.serviceTimeout";
+    public static final String CONF_SERVICE_TIMEOUT =
+            "summa.control.client.servicetimeout";
 
     private Status status;
     private BundleRepository repository;
@@ -118,21 +118,21 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                      + "' present");
         }
 
-        registryHost = conf.getString(REGISTRY_HOST_PROPERTY,
+        registryHost = conf.getString(CONF_REGISTRY_HOST,
                                                "localhost");
-        registryPort = conf.getInt(REGISTRY_PORT_PROPERTY, 27000);
-        clientId = System.getProperty(CLIENT_ID);
-        clientPort = conf.getInt(CLIENT_PORT_PROPERTY, 27002);
+        registryPort = conf.getInt(CONF_REGISTRY_PORT, 27000);
+        clientId = System.getProperty(CONF_CLIENT_ID);
+        clientPort = conf.getInt(CONF_CLIENT_PORT, 27002);
         id = clientId;
 
         if (clientId == null) {
-            throw new BadConfigurationException("System property '" + CLIENT_ID
+            throw new BadConfigurationException("System property '" + CONF_CLIENT_ID
                                                 + "' not set");
         }
 
         basePath = System.getProperty("user.home") + File.separator
                                      + conf.getString(
-                                      CLIENT_BASEPATH_PROPERTY, "summa-control")
+                                      CONF_CLIENT_BASEPATH, "summa-control")
                                      + File.separator + clientId;
         log.debug ("Client '" + id + "' using basePath '" + basePath + "'");
 
@@ -146,7 +146,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         /* Create repository */
         Class<? extends BundleRepository> repositoryClass =
                                     conf.getClass(
-                                            REPOSITORY_CLASS_PROPERTY,
+                                            CONF_REPOSITORY_CLASS,
                                             BundleRepository.class,
                                             RemoteURLRepositoryClient.class);
         repository = Configuration.create(repositoryClass, conf);
@@ -157,7 +157,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         validateConfiguration();
 
         /* Service related setup */
-        serviceTimeout = conf.getInt(SERVICE_TIMEOUT, 5);
+        serviceTimeout = conf.getInt(CONF_SERVICE_TIMEOUT, 5);
         serviceMan = new ServiceManager(conf);
 
         /* Find client hostname */
@@ -196,25 +196,25 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
     private void validateConfiguration() throws BadConfigurationException {
         if (registryHost.equals("")) {
             throw new BadConfigurationException (this + ", "
-                                                 + REGISTRY_HOST_PROPERTY
+                                                 + CONF_REGISTRY_HOST
                                                  + " is empty");
         } else if (registryPort < 0) {
             throw new BadConfigurationException (this + ", "
-                                                 + REGISTRY_PORT_PROPERTY
+                                                 + CONF_REGISTRY_PORT
                                                 + " < 0. Value "
                                                 + registryPort);
         } else if (clientId.equals("")) {
-            throw new BadConfigurationException (this + ", " + CLIENT_ID
+            throw new BadConfigurationException (this + ", " + CONF_CLIENT_ID
                                                  + " is empty");
         } else if (clientPort < 0) {
             throw new BadConfigurationException (this + ", " + clientPort
                                                 + " < 0. Value " + clientPort);
         } else if (id.equals("")) {
-            throw new BadConfigurationException (this + ", " + CLIENT_ID
+            throw new BadConfigurationException (this + ", " + CONF_CLIENT_ID
                                                  + " is empty");
         }  else if (basePath.equals("")) {
             throw new BadConfigurationException (this + ", "
-                                                 + CLIENT_BASEPATH_PROPERTY
+                                                 + CONF_CLIENT_BASEPATH
                                                  + " is empty");
         }
     }
@@ -229,18 +229,18 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
      * This method is mainly here to be able to retrieve the service
      * port in the super() call in the constructor.
      *
-     * @param conf the configuration from which to read {@link #CLIENT_PORT_PROPERTY}
+     * @param conf the configuration from which to read {@link #CONF_CLIENT_PORT}
      * @return the port
-     * @throws ConfigurationException if {@link # CLIENT_PORT_PROPERTY} cannot be read
+     * @throws ConfigurationException if {@link # CONF_CLIENT_PORT} cannot be read
      */
     private static int getServicePort (Configuration conf) {
         try {
-            return conf.getInt(CLIENT_PORT_PROPERTY, DEFAULT_CLIENT_PORT);
+            return conf.getInt(CONF_CLIENT_PORT, DEFAULT_CLIENT_PORT);
         } catch (Exception e) {
-            log.fatal("Unable to read " + CLIENT_PORT_PROPERTY
+            log.fatal("Unable to read " + CONF_CLIENT_PORT
                       + "from configuration", e);
             throw new ConfigurationException("Unable to read "
-                                             + CLIENT_PORT_PROPERTY
+                                             + CONF_CLIENT_PORT
                                              + "from configuration", e);
         }
 
@@ -471,10 +471,10 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                     e);
         }
 
-        stub.addSystemProperty(CLIENT_PERSISTENT_DIR_PROPERTY, persistentPath);
-        stub.addSystemProperty(CLIENT_ID, id);
-        stub.addSystemProperty(Service.SERVICE_ID, instanceId);
-        stub.addSystemProperty(Service.SERVICE_BASEPATH,
+        stub.addSystemProperty(CONF_CLIENT_PERSISTENT_DIR, persistentPath);
+        stub.addSystemProperty(CONF_CLIENT_ID, id);
+        stub.addSystemProperty(Service.CONF_SERVICE_ID, instanceId);
+        stub.addSystemProperty(Service.CONF_SERVICE_BASEPATH,
                 serviceFile.getParent());
         stub.addSystemProperty("summa.configuration", confLocation);
 
@@ -629,7 +629,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         log.trace ("Absolute service config location: " + configLocation);
 
         Configuration serviceConf = Configuration.load(configLocation);
-        int registryPort = serviceConf.getInt(Service.REGISTRY_PORT);
+        int registryPort = serviceConf.getInt(Service.CONF_REGISTRY_PORT);
         String serviceName = stub.getInstanceId();
         String serviceUrl = "//localhost:" + registryPort + "/" + serviceName;
 
@@ -1038,3 +1038,6 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
 
     }
 }
+
+
+
