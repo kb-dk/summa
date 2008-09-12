@@ -129,7 +129,11 @@
                         </entry>
                         <entry>
                             <key>summa.index.consolidatetimeout</key>
-                            <value class="int">1000</value>
+                            <value class="int">-1</value>
+                        </entry>
+                        <entry>
+                            <key>summa.index.committimeout</key>
+                            <value class="int">5000</value>
                         </entry>
                         <entry>
                             <key>LuceneUpdater</key>
@@ -193,7 +197,7 @@
                                             <entry>
                                                 <key>summa.facet.fields</key>
                                                 <value class="list">
-                                                    <item class="string">lsubject</item>
+                                                    <item class="string">lsubject</item>                                                    
                                                 </value>
                                             </entry>
                                         </xproperties>
