@@ -378,9 +378,9 @@ public class CoreMapBitStuffed extends CoreMapImpl {
         try {
             openMeta();
             index = openIndex();
-            for (int i: index) {
-                System.out.println("*** " + i);
-            }
+/*            for (int i: index) {
+                System.out.println("<*= " + i);
+            }*/
             highestDocID = index.length-2;
             valuePos = index[index.length-1];
             int valueSize = (int)Math.max(MIN_GROWTH_SIZE,

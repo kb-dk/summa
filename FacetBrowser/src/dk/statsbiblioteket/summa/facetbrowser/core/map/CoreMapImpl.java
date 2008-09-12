@@ -229,6 +229,7 @@ public abstract class CoreMapImpl implements CoreMap {
         ObjectOutputStream indexWrapper = new ObjectOutputStream(indexBuf);
         for (int i = 0 ; i < length ; i++) {
             indexWrapper.writeInt(index[i]);
+//            System.out.println("*=> " + index[i]);
         }
         log.trace("Finished writing core map index data, closing streams");
         indexWrapper.close();

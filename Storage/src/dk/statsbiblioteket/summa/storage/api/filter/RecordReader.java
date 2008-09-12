@@ -258,8 +258,8 @@ public class RecordReader implements ObjectFilter {
             }
         }
         //noinspection DuplicateStringLiteralInspection
-        log.trace("getStartTime: Could not storage file '" + progressFile
-                  + "'. Returning 0");
+        log.trace("getStartTime: Could not get storage progress file '"
+                  + progressFile + "'. Returning 0 as lastTimestamp");
         return 0;
     }
 
@@ -302,10 +302,12 @@ public class RecordReader implements ObjectFilter {
         }
         Payload payload = new Payload(recordIterator.next());
         recordCounter++;
+//        System.out.println("*** " + lastRecordTimestamp);
         lastRecordTimestamp = payload.getRecord().getLastModified();
         if (log.isTraceEnabled()) {
             log.trace("next(): Got lastModified timestamp "
-                      + String.format(ISO_TIME, lastRecordTimestamp)
+                      + String.format(ISO_TIME,
+                                      payload.getRecord().getLastModified())
                       + " for " + payload);
         }
         if (maxReadRecords != -1 && maxReadRecords <= recordCounter) {
@@ -319,6 +321,7 @@ public class RecordReader implements ObjectFilter {
                       + maxReadSeconds + ") seconds");
             eooReached = true;
         }
+        writeProgress(); // TODO: Is this too aggressive?
         return payload;
     }
 
@@ -349,6 +352,7 @@ public class RecordReader implements ObjectFilter {
      * harvest is stored. If success is false, no progress is stored.
      * @param success whether the while ingest has been successfull or not.
      */
+    // TODO: Check why this is not called in FacetTest
     public void close(boolean success) {
         //noinspection DuplicateStringLiteralInspection
         log.debug("close(" + success + ") entered");

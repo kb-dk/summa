@@ -87,8 +87,8 @@ public class IDMapper implements Map<String, Integer> {
                 break;
             }
             String termString = termEnum.term().text();
-            TermDocs termDocs =
-                    reader.termDocs(new Term(IndexUtils.RECORD_FIELD, termString));
+            TermDocs termDocs =reader.termDocs(new Term(IndexUtils.RECORD_FIELD,
+                                                        termString));
             boolean found = false;
             while (termDocs.next()) {
                 found = true;
@@ -141,6 +141,8 @@ public class IDMapper implements Map<String, Integer> {
         return recordIDs.get(key);
     }
     public Integer put(String key, Integer value) {
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("put(" + key + ", " + value + ") called");
         return recordIDs.put(key, value);
     }
     public Integer remove(Object key) {

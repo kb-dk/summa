@@ -315,8 +315,12 @@ public class LuceneManipulator implements IndexManipulator {
             // TODO: Verify that docCount is trustable with regard to deletes
             payload.getData().put(LuceneIndexUtils.META_ADD_DOCID,
                                   writer.docCount()-1);
+            log.trace("Updating idMapper with id '" + id + "' and pos "
+                      + (writer.docCount()-1));
             idMapper.put(id, writer.docCount()-1);
         } else {
+            log.debug("Update addition: " + deletions.size()
+                      + " deletions exists");
             if (deletions.containsKey(id)) {
                 // TODO: How does this work with Facet?
                 debug.write(" & existing deletion");

@@ -66,7 +66,16 @@ public class CoreMapBitStuffedTest extends TestCase {
         assertEquals("The map should contain 2 elements",
                      2, map.getDocCount());
         map.add(2, 0, new int[]{23, 34});
-        assertEquals("The map should contain 3 elements", 
+        assertEquals("The map should contain 3 elements",
+                     3, map.getDocCount());
+    }
+
+    public void testExpansionWithZeros() throws Exception {
+        CoreMap map = bo.getCoreMap();
+        map.add(0, 0, new int[]{12, 23, 34});
+        map.add(1, 1, new int[]{12, 34});
+        map.add(3, 0, new int[]{23, 34});
+        assertEquals("The map should contain 4 elements",
                      3, map.getDocCount());
     }
 
