@@ -35,7 +35,7 @@
      * The property-key for the boolean determining if a new database should
      * be created, no matter is a database already exists.
      -->
-    <entry key="summa.storage.database.forcenew">true</entry>
+    <entry key="summa.storage.database.forcenew">false</entry>
 
     <!--
      * The location of the database to use/create. This will be relative to
