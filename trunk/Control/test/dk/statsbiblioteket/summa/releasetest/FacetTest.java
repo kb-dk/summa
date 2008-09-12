@@ -275,6 +275,7 @@ public class FacetTest extends NoExitTestCase {
         searcher.checkIndex();
         log.debug("Checkindex after Update 2 performed, verifying...");
         SearchTest.verifySearch(searcher, "Hans", 1);
+        verifyFacetResult(searcher, "Hans");
         log.debug("Sample output after initial ingest: "
                   + searcher.search(SearchTest.simpleRequest("fagekspert")).
                 toXML());
@@ -283,8 +284,6 @@ public class FacetTest extends NoExitTestCase {
                 Resolver.getURL("data/search/input/part2").getFile()));
         updateIndex();
         log.debug("Waiting for the searcher to discover the new index");
-        searcher.checkIndex();
-        Thread.sleep(5000); // Why do we need to do this?
         searcher.checkIndex(); // Make double sure
         Thread.sleep(5000); // Why do we need to do this?
         log.debug("Verify final index");
