@@ -175,6 +175,7 @@ public class SearchWS {
             // transform dom back into a string
             Transformer tran = TransformerFactory.newInstance().newTransformer();
             tran.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+            tran.setOutputProperty(OutputKeys.METHOD, "xml");
             StringWriter sw = new StringWriter();
             tran.transform(new DOMSource(dom), new StreamResult(sw));
 
