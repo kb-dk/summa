@@ -174,7 +174,7 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements
     }
 
     protected abstract DocIDCollector collectDocIDs(String query, String filter)
-                                                            throws IOException;
+                                                             throws IOException;
 
 
     /* Mutators */

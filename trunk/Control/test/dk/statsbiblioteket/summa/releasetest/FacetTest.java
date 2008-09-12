@@ -186,6 +186,30 @@ public class FacetTest extends NoExitTestCase {
         storage.close();
     }
 
+    public void testThreeFileIngest() throws Exception {
+        Storage storage = SearchTest.startStorage();
+        SearchTest.ingest(new File(
+                Resolver.getURL("data/search/input/part1plus2").getFile()));
+        assertEquals("The Records-count should be correct after first ingest",
+                     3, countRecords(storage, "fagref"));
+
+        updateIndex();
+        Thread.sleep(5000); // Why do we need to do this?
+        log.debug("Index updated. Creating searcher");
+        SummaSearcherImpl searcher =
+                new SummaSearcherImpl(getSearcherConfiguration());
+        Thread.sleep(5000); // Why do we need to do this?
+        searcher.checkIndex(); // Make double sure
+        log.debug("Searcher created");
+        for (String name: "Jens Gurli Hans".split(" ")) {
+            log.debug(String.format("Verifying existence of %s data", name));
+            SearchTest.verifySearch(searcher, name, 1);
+            verifyFacetResult(searcher, name);
+        }
+        searcher.close();
+        storage.close();
+    }
+
     public void testDualIngest() throws Exception {
         Storage storage = SearchTest.startStorage();
         SearchTest.ingest(new File(
