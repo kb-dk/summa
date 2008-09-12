@@ -4,12 +4,17 @@
     <groups>
         <group name="au">
             <field name="author_person"/>
+            <field name="author_normalised"/>
+            <field name="au_other"/>
         </group>
         <group name="ti">
             <field name="main_titel"/>
+            <field name="sort_title"/>
         </group>
         <group name="su">
             <field name="lsu_oai"/>
+            <field name="lsubject"/>
+            <field name="subject_other"/>
         </group>
         <group name="lma">
             <field name="lma_long"/>
@@ -21,13 +26,22 @@
         <field name="token" index="true" inFreeText="true" required="true"/>
         <!-- TODO: Consider compression of shortformat -->
         <field name="shortformat" parent="stored" indexed="false" inFreeText="false" required="true"/>
+
+        <field name="author_normalised" parent="token" multiValued="true" queryBoost="10"/>
         <field name="author_person" parent="token" multiValued="true" queryBoost="10"/>
+        <field name="au_other" parent="token" multiValued="true" queryBoost="5"/>
+
         <field name="main_titel" parent="token" queryBoost="10"/>
-        <field name="lsu_oai" parent="keyword" multiValued="false" queryBoost="10"/>
+        <field name="sort_title" parent="keyword" sortLocale="da"/>
+
+        <field name="lsubject" parent="keyword" inFreeText="true" queryBoost="10"/>
+        <field name="subject_other" parent="keyword" inFreeText="true" queryBoost="10"/>
+        <field name="lsu_oai" parent="keyword" inFreeText="true" queryBoost="10"/>
+
         <field name="no" parent="token" queryBoost="7"/>
         <field name="ma_long" parent="token" multiValued="true"/>
         <field name="lma_long" parent="keyword"/>
-        <field name="sort_title" parent="keyword" sortLocale="da"/>
+
     </fields>
 
     <defaultSearchFields>freetext au ti su lma</defaultSearchFields>
