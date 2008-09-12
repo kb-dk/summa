@@ -39,7 +39,7 @@
                         </entry>
                         <entry>
                             <key>summa.ingest.filereader.rootfolder</key>
-                            <value class="string">/tmp/summatest/data/oai</value>
+                            <value class="string">/tmp/summatest/data/oai/incoming</value>
                         </entry>
                         <entry>
                             <key>summa.ingest.filereader.recursive</key>
