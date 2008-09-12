@@ -210,6 +210,32 @@ public class FacetTest extends NoExitTestCase {
         storage.close();
     }
 
+    public void testTagCounting() throws Exception {
+        Storage storage = SearchTest.startStorage();
+        SearchTest.ingest(new File(
+                Resolver.getURL("data/search/input/partClone").getFile()));
+        assertEquals("The Records-count should be correct after first ingest",
+                     4, countRecords(storage, "fagref"));
+
+        updateIndex();
+        log.debug("Index updated. Creating searcher");
+        SummaSearcherImpl searcher =
+                new SummaSearcherImpl(getSearcherConfiguration());
+        searcher.checkIndex(); // Make double sure
+        log.debug("Searcher created");
+        for (String name: "Jens Gurli Hans".split(" ")) {
+            log.debug(String.format("Verifying existence of %s data", name));
+            SearchTest.verifySearch(
+                    searcher, name, name.equals("Hans") ? 2 : 1);
+            verifyFacetResult(searcher, name);
+        }
+        log.debug("Result for search for fagref "
+                  + searcher.search(SearchTest.simpleRequest(
+                "fagekspert")).toXML());
+        searcher.close();
+        storage.close();
+    }
+
     public void testDualIngest() throws Exception {
         Storage storage = SearchTest.startStorage();
         SearchTest.ingest(new File(
@@ -285,7 +311,6 @@ public class FacetTest extends NoExitTestCase {
         updateIndex();
         log.debug("Waiting for the searcher to discover the new index");
         searcher.checkIndex(); // Make double sure
-        Thread.sleep(5000); // Why do we need to do this?
         log.debug("Verify final index");
         SearchTest.verifySearch(searcher, "Gurli", 1);
         SearchTest.verifySearch(searcher, "Gurli", 1); // Yes, we try again
