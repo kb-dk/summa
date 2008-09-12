@@ -13,9 +13,12 @@
 
     String search_html = "";
     String facet_html = "";
+    String form_query = "";
 
     String query = request.getParameter("query");
     if (query != null && !query.equals("")) {
+        form_query = query.replaceAll("\"", "&quot;");
+
         int per_page = 10;
         int startIndex = 0;
         int current_page;
@@ -67,12 +70,25 @@
     <title>summa example website</title>
     <link rel="stylesheet" type="text/css" href="css/project.css"/>
 </head>
-<body>
-<form action="index.jsp">
-    <input type="text" name="query" value="<%= query.replaceAll("\"", "&quot;") %>" />
-    <input type="submit" value="Search" />
-</form>
-<%= search_html %>
-<%= facet_html %>
+<body style="padding: 10px;">
+
+<img src="images/summa-logo_h40.png" alt="Summa logo" />
+<br />
+
+<div class="searchBoxContainer" id="searchBoxContainer">
+    <div class="searchBox" id="searchBox">
+        <form action="index.jsp" class="searchBoxTweak" id="fpSearch">
+            <input type="text" name="query" value="<%= form_query %>" />
+            <input type="submit" value="Search" />
+        </form>
+    </div>
+</div>
+
+<div class="clusterLeft">
+    <%= search_html %>
+</div>
+<div class="clusterRight">
+    <%= facet_html %>
+</div>
 </body>
 </html>
