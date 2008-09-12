@@ -74,15 +74,20 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements
             nonescapedFields.addAll(conf.getStrings(CONF_NONESCAPED_FIELDS));
         }
         fallbackValues = conf.getStrings(CONF_FALLBACK_VALUES, fallbackValues);
-        sortKey = conf.getString(CONF_DEFAULT_SORTKEY, sortKey);
+
         if (fallbackValues != null
             && resultFields.length != fallbackValues.length) {
-            //noinspection DuplicateStringLiteralInspection
-            throw new IllegalArgumentException(String.format(
+            log.error (String.format(
                     "The number of fallback-values(%s) was not equal to the "
                     + "number of result-fields(%s)", fallbackValues.length,
                                                      resultFields.length));
         }
+
+        // Make sure that fallback values and result fields line up
+        fallbackValues = fixFallbackValues(resultFields, fallbackValues);
+
+        sortKey = conf.getString(CONF_DEFAULT_SORTKEY, sortKey);
+
         maxRecords = conf.getLong(CONF_MAX_RECORDS, maxRecords);
         if (maxRecords <= 0) {
             log.warn(String.format(
@@ -106,6 +111,50 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements
         for (int i = 0 ; i < getMaxConcurrentSearches() ; i++) {
             new DocIDCollector(collectors);
         }
+    }
+
+    /**
+     * Make sure that {@code resultFields} and {@code fallbackValues} has the
+     * same length.
+     * <p></p>
+     * @param resultFields the fields that will be returned for request to this
+     *                     searcher
+     * @param fallbackValues the fallback values that should be checked for
+     *                       validity
+     * @return if {@code resultFields.length == fallbackValues.length} simply
+     *         returns {@code fallbackValues}. If not returns a truncated or
+     *         padded version of {@code fallbackValues}.
+     *         If {@code fallbackValues == null} {@code null} is returned.
+     */
+    private String[] fixFallbackValues(String[] resultFields,
+                                   String[] fallbackValues) {
+        if (fallbackValues == null) {
+            log.debug ("No fallback field values defined");
+            return null;
+        }
+
+        if (resultFields.length == fallbackValues.length) {
+            log.debug ("Fallback field values configured correctly");
+        }
+
+        String[] newFallbacks = new String[resultFields.length];
+
+        if (resultFields.length > fallbackValues.length) {
+            // Pad fallbacks with the default fallback value
+            System.arraycopy(fallbackValues, 0,
+                             newFallbacks,  0,
+                             fallbackValues.length);
+            for (int i = 0; i < newFallbacks.length; i++) {
+                newFallbacks[i] = null;
+            }
+        } else {
+            // resultFields.length < fallbackValues.length, truncate fallbacks
+            System.arraycopy(fallbackValues, 0,
+                             newFallbacks,  0,
+                             newFallbacks.length);
+        }
+
+        return newFallbacks;
     }
 
     public String simpleSearch(String query, long startIndex,
@@ -153,6 +202,17 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements
                                                        this.resultFields);
             String[] fallbackValues = request.getStrings(DocumentKeys.SEARCH_FALLBACK_VALUES,
                                                          this.fallbackValues);
+
+            if (fallbackValues != null &&
+                resultFields.length != fallbackValues.length) {
+                log.debug(String.format(
+                          "Incoming request uses mistmatching result fields and"
+                          + "fallback values %s(%s) and %s(%s)",
+                          DocumentKeys.SEARCH_RESULT_FIELDS, resultFields.length,
+                          DocumentKeys.SEARCH_FALLBACK_VALUES, fallbackValues.length));
+            }
+            fallbackValues = fixFallbackValues(resultFields, fallbackValues);
+
             responses.add(fullSearch(filter, query, startIndex, records,
                                      sortKey, reverse,
                                      resultFields, fallbackValues));
