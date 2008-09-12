@@ -177,7 +177,7 @@ public class BrowserImpl extends SearchNodeImpl implements Browser {
         try {
             // TODO: Make this threaded
             log.trace("Activating BrowserThread");
-            browserThread.startRequest(docIDs, 0, docIDs.getDocCount(),
+            browserThread.startRequest(docIDs, 0, docIDs.getBits().length(),
                                    facetRequest);
             log.trace("Waiting for browserThread");
             browserThread.waitForResult(BROWSER_THREAD_MARK_TIMEOUT);

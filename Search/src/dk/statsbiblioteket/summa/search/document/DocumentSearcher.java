@@ -69,8 +69,7 @@ public interface DocumentSearcher extends SearchNode, DocumentKeys {
      * This value is extracted by calling
      * {@link dk.statsbiblioteket.summa.common.configuration.Configuration#getStrings(String)}.
      */
-    public static final String CONF_RESULT_FIELDS =
-            "summa.search.resultfields";
+    public static final String CONF_RESULT_FIELDS = "summa.search.resultfields";
     public static final String[] DEFAULT_RESULT_FIELDS =
             "recordID shortformat".split(" ");
 
@@ -103,8 +102,7 @@ public interface DocumentSearcher extends SearchNode, DocumentKeys {
      * </p></p>
      * Optional. Default is {@link #DEFAULT_START_INDEX} (0).
      */
-    public static final String CONF_START_INDEX =
-            "summa.search.startindex";
+    public static final String CONF_START_INDEX = "summa.search.startindex";
     public static final long DEFAULT_START_INDEX = 0;
 
     /**
@@ -318,5 +316,3 @@ public interface DocumentSearcher extends SearchNode, DocumentKeys {
             throws RemoteException;
 
 }
-
-

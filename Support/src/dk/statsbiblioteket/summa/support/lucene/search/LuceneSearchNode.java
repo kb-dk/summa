@@ -232,6 +232,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
             Filter luceneFilter = filter == null || "".equals(filter) ? null :
                              new QueryWrapperFilter(parser.parse(filter));
             Query luceneQuery = parser.parse(query);
+
             TopFieldDocs topDocs = searcher.search(
                     luceneQuery, luceneFilter,
                     (int)(startIndex + maxRecords), Sort.RELEVANCE);
@@ -326,19 +327,19 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
             throw new RemoteException(String.format(
                     "Unable to parse query '%s'", query), e);
         }
-        return collectDocIDs(luceneFilter, luceneQuery);
+        return collectDocIDs(luceneQuery, luceneFilter);
     }
 
-    private DocIDCollector collectDocIDs(Filter filter, Query query) throws
+    private DocIDCollector collectDocIDs(Query query, Filter filter) throws
                                                                    IOException {
         log.trace("collectDocIDs() called");
         long startTime = System.currentTimeMillis();
         DocIDCollector collector;
         try {
             collector = collectors.poll(COLLECTOR_REQUEST_TIMEOUT,
-                                                       TimeUnit.MILLISECONDS);
+                                        TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
-            throw new RemoteException("Interrupted qhile requesting a "
+            throw new RemoteException("Interrupted while requesting a "
                                       + "DocIDCollector from the queue");
         }
         if (collector == null) {
@@ -347,15 +348,18 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                     + "DocIDCollector", COLLECTOR_REQUEST_TIMEOUT));
         }
         if (filter == null) {
+            //System.out.println(query);
             searcher.search(query, collector);
         } else {
             searcher.search(query, filter, collector);
         }
-        log.trace("Finished collectDocIDs in "
-                  + (System.currentTimeMillis() - startTime)
-                  + " ms with " + collector.getDocCount()
-                  + " documents collected and the highest bit being "
-                  + (collector.getBits().length() - 1));
+        if (log.isTraceEnabled()) {
+            log.trace("Finished collectDocIDs in "
+                      + (System.currentTimeMillis() - startTime)
+                      + " ms with " + collector.getDocCount()
+                      + " documents collected and the highest bit being "
+                      + (collector.getBits().length() - 1));
+        }
         return collector;
     }
 }
