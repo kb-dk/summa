@@ -202,6 +202,15 @@ public class Structure implements Configurable, Serializable {
         }
         return map;
     }
+
+    public HashMap<String, String[]> getFacetFields() {
+        HashMap<String, String[]> map =
+                new HashMap<String, String[]>(facets.size());
+        for (Map.Entry<String, FacetStructure> entry: facets.entrySet()) {
+            map.put(entry.getValue().getName(), entry.getValue().getFields());
+        }
+        return map;
+    }
 }
 
 
