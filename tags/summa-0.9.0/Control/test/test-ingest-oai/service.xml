@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bundle>
+	<mainJar>test-ingest-oai-service-@summa.version@.jar</mainJar>
+	<mainClass>dk.statsbiblioteket.summa.control.service.Launcher</mainClass>
+    <property name="com.sun.management.jmxremote.port" value="2776"/>
+    <property name="com.sun.management.jmxremote.ssl" value="false"/>
+    <description>Test ingester for OAI data</description>
+	<bundleId>test-ingest-oai</bundleId>
+</bundle>
+
+
