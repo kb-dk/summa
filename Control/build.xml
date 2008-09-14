@@ -12,7 +12,7 @@
     <property name="project.version" value="${summa.version}"/>
     <property name="release" value="${project.name}-${project.version}"/>
     <property name="release.jar" value="${release}.jar"/>
-    <property name="release.api" value="${project.name}-api-${project.version}.jar"/>
+    <property name="release.api" value="${project.name}-api-${project.version}"/>
     <property name="release.api.jar" value="${release.api}.jar"/>
     <property name="release.bundles" value="${project.name}-test-bundles-${project.version}"/>
     <property name="release.bundles.zip" value="${release.bundles}.zip"/>
