@@ -12,7 +12,10 @@
     <property name="project.version" value="${summa.version}"/>
     <property name="release" value="${project.name}-${project.version}"/>
     <property name="release.jar" value="${release}.jar"/>
-    <property name="release.api.jar" value="${project.name}-api-${project.version}.jar"/>
+    <property name="release.api" value="${project.name}-api-${project.version}.jar"/>
+    <property name="release.api.jar" value="${release.api}.jar"/>
+    <property name="release.bundles" value="${project.name}-test-bundles-${project.version}"/>
+    <property name="release.bundles.zip" value="${release.bundles}.zip"/>
 
     <!-- Persistent directories -->
     <property name="src.dir" value="${basedir}/src"/>
@@ -114,7 +117,7 @@
     </target>
 
     <target name=".compileFacetBrowser">
-        <ant inheritAll="false" dir="../facetBrowser" target="compile"/>
+        <ant inheritAll="false" dir="../FacetBrowser" target="compile"/>
     </target>
 
     <target name=".releaseFacetBrowser">
@@ -333,6 +336,15 @@
                 token="@summa.ilib.search@"
                 value="lib/summa-search-${summa.version}.jar"/>
         </replace>
+    </target>
+
+    <target name=".release.bundles" depends="depends, .release.depends, .jar, .test-storage-1.bundle, .test-ingest-oai.bundle, .test-facet-index-1.bundle, .test-facet-search-1.bundle, .test-index-oai.bundle, .test-search-1.bundle">
+        <mkdir dir="${dist.dir}"/>
+        <zip destfile="${dist.dir}/${release.bundles.zip}">
+            <zipfileset prefix="${release.bundles}" dir="${dist.dir}">
+                <include name="*.bundle"/>
+            </zipfileset>
+        </zip>
     </target>
 
     <target name="release" depends="distclean, depends, .scripts, .release.depends,.jar, doc">
@@ -897,7 +909,7 @@
         <delete dir="${tmp.dir}"/>
     </target>
 
-    <target name="all" depends="release, .test-facet-index-1.bundle, .test-facet-search-1.bundle, .test-search-1.bundle, .test-client-1.bundle, .test-storage-1.bundle, .test-data, .test-ingest-oai.bundle, .test-index-oai.bundle"/>
+    <target name="all" depends="release, .release.bundles"/>
 
 </project>
 
