@@ -303,6 +303,7 @@ public class IngestTest extends NoExitTestCase {
         log.debug("Releasing remoteStorage connection context");
         cm.release(ctx);
 
+        storage.close();
         log.debug("Finished testRemote unit test");
     }
 
