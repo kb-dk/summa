@@ -5,13 +5,11 @@
 
     <xsl:param name="query"/>
 
-    <xsl:template match="/facetmodel">
+    <xsl:template match="facetmodel">
         <xsl:choose>
             <xsl:when test="count(.//facet) &gt; 0">
-                <div class="clusterRight">
-                    <h2>Limit your search</h2>
-                    <xsl:apply-templates />
-                </div>
+                <h2>Limit your search</h2>
+                <xsl:apply-templates />
             </xsl:when>
             <xsl:otherwise>
                 No facets found
