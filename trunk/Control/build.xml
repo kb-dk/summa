@@ -338,7 +338,7 @@
         </replace>
     </target>
 
-    <target name=".release.bundles" depends="depends, .release.depends, .jar, .test-storage-1.bundle, .test-ingest-oai.bundle, .test-facet-index-1.bundle, .test-facet-search-1.bundle, .test-index-oai.bundle, .test-search-1.bundle">
+    <target name=".release.bundles" depends="depends, .release.depends, .jar, .test-client-1.bundle, .test-storage-1.bundle, .test-ingest-oai.bundle, .test-facet-index-1.bundle, .test-facet-search-1.bundle, .test-index-oai.bundle, .test-search-1.bundle">
         <mkdir dir="${dist.dir}"/>
         <zip destfile="${dist.dir}/${release.bundles.zip}">
             <zipfileset prefix="${release.bundles}" dir="${dist.dir}">
