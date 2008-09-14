@@ -60,7 +60,7 @@
                             <value class="string">fagref:</value>
                         </entry>
                         <entry>
-                            <key>summa.ingest.xmlsplitter.collapse_prefix</key>
+                            <key>summa.ingest.xmlsplitter.collapseprefix</key>
                             <value class="boolean">true</value>
                         </entry>
                         <entry>
