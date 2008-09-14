@@ -56,7 +56,7 @@ public abstract class StorageBase extends UnicastRemoteObject
 
         log.trace("Exporting Storage interface");
         RemoteHelper.exportRemoteInterface(this,
-                                           conf.getInt(Storage.DEFAULT_REGISTRY_PORT, 28000),
+                                           conf.getInt(Storage.CONF_REGISTRY_PORT, 28000),
                                            "summa-storage");
 
         try {
@@ -77,10 +77,10 @@ public abstract class StorageBase extends UnicastRemoteObject
 
     private static int getServicePort(Configuration configuration) {
         try {
-            return configuration.getInt(Storage.DEFAULT_SERVICE_PORT);
+            return configuration.getInt(Storage.CONF_SERVICE_PORT);
         } catch (NullPointerException e) {
             log.warn ("Service port not defined in "
-                    + Storage.DEFAULT_SERVICE_PORT + ". Falling back to "
+                    + Storage.CONF_SERVICE_PORT + ". Falling back to "
                     + "anonymous port");
             return 0;
         }

@@ -42,25 +42,19 @@ public interface Storage extends ReadableStorage, WritableStorage {
      * Configuration property specifying which port the Storage service
      * should communicate on. Default is 27027.
      */
-    public static final String DEFAULT_SERVICE_PORT = "summa.storage.service.port";
+    public static final String CONF_SERVICE_PORT = "summa.storage.service.port";
 
     /**
      * Configuration property specifying the service name of the Storage service.
      * Default is {@code summa-storage}.
      */
-    public static final String DEFAULT_SERVICE_NAME = "summa.storage.service.name";
+    public static final String CONF_SERVICE_NAME = "summa.storage.service.name";
 
     /**
      * Configuration property specifying which port the registry used by
      * the Storage can be found on. Default is 27000.
      */
-    public static final String DEFAULT_REGISTRY_PORT = "summa.storage.registry.port";
-
-    /**
-     * Configuration property specifying which host the registry used by
-     * the Storage can be found on. Default is {@code localhost}.
-     */
-    public static final String DEFAULT_REGISTRY_HOST = "summa.storage.registry.host";
+    public static final String CONF_REGISTRY_PORT = "summa.storage.registry.port";
 
     /**
      * Configuration property specifying where the storage should store
