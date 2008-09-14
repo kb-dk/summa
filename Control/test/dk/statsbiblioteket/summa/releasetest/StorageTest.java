@@ -51,7 +51,7 @@ public class StorageTest extends TestCase {
         Storage storage = IndexTest.fillStorage();
 
         MemoryStorage ms = new MemoryStorage();
-        ms.put(RecordReader.CONF_START_FROM_SCRATCH, false);
+        ms.put(RecordReader.CONF_START_FROM_SCRATCH, true);
         ms.put(RecordReader.CONF_BASE, "fagref");
         Configuration conf = new Configuration(ms);
 
@@ -80,6 +80,7 @@ public class StorageTest extends TestCase {
                      pumps, newPumps);
         reader.close(true);
 
+        ms.put(RecordReader.CONF_START_FROM_SCRATCH, false);
         reader = new RecordReader(conf);
         int thirdPumps = 0;
         while (reader.hasNext()) {
