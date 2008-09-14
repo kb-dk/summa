@@ -44,6 +44,8 @@
                         </entry>
                         <entry>
                             <key>summa.ingest.filereader.completedpostfix</key>
+                            <!-- We use an empty postfix here to allow the unit
+                                 tests to be re-runnable -->
                             <value class="string"></value>
                         </entry>
                     </value>
