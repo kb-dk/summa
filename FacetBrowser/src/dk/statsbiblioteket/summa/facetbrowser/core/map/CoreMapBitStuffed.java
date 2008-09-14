@@ -305,11 +305,9 @@ public class CoreMapBitStuffed extends CoreMapImpl {
         StringWriter sw = new StringWriter(500);
         //noinspection DuplicateStringLiteralInspection
         // TODO: Make a better toString (make a List with array as backing)
-        sw.append("Index: ").append(Logs.expand(Arrays.asList(index),
-                                                Math.min(20, highestDocID+2)));
+        sw.append("Index: ").append(dump(index, Math.min(20, highestDocID+2)));
         sw.append(", Values: ");
-        sw.append(Logs.expand(Arrays.asList(values), 
-                              Math.min(20, valuePos)));
+        sw.append(dump(values, Math.min(20, valuePos)));
         return sw.toString();
     }
 
@@ -517,6 +515,3 @@ public class CoreMapBitStuffed extends CoreMapImpl {
         this.shift = shift;
     }
 }
-
-
-

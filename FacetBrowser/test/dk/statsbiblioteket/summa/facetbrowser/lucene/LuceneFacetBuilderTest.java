@@ -134,6 +134,7 @@ public class LuceneFacetBuilderTest extends TestCase {
         assertEquals("The number of documents should be as expected",
                    IndexBuilder.getDocumentCount(),
                    builder.getCoreMap().getDocCount());
+        log.debug("Builder stats: " + builder.getCoreMap());
     }
 
     public static Test suite() {

@@ -215,7 +215,7 @@ public class FacetTest extends NoExitTestCase {
         SearchTest.ingest(new File(
                 Resolver.getURL("data/search/input/partClone").getFile()));
         assertEquals("The Records-count should be correct after first ingest",
-                     4, countRecords(storage, "fagref"));
+                     5, countRecords(storage, "fagref"));
 
         updateIndex();
         log.debug("Index updated. Creating searcher");
@@ -226,7 +226,7 @@ public class FacetTest extends NoExitTestCase {
         for (String name: "Jens Gurli Hans".split(" ")) {
             log.debug(String.format("Verifying existence of %s data", name));
             SearchTest.verifySearch(
-                    searcher, name, name.equals("Hans") ? 2 : 1);
+                    searcher, name, name.equals("Hans") ? 3 : 1);
             verifyFacetResult(searcher, name);
         }
         log.debug("Result for search for fagref "
