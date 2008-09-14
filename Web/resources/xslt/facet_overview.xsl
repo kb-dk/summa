@@ -6,12 +6,17 @@
     <xsl:param name="query"/>
 
     <xsl:template match="/facetmodel">
-        <xsl:if test="count(.//facet) &gt; 0">
-            <div class="clusterRight">
-                <h2>Limit your search</h2>
-                <xsl:apply-templates />
-            </div>
-        </xsl:if>
+        <xsl:choose>
+            <xsl:when test="count(.//facet) &gt; 0">
+                <div class="clusterRight">
+                    <h2>Limit your search</h2>
+                    <xsl:apply-templates />
+                </div>
+            </xsl:when>
+            <xsl:otherwise>
+                No facets found
+            </xsl:otherwise>
+        </xsl:choose>
     </xsl:template>
 
     <xsl:template match="facet">
