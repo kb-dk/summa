@@ -62,6 +62,9 @@ import org.apache.commons.logging.LogFactory;
  * The purpose of this class is to test the workflow
  * "files => ingest-chain => storage => index-chain => index = search".
  * It relies on the modules Common, Ingest, Index, Storage and Search.
+ * </p><p>
+ * IMPORTANT: Due to problems with releasing JDBC, the tests cannot be run
+ * in succession, but must be started one at a time in their own JVM.
  */
 // TODO: Fix shutdown problem, so that all unit-tests can run sequentially
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
