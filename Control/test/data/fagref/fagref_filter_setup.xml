@@ -44,7 +44,7 @@
                         </entry>
                         <entry>
                             <key>summa.ingest.filereader.completedpostfix</key>
-                            <value class="string">.completed</value>
+                            <value class="string"></value>
                         </entry>
                     </value>
                 </entry>
