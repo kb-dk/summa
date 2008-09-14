@@ -344,6 +344,9 @@
             <zipfileset prefix="${release.bundles}" dir="${dist.dir}">
                 <include name="*.bundle"/>
             </zipfileset>
+            <zipfileset prefix="${release.bundles}" dir="${test.src.dir}">
+                <include name="*data/**/*"/>
+            </zipfileset>
         </zip>
     </target>
 
