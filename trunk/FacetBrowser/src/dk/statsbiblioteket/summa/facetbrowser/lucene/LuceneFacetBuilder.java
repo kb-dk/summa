@@ -145,6 +145,8 @@ public class LuceneFacetBuilder extends BuilderImpl {
         if (!keepTags) {
             buildTagsFromIndex(ir);
         }
+        log.trace("build: Clearing existing core map");
+        coreMap.clear();
         if (docsToTerms) {
             buildDocsToTerms(ir);
         }
@@ -210,8 +212,6 @@ public class LuceneFacetBuilder extends BuilderImpl {
      * @throws java.io.IOException if an I/O-error occured.
      */
     private void buildDocsToTerms(IndexReader ir) throws IOException {
-        log.trace("buildDocsToTerms: Clearing existing core map");
-        coreMap.clear();
         log.info("buildDocsToTerms: Filling core map for facet browsing");
 
         Profiler totalProgress = new Profiler();

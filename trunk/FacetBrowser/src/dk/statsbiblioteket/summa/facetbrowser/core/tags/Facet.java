@@ -169,16 +169,21 @@ public class Facet implements CollatorSortedPool {
             String n = structure.getName();
             String f = Strings.join(Arrays.asList(structure.getFields()), ", ");
             String l = structure.getLocale() == null ? "":structure.getLocale();
-            if (n.equals(xp.getString(META_NAME))
-                && f.equals(Strings.join(
-                    Arrays.asList(xp.getString(META_FIELDS)), ", "))
-                && l.equals(xp.getString(META_LOCALE))) {
-                forceNew = false;
+            if (xp.containsKey(META_NAME)) {
+                if (n.equals(xp.getString(META_NAME))
+                    && f.equals(Strings.join(
+                        Arrays.asList(xp.getString(META_FIELDS)), ", "))
+                    && l.equals(xp.getString(META_LOCALE))) {
+                    forceNew = false;
+                } else {
+                    log.info(String.format(
+                            "The meta-data for the persistent facet did not match "
+                            + "the structure for Facet '%s' at '%s', forcing new",
+                            structure.getName(), location));
+                }
             } else {
-                log.info(String.format(
-                        "The meta-data for the persistent facet did not match "
-                        + "the structure for Facet '%s' at '%s', forcing new",
-                        structure.getName(), location));
+                log.warn("No name located in properties for '" + metaFile
+                         + ". Forcing new facets");
             }
         } catch (IOException e) {
             log.debug(String.format(
