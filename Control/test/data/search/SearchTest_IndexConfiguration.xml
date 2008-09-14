@@ -112,15 +112,15 @@
                         </entry>
                         <entry>
                             <key>summa.index.createnewindex</key>
-                            <value class="boolean">true</value>
+                            <value class="boolean">false</value>
                         </entry>
                         <entry>
                             <key>summa.index.indexrootlocation</key>
                             <value class="string">/tmp/summatest/testindex</value>
                         </entry>
                         <entry>
-                            <key>summa.index.consolidatetimeout</key>
-                            <value class="int">1000</value>
+                            <key>summa.index.committimeout</key>
+                            <value class="int">500</value>
                         </entry>
                         <entry>
                             <key>LuceneUpdater</key>

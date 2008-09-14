@@ -62,8 +62,6 @@ import org.apache.commons.logging.LogFactory;
  * The purpose of this class is to test the workflow
  * "files => ingest-chain => storage => index-chain => index = search".
  * It relies on the modules Common, Ingest, Index, Storage and Search.
- * </p><p>
- * The method {@link #testFull} is the big test.
  */
 // TODO: Fix shutdown problem, so that all unit-tests can run sequentially
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
@@ -308,14 +306,18 @@ public class SearchTest extends NoExitTestCase {
         log.debug("Storage started");
         updateIndex();
         log.debug("updateIndex called");
-        Thread.sleep(3000); // Wait for searcher to discover new content
-        assertNotNull("Searching should provide a result (we don't care what)",
-                      searcher.search(simpleRequest("dummy")));
+//        Thread.sleep(3000); // Wait for searcher to discover new content
+        try {
+            searcher.search(simpleRequest("dummy"));
+            fail("A search with empty index should fail");
+        } catch (Exception e) {
+            // Expected
+        }
         ingest(new File(Resolver.getURL("data/search/input/part1").getFile()));
         verifyStorage(storage, "fagref:hj@example.com");
         updateIndex();
         log.debug("Finished updating of index. It should now contain 1 doc");
-        Thread.sleep(3000); // Wait for searcher to discover new content
+        Thread.sleep(5000); // Wait for searcher to discover new content
         try {
             verifySearch(searcher, "Hans", 1);
         } catch (IndexException e) {
@@ -328,18 +330,19 @@ public class SearchTest extends NoExitTestCase {
         }
         log.debug("Adding new material");
         ingest(new File(Resolver.getURL("data/search/input/part2").getFile()));
+        verifyStorage(storage, "fagref:hj@example.com");
         updateIndex();
         log.debug("Finished updating of index. It should now contain 3 docs");
-        Thread.sleep(3000); // Wait for searcher to discover new content
-        try {
-            verifySearch(searcher, "Hans", 1);
-        } catch (IndexException e) {
-            fail("Failed search 2 for Hans: " + e.getMessage());
-        }
+        Thread.sleep(5000); // Wait for searcher to discover new content
         try {
             verifySearch(searcher, "Gurli", 1);
         } catch (IndexException e) {
             fail("Failed search 2 for Gurli: " + e.getMessage());
+        }
+        try {
+            verifySearch(searcher, "Hans", 1);
+        } catch (IndexException e) {
+            fail("Failed search 2 for Hans: " + e.getMessage());
         }
         storage.close();
     }
