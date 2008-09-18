@@ -5,7 +5,8 @@
     <property file="${basedir}/build.properties"/>
     
     <property name="dist.dir" value="${basedir}/dist"/>
-    <property name="doc.dir" value="${basedir}/doc"/>
+    <property name="doc.dir" value="${basedir}/${summa.doc.dir}"/>
+    <property name="apidocs.dir" value="${basedir}/${summa.apidocs.dir}"/>
     <property name="lib.dir" value="${basedir}/lib"/>
     <property name="tmp.dir" value="${basedir}/tmp"/>
     
@@ -68,9 +69,9 @@
 
     <!-- Build documentation for all modules -->  
     <target name="doc">
-        <mkdir dir="${doc.dir}"/>        
+        <mkdir dir="${apidocs.dir}"/>        
         <javadoc packagenames="dk.statsbiblioteket.*"
-                destdir="${doc.dir}" author="true"
+                destdir="${apidocs.dir}" author="true"
                 version="true" access="private" windowtitle="Summa Documentation - ${summa.version}"
                 additionalparam="-breakiterator">
             <classpath>
@@ -150,7 +151,7 @@
         <!-- <ant dir="ClusterExtractor" inheritall="false" target="distclean"/>-->
 
         <delete dir="${dist.dir}" />
-        <delete dir="${doc.dir}" />
+        <delete dir="${summa.apidocs.dir}" />
     </target>
     
     <!-- Wrap up a tarball ready for distribution -->
@@ -172,7 +173,7 @@
                 <include name="${summa.license}"/>
             </fileset>
          </copy>
-         <copy todir="${release.tmp.dir}/${summa.apidocs.dir}">
+         <copy todir="${release.tmp.dir}/${summa.doc.dir}">
             <fileset dir ="${doc.dir}" includes="**/*"/>
          </copy>
 
