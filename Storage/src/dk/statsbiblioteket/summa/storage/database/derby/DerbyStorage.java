@@ -66,8 +66,15 @@ public class DerbyStorage extends DatabaseStorage implements Configurable {
         username = conf.getString(PROP_USERNAME, "");
         password = conf.getString(PROP_PASSWORD, "");
 
-        location = new File (StorageUtils.getGlobalPersistentDir(conf),
-                             "storage" + File.separator + "derby");
+        if (conf.valueExists(PROP_LOCATION)) {
+            log.debug("Property '" + PROP_LOCATION + "' exists, using value '"
+                      + conf.getString(PROP_LOCATION) + "' as location");
+            location = new File(conf.getString(PROP_LOCATION));
+        } else {
+            location = new File (StorageUtils.getGlobalPersistentDir(conf),
+                                 "storage" + File.separator + "derby");
+            log.debug("Using default location '" + location + "'");
+        }
         if (conf.valueExists(PROP_CREATENEW)) {
                 createNew = conf.getBoolean(PROP_CREATENEW);
         }
