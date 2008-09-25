@@ -23,6 +23,7 @@
 package dk.statsbiblioteket.summa.index;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 
 /**
  * A controller for manipulating indexes. An index is a representation of
@@ -32,7 +33,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public interface IndexController {
+public interface IndexController extends ObjectFilter {
     /**
      * Add a manipulator to the list of manipulators. The order of addition is
      * significant: Manipulators will be called in order of addition.
