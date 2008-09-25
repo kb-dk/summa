@@ -207,7 +207,8 @@ public class DocumentCreator extends ObjectFilterImpl {
         }
 
         payload.getData().put(Payload.LUCENE_DOCUMENT, luceneDoc);
-        payload.getData().put(Payload.SEARCH_DESCRIPTOR, luceneDoc);
+        // TODO: Consider if the SearchDescriptor is needed
+//        payload.getData().put(Payload.SEARCH_DESCRIPTOR, descriptor);
         log.debug("Added Lucene Document and SearchDescriptor to payload "
                   + payload + ". Processing time was "
                   + (System.currentTimeMillis() - startTime) + " ms");
