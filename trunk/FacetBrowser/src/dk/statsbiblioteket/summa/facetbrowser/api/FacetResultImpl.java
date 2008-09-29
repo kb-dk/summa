@@ -428,7 +428,26 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
                     replaceAll(">",  "&gt;").
                     replaceAll("#",  "%23"). // Escaping for URL
                     replaceAll("\"", "&quot;");
-    }}
+    }
+
+    /**
+     * Constructs a list of the Tags under the given Facet.
+     * @param facet the facet to get Tags for.
+     * @return all the Tags under the given Facet or null if the Facet does not
+     *         exist.
+     */
+    public List<String> getTags(String facet) {
+        if (!map.containsKey(facet)) {
+            log.debug("getTags(" + facet + "): Could not locate facet");
+            return null;
+        }
+        List<String> result = new ArrayList<String>(map.get(facet).size());
+        for (FlexiblePair<T, Integer> pair: map.get(facet)) {
+            result.add(getTagString(facet, pair.getKey()));
+        }
+        return result;
+    }
+}
 
 
 

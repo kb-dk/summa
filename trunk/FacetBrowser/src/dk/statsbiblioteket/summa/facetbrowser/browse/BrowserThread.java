@@ -104,9 +104,9 @@ public class BrowserThread implements Runnable {
      */
     public synchronized FacetResult getResult() {
         if (!hasFinished()) {
-            throw new IllegalStateException("It it not allowed to request the "
-                                            + "result before the request has "
-                                            + "been processed");
+            throw new IllegalStateException(
+                    "It it not allowed to request the result before the request"
+                    + " has been processed");
         }
         return result;
     }
@@ -155,6 +155,7 @@ public class BrowserThread implements Runnable {
                 result = null; // There really is no result!
                 return;
             }
+            log.trace("run: Extracting result by calling tagCounter.getFirst");
             result = tagCounter.getFirst(request);
             try {
                 tagCounter.reset(); // Clean-up

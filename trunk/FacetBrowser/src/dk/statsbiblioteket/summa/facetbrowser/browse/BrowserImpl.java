@@ -181,7 +181,7 @@ public class BrowserImpl extends SearchNodeImpl implements Browser {
                                    facetRequest);
             log.trace("Waiting for browserThread");
             browserThread.waitForResult(BROWSER_THREAD_MARK_TIMEOUT);
-            log.trace("Finished waiting for BrowserThread");
+            log.trace("Finished waiting for BrowserThread, returning result");
             return browserThread.getResult().externalize();
         } finally {
             browsers.offer(browserThread);
