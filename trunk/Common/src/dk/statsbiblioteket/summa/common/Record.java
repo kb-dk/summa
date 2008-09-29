@@ -360,6 +360,8 @@ public class Record implements Serializable, Comparable{
     /**
      * Update {@link #modificationTime} to the current time, thereby marking the
      * record as modified.
+     * </p><p>
+     * Note: The ganularity of this is in milliseconds, so if youch is called imm
      */
     public void touch() {
         setModificationTime(System.currentTimeMillis());
