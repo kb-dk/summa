@@ -235,6 +235,18 @@ public class FacetMap {
         tagHandler.open(location);
         coreMap.open(location, false);
     }
+
+    public TagHandler getTagHandler() {
+        return tagHandler;
+    }
+
+    public Structure getStructure() {
+        return structure;
+    }
+
+    public CoreMap getCoreMap() {
+        return coreMap;
+    }
 }
 
 

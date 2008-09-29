@@ -249,6 +249,7 @@ public class TagCounterArray implements TagCounter, Runnable {
 
     public synchronized FacetResult getFirst(Structure requestStructure) {
         lock.lock();
+        log.trace("getFirst called");
         if (requestStructure == null) {
             log.trace("getFirst: Specified requestStructure was null, using "
                       + "default structure");
@@ -257,6 +258,9 @@ public class TagCounterArray implements TagCounter, Runnable {
         try {
             FacetResultLocal result =
                     new FacetResultLocal(requestStructure, tagHandler);
+            if (requestStructure.getFacets().size() == 0) {
+                log.warn("getFirst: No Facets specified in request");
+            }
             for (Map.Entry<String, FacetStructure> facetEntry:
                     requestStructure.getFacets().entrySet()) {
                 FacetStructure facet = facetEntry.getValue();
@@ -419,6 +423,12 @@ public class TagCounterArray implements TagCounter, Runnable {
                                    int counterLength,
                                    FacetResultLocal result,
                                    String facetName) {
+        if (log.isTraceEnabled()) {
+            log.trace(String.format(
+                    "addFirstTagsAlphay(maxTags %d, counterList.length %d, "
+                    + "counterLength %d, result, facet %s) called",
+                    maxTags, counterList.length, counterLength, facetName));
+        }
         ArrayList<FlexiblePair<Integer, Integer>> alphaResult =
                 new ArrayList<FlexiblePair<Integer, Integer>>(
                         Math.min(maxTags, 50000)); // Sanity-check

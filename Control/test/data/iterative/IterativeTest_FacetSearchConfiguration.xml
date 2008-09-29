@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Setup for LuceneSearcher -->
+<xproperties>
+    <xproperties>
+        <entry>
+            <key>summa.facet.facets</key>
+            <value class="list">
+                <xproperties>
+                    <entry>
+                        <key>summa.facet.name</key>
+                        <value class="string">Title</value>
+                    </entry>
+                    <entry>
+                        <key>summa.facet.fields</key>
+                        <value class="list">
+                            <item class="string">title</item>
+                        </value>
+                    </entry>
+                </xproperties>
+                <xproperties>
+                    <entry>
+                        <key>summa.facet.name</key>
+                        <value class="string">BigFacet</value>
+                    </entry>
+                    <entry>
+                        <key>summa.facet.fields</key>
+                        <value class="list">
+                            <item class="string">duplicate</item>
+                        </value>
+                    </entry>
+                </xproperties>
+            </value>
+        </entry>
+    </xproperties>
+</xproperties>
+
+

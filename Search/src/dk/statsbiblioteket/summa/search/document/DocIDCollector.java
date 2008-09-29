@@ -43,7 +43,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 public class DocIDCollector extends HitCollector {
     private static Log log = LogFactory.getLog(DocIDCollector.class);
 
-    private ArrayBlockingQueue<DocIDCollector> queue;
+    private ArrayBlockingQueue<DocIDCollector> queue = null;
     private BitSet bits = new BitSet(100000);
     private int docCount = 0;
 
@@ -54,6 +54,14 @@ public class DocIDCollector extends HitCollector {
     public DocIDCollector(ArrayBlockingQueue<DocIDCollector> queue) {
         this.queue = queue;
         queue.offer(this);
+    }
+
+    /**
+     * Constructs a collector. Normally the other constructor will be used, in
+     * order to re-use the collector.
+     * @see {@link #DocIDCollector(ArrayBlockingQueue)}.
+     */
+    public DocIDCollector() {
     }
 
     public void collect(int doc, float score) {
