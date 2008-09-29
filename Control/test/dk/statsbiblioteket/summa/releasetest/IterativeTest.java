@@ -153,7 +153,7 @@ public class IterativeTest extends NoExitTestCase {
         facetMap.close();
 
         assertIndexEquals("The index should contain a single document",
-                          Arrays.asList("foo"), null);
+                          Arrays.asList("foo"), 0);
         assertTagsEquals("The index should contain a single Title tag",
                           "Title", Arrays.asList("Title_foo"));
     }
@@ -170,7 +170,7 @@ public class IterativeTest extends NoExitTestCase {
                      3, IterativeHelperDocCreator.processedIDs.size());
 
         assertIndexEquals("The index should contain multiple document",
-                          Arrays.asList("foo1", "foo2", "foo3"), null);
+                          Arrays.asList("foo1", "foo2", "foo3"), 0);
         assertTagsEquals("The index should contain multiple Title tags",
                           "Title", Arrays.asList("Title_foo1", "Title_foo2",
                                                  "Title_foo3"));
@@ -185,7 +185,7 @@ public class IterativeTest extends NoExitTestCase {
         assertEquals("The number of processed ids should be correct at first",
                      1, IterativeHelperDocCreator.processedIDs.size());
         assertIndexEquals("The index should contain a single document",
-                          Arrays.asList("foo1"), null);
+                          Arrays.asList("foo1"), 0);
         assertTagsEquals("The index should contain a single Title tag",
                           "Title", Arrays.asList("Title_foo1"));
 
@@ -194,7 +194,7 @@ public class IterativeTest extends NoExitTestCase {
         assertEquals("The number of processed ids should be correct at last",
                      2, IterativeHelperDocCreator.processedIDs.size());
         assertIndexEquals("The index should contain multiple documents",
-                          Arrays.asList("foo1", "foo2"), null);
+                          Arrays.asList("foo1", "foo2"), 0);
         assertTagsEquals("The index should contain multiple Title tags",
                           "Title", Arrays.asList("Title_foo1", "Title_foo2"));
 
@@ -204,14 +204,127 @@ public class IterativeTest extends NoExitTestCase {
     Build an index with 2 Records, then delete the last one
      */
     public void testDeleteEnd() throws Exception {
+        storage.flush(new Record("foo1", BASE, new byte[0]));
+        storage.flush(new Record("foo2", BASE, new byte[0]));
+        updateIndex();
+        Record deletedRecord = new Record("foo2", BASE, new byte[0]);
+        deletedRecord.setDeleted(true);
+        Thread.sleep(10); // Hack to make createdTime != modifiedTime
+        deletedRecord.touch();
+        storage.flush(deletedRecord);
+        updateIndex();
 
+        assertEquals("The number of processed ids should be correct",
+                     3, IterativeHelperDocCreator.processedIDs.size());
+        assertIndexEquals("The index should contain a single document",
+                          Arrays.asList("foo1"), 1);
+        assertTagsEquals("The index should contain a single Title tag",
+                          "Title", Arrays.asList("Title_foo1"));
     }
 
     /*
     Build an index with 2 Records, then delete the first one
      */
     public void testDeleteBeginning() throws Exception {
+        storage.flush(new Record("foo1", BASE, new byte[0]));
+        storage.flush(new Record("foo2", BASE, new byte[0]));
+        updateIndex();
+        Record deletedRecord = new Record("foo1", BASE, new byte[0]);
+        deletedRecord.setDeleted(true);
+        Thread.sleep(10); // Hack to make createdTime != modifiedTime
+        deletedRecord.touch();
+        storage.flush(deletedRecord);
+        updateIndex();
 
+        assertEquals("The number of processed ids should be correct",
+                     3, IterativeHelperDocCreator.processedIDs.size());
+        assertIndexEquals("The index should contain a single document",
+                          Arrays.asList("foo2"), 1);
+        assertTagsEquals("The index should contain a single Title tag",
+                          "Title", Arrays.asList("Title_foo2"));
+    }
+
+    /*
+    Build an index with 2 Records, then delete the first one and add a third one
+     */
+    public void testDeleteAdd() throws Exception {
+        storage.flush(new Record("foo1", BASE, new byte[0]));
+        storage.flush(new Record("foo2", BASE, new byte[0]));
+        updateIndex();
+
+        Record deletedRecord = new Record("foo1", BASE, new byte[0]);
+        deletedRecord.setDeleted(true);
+        Thread.sleep(10); // Hack to make createdTime != modifiedTime
+        deletedRecord.touch();
+        storage.flush(deletedRecord);
+        updateIndex();
+
+        storage.flush(new Record("foo3", BASE, new byte[0]));
+        updateIndex();
+
+        assertIndexEquals("The index should contain a single document",
+                          Arrays.asList("foo1"), 1);
+        assertTagsEquals("The index should contain a single Title tag",
+                          "Title", Arrays.asList("Title_foo1"));
+    }
+
+    /*
+    Build an index with 2 Records, then delete the first one without doing
+    a new index-round
+     */
+    public void testDeleteOneGo() throws Exception {
+        storage.flush(new Record("foo1", BASE, new byte[0]));
+        storage.flush(new Record("foo2", BASE, new byte[0]));
+        Record deletedRecord = new Record("foo2", BASE, new byte[0]);
+        deletedRecord.setDeleted(true);
+        Thread.sleep(10); // Hack to make createdTime != modifiedTime
+        deletedRecord.touch();
+        storage.flush(deletedRecord);
+        updateIndex();
+
+        assertEquals("The number of processed ids should be correct",
+                     2, IterativeHelperDocCreator.processedIDs.size());
+        assertIndexEquals("The index should contain a single document",
+                          Arrays.asList("foo1"), 0);
+        assertTagsEquals("The index should contain a single Title tag",
+                          "Title", Arrays.asList("Title_foo1"));
+    }
+
+    /*
+    Update a record among multiple records.
+     */
+    public void testUpdate() throws Exception {
+        storage.flush(new Record("foo1", BASE, new byte[0]));
+        storage.flush(new Record("foo2", BASE, new byte[0]));
+        updateIndex();
+        Record updatedRecord = new Record("foo1", BASE, new byte[0]);
+        Thread.sleep(10); // Hack to make createdTime != modifiedTime
+        updatedRecord.touch();
+        storage.flush(updatedRecord);
+        updateIndex();
+
+        assertIndexEquals("The index should contain multiple document",
+                          Arrays.asList("foo2", "foo1"), 1);
+        assertTagsEquals("The index should contain multiple Title tags",
+                          "Title", Arrays.asList("Title_foo1", "Title_foo2"));
+    }
+
+    /*
+    Update a record.
+     */
+    public void testUpdateSingleRecord() throws Exception {
+        storage.flush(new Record("foo1", BASE, new byte[0]));
+        updateIndex();
+        Record updatedRecord = new Record("foo1", BASE, new byte[0]);
+        Thread.sleep(10); // Hack to make createdTime != modifiedTime
+        updatedRecord.touch();
+        storage.flush(updatedRecord);
+        updateIndex();
+
+        assertIndexEquals("The index should contain a single document",
+                          Arrays.asList("foo1"), 1);
+        assertTagsEquals("The index should contain a single Title tag",
+                          "Title", Arrays.asList("Title_foo1"));
     }
 
     /* Helpers */
@@ -267,26 +380,22 @@ public class IterativeTest extends NoExitTestCase {
     All recordIDs must be present in the latest index in the given order.
      */
     private void assertIndexEquals(String message, List<String> recordIDs,
-                                   List<String> deletedRecordIDs) throws
-                                                                     Exception {
+                                   int expectedDeleted) throws Exception {
         if (recordIDs == null) {
             recordIDs = new ArrayList<String>(0);
         }
-        if (deletedRecordIDs == null) {
-            deletedRecordIDs = new ArrayList<String>(0);
-        }
         IndexReader ir = getIndexReader();
         List<String> foundIDs = new ArrayList<String>(ir.maxDoc());
-        List<String> foundDeletedIDs = new ArrayList<String>(ir.maxDoc());
+        int deletedCount = 0;
         for (int i = 0 ; i < ir.maxDoc() ; i++) {
-            String id = ir.document(i).getField(IndexUtils.RECORD_FIELD).
-                    stringValue();
-            log.trace("assertIndexEquals: Found id '" + id + "'"
-                      + (ir.isDeleted(i) ? " (deleted)" : " (standard)"));
             if (ir.isDeleted(i)) {
-                foundDeletedIDs.add(id);
+                deletedCount++;
+                log.trace("assertIndexEquals: Found deleted at pos " + i);
             } else {
+                String id = ir.document(i).getField(IndexUtils.RECORD_FIELD).
+                        stringValue();
                 foundIDs.add(id);
+                log.trace("assertIndexEquals: Found id '" + id + "'");
             }
         }
         ir.close();
@@ -296,10 +405,10 @@ public class IterativeTest extends NoExitTestCase {
                  + "match the expected ids. Expected: " + recordIDs
                  + ", actual: " + foundIDs);
         }
-        if (!deletedRecordIDs.equals(foundDeletedIDs)) {
-            fail(message + ". The deleted documents in the index did not "
-                 + "match the expected ids. Expected: " + deletedRecordIDs
-                 + ", actual: " + foundDeletedIDs);
+        if (expectedDeleted != deletedCount) {
+            fail(message + ". The number of deleted documents in the index did"
+                 + "not match the expected ids. Expected: " + expectedDeleted
+                 + ", actual: " + deletedCount);
         }
     }
 
