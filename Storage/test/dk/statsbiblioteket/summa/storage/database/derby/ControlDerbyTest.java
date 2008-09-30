@@ -68,7 +68,7 @@ public class ControlDerbyTest extends TestCase {
         Configuration conf = Configuration.newMemoryBased();
         //noinspection DuplicateStringLiteralInspection
         File location = getLocation();
-        conf.set(DatabaseStorage.PROP_LOCATION, location.toString());
+        conf.set(DatabaseStorage.CONF_LOCATION, location.toString());
         DatabaseStorage storage = new DerbyStorage(conf);
         storage.close();
         assertTrue("The location '" + location + "' should exist",
@@ -79,7 +79,7 @@ public class ControlDerbyTest extends TestCase {
         Configuration conf = Configuration.newMemoryBased();
         //noinspection DuplicateStringLiteralInspection
         File location = getLocation();
-        conf.set(DatabaseStorage.PROP_LOCATION, location.toString());
+        conf.set(DatabaseStorage.CONF_LOCATION, location.toString());
         DatabaseStorage storage = new DerbyStorage(conf);
         storage.close();
         assertTrue("The location '" + location + "' should exist",
@@ -97,8 +97,8 @@ public class ControlDerbyTest extends TestCase {
         Configuration conf = Configuration.newMemoryBased();
         //noinspection DuplicateStringLiteralInspection
         File location = getLocation();
-        conf.set(DatabaseStorage.PROP_LOCATION, location.toString());
-        conf.set(DatabaseStorage.PROP_CREATENEW, false);
+        conf.set(DatabaseStorage.CONF_LOCATION, location.toString());
+        conf.set(DatabaseStorage.CONF_CREATENEW, false);
         try {
             DatabaseStorage storage = new DerbyStorage(conf);
             fail("createNew was false, so construction of DerbyStorage "
@@ -113,9 +113,9 @@ public class ControlDerbyTest extends TestCase {
         Configuration conf = Configuration.newMemoryBased();
         //noinspection DuplicateStringLiteralInspection
         File location = getLocation();
-        conf.set(DatabaseStorage.PROP_LOCATION, location.toString());
-        conf.set(DatabaseStorage.PROP_USERNAME, "foo");
-        conf.set(DatabaseStorage.PROP_PASSWORD, "bar");
+        conf.set(DatabaseStorage.CONF_LOCATION, location.toString());
+        conf.set(DatabaseStorage.CONF_USERNAME, "foo");
+        conf.set(DatabaseStorage.CONF_PASSWORD, "bar");
         DatabaseStorage storage = new DerbyStorage(conf);
         storage.close();
         assertTrue("The location '" + location + "' should exist",
@@ -131,7 +131,7 @@ public class ControlDerbyTest extends TestCase {
 
         // Authentication-failed test disabled at DerbyStorage does not
         // currently support authentication
- /*        conf.set(DatabaseStorage.PROP_PASSWORD, "zoo");
+ /*        conf.set(DatabaseStorage.CONF_PASSWORD, "zoo");
         try {
             storage = new DerbyStorage(conf);
 
@@ -146,7 +146,7 @@ public class ControlDerbyTest extends TestCase {
 
        conf = Configuration.newMemoryBased();
          //noinspection DuplicateStringLiteralInspection
-        conf.set(DatabaseStorage.PROP_LOCATION, location.toString());
+        conf.set(DatabaseStorage.CONF_LOCATION, location.toString());
         try {
             storage = new DerbyStorage(conf);
             fail("It should not be possible to access a protected database " 
@@ -162,7 +162,7 @@ public class ControlDerbyTest extends TestCase {
         Configuration conf = Configuration.newMemoryBased();
         //noinspection DuplicateStringLiteralInspection
         File location = getLocation();
-        conf.set(DatabaseStorage.PROP_LOCATION, location.toString());
+        conf.set(DatabaseStorage.CONF_LOCATION, location.toString());
         DatabaseStorage storage = new DerbyStorage(conf);
         assertTrue("getDatabaseInfo should return something",
                    storage.getDatabaseInfo().length() > 0);
@@ -173,7 +173,7 @@ public class ControlDerbyTest extends TestCase {
         Configuration conf = Configuration.newMemoryBased();
         //noinspection DuplicateStringLiteralInspection
         File location = getLocation();
-        conf.set(DatabaseStorage.PROP_LOCATION, location.toString());
+        conf.set(DatabaseStorage.CONF_LOCATION, location.toString());
         DatabaseStorage control = new DerbyStorage(conf);
         assertTrue("getDatabaseInfo should return something",
                    control.getDatabaseInfo().length() > 0);

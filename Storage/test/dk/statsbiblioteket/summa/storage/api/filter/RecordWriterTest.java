@@ -1,7 +1,7 @@
-/* $Id: RecordWriterTest.java 326 2008-08-11 09:58:03Z toke $
- * $Revision: 326 $
- * $Date: 2008-08-11 09:58:03 +0000 (Mon, 11 Aug 2008) $
- * $Author: toke $
+/* $Id$
+ * $Revision$
+ * $Date$
+ * $Author$
  *
  * The Summa project.
  * Copyright (C) 2005-2007  The State and University Library
@@ -74,7 +74,7 @@ public class RecordWriterTest extends TestCase {
     public void testWrite() throws Exception {
         Configuration conf = Configuration.newMemoryBased();
         Files.delete(storageLocation);
-        conf.set(DatabaseStorage.PROP_LOCATION, storageLocation.toString());
+        conf.set(DatabaseStorage.CONF_LOCATION, storageLocation.toString());
         Storage storage = StorageFactory.createStorage(conf);
         assertNotNull("A controller should be available now", storage);
     }

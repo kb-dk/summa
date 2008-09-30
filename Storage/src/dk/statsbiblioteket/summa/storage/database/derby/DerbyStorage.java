@@ -63,24 +63,24 @@ public class DerbyStorage extends DatabaseStorage implements Configurable {
     public DerbyStorage(Configuration conf) throws IOException {
         super(conf);
         log.trace("Constructing ControlDerby");
-        username = conf.getString(PROP_USERNAME, "");
-        password = conf.getString(PROP_PASSWORD, "");
+        username = conf.getString(CONF_USERNAME, "");
+        password = conf.getString(CONF_PASSWORD, "");
 
-        if (conf.valueExists(PROP_LOCATION)) {
-            log.debug("Property '" + PROP_LOCATION + "' exists, using value '"
-                      + conf.getString(PROP_LOCATION) + "' as location");
-            location = new File(conf.getString(PROP_LOCATION));
+        if (conf.valueExists(CONF_LOCATION)) {
+            log.debug("Property '" + CONF_LOCATION + "' exists, using value '"
+                      + conf.getString(CONF_LOCATION) + "' as location");
+            location = new File(conf.getString(CONF_LOCATION));
         } else {
             location = new File (StorageUtils.getGlobalPersistentDir(conf),
                                  "storage" + File.separator + "derby");
             log.debug("Using default location '" + location + "'");
         }
-        if (conf.valueExists(PROP_CREATENEW)) {
-                createNew = conf.getBoolean(PROP_CREATENEW);
+        if (conf.valueExists(CONF_CREATENEW)) {
+                createNew = conf.getBoolean(CONF_CREATENEW);
         }
 
-        if (conf.valueExists(PROP_FORCENEW)) {
-                forceNew = conf.getBoolean(PROP_FORCENEW);
+        if (conf.valueExists(CONF_FORCENEW)) {
+                forceNew = conf.getBoolean(CONF_FORCENEW);
         }
 
         log.debug("ControlDerby extracted properties username: " + username

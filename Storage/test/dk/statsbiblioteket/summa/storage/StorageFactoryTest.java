@@ -41,7 +41,7 @@ public class StorageFactoryTest extends TestCase {
 
     public void testCreateDefaultController() throws Exception {
         Configuration conf = Configuration.newMemoryBased();
-        conf.set(DatabaseStorage.PROP_LOCATION, location.toString());
+        conf.set(DatabaseStorage.CONF_LOCATION, location.toString());
         Storage storage = StorageFactory.createStorage(conf);
         assertNotNull("A controller should be created", storage);
         storage.close();
@@ -49,7 +49,7 @@ public class StorageFactoryTest extends TestCase {
 
     public void testCreateDerbyController() throws Exception {
         Configuration conf = Configuration.newMemoryBased();
-        conf.set(DatabaseStorage.PROP_LOCATION, location.toString());
+        conf.set(DatabaseStorage.CONF_LOCATION, location.toString());
         conf.set(StorageFactory.CONF_STORAGE, DerbyStorage.class.getName());
         Storage storage = StorageFactory.createStorage(conf);
         assertEquals("The controller should be a ControlDerby",

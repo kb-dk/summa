@@ -23,7 +23,6 @@
 package dk.statsbiblioteket.summa.horizon.hacks;
 
 import dk.statsbiblioteket.summa.storage.api.Storage;
-import dk.statsbiblioteket.summa.storage.api.RecordIterator;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
@@ -32,6 +31,7 @@ import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.io.*;
 
 import org.apache.commons.logging.Log;
@@ -61,7 +61,7 @@ public class HorizonItemCountHack {
     public static void main(String args[]) throws IOException, NotBoundException, RemoteException, XPathExpressionException {
 
         Storage io = (Storage) Naming.lookup(args[0]);
-        RecordIterator iter = io.getRecords("horizon");
+        Iterator<Record> iter = io.getRecordsFromBase("horizon");
         XPathFactory fac = XPathFactory.newInstance();
         XPath xp = fac.newXPath();
 

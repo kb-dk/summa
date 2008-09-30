@@ -24,6 +24,7 @@ package dk.statsbiblioteket.summa.releasetest;
 
 import java.io.IOException;
 import java.io.File;
+import java.util.Iterator;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
@@ -44,7 +45,6 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
-import dk.statsbiblioteket.summa.storage.api.RecordIterator;
 import dk.statsbiblioteket.summa.storage.api.filter.RecordReader;
 import dk.statsbiblioteket.summa.facetbrowser.core.FacetMap;
 import dk.statsbiblioteket.summa.facetbrowser.core.FacetCore;
@@ -491,7 +491,7 @@ public class IterativeTest extends NoExitTestCase {
     }
 
     private int countRecords(String base) throws IOException {
-        RecordIterator iterator = storage.getRecords(base);
+        Iterator<Record> iterator = storage.getRecordsFromBase(base);
         int counter = 0;
         while (iterator.hasNext()) {
             counter++;

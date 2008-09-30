@@ -34,15 +34,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.summa.storage.StorageBase;
-import dk.statsbiblioteket.summa.storage.api.RecordAndNext;
 import dk.statsbiblioteket.summa.storage.api.RecordIterator;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Zips;
@@ -63,12 +61,12 @@ public abstract class DatabaseStorage extends StorageBase {
     /**
      * The property-key for the username for the underlying database, if needed.
      */
-    public static String PROP_USERNAME  = "summa.storage.database.username";
+    public static String CONF_USERNAME = "summa.storage.database.username";
     /**
      * The property-key for the the password for the underlying database, if
      * needed.
      */
-    public static String PROP_PASSWORD  = "summa.storage.database.password";
+    public static String CONF_PASSWORD = "summa.storage.database.password";
     /**
      * The property-key for the boolean value determining if a new database
      * should be created is there is no existing database. If createnew is
@@ -76,19 +74,19 @@ public abstract class DatabaseStorage extends StorageBase {
      * is deleted and a new one created. If createnew is true and a database
      * exists and forcenew is false, the existing database is reused.
      */
-    public static String PROP_CREATENEW = "summa.storage.database.createnew";
+    public static String CONF_CREATENEW = "summa.storage.database.createnew";
     /**
      * The property-key for the boolean determining if a new database should
      * be created, no matter is a database already exists.
      */
-    public static String PROP_FORCENEW = "summa.storage.database.forcenew";
+    public static String CONF_FORCENEW = "summa.storage.database.forcenew";
     /**
      * The location of the database to use/create. If the location is not an
      * absolute path, it will be appended to the System property "
      * summa.control.client.persistent.dir". If that system property does not
      * exist, the location will be relative to the current dir.
      */
-    public static String PROP_LOCATION  = "summa.storage.database.location";
+    public static String CONF_LOCATION = "summa.storage.database.location";
 
     /**
      * The name of the table in the database.
@@ -157,6 +155,8 @@ public abstract class DatabaseStorage extends StorageBase {
     private PreparedStatement stmtGetModifiedAfter;
     private PreparedStatement stmtGetFrom;
     private PreparedStatement stmtGetRecord;
+    private PreparedStatement stmtGetRecords;
+    private PreparedStatement stmtClearBase;
     private PreparedStatement stmtDeleteRecord;
     private PreparedStatement stmtCreateRecord;
     private PreparedStatement stmtUpdateRecord;
@@ -183,9 +183,9 @@ public abstract class DatabaseStorage extends StorageBase {
                                                      configuration) {
         String location;
         try {
-            location = configuration.getString(PROP_LOCATION);
+            location = configuration.getString(CONF_LOCATION);
         } catch (NullPointerException e) {
-            log.debug("Could not locate key " + PROP_LOCATION
+            log.debug("Could not locate key " + CONF_LOCATION
                       + ". Skipping updating of location");
             return configuration;
         }
@@ -195,14 +195,14 @@ public abstract class DatabaseStorage extends StorageBase {
 
             if (!locationFile.equals(newLocationFile)) {
                     log.debug("Storing new location '" + newLocationFile
-                              + "' to property key " + PROP_LOCATION);
-                    configuration.set(PROP_LOCATION, newLocationFile.getPath());
+                              + "' to property key " + CONF_LOCATION);
+                    configuration.set(CONF_LOCATION, newLocationFile.getPath());
             } else {
-                log.debug(PROP_LOCATION + " is an absolute path ("
+                log.debug(CONF_LOCATION + " is an absolute path ("
                           + locationFile + "). No changes will be done");
             }
         } catch (Exception e) {
-            log.debug("Could not transmute key '" + PROP_LOCATION
+            log.debug("Could not transmute key '" + CONF_LOCATION
                       + "' in configuration", e);
         }
         return configuration;
@@ -296,6 +296,26 @@ public abstract class DatabaseStorage extends StorageBase {
         log.debug("Preparing query recordQuery with '" + getRecordQuery + "'");
         stmtGetRecord = getConnection().prepareStatement(getRecordQuery);
 
+        String clearBaseQuery = "UPDATE " + TABLE
+                                + " SET " + DELETED_COLUMN + "=1"
+                                + " WHERE " + BASE_COLUMN + "=?";
+        log.debug("Preparing query clearBase with '"
+                  + clearBaseQuery + "'");
+        stmtClearBase = getConnection().prepareStatement(clearBaseQuery);
+
+        /*
+         FIXME: We might want a prepared statement to fetch multiple records in
+                one go. However it seems to be inefficient to use prepared
+                statements with IN clauses in them . See fx:
+                http://forum.springframework.org/archive/index.php/t-16001.html
+
+        String getRecordsQuery = "SELECT " + allCells
+                                + " FROM " + TABLE
+                                + " WHERE " + ID_COLUMN + " IN ?";
+        log.debug("Preparing query recordsQuery with '" + getRecordsQuery + "'");
+        stmtGetRecords = getConnection().prepareStatement(getRecordsQuery);
+         */
+
         String deleteRecordQuery = "UPDATE " + TABLE
                                    + " SET " + MTIME_COLUMN + "=?, "
                                    + DELETED_COLUMN + "=?"
@@ -352,14 +372,14 @@ public abstract class DatabaseStorage extends StorageBase {
         return preparedStatement;
     }
 
-    public synchronized RecordIterator getAllRecords() throws RemoteException {
+    public synchronized Iterator<Record> getAllRecords() throws RemoteException {
         log.debug("getAllRecords entered");
         return getResult(stmtGetAll);
     }
 
-    public synchronized RecordIterator getRecords(String base) throws
+    public synchronized Iterator<Record> getRecordsFromBase(String base) throws
                                                                RemoteException {
-        log.debug("getRecords('" + base + "') entered");
+        log.debug("getRecordsFromBase('" + base + "') entered");
         try {
             stmtGetFromBase.setString(1, base);
         } catch (SQLException e) {
@@ -369,7 +389,7 @@ public abstract class DatabaseStorage extends StorageBase {
         return getResult(stmtGetFromBase);
     }
 
-    public synchronized RecordIterator getRecordsModifiedAfter(long time,
+    public synchronized Iterator<Record> getRecordsModifiedAfter(long time,
                                                                String base)
                                                         throws RemoteException {
         log.debug("getRecordsModifiedAfter('" + time + "', " + base
@@ -387,7 +407,7 @@ public abstract class DatabaseStorage extends StorageBase {
         return getResult(stmtGetModifiedAfter);
     }
 
-    public synchronized RecordIterator getRecordsFrom(String id, String base)
+    public synchronized Iterator<Record> getRecordsFrom(String id, String base)
                                                         throws RemoteException {
         log.debug("getRecordsFrom('" + base + "', '" + id + "') entered");
         try {
@@ -401,6 +421,12 @@ public abstract class DatabaseStorage extends StorageBase {
         return getResult(stmtGetFrom);
     }
 
+    /**
+     * Convenience method to fetch a single record
+     * @param id id of record to fetch
+     * @return the record or {@code null} if the record is not found
+     * @throws RemoteException on communication errors with the database
+     */
     public Record getRecord(String id) throws RemoteException {
         log.debug("getRecord('" + id + "') entered");
         try {
@@ -427,28 +453,58 @@ public abstract class DatabaseStorage extends StorageBase {
         return record;
     }
 
-    public RecordAndNext next(Long iteratorKey) throws RemoteException {
+    /**
+     * Simple implementation fetching each record one at a time and collecting
+     * them in a list.
+     * <p/>
+     * FIXME: See FIXME inside {@link #prepareStatements()} code
+     */
+    public List<Record> getRecords (List<String> ids, int expansionDepth)
+                                                        throws RemoteException {
+        ArrayList<Record> result = new ArrayList<Record>(ids.size());
+        for (String id : ids) {
+            Record r = getRecord(id);
+            if (r != null) {
+                result.add(r);
+            }
+        }
+
+        return result;
+    }
+
+    public Record next(Long iteratorKey) throws RemoteException {
+        boolean error = false;
         ResultIterator iterator = iterators.get(iteratorKey);
         if (iterator == null) {
             throw new RemoteException("No result iterator with key "
                                       + iteratorKey);
         }
-        RecordAndNext ran;
+
         try {
-            try {
-                ran = new RecordAndNext(iterator.getRecord(),
-                                                      iterator.hasNext());
-            } catch (IOException e) {
-                throw new RemoteException("Exception getting next record", e);
+
+            if (!iterator.hasNext()) {
+                iterator.close();
+                iterators.remove(iterator.getKey());
+                throw new NoSuchElementException ("Iterator " + iteratorKey
+                                                  + " depleted");
             }
+
+            return iterator.getRecord();
+        } catch (IOException e) {
+            error = true;
+                throw new RemoteException("Exception getting next record: "
+                                          + e.getMessage(), e);
         } catch (SQLException e) {
-            throw new RemoteException("SQLException", e);
+            error = true;
+            throw new RemoteException("SQLException: " + e.getMessage(), e);
+        } finally {
+            if (error) {
+                log.debug ("Error detected on iterator " + iteratorKey + "."
+                           + " Removing");
+                iterator.close();
+                iterators.remove(iterator.getKey());
+            }
         }
-        if (!iterator.hasNext()) {
-            iterator.close();
-            iterators.remove(iterator.getKey());
-        }
-        return ran;
     }
 
     public void flush(Record record) throws RemoteException {
@@ -472,6 +528,18 @@ public abstract class DatabaseStorage extends StorageBase {
                                       new IllegalStateException(
                                               record + " not in a flushable "
                                               + "state"));
+        }
+    }
+
+    public void clearBase (String base) throws RemoteException {
+        log.info ("Clearing base '" + base + "'");
+
+        try {
+            stmtClearBase.setString(1, base);
+            stmtClearBase.execute();
+        } catch (SQLException e) {
+            throw new RemoteException("SQLException clearing base '"
+                                      + base + "'", e);
         }
     }
 
@@ -637,7 +705,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * @return a RecordIterator of the result.
      * @throws RemoteException - also on no getConnection() and SQLExceptions.
      */
-    private RecordIterator getResult(PreparedStatement statement) throws
+    private Iterator<Record> getResult(PreparedStatement statement) throws
                                                                RemoteException {
         log.debug("Getting results for '" + statement + "'");
         ResultSet resultSet;
@@ -668,7 +736,7 @@ public abstract class DatabaseStorage extends StorageBase {
         public ResultIterator(ResultSet resultSet) throws SQLException {
             this.resultSet = resultSet;
             hasNext = resultSet.next();
-            log.trace("Constructed Record iterater with initial hasNext: "
+            log.trace("Constructed Record iterator with initial hasNext: "
                       + hasNext);
             lastAccess = System.currentTimeMillis();
         }
@@ -714,16 +782,16 @@ public abstract class DatabaseStorage extends StorageBase {
      * i.e. creates new key and saves the given resultset and getConnection() and
      * "forwards" the resultset by one row to keep a step ahead.
      * @param resultSet the results to wrap.
-     * @return RecordIterator an iterator over the resultset.
+     * @return an iterator over the resultset
      * @throws RemoteException on SQLException
      */
-    private RecordIterator createRecordIterator(ResultSet resultSet) throws
+    private Iterator<Record> createRecordIterator(ResultSet resultSet) throws
                                                                RemoteException {
         log.trace("createRecordIterator entered with result set " + resultSet);
         ResultIterator iterator;
         try {
             iterator = new ResultIterator(resultSet);
-            log.trace("createRecordIterator: God iterator " + iterator.getKey()
+            log.trace("createRecordIterator: Got iterator " + iterator.getKey()
                       + " adding to iterator-list");
             iterators.put(iterator.getKey(), iterator);
         } catch (SQLException e) {

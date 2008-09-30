@@ -24,16 +24,18 @@
  * Created: te 2007-09-04 10:48:55
  * CVS:     $Id: FakeAccess.java,v 1.5 2007/12/04 09:08:19 te Exp $
  */
-package dk.statsbiblioteket.summa.storage.io;
+package dk.statsbiblioteket.summa.storage;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.storage.StorageBase;
 import dk.statsbiblioteket.summa.storage.api.RecordIterator;
-import dk.statsbiblioteket.summa.storage.api.RecordAndNext;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.rmi.RemoteException;
 import java.util.Random;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ArrayList;
 import java.io.IOException;
 
 /**
@@ -55,18 +57,18 @@ public class FakeAccess extends StorageBase {
         this.recordCount = recordCount;
     }
 
-    public RecordIterator getRecords(String base) throws RemoteException {
+    public Iterator<Record> getRecordsFromBase(String base) throws RemoteException {
         position = 0;
         return new RecordIterator(this, 0L, recordCount > 0);
     }
 
-    public RecordIterator getRecordsModifiedAfter(long time, String base) throws
+    public Iterator<Record> getRecordsModifiedAfter(long time, String base) throws
                                                                RemoteException {
         position = 0;
         return new RecordIterator(this, 0L, recordCount > 0);
     }
 
-    public RecordIterator getRecordsFrom(String name, String base) throws
+    public Iterator<Record> getRecordsFrom(String name, String base) throws
                                                                RemoteException {
         if (!recordExists(name)) {
             throw new RemoteException("Record '" + name + "' does not exist");
@@ -75,7 +77,7 @@ public class FakeAccess extends StorageBase {
         return new RecordIterator(this, 0L, position != recordCount-1);
     }
 
-    public Record getRecord(String name) throws RemoteException {
+    private Record getRecord(String name) throws RemoteException {
         try {
             if (recordExists(name)) {
                 return produceRecord(name);
@@ -87,13 +89,25 @@ public class FakeAccess extends StorageBase {
         }
     }
 
+    public List<Record> getRecords (List<String> ids, int expansionDepth)
+                                                        throws RemoteException {
+        List<Record> result = new ArrayList<Record>(ids.size());
+        for (String id : ids) {
+            Record r = getRecord(id);
+            if (r != null) {
+                result.add (r);
+            }
+        }
+        return result;
+    }
+
     private Record produceRecord(String name) {
         byte[] content = new byte[10];
         random.nextBytes(content);
         return new Record(name, "testbase", content);
     }
 
-    public boolean recordExists(String name) throws RemoteException {
+    private boolean recordExists(String name) throws RemoteException {
         try {
             int recordID = Integer.parseInt(name);
             return recordID >= 0 && recordID <recordCount;
@@ -106,25 +120,26 @@ public class FakeAccess extends StorageBase {
         // Does nothing
     }
 
-    public boolean recordActive(String name) throws RemoteException {
+    public void clearBase(String base) throws RemoteException {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    private boolean recordActive(String name) throws RemoteException {
         return recordExists(name);
     }
 
-    public RecordAndNext next(Long iteratorKey) throws RemoteException {
+    public Record next(Long iteratorKey) throws RemoteException {
         if (position >= recordCount) {
             throw new RemoteException("No more records");
         }
-        return new RecordAndNext(produceRecord(Integer.toString(position)), 
-                                 position++ < recordCount-1);
+        return produceRecord(Integer.toString(position));
     }
 
     public void flush(Record record) throws RemoteException {
         // Do nothing
     }
 
-    public void perform() {
-        // Do nothing
-    }
+
 }
 
 

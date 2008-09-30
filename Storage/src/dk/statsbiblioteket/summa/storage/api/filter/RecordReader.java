@@ -29,8 +29,8 @@ import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.storage.api.Storage;
-import dk.statsbiblioteket.summa.storage.api.RecordIterator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -40,6 +40,7 @@ import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.util.GregorianCalendar;
 import java.util.NoSuchElementException;
+import java.util.Iterator;
 import java.net.ConnectException;
 
 /**
@@ -145,7 +146,7 @@ public class RecordReader implements ObjectFilter {
     private long startTime;
     private long lastRecordTimestamp;
 
-    RecordIterator recordIterator;
+    Iterator<Record> recordIterator;
 
     /**
      * Connects to the Storage specified in the configuration and request an

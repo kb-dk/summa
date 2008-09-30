@@ -27,11 +27,11 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.search.IndexWatcher;
 import dk.statsbiblioteket.summa.search.SearchNodeFactory;
 import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
-import dk.statsbiblioteket.summa.storage.api.RecordIterator;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode;
 import dk.statsbiblioteket.util.Files;
@@ -44,6 +44,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.rmi.RemoteException;
 import java.util.List;
+import java.util.Arrays;
+import java.util.Iterator;
 
 /**
  * Tests a ingest => storage => index => search chain with facets.
@@ -134,8 +136,9 @@ public class FacetTest extends NoExitTestCase {
         log.debug("Storage started");
         SearchTest.ingest(new File(
                 Resolver.getURL("data/search/input/part1").getFile()));
-        assertNotNull("Hans Jensen data should be ingested",
-                      storage.getRecord("fagref:hj@example.com"));
+        assertTrue("Hans Jensen data should be ingested",
+                    storage.getRecords(
+                        Arrays.asList("fagref:hj@example.com"), 0).size() == 1);
         storage.close();
     }
 
@@ -269,7 +272,7 @@ public class FacetTest extends NoExitTestCase {
     }
 
     private int countRecords(Storage storage, String base) throws IOException {
-        RecordIterator i = storage.getRecords(base);
+        Iterator<Record> i = storage.getRecordsFromBase(base);
         int counter = 0;
         while (i.hasNext()) {
             counter++;

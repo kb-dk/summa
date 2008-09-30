@@ -1,12 +1,12 @@
 package dk.statsbiblioteket.summa.storage.api.rmi;
 
 import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
-import dk.statsbiblioteket.summa.storage.api.RecordIterator;
-import dk.statsbiblioteket.summa.storage.api.RecordAndNext;
+import dk.statsbiblioteket.summa.common.Record;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.List;
+import java.util.Iterator;
 
 /**
  * Created by IntelliJ IDEA. User: mikkel Date: Aug 5, 2008 Time: 1:02:08 PM To
@@ -14,22 +14,17 @@ import java.util.List;
  */
 public interface RemoteReadableStorage extends ReadableStorage, Remote {
 
-    RecordIterator getRecords(String base) throws RemoteException;
+    Iterator<Record> getRecordsFromBase(String base) throws RemoteException;
 
-    RecordIterator getRecordsModifiedAfter(long time, String base) throws RemoteException;
+    Iterator<Record> getRecordsModifiedAfter(long time, String base) throws RemoteException;
 
-    RecordIterator getRecordsFrom(String id, String base) throws RemoteException;
+    Iterator<Record> getRecordsFrom(String id, String base) throws RemoteException;
 
-    dk.statsbiblioteket.summa.common.Record getRecord(String id) throws RemoteException;
+    List<Record> getRecords(List<String> ids, int expansionDepth) throws RemoteException;
 
-    boolean recordExists(String id) throws RemoteException;
+    Record next(Long iteratorKey) throws RemoteException;
 
-    boolean recordActive(String id) throws RemoteException;
-
-    RecordAndNext next(Long iteratorKey) throws RemoteException;
-
-    List<RecordAndNext> next(Long iteratorKey, int maxRecords) throws
-                                                                RemoteException;
+    List<Record> next(Long iteratorKey, int maxRecords) throws RemoteException;
 
 }
 

@@ -31,6 +31,9 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * A RecordIterator is a facade for an iterator over a collection of records.
  * The collection of records is a ResultSet (of rows in the database) saved in
@@ -44,8 +47,10 @@ public class RecordIterator implements Iterator<Record>, Serializable {
     public static int MAX_QUEUE_SIZE = 100;
     private final Storage iteratorHolder;
     private final Long key;
-    private final Queue<RecordAndNext> records;
+    private final Queue<Record> records;
     private boolean next;
+
+    private Log log;
 
     /**
      * RecordIterator Constructor.
@@ -58,10 +63,11 @@ public class RecordIterator implements Iterator<Record>, Serializable {
      * @param next the value for the first call to hasNext()
      */
     public RecordIterator(Storage iteratorHolder, Long key, boolean next) {
+        log = LogFactory.getLog (this.getClass().getName());
         this.iteratorHolder = iteratorHolder;
         this.key = key;
         this.next = next;
-        records = new LinkedBlockingQueue<RecordAndNext>(MAX_QUEUE_SIZE);
+        records = new LinkedBlockingQueue<Record>(MAX_QUEUE_SIZE);
     }
 
     /**
@@ -69,6 +75,13 @@ public class RecordIterator implements Iterator<Record>, Serializable {
      * @return true if the iterator has more (accessible) Records
      */
     public boolean hasNext() {
+        try {
+            checkRecords();
+        } catch (IOException e) {
+            log.warn ("Failed to retrieve records: " + e.getMessage(), e);
+            next = false;
+        }
+
         return next || records.size() > 0;
     }
 
@@ -82,23 +95,12 @@ public class RecordIterator implements Iterator<Record>, Serializable {
      *                                  or cannot be accessed
      */
     public Record next() {
-        try {
-            if (records.size() == 0) {
-                records.addAll(iteratorHolder.next(key, MAX_QUEUE_SIZE));
-
-            }
-            RecordAndNext ran = records.poll();
-            Record rec = ran.getRecord();
-            next = ran.getNext();
-            return rec;
-        } catch (IOException e) {
-            throw new NoSuchElementException("Could not get next Record for "
-                                             + "key '" + key + "': "
-                                             + e.getMessage());
-            //note: next() cannot throw a RemoteException (by the Iterator
-            // interface definition);
-            //it can throw a NoSuchElementException or return null...
+        if (!hasNext()) {
+            throw new NoSuchElementException ("Depleted");
         }
+
+        return records.poll();
+
     }
 
     /**
@@ -107,6 +109,19 @@ public class RecordIterator implements Iterator<Record>, Serializable {
      */
     public void remove() {
         throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Download next batch of records if applicable and set the 'next' state
+     * appropriately
+     */
+    private void checkRecords () throws IOException {
+        if (records.size() == 0 && next) {
+            List<Record> recs = iteratorHolder.next(key, MAX_QUEUE_SIZE);
+            if (recs.size() < MAX_QUEUE_SIZE) {
+                next = false;
+            }
+        }
     }
 }
 

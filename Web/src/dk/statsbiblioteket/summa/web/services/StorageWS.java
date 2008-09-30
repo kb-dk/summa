@@ -28,6 +28,8 @@ import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -73,8 +75,13 @@ public class StorageWS {
         Record record;
 
         try {
-            record = getStorageClient().getRecord(id);
-            retXML = record.getContentAsUTF8();
+            List<Record> recs = getStorageClient().getRecords(Arrays.asList(id), 0);
+
+            if (recs.size() == 0) {
+                retXML = null;
+            } else {
+               retXML = recs.get(0).getContentAsUTF8();
+            }
         } catch (IOException e) {
             log.error("Error while getting record with id: " + id + ". Error was: ", e);
             // an error occured while retrieving the record. We simply return null to indicate the record was not found.
