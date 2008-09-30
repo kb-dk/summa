@@ -123,12 +123,12 @@ public class FilterPump extends StateThread implements Configurable {
         try {
             long pumpActions = 0;
             while (getStatus() == STATUS.running) {
+                pumpActions++;
                 if (!lastFilter.pump()) {
                     log.info(String.format("Finished pumping '%s' %d times",
                                            chainName, pumpActions));
                     break;
                 }
-                pumpActions++;
             }
         } catch (IOException e) {
             String error = "IOException caught running FilterPump";
@@ -143,6 +143,18 @@ public class FilterPump extends StateThread implements Configurable {
         if (STATUS.error.equals(getStatus())) {
             log.warn("The run was finished with error '" + getErrorMessage(),
                      getErrorCause());
+        } else {
+            log.debug("No error in run, calling close(true)");
+        }
+        // TODO: Check if this is redundant - doesn't EOF handle it? 
+        close(true);
+    }
+
+    private void close(boolean success) {
+        for (Filter filter: filters) {
+            log.debug("calling close(" + success + ") on filter '" + filter
+                      + "'");
+            filter.close(success);
         }
     }
 

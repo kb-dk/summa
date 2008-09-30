@@ -59,11 +59,8 @@ import org.apache.lucene.document.Document;
  * Document as field RecordID.
  */
 // TODO: Verify that the order of documents is strict under all operations
-// TODO: Use indexable instead of deleted
 // TODO: Add maximum number of segments property for consolidate
 // TODO: Add memory based flushing policy
-// TODO: Mark handled records with Lucene-DocID from LuceneIndexUtil
-// TODO: Make this handle deletes properly (no shifting)
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
@@ -350,7 +347,9 @@ public class LuceneManipulator implements IndexManipulator {
         if (indexDirectory == null) { // Never opened
             return;
         }
-        log.trace("close(flush) called for '" + indexDirectory.getFile() + "'");
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("close(" + flush + ") called for '"
+                  + indexDirectory.getFile() + "'");
         if (flush) {
             commit();
         }

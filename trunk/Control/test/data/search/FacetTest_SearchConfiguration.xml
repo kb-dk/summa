@@ -120,7 +120,9 @@
                 <xproperties>
                     <entry>
                         <key>summa.search.node.class</key>
-                        <value class="string">dk.statsbiblioteket.summa.facetbrowser.browse.BrowserImpl</value>
+                        <value class="string">
+                            dk.statsbiblioteket.summa.facetbrowser.FacetSearchNode
+                        </value>
                     </entry>
 
                     <entry>
