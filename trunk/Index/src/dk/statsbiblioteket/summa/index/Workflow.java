@@ -241,13 +241,13 @@ public class Workflow {
                 comp = Boolean.parseBoolean(complete);
             }
             if (!resume){
-                log.info("getRecords:" + target);
-                iter = _io.getRecords(target);
+                log.info("getRecordsFromBase:" + target);
+                iter = _io.getRecordsFromBase(target);
             } else if (!comp){
-                log.info("getRecords:" + (String)p.get(target + ID_SUFFIX));
+                log.info("getRecordsFromBase:" + (String)p.get(target + ID_SUFFIX));
                 iter = _io.getRecordsFrom((String)p.get(target + ID_SUFFIX),target);
             } else {
-               log.info("getRecords:" + target +":"+lastModified);
+               log.info("getRecordsFromBase:" + target +":"+lastModified);
                 iter =_io.getRecordsModifiedAfter(lastModified, target);
                 update = true;
             }

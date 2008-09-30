@@ -4,9 +4,11 @@ import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.util.Logs;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Iterator;
 
 /**
  * A helper class utilizing a stateless connection to a storage service exposing
@@ -28,14 +30,14 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
         super (conf);
     }
 
-    public RecordIterator getRecords(String base) throws IOException {
+    public Iterator<Record> getRecordsFromBase(String base) throws IOException {
         ReadableStorage storage = getConnection();
 
         try {
-            return storage.getRecords(base);
+            return storage.getRecordsFromBase(base);
         } catch (Throwable t) {
             connectionError(t);
-            throw new IOException("getRecords("+base+") failed: "
+            throw new IOException("getRecordsFromBase("+base+") failed: "
                                   + t.getMessage(), t);
         } finally {
             releaseConnection();
@@ -43,7 +45,7 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
     }
 
 
-    public RecordIterator getRecordsModifiedAfter(long time, String base)
+    public Iterator<Record> getRecordsModifiedAfter(long time, String base)
                                                             throws IOException {
         ReadableStorage storage = getConnection();
 
@@ -58,7 +60,7 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
         }
     }
 
-    public RecordIterator getRecordsFrom(String id, String base)
+    public Iterator<Record> getRecordsFrom(String id, String base)
                                                             throws IOException {
         ReadableStorage storage = getConnection();
 
@@ -73,49 +75,22 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
         }
     }
 
-    public Record getRecord(String id) throws IOException {
+    public List<Record> getRecords(List<String> ids, int expansionDepth) throws IOException {
         ReadableStorage storage = getConnection();
 
         try {
-            return storage.getRecord(id);
+            return storage.getRecords(ids, expansionDepth);
         } catch (Throwable t) {
             connectionError(t);
-            throw new IOException("getRecord("+id+") failed: "
+            throw new IOException("getRecords("+ Logs.expand(ids, 10)+", depth="
+                                  + expansionDepth + ") failed: "
                                   + t.getMessage(), t);
         } finally {
             releaseConnection();
         }
     }
 
-    public boolean recordExists(String id) throws IOException {
-        ReadableStorage storage = getConnection();
-
-        try {
-            return storage.recordExists(id);
-        } catch (Throwable t) {
-            connectionError(t);
-            throw new IOException("recordExists("+id+") failed: "
-                                  + t.getMessage(), t);
-        } finally {
-            releaseConnection();
-        }
-    }
-
-    public boolean recordActive(String id) throws IOException {
-        ReadableStorage storage = getConnection();
-
-        try {
-            return storage.recordActive(id);
-        } catch (Throwable t) {
-            connectionError(t);
-            throw new IOException("recordActive("+id+") failed: "
-                                  + t.getMessage(), t);
-        } finally {
-            releaseConnection();
-        }
-    }
-
-    public RecordAndNext next(Long iteratorKey) throws IOException {
+    public Record next(Long iteratorKey) throws IOException {
         ReadableStorage storage = getConnection();
 
         try {
@@ -129,7 +104,7 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
         }
     }
 
-    public List<RecordAndNext> next(Long iteratorKey, int maxRecords)
+    public List<Record> next(Long iteratorKey, int maxRecords)
                                                             throws IOException {
         ReadableStorage storage = getConnection();
 

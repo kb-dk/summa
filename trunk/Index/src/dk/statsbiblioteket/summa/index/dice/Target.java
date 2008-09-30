@@ -65,7 +65,7 @@ public class Target {
         }
 
         // TODO: Read jobHints and see if we should resume or what
-        source = _io.getRecords(base);
+        source = _io.getRecordsFromBase(base);
     }
 
     public Record getNextRecord () {

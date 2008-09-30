@@ -20,7 +20,7 @@
         </layout>
     </appender>
 
-    <logger name="dk.statsbiblioteket">
+    <logger name="dk.statsbiblioteket.summa">
         <level value="TRACE" />
         <appender-ref ref="CONSOLE" />
     </logger>

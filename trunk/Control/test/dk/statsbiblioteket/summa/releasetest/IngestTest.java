@@ -24,6 +24,7 @@ package dk.statsbiblioteket.summa.releasetest;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Iterator;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -40,7 +41,6 @@ import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageConnectionFactory;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.api.filter.RecordWriter;
-import dk.statsbiblioteket.summa.storage.api.RecordIterator;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
@@ -209,9 +209,9 @@ public class IngestTest extends NoExitTestCase {
             "//localhost:27000/summa-storage";
     public static Configuration getStorageConfiguration() {
         Configuration conf = Configuration.newMemoryBased();
-        conf.set(DatabaseStorage.PROP_LOCATION,
+        conf.set(DatabaseStorage.CONF_LOCATION,
                  getStorageLocation().toString());
-        conf.set(DatabaseStorage.PROP_FORCENEW, true);
+        conf.set(DatabaseStorage.CONF_FORCENEW, true);
         conf.set(Service.CONF_SERVICE_PORT, 27003);
         conf.set(Service.CONF_REGISTRY_PORT, 27000);
         conf.set(Service.CONF_SERVICE_ID, "TestStorage");
@@ -227,10 +227,10 @@ public class IngestTest extends NoExitTestCase {
     public void testStorage() throws Exception {
         Configuration storageConf = getStorageConfiguration();
         assertTrue("Storage conf should have location", storageConf.valueExists(
-                DatabaseStorage.PROP_LOCATION));
+                DatabaseStorage.CONF_LOCATION));
         Storage storage = StorageFactory.createStorage(storageConf);
 
-        RecordIterator iterator = storage.getRecordsModifiedAfter(0, TESTBASE);
+        Iterator<Record> iterator = storage.getRecordsModifiedAfter(0, TESTBASE);
         assertFalse("The Storage should be empty", iterator.hasNext());
 
         Record record = new Record("foo", TESTBASE, new byte[0]);
@@ -287,7 +287,7 @@ public class IngestTest extends NoExitTestCase {
                       + " ConnectionContext", ctx);
         Storage remoteStorage = ctx.getConnection();
 
-        RecordIterator recordIterator =
+        Iterator<Record> recordIterator =
                 remoteStorage.getRecordsModifiedAfter(0, TESTBASE);
         assertTrue("The iterator should have at least one element",
                    recordIterator.hasNext());
@@ -341,7 +341,7 @@ public class IngestTest extends NoExitTestCase {
         assertTrue("The ingester should have stopped by now",
                    ingester.getStatus().getCode().equals(Status.CODE.stopped));
 
-        RecordIterator recordIterator =
+        Iterator<Record> recordIterator =
                 storage.getRecordsModifiedAfter(0, TESTBASE);
         assertTrue("The iterator should have at least one element",
                    recordIterator.hasNext());

@@ -57,6 +57,14 @@ public interface WritableStorage {
      * @throws IOException on communication errors
      */
     void close() throws IOException;
+
+    /**
+     * Mark all records in a given base as deleted.
+     *
+     * @param base the name of the base to clear
+     * @throws IOException on communication errors with the storage
+     */
+    void clearBase (String base) throws IOException;
 }
 
 

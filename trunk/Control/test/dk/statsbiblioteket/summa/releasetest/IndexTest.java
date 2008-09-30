@@ -26,6 +26,7 @@ import java.io.File;
 import java.net.URL;
 import java.rmi.RemoteException;
 import java.util.List;
+import java.util.Iterator;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Streams;
@@ -41,12 +42,10 @@ import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.common.unittest.LuceneTestHelper;
 import dk.statsbiblioteket.summa.control.service.FilterService;
 import dk.statsbiblioteket.summa.control.api.Status;
-import dk.statsbiblioteket.summa.storage.api.RecordIterator;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import dk.statsbiblioteket.summa.index.XMLTransformer;
-import dk.statsbiblioteket.summa.index.IndexController;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -230,7 +229,7 @@ public class IndexTest extends NoExitTestCase {
         ingester.start();
         waitForService(ingester);
 
-        RecordIterator recordIterator =
+        Iterator<Record> recordIterator =
                 storage.getRecordsModifiedAfter(0, TESTBASE);
         assertTrue("The iterator should have at least one element",
                    recordIterator.hasNext());

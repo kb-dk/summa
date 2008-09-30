@@ -22,14 +22,10 @@
  */
 package dk.statsbiblioteket.summa.storage.api.tools;
 
-import org.xml.sax.InputSource;
-
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathFactory;
 import java.io.*;
-import java.util.Date;
-import java.util.Properties;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ArrayList;
 
 
 import dk.statsbiblioteket.summa.storage.api.*;
@@ -38,11 +34,8 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
-import dk.statsbiblioteket.summa.common.xml.DefaultNamespaceContext;
 import dk.statsbiblioteket.util.qa.QAInfo;
-
-
-import java.rmi.RMISecurityManager;
+import dk.statsbiblioteket.util.Logs;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -72,20 +65,17 @@ public class StorageTool {
             return;
         }
 
+        List<String> ids = new ArrayList<String>(argv.length - 1);
         for (int i = 1; i < argv.length; i++) {
-            if (i > 1) {
-                System.out.println ("===================");
-            }
-            
-            System.err.println("Getting '" + argv[i] + "'");
-            Record rec = storage.getRecord (argv[i]);
+            ids.add(argv[i]);
+        }
 
-            if (rec == null) {
-                System.err.println ("No such record: " + argv[i]);
-                continue;
-            }
+        System.err.println("Getting records " + Logs.expand(ids, 10) + "");
+        List<Record> recs = storage.getRecords (ids, 0);
 
-            printRecord(rec, true);
+        for (Record r : recs) {
+            printRecord(r, true);
+            System.out.println ("===================");
         }
     }
 
@@ -99,17 +89,19 @@ public class StorageTool {
             return;
         }
 
+        List<String> ids = new ArrayList<String>(argv.length - 1);
         for (int i = 1; i < argv.length; i++) {
-            System.err.println("Touching '" + argv[i] + "'");
-            Record rec = reader.getRecord (argv[i]);
+            ids.add(argv[i]);
+        }
 
-            if (rec == null) {
-                System.err.println ("No such record: " + argv[i]);
-                continue;
-            }
+        System.err.println("Getting records " + Logs.expand(ids, 10) + "");
+        List<Record> recs = reader.getRecords (ids, 0);
 
-            rec.touch();
-            writer.flush(rec);
+        for (Record r : recs) {
+            System.err.println("Touching '" + r.getId() + "'");
+
+            r.touch();
+            writer.flush(r);
         }
     }
 
@@ -132,7 +124,7 @@ public class StorageTool {
         String base = argv[1];
 
         System.err.println ("Getting records from base '" + base + "'");
-        RecordIterator records = storage.getRecords(base);
+        Iterator<Record> records = storage.getRecordsFromBase(base);
         Record rec;
 
         int count = 0;

@@ -23,7 +23,6 @@
 package dk.statsbiblioteket.summa.index;
 
 import dk.statsbiblioteket.summa.storage.api.Storage;
-import dk.statsbiblioteket.summa.storage.api.RecordIterator;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -42,6 +41,7 @@ import java.net.URL;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
+import java.util.Iterator;
 
 import org.apache.lucene.queryParser.ParseException;
 
@@ -190,7 +190,7 @@ public class Test {
         Transformer t = getTransformer("http://hera/cgi-bin/viewcvs.cgi/*checkout*/netmusik2006/Index/config/netmusik_index.xslt?rev=1.1.2.3");
         Transformer t1 = getTransformer("file:///home/hal/ganymedexslt/netmusik_index_anvendt.xslt");
 
- /*       RecordIterator ir = io.getRecords("netmusik");
+ /*       Iterator<Record> ir = io.getRecordsFromBase("netmusik");
         while (ir.hasNext()){
             Record r = ir.next();
             String content = new String(r.getUTF8Content(), "utf-8");
@@ -200,7 +200,7 @@ public class Test {
             w.append("\nCONTENT::::::::\n\n").append(content).append("\n\nCVSXSLT:::::::::::::\n\n").append(tr).append("\n\nanvendt::::::::::::").append(tr1).append("\n\n\n\n");
         }
         w.flush();w.close();
- */     RecordIterator ir = io1.getRecords("netmusik");
+ */     Iterator<Record> ir = io1.getRecordsFromBase("netmusik");
         while (ir.hasNext()){
             Record r = ir.next();
             String content = new String(r.getContent(), "utf-8");

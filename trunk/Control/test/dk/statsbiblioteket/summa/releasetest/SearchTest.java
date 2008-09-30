@@ -36,6 +36,7 @@ import java.security.Permission;
 import java.net.URL;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import java.util.Iterator;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Files;
@@ -45,7 +46,7 @@ import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.index.IndexException;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
-import dk.statsbiblioteket.summa.storage.api.RecordIterator;
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.api.Storage;
@@ -112,8 +113,8 @@ public class SearchTest extends NoExitTestCase {
 
     public static Storage startStorage() throws Exception {
         Configuration storageConf = IngestTest.getStorageConfiguration();
-        storageConf.set(DatabaseStorage.PROP_CREATENEW, true);
-        storageConf.set(DatabaseStorage.PROP_FORCENEW, true);
+        storageConf.set(DatabaseStorage.CONF_CREATENEW, true);
+        storageConf.set(DatabaseStorage.CONF_FORCENEW, true);
         return StorageFactory.createStorage(storageConf);
     }
         
@@ -137,7 +138,7 @@ public class SearchTest extends NoExitTestCase {
      */
     public static void verifyStorage(Storage storage, String id) throws
                                                                      Exception {
-        RecordIterator recordIterator =
+        Iterator<Record> recordIterator =
                 storage.getRecordsModifiedAfter(0, BASE);
         assertTrue("The iterator should have at least one element",
                    recordIterator.hasNext());

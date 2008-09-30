@@ -26,6 +26,8 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Arrays;
 import java.io.IOException;
 
 import dk.statsbiblioteket.summa.common.Record;
@@ -33,7 +35,6 @@ import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.WritableStorage;
-import dk.statsbiblioteket.summa.storage.api.RecordAndNext;
 import dk.statsbiblioteket.summa.storage.api.rmi.RemoteStorage;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -91,16 +92,18 @@ public abstract class StorageBase extends UnicastRemoteObject
      * of RecordAndNext. As this happens server-side, this should be fast
      * enough.
      */
-    public List<RecordAndNext> next(Long iteratorKey, int maxRecords) throws
+    public List<Record> next(Long iteratorKey, int maxRecords) throws
                                                                RemoteException {
-        List<RecordAndNext> records = new ArrayList<RecordAndNext>(maxRecords);
+        List<Record> records = new ArrayList<Record>(maxRecords);
         int added = 0;
         while (added++ < maxRecords) {
-            RecordAndNext ran = next(iteratorKey);
-            records.add(ran);
-            if (!ran.getNext()) {
+            try {
+                Record r = next(iteratorKey);
+                records.add(r);
+            } catch (NoSuchElementException e) {
                 break;
             }
+
         }
         return records;
     }
@@ -129,20 +132,7 @@ public abstract class StorageBase extends UnicastRemoteObject
           foreach child
             mark child as indexable
          */
-    }
-
-    /**
-     * Is a Record is active, it should be indexed. This method returns
-     * !DELETED & INDEXABLE.
-     */
-    public boolean recordActive(String id) throws RemoteException {
-        Record record = getRecord(id);
-        return record != null && !record.isDeleted() && record.isIndexable();
-    }
-
-    public boolean recordExists(String name) throws RemoteException {
-        return getRecord(name) != null;
-    }
+    }    
 
     /**
      * <p>Convenience implementation of {@link WritableStorage#flushAll}
@@ -153,13 +143,14 @@ public abstract class StorageBase extends UnicastRemoteObject
      * for optimization purposes.</p>
      *
      * @param records the records to store or update
-     * @throws IOException on comminication errors
+     * @throws RemoteException on comminication errors
      */
-    public void flushAll (List<Record> records) throws IOException {
+    public void flushAll (List<Record> records) throws RemoteException {
         for (Record rec : records) {
             flush(rec);
         }
     }
+    
 }
 
 

@@ -20,6 +20,7 @@ public interface RemoteWritableStorage extends WritableStorage, Remote {
 
     void close() throws RemoteException;
 
+    void clearBase (String base) throws RemoteException;
 }
 
 

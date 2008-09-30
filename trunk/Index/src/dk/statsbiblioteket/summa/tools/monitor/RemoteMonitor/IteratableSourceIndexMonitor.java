@@ -169,7 +169,7 @@ public class IteratableSourceIndexMonitor extends Monitor {
                         iter = store.getRecordsFrom(lastRecordID, TARGET);
                     } else {
                         log.debug("Getting all records");
-                        iter = store.getRecords(TARGET);
+                        iter = store.getRecordsFromBase(TARGET);
                     }
                 } else {
                     log.debug("Getting records modified after: "  + timestamp);
