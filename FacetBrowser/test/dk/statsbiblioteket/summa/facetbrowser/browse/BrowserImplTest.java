@@ -22,9 +22,6 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.browse;
 
-import java.util.Random;
-import java.util.Arrays;
-import java.io.File;
 import java.io.StringWriter;
 
 import junit.framework.Test;
@@ -185,8 +182,8 @@ public class BrowserImplTest extends TestCase {
         IndexReader reader = IndexBuilder.getReader();
         System.out.println("Setting up system...");
         Configuration config = getConfiguration();
-        config.set(BrowserImpl.BROWSERTHREADS_PROPERTY, 2);
-        config.set(BrowserImpl.BROWSERTHREADS_TIMEOUT_PROPERTY, 5000);
+        config.set(FacetSearchNode.BROWSERTHREADS_PROPERTY, 2);
+        config.set(FacetSearchNode.BROWSERTHREADS_TIMEOUT_PROPERTY, 5000);
         StructureDescription structure = new StructureDescription(config);
         IndexConnector connector = new IndexConnector(config);
 
@@ -208,7 +205,7 @@ public class BrowserImplTest extends TestCase {
                 new SummaQueryParser(new String[]{"foo", "bar"},
                                      new SimpleAnalyzer(), descriptor);
 
-        BrowserImpl browser = new BrowserImpl(config, null, queryParser,
+        FacetSearchNode browser = new FacetSearchNode(config, null, queryParser,
                                               tagHandler,
                                               structure, coreMap);
 

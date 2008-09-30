@@ -1,4 +1,4 @@
-/* $Id: BrowserImpl.java,v 1.14 2007/10/05 10:20:22 te Exp $
+/* $Id: FacetSearchNode.java,v 1.14 2007/10/05 10:20:22 te Exp $
  * $Revision: 1.14 $
  * $Date: 2007/10/05 10:20:22 $
  * $Author: te $
@@ -22,12 +22,15 @@
  */
 /*
  * The State and University Library of Denmark
- * CVS:  $Id: BrowserImpl.java,v 1.14 2007/10/05 10:20:22 te Exp $
+ * CVS:  $Id: FacetSearchNode.java,v 1.14 2007/10/05 10:20:22 te Exp $
  */
-package dk.statsbiblioteket.summa.facetbrowser.browse;
+package dk.statsbiblioteket.summa.facetbrowser;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
+import dk.statsbiblioteket.summa.facetbrowser.browse.Browser;
+import dk.statsbiblioteket.summa.facetbrowser.browse.BrowserThread;
+import dk.statsbiblioteket.summa.facetbrowser.browse.FacetRequest;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMap;
@@ -64,8 +67,8 @@ import java.io.IOException;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class BrowserImpl extends SearchNodeImpl implements Browser {
-    private static Logger log = Logger.getLogger(BrowserImpl.class);
+public class FacetSearchNode extends SearchNodeImpl implements Browser {
+    private static Logger log = Logger.getLogger(FacetSearchNode.class);
 
     /**
      * Each concurrent search costs total number of tags * 4 bytes of memory.
@@ -79,9 +82,9 @@ public class BrowserImpl extends SearchNodeImpl implements Browser {
 
     private BlockingQueue<BrowserThread> browsers;
 
-    public BrowserImpl(Configuration conf) throws RemoteException {
+    public FacetSearchNode(Configuration conf) throws RemoteException {
         super(conf);
-        log.info("Constructing BrowserImpl");
+        log.info("Constructing FacetSearchNode");
         structure = new Structure(conf);
         TagHandler tagHandler =
                 TagHandlerFactory.getTagHandler(conf, structure, false);
@@ -97,7 +100,7 @@ public class BrowserImpl extends SearchNodeImpl implements Browser {
                                           + " BrowserThread to queue");
             }
         }
-        log.trace("BrowserImpl constructed. Awaiting open");
+        log.trace("FacetSearchNode constructed. Awaiting open");
     }
 
     public void open(File directory) throws IOException {
@@ -106,7 +109,7 @@ public class BrowserImpl extends SearchNodeImpl implements Browser {
 
     protected void managedWarmup(String request) {
         log.trace("managedWarmup(" + request + ") called. No effect for "
-                  + "BrowserImpl as it relies on previously chained "
+                  + "FacetSearchNode as it relies on previously chained "
                   + "DocumentSearcher");
     }
 

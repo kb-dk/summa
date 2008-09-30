@@ -637,26 +637,18 @@ public class IndexControllerImpl extends StateThread implements
         if (source == null) {
             throw new IOException("No source defined, cannot pump");
         }
-        if (!source.hasNext()) { // The big shutdown
-            close();
+        if (!hasNext()) { // The big shutdown
             stop();
             return false;
         }
-        Payload payload = source.next();
-        try {
-            update(payload);
-        } catch (IOException e) {
-            // Exceptions while indexing is a serious offense, so we escalate
-            throw new IOException("IOException when calling update("
-                                  + payload + ")", e);
-        }
+        Payload payload = next(); // Also calls update(payload)
         try {
             payload.close();
         } catch (Exception e) {
             log.warn("Exception while calling close() on payload '" + payload
                      + "' in pump()");
         }
-        return source.hasNext();
+        return hasNext();
     }
 
     public void close(boolean success) {
@@ -666,6 +658,14 @@ public class IndexControllerImpl extends StateThread implements
             log.error("No source defined, cannot close");
         }
         source.close(success);
+        if (success) {
+            try {
+                commit();
+            } catch (IOException e) {
+                log.warn("IOException while calling commit in close("
+                         + success + ")", e);
+            }
+        }
     }
 
     public boolean hasNext() {
@@ -673,7 +673,17 @@ public class IndexControllerImpl extends StateThread implements
             log.error("No source defined, cannot call source.hasNext");
             return false;
         }
-        return source.hasNext();
+        boolean hasNext = source.hasNext();
+        if (!hasNext && !getStatus().equals(STATUS.error)
+            && !getStatus().equals(STATUS.stopped)) {
+            log.debug("Calling close() due to no more Payloads");
+            try {
+                close();
+            } catch (IOException e) {
+                log.warn("IOException attempting to close", e);
+            }
+        }
+        return hasNext;
     }
 
     public Payload next() {

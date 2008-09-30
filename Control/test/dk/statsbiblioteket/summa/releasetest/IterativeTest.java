@@ -27,14 +27,10 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Set;
-import java.util.HashSet;
-import java.rmi.RemoteException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.index.IndexReader;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Files;
@@ -57,10 +53,9 @@ import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMapFactory;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandlerFactory;
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
-import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultImpl;
 import dk.statsbiblioteket.summa.facetbrowser.browse.Browser;
-import dk.statsbiblioteket.summa.facetbrowser.browse.BrowserImpl;
+import dk.statsbiblioteket.summa.facetbrowser.FacetSearchNode;
 import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 
 /**
@@ -371,7 +366,7 @@ public class IterativeTest extends NoExitTestCase {
                 "data/iterative/IterativeTest_FacetSearchConfiguration.xml");
         assertEquals("There should be the right number of Facets defined",
                      2, new Structure(conf).getFacetNames().size());
-        Browser browser = new BrowserImpl(conf);
+        Browser browser = new FacetSearchNode(conf);
         browser.open(getIndexLocation());
         return browser;
     }
@@ -414,8 +409,7 @@ public class IterativeTest extends NoExitTestCase {
 
     private IndexReader getIndexReader() throws IOException {
         File indexLocation = getIndexLocation();
-        IndexReader ir = IndexReader.open(new File(indexLocation, "lucene"));
-        return ir;
+        return IndexReader.open(new File(indexLocation, "lucene"));
     }
 
     private File getIndexLocation() {

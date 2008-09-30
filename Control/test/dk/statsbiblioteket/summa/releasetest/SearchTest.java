@@ -83,7 +83,7 @@ public class SearchTest extends NoExitTestCase {
 
     public void tearDown() throws Exception {
         super.tearDown();
-//        cleanup();
+        cleanup();
     }
 
     private void cleanup() throws Exception {
@@ -143,6 +143,12 @@ public class SearchTest extends NoExitTestCase {
                    recordIterator.hasNext());
         while (recordIterator.hasNext()) {
             if (recordIterator.next().getId().equals(id)) {
+                while (recordIterator.hasNext()) {
+                    if (recordIterator.next().getId().equals(id)) {
+                        fail("More than ine Record with id '" + id + " was "
+                             + "present in the Storage");
+                    }
+                }
                 return;
             }
         }
