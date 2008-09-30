@@ -263,9 +263,9 @@ public class IterativeTest extends NoExitTestCase {
         updateIndex();
 
         assertIndexEquals("The index should contain a single document",
-                          Arrays.asList("foo1"), 1);
-        assertTagsEquals("The index should contain a single Title tag",
-                          "Title", Arrays.asList("Title_foo1"));
+                          Arrays.asList("foo2", "foo3"), 1);
+        assertTagsEquals("The index should contain multiple Title tag",
+                          "Title", Arrays.asList("Title_foo2", "Title_foo3"));
     }
 
     /*

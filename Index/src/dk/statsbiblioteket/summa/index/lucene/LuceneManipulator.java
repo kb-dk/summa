@@ -24,9 +24,6 @@ package dk.statsbiblioteket.summa.index.lucene;
 
 import java.io.IOException;
 import java.io.File;
-import java.io.StringWriter;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Files;
@@ -35,16 +32,15 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
-import dk.statsbiblioteket.summa.index.lucene.IDMapper;
 import dk.statsbiblioteket.summa.index.IndexManipulator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.CorruptIndexException;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.index.LogDocMergePolicy;
 import org.apache.lucene.index.SerialMergeScheduler;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.LockObtainFailedException;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -91,37 +87,20 @@ public class LuceneManipulator implements IndexManipulator {
     /** The directory with the Lucene index. This will be a sub-folder to
      * indexRoot. */
     private FSDirectory indexDirectory;
-    /** The writer is used for additions */
+    /** The connection to the Lucene index */
     private IndexWriter writer;
-    /** The reader is used for deletions */
-    private IndexReader reader;
-    /**
-     * An ordered collections of the deletions that should be performed upon
-     * commit. The deletions takes place before additions. The map goes from
-     * RecordIDs to Payloads.
-     */
-    private LinkedHashMap<String, Payload> deletions =
-            new LinkedHashMap<String, Payload>(100);
-    /**
-     * An ordered collection of the additions that should be performed upon
-     * commit. The additions takes place after deletions. The map goes from
-     * RecordIDs to Payloads.
-     */
-    private LinkedHashMap<String, Payload> additions =
-            new LinkedHashMap<String, Payload>(100);
 
     /**
      * Keeps track of RecordIDs. The idMapper is used and updated by
-     * {@link #update}, {@link #flushDeletions} and {@link #flushAdditions}. 
+     * {@link #updateAddition}.
      */
     private IDMapper idMapper;
 
-    @SuppressWarnings({"UnusedDeclaration", "UnusedDeclaration"})
     private int bufferSizePayloads = DEFAULT_BUFFER_SIZE_PAYLOADS;
 
     public LuceneManipulator(Configuration conf) {
         bufferSizePayloads = conf.getInt(CONF_BUFFER_SIZE_PAYLOADS,
-                                         DEFAULT_BUFFER_SIZE_PAYLOADS);
+                                         bufferSizePayloads);
         descriptor = LuceneIndexUtils.getDescriptor(conf);
         log.debug("LuceneManipulator created. bufferSizePayloads is "
                   + bufferSizePayloads);
@@ -198,16 +177,12 @@ public class LuceneManipulator implements IndexManipulator {
         }
     }
 
-    /**
+    /*
      * Opens a reader at indexDirectory if no reader is currently open.
      * @throws IOException if the reader could not be opened.
-     */
-    private void openReader() throws IOException {
-        if (reader != null) {
-            log.debug("checkReader: Reader already opened at '"
-                     + indexDirectory.getFile() + "'");
-            return;
-        }
+     * @return a reader connected to the current index.
+     *
+    private IndexReader openReader() throws IOException {
         if (writer != null) {
             log.warn("checkReader: A Writer is open at '"
                      + indexDirectory.getFile() + "'");
@@ -218,7 +193,7 @@ public class LuceneManipulator implements IndexManipulator {
                                   + "order to delete documents");
         }
         try {
-            reader = IndexReader.open(indexDirectory);
+            return IndexReader.open(indexDirectory);
         } catch (CorruptIndexException e) {
             throw new IOException("Corrupt index for reader found at '"
                                   + indexDirectory.getFile() + "'",e );
@@ -226,7 +201,7 @@ public class LuceneManipulator implements IndexManipulator {
             throw new IOException("Exception opening reader at '"
                                   + indexDirectory.getFile() + "'", e);
         }
-    }
+    } */
 
     public synchronized void clear() throws IOException {
         //noinspection DuplicateStringLiteralInspection
@@ -242,30 +217,10 @@ public class LuceneManipulator implements IndexManipulator {
         open(indexRoot);
     }
 
-    /*
-      * new deletion & existing deletion & no existing addition =>
-      *   remove(existing deletion), add(new deletion)
-      * new deletion & existing deletion & existing addition =>
-      *   remove(existing deletion), remove(existing addition), add(new deletion)
-      * new deletion & no existing deletion & no existing addition =>
-      *   add(new deletion)
-      * new deletion & no existing deletion & existing addition =>
-      *   remove(existing addition), add(new deletion)
-      *
-      * new addition & existing deletion & no existing addition =>
-      *   add(new addition)
-      * new addition & existing deletion & existing addition =>
-      *   remove(existing addition), add(new addition)
-      * new addition & no existing deletion & no existing addition =>
-      *   add(new addition)
-      * new addition & no existing deletion & existing addition =>
-      *   remove(existing addition), add(new deletion)
-     */
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     @QAInfo(level = QAInfo.Level.PEDANTIC,
             state = QAInfo.State.IN_DEVELOPMENT,
             author = "te")
-    // TODO: Consider if adds can be done immediately as dels does not shift ids
     public synchronized boolean update(Payload payload) throws IOException {
         if (payload.getData(Payload.LUCENE_DOCUMENT) == null) {
             throw new IllegalArgumentException("No Document defined in"
@@ -273,109 +228,75 @@ public class LuceneManipulator implements IndexManipulator {
         }
         String id = payload.getId();
         if (id == null) {
-            throw new IllegalArgumentException("Could not extract id from "
-                                               + "Payload '" + payload + "'");
+            throw new IllegalArgumentException(String.format(
+                    "Could not extract id from %s", payload));
         }
         ensureStoredID(id, payload);
+        if (payload.getRecord() == null) {
+            log.debug("update: The Payload " + id + " did not have a record, so"
+                      + " it will always be processed as a plain addition");
+        }
         boolean deleted =
                 payload.getRecord() != null && payload.getRecord().isDeleted();
+        boolean updated =
+                payload.getRecord() != null && payload.getRecord().isModified();
         if (deleted) { // Plain delete
             updateDeletion(id, payload);
         } else { // Addition or update
+            if (updated) { // Update, so we delete first
+                updateDeletion(id, payload);
+            }
             updateAddition(id, payload);
         }
-        return deletions.size() + additions.size() >= bufferSizePayloads;
+        return false; // TODO: Return true if payload counter gets too high
     }
 
-    @SuppressWarnings({"DuplicateStringLiteralInspection"})
+    /**
+     * Additions are either plain additions or updates. Updates are handled by
+     * deleting any existing Document with the given id and then adding the
+     * new document.
+     * </p><p>
+     * In order to make a proper signalling to any following index manipulators,
+     * the position of the deleted document might be determined before deletion.
+     * This increases processing time a bit.
+     * @param id      the id of the document to add or update.
+     * @param payload the payload containing the document to add.
+     * @throws IOException if the document could not be added.
+     */
     private void updateAddition(String id, Payload payload) throws IOException {
-        StringWriter debug = new StringWriter(300);
-        debug.write("new addition(" + id + ")");
-        if (idMapper.containsKey(id)) {
-            log.debug(debug.toString() + " already present in index, so delete "
-                      + "is called before addition");
-            updateDeletion(id, payload);
-            debug.write(" was present in index (a delete has been performed)");
-        }
-
-        if (deletions.size() == 0) {
-            if (additions.size() > 0) {
-                log.error("update(" + payload + ") has 0 pending deletions "
-                          + "but " + additions.size() + " pending additions"
-                          + " (this should be 0)");
-            }
-            debug.write(" and no pending deletions");
-            debug.write(" => ingesting and updating idMap");
-            log.debug(debug.toString());
-            checkWriter();
-            Document document =
-                    (Document)payload.getData(Payload.LUCENE_DOCUMENT);
-            // TODO: Add support for Tokenizer and Filters
-            writer.addDocument(document, descriptor.getIndexAnalyzer());
-            // TODO: Verify that docCount is trustable with regard to deletes
-            payload.getData().put(LuceneIndexUtils.META_ADD_DOCID,
-                                  writer.docCount()-1);
-            log.trace("Updating idMapper with id '" + id + "' and pos "
-                      + (writer.docCount()-1));
-            idMapper.put(id, writer.docCount()-1);
-        } else {
-            log.debug("Update addition: " + deletions.size()
-                      + " deletions exists");
-            if (deletions.containsKey(id)) {
-                // TODO: How does this work with Facet?
-                debug.write(" & existing deletion");
-                if (additions.containsKey(id)) {
-                    debug.write(" & existing addition =>");
-                    debug.write(" remove(existing addition),");
-                } else {
-                    debug.write(" & no existing addition =>");
-                }
-            } else {
-                debug.write(" & no existing deletion");
-                if (additions.containsKey(id)) {
-                    debug.write(" & existing addition =>");
-                    debug.write(" remove(existing addition),");
-                } else {
-                    debug.write(" & no existing addition =>");
-                    // Ingesting here messes up the order, so we queue instead
-                }
-            }
-            debug.write(" add(new addition)");
-            log.debug(debug.toString());
-            additions.put(id, payload); // Replaces any existing addition
-        }
+        //noinspection DuplicateStringLiteralInspection
+        log.debug("Adding '" + id + "'");
+        checkWriter();
+        Document document = (Document)payload.getData(Payload.LUCENE_DOCUMENT);
+        // TODO: Add support for Tokenizer and Filters
+        writer.addDocument(document, descriptor.getIndexAnalyzer());
+        // TODO: Verify that docCount is trustable with regard to deletes
+        payload.getData().put(LuceneIndexUtils.META_ADD_DOCID,
+                              writer.docCount()-1);
+        log.trace("Updating idMapper with id '" + id + "' and pos "
+                  + (writer.docCount()-1));
+        idMapper.put(id, writer.docCount()-1);
     }
 
-    @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    // TODO: Optimize the case where delete has no effect
-    private void updateDeletion(String id, Payload payload) {
-        StringWriter debug = new StringWriter(300);
-        debug.write("new deletion(" + id + ")");
-        if (deletions.containsKey(id)) {
-            debug.write(" & existing deletion");
-            if (additions.containsKey(id)) {
-                debug.write(" & existing addition =>");
-                debug.write(" remove(existing deletion),");
-                debug.write(" remove(existing addition),");
-                additions.remove(id);
-            } else {
-                debug.write(" & no existing addition =>");
-                debug.write(" remove(existing deletion),");
-            }
+    private void updateDeletion(String id, Payload payload) throws IOException {
+        //noinspection DuplicateStringLiteralInspection
+        log.debug("Deleting '" + id + "'");
+        checkWriter();
+        if (idMapper.containsKey(id)) {
+            payload.getData().put(LuceneIndexUtils.META_DELETE_DOCID,
+                                  idMapper.get(id));
+            writer.flush();
+            writer.deleteDocuments(new Term(IndexUtils.RECORD_FIELD, id));
+            // TODO: Consider if we can delay flush
+            // The problem is add(a), delete(a), add(a). Without flushing we
+            // don't know if a will be present in the index or not.
+            // Another problem is add(a), delete(a), add(a), delete(a) as the
+            // deltions are stored in a HashMap
+            writer.flush();
         } else {
-            debug.write(" & no existing deletion");
-            if (additions.containsKey(id)) {
-                debug.write(" & existing addition =>");
-                debug.write(" remove(existing addition),");
-                additions.remove(id);
-            } else {
-                debug.write(" & no existing addition =>");
-            }
+            log.info("Delete requested for " + payload + ", but it was not "
+                     + "present in the index");
         }
-        debug.write(" add(new deletion)");
-        log.debug(debug.toString());
-        // TODO: Signal MARK_DELETE_ID
-        deletions.put(id, payload); // Replaces any existing deletion
     }
 
     /**
@@ -395,8 +316,6 @@ public class LuceneManipulator implements IndexManipulator {
         log.trace("commit() called for '" + indexRoot + "'");
         long startTime = System.currentTimeMillis();
         closeWriter();
-        flushDeletions();
-        flushAdditions();
         if (writer == null) {
             log.trace("commit: No writer, commit finished in "
                   + (System.currentTimeMillis() - startTime) + " ms");
@@ -407,60 +326,6 @@ public class LuceneManipulator implements IndexManipulator {
         closeWriter();
         log.trace("Commit finished for '" + indexRoot + "' in "
                   + (System.currentTimeMillis() - startTime) + " ms");
-    }
-
-    /* Note: The flush does not call commit */
-    private void flushAdditions() throws IOException {
-        if (additions.size() == 0) {
-            log.trace("No additions to flush");
-            return;
-        }
-        log.debug("Flushing  " + additions.size() + " additions");
-        checkWriter();
-        for (Map.Entry<String, Payload> entry: additions.entrySet()) {
-            Payload addition = entry.getValue();
-            //noinspection DuplicateStringLiteralInspection
-            log.debug("Adding '" + addition.getId() + "' to index");
-            idMapper.put(addition.getId(), writer.docCount());
-            Document document =
-                    (Document)addition.getData(Payload.LUCENE_DOCUMENT);
-            writer.addDocument(document);
-        }
-        additions.clear();
-        log.trace("Finished addition flush");
-    }
-
-    private void flushDeletions() throws IOException {
-        if (deletions.size() == 0) {
-            log.trace("No deletions to flush");
-            return;
-        }
-        log.trace("Calling close(true)");
-        closeWriter();
-        log.debug("Opening reader ");
-        openReader();
-        //noinspection DuplicateStringLiteralInspection
-        log.debug("Flushing " + deletions.size() + " deletions");
-        for (Map.Entry<String, Payload> entry: deletions.entrySet()) {
-            Payload deletion = entry.getValue();
-            int delCount;
-            if ((delCount =
-                    reader.deleteDocuments(new Term(IndexUtils.RECORD_FIELD,
-                                                    deletion.getId()))) != 1) {
-                if (delCount == 0) {
-                    log.warn("flushDeletions: Deleted 0 documents for id '"
-                             + deletion.getId() + "'");
-                } else {
-                    log.warn("flushDeletions: Deleted " + delCount
-                             + " documents for id '" + deletion.getId()
-                             + "'. Expected 1");
-                }
-            }
-            idMapper.remove(deletion.getId());
-        }
-        reader.close();
-        deletions.clear();
-        log.trace("flushDeletions() finished");
     }
 
     public synchronized void consolidate() throws IOException {
@@ -508,13 +373,6 @@ public class LuceneManipulator implements IndexManipulator {
             //noinspection AssignmentToNull
             writer = null;
         }
-        if (!flush && (additions.size() > 0 || deletions.size() > 0)) {
-            log.warn("Closing without flush: "
-                     + (additions.size() + deletions.size())
-                     + " cached updates are lost");
-        }
-        additions.clear();
-        deletions.clear();
 
         indexDirectory.close();
         //noinspection AssignmentToNull
