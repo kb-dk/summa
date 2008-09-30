@@ -52,10 +52,11 @@ import org.apache.commons.logging.LogFactory;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class IndexControllerImpl extends StateThread implements ObjectFilter,
-                                                            IndexManipulator,
-                                                            IndexController {
+public class IndexControllerImpl extends StateThread implements
+                                                     IndexManipulator,
+                                                     IndexController {
     private static Log log = LogFactory.getLog(IndexControllerImpl.class);
+    private static Log failLog = LogFactory.getLog(LOG_FAILED);
 
     /**
      * A comma-delimited string of the keys for the manipulators. For each
@@ -483,9 +484,14 @@ public class IndexControllerImpl extends StateThread implements ObjectFilter,
         log.trace("Finished clear()");
     }
 
-    @SuppressWarnings({"DuplicateStringLiteralInspection"})
+    @QAInfo(level = QAInfo.Level.FINE,
+            state = QAInfo.State.IN_DEVELOPMENT,
+            author = "te",
+            comment = "Is it okay to catch on Exception-level when calling "
+                      + "update on the manipulators?")
     public synchronized boolean update(Payload payload) throws IOException {
         if (log.isDebugEnabled()) {
+            //noinspection DuplicateStringLiteralInspection
             log.debug("update(" + payload + ") called");
         }
         if (source == null) {
@@ -494,9 +500,34 @@ public class IndexControllerImpl extends StateThread implements ObjectFilter,
         updatesSinceLastCommit++;
         updatesSinceLastConsolidate++;
         boolean requestCommit = false;
+        int manipulatorPosition = 0;
         for (IndexManipulator manipulator: manipulators) {
-            // TODO: Handle IllegalArgumentexception gracefully for first manipulator
-            requestCommit = requestCommit | manipulator.update(payload);
+            //noinspection OverlyBroadCatchBlock
+            try {
+                requestCommit = requestCommit | manipulator.update(payload);
+            } catch (Exception e) {
+                if (manipulatorPosition == 0) {
+                    failLog.warn(String.format(
+                            "IOException for the first manipulator (%s) while "
+                            + "indexing %s", manipulator, payload), e);
+                    updatesSinceLastCommit--;
+                    updatesSinceLastConsolidate--;
+                } else {
+                    failLog.error(String.format(
+                            "IOException for manipulator #%d (%s) while"
+                            + " indexing %s", manipulatorPosition + 1,
+                                              manipulator, payload), e);
+
+                }
+                if (failLog.isDebugEnabled()) {
+                    log.trace(String.format(
+                            "Failed indexing %s with content\n%s", payload,
+                            payload.getRecord() == null ? "NA"
+                            : payload.getRecord().getContentAsUTF8()));
+                }
+                break;
+            }
+            manipulatorPosition++;
         }
         // TODO: Keep received Payloads and close them on commit?
         profiler.beat();
@@ -506,6 +537,7 @@ public class IndexControllerImpl extends StateThread implements ObjectFilter,
         }
         triggerCheck();
         if (log.isTraceEnabled()) {
+            //noinspection DuplicateStringLiteralInspection
             log.trace("update(" + payload + ") finished");
         }
         return requestCommit;

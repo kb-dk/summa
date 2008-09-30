@@ -35,6 +35,18 @@ import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
         author = "te")
 public interface IndexController extends ObjectFilter {
     /**
+     * The name of the logger collecting Payloads that could not be indexed.
+     * error-level: Used if some index manipulators handled the Payload okay
+     *              but other manipulators failed. This means inconsistencies
+     *              between the sub-indexes.<br />
+     * warn-level:  Used if the fitst index manipulator fails on the Payload.
+     *              Even though the Payload wasn't indexed, the sub-indexes
+     *              are consistent between each other.<br />
+     * debug-level: Logs the content fron the Records in the failed Payloads.
+     */
+    public static final String LOG_FAILED = "index.failed";
+
+    /**
      * Add a manipulator to the list of manipulators. The order of addition is
      * significant: Manipulators will be called in order of addition.
      * @param manipulator the manipulator to add.
