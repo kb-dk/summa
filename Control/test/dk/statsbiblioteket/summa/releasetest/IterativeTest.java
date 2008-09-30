@@ -57,6 +57,7 @@ import dk.statsbiblioteket.summa.facetbrowser.api.FacetResultImpl;
 import dk.statsbiblioteket.summa.facetbrowser.browse.Browser;
 import dk.statsbiblioteket.summa.facetbrowser.FacetSearchNode;
 import dk.statsbiblioteket.summa.search.document.DocIDCollector;
+import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 
 /**
  * Index-building unit-test with focus on iterative building, including
@@ -322,6 +323,31 @@ public class IterativeTest extends NoExitTestCase {
                           "Title", Arrays.asList("Title_foo1"));
     }
 
+    /*
+    Tests whether consolidate properly performs a clean up of the Lucene index
+    and a rebuild of the Facet structure
+     */
+    public void testConsolidate() throws Exception {
+        storage.flush(new Record("foo1", BASE, new byte[0]));
+        storage.flush(new Record("foo2", BASE, new byte[0]));
+        updateIndex();
+
+        Record deletedRecord = new Record("foo1", BASE, new byte[0]);
+        deletedRecord.setDeleted(true);
+        Thread.sleep(10); // Hack to make createdTime != modifiedTime
+        deletedRecord.touch();
+        storage.flush(deletedRecord);
+        updateIndex();
+
+        storage.flush(new Record("foo3", BASE, new byte[0]));
+        updateIndexConsolidate();
+
+        assertIndexEquals("The index should contain no deletions",
+                          Arrays.asList("foo2", "foo3"), 0);
+        assertTagsEquals("The index should contain multiple Title tags",
+                          "Title", Arrays.asList("Title_foo2", "Title_foo3"));
+    }
+
     /* Helpers */
 
     /*
@@ -418,7 +444,21 @@ public class IterativeTest extends NoExitTestCase {
     }
 
     private void updateIndex() throws IOException, InterruptedException {
-        FilterControl filters = new FilterControl(getIndexConfiguration());
+        Configuration conf = getIndexConfiguration();
+        updateIndex(conf);
+    }
+
+    private void updateIndexConsolidate() throws IOException,
+                                                 InterruptedException {
+        Configuration conf = getIndexConfiguration();
+        conf.getSubConfiguration("SingleChain").
+                getSubConfiguration("IndexUpdate").
+                set(IndexControllerImpl.CONF_CONSOLIDATE_MAX_DOCUMENTS, 1);
+        updateIndex(conf);
+    }
+
+    private void updateIndex(Configuration conf) throws InterruptedException {
+        FilterControl filters = new FilterControl(conf);
         log.debug("Starting filter");
         filters.start();
         log.debug("Waiting for finish");
