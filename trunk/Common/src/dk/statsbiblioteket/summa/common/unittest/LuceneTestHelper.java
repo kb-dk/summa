@@ -44,7 +44,7 @@ public class LuceneTestHelper extends TestCase {
         IndexReader reader = IndexReader.open(location);
         try {
             int expectedCount = 0;
-            for (int i = 0 ; i < reader.maxDoc() ; i++) {
+            for (int i = 0 ; i < reader.maxDoc() && i < ids.length; i++) {
                 if (!reader.isDeleted(i)) {
                     assertEquals("The id '" + ids[expectedCount]
                                  + "' should be present in the "
