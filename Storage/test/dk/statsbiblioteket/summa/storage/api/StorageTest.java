@@ -139,9 +139,71 @@ public class StorageTest extends TestCase {
         assertBaseEmpty(testBase1);
     }
 
+    public void testExpandShallowRecord () throws Exception {
+        testAddOne();
+
+        List<Record> recs = storage.getRecords(Arrays.asList(testId1),
+                                               1);
+        assertEquals(1, recs.size());
+
+        Record rec = recs.get(0);
+        assertEquals(rec.getContentAsUTF8(), rec.getContentAsUTF8());
+        assertEquals(rec.getId(), rec.getId());
+    }
+
+    public void testFullExpandShallowRecord () throws Exception {
+        testAddOne();
+
+        List<Record> recs = storage.getRecords(Arrays.asList(testId1),
+                                               -1);
+        assertEquals(1, recs.size());
+
+        Record rec = recs.get(0);
+        assertEquals(rec.getContentAsUTF8(), rec.getContentAsUTF8());
+        assertEquals(rec.getId(), rec.getId());
+    }
+
+    public void testAddLinkedRecords () throws Exception {
+        Record recP = new Record (testId1, testBase1, testContent1);
+        Record recC = new Record (testId2, testBase1, testContent1);
+        recP.setChildren(Arrays.asList(recC));
+        recC.setParentId(recP.getId());
+
+        storage.flushAll (Arrays.asList(recP, recC));
+
+        /* Fetch without expansion, we test that elewhere */
+        List<Record> recs = storage.getRecords(Arrays.asList(testId1, testId2),
+                                               0);
+
+        assertEquals(2, recs.size());
+
+        assertEquals(recP.getContentAsUTF8(), recs.get(0).getContentAsUTF8());
+        assertEquals(recP.getId(), recs.get(0).getId());
+        assertEquals(recs.get(0).getChildren(), null);
+        assertEquals(recs.get(0).getChildIds(), recP.getChildIds());
+
+        assertEquals(recC.getContentAsUTF8(), recs.get(1).getContentAsUTF8());
+        assertEquals(recC.getId(), recs.get(1).getId());
+        assertEquals(recC.getParentId(), recs.get(1).getParentId());
+    }
+
+    public void testExpandLinkedRecord () throws Exception {
+        testAddLinkedRecords();
+
+        /* Fetch records expanding immediate children only */
+        List<Record> recs = storage.getRecords(Arrays.asList(testId1, testId2),
+                                               1);
+
+        assertEquals(2, recs.size());
+
+        /* Check that the first record holds a child relation to the next */
+        assertEquals(recs.get(0).getChildren(), Arrays.asList(recs.get(1)));
+
+    }
+
     /*
     TODO
-     - test expansionDepth
+     - test deep child expansion
      - test mtime/ctime and repeated adding of same rec
      */
 

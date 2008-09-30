@@ -44,6 +44,7 @@ import dk.statsbiblioteket.summa.storage.StorageBase;
 import dk.statsbiblioteket.summa.storage.api.RecordIterator;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Zips;
+import dk.statsbiblioteket.util.Strings;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -427,8 +428,10 @@ public abstract class DatabaseStorage extends StorageBase {
      * @return the record or {@code null} if the record is not found
      * @throws RemoteException on communication errors with the database
      */
-    public Record getRecord(String id) throws RemoteException {
-        log.debug("getRecord('" + id + "') entered");
+    public Record getRecord(String id, int expansionDepth)
+                                                        throws RemoteException {
+        log.trace("getRecord('" + id + "', " + expansionDepth + ")");
+
         try {
             stmtGetRecord.setString(1, id);
         } catch (SQLException e) {
@@ -441,6 +444,8 @@ public abstract class DatabaseStorage extends StorageBase {
             if (resultSet.next()) {
                 try {
                     record = resultToRecord(resultSet);
+                    expandChildRecords(record, expansionDepth);
+
                 } catch (IOException e) {
                     throw new RemoteException("Exception transforming SQL "
                                               + "result set to record", e);
@@ -463,13 +468,37 @@ public abstract class DatabaseStorage extends StorageBase {
                                                         throws RemoteException {
         ArrayList<Record> result = new ArrayList<Record>(ids.size());
         for (String id : ids) {
-            Record r = getRecord(id);
+            Record r = getRecord(id, expansionDepth);
             if (r != null) {
                 result.add(r);
             }
         }
 
         return result;
+    }
+
+    /* Expand child records if we need to and there indeed
+     * are any children to expand */
+    private void expandChildRecords (Record record, int expansionDepth)
+                                                        throws RemoteException {
+        if (expansionDepth == 0) {
+            return;
+        }
+
+        List<String> childIds = record.getChildIds();
+
+        if (childIds != null && childIds.size() != 0) {
+
+            if (log.isTraceEnabled()) {
+                log.trace ("Expanding children of record '"
+                           + record.getId() + "': "
+                           + Strings.join(childIds, ", "));
+            }
+
+            List<Record> children = getRecords(childIds,
+                                               expansionDepth - 1);
+            record.setChildren(children);
+        }
     }
 
     public Record next(Long iteratorKey) throws RemoteException {
@@ -555,9 +584,9 @@ public abstract class DatabaseStorage extends StorageBase {
                                  new Timestamp(record.getCreationTime()));
             stmtCreateRecord.setTimestamp(7,
                                  new Timestamp(record.getModificationTime()));
-            stmtCreateRecord.setString(8, record.getParent());
+            stmtCreateRecord.setString(8, record.getParentId());
             stmtCreateRecord.setString(9,
-                             Record.childrenListToString(record.getChildren()));
+                             Record.childrenListToString(record.getChildIds()));
             stmtCreateRecord.setBytes(10,record.hasMeta() ?
                                          record.getMeta().toFormalBytes() :
                                          new byte[0]);
@@ -579,9 +608,9 @@ public abstract class DatabaseStorage extends StorageBase {
             stmtUpdateRecord.setBytes(4, Zips.gzipBuffer(record.getContent()));
             stmtUpdateRecord.setTimestamp(5,
                                  new Timestamp(record.getModificationTime()));
-            stmtUpdateRecord.setString(6, record.getParent());
+            stmtUpdateRecord.setString(6, record.getParentId());
             stmtUpdateRecord.setString(7,
-                             Record.childrenListToString(record.getChildren()));
+                             Record.childrenListToString(record.getChildIds()));
             stmtUpdateRecord.setBytes(8, record.hasMeta() ?
                                          record.getMeta().toFormalBytes() :
                                          new byte[0]);
