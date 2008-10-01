@@ -386,6 +386,3 @@ public class LuceneFacetBuilder extends BuilderImpl {
         return coreMap;
     }
 }
-
-
-

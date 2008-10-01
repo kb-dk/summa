@@ -77,6 +77,19 @@ public class LuceneManipulator implements IndexManipulator {
             "summa.index.lucene.buffersizepayloads";
     public static final int DEFAULT_BUFFER_SIZE_PAYLOADS = -1;
 
+    /**
+     * The maximum number of segments after a consolidate. Setting this to 1
+     * increases consolidation time considerably on large (multi-GB) indexes.
+     * Setting this to a high number (20+?) decreases search-performance on
+     * conventional harddisks. Setting this very high (200+) taxes the system
+     * for file handles.
+     * </p><p>
+     * This property is optional. Default is 5.
+     */
+    public static final String CONF_MAX_SEGMENTS_ON_CONSOLIDATE =
+            "summa.index.lucene.consolidate.maxsegments";
+    public static final int DEFAULT_MAX_SEGMENTS_ON_CONSOLIDATE = 5;
+
     /** The index descriptor, used for providing Analyzers et al. */
     private LuceneIndexDescriptor descriptor;
     /** The general index folder, which contains the concrete index-parts. */
@@ -94,13 +107,17 @@ public class LuceneManipulator implements IndexManipulator {
     private IDMapper idMapper;
 
     private int bufferSizePayloads = DEFAULT_BUFFER_SIZE_PAYLOADS;
+    private int maxMergeOnConsolidate = DEFAULT_MAX_SEGMENTS_ON_CONSOLIDATE;
 
     public LuceneManipulator(Configuration conf) {
         bufferSizePayloads = conf.getInt(CONF_BUFFER_SIZE_PAYLOADS,
                                          bufferSizePayloads);
+        maxMergeOnConsolidate = conf.getInt(CONF_MAX_SEGMENTS_ON_CONSOLIDATE,
+                                            maxMergeOnConsolidate);
         descriptor = LuceneIndexUtils.getDescriptor(conf);
         log.debug("LuceneManipulator created. bufferSizePayloads is "
-                  + bufferSizePayloads);
+                  + bufferSizePayloads + ", maxMergeOnConsolidate is "
+                  + maxMergeOnConsolidate);
     }
 
     public synchronized void open(File indexRoot) throws IOException {
@@ -326,15 +343,20 @@ public class LuceneManipulator implements IndexManipulator {
     }
 
     public synchronized void consolidate() throws IOException {
-        log.trace("consolidate() called. Calling commit()");
+        //noinspection DuplicateStringLiteralInspection
+        log.debug("consolidate() called");
+        log.trace("consolidate(): Calling commit()");
         long startTime = System.currentTimeMillis();
         commit();
-        closeWriter();
-        // TODO: Consider optimize
-/*
         checkWriter();
-        writer.optimize();
-        writer.flush();*/
+
+        // TODO: When we change to Lucene 2.4, activate expungeDeletes
+        /**
+        log.trace("consolidate(): Removing deletions");
+        writer.expungeDeletes(true);*/
+        writer.optimize(maxMergeOnConsolidate, true);
+        log.trace("Closing writer");
+        closeWriter(); // Is this still necessary?
         log.debug("Consolidate finished in "
                   + (System.currentTimeMillis()- startTime) + " ms");
     }
@@ -406,7 +428,3 @@ public class LuceneManipulator implements IndexManipulator {
     }
 
 }
-
-
-
-

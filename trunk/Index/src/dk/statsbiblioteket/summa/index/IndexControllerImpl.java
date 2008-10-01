@@ -713,6 +713,3 @@ public class IndexControllerImpl extends StateThread implements
         return manipulators.remove(manipulator);
     }
 }
-
-
-

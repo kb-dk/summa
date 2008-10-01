@@ -58,6 +58,7 @@ import dk.statsbiblioteket.summa.facetbrowser.browse.Browser;
 import dk.statsbiblioteket.summa.facetbrowser.FacetSearchNode;
 import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
+import dk.statsbiblioteket.summa.index.lucene.LuceneManipulator;
 
 /**
  * Index-building unit-test with focus on iterative building, including
@@ -451,9 +452,22 @@ public class IterativeTest extends NoExitTestCase {
     private void updateIndexConsolidate() throws IOException,
                                                  InterruptedException {
         Configuration conf = getIndexConfiguration();
+        // Ensure that consolidate is called
         conf.getSubConfiguration("SingleChain").
                 getSubConfiguration("IndexUpdate").
                 set(IndexControllerImpl.CONF_CONSOLIDATE_MAX_DOCUMENTS, 1);
+        // Ensure that deletes are removed
+        conf.getSubConfiguration("SingleChain").
+                getSubConfiguration("IndexUpdate").
+                getSubConfiguration("LuceneUpdater").
+                set(LuceneManipulator.CONF_MAX_SEGMENTS_ON_CONSOLIDATE, 1);
+        // Sanity-check
+        assertEquals("The value for consolidatetimeout should be present",
+                     -1,
+                     conf.getSubConfiguration("SingleChain").
+                             getSubConfiguration("IndexUpdate").
+                             getInt(IndexControllerImpl.
+                             CONF_CONSOLIDATE_TIMEOUT));
         updateIndex(conf);
     }
 
