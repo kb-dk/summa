@@ -47,6 +47,7 @@ import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.index.IndexException;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.util.Security;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.api.Storage;
@@ -77,7 +78,7 @@ public class SearchTest extends NoExitTestCase {
 
     public void setUp () throws Exception {
         super.setUp();
-        checkSecurityManager();
+        Security.checkSecurityManager();
         cleanup();
         INDEX_ROOT.mkdirs();
     }
@@ -98,18 +99,6 @@ public class SearchTest extends NoExitTestCase {
             "data/search/SearchTest_IngestConfiguration.xml").
             getFile()).getParentFile();
     public static String BASE = "fagref";
-
-    private static void checkSecurityManager() {
-        if (System.getSecurityManager() == null) {
-            log.debug("Setting allow-all security manager");
-            System.setSecurityManager(new RMISecurityManager() {
-                public void checkPermission(Permission perm) {
-                }
-                public void checkPermission(Permission perm, Object context) {
-                }
-            });
-        }
-    }
 
     public static Storage startStorage() throws Exception {
         Configuration storageConf = IngestTest.getStorageConfiguration();

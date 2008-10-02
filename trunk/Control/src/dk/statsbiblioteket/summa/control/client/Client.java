@@ -25,6 +25,7 @@ package dk.statsbiblioteket.summa.control.client;
 import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.shell.VoidShellContext;
 import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
+import dk.statsbiblioteket.summa.common.util.Security;
 import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
 import dk.statsbiblioteket.summa.common.configuration.Configurable.ConfigurationException;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -42,7 +43,6 @@ import java.io.IOException;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.NotBoundException;
-import java.rmi.RMISecurityManager;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 import java.net.MalformedURLException;
@@ -109,14 +109,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         log.debug("Constructing client");
         log.trace("Home dir: " + new File(".").getAbsolutePath());
 
-        if (System.getSecurityManager() == null) {
-            log.info ("No security manager found. "
-                      + "Setting RMI security manager");
-            System.setSecurityManager(new RMISecurityManager());
-        } else {
-            log.info("SecurityManager '" + System.getSecurityManager()
-                     + "' present");
-        }
+        Security.checkSecurityManager();
 
         registryHost = conf.getString(CONF_REGISTRY_HOST,
                                                "localhost");
@@ -1002,32 +995,20 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         File password = new File(bundleDir, BundleStub.JMX_PASSWORD_FILE);
         File access = new File(bundleDir, BundleStub.JMX_ACCESS_FILE);
 
-        if (policy.exists()) {
-            log.trace("Setting " + policy + " read only");
-            policy.setReadable(false, false); // disallow all reading
-            policy.setReadable(true); // allow user reading
-            policy.setWritable(false, false); // disallow all writing
-        }
-
-        if (password.exists()) {
-            log.trace("Setting " + password + " read only");
-            password.setReadable(false, false); // disallow all reading
-            password.setReadable(true); // allow user reading
-            password.setWritable(false, false); // disallow all writing
-        }
-
-        if (access.exists()) {
-            log.trace("Setting " + access + " read only");
-            access.setReadable(false, false); // disallow all reading
-            access.setReadable(true); // allow user reading
-            access.setWritable(false, false); // disallow all writing
+        for (File file: new File[]{policy, password, access}) {
+            if (file.exists()) {
+                log.trace("Setting " + file + " read only");
+                file.setReadable(false, false); // disallow all reading
+                file.setReadable(true); // allow user reading
+                file.setWritable(false, false); // disallow all writing
+            }
         }
     }
 
     public static void main(String[] args) {
         try {
             Configuration conf = Configuration.getSystemConfiguration();
-            Client client = new Client(conf);
+            new Client(conf);
             // The spawned server thread for RMI will cause the JVM to not exit
         } catch (Throwable e) {
             log.fatal("Caught toplevel exception, bailing out.", e);

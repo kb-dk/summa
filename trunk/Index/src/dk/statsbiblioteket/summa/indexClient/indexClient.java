@@ -28,6 +28,7 @@ import dk.statsbiblioteket.summa.tools.monitor.Monitor;
 import dk.statsbiblioteket.summa.tools.monitor.RemoteMonitor.IteratableSourceIndexMonitor;
 import dk.statsbiblioteket.summa.tools.schedule.Scheduler;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
+import dk.statsbiblioteket.summa.common.util.Security;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import org.apache.commons.logging.Log;
@@ -93,7 +94,7 @@ public class indexClient {
         IndexService indexer = null;
 
         try {
-            System.setSecurityManager(new RMISecurityManager());
+            Security.checkSecurityManager();
             log.debug("Activate the IndexService on :"  + RMIserver);
             indexer = (IndexService) Naming.lookup("//" + RMIserver + ":" + RMIport + "/" + serviceName);
         } catch (MalformedURLException e) {

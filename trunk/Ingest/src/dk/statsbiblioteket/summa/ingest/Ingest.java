@@ -27,6 +27,7 @@ import dk.statsbiblioteket.summa.ingest.io.IODeleteRecord;
 import dk.statsbiblioteket.summa.ingest.io.IOUpdateRecord;
 import dk.statsbiblioteket.summa.ingest.io.IOCreateRecord;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.util.Security;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.net.MalformedURLException;
@@ -108,11 +109,8 @@ public class Ingest {
                                              storageQueue,
                                              new QueueFullHandler());
 
-           //if (System.getSecurityManager() == null) {
-                log.info("Getting RMISecurityManager");
-                System.setSecurityManager(new RMISecurityManager());
-           // }
-            log.info("getting remote io: " + RMIServer);
+        Security.checkSecurityManager();
+        log.info("getting remote io: " + RMIServer);
         _io = (Storage) Naming.lookup(RMIServer);
 
     }

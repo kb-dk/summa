@@ -78,7 +78,7 @@ public class SetupServices {
 
     public SetupServices() throws Exception {
 
-//	    System.setSecurityManager(new RMISecurityManager());
+//	            Security.checkSecurityManager();
 
         // Because of the 1.2 security model, a security POLICY should
     	// be specified for the ActivationGroup VM. The first argument
