@@ -121,6 +121,7 @@ public class RecordIterator implements Iterator<Record>, Serializable {
             if (recs.size() < MAX_QUEUE_SIZE) {
                 next = false;
             }
+            records.addAll(recs);
         }
     }
 }
