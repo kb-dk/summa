@@ -85,17 +85,24 @@ public class StorageTest extends TestCase {
         }
     }
 
-    public void assertBaseCount (String base, long count) throws Exception {
+    public void testIteration() throws Exception {
+        storage.clearBase (testBase1);
+        storage.flush(new Record(testId1, testBase1, testContent1));
+        storage.flush(new Record(testId2, testBase1, testContent1));
+        assertBaseCount(testBase1, 2);
+    }
+
+    public void assertBaseCount (String base, long expected) throws Exception {
         Iterator<Record> iter = storage.getRecordsFromBase(base);
-        long counter = 0;
+        long actual = 0;
         while (iter.hasNext()) {
             iter.next();
-            counter++;
+            actual++;
         }
 
-        if (counter != count) {
-            fail ("Base '" + base + "' should contain " + count + " records, "
-                  + "but found " + counter);
+        if (actual != expected) {
+            fail("Base '" + base + "' should contain " + expected
+                 + " records, but found " + actual);
         }
     }
 
