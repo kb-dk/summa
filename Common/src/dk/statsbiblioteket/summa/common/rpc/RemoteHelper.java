@@ -20,6 +20,7 @@ import java.net.MalformedURLException;
 
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Zips;
+import dk.statsbiblioteket.summa.common.util.Security;
 
 /**
  * Utility class to help export remote interfaces
@@ -47,10 +48,7 @@ public class RemoteHelper {
                    + "as '" + serviceName + "' with registry on port "
                    + registryPort);
 
-        if (System.getSecurityManager() == null) {
-            log.info ("No security manager set. Using RMISecurityManager");
-            System.setSecurityManager(new RMISecurityManager());
-        }
+        Security.checkSecurityManager();
 
         UnicastRemoteObject remote = (UnicastRemoteObject) obj;
         Registry reg = null;

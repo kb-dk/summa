@@ -30,8 +30,6 @@ import java.io.StringWriter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
-import java.rmi.RMISecurityManager;
-import java.security.Permission;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -46,6 +44,7 @@ import dk.statsbiblioteket.summa.common.configuration.storage.FileStorage;
 import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
 import dk.statsbiblioteket.summa.common.configuration.storage.RemoteStorage;
 import dk.statsbiblioteket.summa.common.configuration.storage.XStorage;
+import dk.statsbiblioteket.summa.common.util.Security;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -791,7 +790,7 @@ public class Configuration implements Serializable,
      *                                  {@code Configurable}.
      */
     public static <T> T create (Class<T> configurable, Configuration conf) {
-        checkSecurityManager();
+        Security.checkSecurityManager();
         if (!Configurable.class.isAssignableFrom(configurable)) {
             throw new IllegalArgumentException("Class " + configurable
                                                + " is not a Configurable");
@@ -813,34 +812,6 @@ public class Configuration implements Serializable,
             throw new Configurable.ConfigurationException(e);
         } catch (InstantiationException e) {
             throw new Configurable.ConfigurationException(e);
-        }
-    }
-
-    /**
-     * Creates an allow-all if no manager is present.
-     */
-    private static void checkSecurityManager() {
-        if (System.getSecurityManager() == null) {
-            log.warn("No security manager found. "
-                     + "Setting allow-all security manager");
-            System.setSecurityManager(new RMISecurityManager() {
-                public void checkPermission(Permission perm) {
-                    // Do nothing (allow all)
-/*                    if (log.isTraceEnabled()) {
-                        log.trace("checkPermission(" + perm + ") called");
-                    }*/
-                }
-                public void checkPermission(Permission perm, Object context) {
-                    // Do nothing (allow all)
-/*                    if (log.isTraceEnabled()) {
-                        log.trace("checkPermission(" + perm + ", " + context
-                                  + ") called");
-                    }*/
-                }
-            });
-        } else {
-            log.debug("SecurityManager '" + System.getSecurityManager()
-                      + "' present");
         }
     }
 

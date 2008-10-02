@@ -24,6 +24,7 @@ package dk.statsbiblioteket.summa.control.service;
 
 import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
+import dk.statsbiblioteket.summa.common.util.Security;
 import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.control.api.BadConfigurationException;
@@ -95,14 +96,7 @@ public abstract class ServiceBase extends UnicastRemoteObject
                     + " specified in system properties '%s'. id could not be"
                     + " determined", Service.CONF_SERVICE_ID, CONF_SERVICE_ID));
         }
-        if (System.getSecurityManager() == null) {
-            log.info ("No security manager found. "
-                      + "Setting RMI security manager");
-            System.setSecurityManager(new RMISecurityManager());
-        } else {
-            log.info("SecurityManager '" + System.getSecurityManager()
-                     + "' present");
-        }
+        Security.checkSecurityManager();
 
         registryPort = conf.getInt(CONF_REGISTRY_PORT, 27000);
         servicePort = conf.getInt(CONF_SERVICE_PORT, 28003);

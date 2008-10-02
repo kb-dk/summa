@@ -27,6 +27,7 @@ import dk.statsbiblioteket.summa.index.IndexService;
 import dk.statsbiblioteket.summa.tools.monitor.Monitor;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.util.Security;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import org.apache.commons.logging.Log;
@@ -118,8 +119,7 @@ public class IteratableSourceIndexMonitor extends Monitor {
             log.error(e);
         }
 
-        if (System.getSecurityManager() == null)
-            System.setSecurityManager(new RMISecurityManager());
+        Security.checkSecurityManager();
         try {
             store = (Storage) Naming.lookup("//" + remoteStoreServer + ":" + remoteStoreServicePort + "/" + remoteStoreServiceName);
             log.info("Got ref to remoteStore: //" + remoteStoreServer + ":" + remoteStoreServicePort + "/" + remoteStoreServiceName );
