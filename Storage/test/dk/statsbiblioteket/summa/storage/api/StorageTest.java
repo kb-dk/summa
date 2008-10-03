@@ -25,6 +25,7 @@ public class StorageTest extends TestCase {
     static String testBase1 = "foobar";
     static String testId1 = "quiz1";
     static String testId2 = "quiz2";
+    static String testId3 = "quiz3";
     static int storageCounter = 0;
     static byte[] testContent1 = new byte[] {'s', 'u', 'm', 'm', 'a'};
 
@@ -172,11 +173,14 @@ public class StorageTest extends TestCase {
 
     public void testAddLinkedRecords () throws Exception {
         Record recP = new Record (testId1, testBase1, testContent1);
-        Record recC = new Record (testId2, testBase1, testContent1);
-        recP.setChildren(Arrays.asList(recC));
-        recC.setParentId(recP.getId());
+        Record recC1 = new Record (testId2, testBase1, testContent1);
+        Record recC2 = new Record (testId3, testBase1, testContent1);
+        recP.setChildren(Arrays.asList(recC1, recC2));
+        recC1.setChildren(Arrays.asList(recC2));
+        recC1.setParentId(recP.getId());
+        recC2.setParentId(recC1.getId());
 
-        storage.flushAll (Arrays.asList(recP, recC));
+        storage.flushAll (Arrays.asList(recP, recC1, recC2));
 
         /* Fetch without expansion, we test that elewhere */
         List<Record> recs = storage.getRecords(Arrays.asList(testId1, testId2),
@@ -189,9 +193,9 @@ public class StorageTest extends TestCase {
         assertEquals(recs.get(0).getChildren(), null);
         assertEquals(recs.get(0).getChildIds(), recP.getChildIds());
 
-        assertEquals(recC.getContentAsUTF8(), recs.get(1).getContentAsUTF8());
-        assertEquals(recC.getId(), recs.get(1).getId());
-        assertEquals(recC.getParentId(), recs.get(1).getParentId());
+        assertEquals(recC1.getContentAsUTF8(), recs.get(1).getContentAsUTF8());
+        assertEquals(recC1.getId(), recs.get(1).getId());
+        assertEquals(recC1.getParentId(), recs.get(1).getParentId());
     }
 
     public void testExpandLinkedRecord () throws Exception {
@@ -205,7 +209,24 @@ public class StorageTest extends TestCase {
 
         /* Check that the first record holds a child relation to the next */
         assertEquals(recs.get(0).getChildren(), Arrays.asList(recs.get(1)));
+    }
 
+    public void testRecursiveExpandLinkedRecord () throws Exception {
+        testAddLinkedRecords();
+
+        /* Fetch records expanding immediate children only */
+        List<Record> recs = storage.getRecords(Arrays.asList(testId1, testId2, testId3),
+                                               -1);
+
+        assertEquals(3, recs.size());
+
+        /* Check that the first record holds child relations to recC1, and recC2 */
+        assertEquals(recs.get(0).getChildren(),
+                     Arrays.asList(recs.get(1), recs.get(2)));
+
+        /* Check that recC1 has child recC2 */
+        assertEquals(recs.get(1).getChildren(),
+                     Arrays.asList(recs.get(2)));
     }
 
     /*

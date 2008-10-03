@@ -497,7 +497,11 @@ public abstract class DatabaseStorage extends StorageBase {
 
             List<Record> children = getRecords(childIds,
                                                expansionDepth - 1);
-            record.setChildren(children);
+            if (children.isEmpty()) {
+                record.setChildren(null);
+            } else {
+                record.setChildren(children);
+            }
         }
     }
 
