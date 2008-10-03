@@ -492,8 +492,9 @@ public class Record implements Serializable, Comparable{
         try {
             return id.equals(other.getId())
                    && base.equals(other.getBase())
-                   && timeEquals(creationTime, other.getCreationTime())
-                   && timeEquals(modificationTime, other.getModificationTime())
+                   // Semantically we compare only the record content, storage context, such as not timestamps:
+                   //&& timeEquals(creationTime, other.getCreationTime())
+                   //&& timeEquals(modificationTime, other.getModificationTime())
                    && deleted == other.isDeleted()
                    && indexable == other.isIndexable()
                    && ((parentId == null && other.getParentId() == null)
