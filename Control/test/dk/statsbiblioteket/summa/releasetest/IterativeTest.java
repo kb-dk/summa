@@ -331,6 +331,7 @@ public class IterativeTest extends NoExitTestCase {
     public void testConsolidate() throws Exception {
         storage.flush(new Record("foo1", BASE, new byte[0]));
         storage.flush(new Record("foo2", BASE, new byte[0]));
+        storage.flush(new Record("foo3", BASE, new byte[0]));
         updateIndex();
 
         Record deletedRecord = new Record("foo1", BASE, new byte[0]);
@@ -340,13 +341,14 @@ public class IterativeTest extends NoExitTestCase {
         storage.flush(deletedRecord);
         updateIndex();
 
-        storage.flush(new Record("foo3", BASE, new byte[0]));
+        storage.flush(new Record("foo4", BASE, new byte[0]));
         updateIndexConsolidate();
 
         assertIndexEquals("The index should contain no deletions",
-                          Arrays.asList("foo2", "foo3"), 0);
-        assertTagsEquals("The index should contain multiple Title tags",
-                          "Title", Arrays.asList("Title_foo2", "Title_foo3"));
+                          Arrays.asList("foo2", "foo3", "foo4"), 0);
+        assertTagsEquals("The Facet index should contain multiple Title tags",
+                          "Title", Arrays.asList(
+                "Title_foo2", "Title_foo3", "Title_foo4"));
     }
 
     /* Helpers */

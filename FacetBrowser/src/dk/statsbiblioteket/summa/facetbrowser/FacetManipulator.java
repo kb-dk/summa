@@ -117,6 +117,7 @@ public class FacetManipulator implements IndexManipulator {
     public void consolidate() throws IOException {
         log.debug("Consolidating Facets");
         builder.build(!clearTagsOnConsolidate);
+        builder.store();
     }
 
     // TODO: Auto-rebuild on missing facets
