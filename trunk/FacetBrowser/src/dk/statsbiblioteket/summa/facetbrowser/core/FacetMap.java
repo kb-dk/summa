@@ -101,7 +101,13 @@ public class FacetMap {
     public synchronized void addToDocument(int docID, Map<String,
             List<String>> facetTags) {
         checkReadOnly();
-        log.trace("Adding String-based facet/tags to document " + docID);
+        if (facetTags.size() == 0) {
+            log.trace("addToDocument: No Facet/Tag pairs received for doc "
+                      + docID);
+            return;
+        }
+        log.trace("addToDocument: Adding " + facetTags.size()
+                  + " String-based facet/tags to document " + docID);
         Map<Integer, List<Integer>> facetTagIDs =
                 new HashMap<Integer, List<Integer>>(facetTags.size());
         for (Map.Entry<String, List<String>> facet: facetTags.entrySet()) {

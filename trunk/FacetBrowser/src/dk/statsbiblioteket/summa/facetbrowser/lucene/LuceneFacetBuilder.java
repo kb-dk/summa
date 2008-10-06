@@ -37,6 +37,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.FieldSelector;
+import org.apache.lucene.document.MapFieldSelector;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
@@ -50,6 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Arrays;
 
 /**
  * The LuceneFacetBuilder works correctly with non-tokenized fields in the
@@ -121,7 +124,7 @@ public class LuceneFacetBuilder extends BuilderImpl {
      * @throws IOException if an I/O error happened.
      */
     public void build(boolean keepTags) throws IOException {
-        log.info(String.format("build(%b) called", keepTags));
+        log.debug(String.format("build(%b) called", keepTags));
 
         if (!docsToTerms && !termsToDocs) {
             log.warn("Neither docs=>terms or terms=>docs was specified. "
@@ -212,22 +215,29 @@ public class LuceneFacetBuilder extends BuilderImpl {
      * @throws java.io.IOException if an I/O-error occured.
      */
     private void buildDocsToTerms(IndexReader ir) throws IOException {
-        log.info("buildDocsToTerms: Filling core map for facet browsing");
+        log.info("buildDocsToTerms: Filling core map for facet browsing with"
+                 + " maxDoc = " + ir.maxDoc());
 
         Profiler totalProgress = new Profiler();
         int maxDoc = ir.maxDoc();
 
         log.trace("buildDocsToTerms: Iterating documents=>tags");
-        noTermFreqVectorSet.clear();
+        noValuesSet.clear();
         Profiler progress = new Profiler();
         progress.setExpectedTotal(maxDoc);
         int feedbackEvery = Math.max(1, maxDoc / 100);
         progress.setBpsSpan(Math.min(10000, feedbackEvery));
         for (int docID = 0 ; docID < maxDoc ; docID++) {
-            buildDocToTerms(ir, docID);
-            if (docID % feedbackEvery == 0) {
+            //noinspection OverlyBroadCatchBlock
+            try {
+                buildDocToTerms(ir, docID);
+            } catch (Exception e) {
+                log.warn("builddocstoTerms(): Exception while processing doc #"
+                         + docID, e);
+            }
+            if (docID % feedbackEvery == 0 && log.isTraceEnabled()) {
                 //noinspection DuplicateStringLiteralInspection
-                log.debug("Mapped " + docID + "/" + maxDoc +
+                log.trace("Mapped doc " + docID + "/" + maxDoc +
                           " ETA: " +  progress.getETAAsString(true) +
                           ". ");
             }
@@ -237,9 +247,25 @@ public class LuceneFacetBuilder extends BuilderImpl {
                   + totalProgress.getSpendTime());
     }
 
-    /* Keeps track of issued warnings due to missing term frequency vectors */
-    private Set<String> noTermFreqVectorSet = new HashSet<String>(10);
-
+    /* Keeps track of issued warnings due to missing values */
+    private Set<String> noValuesSet = new HashSet<String>(10);
+    private FieldSelector facetFields;
+    private void checkFacetFields() {
+        if (facetFields != null) {
+            return;
+        }
+        log.debug("Constructing facetFields");
+        List<String> fieldNames =
+                new ArrayList<String>(structure.getFacets().size() * 5);
+        for (Map.Entry<String, FacetStructure> entry:
+                structure.getFacets().entrySet()) {
+            fieldNames.addAll(Arrays.asList(entry.getValue().getFields()));
+        }
+        // TODO: Use a set instead of a list to ensure uniqueness
+        facetFields = new MapFieldSelector(fieldNames);
+        log.debug("Constructed facetFields with " + fieldNames.size()
+                  + " fields");
+    }
     /**
      * Extracts tags from the given document and inserts them in the FacetMap.
      * @param ir    a reader for a Lucene index.
@@ -251,33 +277,35 @@ public class LuceneFacetBuilder extends BuilderImpl {
             log.trace("The docID " + docID + " refered to a deleted document");
             return;
         }
-        Map<String, List<String>> facetTags = new HashMap<String, List<String>>(
-                structure.getFacets().size());
+        checkFacetFields();
+        Map<String, List<String>> facetTags =
+                new HashMap<String, List<String>>(structure.getFacets().size());
+        Document doc = ir.document(docID, facetFields);
         for (Map.Entry<String, FacetStructure> entry:
                 structure.getFacets().entrySet()) {
             FacetStructure facet = entry.getValue();
-            TermFreqVector concreteVector =
-                    ir.getTermFreqVector(docID, facet.getName());
-            if (concreteVector == null) {
-                if (!noTermFreqVectorSet.contains(facet.getName())) {
-                    log.debug(String.format(
-                            "No termFreqVector found for facet %s in document "
-                            + "%d. This warning will be supressed for the "
-                            + "remainder of the build", 
-                            facet.getName(), docID));
-                    noTermFreqVectorSet.add(facet.getName());
+            List<String> tags = new ArrayList<String>(10);
+            for (String fieldName: facet.getFields()) {
+                String[] terms = doc.getValues(fieldName);
+                if (terms == null) {
+                    if (!noValuesSet.contains(facet.getName())) {
+                        log.debug(String.format(
+                                "No term-values found for field %s in document "
+                                + "%d. This warning will be supressed for the "
+                                + "remainder of the build",
+                                fieldName, docID));
+                        noValuesSet.add(fieldName);
+                    }
+                    continue;
                 }
-                continue;
-            }
-            String[] terms = concreteVector.getTerms();
-            List<String> tags = new ArrayList<String>(terms.length);
-            for (String term: terms) {
-                if (log.isTraceEnabled()) {
-                    //noinspection DuplicateStringLiteralInspection
-                    log.trace("Adding " + term + " to " + facet.getName()
-                              + " for doc " + docID);
+                for (String term: terms) {
+                    if (log.isTraceEnabled()) {
+                        //noinspection DuplicateStringLiteralInspection
+                        log.trace("Adding Tag " + term + " to Facet"
+                                  + facet.getName() + " for doc " + docID);
+                    }
+                    tags.add(term);
                 }
-                tags.add(term);
             }
             if (tags.size() > 0) {
                 facetTags.put(facet.getName(), tags);

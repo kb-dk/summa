@@ -566,7 +566,7 @@ public class IndexControllerImpl extends StateThread implements
 
     public synchronized void consolidate() throws IOException {
         long startTime = System.currentTimeMillis();
-        log.trace("consolidate() called");
+        log.info("consolidate started");
         if (updatesSinceLastConsolidate == 0) {
             log.trace("No updates since last Consolidate");
             lastConsolidate = System.currentTimeMillis();
@@ -583,8 +583,8 @@ public class IndexControllerImpl extends StateThread implements
         lastConsolidate =             System.currentTimeMillis();
         updatesSinceLastConsolidate = 0;
         commitsSinceLastConsolidate = 0;
-        log.trace("consolidate() finished in "
-                  + (System.currentTimeMillis() - startTime) + " ms");
+        log.info(String.format("consolidate() finished in %d ms",
+                               System.currentTimeMillis() - startTime));
     }
 
     /**
