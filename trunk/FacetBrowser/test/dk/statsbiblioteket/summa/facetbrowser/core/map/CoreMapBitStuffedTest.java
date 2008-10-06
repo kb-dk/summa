@@ -157,6 +157,17 @@ public class CoreMapBitStuffedTest extends TestCase {
                      3, map.getDocCount());
     }
 
+    public void testClear() throws Exception {
+        CoreMap map = bo.getCoreMap();
+        map.add(0, 0, new int[]{1, 2});
+        map.add(0, 0, new int[]{3, 4});
+        assertEquals("There should only be a single document",
+                     1, map.getDocCount());
+        map.clear();
+        assertEquals("There should only be no documents after clear",
+                     0, map.getDocCount());
+    }
+
     public void testAddition2() throws Exception {
         CoreMap map = bo.getCoreMap();
         map.add(0, 0, new int[]{1, 2});
