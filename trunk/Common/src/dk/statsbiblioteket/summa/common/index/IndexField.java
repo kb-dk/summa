@@ -408,7 +408,6 @@ public class IndexField<A, T, F> {
         aliases =     new ArrayList<IndexAlias>(IndexAlias.getAliases(node));
         doIndex =     ParseUtil.getValue(xPath, node, "@indexed",
                                          doIndex);
-        // TODO: Consider makin compression an option
         doStore =     ParseUtil.getValue(xPath, node, "@stored",
                                          doStore);
         multiValued = ParseUtil.getValue(xPath, node, "@multiValued",
@@ -417,6 +416,10 @@ public class IndexField<A, T, F> {
                                          queryBoost);
         indexBoost =  ParseUtil.getValue(xPath, node, "@indexBoost",
                                          indexBoost);
+        tokenize =    ParseUtil.getValue(xPath, node, "@tokenize",
+                                         tokenize);
+        doCompress =  ParseUtil.getValue(xPath, node, "@compress",
+                                         doCompress); 
         sortLocale =  ParseUtil.getValue(xPath, node, "@sortLocale",
                                          sortLocale);
         inFreetext =  ParseUtil.getValue(xPath, node, "@inFreeText",
