@@ -43,6 +43,7 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.index.TermFreqVector;
+import org.apache.lucene.index.TermDocs;
 
 import java.io.File;
 import java.io.IOException;
@@ -314,9 +315,36 @@ public class LuceneFacetBuilder extends BuilderImpl {
         facetMap.addToDocument(docID, facetTags);
     }
 
-    // TODO: Implement fill from termenum
-    private void buildTermsToDocs(IndexReader ir) {
-        log.fatal("buildTermsToDocs not implemented yet");
+    // TODO: Only fill fields that has not previously been filled
+    private void buildTermsToDocs(IndexReader ir) throws IOException {
+        log.debug("buildTermsToDocs() started");
+        long startTime = System.currentTimeMillis();
+        for (Map.Entry<String, FacetStructure> entry:
+                structure.getFacets().entrySet()) {
+            FacetStructure facet = entry.getValue();
+            for (String fieldName: facet.getFields()) {
+                TermEnum terms = ir.terms(new Term(fieldName, ""));
+                if (terms == null) {
+                    continue;
+                }
+                do {
+                    Term term = terms.term();
+                    if (term == null || !fieldName.equals(term.field())) {
+                        break;
+                    }
+                    TermDocs termDocs = ir.termDocs(term);
+                    if (termDocs == null) {
+                        break;
+                    }
+                    while(termDocs.next()) {
+                        facetMap.add(
+                                termDocs.doc(), facet.getName(), term.text());
+                    }
+                } while (terms.next());
+            }
+        }
+        log.debug("Finished buildTermsToDocs in "
+                  + (System.currentTimeMillis() - startTime) + " ms");
     }
 
     public boolean update(Payload payload) {

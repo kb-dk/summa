@@ -64,6 +64,10 @@ public class IterativeHelperDocCreator extends ObjectFilterImpl {
                                 Field.Store.YES, Field.Index.UN_TOKENIZED));
         luceneDoc.add(new Field("title", "Title_" + id,
                                 Field.Store.YES, Field.Index.UN_TOKENIZED));
+        luceneDoc.add(new Field("onlystore", "Stored_" + id,
+                                Field.Store.YES, Field.Index.NO));
+        luceneDoc.add(new Field("onlyindex", "Indexed_" + id,
+                                Field.Store.NO, Field.Index.UN_TOKENIZED));
         luceneDoc.add(new Field("someField", "SomeField_" + id,
                                 Field.Store.YES, Field.Index.UN_TOKENIZED));
         luceneDoc.add(new Field("duplicate", "Static",

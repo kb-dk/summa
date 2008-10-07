@@ -28,6 +28,8 @@
         <field name="ma_long" parent="token" multiValued="true"/>
         <field name="lma_long" parent="keyword"/>
         <field name="sort_title" parent="keyword" sortLocale="da"/>
+        <field name="onlyindex" indexed="true" tokenized="false" stored="false"/>
+        <field name="onlystore" indexed="false" stored="true"/>
     </fields>
 
     <defaultSearchFields>freetext au ti su lma</defaultSearchFields>
