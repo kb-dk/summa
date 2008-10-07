@@ -36,7 +36,6 @@ import org.apache.lucene.analysis.SimpleAnalyzer;
  *
  *@author Hans Lund, State and University Library, Denmark
  *@version $Id: FieldType.java,v 1.2 2007/10/04 13:28:19 te Exp $
- * // TODO: Change deprecation to point to Lucene-specific code when available
  *@deprecated see default-fields from {@link LuceneIndexDescriptor} instead.
  */
 public enum FieldType {

@@ -326,11 +326,12 @@ public class IndexField<A, T, F> {
                 "<field name=\"%s\" parent=\"%s\" indexed=\"%s\" "
                 + "tokenized=\"%s\" stored=\"%s\" compressed=\"%s\" "
                 + "multiValued=\"%s\" queryBoost=\"%s\" indexBoost=\"%s\" "
-                + "sortLocale=\"%s\" " + "inFreeText=\"%s\" required=\"%s\">\n",
+                + "sortLocale=\"%s\" " + "inFreeText=\"%s\" required=\"%s\" "
+                + "tokenized=\"%s\">\n",
                 name, parent == null ? "" : parent.getName(), doIndex,
                 tokenize, doStore, doCompress,
                 multiValued, queryBoost, indexBoost, sortLocale,
-                inFreetext, required));
+                inFreetext, required, tokenize));
         for (IndexAlias alias: aliases) {
             sw.append(alias.toXMLFragment());
         }
@@ -416,9 +417,9 @@ public class IndexField<A, T, F> {
                                          queryBoost);
         indexBoost =  ParseUtil.getValue(xPath, node, "@indexBoost",
                                          indexBoost);
-        tokenize =    ParseUtil.getValue(xPath, node, "@tokenize",
+        tokenize =    ParseUtil.getValue(xPath, node, "@tokenized",
                                          tokenize);
-        doCompress =  ParseUtil.getValue(xPath, node, "@compress",
+        doCompress =  ParseUtil.getValue(xPath, node, "@compressed",
                                          doCompress); 
         sortLocale =  ParseUtil.getValue(xPath, node, "@sortLocale",
                                          sortLocale);

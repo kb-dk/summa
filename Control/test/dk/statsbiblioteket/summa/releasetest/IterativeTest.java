@@ -333,6 +333,12 @@ public class IterativeTest extends NoExitTestCase {
         storage.flush(new Record("foo2", BASE, new byte[0]));
         storage.flush(new Record("foo3", BASE, new byte[0]));
         updateIndex();
+        assertTagsEquals("Stored only should work with iterative",
+                          "onlystore", Arrays.asList(
+                "Stored_foo1", "Stored_foo2", "Stored_foo3"));
+        assertTagsEquals("Indexed only should work with iterative",
+                          "onlyindex", Arrays.asList(
+                "Indexed_foo1", "Indexed_foo2", "Indexed_foo3"));
 
         Record deletedRecord = new Record("foo1", BASE, new byte[0]);
         deletedRecord.setDeleted(true);
@@ -349,6 +355,13 @@ public class IterativeTest extends NoExitTestCase {
         assertTagsEquals("The Facet index should contain multiple Title tags",
                           "Title", Arrays.asList(
                 "Title_foo2", "Title_foo3", "Title_foo4"));
+
+        assertTagsEquals("Stored only should work with consolidate",
+                          "onlystore", Arrays.asList(
+                "Stored_foo2", "Stored_foo3", "Stored_foo4"));
+        assertTagsEquals("Indexed only should work with consolidate",
+                          "onlyindex", Arrays.asList(
+                "Indexed_foo2", "Indexed_foo3", "Indexed_foo4"));
     }
 
     /* Helpers */
@@ -394,7 +407,7 @@ public class IterativeTest extends NoExitTestCase {
         Configuration conf = Configuration.load(
                 "data/iterative/IterativeTest_FacetSearchConfiguration.xml");
         assertEquals("There should be the right number of Facets defined",
-                     2, new Structure(conf).getFacetNames().size());
+                     4, new Structure(conf).getFacetNames().size());
         Browser browser = new FacetSearchNode(conf);
         browser.open(getIndexLocation());
         return browser;

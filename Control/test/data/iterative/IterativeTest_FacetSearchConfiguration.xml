@@ -29,6 +29,18 @@
                         </value>
                     </entry>
                 </xproperties>
+                <xproperties>
+                    <entry>
+                        <key>summa.facet.name</key>
+                        <value class="string">onlyindex</value>
+                    </entry>
+                </xproperties>
+                <xproperties>
+                    <entry>
+                        <key>summa.facet.name</key>
+                        <value class="string">onlystore</value>
+                    </entry>
+                </xproperties>
             </value>
         </entry>
     </xproperties>

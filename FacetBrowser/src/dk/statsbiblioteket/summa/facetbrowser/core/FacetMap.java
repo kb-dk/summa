@@ -151,6 +151,8 @@ public class FacetMap {
         int tagID = tagHandler.insertTag(facetID, tag);
         if (tagID > 0) {
             coreMap.adjustPositions(facetID, tagID, 1);
+        } else {
+            tagID = (tagID + 1) * -1;
         }
         coreMap.add(docID, facetID, new int[]{tagID});
     }
