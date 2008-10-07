@@ -42,9 +42,10 @@ import dk.statsbiblioteket.util.qa.QAInfo;
  * populate the values, and then initialize the target before handing the target further in the processing chain.
  *
  * After initialization values cannot be changed, before initialization no values can be read.
+ * @deprecated Superseded by the Filter-workflow from Common.
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-       state = QAInfo.State.IN_DEVELOPMENT,
+@QAInfo(level = QAInfo.Level.NOT_NEEDED,
+       state = QAInfo.State.UNDEFINED,
        author = "hal")
 public class Target{
 

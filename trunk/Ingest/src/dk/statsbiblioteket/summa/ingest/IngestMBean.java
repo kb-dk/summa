@@ -29,7 +29,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
  * manageable interface for the Ingest.
  * 
  * No current implementations exists.
- * @deprecated
+ * @deprecated as part of the old Stable Summa workflow.
  * @see dk.statsbiblioteket.summa.ingest.ProgressMBean
  */
 @QAInfo(level = QAInfo.Level.NOT_NEEDED,

@@ -42,9 +42,10 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 /**
  * The ParserTask is responsible for preparing a file for parsing.
  * The actual parsing is invoked by calling run - typically done in a multi-thread setup.
+ * @deprecated as part of the old Stable Summa workflow.
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-       state = QAInfo.State.IN_DEVELOPMENT,
+@QAInfo(level = QAInfo.Level.NOT_NEEDED,
+       state = QAInfo.State.UNDEFINED,
        author = "hal")
 public abstract class ParserTask implements Runnable{
 

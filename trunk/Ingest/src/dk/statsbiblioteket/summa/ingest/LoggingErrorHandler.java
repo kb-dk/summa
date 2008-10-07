@@ -31,9 +31,10 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * This is a simple ErrorHandler that will Log events.
+ * @deprecated as part of the old Stable Summa workflow.
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-       state = QAInfo.State.IN_DEVELOPMENT,
+@QAInfo(level = QAInfo.Level.NOT_NEEDED,
+       state = QAInfo.State.UNDEFINED,
        author = "hal")
 public class LoggingErrorHandler implements ErrorHandler {
 

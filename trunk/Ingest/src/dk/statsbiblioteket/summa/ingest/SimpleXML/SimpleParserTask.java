@@ -21,14 +21,18 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 package dk.statsbiblioteket.summa.ingest.SimpleXML;import dk.statsbiblioteket.summa.ingest.ParserTask;import dk.statsbiblioteket.summa.ingest.Target;import dk.statsbiblioteket.summa.ingest.Ingest;
+import dk.statsbiblioteket.summa.ingest.stream.XMLSplitterFilter;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.File;
 
 import org.xml.sax.ext.DefaultHandler2;
 
-@QAInfo(level = QAInfo.Level.NORMAL,
-       state = QAInfo.State.IN_DEVELOPMENT,
+/**
+ * @deprecated in favor of {@link XMLSplitterFilter}.
+ */
+@QAInfo(level = QAInfo.Level.NOT_NEEDED,
+       state = QAInfo.State.UNDEFINED,
        author = "hal")
 public class SimpleParserTask extends ParserTask {
     protected SimpleParserTask(File f, Target target, Ingest in) {

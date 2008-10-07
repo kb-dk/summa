@@ -24,6 +24,7 @@ package dk.statsbiblioteket.summa.ingest.SimpleXML;
 
 import dk.statsbiblioteket.summa.ingest.Digester;
 import dk.statsbiblioteket.summa.ingest.ParserTask;
+import dk.statsbiblioteket.summa.ingest.stream.XMLSplitterFilter;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.File;
@@ -31,9 +32,10 @@ import java.io.File;
 
 /**
  * The SimpleDirectoryDigester spans a SimpleParserTask.
+ * @deprecated in favor of {@link XMLSplitterFilter}.
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-       state = QAInfo.State.IN_DEVELOPMENT,
+@QAInfo(level = QAInfo.Level.NOT_NEEDED,
+       state = QAInfo.State.UNDEFINED,
        author = "hal")
 public class SimpleDirectoryDigester extends Digester {
     protected ParserTask createParser(File f) {

@@ -28,9 +28,10 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * The RecordFormatException is thrown when expectations to the XML meta-data is not meet.
+ * @deprecated as part of the old Stable summa workflow.
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-       state = QAInfo.State.IN_DEVELOPMENT,
+@QAInfo(level = QAInfo.Level.NOT_NEEDED,
+       state = QAInfo.State.UNDEFINED,
        author = "hal")
 public class RecordFormatException extends Exception implements Serializable {
 

@@ -33,11 +33,15 @@ import java.util.StringTokenizer;
 import dk.statsbiblioteket.summa.preingest.IngestFilter;
 import dk.statsbiblioteket.summa.preingest.Extension;
 import dk.statsbiblioteket.summa.ingest.postingest.MultiVolume.MARCMultivolumeMerger;
+import dk.statsbiblioteket.summa.ingest.stream.FileReader;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * The workflow is configured using a Property file that needs to be in XML format.<br>
  * The location to the file must be given as argument when running.<br>
+ * @deprecated the Workflow has been superseded by the Filter-framework.
+ * @see {@link FileReader} and other filters in
+ * dk.statsbiblioteket.summa.ingest.stream.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
        state = QAInfo.State.IN_DEVELOPMENT,
