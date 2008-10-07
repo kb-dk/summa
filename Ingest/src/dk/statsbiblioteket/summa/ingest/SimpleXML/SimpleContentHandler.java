@@ -23,6 +23,7 @@
 package dk.statsbiblioteket.summa.ingest.SimpleXML;
 
 import dk.statsbiblioteket.summa.ingest.IngestContentHandler;
+import dk.statsbiblioteket.summa.ingest.stream.XMLSplitterFilter;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.xml.sax.SAXException;import org.xml.sax.Attributes;
 
@@ -30,9 +31,10 @@ import javax.xml.XMLConstants;
 
 /**
  * The simpleContentHandler will scan the XML for records, and extract the record id from a given XMLelement.
+ * @deprecated in favor of {@link XMLSplitterFilter}.
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-       state = QAInfo.State.IN_DEVELOPMENT,
+@QAInfo(level = QAInfo.Level.NOT_NEEDED,
+       state = QAInfo.State.UNDEFINED,
        author = "hal")
 public class SimpleContentHandler extends IngestContentHandler {
 

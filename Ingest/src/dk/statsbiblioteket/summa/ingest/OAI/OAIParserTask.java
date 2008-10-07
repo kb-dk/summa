@@ -29,13 +29,16 @@ import org.xml.sax.ext.DefaultHandler2;
 import dk.statsbiblioteket.summa.ingest.ParserTask;
 import dk.statsbiblioteket.summa.ingest.Ingest;
 import dk.statsbiblioteket.summa.ingest.Target;
+import dk.statsbiblioteket.summa.ingest.stream.XMLSplitterFilter;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * Parses a Target, delegates content handling to the {@link dk.statsbiblioteket.summa.ingest.OAI.PMHContentHandler}.<br>
+ * @deprecated in favor of {@link XMLSplitterFilter} as XMLSplitterFilter is
+ * now supports namespaces.
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+@QAInfo(level = QAInfo.Level.NOT_NEEDED,
+        state = QAInfo.State.UNDEFINED,
         author = "hal")
 public class OAIParserTask extends ParserTask {
     /**

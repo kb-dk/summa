@@ -35,10 +35,11 @@ import dk.statsbiblioteket.util.qa.QAInfo;
  * This implementation runs the {@link java.lang.Runnable} in the current thread. and provide additional logging of the event.
  *
  * The main difference between this Handler and the {@link java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy} handler is that this
- * implementation will run the task even though the executor has been shutdown. 
+ * implementation will run the task even though the executor has been shutdown.
+ * @deprecated as part of the old stable summa workflow.
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-       state = QAInfo.State.IN_DEVELOPMENT,
+@QAInfo(level = QAInfo.Level.NOT_NEEDED,
+       state = QAInfo.State.UNDEFINED,
        author = "hal")
 public class QueueFullHandler implements RejectedExecutionHandler {
 

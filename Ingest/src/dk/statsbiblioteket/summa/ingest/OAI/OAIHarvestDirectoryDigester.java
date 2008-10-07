@@ -43,13 +43,16 @@ import dk.statsbiblioteket.summa.ingest.Digester;
 import dk.statsbiblioteket.summa.ingest.RecordFormatException;
 import dk.statsbiblioteket.summa.ingest.ParserTask;
 import dk.statsbiblioteket.summa.ingest.Target;
+import dk.statsbiblioteket.summa.ingest.stream.XMLSplitterFilter;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * Provides functionality to digest a set of PMH havested OAI-targets.<br> 
+ * @deprecated in favor of {@link XMLSplitterFilter} as XMLSplitterFilter is
+ * now supports namespaces.
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+@QAInfo(level = QAInfo.Level.NOT_NEEDED,
+        state = QAInfo.State.UNDEFINED,
         author = "hal, te")
 public class OAIHarvestDirectoryDigester extends Digester {
 

@@ -29,9 +29,10 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 /**
  * The Manageable interface for the Ingest process.<br>
  * Current implementation is limited to monitoring the process.
+ * @deprecated as part of the old Stable Summa workflow.
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-       state = QAInfo.State.IN_DEVELOPMENT,
+@QAInfo(level = QAInfo.Level.NOT_NEEDED,
+       state = QAInfo.State.UNDEFINED,
        author = "hal")
 public interface ProgressMBean {
 

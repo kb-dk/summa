@@ -49,10 +49,11 @@ import dk.statsbiblioteket.util.qa.QAInfo;
  * The content handler addresses: recordID - creation and record bounderies detection.<br><br>
  *
  * Concrete implementations may address other content specific issues.<br>
+ * @deprecated as part of the old Stable Summa workflow.
  * @see dk.statsbiblioteket.summa.common.Record
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-       state = QAInfo.State.IN_DEVELOPMENT,
+@QAInfo(level = QAInfo.Level.NOT_NEEDED,
+       state = QAInfo.State.UNDEFINED,
        author = "hal, te")
 public abstract class IngestContentHandler extends DefaultHandler2 {
 
