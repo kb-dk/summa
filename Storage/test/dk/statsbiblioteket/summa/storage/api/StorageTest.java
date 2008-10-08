@@ -26,6 +26,7 @@ public class StorageTest extends TestCase {
     static String testId1 = "quiz1";
     static String testId2 = "quiz2";
     static String testId3 = "quiz3";
+    static String testId4 = "quiz4";
     static int storageCounter = 0;
     static byte[] testContent1 = new byte[] {'s', 'u', 'm', 'm', 'a'};
 
@@ -175,10 +176,10 @@ public class StorageTest extends TestCase {
         Record recP = new Record (testId1, testBase1, testContent1);
         Record recC1 = new Record (testId2, testBase1, testContent1);
         Record recC2 = new Record (testId3, testBase1, testContent1);
-        recP.setChildren(Arrays.asList(recC1, recC2));
-        recC1.setChildren(Arrays.asList(recC2));
-        recC1.setParentId(recP.getId());
-        recC2.setParentId(recC1.getId());
+        recP.setChildIds(Arrays.asList(recC1.getId(), recC2.getId()));
+        recC1.setChildIds(Arrays.asList(recC2.getId()));
+        recC1.setParentIds(Arrays.asList(recP.getId()));
+        recC2.setParentIds(Arrays.asList(recC1.getId()));
 
         storage.flushAll (Arrays.asList(recP, recC1, recC2));
 
@@ -188,14 +189,13 @@ public class StorageTest extends TestCase {
 
         assertEquals(2, recs.size());
 
-        assertEquals(recP.getContentAsUTF8(), recs.get(0).getContentAsUTF8());
-        assertEquals(recP.getId(), recs.get(0).getId());
+        assertEquals(recP, recs.get(0));
         assertEquals(recs.get(0).getChildren(), null);
         assertEquals(recs.get(0).getChildIds(), recP.getChildIds());
 
         assertEquals(recC1.getContentAsUTF8(), recs.get(1).getContentAsUTF8());
         assertEquals(recC1.getId(), recs.get(1).getId());
-        assertEquals(recC1.getParentId(), recs.get(1).getParentId());
+        assertEquals(recC1.getParentIds(), recs.get(1).getParentIds());
     }
 
     public void testExpandLinkedRecord () throws Exception {
@@ -229,9 +229,54 @@ public class StorageTest extends TestCase {
                      Arrays.asList(recs.get(2)));
     }
 
+    /**
+     * Test that ingesting one record also ingests any child records on it
+     */
+    public void testAddNestedRecords () throws Exception {
+        Record recP = new Record (testId1, testBase1, testContent1);
+        Record recC1 = new Record (testId2, testBase1, testContent1);
+        Record recC2 = new Record (testId3, testBase1, testContent1);
+        Record recCC1 = new Record (testId4, testBase1, testContent1);
+
+        recP.setChildren(Arrays.asList(recC1, recC2));
+        recC1.setChildren(Arrays.asList(recCC1));
+
+        /* The child records should be implicitly flushed as well */
+        storage.flushAll (Arrays.asList(recP));
+
+        List<Record> recs = storage.getRecords(Arrays.asList(testId1, testId2,
+                                                             testId3, testId4),
+                                               -1);
+
+        assertEquals(4, recs.size());
+
+        assertEquals(recP, recs.get(0));
+        assertEquals(recC1, recs.get(0));
+        assertEquals(recC2, recs.get(0));
+
+        assertNotNull(recs.get(0).getChildren());
+        assertNotNull(recs.get(0).getChildIds());
+        assertEquals(2, recs.get(0).getChildren().size());
+        assertEquals(2, recs.get(0).getChildIds().size());
+
+        assertEquals(recs.get(0).getChildren().get(0), recC1);
+        assertEquals(recs.get(0).getChildren().get(1), recC2);
+
+        assertNotNull(recs.get(1).getChildren());
+        assertNotNull(recs.get(1).getChildIds());
+        assertEquals(1, recs.get(1).getChildren().size());
+        assertEquals(1, recs.get(1).getChildIds().size());
+        assertEquals(recCC1, recs.get(1).getChildren().get(0));
+
+        assertNull(recs.get(2).getChildren());
+        assertNull(recs.get(2).getChildIds());
+
+        assertNull(recs.get(3).getChildren());
+        assertNull(recs.get(3).getChildIds());
+    }
+
     /*
     TODO
-     - test deep child expansion
      - test mtime/ctime and repeated adding of same rec
      */
 

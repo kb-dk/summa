@@ -29,11 +29,7 @@ package dk.statsbiblioteket.summa.storage.database;
 import java.io.File;
 import java.io.IOException;
 import java.rmi.RemoteException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.util.*;
 
 import dk.statsbiblioteket.summa.common.Record;
@@ -90,9 +86,17 @@ public abstract class DatabaseStorage extends StorageBase {
     public static String CONF_LOCATION = "summa.storage.database.location";
 
     /**
-     * The name of the table in the database.
+     * The name of the main table in the database in which record metadata
+     * is stored. Parent/child relations are stored in {@link #RELATIONS}
      */
-    public static final String TABLE            = "summa_io";
+    public static final String RECORDS = "summa_records";
+
+    /**
+     * The name of the table holding the parent/child relations of the records
+     * from {@link #RECORDS}
+     */
+    public static final String RELATIONS = "summa_relations";
+
     /**
      * id is the unique identifier for a given record in the database.
      */
@@ -130,12 +134,12 @@ public abstract class DatabaseStorage extends StorageBase {
      * not need to be present in the database, but if it is, the field indexable
      * should be false for the child.
      */
-    public static final String PARENT_COLUMN    = "parent";
+    public static final String PARENT_ID_COLUMN = "parentId";
     /**
      * children optionally contains a list of children. The children does not
      * need to be present in the database.
      */
-    public static final String CHILDREN_COLUMN  = "children";
+    public static final String CHILD_ID_COLUMN = "childId";
     /**
      * meta contains meta-data for the Record in the form of key-value pairs
      * of Strings. See {@link StringMap#toFormal()} for format.
@@ -146,8 +150,6 @@ public abstract class DatabaseStorage extends StorageBase {
     public static final int ID_LIMIT =       255;
     public static final int BASE_LIMIT =     31;
     public static final int DATA_LIMIT =     50*1024*1024;
-    public static final int PARENT_LIMIT =   10*ID_LIMIT; // Room for the future
-    public static final int CHILDREN_LIMIT = 100*ID_LIMIT; // Change to CLOB?
     public static final int META_LIMIT =     50*1024*1024; // MAX_VALUE instead?
     private static final int BLOB_MAX_SIZE = 50*1024*1024; // MAX_VALUE instead?
 
@@ -156,12 +158,16 @@ public abstract class DatabaseStorage extends StorageBase {
     private PreparedStatement stmtGetModifiedAfter;
     private PreparedStatement stmtGetFrom;
     private PreparedStatement stmtGetRecord;
-    private PreparedStatement stmtGetRecords;
     private PreparedStatement stmtClearBase;
     private PreparedStatement stmtDeleteRecord;
     private PreparedStatement stmtCreateRecord;
     private PreparedStatement stmtUpdateRecord;
     private PreparedStatement stmtTouchRecord;
+    private PreparedStatement stmtGetRecordState;
+    private PreparedStatement stmtGetChildren;
+    private PreparedStatement stmtGetParents;
+    private PreparedStatement stmtCreateRelation;
+    private PreparedStatement stmtDeleteRelation;
 
     private static final int FETCH_SIZE = 10000;
 
@@ -250,54 +256,69 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     private void prepareStatements() throws SQLException {
         log.debug("Preparing SQL statements");
-        String allCells = TABLE + "." + ID_COLUMN + ","
-                          + TABLE + "." + BASE_COLUMN + ","
-                          + TABLE + "." + DELETED_COLUMN + ","
-                          + TABLE + "." + INDEXABLE_COLUMN + ","
-                          + TABLE + "." + DATA_COLUMN + ","
-                          + TABLE + "." + CTIME_COLUMN + ","
-                          + TABLE + "." + MTIME_COLUMN + ","
-                          + TABLE + "." + PARENT_COLUMN + ","
-                          + TABLE + "." + CHILDREN_COLUMN + ","
-                          + TABLE + "." + META_COLUMN;
+        String allCells = RECORDS + "." + ID_COLUMN + ","
+                          + RECORDS + "." + BASE_COLUMN + ","
+                          + RECORDS + "." + DELETED_COLUMN + ","
+                          + RECORDS + "." + INDEXABLE_COLUMN + ","
+                          + RECORDS + "." + DATA_COLUMN + ","
+                          + RECORDS + "." + CTIME_COLUMN + ","
+                          + RECORDS + "." + MTIME_COLUMN + ","
+                          + RELATIONS + "." + PARENT_ID_COLUMN + ","
+                          + RELATIONS + "." + CHILD_ID_COLUMN + ","
+                          + RECORDS + "." + META_COLUMN;
+
+        String relationsClause = RECORDS + "." + ID_COLUMN + "="
+                                + RELATIONS + "." + PARENT_ID_COLUMN
+                                + " AND " + RECORDS + "." + ID_COLUMN + "="
+                                    + RELATIONS + "." + CHILD_ID_COLUMN;
 
         String allQuery = "SELECT " + allCells
-                          + " FROM " + TABLE
-                          + " ORDER BY " + ID_COLUMN;
+                          + " FROM " + RECORDS
+                          + " LEFT JOIN " + RELATIONS
+                          + " ON " + relationsClause
+                          + " ORDER BY " + RECORDS + "." + ID_COLUMN;
         log.debug("Preparing query getAll with '" + allQuery + "'");
         stmtGetAll = getConnection().prepareStatement(allQuery);
 
         String fromBaseQuery = "SELECT " + allCells
-                               + " FROM " + TABLE
-                               + " WHERE " + BASE_COLUMN + "=?"
+                               + " FROM " + RECORDS
+                               + " LEFT JOIN " + RELATIONS
+                               + " ON " + RECORDS + "." + BASE_COLUMN + "=?"
+                               + " AND " + relationsClause
                                + " ORDER BY " + ID_COLUMN;
         log.debug("Preparing query getFromBase with '" + fromBaseQuery + "'");
         stmtGetFromBase = getConnection().prepareStatement(fromBaseQuery);
 
         String modifiedAfterQuery = "SELECT " + allCells
-                                    + " FROM " + TABLE
-                                    + " WHERE " + BASE_COLUMN + "=?"
+                                    + " FROM " + RECORDS
+                                    + " LEFT JOIN " + RELATIONS
+                                    + " ON " + BASE_COLUMN + "=?"
                                     + " AND " + MTIME_COLUMN + ">?"
+                                    + " AND " + relationsClause
                                     + " ORDER BY " + ID_COLUMN;
         log.debug("Preparing query getModifiedAfter with '"
                   + modifiedAfterQuery + "'");
         stmtGetModifiedAfter = getConnection().prepareStatement(modifiedAfterQuery);
 // TODO: Handle deletions and indexables
         String fromQuery = "SELECT " + allCells
-                           + " FROM " + TABLE
-                           + " WHERE " + BASE_COLUMN + "=?"
+                           + " FROM " + RECORDS
+                           + " LEFT JOIN " + RELATIONS
+                           + " ON " + BASE_COLUMN + "=?"
                            + " AND " + ID_COLUMN + ">?"
+                           + " AND " + relationsClause
                            + " ORDER BY " + ID_COLUMN;
         log.debug("Preparing query getFrom with '" + fromQuery + "'");
         stmtGetFrom = getConnection().prepareStatement(fromQuery);
 
         String getRecordQuery = "SELECT " + allCells
-                                + " FROM " + TABLE
-                                + " WHERE " + ID_COLUMN + "=?";
+                                + " FROM " + RECORDS
+                                + " LEFT JOIN " + RELATIONS
+                                + " ON " + ID_COLUMN + "=?"
+                                + " AND " + relationsClause;
         log.debug("Preparing query recordQuery with '" + getRecordQuery + "'");
         stmtGetRecord = getConnection().prepareStatement(getRecordQuery);
 
-        String clearBaseQuery = "UPDATE " + TABLE
+        String clearBaseQuery = "UPDATE " + RECORDS
                                 + " SET " + DELETED_COLUMN + "=1"
                                 + " WHERE " + BASE_COLUMN + "=?";
         log.debug("Preparing query clearBase with '"
@@ -311,13 +332,13 @@ public abstract class DatabaseStorage extends StorageBase {
                 http://forum.springframework.org/archive/index.php/t-16001.html
 
         String getRecordsQuery = "SELECT " + allCells
-                                + " FROM " + TABLE
+                                + " FROM " + RECORDS
                                 + " WHERE " + ID_COLUMN + " IN ?";
         log.debug("Preparing query recordsQuery with '" + getRecordsQuery + "'");
         stmtGetRecords = getConnection().prepareStatement(getRecordsQuery);
          */
 
-        String deleteRecordQuery = "UPDATE " + TABLE
+        String deleteRecordQuery = "UPDATE " + RECORDS
                                    + " SET " + MTIME_COLUMN + "=?, "
                                    + DELETED_COLUMN + "=?"
                                    + " WHERE " + ID_COLUMN + "=?";
@@ -325,42 +346,96 @@ public abstract class DatabaseStorage extends StorageBase {
                   + deleteRecordQuery + "'");
         stmtDeleteRecord = getConnection().prepareStatement(deleteRecordQuery);
 
-        String createRecordQuery = "INSERT INTO " + TABLE
-                                + " (" + ID_COLUMN + ","
-                                       + BASE_COLUMN + ","
-                                       + DELETED_COLUMN + ","
-                                       + INDEXABLE_COLUMN + ","
-                                       + DATA_COLUMN + ","
-                                       + CTIME_COLUMN + ","
-                                       + MTIME_COLUMN + ","
-                                       + PARENT_COLUMN + ","
-                                       + CHILDREN_COLUMN + ","
+        /* createRecord */
+        String createRecordQuery = "INSERT INTO " + RECORDS
+                                + " (" + ID_COLUMN + ", "
+                                       + BASE_COLUMN + ", "
+                                       + DELETED_COLUMN + ", "
+                                       + INDEXABLE_COLUMN + ", "
+                                       + CTIME_COLUMN + ", "
+                                       + MTIME_COLUMN + ", "
+                                       + DATA_COLUMN + ", "
                                        + META_COLUMN
-                                       + ") VALUES (?,?,?,?,?,?,?,?,?,?)";
+                                       + ") VALUES (?,?,?,?,?,?,?,?)";
         log.debug("Preparing query createRecord with '" + createRecordQuery
                   + "'");
         stmtCreateRecord = getConnection().prepareStatement(createRecordQuery);
 
-        String updateRecordQuery = "UPDATE " + TABLE + " SET "
+        /* updateRecord */
+        String updateRecordQuery = "UPDATE " + RECORDS + " SET "
                                    + BASE_COLUMN + "=?, "
                                    + DELETED_COLUMN + "=?, "
                                    + INDEXABLE_COLUMN + "=?, "
-                                   + DATA_COLUMN + "=?, "
                                    + MTIME_COLUMN + "=?, "
-                                   + PARENT_COLUMN + "=?, "
-                                   + CHILDREN_COLUMN + "=?, "
+                                   + DATA_COLUMN + "=?, "
                                    + META_COLUMN + "=? "
                                    + "WHERE " + ID_COLUMN +"=?";
         log.debug("Preparing query updateRecord with '" + updateRecordQuery
                   + "'");
         stmtUpdateRecord = getConnection().prepareStatement(updateRecordQuery);
 
-        String touchRecordQuery = "UPDATE " + TABLE + " SET "
+        /* touchRecord */
+        String touchRecordQuery = "UPDATE " + RECORDS + " SET "
                                    + MTIME_COLUMN + "=? "
                                    + "WHERE " + ID_COLUMN +"=?";
         log.debug("Preparing query touchRecord with '" + touchRecordQuery
                   + "'");
         stmtTouchRecord = prepareStatement(touchRecordQuery);
+
+        /* getRecordState (internal use) */
+        String getRecordStateQuery = "SELECT " + BASE_COLUMN
+                                   + "," + DELETED_COLUMN
+                                   + " FROM " + RECORDS
+                                   + " WHERE " + ID_COLUMN + "=?";
+        log.debug("Preparing query getRecordState with '" + getRecordStateQuery
+                  + "'");
+        stmtGetRecordState = prepareStatement(getRecordStateQuery);
+
+
+        /* getChildren */
+        String getChildrenQuery = "SELECT " + allCells
+                                + " FROM " + RELATIONS
+                                + " JOIN " + RECORDS
+                                + " ON " + RELATIONS + "."
+                                            + PARENT_ID_COLUMN + "=?"
+                                + " AND " + RECORDS + "." + ID_COLUMN + "="
+                                          + RELATIONS + "." + PARENT_ID_COLUMN
+                                + " ORDER BY " + RECORDS + "." + ID_COLUMN;
+        log.debug("Preparing query getChildren with '" + getChildrenQuery
+                  + "'");
+        stmtGetChildren = prepareStatement(getChildrenQuery);
+
+        /* getParents */
+        String getParentsQuery = "SELECT " + allCells
+                                + " FROM " + RELATIONS
+                                + " JOIN " + RECORDS
+                                + " ON " + RELATIONS + "."
+                                            + CHILD_ID_COLUMN + "=?"
+                                + " AND " + RECORDS + "." + ID_COLUMN + "="
+                                          + RELATIONS + "." + CHILD_ID_COLUMN
+                                + " ORDER BY " + RECORDS + "." + ID_COLUMN;
+        log.debug("Preparing query getParents with '" + getParentsQuery
+                  + "'");
+        stmtGetParents = prepareStatement(getParentsQuery);
+
+        /* createRelation */
+        String createRelation = "INSERT INTO " + RELATIONS
+                                + " (" + PARENT_ID_COLUMN + ","
+                                       + CHILD_ID_COLUMN
+                                       + ") VALUES (?,?)";
+        log.debug("Preparing query createRelation with '" +
+                                              createRelation + "'");
+        stmtCreateRelation = getConnection().prepareStatement(
+                                                     createRelation);
+
+        /* deleteRelation */
+        String deleteRelation = "DELETE FROM " + RELATIONS 
+                                + " WHERE " + PARENT_ID_COLUMN + "=? "
+                                + " OR " + CHILD_ID_COLUMN + "=? ";
+        log.debug("Preparing query deleteRelation with '" +
+                                              deleteRelation + "'");
+        stmtDeleteRelation = getConnection().prepareStatement(
+                                                     deleteRelation);
 
         log.trace("Finished preparing SQL statements");
     }
@@ -428,7 +503,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * @return the record or {@code null} if the record is not found
      * @throws RemoteException on communication errors with the database
      */
-    public Record getRecord(String id, int expansionDepth)
+    protected Record getRecord(String id, int expansionDepth)
                                                         throws RemoteException {
         log.trace("getRecord('" + id + "', " + expansionDepth + ")");
 
@@ -441,17 +516,22 @@ public abstract class DatabaseStorage extends StorageBase {
         Record record = null;
         try {
             ResultSet resultSet = stmtGetRecord.executeQuery();
-            if (resultSet.next()) {
-                try {
-                    record = resultToRecord(resultSet);
-                    expandChildRecords(record, expansionDepth);
 
-                } catch (IOException e) {
-                    throw new RemoteException("Exception transforming SQL "
-                                              + "result set to record", e);
-                }
+            if (!resultSet.next()) {
+                log.debug("No such record '" + id + "'");
+                return null;
             }
-// TODO: Close?       stmtGetRecord.close();
+
+            try {
+                record = scanRecord(resultSet);
+                expandChildRecords(record, expansionDepth);
+            } catch (IOException e) {
+                throw new RemoteException("Exception transforming SQL "
+                                          + "result set to record", e);
+            } finally {
+                resultSet.close();
+            }
+
         } catch (SQLException e) {
             throw new RemoteException("SQLException", e);
         }
@@ -578,20 +658,18 @@ public abstract class DatabaseStorage extends StorageBase {
 
     private void createNewRecord(Record record) throws RemoteException {
         // TODO: Consider calling modify if the record already exists
+        long now = System.currentTimeMillis();
+        Timestamp nowStamp = new Timestamp(now);
+
         try {
             stmtCreateRecord.setString(1, record.getId());
             stmtCreateRecord.setString(2, record.getBase());
             stmtCreateRecord.setInt(3, boolToInt(record.isDeleted()));
             stmtCreateRecord.setInt(4, boolToInt(record.isIndexable()));
-            stmtCreateRecord.setBytes(5, Zips.gzipBuffer(record.getContent()));
-            stmtCreateRecord.setTimestamp(6,
-                                 new Timestamp(record.getCreationTime()));
-            stmtCreateRecord.setTimestamp(7,
-                                 new Timestamp(record.getModificationTime()));
-            stmtCreateRecord.setString(8, record.getParentId());
-            stmtCreateRecord.setString(9,
-                             Record.childrenListToString(record.getChildIds()));
-            stmtCreateRecord.setBytes(10,record.hasMeta() ?
+            stmtCreateRecord.setTimestamp(5, nowStamp);
+            stmtCreateRecord.setTimestamp(6, nowStamp);
+            stmtCreateRecord.setBytes(7, Zips.gzipBuffer(record.getContent()));
+            stmtCreateRecord.setBytes(8,record.hasMeta() ?
                                          record.getMeta().toFormalBytes() :
                                          new byte[0]);
             stmtCreateRecord.execute();
@@ -599,27 +677,27 @@ public abstract class DatabaseStorage extends StorageBase {
             throw new RemoteException("SQLException creating new record '"
                                       + record.getId() + "'", e);
         }
-        updateMultiVolume(record);
+        updateRelations(record);
     }
 
     /* Note that creationTime aren't touched */
     private void updateRecord(Record record) throws RemoteException {
         // TODO: Check for existence before creating
+        long now = System.currentTimeMillis();
+        Timestamp nowStamp = new Timestamp(now);
+
         try {
             stmtUpdateRecord.setString(1, record.getBase());
             stmtUpdateRecord.setInt(2, boolToInt(record.isDeleted()));
             stmtUpdateRecord.setInt(3, boolToInt(record.isIndexable()));
-            stmtUpdateRecord.setBytes(4, Zips.gzipBuffer(record.getContent()));
-            stmtUpdateRecord.setTimestamp(5,
-                                 new Timestamp(record.getModificationTime()));
-            stmtUpdateRecord.setString(6, record.getParentId());
-            stmtUpdateRecord.setString(7,
-                             Record.childrenListToString(record.getChildIds()));
-            stmtUpdateRecord.setBytes(8, record.hasMeta() ?
+            stmtCreateRecord.setTimestamp(4, nowStamp);
+            stmtUpdateRecord.setBytes(5, Zips.gzipBuffer(record.getContent()));
+            stmtUpdateRecord.setBytes(6, record.hasMeta() ?
                                          record.getMeta().toFormalBytes() :
                                          new byte[0]);
-            stmtUpdateRecord.setString(9, record.getId());
+            stmtUpdateRecord.setString(7, record.getId());
             stmtUpdateRecord.execute();
+
             if (stmtUpdateRecord.getUpdateCount() == 0) {
                 log.warn("The record with id '" + record.getId()
                          + "' was marked as modified, but did not exist in the"
@@ -637,7 +715,7 @@ public abstract class DatabaseStorage extends StorageBase {
             throw new RemoteException("SQLException updating record '"
                                       + record.getId() + "'", e);
         }
-        updateMultiVolume(record);
+        updateRelations(record);
      }
 
     private int deleteRecord(String id) throws RemoteException {
@@ -674,19 +752,22 @@ public abstract class DatabaseStorage extends StorageBase {
      * used SQL with BLOBs.
      * @throws RemoteException if the database could not be created.
      */
-    protected void createTable() throws RemoteException {
-        log.debug("Attempting to create table");
+    protected void createSchema() throws RemoteException {
+        log.debug("Creating database schema");
         try {
-            constructCreateTableQuery().execute();
+            // Do this in a separate call to avoid massively nested code block
+            doCreateSchema();
         } catch (SQLException e) {
-            throw new RemoteException("Could not create table", e);
+            throw new RemoteException("Could not create schema: "
+                                      + e.getMessage(), e);
         }
     }
 
-    private PreparedStatement constructCreateTableQuery() throws
-                                                            SQLException {
-        String createTableQuery =
-                "CREATE table " + TABLE + " ("
+    private void doCreateSchema() throws SQLException {
+
+        /* RECORDS */
+        String createRecordsQuery =
+                "CREATE TABLE " + RECORDS + " ("
                 + ID_COLUMN        + " VARCHAR(" + ID_LIMIT + ") PRIMARY KEY, "
                 + BASE_COLUMN      + " VARCHAR(" + BASE_LIMIT + "), "
                 + DELETED_COLUMN   + " INTEGER, "
@@ -694,41 +775,143 @@ public abstract class DatabaseStorage extends StorageBase {
                 + DATA_COLUMN      + " BLOB(" + BLOB_MAX_SIZE + "), "
                 + CTIME_COLUMN     + " TIMESTAMP, "
                 + MTIME_COLUMN     + " TIMESTAMP, "
-                + PARENT_COLUMN    + " VARCHAR(" + PARENT_LIMIT + "), "
-                + CHILDREN_COLUMN  + " VARCHAR(" + CHILDREN_LIMIT + "), "
                 + META_COLUMN      + " BLOB(" + META_LIMIT + ") )";
-        log.debug("Creating table with query '" + createTableQuery + "'");
-        return prepareStatement(createTableQuery);
-    }
+        log.debug("Creating table "+RECORDS+" with query: '"
+                  + createRecordsQuery + "'");
 
-    public void perform() {
-        // TODO: Implement this
+        Statement stmt = getConnection().createStatement();
+        stmt.execute(createRecordsQuery);
+        stmt.close();
+
+        /* RECORDS INDEXES */
+        String createRecordsIndexesQuery =
+                "CREATE UNIQUE INDEX i ON " + RECORDS + "("+ID_COLUMN+")";
+        log.debug("Creating index 'i' on table "+RECORDS+" with query: '"
+                  + createRecordsQuery + "'");
+        stmt = getConnection().createStatement();
+        stmt.execute(createRecordsIndexesQuery);
+        stmt.close();
+
+        /* RELATIONS */
+        String createRelationsQuery =
+                "CREATE TABLE " + RELATIONS + " ("
+                + PARENT_ID_COLUMN     + " VARCHAR(" + ID_LIMIT + "), "
+                + CHILD_ID_COLUMN      + " VARCHAR(" + ID_LIMIT + ") )";
+        log.debug("Creating table "+RELATIONS+" with query: '"
+                  + createRelationsQuery + "'");
+        stmt = getConnection().createStatement();
+        stmt.execute(createRelationsQuery);
+        stmt.close();
+
+        /* RELATIONS INDEXES */
+        String createRelationsPCIndexQuery =
+                "CREATE UNIQUE INDEX pc ON "
+                + RELATIONS + "("+PARENT_ID_COLUMN+","+CHILD_ID_COLUMN+")";
+        log.debug("Creating index 'pc' on table "+RELATIONS+" with query: '"
+                  + createRelationsQuery + "'");
+        stmt = getConnection().createStatement();
+        stmt.execute(createRelationsPCIndexQuery);
+        stmt.close();
+
+        String createRelationsCIndexQuery =
+                "CREATE INDEX c ON "
+                + RELATIONS + "("+CHILD_ID_COLUMN+ ")";
+        log.debug("Creating index 'c' on table "+RELATIONS+" with query: '"
+                  + createRelationsQuery + "'");
+        stmt = getConnection().createStatement();
+        stmt.execute(createRelationsCIndexQuery);
+        stmt.close();
     }
 
     /**
      * Extract elements from a SQL result set and create a Record from these
      * elements.
-     * @param resultSet     a SQL result set.
+     * <p/>
+     * This method will position the result set at the beginning of the next
+     * record
+     * @param resultSet     a SQL result set. The result set will be stepped
+     *                      to the beginning of the following record
      * @return              a Record based on the result set.
      * @throws SQLException if there was a problem extracting values from the
      *                      SQL result set.
      * @throws IOException  If the data (content) could not be uncompressed
      *                      with gunzip.
      */
-    public static Record resultToRecord(ResultSet resultSet) throws SQLException,
+    protected static Record scanRecord(ResultSet resultSet) throws SQLException,
                                                              IOException {
-        return new Record(resultSet.getString(ID_COLUMN),
-                          resultSet.getString(BASE_COLUMN),
-                          intToBool(resultSet.getInt(DELETED_COLUMN)),
-                          intToBool(resultSet.getInt(INDEXABLE_COLUMN)),
-                          Zips.gunzipBuffer(resultSet.getBytes(DATA_COLUMN)),
-                          resultSet.getTimestamp(CTIME_COLUMN).getTime(),
-                          resultSet.getTimestamp(MTIME_COLUMN).getTime(),
-                          resultSet.getString(PARENT_COLUMN),
-                          Record.childrenStringToList(resultSet.
-                                  getString(CHILDREN_COLUMN)),
-                          StringMap.fromFormal(resultSet.
-                                  getBytes(META_COLUMN)));
+
+        String id = resultSet.getString(ID_COLUMN);
+        String base = resultSet.getString(BASE_COLUMN);
+        boolean deleted = intToBool(resultSet.getInt(DELETED_COLUMN));
+        boolean indexable = intToBool(resultSet.getInt(INDEXABLE_COLUMN));
+        byte[] gzippedContent = resultSet.getBytes(DATA_COLUMN);
+        long ctime = resultSet.getTimestamp(CTIME_COLUMN).getTime();
+        long mtime = resultSet.getTimestamp(MTIME_COLUMN).getTime();
+        String parentIds = resultSet.getString(PARENT_ID_COLUMN);
+        String childIds = resultSet.getString(CHILD_ID_COLUMN);
+        byte[] meta = resultSet.getBytes(META_COLUMN);
+
+        if (log.isTraceEnabled()) {
+            log.trace ("Constructing record: " + id);
+        }
+
+        /* The way the result is returned from the DB is several identical rows
+         * with different parent and child column values. We need to iterate
+         * through all rows with the same id and collect the different parents
+         * and children listed */
+        while (resultSet.next() && id.equals(resultSet.getString(ID_COLUMN))) {
+
+            /* If we log on debug we do sanity checking of the result set.
+            * Of course the parent and child columns should not be checked,
+            * since they are the ones changing */
+            if (log.isDebugEnabled()) {
+                log.trace("Sanity checking record block for: " + id);
+                if (!base.equals(resultSet.getString(BASE_COLUMN))) {
+                    log.warn("Base mismatch for record: " + id);
+                    return null;
+                } else if (deleted != intToBool(resultSet.getInt(DELETED_COLUMN))) {
+                    log.warn("Deleted state mismatch for record: " + id);
+                    return null;
+                } else if (indexable != intToBool(resultSet.getInt(INDEXABLE_COLUMN))) {
+                    log.warn("Indexable state mismatch for record: " + id);
+                    return null;
+                } else if (!Arrays.equals(gzippedContent, resultSet.getBytes(DATA_COLUMN))) {
+                    log.warn("Content mismatch for record: " + id);
+                    return null;
+                }  else if (ctime != resultSet.getTimestamp(CTIME_COLUMN).getTime()) {
+                    log.warn("CTime state mismatch for record: " + id);
+                    return null;
+                } else if (mtime != resultSet.getTimestamp(MTIME_COLUMN).getTime()) {
+                    log.warn("MTime state mismatch for record: " + id);
+                    return null;
+                }  else if (!Arrays.equals(meta,resultSet.getBytes(META_COLUMN))) {
+                    log.warn("Meta tags mismatch for record: " + id);
+                    return null;
+                }
+            }
+
+            /* Pick up parent and child ids */
+            String newParent = resultSet.getString (PARENT_ID_COLUMN);
+            String newChild = resultSet.getString (CHILD_ID_COLUMN);
+
+            parentIds = parentIds != null ?
+                                (parentIds + ";" + newParent) : newParent;
+            childIds = childIds != null ?
+                                (childIds + ";" + newChild) : newChild;
+        }
+
+        /* The result set cursor will now be on the start of the next record */
+
+        return new Record(id,
+                          base,
+                          deleted,
+                          indexable,
+                          Zips.gunzipBuffer(gzippedContent),
+                          ctime,
+                          mtime,
+                          Record.idStringToList(parentIds),
+                          Record.idStringToList(childIds),
+                          StringMap.fromFormal(meta));
     }
 
     /**
@@ -745,6 +928,12 @@ public abstract class DatabaseStorage extends StorageBase {
          try {
 //             longConn.setAutoCommit(false);
              resultSet = statement.executeQuery();
+             /*
+               FIXME: assert that resultSet.getType() != ResultSet.TYPE_FORWARD_ONLY,
+               or else resultSet.previous() will fail.
+               If this fails we might need some class derived from ResultSet that
+               can do manual caching for us
+               */
              log.debug("Got resultSet from '" + statement.toString() + "'");
          } catch (SQLException e) {
              log.error("SQLException in getResult", e);
@@ -768,7 +957,10 @@ public abstract class DatabaseStorage extends StorageBase {
 
         public ResultIterator(ResultSet resultSet) throws SQLException {
             this.resultSet = resultSet;
+
+            /* The result set starts before the first rwo, so step into it */
             hasNext = resultSet.next();
+
             log.trace("Constructed Record iterator with initial hasNext: "
                       + hasNext);
             lastAccess = System.currentTimeMillis();
@@ -793,11 +985,15 @@ public abstract class DatabaseStorage extends StorageBase {
          */
         public Record getRecord() throws SQLException, IOException {
             lastAccess = System.currentTimeMillis();
-            Record record = DatabaseStorage.resultToRecord(resultSet);
+
+            /* scanRecord() steps the resultSet to the next record */
+            Record record = DatabaseStorage.scanRecord(resultSet);
+
             if (log.isTraceEnabled()) {
                 log.trace("getRecord returning '" + record.getId() + "'");
             }
-            hasNext = resultSet.next();
+            
+            hasNext = !resultSet.isAfterLast();
             return record;
 //            rs.getStatement().close();//note: rs is closed when stmt is closed
         }

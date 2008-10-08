@@ -27,7 +27,6 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Arrays;
 import java.io.IOException;
 
 import dk.statsbiblioteket.summa.common.Record;
@@ -108,8 +107,8 @@ public abstract class StorageBase extends UnicastRemoteObject
         return records;
     }
 
-    protected void updateMultiVolume(Record record) {
-        log.warn("updateMultiVolume not implemented yet");
+    protected void updateRelations(Record record) {
+        log.error("updateRelations not implemented yet");
         // TODO: Implement multi-volume as described in the pseudo-code
         /* Pseudo-code for new or modified (self = new or modified record):
         if parent exists

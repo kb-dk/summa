@@ -102,7 +102,7 @@ public class TestBasicDerby extends TestCase {
                     Statement createDatabase = conn.createStatement();
                     // http://java.sun.com/developer/technicalArticles/J2SE/Desktop/javadb/
                     createDatabase.execute(
-              "CREATE table " + DatabaseStorage.TABLE + " ("
+              "CREATE table " + DatabaseStorage.RECORDS + " ("
               + " " + DatabaseStorage.ID_COLUMN    + " VARCHAR(255), "
               + " " + STATE_COLUMN + " VARCHAR(15), "
               + " " + DatabaseStorage.BASE_COLUMN  + " VARCHAR(15), "
@@ -129,7 +129,7 @@ public class TestBasicDerby extends TestCase {
 
             // http://java.sun.com/developer/technicalArticles/J2SE/Desktop/javadb/
             stmtSaveNewRecord = conn.prepareStatement(
-        "INSERT INTO " + DatabaseStorage.TABLE + " " +
+        "INSERT INTO " + DatabaseStorage.RECORDS + " " +
         "   (" + DatabaseStorage.ID_COLUMN + ", "
                + STATE_COLUMN + ", "
                + DatabaseStorage.BASE_COLUMN + ", "
@@ -138,10 +138,10 @@ public class TestBasicDerby extends TestCase {
                 + "VALUES (?, ?, ?, ?, ?)",
         Statement.RETURN_GENERATED_KEYS);
 
-            String RecordsQuery = "SELECT " + DatabaseStorage.TABLE + "." + DatabaseStorage
+            String RecordsQuery = "SELECT " + DatabaseStorage.RECORDS + "." + DatabaseStorage
                     .ID_COLUMN + ","  +
-                    DatabaseStorage.TABLE + "." + STATE_COLUMN +
-                    " FROM " + DatabaseStorage.TABLE; // + " WHERE " + DatabaseStorage.TABLE + "." + DatabaseStorage.BASE_COLUMN  + " =? ORDER BY " + ID_COLUMN;
+                    DatabaseStorage.RECORDS + "." + STATE_COLUMN +
+                    " FROM " + DatabaseStorage.RECORDS; // + " WHERE " + DatabaseStorage.RECORDS + "." + DatabaseStorage.BASE_COLUMN  + " =? ORDER BY " + ID_COLUMN;
             getAll = conn.prepareStatement(RecordsQuery);
     }
 
