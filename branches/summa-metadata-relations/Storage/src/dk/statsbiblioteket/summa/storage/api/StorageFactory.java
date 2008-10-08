@@ -71,7 +71,7 @@ public class StorageFactory {
         } catch (Exception e) {
             throw new RemoteException("Could not get metadata storage control"
                                       + " class from property "
-                                      + CONF_STORAGE, e);
+                                      + CONF_STORAGE + ": " + e.getMessage(),e);
         }
         //noinspection DuplicateStringLiteralInspection
         log.debug("Instantiating storage class " + storageClass);
@@ -81,7 +81,7 @@ public class StorageFactory {
             return Configuration.create(storageClass, conf);        
         } catch (Exception e) {
             throw new IOException("Failed to instantiate storage class "
-                                  + storageClass, e);
+                                  + storageClass + ": " + e.getMessage(), e);
         }
     }
 

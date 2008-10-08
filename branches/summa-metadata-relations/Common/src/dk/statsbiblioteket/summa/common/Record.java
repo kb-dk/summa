@@ -615,15 +615,15 @@ public class Record implements Serializable, Comparable{
     /**
      * Converts a String-encoded list of children-ID's to a proper list.
      * The String-encoded list is the ID's delimited by ';'.
-     * @param children a ';'-delimited string with children-ID's.
+     * @param ids a ';'-delimited string with children-ID's.
      * @return a List with the children-ID's. If the input-string is null or
      *         of length 0, null is returned.
      */
-    public static List<String> childrenStringToList(String children) {
-        if (children == null || "".equals(children)) {
+    public static List<String> idStringToList(String ids) {
+        if (ids == null || "".equals(ids)) {
             return null;
         }
-        String[] stringChildren = children.split(ID_DELIMITER);
+        String[] stringChildren = ids.split(ID_DELIMITER);
         return Arrays.asList(stringChildren);
     }
 
