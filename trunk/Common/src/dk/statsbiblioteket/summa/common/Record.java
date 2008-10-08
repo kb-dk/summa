@@ -38,12 +38,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * A Record is the atom data unit in summa. Is is used for ingesting to the
+ * A Record is the atom data unit in Summa. Is is used for ingesting to the
  * Storage as well as extracting from it.<br>
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "hal, te")
+        author = "hal, te, mke")
 public class Record implements Serializable, Comparable{
     private static Log log = LogFactory.getLog(Record.class);
 
@@ -110,13 +110,16 @@ public class Record implements Serializable, Comparable{
      * parent-record, this must be null. If a parent-record is present,
      * {@link #indexable} will normally be false.
      */
-    private String parentId;
+    private List<String> parentIds;
+    /**
+     * A list of Record instances representing the parents of this record
+     */
+    private List<Record> parents;
     /**
      * The ids of the children-records for this record, if any. If there are
      * no children-records, this must be null.
      */
     private List<String> childIds;
-
     /**
      * A list of Record instances representing the children of this record
      */
@@ -172,15 +175,15 @@ public class Record implements Serializable, Comparable{
      *                     {@link #creationTime}.
      * @param lastModified the last time that the Record elements were modified.
      *                     {@link #modificationTime}.
-     * @param parentId       the ID for the parent record. {@link #parentId}.
+     * @param parentIds       the ID for the parent record. {@link #parentIds}.
      * @param childIds     the ID's for the children records. {@link #childIds}.
      * @param meta         metadata for the Record.
      */
     public Record(String id, String base, boolean deleted, boolean indexable,
                   byte[] data, long creationTime, long lastModified,
-                  String parentId, List<String> childIds, StringMap meta){
+                  List<String> parentIds, List<String> childIds, StringMap meta){
         init(id, base, deleted, indexable, data, creationTime, lastModified,
-             parentId, childIds, meta);
+             parentIds, childIds, meta);
     }
 
     /**
@@ -195,14 +198,14 @@ public class Record implements Serializable, Comparable{
      *                     {@link #creationTime}.
      * @param lastModified the last time that the Record elements were modified.
      *                     {@link #modificationTime}.
-     * @param parent       the ID for the parent record. {@link #parentId}.
+     * @param parents       the ID for the parent record. {@link #parentIds}.
      * @param children     the ID's for the children records. {@link #childIds}.
      * @param meta         metadata for the Record.
      */
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public void init(String id, String base, boolean deleted, boolean indexable,
                      byte[] data, long creationTime, long lastModified,
-                     String parent, List<String> children, StringMap meta){
+                     List<String> parents, List<String> children, StringMap meta){
         log.trace("Creating Record with id '" + id + "' from base '" + base
                   + "'");
         setId(id);
@@ -212,7 +215,7 @@ public class Record implements Serializable, Comparable{
         setContent(data);
         setCreationTime(creationTime);
         setModificationTime(lastModified);
-        setParentId(parent);
+        setParentIds(parents);
         setChildIds(children);
         setChildren(null);
         this.meta = meta;
@@ -305,20 +308,22 @@ public class Record implements Serializable, Comparable{
         this.modificationTime = modificationTime;
     }
 
-    public String getParentId() {
-        return parentId;
+    public List<String> getParentIds() {
+        return parentIds;
     }
-    public void setParentId(String parentId) {
-        if ("".equals(parentId)) {
+    public void setParentIds(List<String> parentIds) {
+        if (parentIds == null) {
+            this.parentIds = null;
+        } else if (parentIds.isEmpty()) {
             //noinspection DuplicateStringLiteralInspection
             log.warn("The non-existence of a parentId should be stated by null, "
                      + "not the empty string. Problematic Record with id '"
                      + getId() + "' from base '" + getBase()
                      + "'. Continuing creation");
             //noinspection AssignmentToNull
-            this.parentId = null;
+            this.parentIds = null;
         } else {
-            this.parentId = parentId;
+            this.parentIds = parentIds;
         }
     }
 
@@ -333,7 +338,9 @@ public class Record implements Serializable, Comparable{
      * @param childIds list of record ids for the record's children
      */
     public void setChildIds(List<String> childIds) {
-        if (childIds != null && childIds.size() == 0) {
+        if (childIds == null) {
+            this.childIds = childIds;
+        } else if (childIds.isEmpty()) {
             //noinspection DuplicateStringLiteralInspection
             log.warn("No childIds should be stated by null, not the empty "
                      + "list. Problematic Record with id '" + getId()
@@ -371,7 +378,7 @@ public class Record implements Serializable, Comparable{
     /**
      * Get the list of resolved child records. If the record was constructed
      * without child id resolution or {@link #setChildren} has never been
-     * called this method will return null
+     * called this method will return {@code null}
      *
      * @return a list of {@code Record} instances representing the children
      *         of this record, or {@code null} if the child ids has never been
@@ -379,6 +386,40 @@ public class Record implements Serializable, Comparable{
      */
     public List<Record> getChildren () {
         return children;
+    }
+
+    /**
+     * Set parent {@code Record} instances of this record. This will also call
+     * {@link #setParentIds} with the ids of the parent records
+     *
+     * @param parents list of record instances to register as parents
+     */
+    public void setParents(List<Record> parents) {
+        if (parents == null) {
+            this.parents = null;
+            return;
+        }
+
+        List<String> newParentIds = new ArrayList<String>(parents.size());
+        for (Record parent : parents) {
+            newParentIds.add (parent.getId());
+        }
+
+        setParentIds(newParentIds);
+        this.parents = parents;
+    }
+
+    /**
+     * Get the list of resolved parent records. If the record was constructed
+     * without parent id resolution or {@link #setParents} has never been
+     * called this method will return {@code null}
+     *
+     * @return a list of {@code Record} instances representing the parents
+     *         of this record, or {@code null} if the parent ids has never been
+     *         resolved
+     */
+    public List<Record> getParents () {
+        return parents;
     }
 
     public long getLastModified() {
@@ -497,8 +538,8 @@ public class Record implements Serializable, Comparable{
                    //&& timeEquals(modificationTime, other.getModificationTime())
                    && deleted == other.isDeleted()
                    && indexable == other.isIndexable()
-                   && ((parentId == null && other.getParentId() == null)
-                       || (parentId != null && parentId.equals(other.getParentId())))
+                   && ((parentIds == null && other.getParentIds() == null)
+                       || (parentIds != null && parentIds.equals(other.getParentIds())))
                    && Arrays.equals(data, other.getContent())
                    && ((childIds == null && other.getChildIds() == null) ||
                        (childIds != null) && Strings.join(childIds, ",").equals(
@@ -546,7 +587,8 @@ public class Record implements Serializable, Comparable{
                         ", creationTime(" + timeToString(getCreationTime())
                         + "), modificationTime("
                         + timeToString(getModificationTime())
-                        + "), parentId(" + getParentId()
+                        + "), parentIds("
+                        + (parentIds == null ? "" : Logs.expand(parentIds, 5))
                         + "), childIds("
                         + (childIds == null ? "" : Logs.expand(childIds, 5))
                         + "), meta("
