@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+
+<!-- This is an EXAMPLE Dice configuration -->
+<properties>
+
+    <entry key="employer.class">dk.statsbiblioteket.summa.index.dice.Indexer</entry>
+    <entry key="consumer.class">dk.statsbiblioteket.summa.index.dice.Merger</entry>
+    <entry key="worker.class">dk.statsbiblioteket.summa.index.dice.IndexWorker</entry>
+
+    <entry key="socket.type">normal</entry>
+    <entry key="registry.port">8460</entry>
+
+    <entry key="employer.hostname">atria</entry>
+    <entry key="employer.queue">200</entry>
+    <entry key="employer.port">8462</entry>
+    <entry key="employer.service">dice_employer</entry>
+    <entry key="employer.cache.port">8461</entry>
+    <entry key="employer.cache.service">employer_cache</entry>
+    <entry key="employer.cache.writer">dk.statsbiblioteket.summa.dice.caching.GZipCacheWriter</entry>
+    <entry key="employer.cache.reader">dk.statsbiblioteket.summa.dice.caching.DataCacheReader</entry>
+
+    <entry key="consumer.hostname">atria</entry>
+    <entry key="consumer.queue">200</entry>
+    <entry key="consumer.port">8464</entry>
+    <entry key="consumer.service">dice_consumer</entry>
+    <entry key="consumer.cache.port">8463</entry>
+    <entry key="consumer.cache.service">consumer_cache</entry>
+    <entry key="consumer.cache.writer">dk.statsbiblioteket.summa.dice.caching.DataCacheWriter</entry>
+    <entry key="consumer.cache.reader">dk.statsbiblioteket.summa.dice.caching.DataCacheReader</entry>
+
+    <entry key="worker.queue">1</entry>
+    <entry key="worker.cache.writer">dk.statsbiblioteket.summa.dice.caching.DataCacheWriter</entry>
+    <entry key="worker.cache.reader">dk.statsbiblioteket.summa.dice.caching.GZipCacheReader</entry>
+
+</properties>
+
