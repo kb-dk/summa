@@ -23,10 +23,10 @@ public class StorageTest extends TestCase {
 
     static String testDBLocation = "test_db";
     static String testBase1 = "foobar";
-    static String testId1 = "quiz1";
-    static String testId2 = "quiz2";
-    static String testId3 = "quiz3";
-    static String testId4 = "quiz4";
+    static String testId1 = "testId1";
+    static String testId2 = "testId2";
+    static String testId3 = "testId3";
+    static String testId4 = "testId4";
     static int storageCounter = 0;
     static byte[] testContent1 = new byte[] {'s', 'u', 'm', 'm', 'a'};
 
@@ -35,8 +35,8 @@ public class StorageTest extends TestCase {
         Configuration conf = Configuration.newMemoryBased(
                 StorageFactory.CONF_STORAGE,
                 DerbyStorage.class,
-                DatabaseStorage.CONF_LOCATION + (storageCounter++),
-                testDBLocation,
+                DatabaseStorage.CONF_LOCATION,
+                testDBLocation + (storageCounter++),
                 DatabaseStorage.CONF_FORCENEW,
                 true
         );
@@ -50,10 +50,17 @@ public class StorageTest extends TestCase {
         }
 
         storage = StorageFactory.createStorage(createConf());
+
+        /* We get spurious errors where the connection to the db isn't ready
+         * when running the unit tests in batch mode */
+        Thread.sleep(200);
     }
 
     public void tearDown () throws Exception {
         storage.close();
+        /* We get spurious errors where the connection to the db isn't ready
+         * when running the unit tests in batch mode */
+        Thread.sleep(200);
     }
 
     public void testGetEmpty () throws Exception {
@@ -129,6 +136,70 @@ public class StorageTest extends TestCase {
         assertBaseEmpty(testBase1);
     }
 
+    public void testAddOneWithOneChildId() throws Exception {
+        Record rec = new Record (testId1, testBase1, testContent1);
+        rec.setChildIds(Arrays.asList(testId2));
+        storage.flush (rec);
+
+        List<Record> recs = storage.getRecords(Arrays.asList(testId1), 0);
+
+        assertEquals(1, recs.size());
+        assertEquals(rec, recs.get(0));
+
+        assertEquals(null, recs.get(0).getChildren());
+        assertEquals(Arrays.asList(testId2), recs.get(0).getChildIds());
+        assertEquals(null, recs.get(0).getParents());
+        assertEquals(null, recs.get(0).getParentIds());
+    }
+
+    public void testAddOneWithTwoChildIds() throws Exception {
+        Record rec = new Record (testId1, testBase1, testContent1);
+        rec.setChildIds(Arrays.asList(testId2, testId3));
+        storage.flush (rec);
+
+        List<Record> recs = storage.getRecords(Arrays.asList(testId1), 0);
+
+        assertEquals(1, recs.size());
+        assertEquals(rec, recs.get(0));
+
+        assertEquals(null, recs.get(0).getChildren());
+        assertEquals(Arrays.asList(testId2, testId3), recs.get(0).getChildIds());
+        assertEquals(null, recs.get(0).getParents());
+        assertEquals(null, recs.get(0).getParentIds());
+    }
+
+    public void testAddOneWithOneParentId() throws Exception {
+        Record rec = new Record (testId1, testBase1, testContent1);
+        rec.setParentIds(Arrays.asList(testId2));
+        storage.flush (rec);
+
+        List<Record> recs = storage.getRecords(Arrays.asList(testId1), 0);
+
+        assertEquals(1, recs.size());
+        assertEquals(rec, recs.get(0));
+
+        assertEquals(null, recs.get(0).getChildren());
+        assertEquals(null, recs.get(0).getChildIds());
+        assertEquals(null, recs.get(0).getParents());
+        assertEquals(Arrays.asList(testId2), recs.get(0).getParentIds());
+    }
+
+    public void testAddOneWithTwoParentIds() throws Exception {
+        Record rec = new Record (testId1, testBase1, testContent1);
+        rec.setParentIds(Arrays.asList(testId2, testId3));
+        storage.flush (rec);
+
+        List<Record> recs = storage.getRecords(Arrays.asList(testId1), 0);
+
+        assertEquals(1, recs.size());
+        assertEquals(rec, recs.get(0));
+
+        assertEquals(null, recs.get(0).getChildren());
+        assertEquals(null, recs.get(0).getChildIds());
+        assertEquals(null, recs.get(0).getParents());
+        assertEquals(Arrays.asList(testId2, testId3), recs.get(0).getParentIds());
+    }
+
     public void testAddTwo () throws Exception {
         Record rec1 = new Record(testId1, testBase1, testContent1);
         Record rec2 = new Record(testId2, testBase1, testContent1);
@@ -187,9 +258,12 @@ public class StorageTest extends TestCase {
         Record recP = new Record (testId1, testBase1, testContent1);
         Record recC1 = new Record (testId2, testBase1, testContent1);
         Record recC2 = new Record (testId3, testBase1, testContent1);
+
         recP.setChildIds(Arrays.asList(recC1.getId(), recC2.getId()));
+
         recC1.setChildIds(Arrays.asList(recC2.getId()));
         recC1.setParentIds(Arrays.asList(recP.getId()));
+
         recC2.setParentIds(Arrays.asList(recC1.getId()));
 
         storage.flushAll (Arrays.asList(recP, recC1, recC2));
@@ -200,12 +274,24 @@ public class StorageTest extends TestCase {
 
         assertEquals(2, recs.size());
 
-        assertEquals(recP, recs.get(0));
-        assertEquals(null, recs.get(0).getChildren());
+        System.out.println ("ORIG:\n" + recP.toString(true));
+        System.out.println ("GOT :\n" + recs.get(0).toString(true));
+
+        /* We can't compare the records directly because recP has the child
+         * records nested, while the retrieved records only has the ids */
+        assertEquals(recP.getId(), recs.get(0).getId());
+        assertEquals(recP.getBase(), recs.get(0).getBase());
+        assertEquals(recP.getContentAsUTF8(), recs.get(0).getContentAsUTF8());
+
+        /* We should have the ids of the children, but they should not be
+         * expanded */
         assertEquals(recP.getChildIds(), recs.get(0).getChildIds());
+        assertEquals(null, recs.get(0).getChildren());
+
 
         assertEquals(recC1.getContentAsUTF8(), recs.get(1).getContentAsUTF8());
         assertEquals(recC1.getId(), recs.get(1).getId());
+        assertEquals(recC1.getBase(), recs.get(1).getBase());
         assertEquals(recC1.getParentIds(), recs.get(1).getParentIds());
     }
 
@@ -219,7 +305,15 @@ public class StorageTest extends TestCase {
         assertEquals(2, recs.size());
 
         /* Check that the first record holds a child relation to the next */
-        assertEquals(recs.get(0).getChildren(), Arrays.asList(recs.get(1)));
+        assertEquals(2, recs.get(0).getChildren().size());
+        assertEquals(testId2, recs.get(0).getChildren().get(0).getId());
+
+        /* testId3 is a child of testId2 and should be expanded */
+        assertEquals(1, recs.get(1).getChildren().size());
+        assertEquals(1, recs.get(1).getChildIds().size());
+        assertEquals(testId3, recs.get(1).getChildIds().get(0));
+        assertEquals(testId3, recs.get(1).getChildren().get(0).getId());
+
     }
 
     public void testRecursiveExpandLinkedRecord () throws Exception {
@@ -249,8 +343,20 @@ public class StorageTest extends TestCase {
         Record recC2 = new Record (testId3, testBase1, testContent1);
         Record recCC1 = new Record (testId4, testBase1, testContent1);
 
+        /* We need to explicitely set all relations here to make the assertions
+         * work*/
+
         recP.setChildren(Arrays.asList(recC1, recC2));
+
+        recC1.setParents (Arrays.asList(recP));
         recC1.setChildren(Arrays.asList(recCC1));
+        recC1.setIndexable(false);
+
+        recC2.setParents(Arrays.asList(recP));
+        recC2.setIndexable(false);
+
+        recCC1.setParents(Arrays.asList(recC1));
+        recCC1.setIndexable(false);
 
         /* The child records should be implicitly flushed as well */
         storage.flushAll (Arrays.asList(recP));
@@ -262,8 +368,9 @@ public class StorageTest extends TestCase {
         assertEquals(4, recs.size());
 
         assertEquals(recP, recs.get(0));
-        assertEquals(recC1, recs.get(0));
-        assertEquals(recC2, recs.get(0));
+        assertEquals(recC1, recs.get(1));
+        assertEquals(recC2, recs.get(2));
+        assertEquals(recCC1, recs.get(3));
 
         assertNotNull(recs.get(0).getChildren());
         assertNotNull(recs.get(0).getChildIds());
