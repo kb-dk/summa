@@ -283,8 +283,8 @@ public abstract class DatabaseStorage extends StorageBase {
         String fromBaseQuery = "SELECT " + allCells
                                + " FROM " + RECORDS
                                + " LEFT JOIN " + RELATIONS
-                               + " ON " + RECORDS + "." + BASE_COLUMN + "=?"
-                               + " AND " + relationsClause
+                               + " ON " + relationsClause
+                               + " WHERE " + RECORDS + "." + BASE_COLUMN + "=?"
                                + " ORDER BY " + ID_COLUMN;
         log.debug("Preparing query getFromBase with '" + fromBaseQuery + "'");
         stmtGetFromBase = getConnection().prepareStatement(fromBaseQuery);
@@ -292,9 +292,9 @@ public abstract class DatabaseStorage extends StorageBase {
         String modifiedAfterQuery = "SELECT " + allCells
                                     + " FROM " + RECORDS
                                     + " LEFT JOIN " + RELATIONS
-                                    + " ON " + BASE_COLUMN + "=?"
+                                    + " ON " + relationsClause
+                                    + " WHERE " + BASE_COLUMN + "=?"
                                     + " AND " + MTIME_COLUMN + ">?"
-                                    + " AND " + relationsClause
                                     + " ORDER BY " + ID_COLUMN;
         log.debug("Preparing query getModifiedAfter with '"
                   + modifiedAfterQuery + "'");
@@ -303,9 +303,9 @@ public abstract class DatabaseStorage extends StorageBase {
         String fromQuery = "SELECT " + allCells
                            + " FROM " + RECORDS
                            + " LEFT JOIN " + RELATIONS
-                           + " ON " + BASE_COLUMN + "=?"
+                           + " ON " + relationsClause
+                           + " WHERE " + BASE_COLUMN + "=?"
                            + " AND " + ID_COLUMN + ">?"
-                           + " AND " + relationsClause
                            + " ORDER BY " + ID_COLUMN;
         log.debug("Preparing query getFrom with '" + fromQuery + "'");
         stmtGetFrom = getConnection().prepareStatement(fromQuery);
@@ -313,9 +313,9 @@ public abstract class DatabaseStorage extends StorageBase {
         String getRecordQuery = "SELECT " + allCells
                                 + " FROM " + RECORDS
                                 + " LEFT JOIN " + RELATIONS
-                                + " ON " + ID_COLUMN + "=?"
-                                + " AND " + relationsClause;
-        log.debug("Preparing query recordQuery with '" + getRecordQuery + "'");
+                                + " ON " + relationsClause
+                                + " WHERE " + RECORDS + "." + ID_COLUMN + "=?";
+        log.debug("Preparing query getRecord with '" + getRecordQuery + "'");
         stmtGetRecord = getConnection().prepareStatement(getRecordQuery);
 
         String clearBaseQuery = "UPDATE " + RECORDS
@@ -396,10 +396,10 @@ public abstract class DatabaseStorage extends StorageBase {
         String getChildrenQuery = "SELECT " + allCells
                                 + " FROM " + RELATIONS
                                 + " JOIN " + RECORDS
-                                + " ON " + RELATIONS + "."
-                                            + PARENT_ID_COLUMN + "=?"
-                                + " AND " + RECORDS + "." + ID_COLUMN + "="
+                                + " ON " + RECORDS + "." + ID_COLUMN + "="
                                           + RELATIONS + "." + PARENT_ID_COLUMN
+                                + " WHERE " + RELATIONS + "."
+                                            + PARENT_ID_COLUMN + "=?"
                                 + " ORDER BY " + RECORDS + "." + ID_COLUMN;
         log.debug("Preparing query getChildren with '" + getChildrenQuery
                   + "'");
@@ -409,10 +409,10 @@ public abstract class DatabaseStorage extends StorageBase {
         String getParentsQuery = "SELECT " + allCells
                                 + " FROM " + RELATIONS
                                 + " JOIN " + RECORDS
-                                + " ON " + RELATIONS + "."
-                                            + CHILD_ID_COLUMN + "=?"
-                                + " AND " + RECORDS + "." + ID_COLUMN + "="
+                                + " ON " + RECORDS + "." + ID_COLUMN + "="
                                           + RELATIONS + "." + CHILD_ID_COLUMN
+                                + " WHERE " + RELATIONS + "."
+                                            + CHILD_ID_COLUMN + "=?" 
                                 + " ORDER BY " + RECORDS + "." + ID_COLUMN;
         log.debug("Preparing query getParents with '" + getParentsQuery
                   + "'");
@@ -513,6 +513,7 @@ public abstract class DatabaseStorage extends StorageBase {
             throw new RemoteException("Could not prepare stmtGetRecord "
                                       + "with id '" + id + "''", e);
         }
+
         Record record = null;
         try {
             ResultSet resultSet = stmtGetRecord.executeQuery();
@@ -524,6 +525,20 @@ public abstract class DatabaseStorage extends StorageBase {
 
             try {
                 record = scanRecord(resultSet);
+
+                /* Sanity checks if we log on debug */
+                if (log.isDebugEnabled()) {
+                    if (!id.equals(record.getId())) {
+                        log.error ("Record id '" + record.getId()
+                                   + "' does not match requested id: " + id);
+                    }
+
+                    while (resultSet.next()) {                        
+                        Record tmpRec = scanRecord(resultSet);
+                        log.warn ("Bogus record in result set: " + tmpRec);
+                    }
+                }
+
                 expandChildRecords(record, expansionDepth);
             } catch (IOException e) {
                 throw new RemoteException("Exception transforming SQL "
@@ -624,6 +639,9 @@ public abstract class DatabaseStorage extends StorageBase {
         if (log.isTraceEnabled()) {
             log.trace("Flushing " + record);
         }
+
+        /*FIXME: Re-impl this method */
+
         if (record.isDeleted()){
             log.debug("Deleting record '" + record.getId() + "' from base '"
                       + record.getBase() + "'");
@@ -658,6 +676,8 @@ public abstract class DatabaseStorage extends StorageBase {
 
     private void createNewRecord(Record record) throws RemoteException {
         // TODO: Consider calling modify if the record already exists
+        // FIXME: Add child records recursively (parents?)
+
         long now = System.currentTimeMillis();
         Timestamp nowStamp = new Timestamp(now);
 
@@ -682,7 +702,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
     /* Note that creationTime aren't touched */
     private void updateRecord(Record record) throws RemoteException {
-        // TODO: Check for existence before creating
+        // FIXME: Add child records recursively (parents?)
         long now = System.currentTimeMillis();
         Timestamp nowStamp = new Timestamp(now);
 
@@ -748,8 +768,9 @@ public abstract class DatabaseStorage extends StorageBase {
     }
 
     /**
-     * Creates the primary table for a database based metadata storage. This
-     * used SQL with BLOBs.
+     * Creates the tables {@link #RECORDS} and {@link #RELATIONS} and relevant
+     * indexes on the database.
+     *
      * @throws RemoteException if the database could not be created.
      */
     protected void createSchema() throws RemoteException {
@@ -784,12 +805,12 @@ public abstract class DatabaseStorage extends StorageBase {
         stmt.close();
 
         /* RECORDS INDEXES */
-        String createRecordsIndexesQuery =
+        String createRecordsIndexQuery =
                 "CREATE UNIQUE INDEX i ON " + RECORDS + "("+ID_COLUMN+")";
         log.debug("Creating index 'i' on table "+RECORDS+" with query: '"
-                  + createRecordsQuery + "'");
+                  + createRecordsIndexQuery + "'");
         stmt = getConnection().createStatement();
-        stmt.execute(createRecordsIndexesQuery);
+        stmt.execute(createRecordsIndexQuery);
         stmt.close();
 
         /* RELATIONS */
@@ -808,7 +829,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 "CREATE UNIQUE INDEX pc ON "
                 + RELATIONS + "("+PARENT_ID_COLUMN+","+CHILD_ID_COLUMN+")";
         log.debug("Creating index 'pc' on table "+RELATIONS+" with query: '"
-                  + createRelationsQuery + "'");
+                  + createRelationsPCIndexQuery + "'");
         stmt = getConnection().createStatement();
         stmt.execute(createRelationsPCIndexQuery);
         stmt.close();
@@ -817,7 +838,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 "CREATE INDEX c ON "
                 + RELATIONS + "("+CHILD_ID_COLUMN+ ")";
         log.debug("Creating index 'c' on table "+RELATIONS+" with query: '"
-                  + createRelationsQuery + "'");
+                  + createRelationsCIndexQuery + "'");
         stmt = getConnection().createStatement();
         stmt.execute(createRelationsCIndexQuery);
         stmt.close();
@@ -898,6 +919,10 @@ public abstract class DatabaseStorage extends StorageBase {
                                 (parentIds + ";" + newParent) : newParent;
             childIds = childIds != null ?
                                 (childIds + ";" + newChild) : newChild;
+            if (log.isTraceEnabled()) {
+                log.trace ("For record '" + id + "', collected children: "
+                           + childIds + ", collected parents: " + parentIds);
+            }
         }
 
         /* The result set cursor will now be on the start of the next record */
