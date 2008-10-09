@@ -72,14 +72,21 @@ public class RecordWriter extends ObjectFilterImpl {
                     FilterCommons.getAccess(configuration, CONF_STORAGE);
 
             if (accessContext == null) {
-                throw new ConnectException ("Failed to connect to storage");
+                throw new ConnectException(String.format(
+                        "Failed to connect to storage with configuration key "
+                        + "%s. Got null ass accessContext. The configuration "
+                        + "values was '%s'", 
+                        CONF_STORAGE, configuration.valueExists(CONF_STORAGE) ?
+                                      configuration.get(CONF_STORAGE) : "NA"));
             }
 
             storage = accessContext.getConnection();
         } catch (Exception e) {
-            throw new ConfigurationException(
-                    "Could not get storage for Filtercommons with property key '"
-                    + CONF_STORAGE + "'", e);
+            throw new ConfigurationException(String.format(
+                    "Could not get storage for Filtercommons with property key "
+                    + "%s and value '%s'",
+                    CONF_STORAGE, configuration.valueExists(CONF_STORAGE) ?
+                                  configuration.get(CONF_STORAGE) : "NA"), e);
         }
         // TODO: Perform a check to see if the Storage is alive
     }

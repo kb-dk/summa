@@ -39,6 +39,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.ParseUtil;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -60,7 +61,7 @@ import org.xml.sax.ext.DefaultHandler2;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class XMLSplitterParser extends DefaultHandler2 implements
-                                                       Iterator<Payload>,
+                                                       StreamParser,
                                                        Runnable {
     private static Log log = LogFactory.getLog(XMLSplitterParser.class);
 
@@ -75,7 +76,7 @@ public class XMLSplitterParser extends DefaultHandler2 implements
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
     // TODO: Purge double declarations
 
-    private XMLSplitterFilter.Target target;
+    private XMLSplitterParserTarget target;
     private Payload payload;
     private ArrayBlockingQueue<Record> queue;
     private boolean running = false;
@@ -84,8 +85,8 @@ public class XMLSplitterParser extends DefaultHandler2 implements
     private SAXParserFactory factory;
     private SAXParser parser;
 
-    public XMLSplitterParser(XMLSplitterFilter.Target target) {
-        this.target = target;
+    public XMLSplitterParser(Configuration conf) {
+        target = new XMLSplitterParserTarget(conf);
         factory = SAXParserFactory.newInstance();
         factory.setNamespaceAware(true);
     }
@@ -96,10 +97,17 @@ public class XMLSplitterParser extends DefaultHandler2 implements
      * @param payload  the container for the stream to be parsed.
      * @throws IllegalStateException if a parsing is already underway.
      */
-    public synchronized void openPayload(Payload payload) throws
+    public synchronized void open(Payload payload) throws
                                                          IllegalStateException {
         openPayload(payload, DEFAULT_MAX_QUEUE);
     }
+
+    public void close() {
+        //noinspection DuplicateStringLiteralInspection
+        log.debug("close() called");
+        stop();
+    }
+
     /**
      * Opens the stream embedded in the payload and starts the parsing of the
      * content. After this method has been called, Records can be extracted
@@ -153,9 +161,13 @@ public class XMLSplitterParser extends DefaultHandler2 implements
     /**
      * If a parsing is underway, it is stopped and queued Records are discarded.
      */
-    public synchronized void stopParsing() {
+    public synchronized void stop() {
         log.trace("stopParsing called");
         running = false;
+        if (queue == null) {
+            log.debug("stop() called without an open");
+            return;
+        }
         queue.clear();
         queue.add(interruptor);
         // TODO: More aggressive abort of SAXParser?
@@ -208,14 +220,21 @@ public class XMLSplitterParser extends DefaultHandler2 implements
 
     public synchronized boolean hasNext() {
         log.trace("hasNext() called");
+        if (queue == null) { // TODO: If this check solid enough?
+            return false;
+        }
         long endTime = System.currentTimeMillis() + QUEUE_TIMEOUT;
         while (System.currentTimeMillis() < endTime) {
             if (finished) {
+                log.trace("hasNext reached state finished=true");
                 //noinspection ObjectEquality
                 return queue.size() > 0 && queue.peek() != interruptor;
             }
 
             if (queue.size() > 0) {
+                //noinspection ObjectEquality
+                log.trace("hasNext queue > 0, returning "
+                          + (queue.peek() != interruptor));
                 //noinspection ObjectEquality
                 return queue.peek() != interruptor;
             }
@@ -239,10 +258,11 @@ public class XMLSplitterParser extends DefaultHandler2 implements
         return false;
     }
     public synchronized Payload next() {
+        //noinspection DuplicateStringLiteralInspection
         log.trace("next() called");
         if (!hasNext()) {
-            throw new NoSuchElementException("No more Records for the current "
-                                             + "stream");
+            throw new NoSuchElementException(
+                    "No more Records for the current stream");
         }
         while (!(finished && queue.size() == 0)) {
             try {
@@ -289,13 +309,13 @@ public class XMLSplitterParser extends DefaultHandler2 implements
     private StringWriter id;
 
     private void prepareScanForNextRecord() {
-        parser.reset();
+        //parser.reset(); // Don't reset, as it erases namespace context
         inRecord = false;
         inId = false;
         sw = new StringWriter(10000);
         id = new StringWriter(100);
         insideRecordPrefixStack.clear();
-        outsideRecordPrefixStack.clear();
+        outsideRecordPrefixStack.clear();  // TODO: Should this be cleared?
         insideRecordElementStack.clear();
     }
 
@@ -412,6 +432,8 @@ public class XMLSplitterParser extends DefaultHandler2 implements
         if (!expected.equals(qName)) {
             log.warn("endElement: Expected '" + expected
                      + "', got '" + qName + "'");
+        } else {
+            log.trace("endElement: " + qName);
         }
         sw.append("</").append(qName).append(">");
         if (equalsAny(target.recordElement, qName, localName)) {
@@ -429,11 +451,11 @@ public class XMLSplitterParser extends DefaultHandler2 implements
             }
             try {
                 // TODO: Handle target.collapsePrefix
-                Record record = new Record(target.idPrefix + id.toString(),
-                                           target.base,
-                                           (HEADER + sw.toString()).
-                                                   getBytes("utf-8"));
-                log.debug("Produced record " + record);
+                Record record = new Record(
+                        target.idPrefix + id.toString(),
+                        target.base,
+                        (HEADER + sw.toString()).getBytes("utf-8"));
+                log.debug("Produced " + record);
                 queue.add(record);
                 prepareScanForNextRecord();
             } catch (UnsupportedEncodingException e) {
@@ -444,8 +466,8 @@ public class XMLSplitterParser extends DefaultHandler2 implements
         }
     }
 
-    public void characters (char ch[], int start, int length) throws
-                                                              SAXException {
+    public void characters(char ch[], int start, int length) throws
+                                                             SAXException {
         checkRunning();
         if (!inRecord) {
             return;
@@ -461,13 +483,12 @@ public class XMLSplitterParser extends DefaultHandler2 implements
     }
 
 
-    public void ignorableWhitespace (char ch[], int start, int length) throws
-                                                                  SAXException {
+    public void ignorableWhitespace(char ch[], int start, int length) throws
+                                                                      SAXException {
         characters(ch, start, length);
     }
 
-    public void comment (char ch [], int start, int length) throws
-                                                           SAXException {
+    public void comment(char ch [], int start, int length) throws SAXException {
         checkRunning();
         if (!inRecord) {
             return;
@@ -476,14 +497,14 @@ public class XMLSplitterParser extends DefaultHandler2 implements
         sw.append("<!--").append(chars).append("-->");
     }
 
-    public void startCDATA () throws SAXException {
+    public void startCDATA() throws SAXException {
         checkRunning();
         if (!inRecord) {
             return;
         }
         sw.append("<![CDATA[");
     }
-    public void endCDATA () throws SAXException {
+    public void endCDATA() throws SAXException {
         checkRunning();
         if (!inRecord) {
             return;
@@ -498,6 +519,3 @@ public class XMLSplitterParser extends DefaultHandler2 implements
         }
     }
 }
-
-
-

@@ -48,7 +48,7 @@
     </appender>
 
 
-    <logger name="dk.statsbiblioteket.summa.ingest.stream.FileReader">
+<!--    <logger name="dk.statsbiblioteket.summa.ingest.stream.FileReader">
         <level value="trace" />
         <appender-ref ref="CONSOLE"/>
     </logger>
@@ -64,6 +64,11 @@
     </logger>
 
     <logger name="dk.statsbiblioteket.summa.ingest.stream.XMLSplitterParser">
+        <level value="trace" />
+        <appender-ref ref="CONSOLE"/>
+    </logger>-->
+
+    <logger name="dk.statsbiblioteket.summa.ingest.stream">
         <level value="trace" />
         <appender-ref ref="CONSOLE"/>
     </logger>

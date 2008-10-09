@@ -31,11 +31,15 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 
 /**
- * Parses a stream into Payloads. Normally used by  {@link StreamController}.
- *  A StreamParser is reusable and is cleared and initialized by {@link #open}.
+ * Parses a stream (provided by a Payload) into multiple Records wrapped in
+ * Payloads. Normally used by  {@link StreamController}.
+ * A StreamParser is reusable and is cleared and initialized by {@link #open}.
+ * </p><p>
+ * Note: Implemenetations must return false for hasNext if open has not been
+ * called.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_NEEDED,
         author = "te")
 public interface StreamParser extends Iterator<Payload>, Configurable {
     /**
@@ -46,7 +50,14 @@ public interface StreamParser extends Iterator<Payload>, Configurable {
 
     /**
      * If a parsing is underway, it is stopped and any queued Payloads are
-     * discarded.
+     * discarded. The StreamParser can be reused after close.
      */
     public void stop();
+
+    /**
+     * Shuts down the parser, stopping running Threads and the like. The state
+     * of the parser is undefined after close and it is not guaranteed that it
+     * can be reused.
+     */
+    public void close();
 }

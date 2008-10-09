@@ -22,11 +22,17 @@
  */
 package dk.statsbiblioteket.summa.ingest.stream;
 
+import java.util.NoSuchElementException;
+import java.io.IOException;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.filter.Filter;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 
 /**
  * Retrieved payloads from a given source and processes the streams from the
@@ -35,9 +41,133 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class StreamController extends ObjectFilterImpl {
+public class StreamController implements ObjectFilter {
     private static Log log = LogFactory.getLog(StreamController.class);
 
-    protected void processPayload(Payload payload) {
+    /**
+     * The class of the {@link StreamParser} to use for the received Streams.
+     * </p><p>
+     * This property is mandatory.
+     */
+    public static final String CONF_PARSER =
+            "summa.ingest.stream.controller.parser";
+
+    private Payload payload = null;
+    private ObjectFilter source;
+    protected StreamParser parser;
+
+    public StreamController(Configuration conf) {
+        Class<? extends StreamParser> parserClass =
+                Configuration.getClass(CONF_PARSER, StreamParser.class,
+                                       getDefaultStreamParserClass(), conf);
+        log.debug("Creating StreamParser '" + parserClass.getName() + "'");
+        parser = Configuration.create(parserClass, conf);
+    }
+
+    /**
+     * If {@link #payload} is not already assigned, this method tries to
+     * generate the next payload, based on data from the source. If payload
+     * is already assigned, this method does nothing.
+     * </p><p>
+     * Newly created payloads will have a reference to the stream and the
+     * meta-info from the source, will have a newly created Record and will
+     * have no Document assigned.
+     */
+    private void makePayload() {
+        log.trace("makePayload() called");
+        checkSource();
+        if (payload != null) {
+            log.trace("makePayload: Payload already assigned");
+            return;
+        }
+        while (payload == null) {
+            try {
+                if (parser.hasNext()) {
+                    payload = parser.next();
+                    return;
+                }
+            } catch (Exception e) {
+                log.warn("Exception requesting payload from parser, "
+                         + "skipping to next stream payload", e);
+                parser.stop();
+            }
+            if (source.hasNext()) {
+                Payload streamPayload = source.next();
+                log.debug("makePayload: Opening stream payload " + payload);
+                parser.open(streamPayload);
+            } else {
+                log.debug("makePayload: No more stream payloads available");
+                return;
+            }
+        }
+    }
+
+
+    public boolean hasNext() {
+        checkSource();
+        if (payload == null) {
+            makePayload();
+        }
+        return payload != null;
+    }
+
+    public Payload next() {
+        makePayload();
+        Payload newPayload = payload;
+        //noinspection AssignmentToNull
+        payload = null;
+        return newPayload;
+    }
+
+    public boolean pump() throws IOException {
+        if (!hasNext()) {
+            return false;
+        }
+        Payload next = next();
+        if (next == null) {
+            return false;
+        }
+        next.close();
+        return true;
+    }
+
+    public void close(boolean success) {
+        if (source == null) {
+            log.warn(String.format(
+                    "close(%b): Cannot close as no source is specified",
+                    success));
+        } else {
+            parser.stop();
+            source.close(success);
+        }
+    }
+
+    public void remove() {
+        log.warn("Remove not supported in StreamController");
+    }
+
+    private void checkSource() {
+        if (source == null) {
+            throw new NoSuchElementException(
+                    "No source specified for StreamController");
+        }
+    }
+    
+    public void setSource(Filter filter) {
+        if (!(filter instanceof ObjectFilter)) {
+            throw new IllegalArgumentException(
+                    "StreamController can only be chained to ObjectFilters");
+        }
+        source = (ObjectFilter)filter;
+    }
+
+    /**
+     * Override this method to bypass the requirement of having to specify
+     * the {@link #CONF_PARSER}.
+     * @return the default StreamParser class for this controller.
+     */
+    protected Class<? extends StreamParser> getDefaultStreamParserClass() {
+        log.trace("getDefaultStreamParserClass(): returning null");
+        return null;
     }
 }

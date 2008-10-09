@@ -206,14 +206,14 @@ public class IngestTest extends NoExitTestCase {
         return readerConf;
     }
     public static final String STORAGE_ADDRESS =
-            "//localhost:27000/summa-storage";
+            "//localhost:28000/summa-storage";
     public static Configuration getStorageConfiguration() {
         Configuration conf = Configuration.newMemoryBased();
         conf.set(DatabaseStorage.CONF_LOCATION,
                  getStorageLocation().toString());
         conf.set(DatabaseStorage.CONF_FORCENEW, true);
         conf.set(Service.CONF_SERVICE_PORT, 27003);
-        conf.set(Service.CONF_REGISTRY_PORT, 27000);
+        conf.set(Service.CONF_REGISTRY_PORT, 27000);  // Why is this not done?
         conf.set(Service.CONF_SERVICE_ID, "TestStorage");
         System.setProperty(Service.CONF_SERVICE_ID, "TestStorage");
         return conf;
@@ -309,9 +309,13 @@ public class IngestTest extends NoExitTestCase {
 
     // with proper use of FilterChain
     public void testFullIngestWorkflow() throws Exception {
+        File dataLocation = new File("/tmp/summatest/data/5records");
         System.out.println("Note: This is a pseudo-unit-test as it requires "
                            + "that the test-folder 5records are copied to "
-                           + "/tmp/summatest/data");
+                           + dataLocation);
+
+        assertTrue("The test-data should be present at " + dataLocation,
+                   dataLocation.exists());
 
         int TIMEOUT = 10000;
 
