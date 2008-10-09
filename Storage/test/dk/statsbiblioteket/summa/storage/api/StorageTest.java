@@ -123,15 +123,15 @@ public class StorageTest extends TestCase {
         assertEquals(null, recs.get(0).getParentIds());
     }
 
-    public void testClearOne () throws Exception {
+    public void testClearOne() throws Exception {
         testAddOne();
         storage.clearBase(testBase1);
         assertBaseEmpty(testBase1);
     }
 
     public void testAddTwo () throws Exception {
-        Record rec1 = new Record (testId1, testBase1, testContent1);
-        Record rec2 = new Record (testId2, testBase1, testContent1);
+        Record rec1 = new Record(testId1, testBase1, testContent1);
+        Record rec2 = new Record(testId2, testBase1, testContent1);
 
         storage.flushAll (Arrays.asList(rec1, rec2));
 
@@ -201,8 +201,8 @@ public class StorageTest extends TestCase {
         assertEquals(2, recs.size());
 
         assertEquals(recP, recs.get(0));
-        assertEquals(recs.get(0).getChildren(), null);
-        assertEquals(recs.get(0).getChildIds(), recP.getChildIds());
+        assertEquals(null, recs.get(0).getChildren());
+        assertEquals(recP.getChildIds(), recs.get(0).getChildIds());
 
         assertEquals(recC1.getContentAsUTF8(), recs.get(1).getContentAsUTF8());
         assertEquals(recC1.getId(), recs.get(1).getId());
