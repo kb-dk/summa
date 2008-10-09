@@ -43,7 +43,7 @@ import org.apache.commons.logging.LogFactory;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class XMLSplitterFilter implements ObjectFilter {
+public class XMLSplitterFilter extends StreamController {
     private static Log log = LogFactory.getLog(XMLSplitterFilter.class);
 
     /**
@@ -148,190 +148,12 @@ public class XMLSplitterFilter implements ObjectFilter {
      */
     public static final String VALID_XML = "valid_xml";
 
-    /**
-     * Contains all target-specific settings.
-     */
-    public static class Target {
-        public String idPrefix = "";
-        public boolean collapsePrefix = true;
-        @SuppressWarnings({"DuplicateStringLiteralInspection"})
-        public String recordElement = "record";
-        public String idElement ="id";
-        public String idTag = "";
-        public String idNamespace = null;
-        public String base;
-        public boolean preserveNamespaces = true;
-        public boolean requireValid = false;
-
-        /**
-         * Create a new Target containing the target-specific information from
-         * configuration.
-         * @param configuration setup for the target.
-         */
-        public Target(Configuration configuration) {
-            idPrefix = configuration.getString(CONF_ID_PREFIX, idPrefix);
-            idNamespace = configuration.getString(CONF_ID_NAMESPACE, idNamespace);
-            collapsePrefix =
-                    configuration.getBoolean(CONF_COLLAPSE_PREFIX, collapsePrefix);
-            recordElement =
-                    configuration.getString(CONF_RECORD_ELEMENT, recordElement);
-            idElement = configuration.getString(CONF_ID_ELEMENT, idElement);
-            if (idElement.contains("#")) {
-                if (!idElement.endsWith("#") || idElement.startsWith("#")) {
-                    String oldIdElement = idElement;
-                    idTag = idElement.substring(idElement.indexOf("#")+1);
-                    idElement = idElement.substring(0, idElement.indexOf("#"));
-                    log.debug("split idElement '" + oldIdElement
-                              + "' into '" + idElement + "' # '" + idTag + "'");
-                } else {
-                    log.warn("Suspeciously looking idElement for Target: '"
-                             + idElement + "'");
-                }
-            }
-            try {
-                base = configuration.getString(CONF_BASE);
-                if ("".equals(base)) {
-                    throw new ConfigurationException("Base, as defined by "
-                                                     + CONF_BASE
-                                                     + ", must not be empty");
-                }
-            } catch (NullPointerException e) {
-                //noinspection DuplicateStringLiteralInspection
-                throw new ConfigurationException("Could not get " + CONF_BASE
-                                                 + " from configuration");
-            }
-            preserveNamespaces = configuration.getBoolean(CONF_PRESERVE_NAMESPACES,
-                                                          preserveNamespaces);
-            requireValid =
-                    configuration.getBoolean(CONF_REQUIRE_VALID, requireValid);
-        }
-
+    public XMLSplitterFilter(Configuration conf) {
+        super(conf);
+        log.info("Created XMLSplitterFilter");
     }
 
-    private Target target;
-    private ObjectFilter source;
-    private XMLSplitterParser parser = null;
-    private Payload payload = null;
-
-    public XMLSplitterFilter(Configuration configuration) {
-        target = new Target(configuration);
-        log.info("Created XMLSplitterFilter for base '" + target.base + "'");
+    protected Class<? extends StreamParser> getDefaultStreamParserClass() {
+        return XMLSplitterParser.class;
     }
-
-    public boolean hasNext() {
-        if (source == null) {
-            log.warn("No source specified");
-            return false;
-        }
-        if (payload == null) {
-            makePayload();
-        }
-        return payload != null;
-    }
-
-    public Payload next() {
-        if (source == null) {
-            throw new NoSuchElementException("No source specified for "
-                                             + "XMLSplitterFilter");
-        }
-        makePayload();
-        Payload newPayload = payload;
-        //noinspection AssignmentToNull
-        payload = null;
-        return newPayload;
-    }
-
-    public void remove() {
-        log.warn("Remove not supported in XMLSplitterFilter");
-    }
-
-    public void setSource(Filter filter) {
-        if (parser != null) {
-            throw new IllegalStateException("Parser already activated on old"
-                                            + " source");
-        }
-        if (filter instanceof ObjectFilter) {
-            source = (ObjectFilter)filter;
-        } else {
-            throw new IllegalArgumentException("XMLSplitterFilter can only be "
-                                               + "chained to ObjectFilters");
-        }
-    }
-
-    public boolean pump() throws IOException {
-        if (!hasNext()) {
-            return false;
-        }
-        Payload next = next();
-        if (next == null) {
-            return false;
-        }
-        next.close();
-        return true;
-    }
-
-    public void close(boolean success) {
-        if (source == null) {
-            log.warn("Cannot close as no source is specified");
-        } else {
-            if (parser != null) {
-                parser.stopParsing();
-            }
-            source.close(success);
-        }
-    }
-
-    /**
-     * If {@link #payload} is not already assigned, this method tries to
-     * generate the next payload, based on data from the source. If payload
-     * is already assigned, this method does nothing.
-     * </p><p>
-     * Newly created payloads will have a reference to the stream and the
-     * meta-info from the source, will have a newly created Record and will
-     * have no Document assigned.
-     */
-    private void makePayload() {
-        if (payload != null) {
-            log.trace("makePayload: payload already assigned");
-            return;
-        }
-        if (source == null) {
-            throw new IllegalStateException("No source defined");
-        }
-        while (payload == null) {
-            if (parser == null) {
-                if (!source.hasNext()) {
-                    log.debug("Source has no more stream payloads");
-                    return;
-                }
-                log.debug("Creating new parser for target " + target);
-                parser = new XMLSplitterParser(target);
-                Payload streamPayload = source.next();
-                log.debug("Opening stream payload " + payload);
-                parser.openPayload(streamPayload);
-            }
-            if (parser.hasNext()) {
-                try {
-                    payload = parser.next();
-                    return;
-                } catch (Exception e) {
-                    log.warn("Exception requesting payload from parser, "
-                             + "skipping to next stream payload");
-                    parser.stopParsing();
-                }
-            }
-            if (source.hasNext()) {
-                Payload streamPayload = source.next();
-                log.debug("Opening stream payload " + payload);
-                parser.openPayload(streamPayload);
-            } else {
-                log.debug("No more stream payloads available");
-                return;
-            }
-        }
-    }
-
 }
-
-
-

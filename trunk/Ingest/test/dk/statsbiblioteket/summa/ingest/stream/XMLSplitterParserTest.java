@@ -177,6 +177,10 @@ public class XMLSplitterParserTest extends TestCase {
                    parser.isNamespaceAware());
     }
 
+/*    public void testDumpMultiXML() {
+        System.out.println(multiXML);
+    }*/
+
     private Configuration getBasicConfiguration() {
         Configuration conf = Configuration.newMemoryBased();
         conf.set(XMLSplitterFilter.CONF_BASE, "testbase");
@@ -191,12 +195,11 @@ public class XMLSplitterParserTest extends TestCase {
 
     public void testSimpleParse() throws Exception {
         Configuration conf = getBasicConfiguration();
-        XMLSplitterFilter.Target target = new XMLSplitterFilter.Target(conf);
-        XMLSplitterParser parser = new XMLSplitterParser(target);
+        XMLSplitterParser parser = new XMLSplitterParser(conf);
         ByteArrayInputStream stream =
                 new ByteArrayInputStream(singleXML.getBytes("utf-8"));
 
-        parser.openPayload(new Payload(stream));
+        parser.open(new Payload(stream));
         assertTrue("parser should have something",
                    parser.hasNext());
         Payload payload = parser.next();
@@ -210,17 +213,18 @@ public class XMLSplitterParserTest extends TestCase {
 
     public void testMultiParse() throws Exception {
         Configuration conf = getBasicConfiguration();
-        XMLSplitterFilter.Target target = new XMLSplitterFilter.Target(conf);
-        XMLSplitterParser parser = new XMLSplitterParser(target);
+        XMLSplitterParser parser = new XMLSplitterParser(conf);
         ByteArrayInputStream stream =
                 new ByteArrayInputStream(multiXML.getBytes("utf-8"));
 
-        parser.openPayload(new Payload(stream));
+        parser.open(new Payload(stream));
         assertTrue("parser should have something",
                    parser.hasNext());
         Payload payload = parser.next();
         assertNotNull("Something should be returned by parser.next()",
                       payload);
+        assertTrue("parser should have something after the first next",
+                   parser.hasNext());
         assertNotNull("Something should be returned by next() second call",
                       parser.next());
         assertFalse("After two requests, the parser should be empty",
@@ -233,12 +237,11 @@ public class XMLSplitterParserTest extends TestCase {
         Configuration conf = getBasicConfiguration();
         conf.set(XMLSplitterFilter.CONF_RECORD_ELEMENT, "outer");
         conf.set(XMLSplitterFilter.CONF_ID_ELEMENT, "nearlyempty#sometag");
-        XMLSplitterFilter.Target target = new XMLSplitterFilter.Target(conf);
-        XMLSplitterParser parser = new XMLSplitterParser(target);
+        XMLSplitterParser parser = new XMLSplitterParser(conf);
         ByteArrayInputStream stream =
                 new ByteArrayInputStream(noNameXML.getBytes("utf-8"));
 
-        parser.openPayload(new Payload(stream));
+        parser.open(new Payload(stream));
         assertTrue("parser should have something",
                    parser.hasNext());
         Payload payload = parser.next();
@@ -250,6 +253,3 @@ public class XMLSplitterParserTest extends TestCase {
 
     // Parseexception
 }
-
-
-
