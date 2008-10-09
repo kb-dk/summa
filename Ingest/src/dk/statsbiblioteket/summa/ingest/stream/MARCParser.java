@@ -22,42 +22,44 @@
  */
 package dk.statsbiblioteket.summa.ingest.stream;
 
-import java.util.Iterator;
+import java.util.concurrent.ArrayBlockingQueue;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.common.Record;
 
 /**
- * Parses a stream (provided by a Payload) into multiple Records wrapped in
- * Payloads. Normally used by  {@link StreamController}.
- * A StreamParser is reusable and is cleared and initialized by {@link #open}.
+ * Takes a Stream as input, splits into MARC-records and creates Summa-Records
+ * with the content. As part of the split, the following properties are
+ * extracted from the MARC-record:
+ * <ul>
+ *   <li>recordID</li>
+ *   <li>state (deleted or not)</li>
+ *   <li>parent/child relations</li>
+ * </ul>
  * </p><p>
- * Note: Implemenetations must return false for hasNext if open has not been
- * called.
+ * The extraction of recordID and parent/chile-relations is non-trivial due to
+ * the nature of MARC, so the input is parsed. A streaming parser is used as
+ * performance is prioritized over clarity (the streaming parser has less
+ * GC overhead than a full DOM build). 
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.QA_NEEDED,
+        state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public interface StreamParser extends Iterator<Payload>, Configurable {
-    /**
-     * Clears and initializes the parser with the stream from the given Payload.
-     * @param streamPayload the Payload with the stream to parse.
-     */
-    public void open(Payload streamPayload);
+public class MARCParser  {
+    private static Log log = LogFactory.getLog(MARCParser.class);
 
-    /**
-     * If a parsing is underway, it is stopped and any queued Payloads are
-     * discarded. The StreamParser can be reused after stop.
-     */
-    public void stop();
+    private Payload payload;
+    private ArrayBlockingQueue<Record> queue;
+    
 
-    /**
-     * Shuts down the parser, stopping running Threads and the like. The state
-     * of the parser is undefined after close and it is not guaranteed that it
-     * can be reused.
-     */
-    public void close();
+    public void open(Payload streamPayload) {
+        //noinspection DuplicateStringLiteralInspection
+        log.debug("open(" + payload + ") called");
+        payload = streamPayload;
+    }
+
+
 }
