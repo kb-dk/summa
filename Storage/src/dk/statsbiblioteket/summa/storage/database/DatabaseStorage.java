@@ -269,7 +269,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
         String relationsClause = RECORDS + "." + ID_COLUMN + "="
                                 + RELATIONS + "." + PARENT_ID_COLUMN
-                                + " AND " + RECORDS + "." + ID_COLUMN + "="
+                                + " OR " + RECORDS + "." + ID_COLUMN + "="
                                     + RELATIONS + "." + CHILD_ID_COLUMN;
 
         String allQuery = "SELECT " + allCells
@@ -637,28 +637,41 @@ public abstract class DatabaseStorage extends StorageBase {
 
     public void flush(Record record) throws RemoteException {
         if (log.isTraceEnabled()) {
-            log.trace("Flushing " + record);
+            log.trace("Flushing " + record.toString(true));
+        } else if (log.isDebugEnabled()) {
+            log.trace("Flushing " + record.toString(false));
         }
 
-        /*FIXME: Re-impl this method */
+        /* We must create the relations before the record or else
+         * updateRelations() will recurse infinitely */
+        try {
+            createRelations (record);
+        } catch (SQLException e) {
+            // FIXME: This is quite bad because we don't have transaction safety
+            log.error ("Error creating relations for record:\n"
+                       + record.toString() + "\n"
+                       + "Error was: " + e.getMessage()+ "\n"
+                       + "Trace:", e);
+            throw new RemoteException("Error creating relations for '"
+                                      + record.getId() +"':" + e.getMessage(),
+                                      e);
+        }
 
         if (record.isDeleted()){
             log.debug("Deleting record '" + record.getId() + "' from base '"
                       + record.getBase() + "'");
             deleteRecord(record.getId());
-        } else if (record.isNew()){
-            log.debug("Creating new record '" + record.getId() + "' from base '"
-                      + record.getBase() + "'");
-            createNewRecord(record);
-        } else if (record.isModified()){
-            log.debug("Updating record '" + record.getId() + "' from base '"
-                      + record.getBase() + "'");
-            updateRecord(record);
         } else {
-            throw new RemoteException("Illegal State",
-                                      new IllegalStateException(
-                                              record + " not in a flushable "
-                                              + "state"));
+            createNewRecord(record);
+        }
+
+        /* Recursively add child records */
+        if (record.getChildren() != null) {
+            log.debug ("Flushing " + record.getChildren().size()
+                       + " nested child records of '" + record.getId() + "'");
+            for (Record child : record.getChildren()) {
+                flush(child);
+            }
         }
     }
 
@@ -674,9 +687,54 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
+    private void createRelations (Record rec) throws SQLException {
+        // FIXME: Some transactional safety here would be nice
+        if (rec.getChildIds() != null) {
+            for (String childId : rec.getChildIds()) {
+                if (log.isTraceEnabled()) {
+                    log.trace ("Creating relation: " + rec.getId()
+                               + " -> " + childId);
+                }
+                stmtCreateRelation.setString(1, rec.getId());
+                stmtCreateRelation.setString(2, childId);
+
+                try {
+                    stmtCreateRelation.execute();
+                } catch (SQLIntegrityConstraintViolationException e) {
+                    if (log.isDebugEnabled()) {
+                        log.debug ("Relation "+ rec.getId() + " -> "
+                                   + childId + ", already known");
+                    }
+                }
+            }
+        }
+
+        if (rec.getParentIds() != null) {
+            for (String parentId : rec.getParentIds()) {
+                if (log.isTraceEnabled()) {
+                    log.trace ("Creating relation: " + parentId
+                               + " -> " + rec.getId());
+                }
+                stmtCreateRelation.setString(1, parentId);
+                stmtCreateRelation.setString(2, rec.getId());
+
+                try {
+                    stmtCreateRelation.execute();
+                } catch (SQLIntegrityConstraintViolationException e) {
+                    if (log.isDebugEnabled()) {
+                        log.debug ("Relation "+ parentId + " -> "
+                                   + rec.getId() + ", already known");
+                    }
+                }
+            }
+        }
+    }
+
     private void createNewRecord(Record record) throws RemoteException {
-        // TODO: Consider calling modify if the record already exists
         // FIXME: Add child records recursively (parents?)
+
+        log.debug("Creating new record '" + record.getId() + "' from base '"
+                      + record.getBase() + "'");
 
         long now = System.currentTimeMillis();
         Timestamp nowStamp = new Timestamp(now);
@@ -693,11 +751,23 @@ public abstract class DatabaseStorage extends StorageBase {
                                          record.getMeta().toFormalBytes() :
                                          new byte[0]);
             stmtCreateRecord.execute();
+        } catch (SQLIntegrityConstraintViolationException e) {
+            log.debug ("Record '" + record.getId() + "' already stored. "
+                       + "Updating instead");
+            updateRecord(record);
+            return;
         } catch (SQLException e) {
             throw new RemoteException("SQLException creating new record '"
                                       + record.getId() + "'", e);
         }
-        updateRelations(record);
+
+        try {
+            updateRelations(record);
+        } catch (IOException e) {
+            throw new RemoteException("Error updating relations for '"
+                                      + record.getId() + "': " + e.getMessage(),
+                                      e);
+        }
     }
 
     /* Note that creationTime aren't touched */
@@ -710,7 +780,7 @@ public abstract class DatabaseStorage extends StorageBase {
             stmtUpdateRecord.setString(1, record.getBase());
             stmtUpdateRecord.setInt(2, boolToInt(record.isDeleted()));
             stmtUpdateRecord.setInt(3, boolToInt(record.isIndexable()));
-            stmtCreateRecord.setTimestamp(4, nowStamp);
+            stmtUpdateRecord.setTimestamp(4, nowStamp);
             stmtUpdateRecord.setBytes(5, Zips.gzipBuffer(record.getContent()));
             stmtUpdateRecord.setBytes(6, record.hasMeta() ?
                                          record.getMeta().toFormalBytes() :
@@ -735,12 +805,20 @@ public abstract class DatabaseStorage extends StorageBase {
             throw new RemoteException("SQLException updating record '"
                                       + record.getId() + "'", e);
         }
-        updateRelations(record);
+
+        try {
+            updateRelations(record);
+        } catch (IOException e) {
+            throw new RemoteException("Error updating relations for '"
+                                      + record.getId() + "': " + e.getMessage(),
+                                      e);
+        }
      }
 
     private int deleteRecord(String id) throws RemoteException {
         long now = System.currentTimeMillis();
         Timestamp nowStamp = new Timestamp(now);
+
         try {
             stmtDeleteRecord.setTimestamp(1, nowStamp);
             stmtDeleteRecord.setBoolean(2, true);
@@ -752,6 +830,8 @@ public abstract class DatabaseStorage extends StorageBase {
             throw new RemoteException("SQLException deleting record '"
                                       + id + "'", e);
         }
+
+        // FIXME: Should we updateRelations()?
     }
 
     public void touchRecord(String id, long lastModified) throws
@@ -850,16 +930,21 @@ public abstract class DatabaseStorage extends StorageBase {
      * <p/>
      * This method will position the result set at the beginning of the next
      * record
+     *
      * @param resultSet     a SQL result set. The result set will be stepped
      *                      to the beginning of the following record
+     * @param iter          a result iterator on which to update record
+     *                      availability via {@link ResultIterator#setHasNext}
      * @return              a Record based on the result set.
      * @throws SQLException if there was a problem extracting values from the
      *                      SQL result set.
      * @throws IOException  If the data (content) could not be uncompressed
      *                      with gunzip.
      */
-    protected static Record scanRecord(ResultSet resultSet) throws SQLException,
-                                                             IOException {
+    protected static Record scanRecord(ResultSet resultSet, ResultIterator iter)
+                                              throws SQLException, IOException {
+
+        boolean hasNext;
 
         String id = resultSet.getString(ID_COLUMN);
         String base = resultSet.getString(BASE_COLUMN);
@@ -873,14 +958,24 @@ public abstract class DatabaseStorage extends StorageBase {
         byte[] meta = resultSet.getBytes(META_COLUMN);
 
         if (log.isTraceEnabled()) {
-            log.trace ("Constructing record: " + id);
+            log.trace ("Scanning record: " + id);
+        }
+
+        /* If the record is listed as parent or child of something this will
+         * appear in the parent/child columns, so ignore these cases */
+        if (id.equals(parentIds)) {
+            parentIds = null;
+        }
+        if (id.equals(childIds)) {
+            childIds = null;
         }
 
         /* The way the result is returned from the DB is several identical rows
          * with different parent and child column values. We need to iterate
          * through all rows with the same id and collect the different parents
          * and children listed */
-        while (resultSet.next() && id.equals(resultSet.getString(ID_COLUMN))) {
+        while ((hasNext = resultSet.next()) &&
+               id.equals(resultSet.getString(ID_COLUMN))) {
 
             /* If we log on debug we do sanity checking of the result set.
             * Of course the parent and child columns should not be checked,
@@ -915,14 +1010,33 @@ public abstract class DatabaseStorage extends StorageBase {
             String newParent = resultSet.getString (PARENT_ID_COLUMN);
             String newChild = resultSet.getString (CHILD_ID_COLUMN);
 
-            parentIds = parentIds != null ?
+            /* If the record is listed as parent or child of something this
+             * will appear in the parent/child columns, so ignore these cases */
+            if (id.equals(newParent)) {
+                newParent = null;
+            }
+            if (id.equals(newChild)) {
+                newChild = null;
+            }
+
+            if (newParent != null) {
+                parentIds = parentIds != null ?
                                 (parentIds + ";" + newParent) : newParent;
-            childIds = childIds != null ?
+            }
+
+            if (newChild != null) {
+                childIds = childIds != null ?
                                 (childIds + ";" + newChild) : newChild;
+            }
+
             if (log.isTraceEnabled()) {
                 log.trace ("For record '" + id + "', collected children: "
                            + childIds + ", collected parents: " + parentIds);
             }
+        }
+
+        if (iter != null) {
+            iter.setHasNext (hasNext);
         }
 
         /* The result set cursor will now be on the start of the next record */
@@ -937,6 +1051,15 @@ public abstract class DatabaseStorage extends StorageBase {
                           Record.idStringToList(parentIds),
                           Record.idStringToList(childIds),
                           StringMap.fromFormal(meta));
+    }
+
+    /**
+     * As {@link #scanRecord(ResultSet,ResultIterator)} with
+     * {@code resultSet = null}.
+     */
+    public Record scanRecord (ResultSet resultSet)
+                                              throws SQLException, IOException {
+        return scanRecord(resultSet, null);
     }
 
     /**
@@ -1011,14 +1134,21 @@ public abstract class DatabaseStorage extends StorageBase {
         public Record getRecord() throws SQLException, IOException {
             lastAccess = System.currentTimeMillis();
 
-            /* scanRecord() steps the resultSet to the next record */
-            Record record = DatabaseStorage.scanRecord(resultSet);
+            /* scanRecord() steps the resultSet to the next record.
+             * It will update the state of the iterator appropriately */
+            Record record = DatabaseStorage.scanRecord(resultSet, this);
 
             if (log.isTraceEnabled()) {
                 log.trace("getRecord returning '" + record.getId() + "'");
             }
-            
-            hasNext = !resultSet.isAfterLast();
+
+            /* The naive solution top update hasNext is to just do:
+             *   hasNext = !resultSet.isAfterLast();
+             * here, but the ResultSet type does not allow this unless it is
+             * of a scrollable type, which do not use for resource limitation
+             * purposes. Instead the hasNext state is updated ny scanRecord()
+             */            
+
             return record;
 //            rs.getStatement().close();//note: rs is closed when stmt is closed
         }
@@ -1028,6 +1158,15 @@ public abstract class DatabaseStorage extends StorageBase {
 //            rs.getStatement().close();//note: rs is closed when stmt is closed
 //            resultSet.close();
             // TODO: Implement this
+        }
+
+        /**
+         * Called from
+         * {@link DatabaseStorage#scanRecord(ResultSet,ResultIterator)}.
+         * @param hasNext
+         */
+        public void setHasNext(boolean hasNext) {
+            this.hasNext = hasNext;
         }
     }
 

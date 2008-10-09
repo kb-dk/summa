@@ -205,9 +205,7 @@ public class Record implements Serializable, Comparable{
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public void init(String id, String base, boolean deleted, boolean indexable,
                      byte[] data, long creationTime, long lastModified,
-                     List<String> parents, List<String> children, StringMap meta){
-        log.trace("Creating Record with id '" + id + "' from base '" + base
-                  + "'");
+                     List<String> parents, List<String> children, StringMap meta){           
         setId(id);
         setBase(base);
         setDeleted(deleted);
@@ -219,8 +217,11 @@ public class Record implements Serializable, Comparable{
         setChildIds(children);
         setChildren(null);
         this.meta = meta;
-        if (log.isDebugEnabled()) {
-            log.debug("Created " + toString());
+
+        if (log.isTraceEnabled()) {
+            log.trace("Created " + toString(true));
+        } else if (log.isDebugEnabled()) {
+            log.trace("Created " + toString());
         }
     }
 
@@ -583,6 +584,8 @@ public class Record implements Serializable, Comparable{
         return "Record [id(" + getId() + "), base(" + getBase()
                + "), deleted(" + isDeleted() + "), indexable(" + isIndexable()
                + "), data-length(" + getLength()
+               + "), num-children(" + (childIds == null ? 0 : childIds.size())
+               + "), num-parents(" + (parentIds == null ? 0 : parentIds.size())
                + ")" + (verbose ?
                         ", creationTime(" + timeToString(getCreationTime())
                         + "), modificationTime("
