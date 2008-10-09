@@ -115,8 +115,12 @@ public class StorageTest extends TestCase {
         List<Record> recs = storage.getRecords(Arrays.asList(testId1), 0);
 
         assertEquals(1, recs.size());
-        assertEquals(rec.getContentAsUTF8(), recs.get(0).getContentAsUTF8());
-        assertEquals(rec.getId(), recs.get(0).getId());
+        assertEquals(rec, recs.get(0));
+
+        assertEquals(null, recs.get(0).getChildren());
+        assertEquals(null, recs.get(0).getChildIds());
+        assertEquals(null, recs.get(0).getParents());
+        assertEquals(null, recs.get(0).getParentIds());
     }
 
     public void testClearOne () throws Exception {
@@ -135,11 +139,18 @@ public class StorageTest extends TestCase {
                                                0);
 
         assertEquals(2, recs.size());
-        assertEquals(rec1.getContentAsUTF8(), recs.get(0).getContentAsUTF8());
-        assertEquals(rec1.getId(), recs.get(0).getId());
 
-        assertEquals(rec2.getContentAsUTF8(), recs.get(1).getContentAsUTF8());
-        assertEquals(rec2.getId(), recs.get(1).getId());
+        assertEquals(rec1, recs.get(0));
+        assertEquals(null, recs.get(0).getChildIds());
+        assertEquals(null, recs.get(0).getChildren());
+        assertEquals(null, recs.get(0).getParentIds());
+        assertEquals(null, recs.get(0).getParents());
+
+        assertEquals(rec2, recs.get(1));
+        assertEquals(null, recs.get(1).getChildIds());
+        assertEquals(null, recs.get(1).getChildren());
+        assertEquals(null, recs.get(1).getParentIds());
+        assertEquals(null, recs.get(1).getParents());
     }
 
     public void testClearTwo () throws Exception {

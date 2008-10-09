@@ -509,7 +509,7 @@ public class Record implements Serializable, Comparable{
 
     /**
      * Compares this Record with the specified Record for order.
-     * The natural ordering on records is defined to be lexicographical by name (bib#/id).
+     * The natural ordering on records is defined to be lexicographical by id.
      * @param o parameter object to be compared to this record
      * @return a negative integer, zero, or a positive integer as the name of this record is
      *         lexicographically less than, equal to, or greater than the name of the record argument.
@@ -613,7 +613,7 @@ public class Record implements Serializable, Comparable{
     }
 
     /**
-     * Converts a String-encoded list of children-ID's to a proper list.
+     * Converts a String-encoded list of record-ID's to a proper list.
      * The String-encoded list is the ID's delimited by ';'.
      * @param ids a ';'-delimited string with children-ID's.
      * @return a List with the children-ID's. If the input-string is null or
@@ -628,20 +628,20 @@ public class Record implements Serializable, Comparable{
     }
 
     /**
-     * Converts a proper list of children-ID's to a String-encoded list.
+     * Converts a proper list of record-ID's to a String-encoded list.
      * The String-encoded list is the ID's delimited by ';'.
-     * @param children as a proper list of children-ID's.
+     * @param ids as a proper list of children-ID's.
      * @return a ';'-delimited string with children-ID's. If the input-list is
      *         null or of length 0, null is returned.
      */
-    public static String childrenListToString(List<String> children) {
-        if (children == null || children.size() == 0) {
+    public static String idListToString(List<String> ids) {
+        if (ids == null || ids.size() == 0) {
             return null;
         }
-        StringWriter sw = new StringWriter(children.size()*256);
-        for (int i = 0 ; i < children.size() ; i++) {
-            sw.append(children.get(i));
-            if (i < children.size()-1) {
+        StringWriter sw = new StringWriter(ids.size()*256);
+        for (int i = 0 ; i < ids.size() ; i++) {
+            sw.append(ids.get(i));
+            if (i < ids.size()-1) {
                 sw.append(ID_DELIMITER);
             }
         }
