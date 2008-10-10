@@ -111,8 +111,19 @@ public abstract class StorageBase extends UnicastRemoteObject
         return records;
     }
 
-    protected void updateRelations(Record record)
-                                                            throws IOException {
+    /**
+     * Update all {@link Record}s related {@code record}, fixing parent/child
+     * relationships and adding missing relations. This method does not
+     * write the actual relations of {@code record} this is still the job of
+     * {@link #flush}.
+     * <p/>
+     * This method is only a generic implementation and can likely be optimized
+     * a great deal for a concrete storage implementation.
+     *
+     * @param record the record to update related records for
+     * @throws java.io.IOException on communication errors with the db
+     */
+    protected void updateRelations(Record record) throws IOException {
         if (log.isTraceEnabled()) {
             log.trace("updateRelations("+record.getId()+")");
         }
