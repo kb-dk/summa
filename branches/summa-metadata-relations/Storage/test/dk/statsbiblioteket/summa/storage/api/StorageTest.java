@@ -128,6 +128,8 @@ public class StorageTest extends TestCase {
         assertEquals(null, recs.get(0).getChildIds());
         assertEquals(null, recs.get(0).getParents());
         assertEquals(null, recs.get(0).getParentIds());
+
+        assertBaseCount(testBase1, 1);
     }
 
     public void testClearOne() throws Exception {
@@ -150,6 +152,8 @@ public class StorageTest extends TestCase {
         assertEquals(Arrays.asList(testId2), recs.get(0).getChildIds());
         assertEquals(null, recs.get(0).getParents());
         assertEquals(null, recs.get(0).getParentIds());
+
+        assertBaseCount(testBase1, 1);
     }
 
     public void testAddOneWithTwoChildIds() throws Exception {
@@ -166,6 +170,8 @@ public class StorageTest extends TestCase {
         assertEquals(Arrays.asList(testId2, testId3), recs.get(0).getChildIds());
         assertEquals(null, recs.get(0).getParents());
         assertEquals(null, recs.get(0).getParentIds());
+
+        assertBaseCount(testBase1, 1);
     }
 
     public void testAddOneWithOneParentId() throws Exception {
@@ -182,6 +188,8 @@ public class StorageTest extends TestCase {
         assertEquals(null, recs.get(0).getChildIds());
         assertEquals(null, recs.get(0).getParents());
         assertEquals(Arrays.asList(testId2), recs.get(0).getParentIds());
+
+        assertBaseCount(testBase1, 1);
     }
 
     public void testAddOneWithTwoParentIds() throws Exception {
@@ -198,6 +206,8 @@ public class StorageTest extends TestCase {
         assertEquals(null, recs.get(0).getChildIds());
         assertEquals(null, recs.get(0).getParents());
         assertEquals(Arrays.asList(testId2, testId3), recs.get(0).getParentIds());
+
+        assertBaseCount(testBase1, 1);
     }
 
     public void testAddTwo () throws Exception {
@@ -222,6 +232,8 @@ public class StorageTest extends TestCase {
         assertEquals(null, recs.get(1).getChildren());
         assertEquals(null, recs.get(1).getParentIds());
         assertEquals(null, recs.get(1).getParents());
+
+        assertBaseCount(testBase1, 2);
     }
 
     public void testClearTwo () throws Exception {
@@ -293,6 +305,8 @@ public class StorageTest extends TestCase {
         assertEquals(recC1.getId(), recs.get(1).getId());
         assertEquals(recC1.getBase(), recs.get(1).getBase());
         assertEquals(recC1.getParentIds(), recs.get(1).getParentIds());
+
+        assertBaseCount(testBase1, 3);
     }
 
     public void testExpandLinkedRecord () throws Exception {
@@ -391,12 +405,45 @@ public class StorageTest extends TestCase {
 
         assertNull(recs.get(3).getChildren());
         assertNull(recs.get(3).getChildIds());
+
+        assertBaseCount(testBase1, 4);
     }
 
-    /*
-    TODO
-     - test mtime/ctime and repeated adding of same rec
+    /**
+     * Test that ctime is preserved but mtime is updated when flushing the same
+     * tecord two times
      */
+    public void testTimestampUpdates () throws Exception {
+        Record r1 = new Record (testId1, testBase1, testContent1);
 
+        storage.flush(r1);
+        Record r2 = storage.getRecords(Arrays.asList(testId1), 0).get(0);
+
+        assertEquals(r1, r2);
+        long ctime = r2.getCreationTime();
+        long mtime = r2.getModificationTime();
+
+        storage.flush(r1);
+        r2 = storage.getRecords(Arrays.asList(testId1), 0).get(0);
+
+        assertEquals(ctime, r2.getCreationTime());
+        assertTrue(mtime < r2.getModificationTime());
+    }
+
+    public void testRecordMetaTags () throws Exception {
+        Record r1 = new Record (testId1, testBase1, testContent1);
+        r1.addMeta("foo", "bar");
+        r1.addMeta("bork", "boo");
+
+        storage.flush(r1);
+        Record r2 = storage.getRecords(Arrays.asList(testId1), 0).get(0);
+        
+        assertEquals(2, r2.getMeta().size());
+        assertEquals(r1.getMeta("foo"), r2.getMeta("foo"));
+        assertEquals(r1.getMeta("bork"), r2.getMeta("bork"));
+        assertEquals(r1, r2);
+
+        assertBaseCount(testBase1, 1);
+    }
 
 }
