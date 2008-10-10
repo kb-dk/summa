@@ -484,6 +484,14 @@ public class Record implements Serializable, Comparable{
         return meta == null ? null :meta.get(key);
     }
 
+    public void setMeta (StringMap meta) {
+        this.meta = meta;
+    }
+    
+    public void addMeta (String key, String value) {
+        getMeta().put(key, value);
+    }
+
     /**
      * @return true if a meta-map has been created. Used for time/space
      *         optimization. 
