@@ -163,6 +163,7 @@ public abstract class DatabaseStorage extends StorageBase {
     private PreparedStatement stmtCreateRecord;
     private PreparedStatement stmtUpdateRecord;
     private PreparedStatement stmtTouchRecord;
+    private PreparedStatement stmtTouchParents;
     private PreparedStatement stmtGetRecordState;
     private PreparedStatement stmtGetChildren;
     private PreparedStatement stmtGetParents;
@@ -382,6 +383,19 @@ public abstract class DatabaseStorage extends StorageBase {
                   + "'");
         stmtTouchRecord = prepareStatement(touchRecordQuery);
 
+        /* touchParents */
+        String touchParentsQuery = "UPDATE " + RECORDS
+                                + " SET " + MTIME_COLUMN + "=? "
+                                + " WHERE " + ID_COLUMN + " IN ("
+                                + " SELECT " + PARENT_ID_COLUMN
+                                + " FROM " + RELATIONS
+                                + " WHERE " + CHILD_ID_COLUMN + "=? )";
+
+
+        log.debug("Preparing query touchParents with '" + touchParentsQuery
+                  + "'");
+        stmtTouchParents = prepareStatement(touchParentsQuery);
+
         /* getRecordState (internal use) */
         String getRecordStateQuery = "SELECT " + BASE_COLUMN
                                    + "," + DELETED_COLUMN
@@ -397,7 +411,7 @@ public abstract class DatabaseStorage extends StorageBase {
                                 + " FROM " + RELATIONS
                                 + " JOIN " + RECORDS
                                 + " ON " + RECORDS + "." + ID_COLUMN + "="
-                                          + RELATIONS + "." + PARENT_ID_COLUMN
+                                          + RELATIONS + "." + CHILD_ID_COLUMN
                                 + " WHERE " + RELATIONS + "."
                                             + PARENT_ID_COLUMN + "=?"
                                 + " ORDER BY " + RECORDS + "." + ID_COLUMN;
@@ -410,7 +424,7 @@ public abstract class DatabaseStorage extends StorageBase {
                                 + " FROM " + RELATIONS
                                 + " JOIN " + RECORDS
                                 + " ON " + RECORDS + "." + ID_COLUMN + "="
-                                          + RELATIONS + "." + CHILD_ID_COLUMN
+                                          + RELATIONS + "." + PARENT_ID_COLUMN
                                 + " WHERE " + RELATIONS + "."
                                             + CHILD_ID_COLUMN + "=?" 
                                 + " ORDER BY " + RECORDS + "." + ID_COLUMN;
@@ -623,21 +637,6 @@ public abstract class DatabaseStorage extends StorageBase {
             log.trace("Flushing " + record.toString(false));
         }
 
-        /* We must create the relations before the record or else
-         * updateRelations() will recurse infinitely */
-        try {
-            createRelations (record);
-        } catch (SQLException e) {
-            // FIXME: This is quite bad because we don't have transaction safety
-            log.error ("Error creating relations for record:\n"
-                       + record.toString() + "\n"
-                       + "Error was: " + e.getMessage()+ "\n"
-                       + "Trace:", e);
-            throw new RemoteException("Error creating relations for '"
-                                      + record.getId() +"':" + e.getMessage(),
-                                      e);
-        }
-
         if (record.isDeleted()){
             log.debug("Deleting record '" + record.getId() + "' from base '"
                       + record.getBase() + "'");
@@ -654,6 +653,122 @@ public abstract class DatabaseStorage extends StorageBase {
                 flush(child);
             }
         }
+
+        /* Touch parents recursively upwards */
+        try {
+            touchParents(record.getId());
+        } catch (IOException e) {
+            // Consider this non-fatal
+            log.error("Failed to touch parents of '" + record.getId() + "': "
+                      + e.getMessage(), e);
+        }
+
+    }
+
+    /* Recursively touch parents upwards */
+    private void touchParents(String id) throws IOException {
+        if (log.isTraceEnabled()) {
+            log.trace ("Touching parents of '" + id + "'");
+        }
+
+        try {
+            long now = System.currentTimeMillis();
+            Timestamp nowStamp = new Timestamp(now);
+            stmtTouchParents.setTimestamp (1, nowStamp);
+            stmtTouchParents.setString(2, id);
+            stmtTouchParents.execute();
+        } catch (SQLException e) {
+            log.error ("Failed to touch parents of '" + id + "': "
+                       + e.getMessage(), e);
+            // Consider this non-fatal
+            return;
+        }
+
+        // Recurse upwards
+        List<Record> parents = getParents(id);
+        for (Record parent : parents) {
+            touchParents(parent.getId());
+        }
+    }
+
+    /**
+     * Get all immediate parent records of the record with the given id.
+     * @param id the id of the record to look up parents for
+     * @return A list of parent records. This list will be empty if there are no
+     *         parents
+     * @throws RemoteException on communication errors with the db
+     */
+    protected List<Record> getParents (String id) throws RemoteException {
+        List<Record> parents = new ArrayList<Record>(1);
+
+        try {
+            stmtGetParents.setString(1, id);
+            stmtGetParents.execute();
+
+            ResultSet results = stmtGetParents.getResultSet();
+            ResultIterator iter = new ResultIterator(results);
+
+            while (iter.hasNext()) {
+                try {
+                    parents.add(scanRecord(results, iter));
+                } catch (IOException e) {
+                    throw new RemoteException("Error scanning parent records "
+                                              + "for '" + id + "': "
+                                              + e.getMessage(), e);
+                }
+            }
+
+            if (log.isTraceEnabled()) {
+                log.trace ("Looked up parents for '" + id +"': "
+                           + Strings.join (parents, ";"));
+            }
+
+            return parents;
+
+        } catch (SQLException e) {
+            throw new RemoteException("Failed to get parents for record '"
+                                      + id + "': " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Get all immediate child records of the record with the given id.
+     * @param id the id of the record to look up children for
+     * @return A list of child records. This list will be empty if there are no
+     *         parents
+     * @throws RemoteException on communication errors with the db
+     */
+    protected List<Record> getChildren (String id) throws RemoteException {
+        List<Record> parents = new ArrayList<Record>(3);
+
+        try {
+            stmtGetChildren.setString(1, id);
+            stmtGetChildren.execute();
+
+            ResultSet results = stmtGetChildren.getResultSet();
+            ResultIterator iter = new ResultIterator(results);
+
+            while (iter.hasNext()) {
+                try {
+                    parents.add(scanRecord(results, iter));
+                } catch (IOException e) {
+                    throw new RemoteException("Error scanning child records "
+                                              + "for '" + id + "': "
+                                              + e.getMessage(), e);
+                }
+            }
+
+            if (log.isTraceEnabled()) {
+                log.trace ("Looked up children for '" + id +"': "
+                           + Strings.join (parents, ";"));
+            }
+
+            return parents;
+
+        } catch (SQLException e) {
+            throw new RemoteException("Failed to get children for record '"
+                                      + id + "': " + e.getMessage(), e);
+        }
     }
 
     public void clearBase (String base) throws RemoteException {
@@ -668,6 +783,7 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
+    /* Create parent/child and child/parent relations for the given record */
     private void createRelations (Record rec) throws SQLException {
         // FIXME: Some transactional safety here would be nice
         if (rec.getChildIds() != null) {
@@ -712,8 +828,6 @@ public abstract class DatabaseStorage extends StorageBase {
     }
 
     private void createNewRecord(Record record) throws RemoteException {
-        // FIXME: Add child records recursively (parents?)
-
         log.debug("Creating new record '" + record.getId() + "' from base '"
                       + record.getBase() + "'");
 
@@ -742,10 +856,20 @@ public abstract class DatabaseStorage extends StorageBase {
                                       + record.getId() + "'", e);
         }
 
+        /* We must create the relations before calling updateRelations() or else
+         * said method will recurse infinitely */
+        try {
+            createRelations(record);
+        } catch (SQLException e) {
+            throw new RemoteException("Error creating relations for '"
+                                      + record.getId() + "': " + e.getMessage(),
+                                      e);
+        }
+
         try {
             updateRelations(record);
         } catch (IOException e) {
-            throw new RemoteException("Error updating relations for '"
+            throw new RemoteException("Error updating related records for '"
                                       + record.getId() + "': " + e.getMessage(),
                                       e);
         }
@@ -787,6 +911,16 @@ public abstract class DatabaseStorage extends StorageBase {
                                       + record.getId() + "'", e);
         }
 
+        /* We must create the relations before calling updateRelations() or else
+         * said method will recurse infinitely */
+        try {
+            createRelations(record);
+        } catch (SQLException e) {
+            throw new RemoteException("Error creating relations for '"
+                                      + record.getId() + "': " + e.getMessage(),
+                                      e);
+        }
+
         try {
             updateRelations(record);
         } catch (IOException e) {
@@ -815,7 +949,7 @@ public abstract class DatabaseStorage extends StorageBase {
         // FIXME: Should we updateRelations()?
     }
 
-    public void touchRecord(String id, long lastModified) throws
+    /*public void touchRecord(String id, long lastModified) throws
                                                            RemoteException {
         // TODO: Check for existence before touching
         try {
@@ -826,7 +960,7 @@ public abstract class DatabaseStorage extends StorageBase {
             throw new RemoteException("SQLException touching record '"
                                       + id + "'", e);
         }
-    }
+    }*/
 
     /**
      * Creates the tables {@link #RECORDS} and {@link #RELATIONS} and relevant
@@ -1087,7 +1221,7 @@ public abstract class DatabaseStorage extends StorageBase {
         public ResultIterator(ResultSet resultSet) throws SQLException {
             this.resultSet = resultSet;
 
-            /* The result set starts before the first rwo, so step into it */
+            /* The result set starts before the first row, so step into it */
             hasNext = resultSet.next();
 
             log.trace("Constructed Record iterator with initial hasNext: "
@@ -1123,10 +1257,10 @@ public abstract class DatabaseStorage extends StorageBase {
                 log.trace("getRecord returning '" + record.getId() + "'");
             }
 
-            /* The naive solution top update hasNext is to just do:
+            /* The naive solution to updating hasNext is to just do:
              *   hasNext = !resultSet.isAfterLast();
              * here, but the ResultSet type does not allow this unless it is
-             * of a scrollable type, which do not use for resource limitation
+             * of a scrollable type, which we do not use for resource limitation
              * purposes. Instead the hasNext state is updated ny scanRecord()
              */            
 

@@ -423,11 +423,43 @@ public class StorageTest extends TestCase {
         long ctime = r2.getCreationTime();
         long mtime = r2.getModificationTime();
 
+        assertEquals("For new records mtime == ctime",
+                     ctime, mtime);
+
         storage.flush(r1);
         r2 = storage.getRecords(Arrays.asList(testId1), 0).get(0);
 
         assertEquals(ctime, r2.getCreationTime());
         assertTrue(mtime < r2.getModificationTime());
+    }
+
+    /*
+     * Assert that touching a child updates its parents recursively upwards
+     */
+    public void testRecursiveParentUpdates () throws Exception {
+        testAddNestedRecords();
+
+        Record recCC1 = storage.getRecord(testId4, 0);
+        Record recP = storage.getRecord(testId1, 0);
+
+        long mtimeCC1 = recCC1.getModificationTime();
+        long ctimeCC1 = recCC1.getCreationTime();
+        long mtimeP = recP.getModificationTime();
+        long ctimeP = recP.getCreationTime();
+
+        /* Touch child recCC1 of recP (nested 2 levels) */
+        storage.flush (recCC1);
+
+        recCC1 = storage.getRecord(testId4, 0);
+        recP = storage.getRecord(testId1, 0);
+
+        /* Sanity check that recCC1 has been updated */
+        assertTrue (mtimeCC1 < recCC1.getModificationTime());
+        assertTrue (ctimeCC1 == recCC1.getCreationTime());
+
+        /* Assert that the parent has been updated as well */
+        assertTrue (mtimeP < recP.getModificationTime());
+        assertTrue (ctimeP == recP.getCreationTime());
     }
 
     public void testRecordMetaTags () throws Exception {
