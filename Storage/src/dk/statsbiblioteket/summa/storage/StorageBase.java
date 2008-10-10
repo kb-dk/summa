@@ -35,19 +35,22 @@ import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.WritableStorage;
+import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
 import dk.statsbiblioteket.summa.storage.api.rmi.RemoteStorage;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * StorageBase is an abstract class, which implements both the Storage and Schedulable interface.
- * There is no choice of storage in StorageBase. This choice is made in the subclasses.
- * Created by IntelliJ IDEA. User: hal. Date: Jan 9, 2006.
+ * StorageBase is an abstract class to facilitate implementations of the
+ * {@link Storage} interface.
+ * <p/>
+ * There is no choice of storage in StorageBase. This choice is made in the
+ * subclasses.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "hal, te")
+        author = "hal, te, mke")
 public abstract class StorageBase extends UnicastRemoteObject
                                   implements RemoteStorage {
     private static Log log = LogFactory.getLog(StorageBase.class);
@@ -219,6 +222,23 @@ public abstract class StorageBase extends UnicastRemoteObject
         for (Record rec : records) {
             flush(rec);
         }
+    }
+
+    /**
+     * Simple implementation of {@link ReadableStorage#getRecords} fetching
+     * each record one at a time and collecting them in a list.
+     */
+    public List<Record> getRecords (List<String> ids, int expansionDepth)
+                                                        throws RemoteException {
+        ArrayList<Record> result = new ArrayList<Record>(ids.size());
+        for (String id : ids) {
+            Record r = getRecord(id, expansionDepth);
+            if (r != null) {
+                result.add(r);
+            }
+        }
+
+        return result;
     }
     
 }

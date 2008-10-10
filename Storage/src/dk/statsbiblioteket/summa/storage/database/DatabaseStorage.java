@@ -503,7 +503,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * @return the record or {@code null} if the record is not found
      * @throws RemoteException on communication errors with the database
      */
-    protected Record getRecord(String id, int expansionDepth)
+    public Record getRecord(String id, int expansionDepth)
                                                         throws RemoteException {
         log.trace("getRecord('" + id + "', " + expansionDepth + ")");
 
@@ -551,25 +551,6 @@ public abstract class DatabaseStorage extends StorageBase {
             throw new RemoteException("SQLException", e);
         }
         return record;
-    }
-
-    /**
-     * Simple implementation fetching each record one at a time and collecting
-     * them in a list.
-     * <p/>
-     * FIXME: See FIXME inside {@link #prepareStatements()} code
-     */
-    public List<Record> getRecords (List<String> ids, int expansionDepth)
-                                                        throws RemoteException {
-        ArrayList<Record> result = new ArrayList<Record>(ids.size());
-        for (String id : ids) {
-            Record r = getRecord(id, expansionDepth);
-            if (r != null) {
-                result.add(r);
-            }
-        }
-
-        return result;
     }
 
     /* Expand child records if we need to and there indeed
