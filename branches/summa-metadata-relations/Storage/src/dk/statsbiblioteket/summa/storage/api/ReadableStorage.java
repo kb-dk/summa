@@ -79,6 +79,22 @@ public interface ReadableStorage {
                                                              throws IOException;
 
     /**
+     * Retrieve the record given by {@code id} expanding child records to a
+     * depth of {@code expansionDepth}.
+     * <p/>
+     * If {@code expansionDepth == 0} no child expansion will occur, and a
+     * depth of {@code -1} will do recursive expansion of all children.
+     * @param id the id of the record to retrieve
+     * @param expansionDepth the depth to expand child records to. {@code 0}
+     *                       means no expansion and {@code -1} means recursive
+     *                       expansion of all children
+     * @return the requested record or {@code null} if it wasn't found. Expanded
+     *         child records can be retrieved with {@link Record#getChildren}
+     * @throws IOException on communication errors
+     */
+    Record getRecord (String id, int expansionDepth) throws IOException;
+
+    /**
      * Return the next record in the record iteration identified by the given
      * iterator key. This method should not be accessed by third parties.
      * <p/>
