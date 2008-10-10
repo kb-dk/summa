@@ -35,19 +35,22 @@ import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.WritableStorage;
+import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
 import dk.statsbiblioteket.summa.storage.api.rmi.RemoteStorage;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * StorageBase is an abstract class, which implements both the Storage and Schedulable interface.
- * There is no choice of storage in StorageBase. This choice is made in the subclasses.
- * Created by IntelliJ IDEA. User: hal. Date: Jan 9, 2006.
+ * StorageBase is an abstract class to facilitate implementations of the
+ * {@link Storage} interface.
+ * <p/>
+ * There is no choice of storage in StorageBase. This choice is made in the
+ * subclasses.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "hal, te")
+        author = "hal, te, mke")
 public abstract class StorageBase extends UnicastRemoteObject
                                   implements RemoteStorage {
     private static Log log = LogFactory.getLog(StorageBase.class);
@@ -108,9 +111,79 @@ public abstract class StorageBase extends UnicastRemoteObject
         return records;
     }
 
-    protected void updateMultiVolume(Record record) {
-        log.warn("updateMultiVolume not implemented yet");
-        // TODO: Implement multi-volume as described in the pseudo-code
+    protected void updateRelations(Record record)
+                                                            throws IOException {
+        if (log.isTraceEnabled()) {
+            log.trace("updateRelations("+record.getId()+")");
+        }
+
+        /* We collect a list of changes and submit them in one transaction */
+        List<Record> flushQueue = new ArrayList<Record>(5);
+
+        /* Make sure parent records are correct */
+        if (record.getParentIds() != null) {
+            List<Record> parents = getRecords(record.getParentIds(), 0);
+
+            /* If a record has any *existing* parents it is not indexable */
+            if (parents != null && !parents.isEmpty()) {
+                record.setIndexable(false);
+            }
+
+            /* Assert that the record is set as child on all existing parents */
+            for (Record parent : parents) {
+                List<String> parentChildren = parent.getChildIds();
+
+                if (parentChildren == null) {
+                    parent.setChildIds(Arrays.asList(record.getId()));
+                    log.trace ("Creating child list '" + record.getId()
+                               + "' on parent " + parent.getId());
+                    flushQueue.add (parent);
+                } else if (!parentChildren.contains(record.getId())) {
+                    parentChildren.add (record.getId());
+                    parent.setChildIds(parentChildren);
+                    log.trace ("Adding child '" + record.getId()
+                               + "' to parent " + parent.getId());
+                    flushQueue.add (parent);
+                }
+            }
+        }
+
+        /* Make sure child records are correct */
+        if (record.getChildIds() != null) {
+            List<Record> children = getRecords(record.getChildIds(), 0);
+
+            /* Assert that the existing child records have this record set
+             * as parent and that they are marked not indexable  */
+            for (Record child : children) {
+                List<String> childParents = child.getParentIds();
+
+                if (childParents == null) {
+                    child.setParentIds(Arrays.asList(record.getId()));
+                    child.setIndexable(false);
+                    log.trace ("Creating parent list '" + record.getId()
+                               + " on child " + child.getId());
+                    flushQueue.add(child);
+                } else if (!childParents.contains(record.getId())) {
+                    child.getParentIds().add(record.getId());
+                    child.setIndexable(false);
+                    log.trace ("Adding parent '" + record.getId()
+                               + "' to child " + child.getId());
+                    flushQueue.add(child);
+
+                } else {
+                    if (child.isIndexable()) {
+                        log.debug ("Child '" + child.getId() + "' of '"
+                                   + record.getId() + "' was marked as "
+                                   + "indexable. Marking as not indexable");
+                        child.setIndexable(false);
+                    }
+                }
+
+            }
+        }
+
+        flushAll(flushQueue);
+
         /* Pseudo-code for new or modified (self = new or modified record):
         if parent exists
           mark self as not indexable
@@ -132,7 +205,7 @@ public abstract class StorageBase extends UnicastRemoteObject
           foreach child
             mark child as indexable
          */
-    }    
+    }
 
     /**
      * <p>Convenience implementation of {@link WritableStorage#flushAll}
@@ -149,6 +222,23 @@ public abstract class StorageBase extends UnicastRemoteObject
         for (Record rec : records) {
             flush(rec);
         }
+    }
+
+    /**
+     * Simple implementation of {@link ReadableStorage#getRecords} fetching
+     * each record one at a time and collecting them in a list.
+     */
+    public List<Record> getRecords (List<String> ids, int expansionDepth)
+                                                        throws RemoteException {
+        ArrayList<Record> result = new ArrayList<Record>(ids.size());
+        for (String id : ids) {
+            Record r = getRecord(id, expansionDepth);
+            if (r != null) {
+                result.add(r);
+            }
+        }
+
+        return result;
     }
     
 }

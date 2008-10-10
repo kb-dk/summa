@@ -35,6 +35,10 @@ public interface WritableStorage {
 
     /**
      * Flush a record to the storage. In other words write it.
+     * <p/>
+     * Any nested child records (added via {@link Record#setChildren}) will
+     * be added recursively to the storage.
+     *
      * @param record The record to store or update
      * @throws IOException on comminication errors
      */
@@ -43,6 +47,9 @@ public interface WritableStorage {
     /**
      * A batch optimized version of {@link #flush}. Use this method
      * to optimize IPC overhead.
+     * <p/>
+     * Just like {@link #flush} any child records added with
+     * {@link Record#setChildren} will be added recursively to the storage. 
      *
      * @param records a list of records to store or update
      * @throws IOException on communication errors

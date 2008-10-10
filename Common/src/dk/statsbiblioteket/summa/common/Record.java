@@ -205,9 +205,7 @@ public class Record implements Serializable, Comparable{
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public void init(String id, String base, boolean deleted, boolean indexable,
                      byte[] data, long creationTime, long lastModified,
-                     List<String> parents, List<String> children, StringMap meta){
-        log.trace("Creating Record with id '" + id + "' from base '" + base
-                  + "'");
+                     List<String> parents, List<String> children, StringMap meta){           
         setId(id);
         setBase(base);
         setDeleted(deleted);
@@ -219,8 +217,11 @@ public class Record implements Serializable, Comparable{
         setChildIds(children);
         setChildren(null);
         this.meta = meta;
-        if (log.isDebugEnabled()) {
-            log.debug("Created " + toString());
+
+        if (log.isTraceEnabled()) {
+            log.trace("Created " + toString(true));
+        } else if (log.isDebugEnabled()) {
+            log.trace("Created " + toString());
         }
     }
 
@@ -483,6 +484,14 @@ public class Record implements Serializable, Comparable{
         return meta == null ? null :meta.get(key);
     }
 
+    public void setMeta (StringMap meta) {
+        this.meta = meta;
+    }
+    
+    public void addMeta (String key, String value) {
+        getMeta().put(key, value);
+    }
+
     /**
      * @return true if a meta-map has been created. Used for time/space
      *         optimization. 
@@ -509,7 +518,7 @@ public class Record implements Serializable, Comparable{
 
     /**
      * Compares this Record with the specified Record for order.
-     * The natural ordering on records is defined to be lexicographical by name (bib#/id).
+     * The natural ordering on records is defined to be lexicographical by id.
      * @param o parameter object to be compared to this record
      * @return a negative integer, zero, or a positive integer as the name of this record is
      *         lexicographically less than, equal to, or greater than the name of the record argument.
@@ -583,6 +592,8 @@ public class Record implements Serializable, Comparable{
         return "Record [id(" + getId() + "), base(" + getBase()
                + "), deleted(" + isDeleted() + "), indexable(" + isIndexable()
                + "), data-length(" + getLength()
+               + "), num-children(" + (childIds == null ? 0 : childIds.size())
+               + "), num-parents(" + (parentIds == null ? 0 : parentIds.size())
                + ")" + (verbose ?
                         ", creationTime(" + timeToString(getCreationTime())
                         + "), modificationTime("
@@ -613,35 +624,35 @@ public class Record implements Serializable, Comparable{
     }
 
     /**
-     * Converts a String-encoded list of children-ID's to a proper list.
+     * Converts a String-encoded list of record-ID's to a proper list.
      * The String-encoded list is the ID's delimited by ';'.
-     * @param children a ';'-delimited string with children-ID's.
+     * @param ids a ';'-delimited string with children-ID's.
      * @return a List with the children-ID's. If the input-string is null or
      *         of length 0, null is returned.
      */
-    public static List<String> childrenStringToList(String children) {
-        if (children == null || "".equals(children)) {
+    public static List<String> idStringToList(String ids) {
+        if (ids == null || "".equals(ids)) {
             return null;
         }
-        String[] stringChildren = children.split(ID_DELIMITER);
+        String[] stringChildren = ids.split(ID_DELIMITER);
         return Arrays.asList(stringChildren);
     }
 
     /**
-     * Converts a proper list of children-ID's to a String-encoded list.
+     * Converts a proper list of record-ID's to a String-encoded list.
      * The String-encoded list is the ID's delimited by ';'.
-     * @param children as a proper list of children-ID's.
+     * @param ids as a proper list of children-ID's.
      * @return a ';'-delimited string with children-ID's. If the input-list is
      *         null or of length 0, null is returned.
      */
-    public static String childrenListToString(List<String> children) {
-        if (children == null || children.size() == 0) {
+    public static String idListToString(List<String> ids) {
+        if (ids == null || ids.size() == 0) {
             return null;
         }
-        StringWriter sw = new StringWriter(children.size()*256);
-        for (int i = 0 ; i < children.size() ; i++) {
-            sw.append(children.get(i));
-            if (i < children.size()-1) {
+        StringWriter sw = new StringWriter(ids.size()*256);
+        for (int i = 0 ; i < ids.size() ; i++) {
+            sw.append(ids.get(i));
+            if (i < ids.size()-1) {
                 sw.append(ID_DELIMITER);
             }
         }
