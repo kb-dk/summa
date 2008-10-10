@@ -168,7 +168,7 @@ public class DerbyStorage extends DatabaseStorage implements Configurable {
         log.info("Connected to database at '" + location + "'");
         if (createNew) {
             log.info("Creating new table for '" + location + "'");
-            createTable();
+            createSchema();
         }
     }
 

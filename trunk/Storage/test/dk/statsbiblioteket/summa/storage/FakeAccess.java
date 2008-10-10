@@ -77,28 +77,17 @@ public class FakeAccess extends StorageBase {
         return new RecordIterator(this, 0L, position != recordCount-1);
     }
 
-    private Record getRecord(String name) throws RemoteException {
+    public Record getRecord(String name, int expansionDepth)
+                                                        throws RemoteException {
         try {
             if (recordExists(name)) {
                 return produceRecord(name);
             }
-            throw new RemoteException("Unknown ID");
+            return null;
         } catch (Exception e) {
             throw new RemoteException("Exception getting record '"
                                       + name + "'", e);
         }
-    }
-
-    public List<Record> getRecords (List<String> ids, int expansionDepth)
-                                                        throws RemoteException {
-        List<Record> result = new ArrayList<Record>(ids.size());
-        for (String id : ids) {
-            Record r = getRecord(id);
-            if (r != null) {
-                result.add (r);
-            }
-        }
-        return result;
     }
 
     private Record produceRecord(String name) {
@@ -122,10 +111,6 @@ public class FakeAccess extends StorageBase {
 
     public void clearBase(String base) throws RemoteException {
         //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    private boolean recordActive(String name) throws RemoteException {
-        return recordExists(name);
     }
 
     public Record next(Long iteratorKey) throws RemoteException {

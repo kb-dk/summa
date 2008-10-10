@@ -22,6 +22,8 @@ public interface RemoteReadableStorage extends ReadableStorage, Remote {
 
     List<Record> getRecords(List<String> ids, int expansionDepth) throws RemoteException;
 
+    Record getRecord(String id, int expansionDepth) throws RemoteException;
+
     Record next(Long iteratorKey) throws RemoteException;
 
     List<Record> next(Long iteratorKey, int maxRecords) throws RemoteException;
