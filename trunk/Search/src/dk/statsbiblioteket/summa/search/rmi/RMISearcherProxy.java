@@ -44,7 +44,7 @@ public class RMISearcherProxy extends UnicastRemoteObject
      */
     public static final String CONF_SERVICE_NAME = "summa.searcher.rmi.name";
 
-    public static final Class<? extends SummaSearcher> DEFAULT_BACKEND_CLASS =
+    public static final Class<? extends SummaSearcher> DEFAULT_BACKEND =
                                                         SummaSearcherImpl.class;
 
     private SummaSearcher backend;
@@ -83,8 +83,9 @@ public class RMISearcherProxy extends UnicastRemoteObject
         if (conf.valueExists (CONF_BACKEND)) {
             backendConf.set (CONF_CLASS, conf.getString (CONF_BACKEND));
         } else {
-            log.info (CONF_BACKEND + " not set, using " + CONF_CLASS + " for "
+            log.info (CONF_BACKEND + " not set, using " + DEFAULT_BACKEND + " for "
                       + "backend");
+            backendConf.set (CONF_CLASS, DEFAULT_BACKEND);
         }
 
         /* If the backend is set to be another RMISeacherProxy then avoid
@@ -93,9 +94,9 @@ public class RMISearcherProxy extends UnicastRemoteObject
             if (this.getClass().getName().equals(
                                           backendConf.getString (CONF_CLASS))) {
                 log.warn ("Backend set to RMISearcherProxy. Forcing backend " +
-                          "class to " + DEFAULT_BACKEND_CLASS.getName()
+                          "class to " + DEFAULT_BACKEND.getName()
                           + " to avoid infinite recursion");
-                backendConf.set (CONF_CLASS, DEFAULT_BACKEND_CLASS.getName());
+                backendConf.set (CONF_CLASS, DEFAULT_BACKEND.getName());
             }
         }
 

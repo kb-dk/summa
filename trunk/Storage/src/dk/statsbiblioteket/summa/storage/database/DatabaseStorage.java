@@ -28,7 +28,6 @@ package dk.statsbiblioteket.summa.storage.database;
 
 import java.io.File;
 import java.io.IOException;
-import java.rmi.RemoteException;
 import java.sql.*;
 import java.util.*;
 
@@ -220,15 +219,16 @@ public abstract class DatabaseStorage extends StorageBase {
      * The initializer connects to the database and prepares SQL statements.
      * It is recommended that this is called by all constructors.
      * @param configuration    the setup for the database.
-     * @throws RemoteException if the initialization could not finish.
+     * @throws ConfigurationException if the initialization could not finish.
+     * @throws IOException on failing to connect to the database
      */
-    protected void init(Configuration configuration) throws RemoteException {
+    protected void init(Configuration configuration) throws IOException {
         log.trace("init called");
         connectToDatabase(configuration);
         try {
             prepareStatements();
         } catch (SQLException e) {
-            throw new RemoteException("SQLException in init", e);
+            throw new ConfigurationException("SQLException in init", e);
         }
         log.debug("Initialization finished");
     }
@@ -239,11 +239,11 @@ public abstract class DatabaseStorage extends StorageBase {
      * configuration, this might involve creating a table in the database and
      * initializing that to Summa-use.
      * @param configuration setup for the database.
-     * @throws RemoteException if a connection could not be established to the
+     * @throws IOException if a connection could not be established to the
      *                         database.
      */
     protected abstract void connectToDatabase(Configuration configuration)
-                                                        throws RemoteException;
+                                                        throws IOException;
 
     /**
      * @return a connection to a SQL-compatible database.
@@ -462,18 +462,18 @@ public abstract class DatabaseStorage extends StorageBase {
         return preparedStatement;
     }
 
-    public synchronized Iterator<Record> getAllRecords() throws RemoteException {
+    public synchronized Iterator<Record> getAllRecords() throws IOException {
         log.debug("getAllRecords entered");
         return getResult(stmtGetAll);
     }
 
-    public synchronized Iterator<Record> getRecordsFromBase(String base) throws
-                                                               RemoteException {
+    public synchronized Iterator<Record> getRecordsFromBase(String base)
+                                                            throws IOException {
         log.debug("getRecordsFromBase('" + base + "') entered");
         try {
             stmtGetFromBase.setString(1, base);
         } catch (SQLException e) {
-            throw new RemoteException("Could not prepare stmtGetFromBase with "
+            throw new IOException("Could not prepare stmtGetFromBase with "
                                       + "base '" + base + "'", e);
         }
         return getResult(stmtGetFromBase);
@@ -481,30 +481,37 @@ public abstract class DatabaseStorage extends StorageBase {
 
     public synchronized Iterator<Record> getRecordsModifiedAfter(long time,
                                                                String base)
-                                                        throws RemoteException {
+                                                        throws IOException {
         log.debug("getRecordsModifiedAfter('" + time + "', " + base
                   + ") entered");
+
+        if (time > getLastFlushTime(base)) {
+            log.debug ("Storage not flushed after " + time + ". Returning"
+                       + " empty iterator");
+            return new ArrayList<Record>(0).iterator();
+        }
+
         // TODO: Fix the SQL with a WHERE != time instead of hacking this way
         time += 1000;
         try {
             stmtGetModifiedAfter.setString(1, base);
             stmtGetModifiedAfter.setTimestamp(2, new Timestamp(time));
         } catch (SQLException e) {
-            throw new RemoteException("Could not prepare stmtGetModifiedAfter "
+            throw new IOException("Could not prepare stmtGetModifiedAfter "
                                       + "with base '" + base + "' and time "
                                       + time, e);
         }
         return getResult(stmtGetModifiedAfter);
-    }
+    }    
 
     public synchronized Iterator<Record> getRecordsFrom(String id, String base)
-                                                        throws RemoteException {
+                                                        throws IOException {
         log.debug("getRecordsFrom('" + base + "', '" + id + "') entered");
         try {
             stmtGetFrom.setString(1, base);
             stmtGetFrom.setString(2, id);
         } catch (SQLException e) {
-            throw new RemoteException("Could not prepare stmtGetFrom "
+            throw new IOException("Could not prepare stmtGetFrom "
                                       + "with base '" + base + "' and id '"
                                       + id + "'", e);
         }
@@ -515,16 +522,16 @@ public abstract class DatabaseStorage extends StorageBase {
      * Convenience method to fetch a single record
      * @param id id of record to fetch
      * @return the record or {@code null} if the record is not found
-     * @throws RemoteException on communication errors with the database
+     * @throws IOException on communication errors with the database
      */
     public Record getRecord(String id, int expansionDepth)
-                                                        throws RemoteException {
+                                                        throws IOException {
         log.trace("getRecord('" + id + "', " + expansionDepth + ")");
 
         try {
             stmtGetRecord.setString(1, id);
         } catch (SQLException e) {
-            throw new RemoteException("Could not prepare stmtGetRecord "
+            throw new IOException("Could not prepare stmtGetRecord "
                                       + "with id '" + id + "''", e);
         }
 
@@ -554,15 +561,12 @@ public abstract class DatabaseStorage extends StorageBase {
                 }
 
                 expandChildRecords(record, expansionDepth);
-            } catch (IOException e) {
-                throw new RemoteException("Exception transforming SQL "
-                                          + "result set to record", e);
             } finally {
                 resultSet.close();
             }
 
         } catch (SQLException e) {
-            throw new RemoteException("SQLException", e);
+            throw new IOException("SQLException", e);
         }
         return record;
     }
@@ -570,7 +574,7 @@ public abstract class DatabaseStorage extends StorageBase {
     /* Expand child records if we need to and there indeed
      * are any children to expand */
     private void expandChildRecords (Record record, int expansionDepth)
-                                                        throws RemoteException {
+                                                        throws IOException {
         if (expansionDepth == 0) {
             return;
         }
@@ -595,11 +599,11 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
-    public Record next(Long iteratorKey) throws RemoteException {
+    public Record next(Long iteratorKey) throws IOException {
         boolean error = false;
         ResultIterator iterator = iterators.get(iteratorKey);
         if (iterator == null) {
-            throw new RemoteException("No result iterator with key "
+            throw new IOException("No result iterator with key "
                                       + iteratorKey);
         }
 
@@ -613,13 +617,9 @@ public abstract class DatabaseStorage extends StorageBase {
             }
 
             return iterator.getRecord();
-        } catch (IOException e) {
-            error = true;
-                throw new RemoteException("Exception getting next record: "
-                                          + e.getMessage(), e);
         } catch (SQLException e) {
             error = true;
-            throw new RemoteException("SQLException: " + e.getMessage(), e);
+            throw new IOException("SQLException: " + e.getMessage(), e);
         } finally {
             if (error) {
                 log.debug ("Error detected on iterator " + iteratorKey + "."
@@ -630,12 +630,15 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
-    public void flush(Record record) throws RemoteException {
+    public void flush(Record record) throws IOException {
         if (log.isTraceEnabled()) {
             log.trace("Flushing " + record.toString(true));
         } else if (log.isDebugEnabled()) {
             log.trace("Flushing " + record.toString(false));
         }
+
+        /* Update the timestamp we check agaist in getRecordsModifiedAfter */
+        updateLastFlushTime(record.getBase());
 
         if (record.isDeleted()){
             log.debug("Deleting record '" + record.getId() + "' from base '"
@@ -662,6 +665,11 @@ public abstract class DatabaseStorage extends StorageBase {
             log.error("Failed to touch parents of '" + record.getId() + "': "
                       + e.getMessage(), e);
         }
+
+        /* Again - update the timestamp we check agaist in
+         * getRecordsModifiedAfter. This is also done in the end of the flush()
+         * because the operation is non-instantaneous  */
+        updateLastFlushTime(record.getBase());
 
     }
 
@@ -696,9 +704,9 @@ public abstract class DatabaseStorage extends StorageBase {
      * @param id the id of the record to look up parents for
      * @return A list of parent records. This list will be empty if there are no
      *         parents
-     * @throws RemoteException on communication errors with the db
+     * @throws IOException on communication errors with the db
      */
-    protected List<Record> getParents (String id) throws RemoteException {
+    protected List<Record> getParents (String id) throws IOException {
         List<Record> parents = new ArrayList<Record>(1);
 
         try {
@@ -712,7 +720,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 try {
                     parents.add(scanRecord(results, iter));
                 } catch (IOException e) {
-                    throw new RemoteException("Error scanning parent records "
+                    throw new IOException("Error scanning parent records "
                                               + "for '" + id + "': "
                                               + e.getMessage(), e);
                 }
@@ -726,7 +734,7 @@ public abstract class DatabaseStorage extends StorageBase {
             return parents;
 
         } catch (SQLException e) {
-            throw new RemoteException("Failed to get parents for record '"
+            throw new IOException("Failed to get parents for record '"
                                       + id + "': " + e.getMessage(), e);
         }
     }
@@ -736,9 +744,9 @@ public abstract class DatabaseStorage extends StorageBase {
      * @param id the id of the record to look up children for
      * @return A list of child records. This list will be empty if there are no
      *         parents
-     * @throws RemoteException on communication errors with the db
+     * @throws IOException on communication errors with the db
      */
-    protected List<Record> getChildren (String id) throws RemoteException {
+    protected List<Record> getChildren (String id) throws IOException {
         List<Record> parents = new ArrayList<Record>(3);
 
         try {
@@ -749,13 +757,7 @@ public abstract class DatabaseStorage extends StorageBase {
             ResultIterator iter = new ResultIterator(results);
 
             while (iter.hasNext()) {
-                try {
-                    parents.add(scanRecord(results, iter));
-                } catch (IOException e) {
-                    throw new RemoteException("Error scanning child records "
-                                              + "for '" + id + "': "
-                                              + e.getMessage(), e);
-                }
+                parents.add(scanRecord(results, iter));
             }
 
             if (log.isTraceEnabled()) {
@@ -766,19 +768,19 @@ public abstract class DatabaseStorage extends StorageBase {
             return parents;
 
         } catch (SQLException e) {
-            throw new RemoteException("Failed to get children for record '"
+            throw new IOException("Failed to get children for record '"
                                       + id + "': " + e.getMessage(), e);
         }
     }
 
-    public void clearBase (String base) throws RemoteException {
+    public void clearBase (String base) throws IOException {
         log.info ("Clearing base '" + base + "'");
 
         try {
             stmtClearBase.setString(1, base);
             stmtClearBase.execute();
         } catch (SQLException e) {
-            throw new RemoteException("SQLException clearing base '"
+            throw new IOException("SQLException clearing base '"
                                       + base + "'", e);
         }
     }
@@ -827,7 +829,7 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
-    private void createNewRecord(Record record) throws RemoteException {
+    private void createNewRecord(Record record) throws IOException {
         log.debug("Creating new record '" + record.getId() + "' from base '"
                       + record.getBase() + "'");
 
@@ -852,7 +854,7 @@ public abstract class DatabaseStorage extends StorageBase {
             updateRecord(record);
             return;
         } catch (SQLException e) {
-            throw new RemoteException("SQLException creating new record '"
+            throw new IOException("SQLException creating new record '"
                                       + record.getId() + "'", e);
         }
 
@@ -861,22 +863,16 @@ public abstract class DatabaseStorage extends StorageBase {
         try {
             createRelations(record);
         } catch (SQLException e) {
-            throw new RemoteException("Error creating relations for '"
+            throw new IOException("Error creating relations for '"
                                       + record.getId() + "': " + e.getMessage(),
                                       e);
         }
 
-        try {
-            updateRelations(record);
-        } catch (IOException e) {
-            throw new RemoteException("Error updating related records for '"
-                                      + record.getId() + "': " + e.getMessage(),
-                                      e);
-        }
+        updateRelations(record);
     }
 
     /* Note that creationTime aren't touched */
-    private void updateRecord(Record record) throws RemoteException {
+    private void updateRecord(Record record) throws IOException {
         // FIXME: Add child records recursively (parents?)
         long now = System.currentTimeMillis();
         Timestamp nowStamp = new Timestamp(now);
@@ -900,14 +896,8 @@ public abstract class DatabaseStorage extends StorageBase {
                 createNewRecord(record);
                 return;
             }
-        } catch (RemoteException e) {
-            throw new RemoteException("RemoteException calling update for "
-                                      + "record '" + record.getId() + "'", e);
-        } catch (IOException e) {
-            throw new RemoteException("IOException GZIPping data from record '"
-                                      + record.getId() + "'", e);
         } catch (SQLException e) {
-            throw new RemoteException("SQLException updating record '"
+            throw new IOException("SQLException updating record '"
                                       + record.getId() + "'", e);
         }
 
@@ -916,21 +906,15 @@ public abstract class DatabaseStorage extends StorageBase {
         try {
             createRelations(record);
         } catch (SQLException e) {
-            throw new RemoteException("Error creating relations for '"
+            throw new IOException("Error creating relations for '"
                                       + record.getId() + "': " + e.getMessage(),
                                       e);
         }
 
-        try {
-            updateRelations(record);
-        } catch (IOException e) {
-            throw new RemoteException("Error updating relations for '"
-                                      + record.getId() + "': " + e.getMessage(),
-                                      e);
-        }
+        updateRelations(record);
      }
 
-    private int deleteRecord(String id) throws RemoteException {
+    private int deleteRecord(String id) throws IOException {
         long now = System.currentTimeMillis();
         Timestamp nowStamp = new Timestamp(now);
 
@@ -942,7 +926,7 @@ public abstract class DatabaseStorage extends StorageBase {
             return stmtDeleteRecord.executeUpdate();
         } catch (SQLException e) {
             log.error("SQLException deleting record '" + id + "'", e);
-            throw new RemoteException("SQLException deleting record '"
+            throw new IOException("SQLException deleting record '"
                                       + id + "'", e);
         }
 
@@ -966,15 +950,15 @@ public abstract class DatabaseStorage extends StorageBase {
      * Creates the tables {@link #RECORDS} and {@link #RELATIONS} and relevant
      * indexes on the database.
      *
-     * @throws RemoteException if the database could not be created.
+     * @throws IOException if the database could not be created.
      */
-    protected void createSchema() throws RemoteException {
+    protected void createSchema() throws IOException {
         log.debug("Creating database schema");
         try {
             // Do this in a separate call to avoid massively nested code block
             doCreateSchema();
         } catch (SQLException e) {
-            throw new RemoteException("Could not create schema: "
+            throw new IOException("Could not create schema: "
                                       + e.getMessage(), e);
         }
     }
@@ -1185,10 +1169,10 @@ public abstract class DatabaseStorage extends StorageBase {
      * RecordIterator.
      * @param statement the statement to execute.
      * @return a RecordIterator of the result.
-     * @throws RemoteException - also on no getConnection() and SQLExceptions.
+     * @throws IOException - also on no getConnection() and SQLExceptions.
      */
     private Iterator<Record> getResult(PreparedStatement statement) throws
-                                                               RemoteException {
+                                                               IOException {
         log.debug("Getting results for '" + statement + "'");
         ResultSet resultSet;
          try {
@@ -1203,7 +1187,7 @@ public abstract class DatabaseStorage extends StorageBase {
              log.debug("Got resultSet from '" + statement.toString() + "'");
          } catch (SQLException e) {
              log.error("SQLException in getResult", e);
-             throw new RemoteException("SQLException", e);
+             throw new IOException("SQLException", e);
          }
          return createRecordIterator(resultSet);
     }
@@ -1294,10 +1278,10 @@ public abstract class DatabaseStorage extends StorageBase {
      * "forwards" the resultset by one row to keep a step ahead.
      * @param resultSet the results to wrap.
      * @return an iterator over the resultset
-     * @throws RemoteException on SQLException
+     * @throws IOException on SQLException
      */
     private Iterator<Record> createRecordIterator(ResultSet resultSet) throws
-                                                               RemoteException {
+                                                               IOException {
         log.trace("createRecordIterator entered with result set " + resultSet);
         ResultIterator iterator;
         try {
@@ -1307,7 +1291,7 @@ public abstract class DatabaseStorage extends StorageBase {
             iterators.put(iterator.getKey(), iterator);
         } catch (SQLException e) {
             log.error("SQLException creating record iterator", e);
-            throw new RemoteException("SQLException creating record iterator",
+            throw new IOException("SQLException creating record iterator",
                                       e);
         }
         log.trace("returning new RecordIterator");
@@ -1331,13 +1315,13 @@ public abstract class DatabaseStorage extends StorageBase {
      * @return some info on the underlying database. The only guarantee is that
      *         this will not be an empty string, if a connection to a database
      *         is established.
-     * @throws RemoteException if the info could not be retireved.
+     * @throws IOException if the info could not be retireved.
      */
-    public String getDatabaseInfo() throws RemoteException {
+    public String getDatabaseInfo() throws IOException {
         try {
             return getConnection().getMetaData().getDatabaseProductName();
         } catch (SQLException e) {
-            throw new RemoteException("Could not get catalog info", e);
+            throw new IOException("Could not get catalog info", e);
         }
     }
 

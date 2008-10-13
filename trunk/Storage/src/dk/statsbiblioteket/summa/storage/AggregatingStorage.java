@@ -27,7 +27,7 @@ import org.apache.commons.logging.LogFactory;
  * Configuration instructions for the aggregating storage can be found under
  * {@link #CONF_SUB_STORAGES}.
  */
-public class AggregatingStorage implements Storage {
+public class AggregatingStorage extends StorageBase {
 
     /**
      * A list of sub configurations, one for each base name the aggregating
@@ -67,6 +67,8 @@ public class AggregatingStorage implements Storage {
     private Log log;
 
     public AggregatingStorage (Configuration conf) throws IOException {
+        super (conf);
+
         log = LogFactory.getLog(this.getClass().getName());
         log.debug ("Creating aggregating storage");
 
@@ -146,6 +148,21 @@ public class AggregatingStorage implements Storage {
         }
 
         return reader.getRecordsModifiedAfter(time, base);
+    }
+
+    public boolean isModifiedAfter(long time, String base) throws IOException {
+        if (log.isTraceEnabled()) {
+            log.trace ("isModifiedAfter("+time+", '"+base+"')");
+        }
+
+        StorageReaderClient reader = getSubStorageReader(base);
+
+        if (reader == null) {
+            log.warn("No sub storage configured for base '" + base + "'");
+            return false;
+        }
+
+        return reader.isModifiedAfter(time, base);
     }
 
     public Iterator<Record> getRecordsFrom(String id, String base) throws IOException {

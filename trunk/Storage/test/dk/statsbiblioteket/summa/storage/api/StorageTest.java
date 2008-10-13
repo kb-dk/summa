@@ -29,12 +29,13 @@ public class StorageTest extends TestCase {
     static String testId4 = "testId4";
     static int storageCounter = 0;
     static byte[] testContent1 = new byte[] {'s', 'u', 'm', 'm', 'a'};
+    long testStartTime;
 
     public static Configuration createConf () throws Exception {
 
         Configuration conf = Configuration.newMemoryBased(
-                StorageFactory.CONF_STORAGE,
-                DerbyStorage.class,
+                //Storage.CONF_CLASS,
+                //DerbyStorage.class,
                 DatabaseStorage.CONF_LOCATION,
                 testDBLocation + (storageCounter++),
                 DatabaseStorage.CONF_FORCENEW,
@@ -54,6 +55,8 @@ public class StorageTest extends TestCase {
         /* We get spurious errors where the connection to the db isn't ready
          * when running the unit tests in batch mode */
         Thread.sleep(200);
+
+        testStartTime = System.currentTimeMillis();
     }
 
     public void tearDown () throws Exception {
@@ -116,6 +119,8 @@ public class StorageTest extends TestCase {
     }
 
     public void testAddOne () throws Exception {
+        assertFalse(storage.isModifiedAfter(testStartTime, testBase1));
+
         Record rec = new Record (testId1, testBase1, testContent1);
         storage.flush (rec);
 
@@ -130,6 +135,10 @@ public class StorageTest extends TestCase {
         assertEquals(null, recs.get(0).getParentIds());
 
         assertBaseCount(testBase1, 1);
+
+        assertTrue(storage.isModifiedAfter(testStartTime, testBase1));
+        assertTrue(storage.isModifiedAfter(testStartTime, null));
+        assertFalse(storage.isModifiedAfter(testStartTime, "dummyBase"));
     }
 
     public void testClearOne() throws Exception {
@@ -211,6 +220,8 @@ public class StorageTest extends TestCase {
     }
 
     public void testAddTwo () throws Exception {
+        assertFalse(storage.isModifiedAfter(testStartTime, testBase1));
+
         Record rec1 = new Record(testId1, testBase1, testContent1);
         Record rec2 = new Record(testId2, testBase1, testContent1);
 
@@ -234,6 +245,10 @@ public class StorageTest extends TestCase {
         assertEquals(null, recs.get(1).getParents());
 
         assertBaseCount(testBase1, 2);
+
+        assertTrue(storage.isModifiedAfter(testStartTime, testBase1));
+        assertTrue(storage.isModifiedAfter(testStartTime, null));
+        assertFalse(storage.isModifiedAfter(testStartTime, "dummyBase"));
     }
 
     public void testClearTwo () throws Exception {

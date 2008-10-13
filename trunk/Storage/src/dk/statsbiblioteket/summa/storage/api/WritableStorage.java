@@ -23,6 +23,7 @@
 package dk.statsbiblioteket.summa.storage.api;
 
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.IOException;
@@ -31,7 +32,7 @@ import java.util.List;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "hal")
-public interface WritableStorage {
+public interface WritableStorage extends Configurable {
 
     /**
      * Flush a record to the storage. In other words write it.

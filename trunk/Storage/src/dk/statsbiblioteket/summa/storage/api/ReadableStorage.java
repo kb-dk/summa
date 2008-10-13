@@ -28,11 +28,12 @@ import java.io.IOException;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Configurable;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "hal")
-public interface ReadableStorage {
+public interface ReadableStorage extends Configurable {
     /**
      * Get an iterator over all records in the database from the given base
      * sorted by record id.
@@ -44,14 +45,35 @@ public interface ReadableStorage {
 
     /**
      * Get an iterator over all records from the given base modified after the
-     * given time.
-     * The iterator is sorted by record id.
+     * given time. The iterator is sorted by record id.
+     * <p/>
+     * The implementation of this method should be very light in the case there
+     * are no updates as change notification services might poll the storage
+     * using this service.
+     *
      * @param time a timestamp in milliseconds
      * @param base the name of the original record base
      * @return an iterator over all records modified after given time (sorted by name)
      * @throws IOException
      */
     Iterator<Record> getRecordsModifiedAfter(long time, String base) throws IOException;
+
+    /**
+     * Returns whether there has been changes in {@code base} after the time
+     * stamp {@code time}. If {@code base==null} this method checks whether
+     * <i>any</i> base has had changes after {@code time}.
+     * <p/>
+     * Change notification services polling the storage for changes should use
+     * this method.
+     *
+     * @param time the timestamp after which changes should have occured
+     * @param base the base in which to check for changes. If {@code base} is
+     *             {@code null} changes to all bases should be checked
+     * @return whether or not there has been changes to base at a time later
+     *         than {@code time}
+     * @throws IOException on communication errors with the storage service
+     */
+    boolean isModifiedAfter (long time, String base) throws IOException;
 
     /**
      * Get an iterator over all records from the given base "from" the given id.

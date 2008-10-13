@@ -60,6 +60,21 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
         }
     }
 
+    public boolean isModifiedAfter(long time, String base)
+                                                            throws IOException {
+        ReadableStorage storage = getConnection();
+
+        try {
+            return storage.isModifiedAfter(time, base);
+        } catch (Throwable t) {
+            connectionError(t);
+            throw new IOException("getRecordsModifiedAfter("+time+", "+base
+                                  +") failed: " + t.getMessage(), t);
+        } finally {
+            releaseConnection();
+        }
+    }
+
     public Iterator<Record> getRecordsFrom(String id, String base)
                                                             throws IOException {
         ReadableStorage storage = getConnection();
