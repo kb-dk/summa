@@ -24,10 +24,7 @@ package dk.statsbiblioteket.summa.storage;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Arrays;
+import java.util.*;
 import java.io.IOException;
 
 import dk.statsbiblioteket.summa.common.Record;
@@ -51,43 +48,92 @@ import org.apache.commons.logging.LogFactory;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "hal, te, mke")
-public abstract class StorageBase extends UnicastRemoteObject
-                                  implements RemoteStorage {
+public abstract class StorageBase implements Storage {
     private static Log log = LogFactory.getLog(StorageBase.class);
 
-    public StorageBase(Configuration conf) throws IOException {
-        super (getServicePort(conf));
+    private long storageStartTime;
+    private HashMap<String,Long> lastFlushTimes;
 
-        log.trace("Exporting Storage interface");
-        RemoteHelper.exportRemoteInterface(this,
-                                           conf.getInt(Storage.CONF_REGISTRY_PORT, 28000),
-                                           "summa-storage");
-
-        try {
-            RemoteHelper.exportMBean(this);
-        } catch (Exception e) {
-            log.warn ("Failed to register MBean, going on without it. "
-                      + "Error was", e);
-        }
+    public StorageBase(Configuration conf) {
+        storageStartTime = System.currentTimeMillis();
+        lastFlushTimes = new HashMap<String,Long>(10);        
     }
 
     /**
      * Create the storage base with an empty configuration. This means that
      * default values will be used throughout.
      */
-    public StorageBase() throws IOException {
+    public StorageBase() {
         this(Configuration.newMemoryBased());
     }
 
-    private static int getServicePort(Configuration configuration) {
-        try {
-            return configuration.getInt(Storage.CONF_SERVICE_PORT);
-        } catch (NullPointerException e) {
-            log.warn ("Service port not defined in "
-                    + Storage.CONF_SERVICE_PORT + ". Falling back to "
-                    + "anonymous port");
-            return 0;
+    /**
+     * Default implementation of
+     * {@link ReadableStorage#isModifiedAfter(long, String)} using the
+     * {@link #getLastFlushTime(String)} and related methods implmented
+     * in this base class.
+     *
+     * @throws IOException This implementation will never throw an IOException.
+     *                     It is declared anyway to let sub classes override
+     *                     this method without having to pack too many nested
+     *                     exceptions
+     */
+    public boolean isModifiedAfter (long time, String base) throws IOException {
+        return (time < getLastFlushTime(base));
+    }
+
+    /**
+     * Return the time stamp for the last time {@link #flush} or
+     * {@link #flushAll} was called.
+     * <p/>
+     * In case there has been no changes to to the storage since
+     * it was started the start time stamp of the storage will be returned.
+     *
+     * @param base the base to check for changes in. If {@code base} is
+     *             {@code null} return the maximal time stamp from all bases
+     * @return the time stamp
+     */
+    protected long getLastFlushTime (String base) {
+        Long lastFlush;
+
+        if (base != null) {
+            lastFlush = lastFlushTimes.get(base);
+            if (lastFlush == null) {
+                lastFlushTimes.put (base, storageStartTime);
+                lastFlush = storageStartTime; 
+            }
+        } else {
+            lastFlush = storageStartTime;
+            for (Long time : lastFlushTimes.values()) {
+                lastFlush = Math.max(time, lastFlush);
+            }
         }
+
+        return lastFlush;
+    }
+
+    /**
+     * Set the time stamp for the last time {@link #flush} or
+     * {@link #flushAll} was called on something in {@code base}.
+     *
+     * @param base the base in which to register a change
+     * @param timeStamp the new time stamp to set
+     * @return the {@code timeStamp} argument
+     */
+    protected long setLastFlushTime (String base, long timeStamp) {
+        lastFlushTimes.put (base, timeStamp);
+        return timeStamp;
+    }
+
+    /**
+     * Set the time stamp for the last time {@link #flush} or
+     * {@link #flushAll} was called to {@code System.currentTimeMillis()}.
+     *
+     * @param base the base in which to register a change
+     * @return the new time stamp
+     */
+    protected long updateLastFlushTime (String base) {
+        return setLastFlushTime(base, System.currentTimeMillis());
     }
 
     /**
@@ -96,7 +142,7 @@ public abstract class StorageBase extends UnicastRemoteObject
      * enough.
      */
     public List<Record> next(Long iteratorKey, int maxRecords) throws
-                                                               RemoteException {
+                                                               IOException {
         List<Record> records = new ArrayList<Record>(maxRecords);
         int added = 0;
         while (added++ < maxRecords) {
@@ -229,7 +275,7 @@ public abstract class StorageBase extends UnicastRemoteObject
      * @param records the records to store or update
      * @throws RemoteException on comminication errors
      */
-    public void flushAll (List<Record> records) throws RemoteException {
+    public void flushAll (List<Record> records) throws IOException {
         for (Record rec : records) {
             flush(rec);
         }
@@ -240,7 +286,7 @@ public abstract class StorageBase extends UnicastRemoteObject
      * each record one at a time and collecting them in a list.
      */
     public List<Record> getRecords (List<String> ids, int expansionDepth)
-                                                        throws RemoteException {
+                                                        throws IOException {
         ArrayList<Record> result = new ArrayList<Record>(ids.size());
         for (String id : ids) {
             Record r = getRecord(id, expansionDepth);

@@ -39,22 +39,17 @@ import dk.statsbiblioteket.summa.storage.api.WritableStorage;
 public interface Storage extends ReadableStorage, WritableStorage {
 
     /**
+     * Configuration property specifying the class to use as storage
+     * implementation. The default is
+     * {@link dk.statsbiblioteket.summa.storage.rmi.RMIStorageProxy}
+     */
+    public static final String CONF_CLASS = "summa.storage.class";
+
+    /**
      * Configuration property specifying which port the Storage service
      * should communicate on. Default is 27027.
      */
-    public static final String CONF_SERVICE_PORT = "summa.storage.service.port";
-
-    /**
-     * Configuration property specifying the service name of the Storage service.
-     * Default is {@code summa-storage}.
-     */
-    public static final String CONF_SERVICE_NAME = "summa.storage.service.name";
-
-    /**
-     * Configuration property specifying which port the registry used by
-     * the Storage can be found on. Default is 27000.
-     */
-    public static final String CONF_REGISTRY_PORT = "summa.storage.registry.port";
+    public static final String CONF_SERVICE_PORT = "summa.storage.service.port";        
 
     /**
      * Configuration property specifying where the storage should store

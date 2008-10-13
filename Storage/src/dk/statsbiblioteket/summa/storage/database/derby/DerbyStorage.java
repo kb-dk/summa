@@ -94,7 +94,7 @@ public class DerbyStorage extends DatabaseStorage implements Configurable {
 
     // TODO: Consider is authentication should be used or not
     protected void connectToDatabase(Configuration configuration) throws
-                                                               RemoteException {
+                                                               IOException {
         //noinspection DuplicateStringLiteralInspection
         log.info("Establishing connection to JavaDB with driver '"
                  + driver + "', username '" + username + "', password "

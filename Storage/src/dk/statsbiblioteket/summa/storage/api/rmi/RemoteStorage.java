@@ -20,6 +20,8 @@ public interface RemoteStorage extends Storage, Remote {
 
     Iterator<Record> getRecordsModifiedAfter(long time, String base) throws RemoteException;
 
+    boolean isModifiedAfter(long time, String base) throws RemoteException;
+
     Iterator<Record> getRecordsFrom(String id, String base) throws RemoteException;
 
     List<Record> getRecords(List<String> ids, int expansionDepth) throws RemoteException;
