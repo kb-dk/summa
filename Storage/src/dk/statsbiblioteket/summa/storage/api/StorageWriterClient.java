@@ -54,6 +54,20 @@ public class StorageWriterClient extends ConnectionConsumer<WritableStorage> {
         }
     }
 
+    public void clearBase(String base) throws IOException {
+         WritableStorage storage = getConnection();
+
+        try {
+            storage.clearBase (base);
+        } catch (Throwable t) {
+            connectionError(t);
+            throw new IOException("clearBase("+base+") failed: "
+                                  + t.getMessage(), t);
+        } finally {
+            releaseConnection();
+        }
+    }
+
     public void close() throws IOException {
         WritableStorage storage = getConnection();
 

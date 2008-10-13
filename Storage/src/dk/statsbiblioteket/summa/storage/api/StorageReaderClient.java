@@ -90,6 +90,21 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
         }
     }
 
+    public Record getRecord(String id, int expansionDepth) throws IOException {
+        ReadableStorage storage = getConnection();
+
+        try {
+            return storage.getRecord(id, expansionDepth);
+        } catch (Throwable t) {
+            connectionError(t);
+            throw new IOException("getRecord("+id+", depth="
+                                  + expansionDepth + ") failed: "
+                                  + t.getMessage(), t);
+        } finally {
+            releaseConnection();
+        }
+    }
+
     public Record next(Long iteratorKey) throws IOException {
         ReadableStorage storage = getConnection();
 

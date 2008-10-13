@@ -34,7 +34,8 @@ import dk.statsbiblioteket.summa.common.Record;
         author = "hal")
 public interface ReadableStorage {
     /**
-     * Get an iterator over all records in the database from the given base sorted by name.
+     * Get an iterator over all records in the database from the given base
+     * sorted by record id.
      * @param base the name of the original record base
      * @return a iterator over all records (sorted by name)
      * @throws IOException
@@ -42,8 +43,9 @@ public interface ReadableStorage {
     Iterator<Record> getRecordsFromBase(String base) throws IOException;
 
     /**
-     * Get an iterator over all records from the given base modified after the given time.
-     * The iterator is sorted by name.
+     * Get an iterator over all records from the given base modified after the
+     * given time.
+     * The iterator is sorted by record id.
      * @param time a timestamp in milliseconds
      * @param base the name of the original record base
      * @return an iterator over all records modified after given time (sorted by name)
@@ -55,7 +57,7 @@ public interface ReadableStorage {
      * Get an iterator over all records from the given base "from" the given id.
      * I.e. get all records with id "larger than" the given id.
      * Would we prefer "larger than or equal to"?
-     * The iterator is sorted by id.
+     * The iterator is sorted by record id.
      * @param id record id (bib#/id)
      * @param base the name of the original record base
      * @return an iterator over records "from" the given id (sorted by id)
