@@ -1156,16 +1156,19 @@ public abstract class DatabaseStorage extends StorageBase {
 
         /* The result set cursor will now be on the start of the next record */
 
+        /* Create a record with gzipped content. The content will be unzipped
+         * lazily by the Record class upon access */
         return new Record(id,
                           base,
                           deleted,
                           indexable,
-                          Zips.gunzipBuffer(gzippedContent),
+                          gzippedContent,
                           ctime,
                           mtime,
                           Record.idStringToList(parentIds),
                           Record.idStringToList(childIds),
-                          StringMap.fromFormal(meta));
+                          StringMap.fromFormal(meta),
+                          true);
     }
 
     /**
