@@ -33,13 +33,18 @@ import java.util.ArrayList;
 import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.Zips;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
  * A Record is the atom data unit in Summa. Is is used for ingesting to the
- * Storage as well as extracting from it.<br>
+ * Storage as well as extracting from it.
+ * <p/>
+ * The records may optionally have their content payload GZip compressed, in
+ * which case it will be unzipped lazily on the first call to
+ * {@link #getContent} or {@link #getContentAsUTF8()}
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -133,6 +138,13 @@ public class Record implements Serializable, Comparable{
     private StringMap meta;
 
     /**
+     * Indicates whether the bytes stored in {@link #data} is GZip compressed.
+     * If it is a call to {@link #getContent} should uncompress it before
+     * returning the data and set this value to {@code false}.
+     */
+    private boolean contentCompressed;
+
+    /**
      * Create a Record without content. The state of the Record is not
      * guaranteed to be consistent.
      */
@@ -148,7 +160,7 @@ public class Record implements Serializable, Comparable{
      */
     public Record(String id, String base, byte[] data) {
         long now = System.currentTimeMillis();
-        init(id, base, false, true, data, now, now, null, null, null);
+        init(id, base, false, true, data, now, now, null, null, null, false);
     }
 
     /**
@@ -160,7 +172,8 @@ public class Record implements Serializable, Comparable{
      * @param lastModified {@link #modificationTime}.
      */
      public Record(String id, String base, byte[] data, long lastModified){
-         init(id, base, false, true, data, 0, lastModified, null, null, null);
+         init(id, base, false, true, data, 0, lastModified,
+              null, null, null, false);
     }
 
     /**
@@ -178,12 +191,18 @@ public class Record implements Serializable, Comparable{
      * @param parentIds       the ID for the parent record. {@link #parentIds}.
      * @param childIds     the ID's for the children records. {@link #childIds}.
      * @param meta         metadata for the Record.
+     * @param contentCompressed whether the contents of the {@code data}
+     *                          argument id GZip compressed. If this argument is
+     *                          {@code true} the first call to
+     *                          {@link #getContent} or
+     *                          {@link #getContentAsUTF8()} will unzip the data
      */
     public Record(String id, String base, boolean deleted, boolean indexable,
                   byte[] data, long creationTime, long lastModified,
-                  List<String> parentIds, List<String> childIds, StringMap meta){
+                  List<String> parentIds, List<String> childIds, StringMap meta,
+                  boolean contentCompressed){
         init(id, base, deleted, indexable, data, creationTime, lastModified,
-             parentIds, childIds, meta);
+             parentIds, childIds, meta, contentCompressed);
     }
 
     /**
@@ -205,7 +224,8 @@ public class Record implements Serializable, Comparable{
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public void init(String id, String base, boolean deleted, boolean indexable,
                      byte[] data, long creationTime, long lastModified,
-                     List<String> parents, List<String> children, StringMap meta){           
+                     List<String> parents, List<String> children, StringMap meta,
+                     boolean contentCompressed){
         setId(id);
         setBase(base);
         setDeleted(deleted);
@@ -216,6 +236,7 @@ public class Record implements Serializable, Comparable{
         setParentIds(parents);
         setChildIds(children);
         setChildren(null);
+        this.contentCompressed = contentCompressed;
         this.meta = meta;
 
         if (log.isTraceEnabled()) {
@@ -275,9 +296,37 @@ public class Record implements Serializable, Comparable{
     }
 
     public byte[] getContent() {
+        if (contentCompressed) {
+            // this call also sets contentCompressed = false
+            setContent(Zips.gunzipBuffer(data));
+        }
+
         return data;
     }
+
+    /**
+     * Set the content payload of this record. use this method to store
+     * raw uncompressed data on the record. If you want to store compressed
+     * data in the record (and have it transparently uncompressed on access)
+     * use {@link #setContent(byte[], boolean)} instead.
+     *
+     * @param content raw payload to use as record data
+     */
     public void setContent(byte[] content) {
+        setContent(content,  false);
+    }
+
+    /**
+     * Store {@code content} as the data payload of this record. If
+     * {@code contentCompressed == true} the content will be uncompressed
+     * lazily (with GZip) on the first request to {@link #getContent()} or
+     * {@link #getContentAsUTF8()}.
+     *
+     * @param content raw payload to use as record data
+     * @param contentCompressed if {@code true} {@code content} will be
+     *                          uncompressed using GZipwhen read
+     */
+    public void setContent(byte[] content, boolean contentCompressed) {
         if (content == null) {
             //noinspection DuplicateStringLiteralInspection
             throw new IllegalArgumentException("data must be specified for "
@@ -286,10 +335,12 @@ public class Record implements Serializable, Comparable{
                                                + "'");
         }
         data = content;
+        this.contentCompressed = contentCompressed;
     }
+
     public String getContentAsUTF8() {
         try {
-            return new String(data, "utf-8");
+            return new String(getContent(), "utf-8");
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException("Could not convert uning utf-8");
         }
