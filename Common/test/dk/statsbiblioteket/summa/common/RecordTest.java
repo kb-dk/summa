@@ -6,6 +6,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
 
+import dk.statsbiblioteket.util.Zips;
+
 /**
  * Unit tests for the {@link Record} class
  */
@@ -75,5 +77,33 @@ public class RecordTest extends TestCase {
 
         // We should updated the child ids accordingly
         assertEquals (Arrays.asList("foo", "bar"), r.getParentIds());
+    }
+
+    public void testSimpleContent () throws Exception {
+        String orig = "Summa - the choice of GNU generation";
+        r.setContent(orig.getBytes());
+
+        assertEquals(orig, r.getContentAsUTF8());
+        assertTrue(Arrays.equals(orig.getBytes(), r.getContent()));
+
+        /* Run the tests twice to make sure that we don't have some
+         * flip-flopping of the contentCompressed flag */
+        assertEquals(orig, r.getContentAsUTF8());
+        assertTrue(Arrays.equals(orig.getBytes(), r.getContent()));
+    }
+
+    public void testCompressedContent() throws Exception {
+        String orig = "Summa rocks my socks";
+        byte[] data = Zips.gzipBuffer(orig.getBytes());
+
+        r.setContent(data, true);
+
+        assertEquals(orig, r.getContentAsUTF8());
+        assertTrue(Arrays.equals(orig.getBytes(), r.getContent()));
+
+        /* Run the tests twice to make sure that we don't have some
+         * flip-flopping of the contentCompressed flag */
+        assertEquals(orig, r.getContentAsUTF8());
+        assertTrue(Arrays.equals(orig.getBytes(), r.getContent()));
     }
 }
