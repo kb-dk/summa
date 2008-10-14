@@ -39,6 +39,7 @@ import dk.statsbiblioteket.summa.control.service.FilterService;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageConnectionFactory;
+import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.api.filter.RecordWriter;
 import dk.statsbiblioteket.util.Files;
@@ -230,13 +231,15 @@ public class IngestTest extends NoExitTestCase {
                 DatabaseStorage.CONF_LOCATION));
         Storage storage = StorageFactory.createStorage(storageConf);
 
-        Iterator<Record> iterator = storage.getRecordsModifiedAfter(0, TESTBASE);
+        long iterKey = storage.getRecordsModifiedAfter(0, TESTBASE);
+        Iterator<Record> iterator = new StorageIterator(storage, iterKey);
         assertFalse("The Storage should be empty", iterator.hasNext());
 
         Record record = new Record("foo", TESTBASE, new byte[0]);
         storage.flush(record);
 
-        iterator = storage.getRecordsModifiedAfter(0, TESTBASE);
+        iterKey = storage.getRecordsModifiedAfter(0, TESTBASE);
+        iterator = new StorageIterator(storage, iterKey);
         assertTrue("The Storage should contain something", iterator.hasNext());
         assertEquals("The first record should have id as expected",
                      "foo", iterator.next().getId());
@@ -287,18 +290,18 @@ public class IngestTest extends NoExitTestCase {
                       + " ConnectionContext", ctx);
         Storage remoteStorage = ctx.getConnection();
 
-        Iterator<Record> recordIterator =
-                remoteStorage.getRecordsModifiedAfter(0, TESTBASE);
+        long iterKey = storage.getRecordsModifiedAfter(0, TESTBASE);
+        Iterator<Record> iterator = new StorageIterator(storage, iterKey);
         assertTrue("The iterator should have at least one element",
-                   recordIterator.hasNext());
+                   iterator.hasNext());
         for (int i = 0 ; i < NUM_RECORDS ; i++) {
             assertTrue("Storage should have next for record #" + (i+1),
-                       recordIterator.hasNext());
-            Record record = recordIterator.next();
+                       iterator.hasNext());
+            Record record = iterator.next();
             assertNotNull("The next should give a record", record);
         }
         assertFalse("After " + NUM_RECORDS + " Records, iterator should finish",
-                    recordIterator.hasNext());
+                    iterator.hasNext());
 
         log.debug("Releasing remoteStorage connection context");
         cm.release(ctx);
@@ -345,18 +348,18 @@ public class IngestTest extends NoExitTestCase {
         assertTrue("The ingester should have stopped by now",
                    ingester.getStatus().getCode().equals(Status.CODE.stopped));
 
-        Iterator<Record> recordIterator =
-                storage.getRecordsModifiedAfter(0, TESTBASE);
+        long iterKey = storage.getRecordsModifiedAfter(0, TESTBASE);
+        Iterator<Record> iterator = new StorageIterator(storage, iterKey);
         assertTrue("The iterator should have at least one element",
-                   recordIterator.hasNext());
+                   iterator.hasNext());
         for (int i = 0 ; i < NUM_RECORDS ; i++) {
             assertTrue("Storage should have next for record #" + (i+1),
-                       recordIterator.hasNext());
-            Record record = recordIterator.next();
+                       iterator.hasNext());
+            Record record = iterator.next();
             assertNotNull("The next should give a record", record);
         }
         assertFalse("After " + NUM_RECORDS + " Records, iterator should finish",
-                    recordIterator.hasNext());
+                    iterator.hasNext());
 
         storage.close();
     }

@@ -57,6 +57,7 @@ import dk.statsbiblioteket.summa.io.AddTask;
 import dk.statsbiblioteket.summa.io.DeleteTask;
 import dk.statsbiblioteket.summa.io.UpdateTask;
 import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.summa.common.lucene.index.OldIndexField;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
 import dk.statsbiblioteket.summa.common.lucene.index.SearchDescriptor;
@@ -242,13 +243,13 @@ public class Workflow {
             }
             if (!resume){
                 log.info("getRecordsFromBase:" + target);
-                iter = _io.getRecordsFromBase(target);
+                iter = new StorageIterator(_io, _io.getRecordsFromBase(target));
             } else if (!comp){
                 log.info("getRecordsFromBase:" + (String)p.get(target + ID_SUFFIX));
-                iter = _io.getRecordsFrom((String)p.get(target + ID_SUFFIX),target);
+                iter = new StorageIterator(_io, _io.getRecordsFrom((String)p.get(target + ID_SUFFIX),target));
             } else {
                log.info("getRecordsFromBase:" + target +":"+lastModified);
-                iter =_io.getRecordsModifiedAfter(lastModified, target);
+                iter =new StorageIterator(_io, _io.getRecordsModifiedAfter(lastModified, target));
                 update = true;
             }
 

@@ -5,6 +5,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.IOException;
 import java.util.List;
@@ -23,14 +24,17 @@ import java.util.Iterator;
  * {@link dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory#CONF_FACTORY}, and
  * {@link ConnectionConsumer#CONF_RPC_TARGET}
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.QA_NEEDED,
+        author = "mke")
 public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
-                                 implements Configurable {
+                                 implements Configurable, ReadableStorage {
 
     public StorageReaderClient(Configuration conf) {
         super (conf);
     }
 
-    public Iterator<Record> getRecordsFromBase(String base) throws IOException {
+    public long getRecordsFromBase(String base) throws IOException {
         ReadableStorage storage = getConnection();
 
         try {
@@ -45,7 +49,7 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
     }
 
 
-    public Iterator<Record> getRecordsModifiedAfter(long time, String base)
+    public long getRecordsModifiedAfter(long time, String base)
                                                             throws IOException {
         ReadableStorage storage = getConnection();
 
@@ -60,8 +64,7 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
         }
     }
 
-    public boolean isModifiedAfter(long time, String base)
-                                                            throws IOException {
+    public boolean isModifiedAfter(long time, String base) throws IOException {
         ReadableStorage storage = getConnection();
 
         try {
@@ -75,8 +78,7 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
         }
     }
 
-    public Iterator<Record> getRecordsFrom(String id, String base)
-                                                            throws IOException {
+    public long getRecordsFrom(String id, String base) throws IOException {
         ReadableStorage storage = getConnection();
 
         try {
@@ -120,7 +122,7 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
         }
     }
 
-    public Record next(Long iteratorKey) throws IOException {
+    public Record next(long iteratorKey) throws IOException {
         ReadableStorage storage = getConnection();
 
         try {
@@ -134,7 +136,7 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
         }
     }
 
-    public List<Record> next(Long iteratorKey, int maxRecords)
+    public List<Record> next(long iteratorKey, int maxRecords)
                                                             throws IOException {
         ReadableStorage storage = getConnection();
 

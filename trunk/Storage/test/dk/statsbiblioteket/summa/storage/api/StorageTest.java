@@ -82,7 +82,8 @@ public class StorageTest extends TestCase {
     }
 
     public void assertBaseEmpty (String base) throws Exception {
-        Iterator<Record> iter = storage.getRecordsFromBase(base);
+        long iterKey = storage.getRecordsFromBase(base);
+        Iterator<Record> iter = new StorageIterator(storage, iterKey);
         long counter = 0;
         while (iter.hasNext()) {
             Record r = iter.next();
@@ -105,7 +106,8 @@ public class StorageTest extends TestCase {
     }
 
     public void assertBaseCount (String base, long expected) throws Exception {
-        Iterator<Record> iter = storage.getRecordsFromBase(base);
+        long iterKey = storage.getRecordsFromBase(base);
+        Iterator<Record> iter = new StorageIterator(storage, iterKey);
         long actual = 0;
         while (iter.hasNext()) {
             iter.next();

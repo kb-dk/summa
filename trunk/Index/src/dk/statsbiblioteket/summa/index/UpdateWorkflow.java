@@ -52,6 +52,7 @@ import java.rmi.Naming;
 import java.lang.management.ManagementFactory;
 
 import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.summa.io.AddTask;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
 import dk.statsbiblioteket.summa.common.lucene.index.OldIndexField;
@@ -333,7 +334,7 @@ public class UpdateWorkflow {
                 return;
             }
              log.info("getReecords:" + s +":"+lastModified);
-             iter =_io.getRecordsModifiedAfter(lastModified, s);
+             iter =new StorageIterator(_io, _io.getRecordsModifiedAfter(lastModified, s));
 
             while (iter.hasNext()){
                 int use = nextService();

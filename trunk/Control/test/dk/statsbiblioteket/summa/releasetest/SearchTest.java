@@ -51,6 +51,7 @@ import dk.statsbiblioteket.summa.common.util.Security;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.summa.control.service.FilterService;
 import dk.statsbiblioteket.summa.ingest.stream.FileReader;
 import dk.statsbiblioteket.summa.search.*;
@@ -127,8 +128,9 @@ public class SearchTest extends NoExitTestCase {
      */
     public static void verifyStorage(Storage storage, String id) throws
                                                                      Exception {
-        Iterator<Record> recordIterator =
-                storage.getRecordsModifiedAfter(0, BASE);
+        long iterKey = storage.getRecordsModifiedAfter(0, BASE);
+        Iterator<Record> recordIterator = new StorageIterator(storage, iterKey);
+
         assertTrue("The iterator should have at least one element",
                    recordIterator.hasNext());
         while (recordIterator.hasNext()) {

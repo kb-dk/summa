@@ -46,8 +46,8 @@ import org.apache.commons.logging.LogFactory;
  * subclasses.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "hal, te, mke")
+        state = QAInfo.State.QA_NEEDED,
+        author = "te, mke")
 public abstract class StorageBase implements Storage {
     private static Log log = LogFactory.getLog(StorageBase.class);
 
@@ -137,11 +137,11 @@ public abstract class StorageBase implements Storage {
     }
 
     /**
-     * Default implementation that uses {@link #next(Long)} to create the list
-     * of RecordAndNext. As this happens server-side, this should be fast
+     * Default implementation that uses {@link #next(long)} to create the list
+     * of records. As this happens server-side, this should be fast
      * enough.
      */
-    public List<Record> next(Long iteratorKey, int maxRecords) throws
+    public List<Record> next(long iteratorKey, int maxRecords) throws
                                                                IOException {
         List<Record> records = new ArrayList<Record>(maxRecords);
         int added = 0;

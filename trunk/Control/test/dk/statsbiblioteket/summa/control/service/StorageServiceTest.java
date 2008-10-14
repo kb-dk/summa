@@ -12,6 +12,7 @@ import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageConnectionFactory;
+import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
@@ -120,8 +121,10 @@ public class StorageServiceTest extends NoExitTestCase {
                       + " ConnectionContext", ctx);
         Storage remoteStorage = ctx.getConnection();
         remoteStorage.flush(new Record("foo", "bar", new byte[0]));
-        Iterator<Record> recordIterator =
-                remoteStorage.getRecordsModifiedAfter(0, "bar");
+        long iterKey = remoteStorage.getRecordsModifiedAfter(0, "bar");
+        Iterator<Record> recordIterator = new StorageIterator(remoteStorage,
+                                                              iterKey);
+        
         assertTrue("The iterator should have at least one element",
                    recordIterator.hasNext());
         Record extracted = recordIterator.next();

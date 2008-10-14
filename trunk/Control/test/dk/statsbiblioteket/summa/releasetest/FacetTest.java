@@ -33,6 +33,7 @@ import dk.statsbiblioteket.summa.search.SearchNodeFactory;
 import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -272,7 +273,8 @@ public class FacetTest extends NoExitTestCase {
     }
 
     private int countRecords(Storage storage, String base) throws IOException {
-        Iterator<Record> i = storage.getRecordsFromBase(base);
+        long iterKey = storage.getRecordsFromBase(base);
+        Iterator<Record> i = new StorageIterator(storage, iterKey);
         int counter = 0;
         while (i.hasNext()) {
             counter++;

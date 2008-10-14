@@ -30,13 +30,14 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.*;
 import java.util.*;
+import java.rmi.RemoteException;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.summa.storage.StorageBase;
-import dk.statsbiblioteket.summa.storage.api.RecordIterator;
+import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Zips;
 import dk.statsbiblioteket.util.Strings;
@@ -44,13 +45,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * An abstract implementation of a SQL-oriented database driven extension
- * of StorageBase.
+ * An abstract implementation of a SQL database driven extension
+ * of {@link StorageBase}.
  */
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
+        author = "mke, te")
 public abstract class DatabaseStorage extends StorageBase {
     private static Log log = LogFactory.getLog(DatabaseStorage.class);
 
@@ -151,6 +152,8 @@ public abstract class DatabaseStorage extends StorageBase {
     public static final int DATA_LIMIT =     50*1024*1024;
     public static final int META_LIMIT =     50*1024*1024; // MAX_VALUE instead?
     private static final int BLOB_MAX_SIZE = 50*1024*1024; // MAX_VALUE instead?
+
+    private static final long EMPTY_ITERATOR_KEY = -1;
 
     private PreparedStatement stmtGetAll;
     private PreparedStatement stmtGetFromBase;
@@ -462,12 +465,12 @@ public abstract class DatabaseStorage extends StorageBase {
         return preparedStatement;
     }
 
-    public synchronized Iterator<Record> getAllRecords() throws IOException {
+    public synchronized long getAllRecords() throws IOException {
         log.debug("getAllRecords entered");
-        return getResult(stmtGetAll);
+        return prepareIterator(stmtGetAll);
     }
 
-    public synchronized Iterator<Record> getRecordsFromBase(String base)
+    public synchronized long getRecordsFromBase(String base)
                                                             throws IOException {
         log.debug("getRecordsFromBase('" + base + "') entered");
         try {
@@ -476,10 +479,10 @@ public abstract class DatabaseStorage extends StorageBase {
             throw new IOException("Could not prepare stmtGetFromBase with "
                                       + "base '" + base + "'", e);
         }
-        return getResult(stmtGetFromBase);
+        return prepareIterator(stmtGetFromBase);
     }
 
-    public synchronized Iterator<Record> getRecordsModifiedAfter(long time,
+    public synchronized long getRecordsModifiedAfter(long time,
                                                                String base)
                                                         throws IOException {
         log.debug("getRecordsModifiedAfter('" + time + "', " + base
@@ -488,7 +491,7 @@ public abstract class DatabaseStorage extends StorageBase {
         if (time > getLastFlushTime(base)) {
             log.debug ("Storage not flushed after " + time + ". Returning"
                        + " empty iterator");
-            return new ArrayList<Record>(0).iterator();
+            return EMPTY_ITERATOR_KEY;
         }
 
         // TODO: Fix the SQL with a WHERE != time instead of hacking this way
@@ -501,10 +504,10 @@ public abstract class DatabaseStorage extends StorageBase {
                                       + "with base '" + base + "' and time "
                                       + time, e);
         }
-        return getResult(stmtGetModifiedAfter);
+        return prepareIterator(stmtGetModifiedAfter);
     }    
 
-    public synchronized Iterator<Record> getRecordsFrom(String id, String base)
+    public synchronized long getRecordsFrom(String id, String base)
                                                         throws IOException {
         log.debug("getRecordsFrom('" + base + "', '" + id + "') entered");
         try {
@@ -515,7 +518,7 @@ public abstract class DatabaseStorage extends StorageBase {
                                       + "with base '" + base + "' and id '"
                                       + id + "'", e);
         }
-        return getResult(stmtGetFrom);
+        return prepareIterator(stmtGetFrom);
     }
 
     /**
@@ -599,11 +602,11 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
-    public Record next(Long iteratorKey) throws IOException {
+    public Record next(long iteratorKey) throws IOException {
         boolean error = false;
         ResultIterator iterator = iterators.get(iteratorKey);
         if (iterator == null) {
-            throw new IOException("No result iterator with key "
+            throw new IllegalArgumentException("No result iterator with key "
                                       + iteratorKey);
         }
 
@@ -1171,7 +1174,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * @return a RecordIterator of the result.
      * @throws IOException - also on no getConnection() and SQLExceptions.
      */
-    private Iterator<Record> getResult(PreparedStatement statement) throws
+    private long prepareIterator(PreparedStatement statement) throws
                                                                IOException {
         log.debug("Getting results for '" + statement + "'");
         ResultSet resultSet;
@@ -1186,7 +1189,7 @@ public abstract class DatabaseStorage extends StorageBase {
                */
              log.debug("Got resultSet from '" + statement.toString() + "'");
          } catch (SQLException e) {
-             log.error("SQLException in getResult", e);
+             log.error("SQLException in prepareIterator", e);
              throw new IOException("SQLException", e);
          }
          return createRecordIterator(resultSet);
@@ -1236,6 +1239,11 @@ public abstract class DatabaseStorage extends StorageBase {
         public Record getRecord() throws SQLException, IOException {
             lastAccess = System.currentTimeMillis();
 
+            if (!hasNext) {
+                throw new NoSuchElementException("Iterator " + key
+                                                 + " depleted");
+            }
+
             /* scanRecord() steps the resultSet to the next record.
              * It will update the state of the iterator appropriately */
             Record record = DatabaseStorage.scanRecord(resultSet, this);
@@ -1280,7 +1288,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * @return an iterator over the resultset
      * @throws IOException on SQLException
      */
-    private Iterator<Record> createRecordIterator(ResultSet resultSet) throws
+    private long createRecordIterator(ResultSet resultSet) throws
                                                                IOException {
         log.trace("createRecordIterator entered with result set " + resultSet);
         ResultIterator iterator;
@@ -1294,8 +1302,8 @@ public abstract class DatabaseStorage extends StorageBase {
             throw new IOException("SQLException creating record iterator",
                                       e);
         }
-        log.trace("returning new RecordIterator");
-        return new RecordIterator(this, iterator.getKey(), iterator.hasNext());
+        log.trace("returning new StorageIterator");
+        return iterator.getKey();
     }
 
     /* Our version of a boolean packed as integer is that 0 = false, everything
@@ -1325,6 +1333,19 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
+    public void close() throws IOException {
+        try {
+            getConnection().close();
+            if (!getConnection().isClosed()) {
+                throw new IOException("close was called on the connection, "
+                                          + "but the connection state is not "
+                                          + "closed");
+            }
+        } catch (SQLException e) {
+            throw new IOException("SQLException when closing connection",
+                                      e);
+        }
+    }
 }
 
 

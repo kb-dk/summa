@@ -30,18 +30,35 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 
+/**
+ * One of the two interfaces comprising the core {@link Storage} interface in
+ * Summa. The other interface is the {@link WritableStorage} interface.
+ * <p/>
+ * Iteration over the result sets returned by this interface is doner via
+ * keys (in the form of {@code long}s which are passed to the {@link #next(long)}
+ * or {@link #next(long,int)} methods until a
+ * {@link java.util.NoSuchElementException} is thrown. Alternatively one can
+ * use the {@link StorageIterator} class to handle all this behinf an
+ * {@link Iterator} facade.
+ */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "hal")
+        state = QAInfo.State.QA_NEEDED,
+        author = "mke")
 public interface ReadableStorage extends Configurable {
+
     /**
      * Get an iterator over all records in the database from the given base
      * sorted by record id.
+     * <p/>
+     * For convenient iteration over the result set one can use a
+     * {@link StorageIterator} on the returned iterator key.
+     *
      * @param base the name of the original record base
-     * @return a iterator over all records (sorted by name)
-     * @throws IOException
+     * @return a iterator key over that can be used to iterate over all records
+     *         from {@code base} sorted by record id.
+     * @throws IOException on communication errors
      */
-    Iterator<Record> getRecordsFromBase(String base) throws IOException;
+    long getRecordsFromBase(String base) throws IOException;
 
     /**
      * Get an iterator over all records from the given base modified after the
@@ -50,13 +67,17 @@ public interface ReadableStorage extends Configurable {
      * The implementation of this method should be very light in the case there
      * are no updates as change notification services might poll the storage
      * using this service.
+     * <p/>
+     * For convenient iteration over the result set one can use a
+     * {@link StorageIterator} on the returned iterator key.
      *
      * @param time a timestamp in milliseconds
      * @param base the name of the original record base
-     * @return an iterator over all records modified after given time (sorted by name)
-     * @throws IOException
+     * @return an iterator key that can be used to iterate over all records
+     *         modified after given time (sorted by record id)
+     * @throws IOException on communication errors with the storage
      */
-    Iterator<Record> getRecordsModifiedAfter(long time, String base) throws IOException;
+    long getRecordsModifiedAfter(long time, String base) throws IOException;
 
     /**
      * Returns whether there has been changes in {@code base} after the time
@@ -78,14 +99,18 @@ public interface ReadableStorage extends Configurable {
     /**
      * Get an iterator over all records from the given base "from" the given id.
      * I.e. get all records with id "larger than" the given id.
-     * Would we prefer "larger than or equal to"?
      * The iterator is sorted by record id.
-     * @param id record id (bib#/id)
+     * <p/>
+     * For convenient iteration over the result set one can use a
+     * {@link StorageIterator} on the returned iterator key.
+     *
+     * @param id record id
      * @param base the name of the original record base
-     * @return an iterator over records "from" the given id (sorted by id)
-     * @throws IOException
+     * @return an iterator key that can be used to iterate over all records
+     *         "from" the given id (sorted by id)
+     * @throws IOException on communication errors with the storage service
      */
-    Iterator<Record> getRecordsFrom(String id, String base) throws IOException;
+    long getRecordsFrom(String id, String base) throws IOException;
 
     /**
      * Get the records with the given ids. Child records will be expanded
@@ -125,6 +150,7 @@ public interface ReadableStorage extends Configurable {
      * There is no {@code hasNext} method on the {{{ReadableStorage}}} interface
      * instead iterate until you receive a {{{NoSuchElementException}}}. This is
      * to enforce that bad clients don't do two remote calls per record.
+     * 
      * @param iteratorKey iterator key
      * @return the next record in the iteration
      * @throws IOException if there was a problem requesting the record
@@ -133,8 +159,10 @@ public interface ReadableStorage extends Configurable {
      *                                          In case this exception is thrown
      *                                          the iterator should not be
      *                                          accessed again
+     * @throws IllegalArgumentException if {@code iteratorKey} is not known
+     *                                  by the storage
      */
-    Record next(Long iteratorKey) throws IOException;
+    Record next(long iteratorKey) throws IOException;
 
     /**
      * Return a maximum of maxRecords Records in the record iteration identified
@@ -156,8 +184,10 @@ public interface ReadableStorage extends Configurable {
      *                                          accessed again
      * @throws IOException if there was a problem requesting
      *                                  Records.
+     * @throws IllegalArgumentException if {@code iteratorKey} is not known
+     *                                  by the storage
      */
-    List<Record> next(Long iteratorKey, int maxRecords) throws IOException;
+    List<Record> next(long iteratorKey, int maxRecords) throws IOException;
 
 }
 

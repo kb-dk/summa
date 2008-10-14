@@ -3,6 +3,7 @@ package dk.statsbiblioteket.summa.storage.api;
 import dk.statsbiblioteket.util.rpc.ConnectionFactory;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.RMIConnectionFactory;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.rpc.SummaRMIConnectionFactory;
@@ -30,6 +31,9 @@ import org.apache.commons.logging.LogFactory;
  * </p>
  *
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.QA_NEEDED,
+        author = "mke")
 public class StorageConnectionFactory extends ConnectionFactory<Storage>
                                       implements Configurable {
 

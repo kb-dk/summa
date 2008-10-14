@@ -16,21 +16,21 @@ import java.io.IOException;
 public interface RemoteStorage extends Storage, Remote {
 
     /* Reader methods */
-    Iterator<Record> getRecordsFromBase(String base) throws RemoteException;
+    long getRecordsFromBase(String base) throws RemoteException;
 
-    Iterator<Record> getRecordsModifiedAfter(long time, String base) throws RemoteException;
+    long getRecordsModifiedAfter(long time, String base) throws RemoteException;
 
     boolean isModifiedAfter(long time, String base) throws RemoteException;
 
-    Iterator<Record> getRecordsFrom(String id, String base) throws RemoteException;
+    long getRecordsFrom(String id, String base) throws RemoteException;
 
     List<Record> getRecords(List<String> ids, int expansionDepth) throws RemoteException;
 
     Record getRecord(String id, int expansionDepth) throws RemoteException;
 
-    Record next(Long iteratorKey) throws RemoteException;
+    Record next(long iteratorKey) throws RemoteException;
 
-    List<Record> next(Long iteratorKey, int maxRecords) throws
+    List<Record> next(long iteratorKey, int maxRecords) throws
                                                                 RemoteException;
 
     /* Writer methods */
