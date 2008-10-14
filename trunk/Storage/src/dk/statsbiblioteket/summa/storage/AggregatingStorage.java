@@ -22,7 +22,10 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * A {@link Storage} proxying requests onto a collection of sub-storages. The
- * matching is done on {@code base} level.
+ * matching is done on {@code base} level. The actual requests are send through
+ * {@link StorageReaderClient}s and {@link StorageWriterClient}s meaning that
+ * all connections are stateless and will survive unstable connections to the
+ * sub storages.
  * <p/>
  * Configuration instructions for the aggregating storage can be found under
  * {@link #CONF_SUB_STORAGES}.
