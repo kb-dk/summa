@@ -309,19 +309,19 @@ public class AggregatingStorage extends StorageBase {
         return iterKey;
     }
 
-    public boolean isModifiedAfter(long time, String base) throws IOException {
+    public long getModificationTime (String base) throws IOException {
         if (log.isTraceEnabled()) {
-            log.trace ("isModifiedAfter("+time+", '"+base+"')");
+            log.trace ("getModificationTime("+base+")");
         }
 
         StorageReaderClient reader = getSubStorageReader(base);
 
         if (reader == null) {
             log.warn("No sub storage configured for base '" + base + "'");
-            return false;
+            return -1;
         }
 
-        return reader.isModifiedAfter(time, base);
+        return reader.getModificationTime (base);
     }
 
     public long getRecordsFrom(String id, String base) throws IOException {

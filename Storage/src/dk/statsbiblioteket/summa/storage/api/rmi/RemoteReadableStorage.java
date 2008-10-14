@@ -6,7 +6,6 @@ import dk.statsbiblioteket.summa.common.Record;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.List;
-import java.util.Iterator;
 
 /**
  * Created by IntelliJ IDEA. User: mikkel Date: Aug 5, 2008 Time: 1:02:08 PM To
@@ -18,7 +17,7 @@ public interface RemoteReadableStorage extends ReadableStorage, Remote {
 
     long getRecordsModifiedAfter(long time, String base) throws RemoteException;
 
-    boolean isModifiedAfter(long time, String base) throws RemoteException;
+    long getModificationTime (String base) throws RemoteException;
 
     long getRecordsFrom(String id, String base) throws RemoteException;
 
