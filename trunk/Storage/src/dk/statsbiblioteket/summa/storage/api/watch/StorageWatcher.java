@@ -5,6 +5,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
 import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
 import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -18,12 +19,19 @@ import java.io.IOException;
  * The implementation relies on {@link ReadableStorage#getModificationTime}
  * and does active polling to keep track of changes.
  * The implementation only relies on the server side system time to avoid
- * problems with the client and server system times not matching up.
+ * problems with the client and server system times not matching up. In fact
+ * the timestamps are tracked on a per-base level to make sure that the watcher
+ * will also work with a
+ * {@link dk.statsbiblioteket.summa.storage.AggregatingStorage} where each
+ * base might map to a different server.
  * <p/>
  * <b>FIXME:</b> Batching of events if there are many? We should probably handle
  *               that with care since if allow user generated content in the
  *               storage things might change all the time
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.QA_NEEDED,
+        author = "mke")
 public class StorageWatcher implements Configurable, Runnable {
 
     /**
