@@ -174,20 +174,7 @@ public class DerbyStorage extends DatabaseStorage implements Configurable {
 
     protected Connection getConnection() {
         return connection;
-    }
-
-    public void close() throws RemoteException {
-        try {
-            getConnection().close();
-            if (!getConnection().isClosed()) {
-                throw new RemoteException("close was called on the connection, "
-                                          + "but the connection state is not "
-                                          + "closed");
-            }
-        } catch (SQLException e) {
-            throw new RemoteException("SQLException when closing connection",
-                                      e);
-        }    }
+    }    
 }
 
 

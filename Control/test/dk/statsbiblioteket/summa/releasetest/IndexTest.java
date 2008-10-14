@@ -44,6 +44,7 @@ import dk.statsbiblioteket.summa.control.service.FilterService;
 import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import dk.statsbiblioteket.summa.index.XMLTransformer;
 import org.apache.commons.logging.Log;
@@ -229,21 +230,22 @@ public class IndexTest extends NoExitTestCase {
         ingester.start();
         waitForService(ingester);
 
-        Iterator<Record> recordIterator =
-                storage.getRecordsModifiedAfter(0, TESTBASE);
+        long iterKey = storage.getRecordsModifiedAfter(0, TESTBASE);
+        Iterator<Record> iterator = new StorageIterator(storage, iterKey);
         assertTrue("The iterator should have at least one element",
-                   recordIterator.hasNext());
+                   iterator.hasNext());
         for (int i = 0 ; i < NUM_RECORDS ; i++) {
             assertTrue("Storage should have next for record #" + (i+1),
-                       recordIterator.hasNext());
-            Record record = recordIterator.next();
+                       iterator.hasNext());
+            Record record = iterator.next();
             assertNotNull("The next should give a record", record);
         }
         assertFalse("After " + NUM_RECORDS + " Records, iterator should finish",
-                    recordIterator.hasNext());
+                    iterator.hasNext());
 
-        recordIterator = storage.getRecordsModifiedAfter(0, TESTBASE);
-        Record gurli = recordIterator.next();
+        iterKey = storage.getRecordsModifiedAfter(0, TESTBASE);
+        iterator = new StorageIterator(storage, iterKey);
+        Record gurli = iterator.next();
         String fileContent =
                 Resolver.getUTF8Content("data/fagref/gurli.margrethe.xml");
         assertEquals("The stored content should match the file-content",

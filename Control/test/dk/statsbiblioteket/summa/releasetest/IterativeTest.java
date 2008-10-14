@@ -45,6 +45,7 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
+import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.summa.storage.api.filter.RecordReader;
 import dk.statsbiblioteket.summa.facetbrowser.core.FacetMap;
 import dk.statsbiblioteket.summa.facetbrowser.core.FacetCore;
@@ -520,7 +521,8 @@ public class IterativeTest extends NoExitTestCase {
     }
 
     private int countRecords(String base) throws IOException {
-        Iterator<Record> iterator = storage.getRecordsFromBase(base);
+        long iterKey = storage.getRecordsFromBase(base);
+        Iterator<Record> iterator = new StorageIterator(storage, iterKey); 
         int counter = 0;
         while (iterator.hasNext()) {
             counter++;

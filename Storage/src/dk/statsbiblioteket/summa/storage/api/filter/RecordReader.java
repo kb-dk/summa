@@ -31,6 +31,7 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -200,7 +201,8 @@ public class RecordReader implements ObjectFilter {
             long startTime = getStartTime();
             log.debug(String.format("Getting Records modified after "
                                     + ISO_TIME, startTime));
-            recordIterator = storage.getRecordsModifiedAfter(startTime, base);
+            long iterKey = storage.getRecordsModifiedAfter(startTime, base);
+            recordIterator = new StorageIterator(storage, iterKey); 
         } catch (IOException e) {
             FilterCommons.reportError(accessContext, e);
             throw new ConfigurationException("Exception while getting "

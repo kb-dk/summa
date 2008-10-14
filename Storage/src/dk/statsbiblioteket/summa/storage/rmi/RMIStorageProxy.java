@@ -9,6 +9,7 @@ import dk.statsbiblioteket.summa.common.configuration.storage.XStorage;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
 import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.RemoteException;
@@ -20,8 +21,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- *
+ * A {@link Storage} implementation capable of wrapping an underlying backend
+ * {@code Storage} and expose it over RMI.
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.QA_NEEDED,
+        author = "mke")
 public class RMIStorageProxy extends UnicastRemoteObject
                              implements RemoteStorage {
 
@@ -122,7 +127,7 @@ public class RMIStorageProxy extends UnicastRemoteObject
     }
 
     /* Reader methods */
-    public Iterator<Record> getRecordsFromBase(String base) throws RemoteException {
+    public long getRecordsFromBase(String base) throws RemoteException {
         try {
             return backend.getRecordsFromBase(base);
         } catch (IOException e) {
@@ -131,7 +136,7 @@ public class RMIStorageProxy extends UnicastRemoteObject
         }
     }
 
-    public Iterator<Record> getRecordsModifiedAfter(long time, String base) throws RemoteException {
+    public long getRecordsModifiedAfter(long time, String base) throws RemoteException {
         try {
             return backend.getRecordsModifiedAfter(time, base);
         } catch (IOException e) {
@@ -151,7 +156,7 @@ public class RMIStorageProxy extends UnicastRemoteObject
         }
     }
 
-    public Iterator<Record> getRecordsFrom(String id, String base) throws RemoteException {
+    public long getRecordsFrom(String id, String base) throws RemoteException {
         try {
             return backend.getRecordsFrom(id, base);
         } catch (IOException e) {
@@ -180,7 +185,7 @@ public class RMIStorageProxy extends UnicastRemoteObject
         }
     }
 
-    public Record next(Long iteratorKey) throws RemoteException {
+    public Record next(long iteratorKey) throws RemoteException {
         try {
             return backend.next(iteratorKey);
         } catch (IOException e) {
@@ -190,7 +195,7 @@ public class RMIStorageProxy extends UnicastRemoteObject
         }
     }
 
-    public List<Record> next(Long iteratorKey, int maxRecords) throws RemoteException {
+    public List<Record> next(long iteratorKey, int maxRecords) throws RemoteException {
         try {
             return backend.next(iteratorKey, maxRecords);
         } catch (IOException e) {

@@ -124,7 +124,8 @@ public class StorageTool {
         String base = argv[1];
 
         System.err.println ("Getting records from base '" + base + "'");
-        Iterator<Record> records = storage.getRecordsFromBase(base);
+        long iterKey = storage.getRecordsFromBase(base); 
+        Iterator<Record> records = new StorageIterator(storage, iterKey);
         Record rec;
 
         int count = 0;

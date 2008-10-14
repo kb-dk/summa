@@ -28,14 +28,12 @@ package dk.statsbiblioteket.summa.storage;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.storage.StorageBase;
-import dk.statsbiblioteket.summa.storage.api.RecordIterator;
+import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.rmi.RemoteException;
 import java.util.Random;
 import java.util.Iterator;
-import java.util.List;
-import java.util.ArrayList;
 import java.io.IOException;
 
 /**
@@ -57,24 +55,24 @@ public class FakeAccess extends StorageBase {
         this.recordCount = recordCount;
     }
 
-    public Iterator<Record> getRecordsFromBase(String base) throws RemoteException {
+    public long getRecordsFromBase(String base) throws RemoteException {
         position = 0;
-        return new RecordIterator(this, 0L, recordCount > 0);
+        return 0L;
     }
 
-    public Iterator<Record> getRecordsModifiedAfter(long time, String base) throws
+    public long getRecordsModifiedAfter(long time, String base) throws
                                                                RemoteException {
         position = 0;
-        return new RecordIterator(this, 0L, recordCount > 0);
+        return 0L;
     }
 
-    public Iterator<Record> getRecordsFrom(String name, String base) throws
+    public long getRecordsFrom(String name, String base) throws
                                                                RemoteException {
         if (!recordExists(name)) {
             throw new RemoteException("Record '" + name + "' does not exist");
         }
         int position = Integer.parseInt(name);
-        return new RecordIterator(this, 0L, position != recordCount-1);
+        return 0L;
     }
 
     public Record getRecord(String name, int expansionDepth)
@@ -113,7 +111,7 @@ public class FakeAccess extends StorageBase {
         //To change body of implemented methods use File | Settings | File Templates.
     }
 
-    public Record next(Long iteratorKey) throws RemoteException {
+    public Record next(long iteratorKey) throws RemoteException {
         if (position >= recordCount) {
             throw new RemoteException("No more records");
         }

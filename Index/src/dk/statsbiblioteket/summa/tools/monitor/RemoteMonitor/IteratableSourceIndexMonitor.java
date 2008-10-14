@@ -23,6 +23,7 @@
 package dk.statsbiblioteket.summa.tools.monitor.RemoteMonitor;
 
 import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.summa.index.IndexService;
 import dk.statsbiblioteket.summa.tools.monitor.Monitor;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
@@ -166,14 +167,17 @@ public class IteratableSourceIndexMonitor extends Monitor {
                 if (!completedFullIndex) {
                     if (!"".equals(lastRecordID)) {
                         log.debug("resuming iteration from:  " + lastRecordID);
-                        iter = store.getRecordsFrom(lastRecordID, TARGET);
+                        iter = new StorageIterator(store,
+                                                   store.getRecordsFrom(lastRecordID, TARGET));
                     } else {
                         log.debug("Getting all records");
-                        iter = store.getRecordsFromBase(TARGET);
+                        iter = new StorageIterator(store,
+                                                   store.getRecordsFromBase(TARGET));
                     }
                 } else {
                     log.debug("Getting records modified after: "  + timestamp);
-                    iter = store.getRecordsModifiedAfter(timestamp, TARGET);
+                    iter = new StorageIterator(store,
+                                               store.getRecordsModifiedAfter(timestamp, TARGET));
                 }
             } catch (IOException e) {
                 log.error("Error in getting remote iterator", e);

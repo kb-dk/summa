@@ -30,6 +30,7 @@ import dk.statsbiblioteket.summa.storage.database.derby.DerbyStorage;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.StorageBase;
 import dk.statsbiblioteket.summa.storage.rmi.RMIStorageProxy;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -37,6 +38,9 @@ import org.apache.commons.logging.LogFactory;
  * Helper class to create instances of {@link Storage} implementations
  * given a configuration.
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.QA_NEEDED,
+        author = "mke")
 public class StorageFactory {
     private static Log log = LogFactory.getLog(StorageFactory.class);
 

@@ -7,11 +7,15 @@ import java.io.File;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * A collection of utility methods handy for
  * {@link dk.statsbiblioteket.summa.storage.api.Storage} implementations.
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.QA_NEEDED,
+        author = "mke")
 public class StorageUtils {
 
     private static final Log log = LogFactory.getLog (StorageUtils.class);

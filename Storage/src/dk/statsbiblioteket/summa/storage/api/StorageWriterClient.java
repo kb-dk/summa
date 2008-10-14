@@ -3,6 +3,7 @@ package dk.statsbiblioteket.summa.storage.api;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.IOException;
 import java.util.List;
@@ -20,7 +21,11 @@ import java.util.List;
  * {@link dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory#CONF_FACTORY}, and
  * {@link ConnectionConsumer#CONF_RPC_TARGET}
  */
-public class StorageWriterClient extends ConnectionConsumer<WritableStorage> {
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.QA_NEEDED,
+        author = "mke")
+public class StorageWriterClient extends ConnectionConsumer<WritableStorage>
+                                 implements WritableStorage {
 
     public StorageWriterClient(Configuration conf) {
         super(conf);

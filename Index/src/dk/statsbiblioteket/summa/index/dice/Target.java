@@ -23,6 +23,7 @@
 package dk.statsbiblioteket.summa.index.dice;
 
 import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
+import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
@@ -65,7 +66,7 @@ public class Target {
         }
 
         // TODO: Read jobHints and see if we should resume or what
-        source = _io.getRecordsFromBase(base);
+        source = new StorageIterator(_io, _io.getRecordsFromBase(base));
     }
 
     public Record getNextRecord () {

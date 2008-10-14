@@ -34,7 +34,7 @@ import dk.statsbiblioteket.summa.storage.api.WritableStorage;
  * at {@link StorageConnectionFactory}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_NEEDED,
         author = "mke")
 public interface Storage extends ReadableStorage, WritableStorage {
 

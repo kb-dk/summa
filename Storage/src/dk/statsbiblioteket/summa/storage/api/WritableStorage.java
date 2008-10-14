@@ -31,7 +31,7 @@ import java.util.List;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "hal")
+        author = "mke")
 public interface WritableStorage extends Configurable {
 
     /**
