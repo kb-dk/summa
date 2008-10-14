@@ -9,7 +9,6 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Iterator;
 
 /**
  * A helper class utilizing a stateless connection to a storage service exposing
@@ -64,15 +63,15 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
         }
     }
 
-    public boolean isModifiedAfter(long time, String base) throws IOException {
+    public long getModificationTime (String base) throws IOException {
         ReadableStorage storage = getConnection();
 
         try {
-            return storage.isModifiedAfter(time, base);
+            return storage.getModificationTime (base);
         } catch (Throwable t) {
             connectionError(t);
-            throw new IOException("getRecordsModifiedAfter("+time+", "+base
-                                  +") failed: " + t.getMessage(), t);
+            throw new IOException("getModificationTIme("+base+") failed: "
+                                  + t.getMessage(), t);
         } finally {
             releaseConnection();
         }

@@ -2,7 +2,6 @@ package dk.statsbiblioteket.summa.storage.api;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.storage.database.derby.DerbyStorage;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.util.Files;
 
@@ -121,8 +120,6 @@ public class StorageTest extends TestCase {
     }
 
     public void testAddOne () throws Exception {
-        assertFalse(storage.isModifiedAfter(testStartTime, testBase1));
-
         Record rec = new Record (testId1, testBase1, testContent1);
         storage.flush (rec);
 
@@ -138,9 +135,8 @@ public class StorageTest extends TestCase {
 
         assertBaseCount(testBase1, 1);
 
-        assertTrue(storage.isModifiedAfter(testStartTime, testBase1));
-        assertTrue(storage.isModifiedAfter(testStartTime, null));
-        assertFalse(storage.isModifiedAfter(testStartTime, "dummyBase"));
+        assertTrue(storage.getModificationTime (testBase1) > testStartTime);
+        assertTrue(storage.getModificationTime (null) > testStartTime);
     }
 
     public void testClearOne() throws Exception {
@@ -222,8 +218,6 @@ public class StorageTest extends TestCase {
     }
 
     public void testAddTwo () throws Exception {
-        assertFalse(storage.isModifiedAfter(testStartTime, testBase1));
-
         Record rec1 = new Record(testId1, testBase1, testContent1);
         Record rec2 = new Record(testId2, testBase1, testContent1);
 
@@ -248,9 +242,8 @@ public class StorageTest extends TestCase {
 
         assertBaseCount(testBase1, 2);
 
-        assertTrue(storage.isModifiedAfter(testStartTime, testBase1));
-        assertTrue(storage.isModifiedAfter(testStartTime, null));
-        assertFalse(storage.isModifiedAfter(testStartTime, "dummyBase"));
+        assertTrue(storage.getModificationTime (testBase1) > testStartTime);
+        assertTrue(storage.getModificationTime (null) > testStartTime);
     }
 
     public void testClearTwo () throws Exception {

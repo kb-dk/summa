@@ -87,14 +87,13 @@ public interface ReadableStorage extends Configurable {
      * Change notification services polling the storage for changes should use
      * this method.
      *
-     * @param time the timestamp after which changes should have occured
      * @param base the base in which to check for changes. If {@code base} is
      *             {@code null} changes to all bases should be checked
      * @return whether or not there has been changes to base at a time later
      *         than {@code time}
      * @throws IOException on communication errors with the storage service
      */
-    boolean isModifiedAfter (long time, String base) throws IOException;
+    long getModificationTime (String base) throws IOException;
 
     /**
      * Get an iterator over all records from the given base "from" the given id.

@@ -23,17 +23,14 @@
 package dk.statsbiblioteket.summa.storage;
 
 import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 import java.io.IOException;
 
 import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.WritableStorage;
 import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
-import dk.statsbiblioteket.summa.storage.api.rmi.RemoteStorage;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -68,21 +65,6 @@ public abstract class StorageBase implements Storage {
     }
 
     /**
-     * Default implementation of
-     * {@link ReadableStorage#isModifiedAfter(long, String)} using the
-     * {@link #getLastFlushTime(String)} and related methods implmented
-     * in this base class.
-     *
-     * @throws IOException This implementation will never throw an IOException.
-     *                     It is declared anyway to let sub classes override
-     *                     this method without having to pack too many nested
-     *                     exceptions
-     */
-    public boolean isModifiedAfter (long time, String base) throws IOException {
-        return (time < getLastFlushTime(base));
-    }
-
-    /**
      * Return the time stamp for the last time {@link #flush} or
      * {@link #flushAll} was called.
      * <p/>
@@ -92,9 +74,10 @@ public abstract class StorageBase implements Storage {
      * @param base the base to check for changes in. If {@code base} is
      *             {@code null} return the maximal time stamp from all bases
      * @return the time stamp
+     * @throws IOException on communication errors
      */
-    protected long getLastFlushTime (String base) {
-        Long lastFlush;
+    public long getModificationTime (String base) throws IOException {
+        Long lastFlush = null;
 
         if (base != null) {
             lastFlush = lastFlushTimes.get(base);
@@ -120,7 +103,7 @@ public abstract class StorageBase implements Storage {
      * @param timeStamp the new time stamp to set
      * @return the {@code timeStamp} argument
      */
-    protected long setLastFlushTime (String base, long timeStamp) {
+    protected long setModificationTime (String base, long timeStamp) {
         lastFlushTimes.put (base, timeStamp);
         return timeStamp;
     }
@@ -132,8 +115,8 @@ public abstract class StorageBase implements Storage {
      * @param base the base in which to register a change
      * @return the new time stamp
      */
-    protected long updateLastFlushTime (String base) {
-        return setLastFlushTime(base, System.currentTimeMillis());
+    protected long updateModificationTime (String base) {
+        return setModificationTime (base, System.currentTimeMillis());
     }
 
     /**

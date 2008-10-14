@@ -13,7 +13,6 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.RemoteException;
-import java.util.Iterator;
 import java.util.List;
 import java.io.IOException;
 
@@ -146,9 +145,9 @@ public class RMIStorageProxy extends UnicastRemoteObject
         }
     }
 
-    public boolean isModifiedAfter(long time, String base) throws RemoteException {
+    public long getModificationTime (String base) throws RemoteException {
         try {
-            return backend.isModifiedAfter(time, base);
+            return backend.getModificationTime (base);
         } catch (IOException e) {
             throw new RemoteException("Failed to check modification state on "
                                       + "base '" + base + "': "

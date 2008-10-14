@@ -4,7 +4,6 @@ import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
 import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
-import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.util.Strings;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -13,15 +12,23 @@ import java.util.*;
 import java.io.IOException;
 
 /**
- * FIXME: Batching of events if there are many? We should probably handle that
- *        with care since if allow user generated content in the storage things
- *        might change all the time
+ * Change notification mechanism for a Summa storage service. Change
+ * notification can be controlled on a per-base level.
+ * <p/>
+ * The implementation relies on {@link ReadableStorage#getModificationTime}
+ * and does active polling to keep track of changes.
+ * The implementation only relies on the server side system time to avoid
+ * problems with the client and server system times not matching up.
+ * <p/>
+ * <b>FIXME:</b> Batching of events if there are many? We should probably handle
+ *               that with care since if allow user generated content in the
+ *               storage things might change all the time
  */
 public class StorageWatcher implements Configurable, Runnable {
 
     /**
      * Configuration property defining the number of milliseconds between
-     * polling {@link ReadableStorage#isModifiedAfter(long,String)}. Defaults
+     * polling {@link ReadableStorage#getModificationTime(String)}. Defaults
      * to {@link #DEFAULT_POLL_INTERVAL}
      */
     public static final String CONF_POLL_INTERVAL =
@@ -66,7 +73,8 @@ public class StorageWatcher implements Configurable, Runnable {
     private Map<StorageChangeListener,ListenerContext> listeners;
     private Set<String> bases;
     private int pollInterval;
-    private long lastCheck;
+    private Map<String,Long> pollTimes;
+    private long startTime;
 
     private Log log;
 
@@ -76,7 +84,8 @@ public class StorageWatcher implements Configurable, Runnable {
         this.pollInterval = pollInterval;
         this.reader = reader;
 
-        lastCheck = System.currentTimeMillis();
+        startTime = System.currentTimeMillis();
+        pollTimes = new HashMap<String,Long>(10);
         bases = new HashSet<String>(10);
         listeners = new HashMap<StorageChangeListener,ListenerContext>();
 
@@ -130,11 +139,11 @@ public class StorageWatcher implements Configurable, Runnable {
 
         for (ListenerContext ctx : listeners.values()) {
 
-            if (base == null && ctx.getBases() == null) {
+            if (ctx.getBases() == null && base == null) {
+                /* Listeners subscribed to all changes should only be notified
+                 * here to prevent multiple notifications on the same change */
                 ctx.getListener().storageChanged(this, null, eventTime,
                                                  ctx.getUserData());
-
-
             } else if (ctx.getBases() != null &&
                        ctx.getBases().contains(base)) {
                 ctx.getListener().storageChanged(this, base, eventTime,
@@ -156,28 +165,34 @@ public class StorageWatcher implements Configurable, Runnable {
                            + getPollInterval() + " ms");
             }
 
-            long now = System.currentTimeMillis();
-
             for (String base : bases) {
                 if (log.isTraceEnabled()) {
                     log.trace ("Polling base: " + base);
                 }
 
-                if (BASE_WILDCARD.equals(base)) {
-                    base = null;
+                Long lastCheck = pollTimes.get(base);
+
+                if (lastCheck == null) {
+                    log.warn("No timestamp for base '" + base + "'. Skipping");
+                    updatePollTimes ();
+                    continue;
                 }
 
                 try {
-                    if (reader.isModifiedAfter(lastCheck, base)) {
-                        notifyListeners(base, now);
+                    String b = BASE_WILDCARD.equals(base) ? null : base;
+                    Long mtime = reader.getModificationTime(b);
+
+                    /* If we have changes notify the listeners and store the new
+                     * timestamp */
+                    if (mtime > lastCheck) {
+                        notifyListeners(b, mtime);
+                        pollTimes.put(base, mtime);
                     }
                 } catch (IOException e) {
                     log.warn("Error connecting to storage "
                              + reader + ", base '"
                              + base + "': " + e.getMessage(), e);
                 }
-
-                lastCheck = now;
             }
         }
     }
@@ -204,6 +219,23 @@ public class StorageWatcher implements Configurable, Runnable {
         } else {
             log.debug("Adding listener " + l + ", on all bases");
             bases.add (BASE_WILDCARD);
+        }
+
+        updatePollTimes();
+    }
+
+    private void updatePollTimes () {
+        for (String base : bases) {
+            if (!pollTimes.containsKey(base)) {
+                try {
+                    log.debug("Getting initial timestamp for base '"+base+"'");
+                    pollTimes.put(base, reader.getModificationTime(base));
+                } catch (IOException e) {
+                    log.warn("Failed to update timestamp for base '" + base
+                             + "': " + e.getMessage (), e);
+                }
+            }
+
         }
     }
 

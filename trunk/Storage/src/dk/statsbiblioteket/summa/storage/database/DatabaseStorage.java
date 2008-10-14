@@ -30,14 +30,12 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.*;
 import java.util.*;
-import java.rmi.RemoteException;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.summa.storage.StorageBase;
-import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Zips;
 import dk.statsbiblioteket.util.Strings;
@@ -488,7 +486,7 @@ public abstract class DatabaseStorage extends StorageBase {
         log.debug("getRecordsModifiedAfter('" + time + "', " + base
                   + ") entered");
 
-        if (time > getLastFlushTime(base)) {
+        if (time > getModificationTime (base)) {
             log.debug ("Storage not flushed after " + time + ". Returning"
                        + " empty iterator");
             return EMPTY_ITERATOR_KEY;
@@ -641,7 +639,7 @@ public abstract class DatabaseStorage extends StorageBase {
         }
 
         /* Update the timestamp we check agaist in getRecordsModifiedAfter */
-        updateLastFlushTime(record.getBase());
+        updateModificationTime (record.getBase());
 
         if (record.isDeleted()){
             log.debug("Deleting record '" + record.getId() + "' from base '"
@@ -672,7 +670,7 @@ public abstract class DatabaseStorage extends StorageBase {
         /* Again - update the timestamp we check agaist in
          * getRecordsModifiedAfter. This is also done in the end of the flush()
          * because the operation is non-instantaneous  */
-        updateLastFlushTime(record.getBase());
+        updateModificationTime (record.getBase());
 
     }
 
