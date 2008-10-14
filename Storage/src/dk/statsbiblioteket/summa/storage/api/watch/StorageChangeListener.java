@@ -2,11 +2,15 @@ package dk.statsbiblioteket.summa.storage.api.watch;
 
 import dk.statsbiblioteket.summa.storage.api.watch.StorageWatcher;
 import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
+import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * Notification interface for objects that want to monitor a
  * {@link ReadableStorage} for changes via a {@link StorageWatcher}.
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.QA_NEEDED,
+        author = "mke")
 public interface StorageChangeListener {
 
     /**
