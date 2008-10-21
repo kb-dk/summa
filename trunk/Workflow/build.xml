@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<project default="all" name="Storage" basedir=".">
+<project default="all" name="Workflow" basedir=".">
 
     <!--
        PROPERTIES
