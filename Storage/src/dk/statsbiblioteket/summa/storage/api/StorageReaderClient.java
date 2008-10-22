@@ -21,7 +21,10 @@ import java.util.List;
  * {@link dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory#CONF_RETRIES},
  * {@link dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory#CONF_GRACE_TIME},
  * {@link dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory#CONF_FACTORY}, and
- * {@link ConnectionConsumer#CONF_RPC_TARGET}
+ * {@link ConnectionConsumer#CONF_RPC_TARGET}.
+ * <p/>
+ * The property {@link ConnectionConsumer#CONF_RPC_TARGET} <i>must</i> be
+ * defined while all others are optional.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
