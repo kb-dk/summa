@@ -35,8 +35,9 @@ import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 
 /**
- * Retrieved payloads from a given source and processes the streams from the
- * payloads with a Configuration-specified StreamParser.
+ * Retrieves payloads from a given source and processes the streams from the
+ * payloads with a Configuration-specified StreamParser. The StreamParser
+ * splits the given streams into Records, wrapped in new Payloads.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -82,18 +83,31 @@ public class StreamController implements ObjectFilter {
         }
         while (payload == null) {
             try {
+                log.trace("makePayload(): Calling parser.hasNext()");
                 if (parser.hasNext()) {
+                    log.trace("makePayload(): Calling parser.next()");
                     payload = parser.next();
                     return;
+                } else {
+                    log.trace("makePayload(): parser.hasNext() == false");
                 }
             } catch (Exception e) {
                 log.warn("Exception requesting payload from parser, "
                          + "skipping to next stream payload", e);
                 parser.stop();
             }
+
             if (source.hasNext()) {
+                log.trace("makePayload(): Source hasNext, "
+                          + "calling source.next()");
                 Payload streamPayload = source.next();
-                log.debug("makePayload: Opening stream payload " + payload);
+                if (streamPayload == null) {
+                    log.warn(String.format(
+                            "Got null Payload from source %s after hasNext()"
+                            + " == true", source));
+                }
+                log.debug("makePayload: Opening source stream payload "
+                          + streamPayload);
                 parser.open(streamPayload);
             } else {
                 log.debug("makePayload: No more stream payloads available");
@@ -125,6 +139,7 @@ public class StreamController implements ObjectFilter {
         }
         Payload next = next();
         if (next == null) {
+            log.warn("pump: Got null as next after hasNext() was true");
             return false;
         }
         next.close();
@@ -137,7 +152,7 @@ public class StreamController implements ObjectFilter {
                     "close(%b): Cannot close as no source is specified",
                     success));
         } else {
-            parser.stop();
+//            parser.stop(); // It should finish by itself
             source.close(success);
         }
     }
