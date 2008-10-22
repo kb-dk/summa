@@ -52,7 +52,7 @@ import org.apache.commons.logging.LogFactory;
  * If close(false) is called, no files are marked with the postfix and any open
  * files are closed immediately.
  * </p><p>
- * Meta-info for delivered payloads will contain {@link #ORIGIN} which states
+ * Meta-info for delivered payloads will contain {@link Payload#ORIGIN} which states
  * the originating file for the stream.
  * </p><p>
  * The files are processed breadth-first in unicode-sorted order.
@@ -94,11 +94,6 @@ public class FileReader implements ObjectFilter {
             "summa.ingest.filereader.completedpostfix";
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public static final String DEFAULT_COMPLETED_POSTFIX = ".completed";
-
-    /**
-     * The key for the filename-value, added to meta-info in delivered payloads.
-     */
-    public static final String ORIGIN = "filename";
 
     protected File root;
     private boolean recursive = true;
@@ -271,6 +266,7 @@ public class FileReader implements ObjectFilter {
             rename();
         }
         public void close() throws IOException {
+            log.trace("Closing stream to file '" + file + "'");
             super.close();
             closed = true;
             rename();
@@ -295,6 +291,10 @@ public class FileReader implements ObjectFilter {
                               + "' to '" + newName + "'", e);
                 }
             }
+        }
+
+        public String toString() {
+            return "RenamingFileStream(" + file + ")";
         }
     }
 
@@ -324,7 +324,7 @@ public class FileReader implements ObjectFilter {
         try {
             RenamingFileStream in = new RenamingFileStream(current, postfix);
             Payload payload = new Payload(in);
-            payload.getData().put(ORIGIN, current.getPath());
+            payload.getData().put(Payload.ORIGIN, current.getPath());
             log.debug("File '" + current + "' opened successfully");
 //            System.out.println(delivered + " " + payload);
             delivered.add(payload);

@@ -35,7 +35,12 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
 
 /**
  * Helper implementation of StreamParser that handles the bookkeeping of
- * threaded parsing.
+ * threaded parsing. With threaded parsing, a thread is responsible for reading
+ * from the Stream, producing Records and adding the Records to a queue.
+ * Reading from the queue is done from outside the Thread.
+ * </p><p>
+ * Implementators of this abstract class only needs to override the
+ * {@link #protectedRun()} method.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -66,10 +71,10 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
     private static final Record interruptor =
             new Record("dummyID", "dummyBase", new byte[0]);
 
-    protected ArrayBlockingQueue<Record> queue;
-    private Payload sourcePayload;
     private int queueTimeout = DEFAULT_QUEUE_TIMEOUT;
-    private boolean running = false;
+    protected ArrayBlockingQueue<Record> queue;
+    protected Payload sourcePayload;
+    protected boolean running = false;
     private boolean finished = false; // Totally finished
 
     public ThreadedStreamParser(Configuration conf) {
@@ -82,30 +87,40 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
     }
 
     public void open(Payload streamPayload) {
+        //noinspection DuplicateStringLiteralInspection
+        log.debug("open(" + streamPayload + ") called");
         if (running) {
             throw new IllegalStateException(String.format(
-                    "Already parsing %s", streamPayload));
+                    "Already parsing %s", sourcePayload));
         }
+        queue.clear(); // Clean-up from previous runs
         if (streamPayload.getStream() == null) {
             log.warn("No stream in received " + streamPayload
                      + ". No Records will be generated");
+            finished = true;
             return;
         }
         sourcePayload = streamPayload;
         log.trace("Starting Thread for " + streamPayload);
+        running = true;
+        finished = false;
         new Thread(this).start();
     }
 
+    @SuppressWarnings({"ObjectEquality"})
     public synchronized boolean hasNext() {
         log.trace("hasNext() called");
-        if (queue == null) { // TODO: If this check solid enough?
+        // TODO: If this check solid enough?
+        if (queue == null || sourcePayload == null) {
             return false;
         }
         long endTime = System.currentTimeMillis() + queueTimeout;
         while (System.currentTimeMillis() < endTime) {
             if (finished) {
-                log.trace("hasNext reached state finished=true");
-                //noinspection ObjectEquality
+                if (log.isTraceEnabled()) {
+                    log.trace("hasNext reached state finished=true, returning "
+                    + (queue.size() > 0 && queue.peek() != interruptor));
+                }
                 return queue.size() > 0 && queue.peek() != interruptor;
             }
 
@@ -117,8 +132,13 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
                 return queue.peek() != interruptor;
             }
 
+            log.trace("hasNext(): Calling peek on queue of size 0 and running " 
+                      + running);
             Record record = queue.peek();
+            log.trace("hasNext(): Peek finished with Record " + record);
             if (record != null) {
+                log.trace("hasNext(): queue.size() > 0, returning " 
+                          + (record != interruptor));
                 //noinspection ObjectEquality
                 return record != interruptor;
             }
@@ -162,6 +182,7 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
                 log.trace("Got record. Constructing and returning Payload");
                 Payload newPayload = sourcePayload.clone();
                 newPayload.setRecord(record);
+                newPayload.setStream(null); // To avoid premature close
                 return newPayload;
             } catch (InterruptedException e) {
                 log.warn("Interrupted while waiting for Record. Retrying");
@@ -190,14 +211,19 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
 
     public void run() {
         log.debug("run() entered");
-        running = true;
         try {
             protectedRun();
         } catch (Exception e) {
-            log.warn("Exception caught from protectedRun. Stopping processing "
-                     + "of " + sourcePayload, e);
+            log.warn(String.format(
+                    "Exception caught from protectedRun of %s with origin '%s'."
+                    + " Stopping processing", 
+                    sourcePayload, sourcePayload.getData(Payload.ORIGIN)), e);
+        }
+        if (log.isDebugEnabled()) {
+            log.debug("run: Finished processing " + sourcePayload);
         }
         running = false;
+        finished = true; // Too final?
         log.debug("run() finished");
     }
 
@@ -210,8 +236,8 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
      * Records must be added and the processing must be terminated.
      * </p><p>
      * It is perfectly valid for implementations to throw an Exception. This
-     * is handled gracefully (e.g. by logging an appropriate error and skipping
-     * to the next available Stream).
+     * is handled gracefully by logging an appropriate error and skipping
+     * to the next available Stream.
      * @throws Exception if the sourcePayload could not be parsed properly.
      */
     protected abstract void protectedRun() throws Exception;

@@ -258,6 +258,7 @@ public class IndexTest extends NoExitTestCase {
                                   throws RemoteException, InterruptedException {
         int TIMEOUT = 10000;
         long endTime = System.currentTimeMillis() + TIMEOUT;
+        log.debug("Waiting a maximum of " + TIMEOUT + " ms for service");
         while (!service.getStatus().getCode().equals(Status.CODE.stopped) &&
                System.currentTimeMillis() < endTime) {
             log.trace("Sleeping a bit");
@@ -265,6 +266,7 @@ public class IndexTest extends NoExitTestCase {
         }
         assertTrue("The service '" + service + "' should have stopped by now",
                    service.getStatus().getCode().equals(Status.CODE.stopped));
+        log.debug("Finished waiting for service");
     }
 
     public static void updateIndex(Configuration conf) throws Exception {

@@ -73,6 +73,10 @@ public class Payload {
      * EOF should be returned by read() when the filter is depleted.
      */
     public static final int EOF = -1;
+    /**
+     * The key for the filename-value, added to meta-info in delivered payloads.
+     */
+    public static final String ORIGIN = "filename";
 
     /* Constructors */
 
@@ -228,6 +232,7 @@ public class Payload {
     public void close() {
         if (stream != null) {
             try {
+                log.debug("Closing embedded stream for " + this);
                 stream.close();
             } catch (IOException e) {
                 log.error("Exception closing stream", e);
@@ -250,19 +255,24 @@ public class Payload {
 
     /**
      * The clone-method is a shallow cloning, which means that all fields are
-     * copied directly.
+     * copied directly. For data, this means that a new Map is created and the
+     * content from the old map is assigned using putAll.
      * @return a shallow copy of this object.
      */
     @SuppressWarnings({"CloneDoesntDeclareCloneNotSupportedException",
                        "CloneDoesntCallSuperClone"})
     public Payload clone() {
         Payload clone = new Payload(getStream(), getRecord());
-        clone.data = data;
+        if (data != null) {
+            clone.getData().putAll(data);
+        }
         return clone;
     }
 
     public String toString() {
-        return "Payload(" + getId() + ")"; 
+        return "Payload(" + getId() + ")"
+               + (getData(ORIGIN) == null ?
+                  "" : " with origin '" + getData(ORIGIN) + "'");
     }
 }
 

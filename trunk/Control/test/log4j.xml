@@ -23,7 +23,7 @@
     <!-- -->
 
     <appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
-        <param name="Threshold" value="debug"/><!-- or ERROR or INFO -->
+        <param name="Threshold" value="trace"/><!-- or ERROR or INFO -->
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
         </layout>
@@ -61,7 +61,7 @@
     </appender>
       -->
 
-    <logger name="dk.statsbiblioteket.summa">
+    <logger name="dk.statsbiblioteket.summa.ingest.stream.StreamController">
         <level value="trace" />
         <appender-ref ref="CONSOLE" />
     </logger>

@@ -233,6 +233,8 @@ public class XMLSplitterParserTest extends TestCase {
 
     // TODO: Check for extracted id and prefix
 
+    // TODO: Check for multiple payloads from source
+
     public void testNoNamespaceParse() throws Exception {
         Configuration conf = getBasicConfiguration();
         conf.set(XMLSplitterFilter.CONF_RECORD_ELEMENT, "outer");
