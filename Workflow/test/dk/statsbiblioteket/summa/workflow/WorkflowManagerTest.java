@@ -2,6 +2,8 @@ package dk.statsbiblioteket.summa.workflow;
 
 import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.storage.FileStorage;
+import dk.statsbiblioteket.summa.common.configuration.storage.XStorage;
 import dk.statsbiblioteket.summa.common.util.ThreadInterrupt;
 
 /**
@@ -90,7 +92,7 @@ public class WorkflowManagerTest extends TestCase {
     }
 
      public void testManualGoodBadGoodAcceptFail() {
-        man = new WorkflowManager(false, true, 1);
+         man = new WorkflowManager(false, true, 1);
 
          GoodStep good1 = new GoodStep(null);
          BadStep bad = new BadStep(null);
@@ -120,5 +122,18 @@ public class WorkflowManagerTest extends TestCase {
          assertTrue("Workflow should retry until interrupted",
                     deltaTime >= 3100);
      }
+
+    public void testConfigWait() throws Exception {
+        Configuration conf = new Configuration(
+                                             new XStorage("wait-workflow.xml"));
+        man = new WorkflowManager(conf);
+
+        long delta = System.currentTimeMillis();
+        man.run();
+        delta = System.currentTimeMillis() -delta;
+
+        assertTrue(delta < 5005 && delta > 4995);
+
+    }
 
 }
