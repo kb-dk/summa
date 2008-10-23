@@ -1,7 +1,4 @@
 /* $Id$
- * $Revision$
- * $Date$
- * $Author$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -26,17 +23,12 @@ import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.XMLEvent;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.Collections;
-import java.util.Hashtable;
 import java.text.ParseException;
 import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.util.ParseUtil;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -74,7 +66,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class MARCParser extends ThreadedStreamParser {
+public abstract class MARCParser extends ThreadedStreamParser {
     private static Log log = LogFactory.getLog(MARCParser.class);
 
     /**
@@ -85,9 +77,21 @@ public class MARCParser extends ThreadedStreamParser {
     public static final String CONF_BASE = "summa.ingest.marcparser.base";
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    public static final String MARC_RECORD_TAG = "record";
+    public static final String MARC_TAG_RECORD = "record";
+    public static final String MARC_TAG_LEADER = "leader";
+    public static final String MARC_TAG_DATAFIELD = "datafield";
+    public static final String MARC_TAG_DATAFIELD_ATTRIBUTE_TAG = "tag";
+    public static final String MARC_TAG_DATAFIELD_ATTRIBUTE_IND1 = "ind1";
+    public static final String MARC_TAG_DATAFIELD_ATTRIBUTE_IND2 = "ind2";
+    public static final String MARC_TAG_SUBFIELD = "subfield";
+    public static final String MARC_TAG_SUBFIELD_ATTRIBUTE_CODE = "code";
+
     private XMLInputFactory inputFactory;
-    private String base;
+
+    /**
+     * The base for Records produced by implementations of MARCParser.
+     */
+    protected String base;
 
     public MARCParser(Configuration conf) {
         super(conf);
@@ -116,89 +120,335 @@ public class MARCParser extends ThreadedStreamParser {
             eventType = reader.next();
             //noinspection DuplicateStringLiteralInspection
             if (eventType == XMLEvent.START_ELEMENT
-                && MARC_RECORD_TAG.equals(reader.getLocalName())) {
+                && MARC_TAG_RECORD.equals(reader.getLocalName())) {
                 processInRecord(reader);
             }
         }
     }
 
     /**
-     * Collect record information and ultimately build a Record before
-     * returning.
+     * Collect record information and ultimately build a Record and add it to
+     * the queue before returning.
      * @param reader a reader positioned at the start of a record.
-     * @throws XMLStreamException if a perse error occured.
+     * @throws XMLStreamException   if a parse error occured.
+     * @throws InterruptedException if the process was interrupted while adding
+     *                              to the queue.
      */
     private void processInRecord(XMLStreamReader reader) throws
-                                                         XMLStreamException {
+                                                         XMLStreamException,
+                                                         InterruptedException {
+        initializeNewParse();
         StringWriter content = new StringWriter(2000); // Full MARC content
-        String id = null;
 
+        // TODO: Add XML-declaration and namespace
         content.append(beginTagToString(reader));
         while (running && reader.hasNext()) {
             int eventType = reader.next();
 
             switch(eventType) {
-                case XMLEvent.END_ELEMENT :
-                    content.append("<").append(reader.getLocalName()).
-                            append(">\n");
-                    if (MARC_RECORD_TAG.equals(reader.getLocalName())) {
-                        makeRecord(id, content);
-                        return;
-                    }
-                    break;
                 case XMLEvent.START_ELEMENT :
                     content.append(beginTagToString(reader));
+                    if (MARC_TAG_DATAFIELD.equals(reader.getLocalName())) {
+                        processDataField(reader, content);
+                    } else if (MARC_TAG_LEADER.equals(reader.getLocalName())) {
+                        processLeader(reader, content);
+                    } else {
+                        log.warn(String.format(
+                                "Unexpected start-tag '%s' while parsing MARC "
+                                + "for %s",
+                                reader.getLocalName(), sourcePayload));
+                    }
+                    break;
+                case XMLEvent.END_ELEMENT :
+                    content.append(endTagToString(reader));
+                    if (MARC_TAG_RECORD.equals(reader.getLocalName())) {
+                        if (running) {
+                            Record record = makeRecord(content.toString());
+                            if (record != null) {
+                                queue.put(record);
+                            }
+                        }
+                        return;
+                    }
+                    log.warn(String.format(
+                            "Unexpected end-tag '%s' while parsing MARC for %s",
+                            reader.getLocalName(), sourcePayload));
                     break;
                 case XMLEvent.CHARACTERS :
+                    log.warn(String.format(
+                            "Unexpected text '%s' while parsing MARC for %s",
+                            reader.getText(), sourcePayload));
                     // TODO: Test for "foo &lt;bar"
                     content.append(reader.getText());
                     break;
                 default:
-                    log.warn("Unexpended event while processing record: "
-                             + eventID2String(eventType));
+                    log.warn(String.format(
+                            "Unexpended event %s while processing %s",
+                             eventID2String(eventType), sourcePayload));
+            }
+        }
+        if (!running) {
+            log.debug("processInRecord stopped as running was false");
+        }
+    }
+
+    /**
+     * Process the leader in a MARC record, such as
+     * {@code <leader>.....cmm  22.....0  45032</leader>}.
+     * @param reader  the reader, positioned at the start-tag for a leader.
+     * @param content the XML content up till this point, including <leader>.
+     * @throws XMLStreamException   if a parse error occured.
+     * @throws InterruptedException if the process was interrupted while adding
+     *                              to the queue.
+     */
+    private void processLeader(XMLStreamReader reader, StringWriter content)
+            throws XMLStreamException, InterruptedException {
+        log.trace("Reached leader start-tag");
+        String leaderContent = "";
+        while (running && reader.hasNext()) {
+            int eventType = reader.next();
+
+            switch(eventType) {
+                case XMLEvent.START_ELEMENT :
+                    content.append(beginTagToString(reader));
+                    log.warn(String.format(
+                            "processLeader: Reached unexpected start-tag "
+                            + "<%s> for %s. Expected none",
+                            reader.getLocalName(), sourcePayload));
+                    break;
+                case XMLEvent.END_ELEMENT :
+                    content.append(endTagToString(reader));
+                    if (MARC_TAG_LEADER.equals(reader.getLocalName())) {
+                        if ("".equals(leaderContent)) {
+                            log.debug("No leader content for " + sourcePayload);
+                        }
+                        setLeader(leaderContent);
+                        return;
+                    }
+                    log.warn(String.format(
+                            "processLeader: Reached unexpected end-tag </%s> "
+                            + "for %s. Expected </%s>",
+                            reader.getLocalName(), sourcePayload,
+                            MARC_TAG_LEADER));
+                    break;
+                case XMLEvent.CHARACTERS :
+                    // TODO: Test for "foo &lt;bar"
+                    leaderContent = reader.getText();
+                    content.append(reader.getText());
+                    break;
+                default:
+                    log.warn(String.format(
+                            "processLeader: Unexpended event %s while "
+                            + "processing %s",
+                             eventID2String(eventType), sourcePayload));
             }
         }
     }
 
     /**
-     * Create a Record with the given id and content, then add it to the queue.
-     * @param id      the id for the Record.
-     * @param content the content of the Record.
+     * Process datafield-elements in a MARC record, such as {@code
+    <datafield tag="..." ind1="..." ind2="...">
+      <subfield code="...">...</subfield>+
+    </datafield>
+     }.
+     * @param reader  the reader, positioned at the start-tag for a datafield.
+     * @param content the XML content up till this point, including
+     *                {@code <datafield ...>}.
+     * @throws XMLStreamException   if a parse error occured.
      */
-    private void makeRecord(String id, StringWriter content) {
-        if (running) {
-            if (id == null) {
-                if (log.isDebugEnabled()) {
-                    log.warn(String.format(
-                            "Could not extract id from content " + content));
-                } else {
-                    log.warn("Could not extract id from content");
-                }
-                return;
+    protected void processDataField(XMLStreamReader reader,
+                                      StringWriter content)
+                                                     throws XMLStreamException {
+        log.trace("Reached datafield start-tag");
+        String tag = null;
+        String ind1 = null;
+        String ind2 = null;
+        for (int i = 0 ; i < reader.getAttributeCount() ; i++) {
+            if (reader.getAttributeLocalName(i).equals(
+                    MARC_TAG_DATAFIELD_ATTRIBUTE_TAG)) {
+                tag = reader.getAttributeValue(i);
+            } else if (reader.getAttributeLocalName(i).equals(
+                    MARC_TAG_DATAFIELD_ATTRIBUTE_IND1)) {
+                ind1 = reader.getAttributeValue(i);
+            } else if (reader.getAttributeLocalName(i).equals(
+                    MARC_TAG_DATAFIELD_ATTRIBUTE_IND2)) {
+                ind2 = reader.getAttributeValue(i);
+            } else {
+                log.warn(String.format(
+                        "processDatafield: Unexpected attribute %s with value" +
+                                " '%s' for tag %s",
+                        reader.getAttributeLocalName(i),
+                        reader.getAttributeValue(i), MARC_TAG_DATAFIELD));
             }
-            try {
-                log.debug("processInRecord: Adding record with id '" + id
-                          + "' to the queue");
-                queue.put(new Record(
-                        id, base, content.toString().getBytes("utf-8")));
-            } catch (UnsupportedEncodingException e) {
-                throw new RuntimeException(
-                        "utf-8 not supported in String.getBytes(\"utf-8)\")",
-                        e);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(String.format(
-                        "Interrupted while trying to add Record with id '%s' to"
-                        + " queue", id), e);
+        }
+        beginDataField(tag, ind1, ind2);
+
+        while (running && reader.hasNext()) {
+            int eventType = reader.next();
+
+            switch(eventType) {
+                case XMLEvent.START_ELEMENT :
+                    content.append(beginTagToString(reader));
+                    if (MARC_TAG_SUBFIELD.equals(reader.getLocalName())) {
+                        processSubField(reader, content, tag, ind1, ind2);
+                    } else {
+                        log.warn(String.format(
+                                "processDataField: Reached unexpected start-tag"
+                                        + " <%s> for %s. Expected %s",
+                                reader.getLocalName(), sourcePayload,
+                                MARC_TAG_SUBFIELD));
+                    }
+                    break;
+                case XMLEvent.END_ELEMENT :
+                    content.append(endTagToString(reader));
+                    if (MARC_TAG_DATAFIELD.equals(reader.getLocalName())) {
+                        endDataField(tag);
+                        return;
+                    }
+                    log.warn(String.format(
+                            "processDataField: Reached unexpected end-tag </%s>"
+                            + " for %s. Expected </%s>",
+                            reader.getLocalName(), sourcePayload,
+                            MARC_TAG_DATAFIELD));
+                    break;
+                case XMLEvent.CHARACTERS :
+                    log.warn(String.format(
+                            "processDatafield: Unexpected text '%s' while "
+                                    + "parsing MARC for %s",
+                            reader.getText(), sourcePayload));
+                    content.append(reader.getText());
+                    break;
+                default:
+                    log.warn(String.format(
+                            "processDataField: Unexpended event %s while "
+                            + "processing %s",
+                             eventID2String(eventType), sourcePayload));
             }
         }
     }
+
+    protected void processSubField(XMLStreamReader reader, StringWriter content,
+                                   String tag, String ind1, String ind2) throws
+                                                            XMLStreamException {
+        log.trace("Reached subfield start-tag");
+
+        String code = null;
+        for (int i = 0 ; i < reader.getAttributeCount() ; i++) {
+            if (reader.getAttributeLocalName(i).equals(
+                    MARC_TAG_DATAFIELD_ATTRIBUTE_TAG)) {
+                code = reader.getAttributeValue(i);
+            } else {
+                log.warn(String.format(
+                        "processSubfield: Unexpected attribute %s with value '"
+                                + "%s' for tag %s",
+                        reader.getAttributeLocalName(i),
+                        reader.getAttributeValue(i), MARC_TAG_SUBFIELD));
+            }
+        }
+
+        String subfieldcontent = "";
+        while (running && reader.hasNext()) {
+            int eventType = reader.next();
+
+            switch(eventType) {
+                case XMLEvent.START_ELEMENT :
+                    content.append(beginTagToString(reader));
+                    log.warn(String.format(
+                            "processSubField: Reached unexpected start-tag "
+                            + "<%s> for %s. Expected none",
+                            reader.getLocalName(), sourcePayload));
+                    break;
+                case XMLEvent.END_ELEMENT :
+                    content.append(endTagToString(reader));
+                    if (MARC_TAG_SUBFIELD.equals(reader.getLocalName())) {
+                        if ("".equals(subfieldcontent)) {
+                            log.debug("No subfield content for "
+                                    + sourcePayload + " in datafield " + tag
+                                    + ", subfield " + code);
+                        }
+                        setSubField(tag, ind1, ind2, code, subfieldcontent);
+                        return;
+                    }
+                    log.warn(String.format(
+                            "processsubField: Reached unexpected end-tag </%s> "
+                            + "for %s. Expected </%s>",
+                            reader.getLocalName(), sourcePayload,
+                            MARC_TAG_SUBFIELD));
+                    break;
+                case XMLEvent.CHARACTERS :
+                    subfieldcontent = reader.getText();
+                    content.append(reader.getText());
+                    break;
+                default:
+                    log.warn(String.format(
+                            "processSubField: Unexpended event %s while "
+                            + "processing %s",
+                             eventID2String(eventType), sourcePayload));
+            }
+        }
+    }
+
+    /**
+     * Initialize the MARC parser. This normally involves resetting all
+     * attributes to their default states. This method is called at the start
+     * of all record-elements.
+     */
+    protected abstract void initializeNewParse();
+
+    /**
+     * Set the leader for the record.
+     * @param content the text in the leader-element.
+     */
+    protected abstract void setLeader(String content);
+
+    /**
+     * Marks the beginning of a datafield-element. Note that the method
+     * {@link #setSubField} also contains tag, ind1 and ind2, so the
+     * beginDataField-method might not need do anything, depending on
+     * implementation.
+     * @param tag  the id for the datafield.
+     * @param ind1 the ind1-attribute for the datafield.
+     * @param ind2 the ind2-attribute for the datafield.
+     */
+    protected abstract void beginDataField(String tag,
+                                           String ind1, String ind2);
+
+    /**
+     * Set a subfield for a datafield. It is guaranteed that the subfields
+     * for a datafield will follow after {@link #beginDataField} and before
+     * {@link #endDataField}.
+     * @param dataFieldTag  the id for the datafield.
+     * @param dataFieldInd1 the ind-1 attribute for the datafield.
+     * @param dataFieldInd2 the ind-2 attribute for the datafield.
+     * @param subFieldCode  the code for the subfield.
+     * @param subFieldContent the content of the subfield.
+     */
+    protected abstract void setSubField(String dataFieldTag,
+                                        String dataFieldInd1,
+                                        String dataFieldInd2,
+                                        String subFieldCode,
+                                        String subFieldContent);
+
+    /**
+     * Marks the end a datafield-element.
+     * @param tag the id for the datafield.
+     */
+    protected abstract void endDataField(String tag);
+
+    /**
+     * Create a Record based on the received data, if possible.
+     * @param xml the XML for the MARC record, ready for insertion in a Record.
+     * @return a Record based on received data or null if a Record cannot be
+     *         created.
+     */
+    protected abstract Record makeRecord(String xml);
 
     /**
      * Convert a begin-tag to String. Suitable for dumping while parsing.
-     * @param reader a reader pointing to a vegin-tag.
+     * @param reader a reader pointing to a begin-tag.
      * @return the begin-tag as text.
      */
-    private String beginTagToString(XMLStreamReader reader) {
+    protected String beginTagToString(XMLStreamReader reader) {
         StringWriter tag = new StringWriter(50);
         tag.append("<").append(reader.getLocalName());
         for (int i = 0 ; i < reader.getAttributeCount() ; i++) {
@@ -212,11 +462,20 @@ public class MARCParser extends ThreadedStreamParser {
     }
 
     /**
+     * Convert an end-tag to String. Suitable for dumping while parsing.
+     * @param reader a reader pointing to an end-tag.
+     * @return the end-tag as text.
+     */
+    protected String endTagToString(XMLStreamReader reader) {
+        return "</" + reader.getLocalName() + ">\n";
+    }
+
+    /**
      * Udef for debugging. Converts an XMLEvent-id to String.
      * @param eventType the event id.
      * @return the event as human redable String.
      */
-    private String eventID2String(int eventType) {
+    protected String eventID2String(int eventType) {
         switch (eventType) {
             case XMLEvent.START_ELEMENT:  return "START_ELEMENT";
             case XMLEvent.END_ELEMENT:    return "END_ELEMENT";
