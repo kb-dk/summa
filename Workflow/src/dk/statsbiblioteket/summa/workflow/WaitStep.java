@@ -23,6 +23,10 @@ public class WaitStep implements WorkflowStep {
     private Log log;
     private int blockTime;
 
+    /**
+     * Create a new {@code WaitStep} blocking {@code blockTime} seconds
+     * @param blockTime number of seconds to block
+     */
     public WaitStep (int blockTime) {
         log = LogFactory.getLog(this.getClass().getName());
 
