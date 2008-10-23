@@ -11,10 +11,8 @@
     <property name="project.name" value="summa-workflow"/>
     <property name="project.version" value="${summa.version}"/>
     <property name="release" value="${project.name}-${project.version}"/>
+    <property name="release.jar" value="${release}.jar"/>
 
-    <!-- Workflow executables -->
-    <property name="clearandgo" value="${project.name}-clearandgo-${project.version}"/>
-    <property name="clearandgo.jar" value="${clearandgo}.jar"/>
 
     <!-- Persistent directories -->
     <property name="src.dir" value="${basedir}/src"/>
@@ -128,7 +126,6 @@
         <delete dir="${build.dir}"/>
         <delete dir="${test.build.dir}"/>
         <delete dir="${tmp.dir}"/>
-        <delete file="${clearandgo.jar}"/>
     </target>
 
     <target name="distclean" depends="clean">
@@ -183,7 +180,7 @@
 
     </target>
 
-    <target name=".clearandgo.release" depends="compile">
+    <target name=".jar" depends="compile">
         <delete dir="${tmp.dir}"/>
         <mkdir dir="${tmp.dir}"/>
 
@@ -204,20 +201,20 @@
         <!-- Prepare clearandgo class files -->
         <copy todir="${tmp.dir}">
             <fileset dir="${build.dir}"
-                 includes="dk/statsbiblioteket/summa/workflow/clearandgo/**/*"/>
+                 includes="dk/statsbiblioteket/summa/workflow/**/*"/>
         </copy>
 
         <!-- Roll the .jar -->
         <jar basedir="${tmp.dir}" compress="true"
-             jarfile="${dist.dir}/${clearandgo.jar}" includes="**/*">
+             jarfile="${dist.dir}/${release.jar}" includes="**/*">
             <manifest>
                 <attribute name="Main-Class"
-                    value="dk.statsbiblioteket.summa.workflow.clearandgo.Main"/>
+                    value="dk.statsbiblioteket.summa.workflow.Main"/>
             </manifest>
         </jar>
     </target>
 
-    <target name="release" depends="distclean, .clearandgo.release, doc">
+    <target name="release" depends="distclean, .jar, doc">
 
         <mkdir dir="${dist.dir}"/>
 
@@ -230,7 +227,7 @@
         <zip destfile="${dist.dir}/${release}.zip">
 
             <zipfileset prefix="${prefix}" dir="${dist.dir}"
-                        includes="${dist.dir}/${clearandgo.jar}"/>
+                        includes="${release.jar}"/>
 
             <zipfileset dir="${doc.dir}" prefix="${prefix}/${summa.apidocs.dir}">
                 <include name="**/*"/>
