@@ -167,11 +167,15 @@ public class WorkflowManager implements WorkflowStep {
     public void run() {
         log.info("Running workflow");
 
-        do {
+        boolean inRetry = false;
 
+        do {
+            inRetry = false;
             int num = 0;
+
             for (WorkflowStep step : steps) {
-                log.info("Running step " + num + step.getClass().getName());
+                log.info("Running step " + num + ": "
+                         + step.getClass().getName());
 
                 if (failureTolerant) {
                     /* Try running the step and sleep for graceTime before
@@ -184,15 +188,19 @@ public class WorkflowManager implements WorkflowStep {
                                   + step.getClass().getName() + ", failed. "
                                   + "Restarting workflow in "
                                   + graceTime + "s");
+
+                        /* Schedule us for retrying */
+                        inRetry = true;
+
                         try {
-                            Thread.sleep(graceTime);
+                            Thread.sleep(graceTime*1000);
                         } catch (InterruptedException e1) {
                             log.warn("Interruped during failure recovery "
                                      + "gracetime. Aborting workflow loop");
-                            break;
+                            inRetry = false;
                         }
 
-                        continue;
+                        break;
                     }
                 } else {
                     /* Workflow not failure tolerant. Just hit it */
@@ -204,7 +212,7 @@ public class WorkflowManager implements WorkflowStep {
             if (loop) {
                 log.info("Workflow iteration complete. Looping");
             }
-        } while (loop);
+        } while (loop || inRetry);
 
         log.info("Workflow complete");
     }
