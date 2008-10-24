@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -28,7 +28,21 @@ import org.apache.commons.logging.LogFactory;
 import java.io.UnsupportedEncodingException;
 
 /**
- *
+ * Extracts the following properties from the MARC records:
+ * <ul>
+ *   <li>recordID<br />
+ *       Taken from field 001, subfield a.</li>
+ *   <li>state (deleted or not)<br />
+ *       Taken from field 004, subfield r.<br />
+ *       d=deleted, c=corrected, n=new, ""=new or corrected</li>
+ *   <li>parent/child relations</li>
+ * </ul>
+ * </p><p>
+ * The record ID is taken from field 001, subfield a.
+ * </p><p>
+ * The extraction of recordID and parent/child-relations is non-trivial due to
+ * the nature of MARC, which allows for prioritized ids, so the input is parsed.
+ * </p><p>
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -106,7 +120,8 @@ public class DanMARC2Parser extends MARCParser {
         }
         Record record;
         try {
-            record = new Record(id, base, xml.getBytes("utf-8"));
+            record = new Record(id_prefix + id + id_postfix, base,
+                                xml.getBytes("utf-8"));
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException("utf-8 not supported", e);
         }
