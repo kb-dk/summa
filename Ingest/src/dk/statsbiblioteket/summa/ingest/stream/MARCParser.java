@@ -43,8 +43,8 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
  * </p><p>
  * Extracting concrete information and constructing Summa Records is left to
  * classes extending this parser. Such classes only need to match the
- * constructor and implement the abstract methods. Implementations should also
- * ise {@link #id_prefix} and {@link #id_postfix}.
+ * constructor and implement the abstract methods. Implementations should use
+ * {@link #expandID} before adding IDs to a Record..
  * </p><p>
  * The overall structure of a MARC-dump is
  * {@code
@@ -62,7 +62,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
  * (well, at least we think so - MARC is a fixed target).
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_NEEDED,
         author = "te")
 public abstract class MARCParser extends ThreadedStreamParser {
     private static Log log = LogFactory.getLog(MARCParser.class);
@@ -113,11 +113,11 @@ public abstract class MARCParser extends ThreadedStreamParser {
     /**
      * Prepended to the extracted id. Used by subclasses.
      */
-    protected String id_prefix = DEFAULT_ID_PREFIX;
+    private String id_prefix = DEFAULT_ID_PREFIX;
     /**
      * Appended to the extracted id. Used by subclasses.
      */
-    protected String id_postfix = DEFAULT_ID_POSTFIX;
+    private String id_postfix = DEFAULT_ID_POSTFIX;
 
     public MARCParser(Configuration conf) {
         super(conf);
@@ -174,7 +174,8 @@ public abstract class MARCParser extends ThreadedStreamParser {
         StringWriter content = new StringWriter(2000); // Full MARC content
 
         // TODO: Add XML-declaration and namespace
-        content.append(beginTagToString(reader));
+        content.append(ParseUtil.XML_HEADER + "\n");
+        content.append(beginTagToString(reader, true));
         while (running && reader.hasNext()) {
             int eventType = reader.next();
 
@@ -497,8 +498,35 @@ public abstract class MARCParser extends ThreadedStreamParser {
      * @return the begin-tag as text.
      */
     protected String beginTagToString(XMLStreamReader reader) {
+        return beginTagToString(reader, false);
+    }
+
+    /**
+     * Convert a begin-tag to String. Suitable for dumping while parsing.
+     * @param reader a reader pointing to a begin-tag.
+     * @param addNamespaceDeclarations if true, namespaces are declared.
+     * @return the begin-tag as text.
+     */
+    @QAInfo(level = QAInfo.Level.FINE,
+            state = QAInfo.State.QA_NEEDED,
+            author = "te",
+            comment = "Test expansion of non-default namespaces")
+    protected String beginTagToString(XMLStreamReader reader,
+                                      boolean addNamespaceDeclarations) {
         StringWriter tag = new StringWriter(50);
         tag.append("<").append(reader.getLocalName());
+        if (addNamespaceDeclarations) {
+            if (reader.getNamespaceURI() != null) {
+                tag.append(" xmlns=\"").append(reader.getNamespaceURI());
+                tag.append("\"");
+            }
+            for (int i = 0 ; i < reader.getNamespaceCount() ; i++) {
+                tag.append(" xmlns:");
+                tag.append(reader.getNamespacePrefix(i));
+                tag.append("=\"").append(reader.getNamespaceURI(i));
+                tag.append("\"");
+            }
+        }
         for (int i = 0 ; i < reader.getAttributeCount() ; i++) {
             tag.append(" ").append(reader.getAttributeLocalName(i));
             tag.append("=\"");
@@ -515,7 +543,7 @@ public abstract class MARCParser extends ThreadedStreamParser {
      * @return the end-tag as text.
      */
     protected String endTagToString(XMLStreamReader reader) {
-        return "</" + reader.getLocalName() + ">\n";
+        return "</" + reader.getLocalName() + ">";
     }
 
     /**
@@ -540,5 +568,16 @@ public abstract class MARCParser extends ThreadedStreamParser {
             case XMLEvent.SPACE: return "SPACE";
             default: return "UNKNOWN_EVENT_TYPE " + "," + eventType;
         }
+    }
+
+    /**
+     * Expands an id with{@link #id_prefix} and {@link #id_postfix} if they are
+     * specified. This should be used before adding any id (including those of
+     * parent/child relations) to a Record.
+     * @param id the ID to expand.
+     * @return the ID expanded with id_prefix and id_postfix.
+     */
+    protected String expandID(String id) {
+        return id_prefix + id + id_postfix;
     }
 }

@@ -363,19 +363,27 @@ public class Record implements Serializable, Comparable{
     public List<String> getParentIds() {
         return parentIds;
     }
+
+    /**
+     * Sets the parent-IDs for this Record. This copies the content of the
+     * given parentIDs to the Record, so callers are free to clear the given
+     * list after this method is called.
+     * @param parentIds the IDs to assign to the Record.
+     */
     public void setParentIds(List<String> parentIds) {
         if (parentIds == null) {
             this.parentIds = null;
         } else if (parentIds.isEmpty()) {
             //noinspection DuplicateStringLiteralInspection
             log.warn("The non-existence of a parentId should be stated by null, "
-                     + "not the empty string. Problematic Record with id '"
+                     + "not the empty list. Problematic Record with id '"
                      + getId() + "' from base '" + getBase()
                      + "'. Continuing creation");
             //noinspection AssignmentToNull
             this.parentIds = null;
         } else {
-            this.parentIds = parentIds;
+            this.parentIds = new ArrayList<String>(parentIds.size());
+            this.parentIds.addAll(parentIds);
         }
     }
 
@@ -385,8 +393,9 @@ public class Record implements Serializable, Comparable{
 
     /**
      * Set the child ids listed as children of this record. This will reset
-     * any children registered with {@link #setChildren(List)}.
-     *
+     * any children registered with {@link #setChildren(List)}. Note that this
+     * method copies the content of the given list, so callers are free to
+     * clear the list after calling.
      * @param childIds list of record ids for the record's children
      */
     public void setChildIds(List<String> childIds) {
@@ -400,7 +409,8 @@ public class Record implements Serializable, Comparable{
             //noinspection AssignmentToNull
             this.childIds = null;
         } else {
-            this.childIds = childIds;
+            this.childIds = new ArrayList<String>(childIds.size());
+            this.childIds.addAll(childIds);
         }
 
         children = null;

@@ -23,9 +23,33 @@
     <subfield code="a">m</subfield>
     <subfield code="g">th</subfield>
   </datafield>
-  <datafield tag="010" ind1="0" ind2="0">
-    <subfield code="a">D545320487</subfield>
-  </datafield>
+    <datafield tag="010" ind1="0" ind2="0">
+      <subfield code="a">D545320487</subfield>
+    </datafield>
+    <datafield tag="014" ind1="0" ind2="0">
+      <subfield code="a">aParent</subfield>
+    </datafield>
+    <datafield tag="015" ind1="0" ind2="0">
+      <subfield code="a">childOne</subfield>
+        <subfield code="v">002</subfield>
+    </datafield>
+    <datafield tag="015" ind1="0" ind2="0">
+      <subfield code="a">childTwo</subfield>
+    </datafield>
+    <datafield tag="015" ind1="0" ind2="0">
+      <subfield code="a">childThree</subfield>
+    </datafield>
+    <datafield tag="015" ind1="0" ind2="0">
+        <subfield code="a">childFour</subfield>
+        <subfield code="v">001</subfield>
+    </datafield>
+    <datafield tag="015" ind1="0" ind2="0">
+        <subfield code="a">childFive</subfield>
+        <subfield code="v">003</subfield>
+    </datafield>
+    <datafield tag="015" ind1="0" ind2="0">
+      <subfield code="a">childSix</subfield>
+    </datafield>
   <datafield tag="010" ind1="0" ind2="0">
     <subfield code="a">2 740 553 3</subfield>
     <subfield code="b">870970</subfield>
