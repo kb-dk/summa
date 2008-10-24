@@ -32,6 +32,7 @@ import org.xml.sax.ext.DefaultHandler2;
 
 /**
  * Create a ParserTask, instanciating the {@link dk.statsbiblioteket.summa.ingest.MARCXML.MARCContentHandler}.
+ * @deprecated in favor of SBMARCParser.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,

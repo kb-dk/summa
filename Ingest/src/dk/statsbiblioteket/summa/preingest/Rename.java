@@ -35,6 +35,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * Trivial filter that changes the extension for the files.
+ * @deprecated as FileReader implements renaming.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
        state = QAInfo.State.IN_DEVELOPMENT,

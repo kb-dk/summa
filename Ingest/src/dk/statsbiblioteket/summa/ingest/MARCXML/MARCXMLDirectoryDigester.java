@@ -30,6 +30,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * Provides funtionality to digest a set of MARC-XML data dumps.<br>
+ * @deprecated in favor of SBMARCParser.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
