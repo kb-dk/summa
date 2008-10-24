@@ -25,6 +25,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.XMLEvent;
 import java.text.ParseException;
 import java.io.StringWriter;
+import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -34,19 +35,16 @@ import dk.statsbiblioteket.summa.common.util.ParseUtil;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 
 /**
- * Takes a Stream as input, splits into MARC-records and creates Summa-Records
- * with the content. As part of the split, the following properties are
- * extracted from the MARC-record:
- * <ul>
- *   <li>recordID</li>
- *   <li>state (deleted or not)</li>
- *   <li>parent/child relations</li>
- * </ul>
+ * A generic MARC21 slim parser that steps through MARC records and sends
+ * events when leader, datafield and subfields are encountered. The parser also
+ * handles the logic of adding produced Records to the queue.
+ * A streaming parser is used as performance is prioritized over clarity (the
+ * streaming parser has less GC overhead than a full DOM build).
  * </p><p>
- * The extraction of recordID and parent/child-relations is non-trivial due to
- * the nature of MARC, so the input is parsed. A streaming parser is used as
- * performance is prioritized over clarity (the streaming parser has less
- * GC overhead than a full DOM build).
+ * Extracting concrete information and constructing Summa Records is left to
+ * classes extending this parser. Such classes only need to match the
+ * constructor and implement the abstract methods. Implementations should also
+ * ise {@link #id_prefix} and {@link #id_postfix}.
  * </p><p>
  * The overall structure of a MARC-dump is
  * {@code
@@ -76,6 +74,26 @@ public abstract class MARCParser extends ThreadedStreamParser {
      */
     public static final String CONF_BASE = "summa.ingest.marcparser.base";
 
+    /**
+     * The prefix to prepend to ids extracted from the MARC records before
+     * generating a Summa Record.
+     * </p><p>
+     * This property is optional. Default is "".
+     */
+    public static final String CONF_ID_PREFIX =
+            "summa.ingest.marcparser.id.prefix";
+    public static final String DEFAULT_ID_PREFIX = "";
+
+    /**
+     * The prefix to append to ids extracted from the MARC records before
+     * generating a Summa Record.
+     * </p><p>
+     * This property is optional. Default is "".
+     */
+    public static final String CONF_ID_POSTFIX =
+            "summa.ingest.marcparser.id.postfix";
+    public static final String DEFAULT_ID_POSTFIX = "";
+
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public static final String MARC_TAG_RECORD = "record";
     public static final String MARC_TAG_LEADER = "leader";
@@ -92,6 +110,14 @@ public abstract class MARCParser extends ThreadedStreamParser {
      * The base for Records produced by implementations of MARCParser.
      */
     protected String base;
+    /**
+     * Prepended to the extracted id. Used by subclasses.
+     */
+    protected String id_prefix = DEFAULT_ID_PREFIX;
+    /**
+     * Appended to the extracted id. Used by subclasses.
+     */
+    protected String id_postfix = DEFAULT_ID_POSTFIX;
 
     public MARCParser(Configuration conf) {
         super(conf);
@@ -104,6 +130,11 @@ public abstract class MARCParser extends ThreadedStreamParser {
             throw new ConfigurationException(String.format(
                     "A base must be specified with key %s", CONF_BASE));
         }
+        id_prefix = conf.getString(CONF_ID_PREFIX, id_prefix);
+        id_postfix = conf.getString(CONF_ID_POSTFIX, id_postfix);
+        log.debug(String.format("Created MARC parser with base '%s', "
+                                + "id prefix '%s', id postfix '%s'",
+                                base, id_prefix, id_postfix));
     }
 
     // http://java.sun.com/javaee/5/docs/tutorial/doc/bnbfl.html
@@ -112,8 +143,10 @@ public abstract class MARCParser extends ThreadedStreamParser {
                 sourcePayload.getStream(), "utf-8");
         // Positioned at startDocument
         int eventType = reader.getEventType();
-        if (eventType != XMLEvent.START_ELEMENT) {
-            throw new ParseException("The first element was not start", 0);
+        if (eventType != XMLEvent.START_DOCUMENT) {
+            throw new ParseException(String.format(
+                    "The first element was not start, it was %s", 
+                    eventID2String(eventType)), 0);
         }
 
         while (running && reader.hasNext()) {
@@ -175,9 +208,11 @@ public abstract class MARCParser extends ThreadedStreamParser {
                             reader.getLocalName(), sourcePayload));
                     break;
                 case XMLEvent.CHARACTERS :
-                    log.warn(String.format(
-                            "Unexpected text '%s' while parsing MARC for %s",
-                            reader.getText(), sourcePayload));
+                    if (!isBlank(reader.getText())) {
+                        log.warn(String.format(
+                                "Unexpected text '%s' while parsing MARC in %s",
+                                reader.getText(), sourcePayload));
+                    }
                     // TODO: Test for "foo &lt;bar"
                     content.append(reader.getText());
                     break;
@@ -190,6 +225,17 @@ public abstract class MARCParser extends ThreadedStreamParser {
         if (!running) {
             log.debug("processInRecord stopped as running was false");
         }
+    }
+
+    private static final Pattern BLANKS = Pattern.compile("( |\n|\t)*");
+    /**
+     * Test whether text is made up of ignorable blanks, which translates to
+     * line-breaks, space and tab.
+     * @param text the String to analyze for blanks.
+     * @return true if the text consists solely of blanks.
+     */
+    protected static boolean isBlank(String text) {
+        return BLANKS.matcher(text).matches();
     }
 
     /**
@@ -312,10 +358,12 @@ public abstract class MARCParser extends ThreadedStreamParser {
                             MARC_TAG_DATAFIELD));
                     break;
                 case XMLEvent.CHARACTERS :
-                    log.warn(String.format(
-                            "processDatafield: Unexpected text '%s' while "
-                                    + "parsing MARC for %s",
-                            reader.getText(), sourcePayload));
+                    if (!isBlank(reader.getText())) {
+                        log.warn(String.format(
+                                "processDatafield: Unexpected text '%s' while "
+                                + "parsing MARC for %s",
+                                reader.getText(), sourcePayload));
+                    }
                     content.append(reader.getText());
                     break;
                 default:
@@ -335,7 +383,7 @@ public abstract class MARCParser extends ThreadedStreamParser {
         String code = null;
         for (int i = 0 ; i < reader.getAttributeCount() ; i++) {
             if (reader.getAttributeLocalName(i).equals(
-                    MARC_TAG_DATAFIELD_ATTRIBUTE_TAG)) {
+                    MARC_TAG_SUBFIELD_ATTRIBUTE_CODE)) {
                 code = reader.getAttributeValue(i);
             } else {
                 log.warn(String.format(

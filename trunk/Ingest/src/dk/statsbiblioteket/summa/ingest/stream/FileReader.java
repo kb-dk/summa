@@ -87,6 +87,7 @@ public class FileReader implements ObjectFilter {
     private static final String DEFAULT_FILE_PATTERN = ".*\\.xml";
     /**
      * The postfix for the file when it has been fully processed.
+     * Setting this to null or the empty String means that no renaming is done.
      * </p><p>
      * This property is optional. Default is ".completed".
      */
@@ -230,9 +231,9 @@ public class FileReader implements ObjectFilter {
         updateToDo(root);
         delivered = new ArrayList<Payload>(Math.max(1, todo.size()));
         started = true;
-        log.info(String.format(
-                "Located %d files matching pattern '%s' from root %s",
-                todo.size(), filePattern.pattern(), root.getPath()));
+        log.debug(String.format(
+                 "Located %d files matching pattern '%s' from root %s",
+                 todo.size(), filePattern.pattern(), root.getPath()));
     }
 
     /**
