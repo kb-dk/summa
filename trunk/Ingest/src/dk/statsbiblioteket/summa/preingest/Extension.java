@@ -26,6 +26,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * Extensions known to summa.
+ * @deprecated as extensions are now specified with patterns in configurations
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
        state = QAInfo.State.IN_DEVELOPMENT,

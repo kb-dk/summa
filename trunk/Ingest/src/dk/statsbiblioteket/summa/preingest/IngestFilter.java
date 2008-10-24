@@ -28,6 +28,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * An filter in the Summa pre-ingest needs to implement this interface and to have an default empty constructor.<br>
+ * @deprecated by the general filter framework.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
        state = QAInfo.State.IN_DEVELOPMENT,
