@@ -49,6 +49,7 @@ import javax.xml.XMLConstants;
  *  <li>State extraction</li>
  *  <li>marking records for multi volume creation {@link dk.statsbiblioteket.summa.ingest.postingest.MultiVolume}</li>
  * <ul>
+ * @deprecated in favor of SBMARCParser.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
