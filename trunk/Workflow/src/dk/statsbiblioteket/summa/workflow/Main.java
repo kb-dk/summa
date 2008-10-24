@@ -18,6 +18,9 @@ import java.io.IOException;
  */
 public class Main {
 
+    public static final String CONF_CONFIG =
+                                      Configuration.CONF_CONFIGURATION_PROPERTY;
+
     public static void main (String[] args) {
         if (args.length > 1) {
             System.err.println("Too many arguments. Only one or zero arguments "
@@ -28,9 +31,9 @@ public class Main {
         Configuration conf = null;
 
         if (args.length == 1) {
-            if (System.getProperty(Configuration.CONF_CONFIGURATION_PROPERTY) != null) {
+            if (System.getProperty(CONF_CONFIG) != null) {
                 System.err.println("Both system property "
-                                   + Configuration.CONF_CONFIGURATION_PROPERTY
+                                   + CONF_CONFIG
                                    + " and command line argument present. "
                                    + "Bailing out");
                 System.exit(3);
@@ -44,6 +47,13 @@ public class Main {
                 System.exit(2);
             }
         } else {
+            if (System.getProperty(CONF_CONFIG) == null) {
+                System.err.println("System property " + CONF_CONFIG + " must be"
+                                   + " set when running summa-workflow without "
+                                   + "arguments.");
+                System.exit(4);
+            }
+
             conf  = Configuration.getSystemConfiguration();
         }
 

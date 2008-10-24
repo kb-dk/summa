@@ -17,6 +17,7 @@
     <!-- Persistent directories -->
     <property name="src.dir" value="${basedir}/src"/>
     <property name="test.src.dir" value="${basedir}/test"/>
+    <property name="config.dir" value="${basedir}/config"/>
 
     <!-- Temporary files and directories -->
     <property name="build.dir" value="${basedir}/${summa.classes.dir}"/>
@@ -189,7 +190,7 @@
         <!-- Prepare libs for bundling -->
         <unzip dest="${tmp.dir}">
             <patternset>
-                <include name="**/*.class"/>
+                <include name="**/*"/>
                 <exclude name="**/*Test.java"/>
             </patternset>
             <fileset dir="lib">
@@ -203,6 +204,8 @@
             <fileset dir="${build.dir}"
                  includes="dk/statsbiblioteket/summa/workflow/**/*"/>
         </copy>
+
+        <copy file="${config.dir}/log4j.xml" todir="${tmp.dir}"/>
 
         <!-- Roll the .jar -->
         <jar basedir="${tmp.dir}" compress="true"
