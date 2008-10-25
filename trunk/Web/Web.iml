@@ -39,15 +39,6 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/lib/sbutil-0.3.3.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
           <root url="jar://$MODULE_DIR$/lib/lucene-core-2.3.0.jar!/" />
         </CLASSES>
         <JAVADOC />
@@ -76,6 +67,7 @@
     <orderEntry type="module" module-name="Search" />
     <orderEntry type="module" module-name="Storage" />
     <orderEntry type="module" module-name="Support" />
+    <orderEntry type="library" name="sbutil" level="project" />
     <orderEntryProperties />
   </component>
 </module>
