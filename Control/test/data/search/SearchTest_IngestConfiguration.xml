@@ -64,7 +64,9 @@
                     <value class="xproperties">
                         <entry>
                             <key>filterpump.filterclass</key>
-                            <value class="string">dk.statsbiblioteket.summa.ingest.stream.XMLSplitterFilter</value>
+                            <value class="string">
+                                dk.statsbiblioteket.summa.ingest.split.XMLSplitterFilter
+                            </value>
                         </entry>
                         <entry>
                             <key>summa.ingest.xmlsplitter.idprefix</key>

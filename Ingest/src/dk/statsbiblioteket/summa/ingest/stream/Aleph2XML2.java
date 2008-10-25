@@ -20,7 +20,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.summa.preingest;
+package dk.statsbiblioteket.summa.ingest.stream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -28,6 +28,8 @@ import org.apache.commons.logging.LogFactory;
 import java.io.*;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.preingest.IngestFilter;
+import dk.statsbiblioteket.summa.preingest.Extension;
 
 /**
  * This filter converts dumps from XLibris Aleph library system to MARC-XML

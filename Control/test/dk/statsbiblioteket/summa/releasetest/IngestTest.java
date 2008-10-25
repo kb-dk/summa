@@ -32,7 +32,7 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.ingest.stream.FileReader;
-import dk.statsbiblioteket.summa.ingest.stream.XMLSplitterFilter;
+import dk.statsbiblioteket.summa.ingest.split.XMLSplitterFilter;
 import dk.statsbiblioteket.summa.control.api.Service;
 import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.control.service.FilterService;
@@ -116,7 +116,7 @@ public class IngestTest extends NoExitTestCase {
         if (sourceRoot.exists()) {
             Files.delete(sourceRoot);
         }
-        assertTrue("The root '" + sourceRoot + "' should have be created",
+        assertTrue("The root '" + sourceRoot + "' should be created",
                    sourceRoot.mkdirs());
         Files.saveString(THREE_RECORDS, new File(sourceRoot, "three.xml"));
         Files.saveString(TWO_RECORDS, new File(sourceRoot, "two.xml"));
@@ -127,7 +127,7 @@ public class IngestTest extends NoExitTestCase {
     }
     public void tearDown() throws Exception {
         super.tearDown();
-        //Files.delete(sourceRoot);
+        Files.delete(sourceRoot);
     }
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})

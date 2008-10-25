@@ -26,11 +26,16 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.api.filter.RecordReader;
+import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import junit.framework.TestCase;
+
+import java.io.File;
 
 /**
  * te forgot to document this class.
@@ -46,6 +51,17 @@ public class StorageTest extends TestCase {
         super.setUp();
         IngestTest.deleteOldStorages();
     }
+
+/*    public void testReopen() throws Exception {
+        Storage storage = IndexTest.fillStorage();
+        SearchTest.ingest(new File(
+                Resolver.getURL("data/search/input/part1").getFile()));
+        assertEquals("There should be something in the first storage", 1, )
+        Configuration storageConf = IngestTest.getStorageConfiguration();
+        storageConf.set(DatabaseStorage.PROP_FORCENEW, false);
+        storage = StorageFactory.createStorage(storageConf);
+    }
+  */  
 
     public void testRecordReader() throws Exception {
         Storage storage = IndexTest.fillStorage();

@@ -99,6 +99,9 @@ public class FileStorage implements ConfigurationStorage {
         URL url = Thread.currentThread().getContextClassLoader().getResource(resource);
 
         if (url == null) {
+            if (new File(resource).exists()) {
+                return new File(resource);
+            }
             throw new ConfigurationStorageException("Unable to find resource '"
                                                   + resource + "'"); 
         }

@@ -24,7 +24,7 @@ package dk.statsbiblioteket.summa.ingest.SimpleXML;
 
 import dk.statsbiblioteket.summa.ingest.Digester;
 import dk.statsbiblioteket.summa.ingest.ParserTask;
-import dk.statsbiblioteket.summa.ingest.stream.XMLSplitterFilter;
+import dk.statsbiblioteket.summa.ingest.split.XMLSplitterFilter;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.File;

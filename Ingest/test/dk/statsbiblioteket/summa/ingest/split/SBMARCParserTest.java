@@ -17,7 +17,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.summa.ingest.stream;
+package dk.statsbiblioteket.summa.ingest.split;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -26,6 +26,10 @@ import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.ingest.split.StreamController;
+import dk.statsbiblioteket.summa.ingest.split.MARCParser;
+import dk.statsbiblioteket.summa.ingest.split.SBMARCParser;
+import dk.statsbiblioteket.summa.ingest.stream.FileReader;
 
 import java.net.URL;
 import java.util.Arrays;
