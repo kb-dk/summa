@@ -30,6 +30,7 @@ import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.ingest.stream.Aleph2XML2;
 
 /**
  * Aleph2XML2 Tester.

@@ -63,7 +63,7 @@
         <appender-ref ref="CONSOLE"/>
     </logger>
 
-    <logger name="dk.statsbiblioteket.summa.ingest.stream.XMLSplitterParser">
+    <logger name="dk.statsbiblioteket.summa.ingest.split.XMLSplitterParser">
         <level value="trace" />
         <appender-ref ref="CONSOLE"/>
     </logger>-->

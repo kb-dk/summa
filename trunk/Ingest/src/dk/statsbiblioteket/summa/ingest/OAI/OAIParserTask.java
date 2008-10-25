@@ -23,18 +23,16 @@
 package dk.statsbiblioteket.summa.ingest.OAI;
 
 import java.io.*;
-import java.net.URL;
 
 import org.xml.sax.ext.DefaultHandler2;
 import dk.statsbiblioteket.summa.ingest.ParserTask;
 import dk.statsbiblioteket.summa.ingest.Ingest;
 import dk.statsbiblioteket.summa.ingest.Target;
-import dk.statsbiblioteket.summa.ingest.stream.XMLSplitterFilter;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * Parses a Target, delegates content handling to the {@link dk.statsbiblioteket.summa.ingest.OAI.PMHContentHandler}.<br>
- * @deprecated in favor of {@link XMLSplitterFilter} as XMLSplitterFilter is
+ * @deprecated in favor of {@link dk.statsbiblioteket.summa.ingest.split.XMLSplitterFilter} as XMLSplitterFilter is
  * now supports namespaces.
  */
 @QAInfo(level = QAInfo.Level.NOT_NEEDED,

@@ -1,12 +1,13 @@
-package dk.statsbiblioteket.summa.ingest.stream;
+package dk.statsbiblioteket.summa.ingest.split;
 
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import java.io.ByteArrayInputStream;
 
-import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.ingest.split.XMLSplitterFilter;
+import dk.statsbiblioteket.summa.ingest.split.XMLSplitterParser;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;

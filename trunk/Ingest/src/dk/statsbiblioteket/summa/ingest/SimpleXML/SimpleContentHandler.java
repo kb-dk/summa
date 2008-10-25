@@ -23,7 +23,7 @@
 package dk.statsbiblioteket.summa.ingest.SimpleXML;
 
 import dk.statsbiblioteket.summa.ingest.IngestContentHandler;
-import dk.statsbiblioteket.summa.ingest.stream.XMLSplitterFilter;
+import dk.statsbiblioteket.summa.ingest.split.XMLSplitterFilter;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.xml.sax.SAXException;import org.xml.sax.Attributes;
 

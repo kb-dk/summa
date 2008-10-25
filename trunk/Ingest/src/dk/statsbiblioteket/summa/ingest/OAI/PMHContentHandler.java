@@ -25,7 +25,6 @@ package dk.statsbiblioteket.summa.ingest.OAI;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import dk.statsbiblioteket.summa.ingest.IngestContentHandler;
-import dk.statsbiblioteket.summa.ingest.stream.XMLSplitterFilter;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import javax.xml.XMLConstants;
@@ -35,7 +34,7 @@ import javax.xml.XMLConstants;
  * Only meta-data in the OAI_DC_NAMESPACE:<br>
  * <code>http://www.openarchives.org/OAI/2.0/oai_dc/</code> will be included
  * in the records..
- * @deprecated in favor of {@link XMLSplitterFilter} as XMLSplitterFilter is
+ * @deprecated in favor of {@link dk.statsbiblioteket.summa.ingest.split.XMLSplitterFilter} as XMLSplitterFilter is
  * now supports namespaces.
  */
 @QAInfo(level = QAInfo.Level.NOT_NEEDED,

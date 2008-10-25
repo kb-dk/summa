@@ -61,7 +61,7 @@
     </appender>
       -->
 
-    <logger name="dk.statsbiblioteket.summa.ingest.stream.StreamController">
+    <logger name="dk.statsbiblioteket.summa.ingest.split.StreamController">
         <level value="trace" />
         <appender-ref ref="CONSOLE" />
     </logger>
