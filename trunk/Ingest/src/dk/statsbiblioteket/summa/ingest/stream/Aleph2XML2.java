@@ -28,17 +28,22 @@ import org.apache.commons.logging.LogFactory;
 import java.io.*;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.preingest.IngestFilter;
 import dk.statsbiblioteket.summa.preingest.Extension;
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
+import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.util.ParseUtil;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 
 /**
- * This filter converts dumps from XLibris Aleph library system to MARC-XML
- *
- *
+ * This filter converts dumps from XLibris Aleph library system to MARC-XML.
+ * It is normally followed by the
+ * {@link dk.statsbiblioteket.summa.ingest.split.SBMARCParser} filter.
+ * </p><p>
+ * The Aleph2XML2-filter is stream-to-stream.
+ * </p><p>
  * Example record<br>
- *
+ * </p><p>
  * Prior:<br>
- *
  * <pre>
  * {@code
  * 000000001 FMT   L ML
@@ -63,8 +68,7 @@ import dk.statsbiblioteket.summa.preingest.Extension;
  * 000000001 V0700 L $$aXI,5b S
  * }
  * </pre>
- *
- *
+ * </p><p>
  * After:<br>
  * <pre>
  * {@code
@@ -163,42 +167,264 @@ import dk.statsbiblioteket.summa.preingest.Extension;
  * }
  * </pre>
  */
+// TODO: Check whether FMT must be ML and whether LDR sould be <leader>
 @QAInfo(level = QAInfo.Level.NORMAL,
        state = QAInfo.State.IN_DEVELOPMENT,
-       author = "hal")
-public class Aleph2XML2 implements IngestFilter {
-
-
+       author = "te, hal")
+public class Aleph2XML2 extends ObjectFilterImpl {
     private static Log log = LogFactory.getLog(Aleph2XML2.class);
 
-    private static final String data_start = "<datafield tag=\"";
-    private static final String data_end = "</datafield>\n";
+    private static final String HEADER =
+            ParseUtil.XML_HEADER
+            + "\n<collection xmlns=\"http://www.loc.gov/MARC21/slim\">"
+            + "\n<record>";
+    private static final String HEADER2 =
+            ParseUtil.XML_HEADER
+            + "\n<collection xmlns=\"http://www.loc.gov/MARC21/slim\">\n";
+    private static final String FOOTER = "</collection>\n";
 
-    private static final String lead = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<collection xmlns=\"http://www.loc.gov/MARC21/slim\">\n<record>";
+    private static final String RECORD_START ="<record>\n";
+    private static final String RECORD_END = "</record>\n";
 
-    private static final String startRecord ="<record>\n";
-    private static final String endRecord = "</record>\n";
+    private static final String DATA_START = "<datafield tag=\"";
+    private static final String DATA_END = "</datafield>\n";
 
-    private static final String subfieldStart = "<subfield code=\"";
-    private static final String subfieldEnd = "</subfield>\n";
+    private static final String SUBFIELD_START = "<subfield code=\"";
+    private static final String SUBFIELD_END = "</subfield>\n";
 
-    public static void main (String args[]){
-           new Aleph2XML2().applyFilter(new File("/home/hal/Desktop/all-fys.data"), Extension.xml, "UTF-8");
+    public Aleph2XML2(Configuration conf){
     }
 
-    public Aleph2XML2(){
-        super();
+    /**
+     * Trims, entity-encodes and format-checks a string, prior to insertion
+     * into a MARC element.
+     * @param content the content to prepare.
+     * @return the tranformed content, ready for insertion into MARC-XML.
+     */
+    private String prepareString(String content) {
+        content = content.trim();
+        ParseUtil.encode(content);
+        // some records has this illegal char in the record - remove it
+        return content.replaceAll("\\p{Cntrl}","");
     }
 
-    String myTrim(String in) {
-        in = in.trim();
-        in = in.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;"); // standard xml escaping
-        in = in.replaceAll("\\p{Cntrl}","");  // some records has this illegal char in the record - needs to be removed.
-        return in;
+    protected void processPayload(Payload payload) {
+        if (payload.getStream() == null) {
+            throw new IllegalArgumentException("No stream in " + payload);
+        }
+        log.debug("Wrapping the Stream in " + payload
+                  + " in a Aleph2XML2OutputStream");
+        payload.setStream(new Aleph2XML2OutputStream(payload.getStream(),
+                                                     payload.toString()));
     }
 
-    
+    /**
+     * On-the-fly creation of MARC-XML from Aleph-input.
+     */
+    public class Aleph2XML2OutputStream extends InputStream {
+        private BufferedReader source;
+        /**
+         * The main buffer for the reader. Anything is this is to be passed on.
+         */
+        private StringBuffer buffer;
+        private int bufferPos = -1;
+        /**
+         * An ID or description of this stream to be used when outputting
+         * debug information.
+         */
+        private String debugID;
+
+        private StringBuffer recordBuffer = new StringBuffer(10000);
+        private boolean notReadYet = true; // Nothing has been read from source
+        private boolean eofReached = false;
+
+        public Aleph2XML2OutputStream(InputStream source, String debugID) {
+            this.source = new BufferedReader(new InputStreamReader(source));
+            this.debugID = debugID;
+        }
+
+        public void close() throws IOException {
+            source.close();
+        }
+
+        public int read() throws IOException {
+            while (true) {
+                if (bufferPos != -1 && buffer != null &&
+                    bufferPos < buffer.length()) {
+                    return buffer.charAt(bufferPos++);
+                }
+                if (eofReached) {
+                    return Payload.EOF;
+                }
+                if (notReadYet) {
+                    notReadYet = false;
+                    buffer.append(HEADER);
+                    bufferPos = 0;
+                } else {
+                    processNextLine();
+                }
+            }
+        }
+
+        /**
+         * Reads a line from the input-stream and adds the corresponding output
+         * to recordBuffer. This method might not update the recordBuffer, but
+         * it will always advance through source.
+         * </p><p>
+         * When a record is deemed finished, recordBuffer will be assigned to
+         * buffer and a new recordBuffer will be allocated. When buffer has
+         * content, this content will be emptied before processNewLine will
+         * be called again.
+         * @throws java.io.IOException if a line could not be read from source.
+         */
+        private void processNextLine() throws IOException {
+            String line = source.readLine();
+            if (line == null) {
+                // TODO: Should we call close in the stream here?
+                eofReached = true;
+                finishRecord();
+                buffer.append(FOOTER);
+                bufferPos = 0;
+                return;
+            }
+            if ("".equals(line)) {
+                return;
+            }
+            processLineContent(line);
+        }
+
+        /**
+         * The last Aleph-ID (the counter 000000000 => 999999999) encountered.
+         */
+        private String lastAlephID = null; // Last processed record
+        /**
+         * The prefix for field 994*z is collected from any Aleph CAT*l-field.
+         * The 994*z-field is appended after all the directly converted fields.
+         */
+        private String field994Prefix = "";
+        /**
+         * Whether or not the current Aleph record is considered valid.
+         * Records that are not ok will not be passes on in the Stream.
+         */
+        private boolean isOK = true;
+        /**
+         * Process the given line and potentially signal that the XML for a new
+         * record is ready to be passed on in the stream.
+         * @param line the String to process.
+         */
+        private void processLineContent(String line) {
+            if (buffer.length() == 0) {
+                buffer.append(RECORD_START);
+            }
+            //  * 000000001 00800 L $$a1979$$bdk$$e1$$f0$$g0$$ldan$$tm
+            String[] strparts = line.split("[ ]{1,5}", 4);
+            if (strparts.length != 4) {
+                log.debug("Received unexpected string " + line
+                          + " with last id " + lastAlephID);
+                return;
+            }
+            String alephID = strparts[0];
+            while (alephID.length() < 9){
+                alephID = "0" + alephID;
+            }
+            if (lastAlephID == null) {
+                lastAlephID = alephID;
+            }
+            if (log.isTraceEnabled()) {
+                log.trace("Processing line for aleph-ID '" + alephID + "': "
+                          + line);
+            }
+
+            if (!alephID.equals(lastAlephID)) {
+                /* We've reached the beginning of a new record and thus
+                       the end of a previous one (and yes, we have handled
+                       the start-case).
+                     */
+                finishRecord();
+                lastAlephID = alephID;
+            }
+
+            String fieldTag = strparts[1];
+            String ind1 = "";
+            String ind2 = "";
+            boolean inCAT = false;
+            if (fieldTag.length() >= 3) {
+                if (fieldTag.length() > 3) {
+                    inCAT= false;
+                    try{
+                        ind1 = fieldTag.substring(3,4);
+                        ind2 = fieldTag.substring(4,5);
+                    } catch (StringIndexOutOfBoundsException e){
+                        log.warn(String.format(
+                                "StringIndexOutOfBounds while extracting ind1 "
+                                + "and ind2 from line '%s' from %s",
+                                line, debugID), e);
+                        isOK = false;
+                    }
+                } else if (fieldTag.equals("CAT")) {
+                     inCAT = true;
+                } else if (fieldTag.equals("DEL")){ // deleted nat record
+                    recordBuffer.append(DATA_START).append("004").
+                            append("\" ind1=\"\" ind2=\"\" >").
+                            append(SUBFIELD_START).append("r\" >d").
+                            append(SUBFIELD_END).append(DATA_END);
+                    inCAT = false;
+                } else {
+                    inCAT = false;
+                }
+                fieldTag = fieldTag.substring(0,3);
+            } else {
+                // TODO: Add this to content-log instead of general log
+                log.warn(String.format(
+                        "Aleph field '%s' from line '%s' in %s did not have "
+                        + "length >= 3", fieldTag, line, debugID));
+            }
+
+        }
+
+        // TODO: Check whether this should be field 994*a instead of 994*z
+        /**
+         * If valid record-data exists, add the Aleph-ID to field 994*z, close
+         * the XML for the record and pass the content to the main buffer.
+         */
+        private void finishRecord() {
+            if (recordBuffer.length() <= HEADER.length()) {
+                log.debug("finishRecord: No content received");
+            } else {
+                recordBuffer.append(DATA_START).
+                        append("994\" ind1=\"0\" ind2=\"0\">\n").
+                        append(SUBFIELD_START).append("z\">").
+                        append(field994Prefix).append('-').append(lastAlephID).
+                        append(SUBFIELD_END).append("\n").
+                        append(DATA_END);
+                recordBuffer.append(RECORD_END);
+                if (isOK){
+                    log.debug("Adding content of record buffer for "
+                              + lastAlephID + " to main buffer");
+                    buffer.append(recordBuffer);
+                    if (log.isTraceEnabled()) {
+                        log.trace("Generated XML for record " + lastAlephID
+                                  + ":\n" + recordBuffer);
+                    }
+                    bufferPos = 0;
+                } else {
+                    log.warn(String.format("Skipping Aleph record %s from %s "
+                                           + "containing errors:\n%s",
+                                           lastAlephID, debugID, buffer));
+                }
+            }
+            recordBuffer = new StringBuffer(1000);
+            isOK = true;
+            field994Prefix = "";
+        }
+
+        private void newRecordEntered() {
+
+        }
+    }
+
     public void applyFilter(File input, Extension ext, String encoding) {
+
         try{
             StringBuffer sb = new StringBuffer();
             StringBuffer record = new StringBuffer();
@@ -211,7 +437,7 @@ public class Aleph2XML2 implements IngestFilter {
             String str;
             long idx = 0;
             long huskidx = -1;
-            sb.append(lead);
+            sb.append(HEADER);
 
             while (((str = in.readLine()) != null) && (idx < 60000)){
                 String[] strparts = str.split("[ ]{1,5}",4);
@@ -225,13 +451,13 @@ public class Aleph2XML2 implements IngestFilter {
                         while (idex.length() < 9){
                              idex = "0" + idex;
                         }
-                        record.append(data_start).
+                        record.append(DATA_START).
                                 append("994\" ind1=\"0\" ind2=\"0\">\n").
-                                append(subfieldStart).append("z\">").
+                                append(SUBFIELD_START).append("z\">").
                                 append(id).append('-').append(idex).
-                                append(subfieldEnd).append("\n").
-                                append(data_end);
-                        record.append(endRecord);
+                                append(SUBFIELD_END).append("\n").
+                                append(DATA_END);
+                        record.append(RECORD_END);
                         id = "";
                         if (isOK){
                             sb.append(record);
@@ -243,7 +469,7 @@ public class Aleph2XML2 implements IngestFilter {
                         record.setLength(0);
                         out.write(sb.toString().trim());
                         sb.setLength(0);
-                        record.append(startRecord);
+                        record.append(RECORD_START);
                         huskidx = idx;
                     }
                     String felt = strparts[1];
@@ -265,10 +491,10 @@ public class Aleph2XML2 implements IngestFilter {
                         } else if (felt.equals("CAT")) {
                              inCAT = true;
                         } else if (felt.equals("DEL")){ // deleted nat record
-                            record.append(data_start).append("004").
+                            record.append(DATA_START).append("004").
                                     append("\" ind1=\"\" ind2=\"\" >").
-                                    append(subfieldStart).append("r\" >d").
-                                    append(subfieldEnd).append(data_end);
+                                    append(SUBFIELD_START).append("r\" >d").
+                                    append(SUBFIELD_END).append(DATA_END);
                             inCAT = false;
                         } else {
                             inCAT = false;
@@ -279,9 +505,9 @@ public class Aleph2XML2 implements IngestFilter {
                                  + "3. Felt subtracted from line \""
                                  + str + "\"");
                     }
-                    record.append(data_start).append(myTrim(felt)).
-                            append("\" ind1=\"").append(myTrim(ind1)).
-                            append("\" ind2=\"").append(myTrim(ind2)).
+                    record.append(DATA_START).append(prepareString(felt)).
+                            append("\" ind1=\"").append(prepareString(ind1)).
+                            append("\" ind2=\"").append(prepareString(ind2)).
                             append("\">");
                     if (strparts[3].indexOf("$$") >= 0) {
                         String[] subf = strparts[3].split("\\$\\$");
@@ -297,18 +523,18 @@ public class Aleph2XML2 implements IngestFilter {
                                 if (j == 0) {
                                     sb.append("\n");
                                 }
-                                record.append(subfieldStart).
-                                        append(myTrim(code)).append("\">").
-                                        append(myTrim(subfield)).
-                                        append(subfieldEnd);
+                                record.append(SUBFIELD_START).
+                                        append(prepareString(code)).append("\">").
+                                        append(prepareString(subfield)).
+                                        append(SUBFIELD_END);
                                 j++;
                             }
                             i++;
                         }
                     } else {
-                        record.append(myTrim(strparts[3]));
+                        record.append(prepareString(strparts[3]));
                     }
-                    record.append(data_end);
+                    record.append(DATA_END);
                 }
             }
 
@@ -316,8 +542,8 @@ public class Aleph2XML2 implements IngestFilter {
             while (idex.length() < 9){
                  idex = "0" + idex;
             }
-            record.append(data_start).append("994\" ind1=\"0\" ind2=\"0\">\n").append(subfieldStart).append("z\">").append(id).append('-').append(idex).append(subfieldEnd).append("\n").append(data_end);
-            record.append(endRecord);
+            record.append(DATA_START).append("994\" ind1=\"0\" ind2=\"0\">\n").append(SUBFIELD_START).append("z\">").append(id).append('-').append(idex).append(SUBFIELD_END).append("\n").append(DATA_END);
+            record.append(RECORD_END);
             id = "";
             if (isOK){
                 sb.append(record);

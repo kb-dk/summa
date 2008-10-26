@@ -89,7 +89,7 @@ public class Aleph2XML2Test extends TestCase {
     public void testNonDeleted() throws Exception {
         assertTrue("The nondeleted aleph record must exist at " + nondeleted,
                    nondeleted.exists());
-        Aleph2XML2 filter = new Aleph2XML2();
+        Aleph2XML2 filter = new Aleph2XML2(null);
         filter.applyFilter(nondeleted, Extension.xml, "utf-8");
         assertTrue("The destination file must exist",
                    nondeleted_converted.exists());
@@ -108,7 +108,7 @@ public class Aleph2XML2Test extends TestCase {
     private void testDeleted(File in, File out) throws Exception {
         assertTrue("The aleph record marked as deleted must exist at " + in,
                    in.exists());
-        Aleph2XML2 filter = new Aleph2XML2();
+        Aleph2XML2 filter = new Aleph2XML2(null);
         filter.applyFilter(in, Extension.xml, "utf-8");
         assertTrue("The destination file must exist",
                    out.exists());
@@ -121,7 +121,7 @@ public class Aleph2XML2Test extends TestCase {
     }
 
     public void dumpResults() throws Exception {
-        Aleph2XML2 filter = new Aleph2XML2();
+        Aleph2XML2 filter = new Aleph2XML2(null);
         for (File[] in: new File[][] {{nondeleted, nondeleted_converted},
                                     {deleted, deleted_converted},
                                     {deleted2, deleted2_converted}}) {

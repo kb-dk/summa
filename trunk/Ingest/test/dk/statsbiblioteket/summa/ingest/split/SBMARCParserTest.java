@@ -26,9 +26,6 @@ import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.ingest.split.StreamController;
-import dk.statsbiblioteket.summa.ingest.split.MARCParser;
-import dk.statsbiblioteket.summa.ingest.split.SBMARCParser;
 import dk.statsbiblioteket.summa.ingest.stream.FileReader;
 
 import java.net.URL;
