@@ -76,7 +76,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
  * It is possible to trick it to deliver the wrong output (see
  * {@link#applyFilter(Reader, Writer) for details). However, assuming a valid
  * MARC-XML, the filter should be solid.
- * Reapplying the filter will not introduce further changes. 
+ * Reapplying the filter will not introduce further changes.
+ * @deprecated as the new SBMARCParser handles the Horizon-hacks 
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
        state = QAInfo.State.IN_DEVELOPMENT,
