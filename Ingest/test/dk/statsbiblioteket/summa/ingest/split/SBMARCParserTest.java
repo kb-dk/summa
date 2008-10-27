@@ -61,6 +61,7 @@ public class SBMARCParserTest extends TestCase {
         return new TestSuite(SBMARCParserTest.class);
     }
 
+    // TODO: Test 014*z => 014*a (same for 015)
     public ObjectFilter getStreamReader() {
         URL inputDir = Resolver.getURL("data/horizon/");
         log.debug("getStreamReader: Located root " + inputDir.getFile());

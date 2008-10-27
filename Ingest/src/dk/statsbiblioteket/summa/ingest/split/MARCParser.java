@@ -335,10 +335,10 @@ public abstract class MARCParser extends ThreadedStreamParser {
 
             switch(eventType) {
                 case XMLEvent.START_ELEMENT :
-                    content.append(beginTagToString(reader));
                     if (MARC_TAG_SUBFIELD.equals(reader.getLocalName())) {
                         processSubField(reader, content, tag, ind1, ind2);
                     } else {
+                        content.append(beginTagToString(reader));
                         log.warn(String.format(
                                 "processDataField: Reached unexpected start-tag"
                                         + " <%s> for %s. Expected %s",
@@ -394,6 +394,7 @@ public abstract class MARCParser extends ThreadedStreamParser {
                         reader.getAttributeValue(i), MARC_TAG_SUBFIELD));
             }
         }
+        content.append(beginSubFieldTagToString(reader, tag, ind1, ind2, code));
 
         String subfieldcontent = "";
         while (running && reader.hasNext()) {
@@ -502,6 +503,25 @@ public abstract class MARCParser extends ThreadedStreamParser {
     }
 
     /**
+     * Convert a begin-tag for a sub field to String. Suitable for dumping while
+     * parsing. The base implementation of this method calls
+     * {@link #beginTagToString(javax.xml.stream.XMLStreamReader, boolean)} and
+     * is meant to be overridden if special processing is required.
+     * @param reader a reader pointing to a begin-subfield-tag.
+     * @param tag  the tag for the outer data field.
+     * @param ind1 ind1 for the outer data field.
+     * @param ind2 ind2 for the outer data field.
+     * @param code the code for the sub field.
+     * @return the begin-tag as text.
+     */
+    @SuppressWarnings({"UnusedDeclaration"})
+    protected String beginSubFieldTagToString(XMLStreamReader reader,
+                                              String tag, String ind1,
+                                              String ind2, String code) {
+        return beginTagToString(reader, false);
+    }
+
+    /**
      * Convert a begin-tag to String. Suitable for dumping while parsing.
      * @param reader a reader pointing to a begin-tag.
      * @param addNamespaceDeclarations if true, namespaces are declared.
@@ -516,25 +536,51 @@ public abstract class MARCParser extends ThreadedStreamParser {
         StringWriter tag = new StringWriter(50);
         tag.append("<").append(reader.getLocalName());
         if (addNamespaceDeclarations) {
-            if (reader.getNamespaceURI() != null) {
-                tag.append(" xmlns=\"").append(reader.getNamespaceURI());
-                tag.append("\"");
-            }
-            for (int i = 0 ; i < reader.getNamespaceCount() ; i++) {
-                tag.append(" xmlns:");
-                tag.append(reader.getNamespacePrefix(i));
-                tag.append("=\"").append(reader.getNamespaceURI(i));
-                tag.append("\"");
-            }
+            addNamespaceDeclarations(reader, tag);
         }
         for (int i = 0 ; i < reader.getAttributeCount() ; i++) {
-            tag.append(" ").append(reader.getAttributeLocalName(i));
-            tag.append("=\"");
-            tag.append(ParseUtil.encode(reader.getAttributeValue(i)));
-            tag.append("\"");
+            addAttribute(tag, reader.getAttributeLocalName(i),
+                         reader.getAttributeValue(i));
         }
         tag.append(">");
         return tag.toString();
+    }
+
+    /**
+     * Adds namespace declarations to the given writer, prepending each
+     * declaration with a space.
+     * </p><p>
+     * Example: {@code ' xmlns="http://www.loc.gov/MARC21/slim"'}. 
+     * @param reader where to get the namespace declarations.
+     * @param writer the writer to append to.
+     */
+    private void addNamespaceDeclarations(XMLStreamReader reader,
+                                          StringWriter writer) {
+        if (reader.getNamespaceURI() != null) {
+            writer.append(" xmlns=\"").append(reader.getNamespaceURI());
+            writer.append("\"");
+        }
+        for (int i = 0 ; i < reader.getNamespaceCount() ; i++) {
+            writer.append(" xmlns:");
+            writer.append(reader.getNamespacePrefix(i));
+            writer.append("=\"").append(reader.getNamespaceURI(i));
+            writer.append("\"");
+        }
+    }
+
+    /**
+     * Adds the given attribute to a StringWriter, prepending with space.
+     * Example: {@code ' foo="bar&amp;zoo"'}.
+     * </p><p>
+     * Suitable for overrides if special processing should take place.
+     * @param writer    the writer to append to.
+     * @param localName the SAX-derived attribute local name.
+     * @param value the value of the attribute.
+     */
+    protected void addAttribute(StringWriter writer,
+                                String localName, String value) {
+        writer.append(" ").append(localName).append("=\"").
+                append(ParseUtil.encode(value)).append("\"");
     }
 
     /**
