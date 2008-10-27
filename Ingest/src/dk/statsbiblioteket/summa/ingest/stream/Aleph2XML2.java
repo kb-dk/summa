@@ -28,7 +28,6 @@ import org.apache.commons.logging.LogFactory;
 import java.io.*;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.preingest.Extension;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.util.ParseUtil;
@@ -174,24 +173,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 public class Aleph2XML2 extends ObjectFilterImpl {
     private static Log log = LogFactory.getLog(Aleph2XML2.class);
 
-    private static final String HEADER =
-            ParseUtil.XML_HEADER
-            + "\n<collection xmlns=\"http://www.loc.gov/MARC21/slim\">"
-            + "\n<record>";
-    private static final String HEADER2 =
-            ParseUtil.XML_HEADER
-            + "\n<collection xmlns=\"http://www.loc.gov/MARC21/slim\">\n";
-    private static final String FOOTER = "</collection>\n";
-
-    private static final String RECORD_START ="<record>\n";
-    private static final String RECORD_END = "</record>\n";
-
-    private static final String DATA_START = "<datafield tag=\"";
-    private static final String DATA_END = "</datafield>\n";
-
-    private static final String SUBFIELD_START = "<subfield code=\"";
-    private static final String SUBFIELD_END = "</subfield>\n";
-
+    @SuppressWarnings({"UnusedDeclaration"})
     public Aleph2XML2(Configuration conf){
     }
 
@@ -222,11 +204,30 @@ public class Aleph2XML2 extends ObjectFilterImpl {
      * On-the-fly creation of MARC-XML from Aleph-input.
      */
     public class Aleph2XML2OutputStream extends InputStream {
+/*        private static final String HEADER =
+                ParseUtil.XML_HEADER
+                + "\n<collection xmlns=\"http://www.loc.gov/MARC21/slim\">"
+                + "\n<record>";*/
+        private static final String HEADER =
+                ParseUtil.XML_HEADER
+                + "\n<collection xmlns=\"http://www.loc.gov/MARC21/slim\">\n";
+        private static final String FOOTER = "</collection>\n";
+
+        private static final String RECORD_START ="<record>\n";
+        private static final String RECORD_END = "</record>\n";
+
+        private static final String DATA_START = "<datafield tag=\"";
+        private static final String DATA_END = "</datafield>\n";
+
+        private static final String SUBFIELD_START = "<subfield code=\"";
+        private static final String SUBFIELD_END = "</subfield>\n";
+
+
         private BufferedReader source;
         /**
          * The main buffer for the reader. Anything is this is to be passed on.
          */
-        private StringBuffer buffer;
+        private StringBuffer buffer = new StringBuffer(10000);
         private int bufferPos = -1;
         /**
          * An ID or description of this stream to be used when outputting
@@ -249,9 +250,13 @@ public class Aleph2XML2 extends ObjectFilterImpl {
 
         public int read() throws IOException {
             while (true) {
-                if (bufferPos != -1 && buffer != null &&
-                    bufferPos < buffer.length()) {
-                    return buffer.charAt(bufferPos++);
+                if (bufferPos != -1) {
+                    if (bufferPos < buffer.length()) {
+                        return buffer.charAt(bufferPos++);
+                    } else {
+                        buffer = new StringBuffer(10000);
+                        bufferPos = -1;
+                    }
                 }
                 if (eofReached) {
                     return Payload.EOF;
@@ -350,7 +355,6 @@ public class Aleph2XML2 extends ObjectFilterImpl {
             boolean inCAT = false;
             if (fieldTag.length() >= 3) {
                 if (fieldTag.length() > 3) {
-                    inCAT= false;
                     try{
                         ind1 = fieldTag.substring(3,4);
                         ind2 = fieldTag.substring(4,5);
@@ -366,11 +370,8 @@ public class Aleph2XML2 extends ObjectFilterImpl {
                 } else if (fieldTag.equals("DEL")){ // deleted nat record
                     recordBuffer.append(DATA_START).append("004").
                             append("\" ind1=\"\" ind2=\"\" >").
-                            append(SUBFIELD_START).append("r\" >d").
+                            append(SUBFIELD_START).append("r\">d").
                             append(SUBFIELD_END).append(DATA_END);
-                    inCAT = false;
-                } else {
-                    inCAT = false;
                 }
                 fieldTag = fieldTag.substring(0,3);
             } else {
@@ -380,9 +381,45 @@ public class Aleph2XML2 extends ObjectFilterImpl {
                         + "length >= 3", fieldTag, line, debugID));
             }
 
+            makeDatafield(strparts, fieldTag, ind1, ind2, inCAT);
+        }
+
+        private void makeDatafield(String[] tokens, String fieldTag,
+                                   String ind1, String ind2, boolean inCAT) {
+            recordBuffer.append(DATA_START).append(prepareString(fieldTag)).
+                    append("\" ind1=\"").append(prepareString(ind1)).
+                    append("\" ind2=\"").append(prepareString(ind2)).
+                    append("\">");
+            if (tokens[3].indexOf("$$") >= 0) {
+                String[] subf = tokens[3].split("\\$\\$");
+                int i = 0;
+                int j = 0;
+                while (i < subf.length) {
+                    if (!subf[i].equals("")) {
+                        String code = subf[i].substring(0,1);
+                        String subfield = subf[i].substring(1);
+                        if (inCAT && code.equals("l")){
+                           field994Prefix = subfield;
+                        }
+                        if (j == 0) {
+                            recordBuffer.append("\n");
+                        }
+                        recordBuffer.append(SUBFIELD_START).
+                                append(prepareString(code)).append("\">").
+                                append(prepareString(subfield)).
+                                append(SUBFIELD_END);
+                        j++;
+                    }
+                    i++;
+                }
+            } else {
+                recordBuffer.append(prepareString(tokens[3]));
+            }
+            recordBuffer.append(DATA_END);
         }
 
         // TODO: Check whether this should be field 994*a instead of 994*z
+        // TODO: Put the id in 001*a - same content as 994*z
         /**
          * If valid record-data exists, add the Aleph-ID to field 994*z, close
          * the XML for the record and pass the content to the main buffer.
@@ -418,11 +455,8 @@ public class Aleph2XML2 extends ObjectFilterImpl {
             field994Prefix = "";
         }
 
-        private void newRecordEntered() {
-
-        }
     }
-
+/*
     public void applyFilter(File input, Extension ext, String encoding) {
 
         try{
@@ -567,6 +601,7 @@ public class Aleph2XML2 extends ObjectFilterImpl {
             log.error(e.getMessage(), e);
         }
     }
+    */
 }
 
 
