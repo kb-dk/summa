@@ -25,7 +25,9 @@ import dk.statsbiblioteket.summa.common.Record;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import javax.xml.stream.XMLStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.io.StringWriter;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -74,10 +76,12 @@ public class SBMARCParser extends MARCParser {
     public static final String STATUS_DELETED = "r";
 
     public static final String PARENT_FIELD = "014";
-    public static final String PARENT_FIELD_SUBFIELD = "a";
+    public static final String PARENT_FIELD_SUBFIELD_ID = "a";
+    public static final String PARENT_FIELD_SUBFIELD_SBID = "z";
 
     public static final String CHILD_FIELD = "015";
     public static final String CHILD_FIELD_SUBFIELD_ID = "a";
+    public static final String CHILD_FIELD_SUBFIELD_SBID = "z";
     public static final String CHILD_FIELD_SUBFIELD_SORT = "v";
 
     /**
@@ -191,7 +195,8 @@ public class SBMARCParser extends MARCParser {
 
         // Parent
         if (PARENT_FIELD.equals(dataFieldTag)) {
-            if (PARENT_FIELD_SUBFIELD.equals(subFieldCode)) {
+            if (PARENT_FIELD_SUBFIELD_ID.equals(subFieldCode) ||
+                PARENT_FIELD_SUBFIELD_SBID.equals(subFieldCode) ) {
                 parent = expandID(subFieldContent);
                 log.trace("Parent for " + id + " is " + parent);
             } else {
@@ -202,7 +207,8 @@ public class SBMARCParser extends MARCParser {
 
         // Children
         if (CHILD_FIELD.equals(dataFieldTag)) {
-            if (CHILD_FIELD_SUBFIELD_ID.equals(subFieldCode)) {
+            if (CHILD_FIELD_SUBFIELD_ID.equals(subFieldCode) ||
+                CHILD_FIELD_SUBFIELD_SBID.equals(subFieldCode)) {
                 lastChildID = expandID(subFieldContent);
             } else if (CHILD_FIELD_SUBFIELD_SORT.equals(subFieldCode)) {
                 lastChildSort = subFieldContent;
@@ -211,6 +217,47 @@ public class SBMARCParser extends MARCParser {
             }
         }
         // 001.c: Last update, 001.d: Creation, both as ISO
+    }
+
+    /**
+     * The SB-MARC format defines parent/child ids in subfield z instead of a,
+     * to this is changed to proper danMARC2 as part of the XML generation.
+     * @param reader the XML reader at a subfield.
+     * @param tag  the tag for the datafield.
+     * @param ind1 ind1 for the datafield.
+     * @param ind2 ind2 for the datafield.
+     * @param code the subfield code.
+     * @return the XML for the begin subfield tag.
+     */
+    @SuppressWarnings({"UnusedDeclaration"})
+    protected String beginSubFieldTagToString(XMLStreamReader reader,
+                                              String tag, String ind1,
+                                              String ind2, String code) {
+        String replaceSrcCode;
+        String replaceDestCode;
+        if (PARENT_FIELD.equals(tag) &&
+            PARENT_FIELD_SUBFIELD_SBID.equals(code)) {
+            replaceSrcCode = PARENT_FIELD_SUBFIELD_SBID;
+            replaceDestCode = PARENT_FIELD_SUBFIELD_ID;
+        } else if (CHILD_FIELD.equals(tag) &&
+                   CHILD_FIELD_SUBFIELD_SBID.equals(code)) {
+            replaceSrcCode = CHILD_FIELD_SUBFIELD_SBID;
+            replaceDestCode = CHILD_FIELD_SUBFIELD_ID;
+        } else {
+            return super.beginSubFieldTagToString(
+                    reader, tag, ind1, ind2, code);
+        }
+
+        StringWriter xml = new StringWriter(50);
+        xml.append("<").append(reader.getLocalName());
+        for (int i = 0 ; i < reader.getAttributeCount() ; i++) {
+            String attributeLocalName =
+                    replaceSrcCode.equals(reader.getAttributeLocalName(i)) ?
+                    replaceDestCode : reader.getAttributeLocalName(i); 
+            addAttribute(xml, attributeLocalName, reader.getAttributeValue(i));
+        }
+        xml.append(">");
+        return xml.toString();
     }
 
     protected Record makeRecord(String xml) {
