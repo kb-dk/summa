@@ -2,11 +2,12 @@ package dk.statsbiblioteket.summa.control.bundle;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
+import dk.statsbiblioteket.summa.control.api.bundle.WritableBundleRepository;
+import dk.statsbiblioteket.summa.control.api.bundle.rmi.RemoteRepository;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
@@ -14,7 +15,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * A {@link BundleRepository} exposing an RMI interface. It wraps
+ * A {@link dk.statsbiblioteket.summa.control.api.bundle.BundleRepository} exposing an RMI interface. It wraps
  * a child {@link URLRepository} soring the bundles.
  */
 public class RemoteURLRepositoryServer extends UnicastRemoteObject
@@ -29,7 +30,7 @@ public class RemoteURLRepositoryServer extends UnicastRemoteObject
      * with this repo should proceed. The default is 27045.
      */
     public static final String CONF_SERVICE_PORT =
-                                          "summa.control.repository.service.port";
+                                        "summa.control.repository.service.port";
 
     public static final int DEFAULT_SERVICE_PORT = 27045;
 
@@ -39,7 +40,7 @@ public class RemoteURLRepositoryServer extends UnicastRemoteObject
      * {@code remoteURLRepository}
      */
     public static final String CONF_SERVICE_NAME =
-                                          "summa.control.repository.service.name";
+                                        "summa.control.repository.service.name";
 
     public static final String DEFAULT_SERVICE_NAME = "remoteURLRepository";
 
@@ -72,6 +73,9 @@ public class RemoteURLRepositoryServer extends UnicastRemoteObject
         localRepo = new LocalURLRepository(conf);
 
         log.debug ("Exporting remote interfaces");
+
+        BundleUtils.prepareCodeBase(conf, this,
+                                    "summa-common", "summa-control-api");        
         RemoteHelper.exportRemoteInterface(this,
                                            conf.getInt(CONF_REGISTRY_PORT,
                                                        DEFAULT_REGISTRY_PORT),

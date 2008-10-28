@@ -34,7 +34,7 @@ import java.io.IOException;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.control.api.Service;
-import dk.statsbiblioteket.summa.control.bundle.BundleRepository;
+import dk.statsbiblioteket.summa.control.api.bundle.BundleRepository;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -65,6 +65,10 @@ public class FakeClient implements ClientConnection {
         log.info("Fake deploying bundle " + bundleId + " with config location "
                 + confLocation + " using instance id '" + instanceId + "'");
         return "fake-instance-id";
+    }
+
+    public void removeService(String instanceId) throws IOException {
+        log.info("Remove service '" + instanceId + "'");
     }
 
     public void startService(String id,
@@ -99,6 +103,10 @@ public class FakeClient implements ClientConnection {
 
     public BundleRepository getRepository() throws IOException {
         return null;
+    }
+
+    public String getBundleSpec(String instanceId) throws IOException {
+        return "<bundle></bundle>";
     }
 
     public void reportError(String id) throws IOException {

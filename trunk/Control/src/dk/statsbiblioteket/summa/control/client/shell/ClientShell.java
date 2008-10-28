@@ -71,6 +71,8 @@ public class ClientShell {
         shell.installCommand(new IdCommand(connManager, rmiAddress));
         shell.installCommand(new RepositoryCommand(connManager, rmiAddress));
         shell.installCommand(new KillCommand(connManager, rmiAddress));
+        shell.installCommand(new RemoveServiceCommand(connManager, rmiAddress));
+        shell.installCommand(new SpecCommand(connManager, rmiAddress));
     }
 
     public void run () {

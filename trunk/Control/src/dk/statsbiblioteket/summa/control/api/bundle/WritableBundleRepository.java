@@ -1,4 +1,4 @@
-package dk.statsbiblioteket.summa.control.bundle;
+package dk.statsbiblioteket.summa.control.api.bundle;
 
 import java.io.File;
 import java.io.IOException;

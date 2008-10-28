@@ -1,8 +1,9 @@
 package dk.statsbiblioteket.summa.control.server;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
-import dk.statsbiblioteket.summa.control.bundle.BundleRepository;
+import dk.statsbiblioteket.summa.control.api.bundle.BundleRepository;
 import dk.statsbiblioteket.summa.control.api.BadConfigurationException;
 
 import java.io.File;

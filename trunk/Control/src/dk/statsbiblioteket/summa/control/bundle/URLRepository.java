@@ -25,6 +25,7 @@ package dk.statsbiblioteket.summa.control.bundle;
 import dk.statsbiblioteket.util.Streams;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.control.api.bundle.BundleRepository;
 
 import java.io.*;
 import java.net.URL;
@@ -36,7 +37,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * <p>A {@link BundleRepository} fetching bundles via Java {@link URL}s.</p>
+ * <p>A {@link dk.statsbiblioteket.summa.control.api.bundle.BundleRepository} fetching bundles via Java {@link URL}s.</p>
  *
  * <p>Given a bundle id it is mapped to a URL as specified by the
  * {@link #CONF_REPO_ADDRESS} property in the {@link Configuration}.</p>

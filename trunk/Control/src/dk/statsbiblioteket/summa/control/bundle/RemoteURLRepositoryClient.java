@@ -2,6 +2,8 @@ package dk.statsbiblioteket.summa.control.bundle;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.rpc.SummaRMIConnectionFactory;
+import dk.statsbiblioteket.summa.control.api.bundle.BundleRepository;
+import dk.statsbiblioteket.summa.control.api.bundle.rmi.RemoteRepository;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
 

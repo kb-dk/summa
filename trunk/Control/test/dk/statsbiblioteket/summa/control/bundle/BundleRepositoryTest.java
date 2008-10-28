@@ -1,17 +1,13 @@
 package dk.statsbiblioteket.summa.control.bundle;
 
 import junit.framework.*;
-import dk.statsbiblioteket.summa.control.bundle.BundleSpecBuilder;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
+import dk.statsbiblioteket.summa.control.api.bundle.BundleRepository;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.storage.FileStorage;
 
 import dk.statsbiblioteket.util.Strings;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.util.List;
 
 

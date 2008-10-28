@@ -6,6 +6,7 @@
 
     <entry key="summa.configuration.service.port">2768</entry>
     <entry key="summa.configuration.service.name">ConfigurationStorage</entry>
+    <entry key="summa.api.version">1.0.99</entry>
     
     <!--<entry key="summa.control.client.id">test-client-1</entry>
     <entry key="summa.control.client.basepath">summa-control</entry>

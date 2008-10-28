@@ -10,6 +10,7 @@ import dk.statsbiblioteket.summa.control.api.*;
 import dk.statsbiblioteket.summa.control.api.feedback.Feedback;
 import dk.statsbiblioteket.summa.control.api.feedback.FeedbackFactory;
 import dk.statsbiblioteket.summa.control.api.rmi.ControlRMIConnection;
+import dk.statsbiblioteket.summa.control.bundle.BundleUtils;
 
 import java.io.IOException;
 import java.io.File;
@@ -28,7 +29,7 @@ import org.apache.commons.logging.LogFactory;
         author = "mke",
         comment="Unfinished")
 public class ControlCore extends UnicastRemoteObject
-                  implements ControlRMIConnection, ControlCoreMBean, Configurable {
+               implements ControlRMIConnection, ControlCoreMBean, Configurable {
 
     /**
      * Configuration property defining which port the
@@ -48,7 +49,8 @@ public class ControlCore extends UnicastRemoteObject
      */
     public static final String CONF_CONTROL_BASE_DIR = "summa.control.core.dir";
 
-    private Log log = LogFactory.getLog (ControlCore.class);
+    private static final Log log = LogFactory.getLog (ControlCore.class);
+
     private File baseDir;
     private Status status;
     private ClientManager clientManager;
@@ -68,11 +70,14 @@ public class ControlCore extends UnicastRemoteObject
         baseDir = ControlUtils.getControlBaseDir(conf);
         log.debug ("Using base dir '" + baseDir + "'");
 
+        BundleUtils.prepareCodeBase(conf, repoManager.getRepository(),
+                                    "summa-common", "summa-control-api");
         setStatus(Status.CODE.not_instantiated,
                   "Exporting remote interfaces", Logging.LogLevel.DEBUG);
-        RemoteHelper.exportRemoteInterface(this,
-                                        conf.getInt(CONF_CONTROL_REGISTRY_PORT, 27000),
-                                        "summa-control");
+        RemoteHelper.exportRemoteInterface(
+                                 this,
+                                 conf.getInt(CONF_CONTROL_REGISTRY_PORT, 27000),
+                                 "summa-control");
 
         try {
             RemoteHelper.exportMBean(this);
@@ -84,7 +89,7 @@ public class ControlCore extends UnicastRemoteObject
         setStatus(Status.CODE.idle,
                   "Set up complete. Remote interfaces up",
                   Logging.LogLevel.DEBUG);
-    }
+    }    
 
     private static int getServicePort(Configuration conf) {
         return conf.getInt(CONF_CONTROL_CORE_PORT, 27001);
