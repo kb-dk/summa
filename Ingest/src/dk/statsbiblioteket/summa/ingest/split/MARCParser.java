@@ -215,7 +215,7 @@ public abstract class MARCParser extends ThreadedStreamParser {
                                 reader.getText(), sourcePayload));
                     }
                     // TODO: Test for "foo &lt;bar"
-                    content.append(reader.getText());
+                    content.append(ParseUtil.encode(reader.getText()));
                     break;
                 default:
                     log.warn(String.format(
@@ -281,7 +281,7 @@ public abstract class MARCParser extends ThreadedStreamParser {
                 case XMLEvent.CHARACTERS :
                     // TODO: Test for "foo &lt;bar"
                     leaderContent = reader.getText();
-                    content.append(reader.getText());
+                    content.append(ParseUtil.encode(reader.getText()));
                     break;
                 default:
                     log.warn(String.format(
@@ -365,7 +365,7 @@ public abstract class MARCParser extends ThreadedStreamParser {
                                 + "parsing MARC for %s",
                                 reader.getText(), sourcePayload));
                     }
-                    content.append(reader.getText());
+                    content.append(ParseUtil.encode(reader.getText()));
                     break;
                 default:
                     log.warn(String.format(
@@ -427,7 +427,7 @@ public abstract class MARCParser extends ThreadedStreamParser {
                     break;
                 case XMLEvent.CHARACTERS :
                     subfieldcontent = reader.getText();
-                    content.append(reader.getText());
+                    content.append(ParseUtil.encode(reader.getText()));
                     break;
                 default:
                     log.warn(String.format(
