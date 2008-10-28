@@ -9,10 +9,10 @@ import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.control.bundle.*;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
-import dk.statsbiblioteket.summa.control.client.Client;
+import dk.statsbiblioteket.summa.control.api.bundle.BundleRepository;
+import dk.statsbiblioteket.summa.control.api.bundle.WritableBundleRepository;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.*;
 
@@ -545,6 +545,26 @@ public class RepositoryManager implements Configurable,
         }
 
         /* Bundle is ok */
+    }
+
+    /**
+     * Like {@link BundleRepository#expandApiUrl(String)}.
+     * @param jarFileName the name of jar file to expand the API URL for
+     * @return the fully qualified URL to the jar file or {@code null} if the
+     *         requested jar file is not present in the API section of the repo
+     */
+    public String expandPublicApi (String jarFileName) {
+        try {
+            return repo.expandApiUrl(jarFileName);
+        } catch (IOException e) {
+            log.warn("Failed to expand public API URL for '"
+                     + jarFileName + "'",e);
+            return null;
+        }
+    }
+
+    public BundleRepository getRepository() {
+        return repo;
     }
 }
 

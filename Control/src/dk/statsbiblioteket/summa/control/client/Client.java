@@ -30,6 +30,7 @@ import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
 import dk.statsbiblioteket.summa.common.configuration.Configurable.ConfigurationException;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.control.api.*;
+import dk.statsbiblioteket.summa.control.api.bundle.BundleRepository;
 import dk.statsbiblioteket.summa.control.bundle.*;
 import dk.statsbiblioteket.util.*;
 import dk.statsbiblioteket.util.console.ProcessRunner;
@@ -40,6 +41,7 @@ import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.ByteArrayOutputStream;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.NotBoundException;
@@ -884,6 +886,34 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         return repository;
     }
 
+    public String getBundleSpec (String instanceId) throws RemoteException {
+        File specFile;
+
+        if (instanceId == null) {
+            // Get bundle spec of the client
+            specFile = new File(basePath, "client.xml");
+        } else {
+            if (!serviceMan.knows(instanceId)) {
+                throw new NoSuchServiceException(this, instanceId,
+                                                 "getBundleSpec");
+            }
+
+            specFile = serviceMan.getServiceFile(instanceId);
+        }
+
+        try {
+            BundleSpecBuilder builder = BundleSpecBuilder.open(specFile);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            builder.write(out);
+            return new String(out.toByteArray());
+        } catch (IOException e) {
+            throw new RemoteException("Failed to read bundle spec " + specFile
+                                      +" for '"
+                                      + (instanceId == null ? id : instanceId)
+                                      + "': " + e.getMessage(), e);
+        }
+    }
+
     public void reportError(String id) throws RemoteException {
         log.debug ("Got error report on '" + id + "'");
 
@@ -952,7 +982,9 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
      * @param id the service to stop and remove
      * @throws RemoteException upon communication errors with the service
      */
-    private void removeService(String id) throws RemoteException {
+    public void removeService(String id) throws RemoteException {
+        log.info("Removing service '" + id +"'");
+
         ConnectionContext<Service> connCtx = null;
         File pkgFile = serviceMan.getServiceDir(id);
         String artifactPkgPath;
@@ -966,21 +998,30 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         /* Close the service if it is running */
         if (connCtx != null) {
             try {
-                connCtx.getConnection().stop ();
+                log.info("Killing service '" + id + "' before removal");
+                connCtx.getConnection().kill ();
+            } catch(Exception e) {
+                log.warn("Problems connecting to service '" + id + "' when "
+                         +"killing it. Removing it anyway", e);
+                serviceMan.reportError(connCtx, e);
             } finally {
                 connCtx.unref();
             }
+        } else {
+            log.info("Service '" + id + "', not running. Good to remove");
         }
 
         /* Find an available file name in the artifacts dir */
         int availNum = 1;
         artifactPkgPath = artifactPath +File.separator
-                               + Files.baseName(pkgFile) + ".old.0";
+                               + pkgFile.getName() + ".old.0";
         while (new File (artifactPkgPath).exists()) {
             artifactPkgPath =  artifactPath +File.separator
-                               + Files.baseName(pkgFile) + ".old." + availNum;
+                               + pkgFile.getName() + ".old." + availNum;
         }
 
+        log.info("Service '" + id + "' removed. Backup kept as: "
+                 + artifactPkgPath);
         pkgFile.renameTo(new File(artifactPkgPath));
     }
 

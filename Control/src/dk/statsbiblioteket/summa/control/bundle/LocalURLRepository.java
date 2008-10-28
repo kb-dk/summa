@@ -2,6 +2,7 @@ package dk.statsbiblioteket.summa.control.bundle;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.control.api.bundle.WritableBundleRepository;
 import dk.statsbiblioteket.util.Files;
 
 import java.io.File;
@@ -12,7 +13,7 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * An extension of {@link URLRepository} also implementing the
- * {@link WritableBundleRepository} interface, thus allowing clients to
+ * {@link dk.statsbiblioteket.summa.control.api.bundle.WritableBundleRepository} interface, thus allowing clients to
  * install files into the repository.
  */
 public class LocalURLRepository extends URLRepository

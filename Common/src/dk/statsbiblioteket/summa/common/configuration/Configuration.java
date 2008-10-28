@@ -57,7 +57,7 @@ import org.apache.commons.logging.LogFactory;
 public class Configuration implements Serializable,
                                       Iterable<Map.Entry<String,Serializable>>,
                                       Configurable {
-    private static Log log = LogFactory.getLog(Configuration.class);
+    private final static Log log = LogFactory.getLog(Configuration.class);
 
     private ConfigurationStorage storage;
 
@@ -81,6 +81,14 @@ public class Configuration implements Serializable,
     /** System property defining where to fetch the configuration.
      * This can be a normal URL or an rmi path.*/
     public static final String CONF_CONFIGURATION_PROPERTY = "summa.configuration";
+
+    /** Optional system property defining which version of the Summa API
+     * applications should adhere to if it can not be determined at compile time.
+     * Default value is {@link #DEFAULT_API_VERSION */
+     public static final String CONF_API_VERSION = "summa.api.version";
+
+    /** API version of the Summa release */
+     public static final String DEFAULT_API_VERSION = "1.1";
 
     /** System property defining the root directory from which persistent
      * data should be read and stored to. The default value is

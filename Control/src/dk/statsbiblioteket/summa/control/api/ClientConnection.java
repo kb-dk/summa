@@ -23,7 +23,7 @@
 package dk.statsbiblioteket.summa.control.api;
 
 import dk.statsbiblioteket.summa.control.client.Client;
-import dk.statsbiblioteket.summa.control.bundle.BundleRepository;
+import dk.statsbiblioteket.summa.control.api.bundle.BundleRepository;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
@@ -91,7 +91,7 @@ public interface ClientConnection extends Monitorable {
     public static final String CONF_REGISTRY_HOST =
                                             "summa.control.client.registry.host";
 
-    /** <p>Property containing the class of {@link dk.statsbiblioteket.summa.control.bundle.BundleRepository}
+    /** <p>Property containing the class of {@link dk.statsbiblioteket.summa.control.api.bundle.BundleRepository}
      * a {@link Client} should use for fetching bundles.</p>
      *
      * <p>Default is to use a
@@ -127,7 +127,7 @@ public interface ClientConnection extends Monitorable {
 
     /**
      * Fetches the service bundle with a given bundle id from the configured
-     * {@link BundleRepository} and deploys it according to the bundle's
+     * {@link dk.statsbiblioteket.summa.control.api.bundle.BundleRepository} and deploys it according to the bundle's
      * configuration and instance id.
      * @param bundleId          The <i>bundle id</i> for the service
      * @param instanceId        The <i>instance id</i> to deploy the service
@@ -144,6 +144,16 @@ public interface ClientConnection extends Monitorable {
                                 String instanceId,
                                 String configLocation)
                               throws IOException;
+
+    /**
+     * Remove a given service from the client. If the service is already
+     * running it will be stopped with a call to {@link #stopService(String)}
+     * @param instanceId the instance if of the service to stop
+     * @throws IOException on communication errors
+     * @throws NoSuchServiceException if the service {@code instanceId}is not
+     *                                installed in the client
+     */
+    public void removeService(String instanceId) throws IOException;
 
     /**
      * Start the given service with the given configuration. If the service
@@ -210,15 +220,30 @@ public interface ClientConnection extends Monitorable {
     public String getId() throws IOException;
 
     /**
-     * Get the {@link BundleRepository} the client uses.
+     * Get the {@link dk.statsbiblioteket.summa.control.api.bundle.BundleRepository} the client uses.
      */
     public BundleRepository getRepository () throws IOException;
+
+    /**
+     * Get the contents of the bundle spec of a deployed service.
+     * If {@code instanceId} is {@code null} the bundle spec of the
+     * running client will be returned
+     * @param instanceId the instance id of the bundle to inspect, or
+     *        {@code null} to get the bundle spec for the running client
+     * @return the contents of the bundle spec file
+     * @throws IOException on communication errors
+     * @throws NoSuchServiceException if the client does not know of a service
+     *                                with the id {@code instanceId}
+     */
+    public String getBundleSpec (String instanceId) throws IOException;
 
     /**
      * Report to the client that the given service is acting up and
      * that it should check its connection to the service.
      * @param id the service to report
      * @throws IOException on communication errors with the client
+     * @throws NoSuchServiceException if a service by the given id doesn't
+     *                                exist
      */
     public void reportError (String id) throws IOException;
 }
