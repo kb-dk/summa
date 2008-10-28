@@ -35,12 +35,14 @@ import java.util.Arrays;
 
 /**
  * A parser for the MARC-variant used at the State and University Library of
- * Denmark. The variant is a true subset of the danMARC2 standard.
+ * Denmark (SB). The variant is a true subset of the danMARC2 standard.
  * </p><p>
  * The parser extracts the following properties from the MARC records:
  * <ul>
  *   <li>recordID<br />
- *       Taken from field 001, subfield a.</li>
+ *       Taken from field 001, subfield a or field 994, subfield z.<br />
+ *       994*z (specific for SB) has precedence over 001*a (danMARC2 standard).
+ *   </li>
  *   <li>state (deleted or not)<br />
  *       Taken from field 004, subfield r.<br />
  *       d=deleted, c=corrected, n=new, ""=new or corrected</li>
@@ -67,13 +69,14 @@ import java.util.Arrays;
 public class SBMARCParser extends MARCParser {
     private static Log log = LogFactory.getLog(SBMARCParser.class);
 
-    // Old SB-way: 004.a and 004.z in unknown order of priority
     public static final String ID_FIELD = "001";
     public static final String ID_FIELD_SUBFIELD = "a";
+    public static final String SBID_FIELD = "994";
+    public static final String SBID_FIELD_SUBFIELD = "z";
 
     public static final String STATUS_FIELD = "004";
     public static final String STATUS_FIELD_SUBFIELD = "r";
-    public static final String STATUS_DELETED = "r";
+    public static final String STATUS_DELETED = "d";
 
     public static final String PARENT_FIELD = "014";
     public static final String PARENT_FIELD_SUBFIELD_ID = "a";
@@ -177,12 +180,17 @@ public class SBMARCParser extends MARCParser {
         // ID
         if (ID_FIELD.equals(dataFieldTag) &&
             ID_FIELD_SUBFIELD.equals(subFieldCode)) {
-            // Only one way to specify ID in SB MARC
-            setID(expandID(subFieldContent), 0);
+            setID(expandID(subFieldContent), 0); // Lowest priority
+            return;
+        }
+        if (SBID_FIELD.equals(dataFieldTag) &&
+            SBID_FIELD_SUBFIELD.equals(subFieldCode)) {
+            setID(expandID(subFieldContent), 1); // Highest priority
             return;
         }
 
         // Status
+        System.out.println(dataFieldTag);
         if (STATUS_FIELD.equals(dataFieldTag) &&
             STATUS_FIELD_SUBFIELD.equals(subFieldCode)) {
             // d = deleted, c = corrected, n = new, "" = new or corrected
@@ -272,6 +280,8 @@ public class SBMARCParser extends MARCParser {
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException("utf-8 not supported", e);
         }
+        log.trace("Setting deleted-status for Record " + id + " to "
+                  + isDeleted);
         record.setDeleted(isDeleted);
         if (parent != null) {
             record.setParentIds(Arrays.asList(parent));

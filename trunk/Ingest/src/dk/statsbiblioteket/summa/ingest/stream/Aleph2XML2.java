@@ -26,12 +26,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.*;
+import java.util.ArrayList;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.util.ParseUtil;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * This filter converts dumps from XLibris Aleph library system to MARC-XML.
@@ -69,7 +70,6 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
  * </pre>
  * </p><p>
  * After:<br>
- * <pre>
  * {@code
  * <?xml version="1.0" encoding="UTF-8"?>
  * <collection xmlns="http://www.loc.gov/MARC21/slim">
@@ -161,10 +161,14 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
  *       <datafield tag="V07" ind1="0" ind2="0">
  *           <subfield code="a">XI,5b S</subfield>
  *       </datafield>
+ *       <datafield tag="994" ind1="0" ind2="0">
+ *           <subfield code="z">KEM01-000000001</subfield>
+ *       </datafield>
  *   </record>
  * </collection>
  * }
- * </pre>
+ * Note the existence of the 994*z field. This is specific for SB and contains
+ * subfield CAT*l + "-" + the alephID and is used as the Record-id in Summa.
  */
 // TODO: Check whether FMT must be ML and whether LDR sould be <leader>
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -185,7 +189,7 @@ public class Aleph2XML2 extends ObjectFilterImpl {
      */
     private String prepareString(String content) {
         content = content.trim();
-        ParseUtil.encode(content);
+        content = ParseUtil.encode(content);
         // some records has this illegal char in the record - remove it
         return content.replaceAll("\\p{Cntrl}","");
     }
@@ -227,7 +231,7 @@ public class Aleph2XML2 extends ObjectFilterImpl {
         /**
          * The main buffer for the reader. Anything is this is to be passed on.
          */
-        private StringBuffer buffer = new StringBuffer(10000);
+        private ArrayList<Byte> buffer = new ArrayList<Byte>(10000);
         private int bufferPos = -1;
         /**
          * An ID or description of this stream to be used when outputting
@@ -251,10 +255,10 @@ public class Aleph2XML2 extends ObjectFilterImpl {
         public int read() throws IOException {
             while (true) {
                 if (bufferPos != -1) {
-                    if (bufferPos < buffer.length()) {
-                        return buffer.charAt(bufferPos++);
+                    if (bufferPos < buffer.size()) {
+                        return buffer.get(bufferPos++);
                     } else {
-                        buffer = new StringBuffer(10000);
+                        buffer.clear();
                         bufferPos = -1;
                     }
                 }
@@ -263,7 +267,7 @@ public class Aleph2XML2 extends ObjectFilterImpl {
                 }
                 if (notReadYet) {
                     notReadYet = false;
-                    buffer.append(HEADER);
+                    appendToBuffer(HEADER);
                     bufferPos = 0;
                 } else {
                     processNextLine();
@@ -288,7 +292,7 @@ public class Aleph2XML2 extends ObjectFilterImpl {
                 // TODO: Should we call close in the stream here?
                 eofReached = true;
                 finishRecord();
-                buffer.append(FOOTER);
+                appendToBuffer(FOOTER);
                 bufferPos = 0;
                 return;
             }
@@ -318,8 +322,8 @@ public class Aleph2XML2 extends ObjectFilterImpl {
          * @param line the String to process.
          */
         private void processLineContent(String line) {
-            if (buffer.length() == 0) {
-                buffer.append(RECORD_START);
+            if (buffer.size() == 0) {
+                appendToBuffer(RECORD_START);
             }
             //  * 000000001 00800 L $$a1979$$bdk$$e1$$f0$$g0$$ldan$$tm
             String[] strparts = line.split("[ ]{1,5}", 4);
@@ -369,7 +373,7 @@ public class Aleph2XML2 extends ObjectFilterImpl {
                      inCAT = true;
                 } else if (fieldTag.equals("DEL")){ // deleted nat record
                     recordBuffer.append(DATA_START).append("004").
-                            append("\" ind1=\"\" ind2=\"\" >").
+                            append("\" ind1=\"\" ind2=\"\" >\n").
                             append(SUBFIELD_START).append("r\">d").
                             append(SUBFIELD_END).append(DATA_END);
                 }
@@ -438,7 +442,7 @@ public class Aleph2XML2 extends ObjectFilterImpl {
                 if (isOK){
                     log.debug("Adding content of record buffer for "
                               + lastAlephID + " to main buffer");
-                    buffer.append(recordBuffer);
+                    appendToBuffer(recordBuffer.toString());
                     if (log.isTraceEnabled()) {
                         log.trace("Generated XML for record " + lastAlephID
                                   + ":\n" + recordBuffer);
@@ -455,6 +459,17 @@ public class Aleph2XML2 extends ObjectFilterImpl {
             field994Prefix = "";
         }
 
+        private void appendToBuffer(String content) {
+            try {
+                byte[] bytes = content.getBytes("utf-8");
+                for (byte aByte : bytes) {
+                    buffer.add(aByte);
+                }
+            } catch (UnsupportedEncodingException e) {
+                throw new RuntimeException("utf-8 not supported", e);
+            }
+
+        }
     }
 /*
     public void applyFilter(File input, Extension ext, String encoding) {

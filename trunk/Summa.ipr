@@ -132,6 +132,7 @@
       <entry name="*.cfs" />
       <entry name="*.gen" />
       <entry name="*_4" />
+      <entry name="*.data" />
     </wildcardResourcePatterns>
   </component>
   <component name="CppTools.Loader" reportImplicitCastToBool="false" version="1" />
