@@ -67,7 +67,13 @@ public class RemoteHelper {
                                         + "localhost:" + registryPort);
         }
 
-        reg.rebind(serviceName, remote);        
+        try {
+            reg.rebind(serviceName, remote);
+        } catch (NullPointerException e) {
+            throw new NullPointerException(String.format(
+                    "NullPointerException while calling rebind(%s, %s",
+                    serviceName, remote));
+        }
 
         log.info(remote.getClass().getSimpleName()
                 + " bound in registry on //localhost:" + registryPort + "/"
