@@ -130,7 +130,12 @@ public class StorageService extends ServiceBase {
                   Logging.LogLevel.INFO);
     }
 
-    
+    /**
+     * @return the underlying Storage. Primarily used for testing purposes.
+     */
+    public Storage getStorage() {
+        return storage;
+    }
 }
 
 

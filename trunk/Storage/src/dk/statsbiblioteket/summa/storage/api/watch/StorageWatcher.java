@@ -168,6 +168,11 @@ public class StorageWatcher implements Configurable, Runnable {
                 log.debug("Interrupted");
             }
 
+            if (!mayRun) {
+                log.debug("Skipping check as mayRun is false");
+                return;
+            }
+
             if (log.isTraceEnabled()) {
                 log.trace ("Polling storage with interval: "
                            + getPollInterval() + " ms");
