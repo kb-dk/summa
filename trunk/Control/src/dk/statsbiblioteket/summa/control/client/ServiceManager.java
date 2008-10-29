@@ -4,9 +4,7 @@ import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionFactory;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
 import dk.statsbiblioteket.summa.control.api.Service;
-import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.api.BadConfigurationException;
-import dk.statsbiblioteket.summa.control.api.NoSuchServiceException;
 import dk.statsbiblioteket.summa.control.bundle.BundleSpecBuilder;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -32,8 +30,6 @@ public class ServiceManager extends ConnectionManager<Service>
 
     private static Log log = LogFactory.getLog(ServiceManager.class);
 
-    private List<String> services;
-
     /**
      * Configuration property defining the class of the
      * {@link ConnectionFactory} to use for creating service connections.
@@ -47,8 +43,6 @@ public class ServiceManager extends ConnectionManager<Service>
 
     public ServiceManager (Configuration conf) {
         super (getConnectionFactory(conf));
-
-        services = new ArrayList<String>();
 
         registryPort = conf.getInt(Client.CONF_REGISTRY_PORT, 27000);
         clientId = System.getProperty(Client.CONF_CLIENT_ID);
@@ -95,11 +89,11 @@ public class ServiceManager extends ConnectionManager<Service>
                                             + " 'null'");
         }
 
-        services.add (instanceId);
+        log.debug("Currently regsiter() is a no-op");
     }
 
     public Iterator<String> iterator() {
-        return services.iterator();
+        return getServices().iterator();
     }
 
     public boolean knows (String instanceId) {
@@ -124,10 +118,10 @@ public class ServiceManager extends ConnectionManager<Service>
     }
 
     public String getBundleId (String serviceId) {
-        return getBundle (serviceId).getBundleId();
+        return getBundleSpec (serviceId).getBundleId();
     }
 
-    private BundleSpecBuilder getBundle (String serviceId) {
+    public BundleSpecBuilder getBundleSpec (String serviceId) {
         File bundleFile = getServiceFile(serviceId);
         try {
             BundleSpecBuilder builder = BundleSpecBuilder.open(bundleFile);

@@ -94,14 +94,15 @@ public interface ClientDeployer extends Configurable {
      * <p>Configuration property defining the system property where the client is
      * to look up a {@link Configuration} with.</p>
      *
-     * <p>If this property is not set the {@link dk.statsbiblioteket.summa.control.server.ControlCore} will set it to
-     * point at the Control's configuration server before passing the configuration
-     * to {@link ClientDeployer}'s constructor.</p>
+     * <p>If this property is not set the
+     * {@link dk.statsbiblioteket.summa.control.server.ControlCore} will set it
+     * to {@code configuration.xml} before passing the configuration to
+     * {@link ClientDeployer}'s constructor.</p>
      *
      * {@link Configuration#getSystemConfiguration()}. 
      */
     public static final String CONF_CLIENT_CONF =
-                                                  Configuration.CONF_CONFIGURATION_PROPERTY;
+                                      Configuration.CONF_CONFIGURATION_PROPERTY;
 
     /**
      * <p>Configuration property defining the bundle to deploy. The
@@ -112,14 +113,14 @@ public interface ClientDeployer extends Configurable {
      * <p>This property <i>must</i> be provided by the configuration.</p>
      */
     public static final String CONF_DEPLOYER_BUNDLE =
-                                               "summa.control.deployer.bundle.id";
+                                             "summa.control.deployer.bundle.id";
 
     /**
      * Configuration property set by the Control server. It contains the absolute
      * path to the .bundle file to deploy.
      */
     public static final String CONF_DEPLOYER_BUNDLE_FILE =
-                                             "summa.control.deployer.bundle.file";
+                                           "summa.control.deployer.bundle.file";
 
     /**
      * <p>Configuration property naming the class used to provide user
@@ -128,7 +129,7 @@ public interface ClientDeployer extends Configurable {
      * <p>This property <i>must</i> be provided by the configuration.</p>
      */
     public static final String CONF_DEPLOYER_FEEDBACK =
-                                          "summa.control.deployer.feedback.class";
+                                        "summa.control.deployer.feedback.class";
 
     /**
      * <p>Deploy the client, as specified in the {@link Configuration} supplied

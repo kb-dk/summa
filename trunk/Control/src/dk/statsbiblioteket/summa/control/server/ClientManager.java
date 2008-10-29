@@ -10,6 +10,8 @@ import dk.statsbiblioteket.summa.control.api.BadConfigurationException;
 import dk.statsbiblioteket.summa.control.api.NoSuchClientException;
 import dk.statsbiblioteket.summa.control.api.ControlConnection;
 import dk.statsbiblioteket.summa.control.api.ClientDeployer;
+import dk.statsbiblioteket.summa.control.bundle.BundleSpecBuilder;
+import dk.statsbiblioteket.summa.control.bundle.Bundle;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionFactory;
@@ -22,6 +24,7 @@ import java.io.InputStream;
 import java.io.FileInputStream;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -39,26 +42,21 @@ import org.apache.commons.logging.LogFactory;
         author = "mke",
         comment="Unfinished")
 public class ClientManager extends ConnectionManager<ClientConnection>
-                                                           implements Runnable {
-
-    /**
-     * Name of file used to store a list of clients. This file will
-     * contain a {@code instanceId -> address} map.
-     */
-    public static final String CLIENT_MAP_FILE = "control.clients.xml";
+                                         implements Runnable, Iterable<String> {
 
     /**
      * Configuration property defining the class of the
      * {@link ConnectionFactory} to use for creating client connections.
      */
     public static final String CONF_CONNECTION_FACTORY =
-                                               GenericConnectionFactory.CONF_FACTORY;
+                                          GenericConnectionFactory.CONF_FACTORY;
 
     /**
      * Configuration property defining in what directory to store
      * client deployment metadata
      */
-    public static final String CLIENT_META_DIR_PROPERTY = "summa.control.meta.dir";
+    public static final String CLIENT_META_DIR_PROPERTY =
+                                                       "summa.control.meta.dir";
 
     /**
      * File extension for client metadata files
@@ -104,12 +102,15 @@ public class ClientManager extends ConnectionManager<ClientConnection>
      * @param clientHost hostname of the machine where the client runs
      * @param deployConfig configuration passed to the {@link ClientDeployer}
      *                     responsible for deploying the given client
+     * @param spec a bundle spec for the client being deployed
      * @throws BadConfigurationException if a client with instance id
      *                                   {@code instanceId} is already
      *                                   registered.
      */
-    public void register (String instanceId, String clientHost,
-                          Configuration deployConfig) {
+    public void register (String instanceId,
+                          String clientHost,
+                          Configuration deployConfig,
+                          BundleSpecBuilder spec) {
         log.debug ("Registering Client instance '" + instanceId + "' on host '"
                    + clientHost + "'");
 
@@ -128,7 +129,13 @@ public class ClientManager extends ConnectionManager<ClientConnection>
             conf.set (ClientConnection.CONF_REGISTRY_HOST, clientHost);
 
             int regPort = getClientRegistryPort (instanceId, deployConfig);
-            conf.set (ClientConnection.CONF_REGISTRY_PORT, new Integer(regPort).toString());
+            conf.set (ClientConnection.CONF_REGISTRY_PORT,
+                      Integer.toString(regPort));
+
+            /* Store whether this bundle should be automagically started
+             * by the Control server */
+            conf.set(Bundle.CONF_AUTO_START,
+                     Boolean.toString(spec.isAutoStart()));
 
         } catch (IOException e) {
             log.error ("Failed to write client registration for '"
@@ -306,6 +313,10 @@ public class ClientManager extends ConnectionManager<ClientConnection>
         log.trace ("Found clients: " + Logs.expand(clients, 10));
 
         return clients;
+    }
+
+    public Iterator<String> iterator () {
+        return getClients ().iterator();
     }
 }
 

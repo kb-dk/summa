@@ -13,8 +13,8 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * An extension of {@link URLRepository} also implementing the
- * {@link dk.statsbiblioteket.summa.control.api.bundle.WritableBundleRepository} interface, thus allowing clients to
- * install files into the repository.
+ * {@link dk.statsbiblioteket.summa.control.api.bundle.WritableBundleRepository}
+ * interface, thus allowing clients to install files into the repository.
  */
 public class LocalURLRepository extends URLRepository
                                 implements WritableBundleRepository,

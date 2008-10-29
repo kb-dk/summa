@@ -9,12 +9,16 @@ import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.control.bundle.*;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
+import dk.statsbiblioteket.summa.control.api.NoSuchClientException;
 import dk.statsbiblioteket.summa.control.api.bundle.BundleRepository;
 import dk.statsbiblioteket.summa.control.api.bundle.WritableBundleRepository;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.FileInputStream;
 import java.util.*;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipEntry;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -197,6 +201,27 @@ public class RepositoryManager implements Configurable,
         }
 
         return null;
+    }
+
+    /**
+     * Return the contents of the bundle spec for the requested bundle.
+     * <p/>
+     * For easy handling of bundle spec see
+     * {@link dk.statsbiblioteket.summa.control.bundle.BundleSpecBuilder}
+     *
+     * @param bundleId the bundle id of the bundle to inspect
+     * @return string representation of the bundle spec
+     * @throws IOException on communication errors with the repository
+     */
+    public byte[] getBundleSpec (String bundleId) {
+        File clientBundle = getBundle (bundleId);
+
+        if (clientBundle == null) {
+            throw new BundleLoadingException("No such bundle in repository: "
+                                             + bundleId);
+        }
+
+        return BundleUtils.extractBundleSpec(clientBundle);
     }
 
     /**

@@ -2,6 +2,7 @@
 <bundle>
 	<mainJar>lib/@release.jar@</mainJar>
 	<mainClass>dk.statsbiblioteket.summa.control.client.Client</mainClass>
+    <autoStart>true</autoStart>
     <property name="com.sun.management.jmxremote.port" value="2765"/>
     <property name="com.sun.management.jmxremote.ssl" value="false"/>
     <description>A sample Client bundle for the Summa Control</description>

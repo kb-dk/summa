@@ -180,6 +180,39 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                                       + dirFile.getAbsoluteFile() + "'");
             }
         }
+
+        runAutoStartServices ();
+    }
+
+    private void runAutoStartServices () {
+        setStatusRunning("Starting auto-start services");
+        for (String instanceId : serviceMan) {
+            BundleSpecBuilder spec = serviceMan.getBundleSpec(instanceId);
+
+            if (spec == null) {
+                log.error("Failed to read bundle spec for '" + instanceId + "'");
+                continue;
+            }
+
+            if (spec.isAutoStart ()) {
+                try {
+                    log.info("Auto-starting service '" + instanceId + "'");
+                    log.warn("FIXME: confLocation hardcoded to 'configuration.xml'");
+
+                    /* This method call will only start the service if it isn't
+                     * already running: */
+                    startService(instanceId, "configuration.xml");
+                } catch (Exception e) {
+                    log.error("Failed to auto-start service '" + instanceId
+                              + "': " + e.getMessage(), e);
+                }
+            } else {
+                log.debug("Service '" + instanceId + "' not scheduled for "
+                          + "auto-start");
+            }
+        }
+
+        setStatusIdle();
     }
 
     /**

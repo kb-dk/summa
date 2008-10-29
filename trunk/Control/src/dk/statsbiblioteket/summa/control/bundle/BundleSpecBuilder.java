@@ -3,17 +3,7 @@ package dk.statsbiblioteket.summa.control.bundle;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.io.Serializable;
-import java.io.Writer;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -23,6 +13,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.control.api.bundle.BundleRepository;
 import dk.statsbiblioteket.util.FileAlreadyExistsException;
 import org.apache.commons.logging.Log;
@@ -676,6 +667,52 @@ public class BundleSpecBuilder {
         log.trace("Finished getStub(), returning: " + stub);
         return stub;
 
+    }
+
+    /**
+     * Return a string representation of the bundle spec suitable for
+     * displaying to humans.
+     * <p/>
+     * Note that the format of the returned message is not stable in any way
+     * and should never be subject to parsing or other formal inspection. The
+     * XML format is to be used for that.
+     *
+     * @param printFiles whether or not to include the file list in the result
+     * @return a "pretty print" version of the bundle spec
+     */
+    public String getDisplayString (boolean printFiles) {
+        String msg =
+        "Description:\n" + getDescription() + "\n\n";
+
+        msg += "Metadata:\n"
+        + "\tInstance id : " + getInstanceId() + "\n"
+        + "\tBundle id   : " + getBundleId() + "\n"
+        + "\tMain jar    : " + getMainJar() + "\n"
+        + "\tMain class  : " + getMainClass() + "\n"
+        + "\tAuto start  : " + isAutoStart() + "\n"
+        + "\n";
+
+        msg += "JVM Properties:\n";
+        for (Map.Entry<String, Serializable> entry: getProperties()) {
+            msg += "\t" + entry.getKey() + " = " + entry.getValue() + "\n";
+        }
+        msg += "\n";
+
+        msg+= "Public API:\n";
+        for (String api : getApi()) {
+            msg += "\t" + api + "\n";
+        }
+        msg += "\n";
+
+        if (printFiles) {
+            msg += "Files:\n";
+            for (String file : getFiles()) {
+                msg += "\t" + file + "\n";
+            }
+            msg += "\n";
+        }
+
+        return msg;
     }
 }
 

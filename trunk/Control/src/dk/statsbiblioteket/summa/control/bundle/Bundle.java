@@ -38,12 +38,14 @@ public interface Bundle {
     /**
      * Configuration used to instantiate the {@link Client} or {@link Service}
      */
-    public static final String CONF_BUNDLE_CONFIGURATION = "summa.control.bundle.configuration";
+    public static final String CONF_BUNDLE_CONFIGURATION =
+                                           "summa.control.bundle.configuration";
 
     /**
      * Configuration used for the {@link BundleStub}
      */
-    public static final String CONF_STUB_CONFIGURATION = "summa.control.bundle.stub.configuration";
+    public static final String CONF_STUB_CONFIGURATION =
+                                      "summa.control.bundle.stub.configuration";
 
     /**
      * The id, passed as a system property, to a {@link Client}
@@ -60,6 +62,23 @@ public interface Bundle {
      * system property.
      */
     public static final String CONF_BUNDLE_DIR = "summa.control.bundle.dir";
+
+    /**
+     * Property defining whether the service or client defined by the bundle
+     * should be automatically started.
+     * <p/>
+     * Clients will be started by the Control server while Services will
+     * be started by the hosting Client server.
+     * <p/>
+     * The default value is {@link #DEFAULT_AUTO_START}
+     */
+    public static final String CONF_AUTO_START =
+                                               "summa.control.bundle.autostart";
+
+    /**
+     * Default value for the {@link #CONF_AUTO_START} property
+     */
+    public static final boolean DEFAULT_AUTO_START = false;
 
     /**
      * Extension used for bundle files.

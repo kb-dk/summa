@@ -2,6 +2,7 @@
 <bundle>
 	<mainJar>storage-service-@summa.version@.jar</mainJar>
 	<mainClass>dk.statsbiblioteket.summa.control.service.Launcher</mainClass>
+    <autoStart>true</autoStart>
     <property name="com.sun.management.jmxremote.port" value="2771"/>
     <property name="com.sun.management.jmxremote.ssl" value="false"/>
     <description>Test bundle for a Storage service</description>

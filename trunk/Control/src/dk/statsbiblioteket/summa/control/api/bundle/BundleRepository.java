@@ -118,7 +118,6 @@ public interface BundleRepository extends Configurable, Serializable {
      *         an URL then it will be returned unmodified
      */
     public String expandApiUrl (String jarFileName) throws IOException;
-
 }
 
 

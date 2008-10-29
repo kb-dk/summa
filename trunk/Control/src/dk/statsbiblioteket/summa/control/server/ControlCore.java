@@ -11,9 +11,12 @@ import dk.statsbiblioteket.summa.control.api.feedback.Feedback;
 import dk.statsbiblioteket.summa.control.api.feedback.FeedbackFactory;
 import dk.statsbiblioteket.summa.control.api.rmi.ControlRMIConnection;
 import dk.statsbiblioteket.summa.control.bundle.BundleUtils;
+import dk.statsbiblioteket.summa.control.bundle.BundleSpecBuilder;
+import dk.statsbiblioteket.summa.control.bundle.Bundle;
 
 import java.io.IOException;
 import java.io.File;
+import java.io.ByteArrayInputStream;
 import java.util.List;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.RemoteException;
@@ -86,10 +89,37 @@ public class ControlCore extends UnicastRemoteObject
                       + "Error was", e);
         }
 
+        runAutoStartClients ();
+
         setStatus(Status.CODE.idle,
                   "Set up complete. Remote interfaces up",
                   Logging.LogLevel.DEBUG);
-    }    
+    }
+
+    private void runAutoStartClients () {
+        setStatusRunning("Starting auto-start clients");
+
+        for (String instanceId : clientManager) {
+            Configuration conf =
+                               clientManager.getDeployConfiguration(instanceId);
+
+            if (conf.getBoolean(Bundle.CONF_AUTO_START,
+                                Bundle.DEFAULT_AUTO_START)) {
+                log.info("Auto-starting client '" + instanceId + "'");
+                try {
+                    startClient (conf);
+                } catch (Exception e) {
+                    log.error("Error auto-starting client '"
+                              + instanceId + "': " + e.getMessage(), e);
+                }
+            } else {
+                log.debug("Client '" + instanceId + "' not scheduled for " +
+                          "auto-start");
+            }
+        }
+
+        setStatusIdle();
+    }
 
     private static int getServicePort(Configuration conf) {
         return conf.getInt(CONF_CONTROL_CORE_PORT, 27001);
@@ -143,7 +173,7 @@ public class ControlCore extends UnicastRemoteObject
         setStatusRunning ("Deploying client");
 
         validateClientConf(conf);
-        log.info ("Preparing to start client with deployer config: \n"
+        log.info ("Preparing to deploy client with deployer config: \n"
                    + conf.dumpString());
 
         ClientDeployer deployer = DeployerFactory.createClientDeployer(conf);
@@ -169,9 +199,20 @@ public class ControlCore extends UnicastRemoteObject
                                                 + e.getMessage(), e);
         }
 
+        /* Client is deployed. Store everything we need to know about this
+         * deployment */
+
+        // First extract the bundle spec
+        String bundleId = conf.getString(ClientDeployer.CONF_DEPLOYER_BUNDLE);
+        byte[] bundleSpecContent = repoManager.getBundleSpec(bundleId);
+        BundleSpecBuilder spec = BundleSpecBuilder.open(
+                                   new ByteArrayInputStream(bundleSpecContent));
+
+        // Write client meta file
         clientManager.register(instanceId,
                                deployer.getTargetHost(),
-                               conf);
+                               conf,
+                               spec);
 
         log.info ("Client '" + instanceId + "' deployed");
         setStatusIdle();
@@ -347,9 +388,9 @@ public class ControlCore extends UnicastRemoteObject
             // The ClientDeployer.CONF_CLIENT_CONF is not set, set it as
             // specified by our contract (see javadoc for said property)
             log.debug (ClientDeployer.CONF_CLIENT_CONF + " not set, "
-                       + "setting to " + confManager.getPublicAddress());
+                       + "setting to 'configuration.xml'");
             conf.set(ClientDeployer.CONF_CLIENT_CONF,
-                     confManager.getPublicAddress());
+                     "configuration.xml");
         }
     }
 
