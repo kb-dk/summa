@@ -59,6 +59,11 @@ import org.w3c.dom.Node;
  * is added to the Payload's data under the key {@link Payload#LUCENE_DOCUMENT}.
  * </p><p>
  * see SummaDocumentXMLSample.xml.
+ * </p><p>
+ * Note: The DocumentCreator need an index-description. The setup for retrieving
+ * the description must be stored in the sub-property 
+ * {@link LuceneIndexUtils#CONF_DESCRIPTOR} with parameters from
+ * {@link dk.statsbiblioteket.summa.common.index.IndexDescriptor}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,

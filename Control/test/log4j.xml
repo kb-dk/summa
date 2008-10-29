@@ -61,11 +61,11 @@
     </appender>
       -->
 
-    <logger name="dk.statsbiblioteket.summa.ingest.split.StreamController">
+    <logger name="dk.statsbiblioteket.summa">
         <level value="trace" />
         <appender-ref ref="CONSOLE" />
     </logger>
-                           <!--
+
     <logger name="dk.statsbiblioteket.summa.facetbrowser">
         <level value="trace" />
         <appender-ref ref="CONSOLE" />
