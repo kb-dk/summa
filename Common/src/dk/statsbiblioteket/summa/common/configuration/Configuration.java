@@ -1054,7 +1054,7 @@ public class Configuration implements Serializable,
                     throw new ConfigurationException("Error reading "
                                                      + "configuration file '"
                                                      + confLocation
-                                                     + "using XStorage", ex);
+                                                     + "' using XStorage", ex);
                 }
                 //throw new ConfigurationException("Error reading configuration file " + confLocation, e);
             }

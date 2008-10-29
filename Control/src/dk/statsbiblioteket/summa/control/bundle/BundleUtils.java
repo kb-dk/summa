@@ -4,11 +4,17 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.control.api.bundle.BundleRepository;
 import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.Streams;
 
 import java.io.IOException;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.Arrays;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipEntry;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -68,6 +74,54 @@ public class BundleUtils {
 
         log.debug("Updating java.rmi.server.codebase: " + codeBase);
         System.setProperty("java.rmi.server.codebase", codeBase);
+    }
+
+    /**
+     * Extract the contents of a bundle spec file ({@code client.xml} or
+     * {@code service.xml}) from a zipped bundle file.
+     *
+     * @param bundleFile a standard zipped bundle file
+     * @return the raw contents of the bundle descriptor
+     */
+    public static byte[] extractBundleSpec (File bundleFile) {
+        ZipInputStream zin;
+
+        try {
+            zin = new ZipInputStream (new FileInputStream (bundleFile));
+        } catch (IOException e) {
+            throw new BundleLoadingException("Failed to load bundle "
+                                             + bundleFile, e);
+        }
+
+        try {
+            ZipEntry entry;
+            while ((entry = zin.getNextEntry()) != null) {
+                if ("client.xml".equals (entry.getName ()) ||
+                    "service.xml".equals (entry.getName())) {
+                    break;
+                }
+            }
+
+            if (entry == null) {
+                throw new BundleFormatException ("Bundle has no spec file: "
+                                                 + bundleFile);
+            }
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream ();
+            Streams.pipe (zin, out, 2048);
+            return out.toByteArray();
+
+        } catch (IOException e) {
+            throw new BundleLoadingException("Failed to load bundle "
+                                             + bundleFile, e);
+        } finally {
+            try {
+                zin.close();
+            } catch (IOException e) {
+                log.warn ("Failed to close zip stream for bundle file "
+                          + bundleFile, e);
+            }
+        }
     }
 
 }

@@ -44,7 +44,11 @@ public class SpecCommand extends RemoteCommand<ClientConnection> {
             if (services.length == 0) {
                 String spec = client.getBundleSpec(null);
                 ctx.info("Client spec:");
-                ctx.info(spec);
+                if (hasOption("pretty")) {
+                    prettyPrint(spec, ctx);
+                } else {
+                    ctx.info(spec);
+                }
             } else {
                 for (String service : services) {
                     ctx.info("Service spec for '"+service+"':");
@@ -70,36 +74,7 @@ public class SpecCommand extends RemoteCommand<ClientConnection> {
         BundleSpecBuilder builder = BundleSpecBuilder.open(
                                      new ByteArrayInputStream(spec.getBytes()));
 
-        String msg =
-        "Description:\n" + builder.getDescription() + "\n\n";
-
-        msg += "Metadata:\n"
-        + "\tInstance id : " + builder.getInstanceId() + "\n"
-        + "\tBundle id   : " + builder.getBundleId() + "\n"
-        + "\tMain jar    : " + builder.getMainJar() + "\n"
-        + "\tMain class  : " + builder.getMainClass() + "\n"
-        + "\n";
-
-        msg += "JVM Properties:\n";
-        for (Map.Entry<String, Serializable> entry: builder.getProperties()) {
-            msg += "\t" + entry.getKey() + " = " + entry.getValue() + "\n";
-        }
-        msg += "\n";
-
-        msg+= "Public API:\n";
-        for (String api : builder.getApi()) {
-            msg += "\t" + api + "\n";
-        }
-        msg += "\n";
-
-        if (hasOption("files")) {
-            msg += "Files:\n";
-            for (String file : builder.getFiles()) {
-                msg += "\t" + file + "\n";
-            }
-            msg += "\n";
-        }
-
+        String msg = builder.getDisplayString (hasOption("files"));
         ctx.info(msg);
     }
 }

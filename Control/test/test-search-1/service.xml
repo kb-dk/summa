@@ -1,13 +1,8 @@
 <bundle>
-	<mainJar>lib/@release.jar@</mainJar>
-	<mainClass>dk.statsbiblioteket.summa.control.service.Launcher</mainClass>
-    <property name="com.sun.management.jmxremote.port" value="2766"/>
-    <property name="com.sun.management.jmxremote.ssl" value="false"/>
-    <description>A test bundle for the Summa Search module</description>
-	<bundleId>test-search-1</bundleId>
-	<publicApi>
-        <file>lib/summa-search-api-@summa.version@.jar</file>
-    </publicApi>
+  <bundleId>unit-test</bundleId>
+  <autoStart>false</autoStart>
+  <fileList>
+    <file>service.xml</file>
+    <file>config/configuration.xml</file>
+  </fileList>
 </bundle>
-
-
