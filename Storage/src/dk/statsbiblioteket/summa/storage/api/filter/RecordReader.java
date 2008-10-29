@@ -161,11 +161,11 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
     private StorageWatcher storageWatcher;
     private boolean eofReached = false;
     private long recordCounter = 0;
-    private long startTime;
+    private long startTime = System.currentTimeMillis();
     private long lastRecordTimestamp;
     private Semaphore updateSignal = new Semaphore(1);
 
-    private Iterator<Record> recordIterator;
+    private Iterator<Record> recordIterator = null;
 
     /**
      * Connects to the Storage specified in the configuration and request an
@@ -214,19 +214,20 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
 //            storageWatcher.addListener(this, Arrays.asList(base), null);
         }
 
-        try {
-            long startTime = getStartTime();
-            log.debug(String.format("Getting Records modified after "
-                                    + ISO_TIME, startTime));
-            long iterKey = storage.getRecordsModifiedAfter(startTime, base);
-            recordIterator = new StorageIterator(storage, iterKey); 
-        } catch (IOException e) {
-            throw new ConfigurationException(String.format(
-                    "Exception while getting recordIterator for time %s"
-                    + " and base '%s'", getStartTime(), base), e);
-        }
-        startTime = 0;
+        lastRecordTimestamp = getStartTime() + 1; // TODO: Check if the +1 is ok
         log.trace("RecordReader constructed, ready for pumping");
+    }
+
+    /**
+     * Update the iterator from the Storage.
+     * @throws IOException if a communication error occured with the Storage.
+     */
+    private void updateIterator() throws IOException {
+        log.debug(String.format("Getting Records modified after "
+                                + ISO_TIME, lastRecordTimestamp));
+        long iterKey =
+                storage.getRecordsModifiedAfter(lastRecordTimestamp, base);
+        recordIterator = new StorageIterator(storage, iterKey);
     }
 
     private static final String TAG = "lastRecordTimestamp";
@@ -299,12 +300,34 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
                 getTimeInMillis();
     }
 
+    /**
+     * If the iterator is null, a new iterator is requested. If the iterator
+     * has reached the end, the method checks to see is the Storage has been
+     * updated since last iterator creation. If so, a new iterator is created.
+     * If not, the method waits for an update from StorageWatcher.
+     * @throws java.io.IOException if an iterator could not be created.
+     */
+    private void checkIterator() throws IOException {
+        if (recordIterator == null || !recordIterator.hasNext()) {
+            updateIterator();
+            return;
+        }
+    }
+
     /* ObjectFilter interface */
 
     public boolean hasNext() {
         if (eofReached) {
             return false;
         }
+        try {
+            checkIterator();
+        } catch (IOException e) {
+            log.warn("hasNext: An exception occured while checking for a new "
+                     + "iterator. Returning false");
+            return false;
+        }
+        // TODO: Update this logic
         if (!recordIterator.hasNext()) {
             eofReached = true;
             return false;
