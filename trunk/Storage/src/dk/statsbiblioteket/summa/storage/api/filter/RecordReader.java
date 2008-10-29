@@ -30,8 +30,13 @@ import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageIterator;
+import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
+import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
+import dk.statsbiblioteket.summa.storage.api.watch.StorageWatcher;
+import dk.statsbiblioteket.summa.storage.api.watch.StorageChangeListener;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -42,26 +47,24 @@ import java.util.regex.Matcher;
 import java.util.GregorianCalendar;
 import java.util.NoSuchElementException;
 import java.util.Iterator;
+import java.util.Arrays;
+import java.util.concurrent.Semaphore;
 import java.net.ConnectException;
 
 /**
  * Retrieves Records from storage based on the criteria given in the properties.
  * Supports stopping during retrieval and resuming by timestamp.
+ * </p><p>
+ * Note: Besides the configurations stated below, the address for the
+ * Storage must be specified with the key
+ * {@link ConnectionConsumer#CONF_RPC_TARGET}. The address can be a standard
+ * RMI address, such as {@code //localhost:6789/storage}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class RecordReader implements ObjectFilter {
+public class RecordReader implements ObjectFilter, StorageChangeListener {
     private static Log log = LogFactory.getLog(RecordReader.class);
-
-    /**
-     * The Storage to connect to. This is a standard RMI address.
-     * Example: //localhost:6789/storage;
-     * </p><p>
-     * This property is mandatory.
-     */
-    public static final String CONF_STORAGE =
-            "summa.storage.recordreader.storage";
 
     /**
      * The state of progress is stored in this file upon close. This allows
@@ -131,9 +134,22 @@ public class RecordReader implements ObjectFilter {
             "summa.storage.recordreader.base";
     public static final String DEFAULT_BASE = "";
 
+    /**
+     * If true, the connection should stay alive after the initial poll.
+     * Calls to hasNext(), next() and pump() will block until new Records are
+     * added to the Storage or close is called.
+     * </p><p>
+     * Note: The property {@link StorageWatcher#CONF_POLL_INTERVAL} controls the
+     *       polling interval.
+     * </p><p>
+     * This property is optional. Default is false.
+     */
+    public static final String CONF_STAY_ALIVE =
+            "summa.storage.recordreader.stayalive";
+    public static final boolean DEFAULT_STAY_ALIVE = false;
+
     @SuppressWarnings({"FieldCanBeLocal"})
-    private ConnectionContext<Storage> accessContext;
-    private Storage storage;
+    private ReadableStorage storage;
     @SuppressWarnings({"FieldCanBeLocal"})
     private String base = DEFAULT_BASE;
     private File progressFile;
@@ -142,39 +158,35 @@ public class RecordReader implements ObjectFilter {
     private int maxReadRecords = DEFAULT_MAX_READ_RECORDS;
     private int maxReadSeconds = DEFAULT_MAX_READ_SECONDS;
 
-    private boolean eooReached = false;
+    private StorageWatcher storageWatcher;
+    private boolean eofReached = false;
     private long recordCounter = 0;
     private long startTime;
     private long lastRecordTimestamp;
+    private Semaphore updateSignal = new Semaphore(1);
 
-    Iterator<Record> recordIterator;
+    private Iterator<Record> recordIterator;
 
     /**
      * Connects to the Storage specified in the configuration and request an
      * iteration of the Records specified by the properties.
-     * @param configuration contains setup information.
+     * @param conf contains setup information.
      * @see {@link #CONF_BASE}.
      * @see {@link #CONF_MAX_READ_RECORDS}.
      * @see {@link #CONF_MAX_READ_SECONDS}.
-     * @see {@link #CONF_STORAGE}.
+     * @see {@link ConnectionConsumer#CONF_RPC_TARGET}.
      * @see {@link #CONF_PROGRESS_FILE}.
      * @see {@link #CONF_START_FROM_SCRATCH}.
      * @see {@link #CONF_USE_PERSISTENCE}.
+     * @throws java.io.IOException if it was not possible to connect to the
+     * Storage or if the filename for the progress file was illegal.
      */
-    public RecordReader(Configuration configuration) throws IOException {
+    public RecordReader(Configuration conf) throws IOException {
         log.trace("Constructing RecordReader");
-        accessContext =
-                FilterCommons.getAccess(configuration, CONF_STORAGE);
-         // TODO: Consider if this should be requested for every call to Storage
-
-        if (accessContext == null) {
-            throw new ConnectException("Unnable to connect to storage at");
-        }
-
-        storage = accessContext.getConnection();
-        base = configuration.getString(CONF_BASE, DEFAULT_BASE);
+        storage = new StorageReaderClient(conf);
+        base = conf.getString(CONF_BASE, DEFAULT_BASE);
         String progressFileString =
-                configuration.getString(CONF_PROGRESS_FILE, null);
+                conf.getString(CONF_PROGRESS_FILE, null);
         if (progressFileString == null || "".equals(progressFileString)) {
             progressFile = new File(("".equals(base) ? "" : base + ".")
                                     + DEFAULT_PROGRESS_FILE_POSTFIX);
@@ -184,17 +196,22 @@ public class RecordReader implements ObjectFilter {
             log.debug("Progress.file is " + progressFile.getCanonicalFile());
         }
         progressFile = progressFile.getAbsoluteFile();
-        usePersistence = configuration.getBoolean(CONF_USE_PERSISTENCE,
-                                                  DEFAULT_USE_PERSISTENCE);
-        startFromScratch = configuration.getBoolean(CONF_START_FROM_SCRATCH,
-                                                    DEFAULT_START_FROM_SCRATCH);
-        maxReadRecords = configuration.getInt(CONF_MAX_READ_RECORDS,
-                                              DEFAULT_MAX_READ_RECORDS);
-        maxReadSeconds = configuration.getInt(CONF_MAX_READ_SECONDS,
-                                              DEFAULT_MAX_READ_SECONDS);
+        usePersistence = conf.getBoolean(CONF_USE_PERSISTENCE,
+                                         DEFAULT_USE_PERSISTENCE);
+        startFromScratch = conf.getBoolean(CONF_START_FROM_SCRATCH,
+                                           DEFAULT_START_FROM_SCRATCH);
+        maxReadRecords = conf.getInt(CONF_MAX_READ_RECORDS,
+                                     DEFAULT_MAX_READ_RECORDS);
+        maxReadSeconds = conf.getInt(CONF_MAX_READ_SECONDS,
+                                     DEFAULT_MAX_READ_SECONDS);
         // TODO: Support empty base in reader
         if ("".equals(base)) {
             throw new ConfigurationException("Empty base not supported yet");
+        }
+
+        if (conf.getBoolean(CONF_STAY_ALIVE, DEFAULT_STAY_ALIVE)) {
+            storageWatcher = new StorageWatcher(conf);
+//            storageWatcher.addListener(this, Arrays.asList(base), null);
         }
 
         try {
@@ -204,11 +221,9 @@ public class RecordReader implements ObjectFilter {
             long iterKey = storage.getRecordsModifiedAfter(startTime, base);
             recordIterator = new StorageIterator(storage, iterKey); 
         } catch (IOException e) {
-            FilterCommons.reportError(accessContext, e);
-            throw new ConfigurationException("Exception while getting "
-                                             + "recordIterator for time "
-                                             + getStartTime() + " and base '"
-                                             + base +"'", e);
+            throw new ConfigurationException(String.format(
+                    "Exception while getting recordIterator for time %s"
+                    + " and base '%s'", getStartTime(), base), e);
         }
         startTime = 0;
         log.trace("RecordReader constructed, ready for pumping");
@@ -287,11 +302,11 @@ public class RecordReader implements ObjectFilter {
     /* ObjectFilter interface */
 
     public boolean hasNext() {
-        if (eooReached) {
+        if (eofReached) {
             return false;
         }
         if (!recordIterator.hasNext()) {
-            eooReached = true;
+            eofReached = true;
             return false;
         }
         return true;
@@ -316,13 +331,13 @@ public class RecordReader implements ObjectFilter {
         if (maxReadRecords != -1 && maxReadRecords <= recordCounter) {
             log.debug("Reached maximum number of Records to read ("
                       + maxReadRecords + ")");
-            eooReached = true;
+            eofReached = true;
         }
         if (maxReadSeconds != -1 &&
             maxReadSeconds * 1000 <= System.currentTimeMillis() - startTime) {
             log.debug("Reached maximum allow time usage ("
                       + maxReadSeconds + ") seconds");
-            eooReached = true;
+            eofReached = true;
         }
         writeProgress(); // TODO: Is this too aggressive?
         return payload;
@@ -359,11 +374,10 @@ public class RecordReader implements ObjectFilter {
     public void close(boolean success) {
         //noinspection DuplicateStringLiteralInspection
         log.debug("close(" + success + ") entered");
-        eooReached = true;
+        eofReached = true;
         if (success) {
             writeProgress();
         }
-        FilterCommons.releaseAccess(accessContext);
     }
 
     private void writeProgress() {
@@ -387,6 +401,11 @@ public class RecordReader implements ObjectFilter {
         if (progressFile != null && progressFile.exists()) {
             progressFile.delete();
         }
+    }
+
+    public void storageChanged(StorageWatcher watch, String base, long timeStamp, Object userData) {
+
+
     }
 }
 
