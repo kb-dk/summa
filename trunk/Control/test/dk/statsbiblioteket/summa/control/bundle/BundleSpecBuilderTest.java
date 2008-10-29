@@ -21,6 +21,7 @@ public class BundleSpecBuilderTest extends TestCase {
     + "  <bundleId>myBundleId</bundleId>\n"
     + "  <mainClass>myMainClass</mainClass>\n"
     + "  <mainJar>myMainJar</mainJar>\n"
+    + "  <autoStart>true</autoStart>"
     + "  <description>myDescription</description>\n"
     + "  <property name=\"myProp1\" value=\"myProp1Value\"/>\n"
     + "  <property name=\"myProp2\" value=\"myProp2Value\"/>\n"
@@ -75,6 +76,14 @@ public class BundleSpecBuilderTest extends TestCase {
         assertEquals(Bundle.Type.CLIENT, b.getBundleType());
         b.setBundleType(Bundle.Type.SERVICE);
         assertEquals(Bundle.Type.SERVICE, b.getBundleType());
+    }
+
+    public void testGetSetAutoStart() throws Exception {
+        assertFalse(b.isAutoStart());
+        b.setAutoStart(true);
+        assertTrue(b.isAutoStart());
+        b.setAutoStart(false);
+        assertFalse(b.isAutoStart());
     }
 
     public void testGetSetDescription() throws Exception {
@@ -136,6 +145,7 @@ public class BundleSpecBuilderTest extends TestCase {
         assertEquals("myMainClass", b.getMainClass());
         assertEquals("myInstanceId", b.getInstanceId());
         assertEquals("myBundleId", b.getBundleId());
+        assertEquals(true, b.isAutoStart());
         assertEquals("myDescription", b.getDescription());
 
         assertEquals("myProp1Value", b.getProperty("myProp1"));
@@ -173,7 +183,7 @@ public class BundleSpecBuilderTest extends TestCase {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         b.write (out);
 
-        BundleSpecBuilder bb = BundleSpecBuilder.open (
+        b = BundleSpecBuilder.open (
                                    new ByteArrayInputStream(out.toByteArray()));
         doTestSampleSpec();
     }

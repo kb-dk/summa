@@ -43,6 +43,7 @@ public class BundleSpecBuilder {
     private String bundleId;
     private String instanceId;
     private String description;
+    private boolean autoStart;
     private Bundle.Type bundleType;
     private Configuration properties;
     private HashSet<String> fileSet;
@@ -53,6 +54,7 @@ public class BundleSpecBuilder {
         properties = Configuration.newMemoryBased();
         fileSet = new HashSet<String>();
         apiSet = new HashSet<String>();
+        autoStart = false;
 
     }
 
@@ -73,6 +75,9 @@ public class BundleSpecBuilder {
 
     public String getDescription () { return description; }
     public void setDescription (String description) { this.description = description; }
+
+    public boolean isAutoStart () { return autoStart; }
+    public void setAutoStart (boolean autoStart) { this.autoStart = autoStart; }
 
     public String getProperty (String name) { return properties.getString(name); }
     public void setProperty (String name, String value) { properties.set (name, value); }
@@ -121,6 +126,8 @@ public class BundleSpecBuilder {
             if (mainClass != null) {
                 out.println ("  <mainClass>" + mainClass + "</mainClass>");
             }
+
+            out.println("  <autoStart>" + autoStart + "</autoStart>");
 
             if (description != null) {
                 out.println ("  <description>" + description + "</description>");
@@ -324,6 +331,8 @@ public class BundleSpecBuilder {
                 mainJar = node.getTextContent();
             } else if ("mainClass".equals(node.getNodeName())) {
                 mainClass = node.getTextContent();
+            } else if ("autoStart".equals(node.getNodeName ())) {
+                autoStart = Boolean.parseBoolean (node.getTextContent()); 
             } else if ("description".equals(node.getNodeName())) {
                 description = node.getTextContent();
             } else if ("bundleId".equals(node.getNodeName())) {
