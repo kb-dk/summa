@@ -122,6 +122,7 @@
 
     <!-- Delete all files not in CVS -->
     <target name="clean">
+        <echo message="Cleaning modules"/>
         <ant dir="Common" inheritall="false" target="clean"/>
         <ant dir="Storage" inheritall="false" target="clean"/>
         <ant dir="Ingest" inheritall="false" target="clean"/>
@@ -141,6 +142,7 @@
 
     <!-- Delete all files not in CVS -->
     <target name="distclean">
+        <echo message="Dist-cleaning modules"/>
         <ant dir="Common" inheritall="false" target="distclean"/>
         <ant dir="Storage" inheritall="false" target="distclean"/>
         <ant dir="Ingest" inheritall="false" target="distclean"/>
@@ -152,10 +154,22 @@
         <ant dir="Web" inheritall="false" target="distclean"/>
         <ant dir="Workflow" inheritall="false" target="distclean"/>
 
+        <echo message="Cleaning test artifacts"/>
+        <delete includeemptydirs="true">
+            <fileset dir="${basedir}">
+                <include name="test_db*/**/*"/>
+                <include name="test_db*"/>
+                <include name="xconfiguration*.xml"/>
+                <include name="log"/>
+                <include name="*.log"/>
+            </fileset>
+        </delete>
+
         <!-- Legacy modules not built: -->
         <!-- <ant dir="Dice" inheritall="false" target="distclean"/> -->
         <!-- <ant dir="ClusterExtractor" inheritall="false" target="distclean"/>-->
 
+        <echo message="Deleting dist files"/>
         <delete dir="${dist.dir}" />
         <delete dir="${summa.apidocs.dir}" />
     </target>
