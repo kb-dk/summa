@@ -162,6 +162,7 @@
         <delete dir="${test.build.dir}"/>
         <delete dir="${tmp.dir}"/>
         <delete file="${release.jar}"/>
+        <delete file="${release.api.jar}"/>
     </target>
 
     <target name="distclean" depends="clean">
