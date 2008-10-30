@@ -54,7 +54,6 @@
     <path id="lib.internal">
         <pathelement location="../Storage/${summa.classes.dir}"/>
         <pathelement location="../Common/${summa.classes.dir}"/>
-        <pathelement location="../Dice/${summa.classes.dir}"/>
     </path>
 
     <!-- lib.files : set by the .checkDepends target -->
@@ -72,14 +71,6 @@
 
     <target name=".releaseCommon">
         <ant inheritAll="false" dir="../Common" target="release"/>
-    </target>
-
-    <target name=".compileDice">
-        <ant inheritAll="false" dir="../Dice" target="compile"/>
-    </target>
-
-    <target name=".releaseDice">
-        <ant inheritAll="false" dir="../Dice" target="release"/>
     </target>
 
     <target name=".compileStorage">
@@ -121,13 +112,6 @@
         </condition>
         <antcall target="${compileCommonTask}"/>
 
-        <!-- Check that Dice is compiled -->
-        <echo message="Checking whether Dice is compiled"/>
-        <condition property="compileDiceTask" value=".phony" else=".compileDice">
-            <available file="../Dice/${summa.classes.dir}"/>
-        </condition>
-        <antcall target="${compileDiceTask}"/>
-
         <!-- Store space-separated list of lib-filenames in lib.files -->
         <pathconvert refid="lib.path" property="lib.files" pathsep=" ">
             <map from="${lib.dir}/" to=""/>
@@ -146,12 +130,6 @@
             <available file="../${summa.ilib.storage}"/>
         </condition>
         <antcall target="${releaseStorageTask}"/>
-
-        <!-- Check that Metadata release is compiled -->
-        <condition property="releaseDiceTask" value=".phony" else=".releaseDice">
-            <available file="../${summa.ilib.dice}"/>
-        </condition>
-        <antcall target="${releaseDiceTask}"/>
     </target>
 
     <target name="clean">
@@ -196,8 +174,8 @@
                 destdir="${doc.dir}"
                 author="true"
                 version="true"
-                access="private"
-                windowtitle="Summa Distributed Computing Environment (Dice)"
+                access="protected"
+                windowtitle="Summa Index Module"
                 additionalparam="-breakiterator">
 
             <classpath refid="lib.path"/>
@@ -233,7 +211,6 @@
             <zipfileset prefix="${prefix}/lib" dir="${lib.dir}" includes="${lib.files}"/>
             <zipfileset prefix="${prefix}/lib"  dir="${basedir}" file="../${summa.ilib.common}"/>
             <zipfileset prefix="${prefix}/lib"  dir="${basedir}" file="../${summa.ilib.storage}"/>
-            <zipfileset prefix="${prefix}/lib"  dir="${basedir}" file="../${summa.ilib.dice}"/>
 
             <zipfileset dir="${basedir}/config" prefix="${prefix}/config">
                 <include name="**/*"/>
