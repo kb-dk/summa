@@ -58,9 +58,9 @@ import org.apache.lucene.document.Document;
  * Records. If no Record exists, the id is extracted from the embedded
  * Document as field RecordID.
  */
-// TODO: Verify that the order of documents is strict under all operations
 // TODO: Add maximum number of segments property for consolidate
 // TODO: Add memory based flushing policy
+// TODO: Verify that adds + deletes inside the same commit works as expected 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
@@ -133,8 +133,8 @@ public class LuceneManipulator implements IndexManipulator {
                                       + concrete + "'");
             }
         }
-        indexDirectory = FSDirectory.getDirectory(new File(indexRoot,
-                                                           LuceneIndexUtils.LUCENE_FOLDER));
+        indexDirectory = FSDirectory.getDirectory(
+                new File(indexRoot, LuceneIndexUtils.LUCENE_FOLDER));
         if (IndexReader.indexExists(indexDirectory)) {
             log.debug("Extracting existing RecordIDs from index at '"
                       + indexDirectory.getFile() + "'");
