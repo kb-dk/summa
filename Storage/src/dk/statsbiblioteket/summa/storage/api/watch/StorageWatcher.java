@@ -25,6 +25,14 @@ import java.io.IOException;
  * {@link dk.statsbiblioteket.summa.storage.AggregatingStorage} where each
  * base might map to a different server.
  * <p/>
+ * <h3>Waiting for StorageWatcher Signals</h3>
+ * If you need to perform a blocking wait for notifications from the storage
+ * watcher you don't even have to implement the {@link StorageChangeListener}
+ * interface or to subscribe to events. Simply call the standard {@link #wait}
+ * method from the Java {@link Object} class. Note however that you should be
+ * cautious of <i>"spurious interrupts"</i> - please see the Java documentation
+ * for {@link Object#wait} on how to handle this.
+ * <p/>
  * <b>FIXME:</b> Batching of events if there are many? We should probably handle
  *               that with care since if allow user generated content in the
  *               storage things might change all the time
@@ -82,6 +90,7 @@ public class StorageWatcher implements Configurable, Runnable {
     private Set<String> bases;
     private int pollInterval;
     private Map<String,Long> pollTimes;
+    private Map<String,Long> notifyTimes;
     private long startTime;
 
     private Log log;
@@ -94,6 +103,7 @@ public class StorageWatcher implements Configurable, Runnable {
 
         startTime = System.currentTimeMillis();
         pollTimes = new HashMap<String,Long>(10);
+        notifyTimes = new HashMap<String,Long>(10);
         bases = new HashSet<String>(10);
         listeners = new HashMap<StorageChangeListener,ListenerContext>();
 
@@ -139,11 +149,16 @@ public class StorageWatcher implements Configurable, Runnable {
      * @param base the base in which there has been changes
      * @param eventTime the time these changes where detected by the watcher
      */
-    public void notifyListeners (String base, long eventTime) {
+    public synchronized void notifyListeners (String base, long eventTime) {
         if (log.isTraceEnabled()) {
             log.trace ("Notifying listeners on base: "
                        + (base != null ? base : BASE_WILDCARD));
         }
+
+        notifyTimes.put(base, System.currentTimeMillis());
+
+        // Notify threads blocking on wait()
+        notifyAll();
 
         for (ListenerContext ctx : listeners.values()) {
 
@@ -158,6 +173,24 @@ public class StorageWatcher implements Configurable, Runnable {
                                                  ctx.getUserData());
             }
         }
+    }
+
+    /**
+     * Get the system time for the last notification emitted on {@code base}
+     *
+     * @param base the base to check for notifications
+     * @return system time as reported by {@link System#currentTimeMillis()}
+     *         at the time of the last call to {@link #notifyListeners} or
+     *         {@code -1} if no notifications has been emitted on {@code base}
+     */
+    public long getLastNotify (String base) {
+        Long lastNotify = notifyTimes.get(base);
+
+        if (lastNotify == null) {
+            return -1;
+        }
+
+        return lastNotify;
     }
 
     public void run() {

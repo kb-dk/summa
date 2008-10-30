@@ -39,7 +39,7 @@ import dk.statsbiblioteket.util.Logs;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "hal, te")
+        author = "mke")
 public class StorageTool {
 
     public static void printRecord (Record rec, boolean withContents) {
