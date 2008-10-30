@@ -780,6 +780,7 @@ public abstract class DatabaseStorage extends StorageBase {
         try {
             stmtClearBase.setString(1, base);
             stmtClearBase.execute();
+            updateModificationTime(base);
         } catch (SQLException e) {
             throw new IOException("SQLException clearing base '"
                                       + base + "'", e);
