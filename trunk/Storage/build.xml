@@ -195,9 +195,8 @@
             <zipfileset prefix="${prefix}/lib"  dir="${basedir}" file="../${summa.ilib.common}"/>
 
             <zipfileset dir="${basedir}/config" prefix="${prefix}/config">
-                <include  name="log4j.xml"/>
-                <include  name=".storage.policy"/>
-                <include  name="*.properties"/>
+                <include  name="**/*"/>
+                <exclude  name="jmx/**/*"/>
             </zipfileset>
 
             <zipfileset dir="${basedir}/config/jmx" prefix="${prefix}/config/jmx" filemode="600">
@@ -205,9 +204,9 @@
                 <include name="jmxremote.access"/>
             </zipfileset>
 
-            <zipfileset dir="${basedir}/scripts" prefix="${prefix}/bin" filemode="755">
+            <!--<zipfileset dir="${basedir}/scripts" prefix="${prefix}/bin" filemode="755">
                 <include name="*"/>
-            </zipfileset>
+            </zipfileset>-->
 
             <zipfileset dir="${doc.dir}" prefix="${prefix}/${summa.apidocs.dir}">
                 <include name="**/*"/>
