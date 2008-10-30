@@ -328,11 +328,16 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             return false;
         }
         // TODO: Update this logic
-        if (!recordIterator.hasNext()) {
-            eofReached = true;
-            return false;
+        while (!recordIterator.hasNext() && !eofReached) {
+            try {
+                updateIterator();
+            } catch (IOException e) {
+                log.warn("hasNext: An exception occured while checking for a"
+                         + " new iterator. Returning false");
+                return false;
+            }
         }
-        return true;
+        return !eofReached;
     }
 
     public Payload next() {
@@ -427,7 +432,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
     }
 
     public void storageChanged(StorageWatcher watch, String base, long timeStamp, Object userData) {
-
+        // TODO : Update the Semaphore with at most 1   (remember syns)
 
     }
 }
