@@ -24,14 +24,12 @@ package dk.statsbiblioteket.summa.storage.api.filter;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Files;
-import dk.statsbiblioteket.util.rpc.ConnectionContext;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
-import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
 import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
@@ -47,9 +45,7 @@ import java.util.regex.Matcher;
 import java.util.GregorianCalendar;
 import java.util.NoSuchElementException;
 import java.util.Iterator;
-import java.util.Arrays;
 import java.util.concurrent.Semaphore;
-import java.net.ConnectException;
 
 /**
  * Retrieves Records from storage based on the criteria given in the properties.
@@ -163,7 +159,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
     private long recordCounter = 0;
     private long startTime = System.currentTimeMillis();
     private long lastRecordTimestamp;
-    private Semaphore updateSignal = new Semaphore(1);
+    private long lastIteratorUpdate;
 
     private Iterator<Record> recordIterator = null;
 
@@ -215,19 +211,8 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         }
 
         lastRecordTimestamp = getStartTime() + 1; // TODO: Check if the +1 is ok
+        lastIteratorUpdate = lastRecordTimestamp;
         log.trace("RecordReader constructed, ready for pumping");
-    }
-
-    /**
-     * Update the iterator from the Storage.
-     * @throws IOException if a communication error occured with the Storage.
-     */
-    private void updateIterator() throws IOException {
-        log.debug(String.format("Getting Records modified after "
-                                + ISO_TIME, lastRecordTimestamp));
-        long iterKey =
-                storage.getRecordsModifiedAfter(lastRecordTimestamp, base);
-        recordIterator = new StorageIterator(storage, iterKey);
     }
 
     private static final String TAG = "lastRecordTimestamp";
@@ -305,21 +290,55 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      * has reached the end, the method checks to see is the Storage has been
      * updated since last iterator creation. If so, a new iterator is created.
      * If not, the method waits for an update from StorageWatcher.
+     *
+     * @return {@code true} iff the iterator was good
      * @throws java.io.IOException if an iterator could not be created.
      */
-    private void checkIterator() throws IOException {
-        if (recordIterator == null || !recordIterator.hasNext()) {
-            updateIterator();
-            return;
+    private boolean checkIterator() throws IOException {
+        if (recordIterator == null) {
+            log.debug(String.format("Creating initial record iterator for "
+                                    + "Records modified after "
+                                    + ISO_TIME, lastRecordTimestamp));
+            long iterKey =
+                    storage.getRecordsModifiedAfter(lastRecordTimestamp, base);
+
+            lastIteratorUpdate = System.currentTimeMillis();
+            recordIterator = new StorageIterator(storage, iterKey);
+
+            return false;
+        } else if (recordIterator.hasNext()) {
+            return true;
+        } else {
+            // We have an iterator but it is empty
+            log.debug(String.format("Updating record iterator for "
+                                    + "Records modified after "
+                                    + ISO_TIME, lastRecordTimestamp));
+            long iterKey =
+                    storage.getRecordsModifiedAfter(lastRecordTimestamp, base);
+
+            lastIteratorUpdate = System.currentTimeMillis();
+            recordIterator = new StorageIterator(storage, iterKey);
+
+            return false;
         }
+    }
+
+    private void markEof() {
+        eofReached = true;
+        recordIterator = null; // Allow finalization of the recordIterator
+    }
+
+    private boolean isEof() {
+        return eofReached;
     }
 
     /* ObjectFilter interface */
 
     public boolean hasNext() {
-        if (eofReached) {
+        if (isEof()) {
             return false;
         }
+
         try {
             checkIterator();
         } catch (IOException e) {
@@ -327,10 +346,11 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
                      + "iterator. Returning false");
             return false;
         }
-        // TODO: Update this logic
-        while (!recordIterator.hasNext() && !eofReached) {
+
+        while (!recordIterator.hasNext()) {
             try {
-                updateIterator();
+                waitForStorageChange();
+                checkIterator();
             } catch (IOException e) {
                 log.warn("hasNext: An exception occured while checking for a"
                          + " new iterator. Returning false");
@@ -340,34 +360,76 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         return !eofReached;
     }
 
+    private void waitForStorageChange() {
+        try {
+            checkIterator();
+        } catch (IOException e) {
+            log.error("Error prepraring iterator for wait-phase: "
+                      + e.getMessage(), e);
+            markEof();
+        }
+
+        // Check if there has been changes since we last checked
+        // Keep the monitor on the storageWatcher until we have finished waiting
+        // on it to make sure we don't drop any events
+        synchronized (storageWatcher) {
+            if(storageWatcher.getLastNotify(base) > lastIteratorUpdate) {
+                log.debug("Detected changes on base '"+base
+                          +"'since last check. Skipping wait");
+                return;
+            }
+
+
+            // We have to check this in a loop. See Javadoc for Object.wait()
+            while (!hasNext()) {
+                try {
+                    log.debug("No changes on base '"+base+"' since last check."
+                              + " Waiting for storage watcher...");
+                    storageWatcher.wait();
+
+                } catch (InterruptedException e) {
+                    log.debug("Interrupted");
+                }
+            }
+        }
+
+        log.debug("Got notification from storage");
+    }
+
     public Payload next() {
         //noinspection DuplicateStringLiteralInspection
         log.trace("next() called");
+
         if (!hasNext()) {
             throw new NoSuchElementException("No more Records available");
         }
+
         Payload payload = new Payload(recordIterator.next());
         recordCounter++;
-//        System.out.println("*** " + lastRecordTimestamp);
         lastRecordTimestamp = payload.getRecord().getLastModified();
+
         if (log.isTraceEnabled()) {
             log.trace("next(): Got lastModified timestamp "
                       + String.format(ISO_TIME,
                                       payload.getRecord().getLastModified())
                       + " for " + payload);
         }
+
         if (maxReadRecords != -1 && maxReadRecords <= recordCounter) {
             log.debug("Reached maximum number of Records to read ("
                       + maxReadRecords + ")");
-            eofReached = true;
+            markEof();
         }
+
         if (maxReadSeconds != -1 &&
             maxReadSeconds * 1000 <= System.currentTimeMillis() - startTime) {
             log.debug("Reached maximum allow time usage ("
                       + maxReadSeconds + ") seconds");
-            eofReached = true;
+            markEof();
         }
+
         writeProgress(); // TODO: Is this too aggressive?
+
         return payload;
     }
 
@@ -402,7 +464,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
     public void close(boolean success) {
         //noinspection DuplicateStringLiteralInspection
         log.debug("close(" + success + ") entered");
-        eofReached = true;
+        markEof();
         if (success) {
             writeProgress();
         }
@@ -423,7 +485,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
     }
 
     /**
-     * If a progress-files is existing, it is cleared.
+     * If a progress-file is existing, it is cleared.
      */
     public void clearProgressFile() {
         if (progressFile != null && progressFile.exists()) {
@@ -431,7 +493,8 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         }
     }
 
-    public void storageChanged(StorageWatcher watch, String base, long timeStamp, Object userData) {
+    public void storageChanged(StorageWatcher watch, String base,
+                               long timeStamp, Object userData) {
         // TODO : Update the Semaphore with at most 1   (remember syns)
 
     }
