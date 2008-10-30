@@ -202,7 +202,9 @@ public class IndexTest extends NoExitTestCase {
         // Storage
         Configuration storageConf = IngestTest.getStorageConfiguration();
         Storage storage = StorageFactory.createStorage(storageConf);
-
+        return fillStorage(storage);
+    }
+    public static Storage fillStorage(Storage storage) throws Exception {
         // Ingest
         URL dataLocation =
                 Thread.currentThread().getContextClassLoader().getResource(

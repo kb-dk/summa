@@ -195,6 +195,11 @@ public class StorageWatcher implements Configurable, Runnable {
 
     public void run() {
         while (mayRun) {
+            if (log.isTraceEnabled()) {
+                log.trace ("Polling storage with interval: "
+                           + getPollInterval() + " ms");
+            }
+
             try {
                 Thread.sleep(pollInterval);
             } catch (InterruptedException e) {
@@ -206,14 +211,9 @@ public class StorageWatcher implements Configurable, Runnable {
                 return;
             }
 
-            if (log.isTraceEnabled()) {
-                log.trace ("Polling storage with interval: "
-                           + getPollInterval() + " ms");
-            }
-
             for (String base : bases) {
                 if (log.isTraceEnabled()) {
-                    log.trace ("Polling base: " + base);
+                    log.trace("Polling base: " + base);
                 }
 
                 Long lastCheck = pollTimes.get(base);
@@ -255,7 +255,6 @@ public class StorageWatcher implements Configurable, Runnable {
      */
     public void addListener (StorageChangeListener l,
                              List<String> monitoredBases, Object userData) {
-
         listeners.put (l, new ListenerContext(l, monitoredBases, userData));
 
         if (monitoredBases != null) {
@@ -274,8 +273,10 @@ public class StorageWatcher implements Configurable, Runnable {
         for (String base : bases) {
             if (!pollTimes.containsKey(base)) {
                 try {
-                    log.debug("Getting initial timestamp for base '"+base+"'");
+                    log.debug("Getting initial timestamp for base '" + base
+                              + "'");
                     pollTimes.put(base, reader.getModificationTime(base));
+                    log.trace("Got initial timestamp for base '" + base + "'");
                 } catch (IOException e) {
                     log.warn("Failed to update timestamp for base '" + base
                              + "': " + e.getMessage (), e);

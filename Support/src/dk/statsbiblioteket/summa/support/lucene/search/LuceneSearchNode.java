@@ -134,6 +134,8 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
         try {
             searcher = new IndexSearcher(
                     FSDirectory.getDirectory(urlLocation.getFile()));
+            log.debug("Opened Lucene searcher for " + urlLocation
+                      + " with maxDoc " + searcher.maxDoc());
         } catch (CorruptIndexException e) {
             throw new RemoteException(String.format(
                     "Corrupt index at '%s'", urlLocation.getFile()), e);

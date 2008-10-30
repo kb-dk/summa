@@ -40,6 +40,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
@@ -534,6 +535,8 @@ public class IterativeTest extends NoExitTestCase {
     public RecordReader getRecordReader() throws IOException {
         MemoryStorage ms = new MemoryStorage();
         ms.put(RecordReader.CONF_START_FROM_SCRATCH, true);
+        ms.put(ConnectionConsumer.CONF_RPC_TARGET,
+               "//localhost:28000/summa-storage");
         ms.put(RecordReader.CONF_BASE, BASE);
         return new RecordReader(new Configuration(ms));
     }

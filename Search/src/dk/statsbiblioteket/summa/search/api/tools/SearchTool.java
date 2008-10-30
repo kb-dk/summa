@@ -7,6 +7,7 @@ import dk.statsbiblioteket.summa.search.api.SearchClient;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
+import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.rmi.Naming;
 
@@ -14,6 +15,9 @@ import java.rmi.Naming;
  * Little tool to hook up to a {@link SummaSearcher} and launch a search
  * on it and print the result to stdout.
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.QA_NEEDED,
+        author = "mke")
 public class SearchTool {
 
     public static void main (String[] args) throws Exception {
