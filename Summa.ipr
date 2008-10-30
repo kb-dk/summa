@@ -419,7 +419,6 @@
       <module fileurl="file://$PROJECT_DIR$/ClusterExtractor/ClusterExtractor.iml" filepath="$PROJECT_DIR$/ClusterExtractor/ClusterExtractor.iml" />
       <module fileurl="file://$PROJECT_DIR$/Common/Common.iml" filepath="$PROJECT_DIR$/Common/Common.iml" />
       <module fileurl="file://$PROJECT_DIR$/Control/Control.iml" filepath="$PROJECT_DIR$/Control/Control.iml" />
-      <module fileurl="file://$PROJECT_DIR$/Dice/Dice.iml" filepath="$PROJECT_DIR$/Dice/Dice.iml" />
       <module fileurl="file://$PROJECT_DIR$/FacetBrowser/FacetBrowser.iml" filepath="$PROJECT_DIR$/FacetBrowser/FacetBrowser.iml" />
       <module fileurl="file://$PROJECT_DIR$/Index/Index.iml" filepath="$PROJECT_DIR$/Index/Index.iml" />
       <module fileurl="file://$PROJECT_DIR$/Ingest/Ingest.iml" filepath="$PROJECT_DIR$/Ingest/Ingest.iml" />
