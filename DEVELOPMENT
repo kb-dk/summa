@@ -83,7 +83,7 @@ The layout of a module compiled by its "release" target must be as follows:
             <all config files - fx log4j.xml>
             
         summa-<module>-VERSION.jar
-        ChangeLog.html
+        summa-<module>-api-VERSION.jar (optional)
         README
 
 Webservice Releases
@@ -92,7 +92,7 @@ A release of a webservice .war must use the naming pattern
 summa-<module>[-servicename].war and place the file
 in <module>/summa.dist.dir.
 
-The war must bundle the compile-summa.properties file for
+The .war must bundle the build.properties file in META-INF/ for
 identification purposes (version numbering the war file will
 give us headaches).
 
