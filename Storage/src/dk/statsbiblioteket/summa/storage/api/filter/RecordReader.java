@@ -210,7 +210,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
 //            storageWatcher.addListener(this, Arrays.asList(base), null);
         }
 
-        lastRecordTimestamp = getStartTime() + 1; // TODO: Check if the +1 is ok
+        lastRecordTimestamp = getStartTime() + 1000; // TODO: Fix the 1s hack
         lastIteratorUpdate = lastRecordTimestamp;
         log.trace("RecordReader constructed, ready for pumping");
     }
@@ -348,6 +348,8 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         }
 
         while (!recordIterator.hasNext()) {
+            log.trace("hasNext: RecordIterater does not have next. Waiting and "
+                      + "checking");
             try {
                 waitForStorageChange();
                 checkIterator();
@@ -369,27 +371,27 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             markEof();
         }
 
-        // Check if there has been changes since we last checked
-        // Keep the monitor on the storageWatcher until we have finished waiting
-        // on it to make sure we don't drop any events
-        synchronized (storageWatcher) {
-            if(storageWatcher.getLastNotify(base) > lastIteratorUpdate) {
-                log.debug("Detected changes on base '"+base
-                          +"'since last check. Skipping wait");
-                return;
-            }
 
-
-            // We have to check this in a loop. See Javadoc for Object.wait()
-            while (!hasNext()) {
-                try {
+        // We have to check this in a loop. See Javadoc for Object.wait()
+        while (true) {
+            try {
+                // Check if there has been changes since we last checked
+                // Keep the monitor on the storageWatcher until we have
+                // finished waiting
+                // on it to make sure we don't drop any events
+                synchronized (storageWatcher) {
+                    if (storageWatcher.getLastNotify(base) >
+                        lastIteratorUpdate) {
+                        log.debug("Detected changes on base '"+base
+                                  +"'since last check. Skipping wait");
+                        break;
+                    }
                     log.debug("No changes on base '"+base+"' since last check."
                               + " Waiting for storage watcher...");
                     storageWatcher.wait();
-
-                } catch (InterruptedException e) {
-                    log.debug("Interrupted");
                 }
+            } catch (InterruptedException e) {
+                log.debug("Interrupted");
             }
         }
 

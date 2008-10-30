@@ -61,26 +61,11 @@
     </appender>
       -->
 
-    <logger name="dk.statsbiblioteket.summa">
+    <logger name="dk.statsbiblioteket.summa.common.filter.">
         <level value="trace" />
         <appender-ref ref="CONSOLE" />
     </logger>
 
-    <logger name="dk.statsbiblioteket.summa.facetbrowser">
-        <level value="trace" />
-        <appender-ref ref="CONSOLE" />
-    </logger>
-
-    <logger name="dk.statsbiblioteket.summa.releasetest">
-        <level value="trace" />
-        <appender-ref ref="CONSOLE" />
-    </logger>
-
-    <logger name="dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode">
-        <level value="trace" />
-        <appender-ref ref="CONSOLE" />
-    </logger>
-                               -->
     <!-- all loggeres inherit the root logger - so don't include the root appenders in the other loggers (will duplicate log entries in the log file) -->
     <root>
         <level value="FATAL" />

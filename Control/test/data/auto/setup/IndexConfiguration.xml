@@ -46,8 +46,16 @@
                             <value class="string">dk.statsbiblioteket.summa.storage.api.filter.RecordReader</value>
                         </entry>
                         <entry>
+                            <key>summa.rpc.vendor</key>
+                            <value class="string">//localhost:28000/summa-storage</value>
+                        </entry>
+                        <entry>
                             <key>summa.storage.recordreader.startfromscratch</key>
                             <value class="boolean">true</value>
+                        </entry>
+                        <entry>
+                            <key>summa.storage.watcher.pollinterval</key>
+                            <value class="int">500</value>
                         </entry>
                         <entry>
                             <key>summa.storage.recordreader.maxread.records</key>
@@ -56,6 +64,10 @@
                         <entry>
                             <key>summa.storage.recordreader.base</key>
                             <value class="string">fagref</value>
+                        </entry>
+                        <entry>
+                            <key>summa.storage.recordreader.stayalive</key>
+                            <value class="boolean">true</value>
                         </entry>
                     </value>
                 </entry>
@@ -90,9 +102,7 @@
                     <value class="xproperties">
                         <entry>
                             <key>filterpump.filterclass</key>
-                            <value class="string">
-                                dk.statsbiblioteket.summa.index.lucene.DocumentCreator
-                            </value>
+                            <value class="string">dk.statsbiblioteket.summa.index.lucene.DocumentCreator</value>
                         </entry>
                         <entry>
                             <key>summa.index.descriptorsetup</key>

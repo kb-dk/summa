@@ -39,13 +39,6 @@
       <maximumHeapSize value="128" />
       <properties />
     </buildFile>
-    <buildFile url="file://$PROJECT_DIR$/Dice/build.xml">
-      <additionalClassPath />
-      <antReference projectDefault="true" />
-      <customJdkName value="" />
-      <maximumHeapSize value="128" />
-      <properties />
-    </buildFile>
     <buildFile url="file://$PROJECT_DIR$/FacetBrowser/build.xml">
       <additionalClassPath>
         <entry path="file://$PROJECT_DIR$/lib/junit-3.8.1.jar" />
