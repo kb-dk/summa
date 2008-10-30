@@ -36,12 +36,15 @@ import dk.statsbiblioteket.summa.control.api.Service;
 import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.control.service.StorageService;
 import dk.statsbiblioteket.summa.control.service.FilterService;
+import dk.statsbiblioteket.summa.control.service.SearchService;
 import dk.statsbiblioteket.summa.search.api.SearchClient;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
+import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.IndexWatcher;
 import dk.statsbiblioteket.summa.search.SearchNodeFactory;
 import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
 import dk.statsbiblioteket.summa.search.SummaSearcherFactory;
+import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
 import dk.statsbiblioteket.summa.ingest.stream.FileReader;
 import dk.statsbiblioteket.summa.index.XMLTransformer;
 import dk.statsbiblioteket.summa.index.IndexController;
@@ -107,6 +110,7 @@ public class AutoDiscoverTest extends TestCase {
     private void putFiles() throws Exception {
         for (String file: TEST_FILES) {
             putFile(file);
+            Thread.sleep(2000); // We need to look into this...
         }
     }
     private void putFile(String file) throws Exception {
@@ -245,7 +249,7 @@ public class AutoDiscoverTest extends TestCase {
                      TEST_FILES.size(), count);
     }
 
-    private SummaSearcherImpl createSearcher() throws Exception {
+    private SearchService createSearcher() throws Exception {
         Configuration conf =
                 Configuration.load("data/auto/setup/SearchConfiguration.xml");
         conf.set(DatabaseStorage.CONF_LOCATION, new File(TEST_DIR, "storage"));
@@ -253,25 +257,37 @@ public class AutoDiscoverTest extends TestCase {
         conf.getSubConfigurations(SearchNodeFactory.CONF_NODES).get(0).
                 getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION, INDEX_DESCRIPTOR);
-        return new SummaSearcherImpl(conf);
+        return new SearchService(conf);
     }
-    public void testSearcher() throws Exception {
-        SummaSearcherImpl searcher = createSearcher();
+    private SearchClient getSearchClient() throws Exception {
+        Configuration conf = Configuration.newMemoryBased();
+        conf.set(ConnectionConsumer.CONF_RPC_TARGET,
+                 "//localhost:28000/summa-searcher");
+        return new SearchClient(conf);
+    }
+    public void testSearch() throws Exception {
         StorageService storage = createStorage();
+        SearchService searchService = createSearcher();
+        searchService.start();
+        SearchClient searchClient = getSearchClient();
         Service ingest = createIngestChain();
         ingest.start();
         Service index = createIndexer();
         index.start();
         putFiles();
-        Thread.sleep(2000);
+        Thread.sleep(10000);
 
-        assertNotNull("An index-location for the searcher should be available",
-                      searcher.getIndexLocation());
-        log.debug("The index-searcher derived index location was " 
-                  + searcher.getIndexLocation());
-    }
+        Request request = new Request();
+        request.put(DocumentSearcher.SEARCH_QUERY, "hans");
 
-    private SearchClient getSearchClient() throws Exception {
-        throw new UnsupportedOperationException("Not implemented yet");
+        String response = searchClient.search(request).toXML();
+        log.debug("A search for 'hans' gave\n" + response);
+        assertTrue("The search for hans should yield a response with "
+                   + "Hans-related content", 
+                   response.indexOf("Fagekspert i Datalogi") > 0);
+        searchService.stop();
+        ingest.stop();
+        index.stop();
+        storage.stop();
     }
 }

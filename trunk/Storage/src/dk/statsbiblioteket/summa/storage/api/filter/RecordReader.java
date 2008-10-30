@@ -45,6 +45,7 @@ import java.util.regex.Matcher;
 import java.util.GregorianCalendar;
 import java.util.NoSuchElementException;
 import java.util.Iterator;
+import java.util.Arrays;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -59,6 +60,8 @@ import java.util.concurrent.Semaphore;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
+// TODO: If keepalive, the state should be saved at regular intervals
+// TODO: Change the + 1000 ms when the time granilarity of JavaDB improves
 public class RecordReader implements ObjectFilter, StorageChangeListener {
     private static Log log = LogFactory.getLog(RecordReader.class);
 
@@ -171,6 +174,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      * @see {@link #CONF_MAX_READ_RECORDS}.
      * @see {@link #CONF_MAX_READ_SECONDS}.
      * @see {@link ConnectionConsumer#CONF_RPC_TARGET}.
+     * @see {@link StorageWatcher#CONF_POLL_INTERVAL}.
      * @see {@link #CONF_PROGRESS_FILE}.
      * @see {@link #CONF_START_FROM_SCRATCH}.
      * @see {@link #CONF_USE_PERSISTENCE}.
@@ -207,7 +211,12 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
 
         if (conf.getBoolean(CONF_STAY_ALIVE, DEFAULT_STAY_ALIVE)) {
             storageWatcher = new StorageWatcher(conf);
-//            storageWatcher.addListener(this, Arrays.asList(base), null);
+            storageWatcher.addListener(this, Arrays.asList(base), null);
+            storageWatcher.start();
+            log.trace("Enabled storage watching for base " + base);
+        } else {
+            log.trace("No storage watching enabled as " + CONF_STAY_ALIVE
+                      + " was false");
         }
 
         lastRecordTimestamp = getStartTime() + 1000; // TODO: Fix the 1s hack
@@ -295,6 +304,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      * @throws java.io.IOException if an iterator could not be created.
      */
     private boolean checkIterator() throws IOException {
+        log.trace("checkIterator() called");
         if (recordIterator == null) {
             log.debug(String.format("Creating initial record iterator for "
                                     + "Records modified after "
@@ -340,6 +350,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         }
 
         try {
+            log.trace("hasNext: Calling checkIterator()");
             checkIterator();
         } catch (IOException e) {
             log.warn("hasNext: An exception occured while checking for a new "
@@ -353,6 +364,10 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             try {
                 waitForStorageChange();
                 checkIterator();
+                if (storageWatcher == null || recordIterator == null
+                    || !recordIterator.hasNext()) {
+                    break;
+                }
             } catch (IOException e) {
                 log.warn("hasNext: An exception occured while checking for a"
                          + " new iterator. Returning false");
@@ -363,8 +378,17 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
     }
 
     private void waitForStorageChange() {
+        log.trace("waitForStorageChange() called");
         try {
-            checkIterator();
+            if (checkIterator() && recordIterator.hasNext()) {
+                return;
+            }
+            if (storageWatcher == null) { // We don't wait here
+                log.trace("waitForStorageChange: No storageWatcher, no records:" 
+                          + " Mark EOF");
+                markEof();
+                return;
+            }
         } catch (IOException e) {
             log.error("Error prepraring iterator for wait-phase: "
                       + e.getMessage(), e);
@@ -497,8 +521,10 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
 
     public void storageChanged(StorageWatcher watch, String base,
                                long timeStamp, Object userData) {
+        log.trace("Storage was changed for base " + base + " and timestamp "
+                  + timeStamp);
+        watch.notifyAll();
         // TODO : Update the Semaphore with at most 1   (remember syns)
-
     }
 }
 

@@ -61,8 +61,8 @@
     </appender>
       -->
 
-    <logger name="dk.statsbiblioteket.summa.common.filter.">
-        <level value="trace" />
+    <logger name="dk.statsbiblioteket.summa">
+        <level value="debug" />
         <appender-ref ref="CONSOLE" />
     </logger>
 

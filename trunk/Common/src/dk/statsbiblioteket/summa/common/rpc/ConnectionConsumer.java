@@ -6,6 +6,9 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionFactory;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * A generic base class for applications wanting to consume a single connection
@@ -43,7 +46,11 @@ import dk.statsbiblioteket.util.rpc.ConnectionContext;
  * }
  * </pre>
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.QA_NEEDED,
+        author = "mke")
 public class ConnectionConsumer<E> implements Configurable {
+    private static Log log = LogFactory.getLog(ConnectionConsumer.class);
 
     /**
      * Configuration property defining the address the host providing the
@@ -88,6 +95,7 @@ public class ConnectionConsumer<E> implements Configurable {
                                              + "RPC vendor");
         }
         conn = null;
+        log.debug("Created ConnectionConsumer for " + connId);
     }
 
     /**
@@ -104,10 +112,12 @@ public class ConnectionConsumer<E> implements Configurable {
      */
     public synchronized E getConnection () {
         if (conn == null) {
-            conn = connMan.get (connId);
+            conn = connMan.get(connId);
         }
 
         if (conn == null) {
+            log.debug("getConnection: ConnectionContext is null for id "
+                      + connId);
             return null;
         }
 

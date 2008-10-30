@@ -4,8 +4,12 @@ import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.IOException;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * A helper class utilizing a stateless connection to a search engine exposing
@@ -20,11 +24,19 @@ import java.io.IOException;
  * {@link GenericConnectionFactory#CONF_FACTORY}, and
  * {@link ConnectionConsumer#CONF_RPC_TARGET}
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.QA_NEEDED,
+        author = "mke")
 public class SearchClient extends ConnectionConsumer<SummaSearcher>
                           implements Configurable {
+    private static Log log = LogFactory.getLog(SearchClient.class);
 
     public SearchClient (Configuration conf) {
         super (conf);
+        log.debug(String.format(
+                "Created SearchClien with %s=%s",
+                ConnectionConsumer.CONF_RPC_TARGET,
+                conf.getString(ConnectionConsumer.CONF_RPC_TARGET)));
     }
 
     /**
@@ -38,6 +50,9 @@ public class SearchClient extends ConnectionConsumer<SummaSearcher>
     public ResponseCollection search (Request request) throws IOException {
         SummaSearcher searcher = getConnection();
 
+        if (searcher == null) {
+            log.warn("The searcher retrieved from getConnection was null");
+        }
         try {
             return searcher.search(request);
         } catch (Throwable t) {
