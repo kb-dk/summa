@@ -247,6 +247,10 @@
             <webinf dir="${basedir}/config/search">
                 <include name="server-config.wsdd"/>
             </webinf>
+            <metainf dir="${basedir}/..">
+                <!-- Add build.properties to get versioning info in the .war -->
+                <include name="build.properties"/>
+            </metainf>
             <classes dir="${basedir}/config/search">
                 <include name="log4j.xml"/>
                 <include name="configuration.xml"/>
@@ -270,6 +274,10 @@
             <webinf dir="${basedir}/config/storage">
                 <include name="server-config.wsdd"/>
             </webinf>
+            <metainf dir="${basedir}/..">
+                <!-- Add build.properties to get versioning info in the .war -->
+                <include name="build.properties"/>
+            </metainf>
             <classes dir="${basedir}/config/storage">
                 <include name="log4j.xml"/>
                 <include name="configuration.xml"/>
@@ -291,6 +299,10 @@
             <lib dir="${lib.dir}">
                 <include name="${lib.files}"/>
             </lib>
+            <metainf dir="${basedir}/..">
+                <!-- Add build.properties to get versioning info in the .war -->
+                <include name="build.properties"/>
+            </metainf>
             <classes dir="${basedir}/config/website">
                 <include name="log4j.xml"/>
                 <include name="services.xml"/>
