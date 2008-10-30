@@ -283,7 +283,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
     }
 
     public String getIndexLocation() throws RemoteException {
-        return indexFolder.toString();
+        return indexFolder == null ? null : indexFolder.toString();
     }
 
     /* Statistics */

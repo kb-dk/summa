@@ -37,8 +37,15 @@ import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.control.service.StorageService;
 import dk.statsbiblioteket.summa.control.service.FilterService;
 import dk.statsbiblioteket.summa.search.api.SearchClient;
+import dk.statsbiblioteket.summa.search.api.SummaSearcher;
+import dk.statsbiblioteket.summa.search.IndexWatcher;
+import dk.statsbiblioteket.summa.search.SearchNodeFactory;
+import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
+import dk.statsbiblioteket.summa.search.SummaSearcherFactory;
 import dk.statsbiblioteket.summa.ingest.stream.FileReader;
 import dk.statsbiblioteket.summa.index.XMLTransformer;
+import dk.statsbiblioteket.summa.index.IndexController;
+import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import dk.statsbiblioteket.summa.index.lucene.DocumentCreator;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
@@ -46,6 +53,7 @@ import junit.framework.TestCase;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -87,6 +95,7 @@ public class AutoDiscoverTest extends TestCase {
     File TEST_DIR = new File(System.getProperty("java.io.tmpdir"), "autotest");
     String STORAGE_CONF_LOCATION = "data/auto/setup/StorageConfiguration.xml";
     String INGEST_FOLDER = new File(TEST_DIR, "data_in").toString();
+    String INDEX_ROOT = new File(TEST_DIR, "index").toString();
     File INGEST_SOURCE = new File(Resolver.getURL("data/auto/data").getFile());
     List<String> TEST_FILES = Arrays.asList(
             "gurli.margrethe.xml", "hans.jensen.xml", "jens.hansen.xml");
@@ -170,16 +179,7 @@ public class AutoDiscoverTest extends TestCase {
         ingest.start();
         putFiles();
         Thread.sleep(2000);
-        StorageIterator records = new StorageIterator(
-                storage.getStorage(),
-                storage.getStorage().getRecordsFromBase("fagref"));
-        int count = 0;
-        while (records.hasNext()) {
-            records.next();
-            count++;
-        }
-        assertEquals("The number of ingested records should match the files",
-                     TEST_FILES.size(), count);
+        checkRecords(storage);
         ingest.stop();
         storage.stop();
     }
@@ -200,13 +200,75 @@ public class AutoDiscoverTest extends TestCase {
                 getSubConfiguration("LuceneUpdater").
                 getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION, INDEX_DESCRIPTOR);
-        FilterService ingest = new FilterService(conf);
+        conf.getSubConfiguration("IndexChain").
+                getSubConfiguration("IndexUpdate").
+                set(IndexControllerImpl.CONF_INDEX_ROOT_LOCATION, INDEX_ROOT);
+        FilterService index = new FilterService(conf);
+        index.start();
+        return index;
+    }
+    public void testIndexer() throws Exception {
+        StorageService storage = createStorage();
+        Service ingest = createIngestChain();
         ingest.start();
-        return ingest;
+        Service index = createIndexer();
+        index.start();
+        putFiles();
+        Thread.sleep(2000);
+
+        checkRecords(storage);
+        assertTrue("The index root must exist", new File(INDEX_ROOT).exists());
+        assertEquals("The INDEX_ROOT/YYMMDD_HHMM/lucene-folder should contain "
+                     + "the right number of files",
+                     3, new File(INDEX_ROOT).listFiles()[0].
+                listFiles()[1].listFiles().length);
+        assertTrue("The INDEX_ROOT/YYMMDD_HHMM/facet/author.dat should be > 0 "
+                   + "bytes ",
+                      new File(INDEX_ROOT).listFiles()[0].
+                listFiles()[0].listFiles()[0].length() > 0);
+
+        index.stop();
+        ingest.stop();
+        storage.stop();
     }
 
-    private Service createSearcher() throws Exception {
-        throw new UnsupportedOperationException("Not implemented yet");
+    private void checkRecords(StorageService storage) throws IOException {
+        StorageIterator records = new StorageIterator(
+                storage.getStorage(),
+                storage.getStorage().getRecordsFromBase("fagref"));
+        int count = 0;
+        while (records.hasNext()) {
+            records.next();
+            count++;
+        }
+        assertEquals("The number of ingested records should match the files",
+                     TEST_FILES.size(), count);
+    }
+
+    private SummaSearcherImpl createSearcher() throws Exception {
+        Configuration conf =
+                Configuration.load("data/auto/setup/SearchConfiguration.xml");
+        conf.set(DatabaseStorage.CONF_LOCATION, new File(TEST_DIR, "storage"));
+        conf.set(IndexWatcher.CONF_INDEX_WATCHER_INDEX_ROOT, INDEX_ROOT);
+        conf.getSubConfigurations(SearchNodeFactory.CONF_NODES).get(0).
+                getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR).
+                set(IndexDescriptor.CONF_ABSOLUTE_LOCATION, INDEX_DESCRIPTOR);
+        return new SummaSearcherImpl(conf);
+    }
+    public void testSearcher() throws Exception {
+        SummaSearcherImpl searcher = createSearcher();
+        StorageService storage = createStorage();
+        Service ingest = createIngestChain();
+        ingest.start();
+        Service index = createIndexer();
+        index.start();
+        putFiles();
+        Thread.sleep(2000);
+
+        assertNotNull("An index-location for the searcher should be available",
+                      searcher.getIndexLocation());
+        log.debug("The index-searcher derived index location was " 
+                  + searcher.getIndexLocation());
     }
 
     private SearchClient getSearchClient() throws Exception {

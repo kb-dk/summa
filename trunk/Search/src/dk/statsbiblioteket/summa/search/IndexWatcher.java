@@ -149,7 +149,8 @@ public class IndexWatcher extends Observable<IndexListener> implements
     }
 
     public void run() {
-        log.debug("Starting watch for index changes");
+        log.debug("Starting watch for index changes with max sleep-time "
+                  + indexCheckInterval + " ms");
         continueWatching = true;
         while (continueWatching) {
             updateAndReturnCurrentState();
