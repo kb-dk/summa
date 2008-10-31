@@ -1,0 +1,171 @@
+<xproperties>
+    <xproperties>
+        <entry>
+            <key>summa.control.service.port</key>
+            <value class="int">2784</value>
+        </entry>
+        <entry>
+            <key>summa.control.service.registry.port</key>
+            <value class="int">27000</value>
+        </entry>
+
+        <entry>
+            <key>filterpump.chainname</key>
+            <value class="string">Iterative test</value>
+        </entry>
+        <entry>
+            <key>filtercontrol.chains</key>
+            <value class="string">SingleChain</value>
+        </entry>
+        <entry>
+            <key>filtercontrol.sequential</key>
+            <value class="boolean">true</value>
+        </entry>
+        <entry>
+            <key>SingleChain</key>
+            <value class="xproperties">
+                <entry>
+                    <key>filterpump.filters</key>
+                    <value class="string">StorageReader, DocCreator, IndexUpdate</value>
+                </entry>
+                <entry>
+                    <key>StorageReader</key>
+                    <value class="xproperties">
+                        <entry>
+                            <key>filterpump.filterclass</key>
+                            <value class="string">
+                                dk.statsbiblioteket.summa.storage.api.filter.RecordReader
+                            </value>
+                        </entry>
+                        <entry>
+                            <key>summa.storage.recordreader.startfromscratch</key>
+                            <value class="boolean">false</value>
+                        </entry>
+                        <entry>
+                            <key>summa.storage.recordreader.maxread.records</key>
+                            <value class="int">-1</value>
+                        </entry>
+                        <entry>
+                            <key>summa.storage.recordreader.base</key>
+                            <value class="string">bar</value>
+                        </entry>
+                    </value>
+                </entry>
+                <entry>
+                    <key>DocCreator</key>
+                    <value class="xproperties">
+                        <entry>
+                            <key>filterpump.filterclass</key>
+                            <value class="string">
+                                dk.statsbiblioteket.summa.releasetest.IterativeHelperDocCreator
+                            </value>
+                        </entry>
+                    </value>
+                </entry>
+                <entry>
+                    <key>IndexUpdate</key>
+                    <value class="xproperties">
+                        <entry>
+                            <key>filterpump.filterclass</key>
+                            <value class="string">
+                                dk.statsbiblioteket.summa.index.IndexControllerImpl
+                            </value>
+                        </entry>
+                        <entry>
+                            <key>summa.index.manipulators</key>
+                            <value class="string">LuceneUpdater, FacetUpdater</value>
+                        </entry>
+                        <entry>
+                            <key>summa.index.createnewindex</key>
+                            <value class="boolean">false</value>
+                        </entry>
+                        <entry>
+                            <key>summa.index.indexrootlocation</key>
+                            <value class="string">[IndexRootLocation]</value>
+                        </entry>
+                        <entry>
+                            <key>summa.index.consolidatetimeout</key>
+                            <value class="int">-1</value>
+                        </entry>
+                        <entry>
+                            <key>summa.index.commit-timeout</key>
+                            <value class="int">1000</value>
+                        </entry>
+                        <entry>
+                            <key>LuceneUpdater</key>
+                            <value class="xproperties">
+                                <entry>
+                                    <key>summa.index.manipulatorclass</key>
+                                    <value class="string">
+                                        dk.statsbiblioteket.summa.index.lucene.LuceneManipulator
+                                    </value>
+                                </entry>
+                                <entry>
+                                    <key>summa.index.descriptorsetup</key>
+                                    <value class="xproperties">
+                                        <entry>
+                                            <key>summa.common.indexdescriptor.absolutelocation</key>
+                                            <value class="string">[IndexDescriptorLocation]</value>
+                                        </entry>
+                                    </value>
+                                </entry>
+                            </value>
+                        </entry>
+                        <entry>
+                            <key>FacetUpdater</key>
+                            <value class="xproperties">
+                                <entry>
+                                    <key>summa.index.manipulatorclass</key>
+                                    <value class="string">dk.statsbiblioteket.summa.facetbrowser.FacetManipulator</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.facet.facets</key>
+                                    <value class="list">
+                                        <xproperties>
+                                            <entry>
+                                                <key>summa.facet.name</key>
+                                                <value class="string">Title</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.facet.fields</key>
+                                                <value class="list">
+                                                    <item class="string">title</item>
+                                                </value>
+                                            </entry>
+                                        </xproperties>
+                                        <xproperties>
+                                            <entry>
+                                                <key>summa.facet.name</key>
+                                                <value class="string">BigFacet</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.facet.fields</key>
+                                                <value class="list">
+                                                    <item class="string">duplicate</item>
+                                                </value>
+                                            </entry>
+                                        </xproperties>
+                                        <xproperties>
+                                            <entry>
+                                                <key>summa.facet.name</key>
+                                                <value class="string">onlyindex</value>
+                                            </entry>
+                                        </xproperties>
+                                        <xproperties>
+                                            <entry>
+                                                <key>summa.facet.name</key>
+                                                <value class="string">onlystore</value>
+                                            </entry>
+                                        </xproperties>
+                                    </value>
+                                </entry>
+                            </value>
+                        </entry>
+                    </value>
+                </entry>
+            </value>
+        </entry>
+    </xproperties>
+</xproperties>
+
+
