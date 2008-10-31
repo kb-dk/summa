@@ -32,6 +32,7 @@ import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
+import dk.statsbiblioteket.util.Profiler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -59,6 +60,7 @@ public class RecordWriter extends ObjectFilterImpl {
 
     private ConnectionContext<Storage> accessContext;
     private Storage storage;
+    private Profiler profiler = new Profiler();
 
     /**
      * Established an RMI connection to the Storage specified in configuration.
@@ -109,6 +111,7 @@ public class RecordWriter extends ObjectFilterImpl {
                 log.debug("Flushing record '" + record.getId() + "'");
             }
             storage.flush(record);
+            profiler.beat();
         } catch (IOException e) {
             FilterCommons.reportError(accessContext, e);
             log.error("Exception flushing " + record, e);
@@ -117,6 +120,8 @@ public class RecordWriter extends ObjectFilterImpl {
     }
 
     public synchronized void close(boolean success) {
+        log.info("Closing RecordWriter after " + profiler.getBeats()
+                 + " writes in " + profiler.getSpendTime());
         super.close(success);
         FilterCommons.releaseAccess(accessContext);
     }

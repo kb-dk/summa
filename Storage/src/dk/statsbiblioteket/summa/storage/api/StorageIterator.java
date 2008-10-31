@@ -47,7 +47,7 @@ import org.apache.commons.logging.LogFactory;
        author = "mke")
 public class StorageIterator implements Iterator<Record>, Serializable {
     // TODO: Consider making this adjustable
-    public static int MAX_QUEUE_SIZE = 100;
+    public static int MAX_QUEUE_SIZE = 110;
     private final ReadableStorage iteratorHolder;
     private final long key;
     private final Queue<Record> records;
