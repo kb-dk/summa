@@ -3,7 +3,7 @@
 	<mainClass>dk.statsbiblioteket.summa.control.service.Launcher</mainClass>
     <property name="com.sun.management.jmxremote.port" value="27065"/>
     <property name="com.sun.management.jmxremote.ssl" value="false"/>
-    <description>A test bundle for the Summa FacetBrowser module</description>
+    <description>A test search engine utilizing an index facet information</description>
 	<bundleId>test-facet-search-1</bundleId>
 	<publicApi>
         <file>lib/summa-search-api-@summa.version@.jar</file>
