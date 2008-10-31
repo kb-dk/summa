@@ -262,7 +262,7 @@ public class LuceneManipulator implements IndexManipulator {
             }
             updateAddition(id, payload);
         }
-        return false; // TODO: Return true if payload counter gets too high
+        return true; // TODO: Return false if payload counter gets too high
     }
 
     /**

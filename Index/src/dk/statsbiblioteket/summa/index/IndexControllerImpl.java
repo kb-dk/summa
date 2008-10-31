@@ -504,7 +504,7 @@ public class IndexControllerImpl extends StateThread implements
         for (IndexManipulator manipulator: manipulators) {
             //noinspection OverlyBroadCatchBlock
             try {
-                requestCommit = requestCommit | manipulator.update(payload);
+                requestCommit = requestCommit | !manipulator.update(payload);
             } catch (Exception e) {
                 if (manipulatorPosition == 0) {
                     failLog.warn(String.format(
