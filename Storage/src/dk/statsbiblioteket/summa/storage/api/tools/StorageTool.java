@@ -26,16 +26,24 @@ import java.io.*;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
+import java.net.URL;
+import java.net.MalformedURLException;
 
 
 import dk.statsbiblioteket.summa.storage.api.*;
 
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Logs;
+
+import javax.xml.transform.*;
+import javax.xml.transform.stream.StreamSource;
+import javax.xml.transform.stream.StreamResult;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -145,13 +153,82 @@ public class StorageTool {
 
     }
 
+    private static void actionXslt (String[] argv, StorageReaderClient storage)
+                                                             throws IOException{
+        if (argv.length <= 2) {
+            System.err.println("You must specify a record id and a URL "
+                               + "for the XSLT to apply");
+            return;
+        }
+
+        String recordId = argv[1];
+        String xsltUrl = argv[2];
+
+        Record r = storage.getRecord(recordId, 0);
+
+        if (r == null) {
+            System.err.println("No such record '" + recordId + "'");
+            return;
+        }
+
+        System.out.println(r.toString(true));
+        System.out.println("Original content:\n" + r.getContentAsUTF8() + "\n");
+        System.out.println("\n===========================\n");
+
+        Transformer t = compileTransformer(xsltUrl);
+        StreamResult input = new StreamResult();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        input.setOutputStream(out);
+        Source so = new StreamSource(new ByteArrayInputStream(r.getContent()));
+
+        try {
+            t.transform(so, input);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
+
+        System.out.println("Contents transformed with: " + xsltUrl + ":\n");
+        System.out.println(new String(out.toByteArray()));
+
+
+    }
+
+    public static Transformer compileTransformer (String xsltUrl) {
+        Transformer transformer;
+        TransformerFactory tfactory = TransformerFactory.newInstance();
+        InputStream in = null;
+
+        try {
+            URL url = Resolver.getURL(xsltUrl);
+            in = url.openStream();
+            transformer = tfactory.newTransformer(
+                    new StreamSource(in, url.toString()));
+        } catch (Exception e) {
+            throw new RuntimeException("Error compiling XSLT: "
+                                       + e.getMessage(), e);
+        } finally {
+            try {
+                if (in != null) {
+                    in.close();
+                }
+            } catch (IOException e) {
+                System.err.println("Non-fatal IOException while closing "
+                                   + "stream for '" + xsltUrl + "'");
+            }
+        }
+
+        return transformer;
+    }
+
     private static void printUsage () {
         System.err.println ("USAGE:\n\t" +
                             "storage-tool.sh <action> [arg]...");
         System.err.println ("Actions:\n"
                             + "\tget  <record_id>\n"
                             + "\tpeek <base> [max_count=5]\n"
-                            + "\ttouch <record_id> [record_id...]\n");        
+                            + "\ttouch <record_id> [record_id...]\n"
+                            + "\txslt <record_id> <xslt_url>\n");
     }
 
     public static void main (String[] args) throws Exception {
@@ -200,6 +277,8 @@ public class StorageTool {
             actionPeek(args, reader);
         } else if ("touch".equals(action)) {
             actionTouch(args, reader, writer);
+        } else if ("xslt".equals(action)) {
+            actionXslt(args, reader);
         } else {
             System.err.println ("Unknown action '" + action + "'");
             printUsage();
