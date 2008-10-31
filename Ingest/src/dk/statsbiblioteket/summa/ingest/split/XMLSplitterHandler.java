@@ -22,8 +22,7 @@
  */
 package dk.statsbiblioteket.summa.ingest.split;
 
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 
@@ -67,7 +66,7 @@ public class XMLSplitterHandler extends DefaultHandler2 {
 
     /* DefaultHandler overrides */
     private List<String> insideRecordElementStack = new ArrayList<String>(20);
-    private List<String> outsideRecordPrefixStack = new ArrayList<String>(20);
+    private Set<String> outsideRecordPrefixStack = new HashSet<String>(20);
     private List<String> insideRecordPrefixStack = new ArrayList<String>(20);
 
     /* Inside a record-block */
@@ -89,7 +88,7 @@ public class XMLSplitterHandler extends DefaultHandler2 {
         sw = new StringWriter(10000);
         id = new StringWriter(100);
         insideRecordPrefixStack.clear();
-        outsideRecordPrefixStack.clear();  // TODO: Should this be cleared?
+        //outsideRecordPrefixStack.clear();  // TODO: Should this be cleared?
         insideRecordElementStack.clear();
     }
 
@@ -130,7 +129,7 @@ public class XMLSplitterHandler extends DefaultHandler2 {
             // This is the Record root element
             inRecord = true;
             rootRecordElement = true;
-            prefixes = outsideRecordPrefixStack;
+            prefixes = new ArrayList<String>(outsideRecordPrefixStack);
             log.trace("Record start");
         } else {
             rootRecordElement = false;

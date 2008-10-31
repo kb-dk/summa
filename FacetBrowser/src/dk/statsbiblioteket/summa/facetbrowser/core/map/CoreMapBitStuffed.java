@@ -355,7 +355,7 @@ public class CoreMapBitStuffed extends CoreMapImpl {
     }
 
     public void store() throws IOException {
-        log.info("Storing integer-based map");
+        log.info("Storing integer-based map with docCount " + getDocCount());
         storeMeta();
         storeIndex(index, getDocCount() + 1);
         storeValues(valuePos);

@@ -163,6 +163,7 @@
         <modules>
           <module name="Search">
             <files>
+              <file url="file://$PROJECT_DIR$/Search/attic/config/web.xml" />
               <file url="file://$PROJECT_DIR$/Search/config/web.xml" />
             </files>
           </module>

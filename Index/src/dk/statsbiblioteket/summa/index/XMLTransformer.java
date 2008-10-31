@@ -65,6 +65,7 @@ public class XMLTransformer extends ObjectFilterImpl {
      */
     public static final String CONF_XSLT = "summa.xmltransformer.xslt";
 
+    private String xsltLocation;
     private Transformer transformer;
 
     /**
@@ -73,7 +74,6 @@ public class XMLTransformer extends ObjectFilterImpl {
      * @see {@link #CONF_XSLT}.
      */
     public XMLTransformer(Configuration conf) {
-        String xsltLocation;
         try {
             xsltLocation = conf.getString(CONF_XSLT);
             // Extract XSLT
@@ -175,9 +175,21 @@ public class XMLTransformer extends ObjectFilterImpl {
             System.out.println("************************************");*/
             log.debug("Finished transformation of " + payload);
             if (log.isTraceEnabled()) {
+                try {
+                    log.trace(String.format(
+                        "Transformed %s using XSLT from %s\n***** Source *****"
+                            + "\n%s\n***** Result *****\n%s",
+                            payload, xsltLocation,
+                            payload.getRecord().getContentAsUTF8(),
+                            new String(out.toByteArray(), "utf-8")));
+                } catch (UnsupportedEncodingException e) {
+                    log.error("Unable to convert byte-array to UTF-8", e);
+                }
+            }
+/*            if (log.isTraceEnabled()) {
                 log.trace("Transformed content for " + payload + ": "
                           + payload.getRecord().getContentAsUTF8());
-            }
+            }*/
         } catch (TransformerException e) {
             log.warn("Transformer problems. Discarding payload " + payload, e);
         }
