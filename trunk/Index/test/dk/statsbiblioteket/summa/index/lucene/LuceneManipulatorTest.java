@@ -87,7 +87,7 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
     public void testLargeIndex(int docCount) throws Exception {
         Profiler profiler = new Profiler();
         profiler.setExpectedTotal(docCount);
-        LuceneManipulator manipulator = openIndex(100);
+        LuceneManipulator manipulator = openIndex(102);
         String[] ids = new String[docCount];
         for (int i = 0 ; i < docCount ; i++) {
             ids[i] = "doc" + i;

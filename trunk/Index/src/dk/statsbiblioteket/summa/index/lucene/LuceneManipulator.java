@@ -161,7 +161,7 @@ public class LuceneManipulator implements IndexManipulator {
                           + indexDirectory.getFile() + "'");
                 writer = new IndexWriter(indexDirectory, false,
                                          new StandardAnalyzer(), false);
-                writer.setMergeFactor(100); // TODO: Verify this
+                writer.setMergeFactor(80); // TODO: Verify this
                 // We want to avoid implicit merging of segments as is messes
                 // up document ordering
             } else {

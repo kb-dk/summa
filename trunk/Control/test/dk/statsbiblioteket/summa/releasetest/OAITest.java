@@ -31,6 +31,7 @@ import dk.statsbiblioteket.summa.control.service.SearchService;
 import dk.statsbiblioteket.summa.control.api.Service;
 import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.Profiler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -61,6 +62,7 @@ public class OAITest extends NoExitTestCase {
     }
 
     public void testFull() throws Exception {
+        Profiler profiler = new Profiler();
         Configuration storageConf = Configuration.load(Resolver.getURL(
                         "test-storage-1/config/configuration.xml").getFile());
         storageConf.set(Service.CONF_SERVICE_ID, "StorageService");
@@ -68,6 +70,7 @@ public class OAITest extends NoExitTestCase {
         storage.start();
         storage.getStorage().clearBase("dummy");
 
+        Profiler ingestProfiler = new Profiler();
         log.info("Starting ingest");
         Configuration ingestConf = Configuration.load(Resolver.getURL(
                         "test-ingest-oai/config/configuration.xml").getFile());
@@ -78,7 +81,9 @@ public class OAITest extends NoExitTestCase {
             log.trace("Waiting for ingest ½ a second");
             Thread.sleep(500);
         }
+        String ingestTime = ingestProfiler.getSpendTime();
 
+        Profiler indexProfiler = new Profiler();
         log.info("Starting index");
         Configuration indexConf = Configuration.load(Resolver.getURL(
                         "test-facet-index-1/config/configuration.xml").
@@ -90,6 +95,8 @@ public class OAITest extends NoExitTestCase {
             log.trace("Waiting for index ½ a second");
             Thread.sleep(500);
         }
+        log.info("Finished indexing in " + indexProfiler.getSpendTime()
+                 + ", ingesting in " + ingestTime);
 
         log.info("Starting search");
         Configuration searchConf = Configuration.load(Resolver.getURL(

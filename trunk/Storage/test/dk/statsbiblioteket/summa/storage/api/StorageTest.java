@@ -446,6 +446,23 @@ public class StorageTest extends TestCase {
         assertTrue(mtime < r2.getModificationTime());
     }
 
+    public void testGetMorerecords() throws Exception {
+        int WANTED_RECORDS = StorageIterator.MAX_QUEUE_SIZE + 5;
+        for (int i = 0 ; i < WANTED_RECORDS ; i++) {
+            storage.flush(new Record("Foo" + i, testBase1, testContent1));
+        }
+
+        StorageIterator records = new StorageIterator(
+                storage, storage.getRecordsModifiedAfter(0, testBase1));
+        int count = 0;
+        while (records.hasNext()) {
+            records.next();
+            count++;
+        }
+        assertEquals("The number of received Records should match (and be "
+                     + WANTED_RECORDS + ")", WANTED_RECORDS, count);
+    }
+
     public void testGetModifiedAfter() throws Exception {
         Record r1 = new Record (testId1, testBase1, testContent1);
         storage.flush(r1);

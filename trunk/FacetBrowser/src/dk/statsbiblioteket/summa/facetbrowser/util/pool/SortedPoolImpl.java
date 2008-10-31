@@ -426,7 +426,7 @@ public abstract class SortedPoolImpl<E extends Comparable<E>>
         if (insertPos >= 0) {
             log.trace("Value '" + value + "' already exists in pool '"
                       + poolName + "'");
-            return -1 * (insertPos + 1);
+            return (-1 * insertPos) - 1;
         }
         insertPos = -1 * (insertPos + 1);
         add(insertPos, value); // Positive position

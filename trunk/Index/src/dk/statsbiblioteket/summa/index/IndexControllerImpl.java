@@ -159,11 +159,11 @@ public class IndexControllerImpl extends StateThread implements
      * CONF_CONSOLIDATE_MAX_DOCUMENTS, CONF_CONSOLIDATE_MAX_COMMITS or any
      * combination of these to avoid running out of file handles.
      * </p><p>
-     * This property is optional. Default is 100.
+     * This property is optional. Default is 70.
      */
     public static final String CONF_CONSOLIDATE_MAX_COMMITS =
             "summa.index.consolidatemaxcommits";
-    public static final int DEFAULT_CONSOLIDATE_MAX_COMMITS = 100;
+    public static final int DEFAULT_CONSOLIDATE_MAX_COMMITS = 70;
 
     /**
      * The fully qualified class-name for a manipulator. Used to create an
@@ -490,9 +490,9 @@ public class IndexControllerImpl extends StateThread implements
             comment = "Is it okay to catch on Exception-level when calling "
                       + "update on the manipulators?")
     public synchronized boolean update(Payload payload) throws IOException {
-        if (log.isDebugEnabled()) {
+        if (log.isTraceEnabled()) {
             //noinspection DuplicateStringLiteralInspection
-            log.debug("update(" + payload + ") called");
+            log.trace("update(" + payload + ") called");
         }
         if (source == null) {
             throw new IOException("No source defined, cannot update");
@@ -536,9 +536,10 @@ public class IndexControllerImpl extends StateThread implements
             commit();
         }
         triggerCheck();
-        if (log.isTraceEnabled()) {
+        if (log.isDebugEnabled()) {
             //noinspection DuplicateStringLiteralInspection
-            log.trace("update(" + payload + ") finished");
+            log.debug("update(" + payload + ") finished - update count for the "
+                      + "current location is " + profiler.getBeats());
         }
         return requestCommit;
     }
@@ -559,7 +560,7 @@ public class IndexControllerImpl extends StateThread implements
         commitsSinceLastConsolidate++;
         lastCommit = System.currentTimeMillis();
         markAsUpdated(lastCommit);
-        updatesSinceLastCommit =      0;
+        updatesSinceLastCommit = 0;
         log.trace("commit() finished in "
                   + (System.currentTimeMillis() - startTime) + " ms");
     }
