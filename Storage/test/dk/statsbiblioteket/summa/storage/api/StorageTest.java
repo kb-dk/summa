@@ -12,11 +12,14 @@ import java.util.Iterator;
 import java.io.File;
 
 import junit.framework.TestCase;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  *
  */
 public class StorageTest extends TestCase {
+    private static Log log = LogFactory.getLog(StorageTest.class);
 
     Storage storage;
 
@@ -441,6 +444,36 @@ public class StorageTest extends TestCase {
 
         assertEquals(ctime, r2.getCreationTime());
         assertTrue(mtime < r2.getModificationTime());
+    }
+
+    public void testGetModifiedAfter() throws Exception {
+        Record r1 = new Record (testId1, testBase1, testContent1);
+        storage.flush(r1);
+        Record r2 = storage.getRecords(Arrays.asList(testId1), 0).get(0);
+        assertEquals("The timestamp for the retireved record should match the"
+                     + " ingested", r1, r2);
+        long mtime1 = r2.getModificationTime();
+
+        storage.flush(new Record(testId2, testBase1, testContent1));
+        long mtime2 = storage.getRecords(Arrays.asList(testId2), 0).get(0).
+                getModificationTime();
+        assertTrue("Record 1 mtime should be before record 2 mtime",
+                   mtime1 < mtime2);
+
+        log.debug("Received modification timestamps: " + mtime1 + " and "
+                  + mtime2);
+        StorageIterator records = new StorageIterator(
+                storage, storage.getRecordsModifiedAfter(mtime1, testBase1));
+        assertTrue("The iterator should contain a record", records.hasNext());
+        Record record = records.next();
+        log.debug("Got record from getModifiedAfter(" + mtime1 + ", "
+                  + testBase1 + ") with id " + record.getId() + ", mtime "
+                  + record.getModificationTime() + ". Time diff: " 
+                  + (record.getModificationTime() - mtime1));
+        if (records.hasNext()) {
+            fail("Record is singular - no more records should be returned. " 
+                 + "Got record " + records.next());
+        }
     }
 
     /*

@@ -110,7 +110,7 @@ public class AutoDiscoverTest extends TestCase {
     private void putFiles() throws Exception {
         for (String file: TEST_FILES) {
             putFile(file);
-            Thread.sleep(2000); // We need to look into this...
+//            Thread.sleep(2000); // We need to look into this...
         }
     }
     private void putFile(String file) throws Exception {
@@ -275,7 +275,7 @@ public class AutoDiscoverTest extends TestCase {
         Service index = createIndexer();
         index.start();
         putFiles();
-        Thread.sleep(10000);
+        Thread.sleep(5000);
 
         Request request = new Request();
         request.put(DocumentSearcher.SEARCH_QUERY, "hans");

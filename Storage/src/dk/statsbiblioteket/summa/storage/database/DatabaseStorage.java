@@ -297,6 +297,7 @@ public abstract class DatabaseStorage extends StorageBase {
                                     + " ON " + relationsClause
                                     + " WHERE " + BASE_COLUMN + "=?"
                                     + " AND " + MTIME_COLUMN + ">?"
+//                                    + " AND " + MTIME_COLUMN + "!=?"
                                     + " ORDER BY " + ID_COLUMN;
         log.debug("Preparing query getModifiedAfter with '"
                   + modifiedAfterQuery + "'");
@@ -492,11 +493,11 @@ public abstract class DatabaseStorage extends StorageBase {
             return EMPTY_ITERATOR_KEY;
         }
 
-        // TODO: Fix the SQL with a WHERE != time instead of hacking this way
-        time += 1000;
+        //time += 1000;
         try {
             stmtGetModifiedAfter.setString(1, base);
             stmtGetModifiedAfter.setTimestamp(2, new Timestamp(time));
+           // stmtGetModifiedAfter.setTimestamp(3, new Timestamp(time));
         } catch (SQLException e) {
             throw new IOException("Could not prepare stmtGetModifiedAfter "
                                       + "with base '" + base + "' and time "
