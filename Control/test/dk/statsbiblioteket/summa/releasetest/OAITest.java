@@ -45,6 +45,7 @@ import org.apache.commons.logging.LogFactory;
  * inspected manually. It is places under the current directory, along with the
  * storage folder.
  */
+// TODO: Change the root to tmp-dir
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,

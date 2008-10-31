@@ -29,6 +29,7 @@
 
         <field name="author_normalised" parent="token" multiValued="true" queryBoost="10"/>
         <field name="author_person" parent="token" multiValued="true" queryBoost="10"/>
+        <field name="author_corporation" parent="token" multiValued="true"/>
         <field name="au_other" parent="token" multiValued="true" queryBoost="5"/>
 
         <field name="main_titel" parent="token" queryBoost="10"/>
@@ -42,9 +43,17 @@
         <field name="ma_long" parent="token" multiValued="true"/>
         <field name="lma_long" parent="keyword"/>
 
+        <field name="id" parent="keyword"/>
+        <field name="ww" parent="keyword"/>
+        <field name="ma_short" parent="token"/>
+        <field name="ltarget" parent="keyword"/>
+        <field name="openUrl" parent="keyword"/>
+        <field name="pu" parent="token"/>
+        <field name="py" parent="token"/>
+        <field name="sort_year_desc" parent="keyword"/>
     </fields>
 
-    <defaultSearchFields>freetext au ti su lma</defaultSearchFields>
+    <defaultSearchFields>freetext au ti su lma id</defaultSearchFields>
 </IndexDescriptor>
 
 
