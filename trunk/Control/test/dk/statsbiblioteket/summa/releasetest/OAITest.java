@@ -36,15 +36,13 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * This is a unit-test mimicking
- * http://wiki.statsbiblioteket.dk/summa/Community/Tutorials/MinimalDeployment1.0
- * as such, it is neccessary to follow steps 1.3-1.4 
- *
- * Tests OAI ingesting from a corpus of 1300 records.
+ *http://wiki.statsbiblioteket.dk/summa/Community/Tutorials/MinimalDeployment1.0
+ * as such, it is neccessary to follow steps 1.3-1.4 to get the test-data and
+ * the XSLTs in place.
  * </p><p>
- *
- * The records must be downloaded from
- * http://wiki.statsbiblioteket.dk/summa/Community/Tutorials
- * and unpacked in /tmp creating /tmp/summa_test_data_small_OAI/
+ * This test it partly manual, as the result (primarily the index) needs to be
+ * inspected manually. It is places under the current directory, along with the
+ * storage folder.
  */
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
