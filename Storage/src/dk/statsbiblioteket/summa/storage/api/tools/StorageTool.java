@@ -171,8 +171,9 @@ public class StorageTool {
             return;
         }
 
-        System.out.println(r.toString(true));
-        System.out.println("Original content:\n" + r.getContentAsUTF8() + "\n");
+        System.out.println(r.toString(true) + "\n");
+        System.out.println("Original content:\n\n"
+                           + r.getContentAsUTF8() + "\n");
         System.out.println("\n===========================\n");
 
         Transformer t = compileTransformer(xsltUrl);
