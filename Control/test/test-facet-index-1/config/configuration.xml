@@ -58,6 +58,10 @@
                             <key>summa.storage.recordreader.base</key>
                             <value class="string">oai</value>
                         </entry>
+                        <entry>
+                            <key>summa.rpc.vendor</key>
+                            <value class="string">//localhost:28000/summa-storage</value>
+                        </entry>
                     </value>
                 </entry>
                 <entry>
