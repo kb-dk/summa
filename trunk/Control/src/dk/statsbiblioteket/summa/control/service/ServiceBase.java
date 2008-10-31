@@ -91,11 +91,12 @@ public abstract class ServiceBase extends UnicastRemoteObject
             id = conf.getString(Service.CONF_SERVICE_ID, null);
         }
         if (id == null) {
-            log.warn(String.format(
+            throw new ConfigurationException(String.format(
                     "The property '%s' was not present and no service id was"
                     + " specified in system properties '%s'. id could not be"
-                    + " determined", Service.CONF_SERVICE_ID, CONF_SERVICE_ID));
+                    + " determined", CONF_SERVICE_ID, CONF_SERVICE_ID));
         }
+
         Security.checkSecurityManager();
 
         registryPort = conf.getInt(CONF_REGISTRY_PORT, 27000);
