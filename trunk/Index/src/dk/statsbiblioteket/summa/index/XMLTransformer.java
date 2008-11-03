@@ -95,7 +95,7 @@ public class XMLTransformer extends ObjectFilterImpl {
         } catch (IndexServiceException e) {
             throw new ConfigurationException("Unable to create transformer", e);
         }
-        log.debug("Transformer ready for use");
+        log.info("Transformer for '" + xsltLocation + "' ready for use");
     }
 
     /**
@@ -117,6 +117,10 @@ public class XMLTransformer extends ObjectFilterImpl {
         InputStream in = null;
         try {
             URL url = Resolver.getURL(xsltLocation);
+            if (url == null) {
+                throw new ConfigurationException(
+                        "Unable to resolve '" + xsltLocation + "' to URL");
+            }
             in = url.openStream();
             transformer = tfactory.newTransformer(
                     new StreamSource(in, url.toString()));
@@ -173,7 +177,6 @@ public class XMLTransformer extends ObjectFilterImpl {
 /*            System.out.println("------------------------------------");
             System.out.println(payload.getRecord().getContentAsUTF8());
             System.out.println("************************************");*/
-            log.debug("Finished transformation of " + payload);
             if (log.isTraceEnabled()) {
                 try {
                     log.trace(String.format(
@@ -193,6 +196,12 @@ public class XMLTransformer extends ObjectFilterImpl {
         } catch (TransformerException e) {
             log.warn("Transformer problems. Discarding payload " + payload, e);
         }
+    }
+
+    public synchronized void close(boolean success) {
+        super.close(success);
+        log.info("Closing down XMLTransformer for '" + xsltLocation + "'. "
+                 + getProcessStats());
     }
 }
 

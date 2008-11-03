@@ -343,6 +343,11 @@ public class DocumentCreator extends ObjectFilterImpl {
             luceneDoc.add(freeField);
         }
     }
+
+    public synchronized void close(boolean success) {
+        super.close(success);
+        log.info("Closing down Documentcreator. " + getProcessStats());
+    }
 }
 
 
