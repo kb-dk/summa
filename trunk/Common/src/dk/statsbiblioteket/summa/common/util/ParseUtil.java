@@ -25,6 +25,7 @@ package dk.statsbiblioteket.summa.common.util;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
+import javax.xml.stream.events.XMLEvent;
 import java.text.ParseException;
 import java.io.StringWriter;
 
@@ -175,7 +176,29 @@ public class ParseUtil {
         return input.replaceAll(">", "&gt;");
     }
 
+    /**
+     * Converts an XMLEvent-id to String. Used for primarily debugging and error
+     * messages.
+     * @param eventType the XMLEvent-id.
+     * @return the event as human redable String.
+     */
+    public static String eventID2String(int eventType) {
+        switch (eventType) {
+            case XMLEvent.START_ELEMENT:  return "START_ELEMENT";
+            case XMLEvent.END_ELEMENT:    return "END_ELEMENT";
+            case XMLEvent.PROCESSING_INSTRUCTION:
+                return "PROCESSING_INSTRUCTION";
+            case XMLEvent.CHARACTERS: return "CHARACTERS";
+            case XMLEvent.COMMENT: return "COMMENT";
+            case XMLEvent.START_DOCUMENT: return "START_DOCUMENT";
+            case XMLEvent.END_DOCUMENT: return "END_DOCUMENT";
+            case XMLEvent.ENTITY_REFERENCE: return "ENTITY_REFERENCE";
+            case XMLEvent.ATTRIBUTE: return "ATTRIBUTE";
+            case XMLEvent.DTD: return "DTD";
+            case XMLEvent.CDATA: return "CDATA";
+            case XMLEvent.SPACE: return "SPACE";
+            default: return "UNKNOWN_EVENT_TYPE " + "," + eventType;
+        }
+    }
+
 }
-
-
-
