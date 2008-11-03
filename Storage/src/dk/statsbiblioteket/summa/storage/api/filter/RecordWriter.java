@@ -66,6 +66,7 @@ public class RecordWriter extends ObjectFilterImpl {
      * Established an RMI connection to the Storage specified in configuration.
      * @param configuration contains setup information.
      * @see {@link #CONF_STORAGE}.
+     * @throws java.io.IOException if the RecordWriter could not be constructed.
      */
     public RecordWriter(Configuration configuration) throws IOException {
         log.trace("Constructing RecordWriter");
@@ -120,10 +121,10 @@ public class RecordWriter extends ObjectFilterImpl {
     }
 
     public synchronized void close(boolean success) {
-        log.info("Closing RecordWriter after " + profiler.getBeats()
-                 + " writes in " + profiler.getSpendTime());
         super.close(success);
         FilterCommons.releaseAccess(accessContext);
+        log.info("Closing down RecordWriter. " + getProcessStats()
+                 + ". Total time: " + profiler.getSpendTime());
     }
 
     // TODO: Close connection on EOF

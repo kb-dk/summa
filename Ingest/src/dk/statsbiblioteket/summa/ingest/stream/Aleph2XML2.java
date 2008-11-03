@@ -471,6 +471,12 @@ public class Aleph2XML2 extends ObjectFilterImpl {
 
         }
     }
+    
+    public synchronized void close(boolean success) {
+        super.close(success);
+        log.info("Closing down Aleph2XML2. " + getProcessStats());
+    }
+
 /*
     public void applyFilter(File input, Extension ext, String encoding) {
 
@@ -618,8 +624,3 @@ public class Aleph2XML2 extends ObjectFilterImpl {
     }
     */
 }
-
-
-
-
-

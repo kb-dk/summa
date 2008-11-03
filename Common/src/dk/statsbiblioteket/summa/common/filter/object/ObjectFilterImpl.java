@@ -27,6 +27,8 @@ import java.io.IOException;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Convenience implementation of ObjectFilter, suitable as a super-class for
@@ -36,7 +38,11 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public abstract class ObjectFilterImpl implements ObjectFilter {
+    private static Log log = LogFactory.getLog(ObjectFilterImpl.class);
+
     private ObjectFilter source;
+    private long payloadCount = 0;
+    private long totalTimeNS = 0;
     
     public boolean hasNext() {
         checkSource();
@@ -46,7 +52,15 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
     public Payload next() {
         checkSource();
         Payload payload = source.next();
+        long startTime = System.nanoTime();
         processPayload(payload);
+        long spendTime = System.nanoTime() - startTime;
+        totalTimeNS += spendTime;
+        payloadCount++;
+        if (log.isTraceEnabled()) {
+            log.trace("Processed " + payload + " (#" + payloadCount + " in "
+                      + (spendTime / 1000000.0) + " ms using " + this);
+        }
         return payload;
     }
 
@@ -83,6 +97,8 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
     }
 
     public synchronized void close(boolean success) {
+        log.debug(String.format(
+                "Closing down '%s'. %s", this, getProcessStats()));
         checkSource();
         source.close(success);
     }
@@ -93,7 +109,15 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
                                             + "CreateDocument filter");
         }
     }
+
+    /**
+     * @return simple statistics on processed Payloads.
+     *         Sample output: "Processed 1234 Payloads at 1.43232 ms/Payload" 
+     */
+    public String getProcessStats() {
+        return String.format(
+                "Processed %d Payloads at %s ms/Payload",
+                payloadCount, payloadCount == 0 ? "NA" :
+                totalTimeNS / 1000000.0 / payloadCount);
+    }
  }
-
-
-
