@@ -85,8 +85,13 @@ public class ControlCore extends UnicastRemoteObject
         try {
             RemoteHelper.exportMBean(this);
         } catch (Exception e) {
-            log.warn ("Failed to register MBean, going on without it. "
-                      + "Error was", e);
+            String msg = "Failed to register MBean, going on without it. "
+                         + "Error was: " + e.getMessage();
+            if (log.isTraceEnabled()) {
+                log.warn (msg, e);
+            } else {
+                log.warn(msg);
+            }
         }
 
         runAutoStartClients ();
