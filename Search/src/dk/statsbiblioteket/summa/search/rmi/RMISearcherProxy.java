@@ -116,8 +116,13 @@ public class RMISearcherProxy extends UnicastRemoteObject
         try {
             RemoteHelper.exportMBean (this);
         } catch (Exception e) {
-            log.warn ("Error exporting MBean of '" + this
-                      + "'. Going on without it: " + e.getMessage (), e);
+            String msg = "Error exporting MBean of '" + this
+                         + "'. Going on without it: " + e.getMessage ();
+            if (log.isTraceEnabled()) {
+                log.warn (msg, e);
+            } else {
+                log.warn(msg);
+            }
         }
     }
 

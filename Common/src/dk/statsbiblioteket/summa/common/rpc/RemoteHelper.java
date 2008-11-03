@@ -156,8 +156,13 @@ public class RemoteHelper {
                                   + ":type=" + obj.getClass().getSimpleName());
             mbserver.unregisterMBean(name);
         } catch (Exception e) {
-            log.warn("Failed to unregister JMX interface for "
-                     + obj.getClass() + ". Continuing.", e);
+            String msg = "Failed to unregister JMX interface for "
+                         + obj.getClass() + ". Continuing.";
+            if (log.isTraceEnabled()) {
+                log.warn(msg, e);
+            } else {
+                log.warn(msg);
+            }
         }
     }
 
