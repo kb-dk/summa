@@ -146,7 +146,7 @@ public abstract class MARCParser extends ThreadedStreamParser {
         if (eventType != XMLEvent.START_DOCUMENT) {
             throw new ParseException(String.format(
                     "The first element was not start, it was %s", 
-                    eventID2String(eventType)), 0);
+                    ParseUtil.eventID2String(eventType)), 0);
         }
 
         while (running && reader.hasNext()) {
@@ -220,7 +220,8 @@ public abstract class MARCParser extends ThreadedStreamParser {
                 default:
                     log.warn(String.format(
                             "Unexpended event %s while processing %s",
-                             eventID2String(eventType), sourcePayload));
+                             ParseUtil.eventID2String(eventType),
+                             sourcePayload));
             }
         }
         if (!running) {
@@ -287,7 +288,8 @@ public abstract class MARCParser extends ThreadedStreamParser {
                     log.warn(String.format(
                             "processLeader: Unexpended event %s while "
                             + "processing %s",
-                             eventID2String(eventType), sourcePayload));
+                             ParseUtil.eventID2String(eventType),
+                             sourcePayload));
             }
         }
     }
@@ -371,7 +373,8 @@ public abstract class MARCParser extends ThreadedStreamParser {
                     log.warn(String.format(
                             "processDataField: Unexpended event %s while "
                             + "processing %s",
-                             eventID2String(eventType), sourcePayload));
+                             ParseUtil.eventID2String(eventType),
+                             sourcePayload));
             }
         }
     }
@@ -433,7 +436,8 @@ public abstract class MARCParser extends ThreadedStreamParser {
                     log.warn(String.format(
                             "processSubField: Unexpended event %s while "
                             + "processing %s",
-                             eventID2String(eventType), sourcePayload));
+                             ParseUtil.eventID2String(eventType),
+                             sourcePayload));
             }
         }
     }
@@ -590,30 +594,6 @@ public abstract class MARCParser extends ThreadedStreamParser {
      */
     protected String endTagToString(XMLStreamReader reader) {
         return "</" + reader.getLocalName() + ">";
-    }
-
-    /**
-     * Udef for debugging. Converts an XMLEvent-id to String.
-     * @param eventType the event id.
-     * @return the event as human redable String.
-     */
-    protected String eventID2String(int eventType) {
-        switch (eventType) {
-            case XMLEvent.START_ELEMENT:  return "START_ELEMENT";
-            case XMLEvent.END_ELEMENT:    return "END_ELEMENT";
-            case XMLEvent.PROCESSING_INSTRUCTION:
-                return "PROCESSING_INSTRUCTION";
-            case XMLEvent.CHARACTERS: return "CHARACTERS";
-            case XMLEvent.COMMENT: return "COMMENT";
-            case XMLEvent.START_DOCUMENT: return "START_DOCUMENT";
-            case XMLEvent.END_DOCUMENT: return "END_DOCUMENT";
-            case XMLEvent.ENTITY_REFERENCE: return "ENTITY_REFERENCE";
-            case XMLEvent.ATTRIBUTE: return "ATTRIBUTE";
-            case XMLEvent.DTD: return "DTD";
-            case XMLEvent.CDATA: return "CDATA";
-            case XMLEvent.SPACE: return "SPACE";
-            default: return "UNKNOWN_EVENT_TYPE " + "," + eventType;
-        }
     }
 
     /**
