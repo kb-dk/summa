@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -103,4 +103,6 @@ public class MUXFilter {
         }
 //        for (String filterName)
     }
+
+    // TODO: Do round.robin with queuesize
 }
