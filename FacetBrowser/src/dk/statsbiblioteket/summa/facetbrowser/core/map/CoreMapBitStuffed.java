@@ -61,6 +61,7 @@ import java.util.BitSet;
  * @see {@link #add}.
  */
 // TODO: Handle emptyFacet translation int<->long for open and store
+// TODO: Experiment with OpenBitSet from the SOLR project for speed
 public class CoreMapBitStuffed extends CoreMapImpl {
     private static Logger log = Logger.getLogger(CoreMapBitStuffed.class);
 
