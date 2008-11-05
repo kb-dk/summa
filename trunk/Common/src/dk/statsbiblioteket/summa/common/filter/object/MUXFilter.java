@@ -26,6 +26,8 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.io.IOException;
 
 /**
  * The MUXFilter divides incoming Payloads among one or more ObjectFilters
@@ -40,13 +42,13 @@ import java.util.List;
  * from a {@link MUXFilterFeeder} that in turn gets Payloads from the MUXFilter.
  * In order to provide hasNext()/next()-consistent behaviour (e.g. that there
  * always is a next(), is hasNext() is true), the MUXFilterFeeders might at any
- * time contain 1 cached Payload. 
+ * time contain 1 or more cached Payload.
  */
 // TODO: Make a FilterProxy and a FilterSequencer.
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class MUXFilter {
+public class MUXFilter implements Runnable {
     private static Log log = LogFactory.getLog(MUXFilter.class);
 
     /**
@@ -56,38 +58,15 @@ public class MUXFilter {
      * be used together with ProxyFilters to provide Threaded execution.
      * </p><p>
      * For each unique Filter specified in this property, a subConfiguration
-     * must exist in the Configuration.
+     * must exist in the Configuration. Note that {@link MUXFilterFeeder}
+     *
      * </p><p>
      * This property is mandatory.
      */
     public static final String CONF_FILTERS = "summa.muxfilter.filters";
 
-    /**
-     * The Class name for the Filter to use if no other filters accepts an
-     * incoming Payload.
-     * </p><p>
-     * This property is optional. If not defined, a warning is logged and the
-     * non-fitting Payload is discarded.
-     */
-    public static final String CONF_DEFAULT_FILTER =
-            "summa.muxfilter.defaultfilter";
-    /**
-     * The Class name for a filter specified in {@link #CONF_FILTERS}.
-     * A new Filter will be created from this Class by introspection
-     * and used by the muxer.
-     */
-    public static final String CONF_FILTER_CLASS =
-            "summa.muxfilter.filter.class";
-    /**
-     * A list of Strings specifying the bases that the Filter accepts.
-     * "*" specifies that all bases are accepted.
-     * </p><p>
-     * This property is mandatory for all Filters except the default Filter.
-     */
-    public static final String CONF_FILTER_NAME =
-            "summa.muxfilter.filter.bases";
-
-    private ObjectFilter defaultFilter = null;
+    private List<MUXFilterFeeder> feeders;
+    private boolean isRunning;
 
     public MUXFilter(Configuration conf) {
         log.debug("Constructing MUXFilter");
@@ -96,13 +75,23 @@ public class MUXFilter {
                     "A value for the key %s must exist in the Configuration",
                     CONF_FILTERS));
         }
-        List<String> filterNames = conf.getStrings(CONF_FILTERS);
-        String defaultFilterName = conf.getString(CONF_DEFAULT_FILTER, null);
-        if (defaultFilter != null) {
-            log.debug("Creating default filter '" + defaultFilterName);
+        List<String> filterConfKeys = conf.getStrings(CONF_FILTERS);
+        feeders = new ArrayList<MUXFilterFeeder>(filterConfKeys.size());
+        for (String filterConfKey: filterConfKeys) {
+            try {
+                feeders.add(new MUXFilterFeeder(
+                        conf.getSubConfiguration(filterConfKey)));
+            } catch (IOException e) {
+                throw new Configurable.ConfigurationException(String.format(
+                        "Unable to create MUXFilterFeeder with key '%s'",
+                        filterConfKey), e);
+            }
         }
-//        for (String filterName)
+        log.trace("Constructed feeders, starting to fill the feeders");
+        new Thread(this).start();
     }
 
-    // TODO: Do round.robin with queuesize
+    public void run() {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
 }
