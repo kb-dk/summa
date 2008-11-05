@@ -27,14 +27,18 @@ import dk.statsbiblioteket.summa.common.Record;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
-import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.io.IOException;
 
 /**
  * Helper class for {@link MUXFilter} that handles feeding of the right Payloads
- * into Filters.
+ * into Filters. The class for the Filter to wrap in the feeder must be
+ * specified in {@link #CONF_FILTER_CLASS}.
+ * </p><p>
+ * The feeder works by continuously calling next() on the wrapped filter and
+ * putting the resulting Payload in an out queue. The wrapped filter gets its
+ * input Payloads from an inQueue.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -43,30 +47,84 @@ public class MUXFilterFeeder implements ObjectFilter {
     private static Log log = LogFactory.getLog(MUXFilterFeeder.class);
 
     /**
-     * The length of the queue. This can be used to create a FilterProxy.
+     * The length of the input queue.
      * </p><p>
      * This property is optional. Default is 1.
      */
-    public static final String CONF_QUEUE_LENGTH =
-            "summa.muxfilter.feeder.queuelength";
-    public static final int DEFAULT_QUEUE_LENGTH = 1;
+    public static final String CONF_QUEUE_IN_LENGTH =
+            "summa.muxfilter.feeder.queue.in.length";
+    public static final int DEFAULT_QUEUE_IN_LENGTH = 1;
+
+    /**
+     * The length of the output queue.
+     * </p><p>
+     * This property is optional. Default is 1.
+     */
+    public static final String CONF_QUEUE_OUT_LENGTH =
+            "summa.muxfilter.feeder.queue.out.length";
+    public static final int DEFAULT_QUEUE_OUT_LENGTH = 1;
+
+    /**
+     * The Class name for a filter specified in {@link MUXFilter#CONF_FILTERS}.
+     * A new Filter will be created from this Class by introspection
+     * and used by the muxer.
+     * </p><p>
+     * This property is mandatory.
+     */
+    public static final String CONF_FILTER_CLASS =
+            "summa.muxfilter.filter.class";
+    /**
+     * The name of the Filter. Used for feedback and debugging.
+     * </p><p>
+     * This property is optional. Default is "Unnamed Filter".
+     */
+    public static final String CONF_FILTER_NAME =
+            "summa.muxfilter.filter.name";
+    public static final String DEFAULT_FILTER_NAME = "Unnamed Filter";
+    /**
+     * If a Filter is marked as fallback, it should only be used if no other
+     * filters accepts the Payload, regardless of the queue-sizes of the
+     * filters. If no fallback-filters are specified, a warning will be
+     * issued and the non-usable Payload will be discarded.
+     * </p><p>
+     * This property is optional. Default is false.
+     */
+    public static final String CONF_FILTER_ISFALLBACK =
+            "summa.muxfilter.filter.isfallback";
+    public static final boolean DEFAULT_FILTER_ISFALLBACK = false;
+    /**
+     * A list of the bases that the Filter accepts. This is either a plain list
+     * or "*", which designates all bases. Note that wildcards in general are
+     * not supported, only "*".
+     * </p><p>
+     * This property is optinal. Default is "*".
+     */
+    public static final String CONF_FILTER_BASES =
+            "summa.muxfilter.filter.bases";
+    public static final String DEFAULT_FILTER_BASES = "*";
 
     private static final Payload STOP =
             new Payload(new Record("EOF", "Dummy", new byte[0]));
 
     private boolean eofReached = false;
-    private ArrayBlockingQueue<Payload> queue;
+    private ArrayBlockingQueue<Payload> inQueue;
+    private ArrayBlockingQueue<Payload> outQueue;
+    private Payload polledByHasNext = null;
+    private ObjectFilter filter;
 
     public MUXFilterFeeder(Configuration conf) {
         log.trace("Constructing MUXFilterFeeder");
-        queue = new ArrayBlockingQueue<Payload>(
-                conf.getInt(CONF_QUEUE_LENGTH, DEFAULT_QUEUE_LENGTH), true);
-
+        inQueue = new ArrayBlockingQueue<Payload>(
+                conf.getInt(CONF_QUEUE_IN_LENGTH, DEFAULT_QUEUE_IN_LENGTH),
+                true);
+        outQueue = new ArrayBlockingQueue<Payload>(
+                conf.getInt(CONF_QUEUE_IN_LENGTH, DEFAULT_QUEUE_IN_LENGTH),
+                true);
     }
 
     private Filter createFilter(Configuration configuration) {
         Class<? extends Filter> filter = configuration.getClass(
-                MUXFilter.CONF_FILTER_CLASS, Filter.class);
+                CONF_FILTER_CLASS, Filter.class);
         log.debug("Got filter class " + filter + ". Commencing creation");
         return Configuration.create(filter, configuration);
     }
@@ -81,7 +139,7 @@ public class MUXFilterFeeder implements ObjectFilter {
         if (log.isTraceEnabled()) {
             log.trace("Queueing " + payload);
         }
-        queue.offer(payload, Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
+        inQueue.offer(payload, Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -92,11 +150,11 @@ public class MUXFilterFeeder implements ObjectFilter {
         eofReached = true;
         while (true) {
             try {
-                queue.offer(STOP, Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
+                inQueue.offer(STOP, Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
                 log.trace("signalEOF() completed");
                 return;
             } catch (InterruptedException e) {
-                log.warn("Interrupted while adding EOF-signal to queue. "
+                log.warn("Interrupted while adding EOF-signal to inQueue. "
                          + "Retrying", e);
             }
         }
@@ -106,16 +164,24 @@ public class MUXFilterFeeder implements ObjectFilter {
      * @return the number of Payloads currently in the queue.
      */
     public int getQueueSize() {
-        return queue.size();
+        return inQueue.size();
     }
 
     public boolean hasNext() {
         while (true) {
+            if (eofReached) {
+                return false;
+            }
+            if (polledByHasNext != null && polledByHasNext != STOP) {
+                return true;
+            }
             try {
-                return !eofReached &&
-                       queue.poll(Integer.MAX_VALUE, TimeUnit.MILLISECONDS) != 
-                       STOP;
-                // TODO: Not poll, but busy peek?
+                polledByHasNext =
+                        inQueue.poll(Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
+                if (polledByHasNext == STOP) {
+                    eofReached = true;
+                }
+                return !eofReached;
             } catch (InterruptedException e) {
                 log.warn("Interrupted while polling for next Payload.. "
                          + "Retrying", e);
@@ -124,22 +190,40 @@ public class MUXFilterFeeder implements ObjectFilter {
     }
 
     public void setSource(Filter filter) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        throw new UnsupportedOperationException(
+                "MUXFilterFeeders are push-filters, so no explicit source "
+                + "should be set");
     }
 
     public boolean pump() throws IOException {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+        if (!hasNext()) {
+            return false;
+        }
+        Payload next = next();
+        next.close();
+        return hasNext();
     }
 
+    private boolean closed = false; // To avoid endless recursion
     public void close(boolean success) {
-        //To change body of implemented methods use File | Settings | File Templates.
+        if (closed) {
+            return;
+        }
+        filter.close(success);
+        closed = true;
     }
 
     public Payload next() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        if (eofReached || !hasNext()) {
+            throw new IllegalStateException("EOF reached. There is no next");
+        }
+        Payload result = polledByHasNext;
+        polledByHasNext = null;
+        return result;
     }
 
     public void remove() {
-        //To change body of implemented methods use File | Settings | File Templates.
+        throw new UnsupportedOperationException(
+                "Remove not supported by MUXFilterFeeder");
     }
 }
