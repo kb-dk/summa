@@ -22,6 +22,7 @@ package dk.statsbiblioteket.summa.common.filter.object;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.Filter;
+import dk.statsbiblioteket.summa.common.filter.PayloadQueue;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Record;
 import org.apache.commons.logging.LogFactory;
@@ -29,6 +30,9 @@ import org.apache.commons.logging.Log;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.Set;
+import java.util.List;
+import java.util.HashSet;
 import java.io.IOException;
 
 /**
@@ -43,7 +47,7 @@ import java.io.IOException;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class MUXFilterFeeder implements ObjectFilter {
+public class MUXFilterFeeder implements ObjectFilter, Runnable {
     private static Log log = LogFactory.getLog(MUXFilterFeeder.class);
 
     /**
@@ -56,6 +60,15 @@ public class MUXFilterFeeder implements ObjectFilter {
     public static final int DEFAULT_QUEUE_IN_LENGTH = 1;
 
     /**
+     * The maximum size in bytes of the Payloads in the input queue.
+     * </p><p>
+     * This property is optional. Default is 1 MB.
+     */
+    public static final String CONF_QUEUE_IN_MAXBYTES =
+            "summa.muxfilter.feeder.queue.in.maxbytes";
+    public static final int DEFAULT_QUEUE_IN_MAXBYTES = 1024 * 1024;
+
+    /**
      * The length of the output queue.
      * </p><p>
      * This property is optional. Default is 1.
@@ -63,6 +76,15 @@ public class MUXFilterFeeder implements ObjectFilter {
     public static final String CONF_QUEUE_OUT_LENGTH =
             "summa.muxfilter.feeder.queue.out.length";
     public static final int DEFAULT_QUEUE_OUT_LENGTH = 1;
+
+    /**
+     * The maximum size in bytes of the Payloads in the output queue.
+     * </p><p>
+     * This property is optional. Default is 100 KB.
+     */
+    public static final String CONF_QUEUE_OUT_MAXBYTES =
+            "summa.muxfilter.feeder.queue.out.maxbytes";
+    public static final int DEFAULT_QUEUE_OUT_MAXBYTES = 100 * 1024;
 
     /**
      * The Class name for a filter specified in {@link MUXFilter#CONF_FILTERS}.
@@ -84,8 +106,10 @@ public class MUXFilterFeeder implements ObjectFilter {
     /**
      * If a Filter is marked as fallback, it should only be used if no other
      * filters accepts the Payload, regardless of the queue-sizes of the
-     * filters. If no fallback-filters are specified, a warning will be
-     * issued and the non-usable Payload will be discarded.
+     * filters. If no fallback-filters are specified (or matching), a warning
+     * will be issued and the non-usable Payload will be discarded.
+     * </p><p>
+     * For most setups, the default filter should accept all bases.
      * </p><p>
      * This property is optional. Default is false.
      */
@@ -97,7 +121,7 @@ public class MUXFilterFeeder implements ObjectFilter {
      * or "*", which designates all bases. Note that wildcards in general are
      * not supported, only "*".
      * </p><p>
-     * This property is optinal. Default is "*".
+     * This property is optional. Default is "*".
      */
     public static final String CONF_FILTER_BASES =
             "summa.muxfilter.filter.bases";
@@ -106,25 +130,40 @@ public class MUXFilterFeeder implements ObjectFilter {
     private static final Payload STOP =
             new Payload(new Record("EOF", "Dummy", new byte[0]));
 
-    private boolean eofReached = false;
-    private ArrayBlockingQueue<Payload> inQueue;
-    private ArrayBlockingQueue<Payload> outQueue;
-    private Payload polledByHasNext = null;
+    private PayloadQueue inQueue;
+    private PayloadQueue outQueue;
     private ObjectFilter filter;
+    private String filterName = DEFAULT_FILTER_NAME;
+    private boolean isFallback = DEFAULT_FILTER_ISFALLBACK;
+    private Set<String> bases = null;
+
+    private boolean eofReached = false;
+    private Payload polledByHasNext = null;
 
     public MUXFilterFeeder(Configuration conf) {
         log.trace("Constructing MUXFilterFeeder");
-        inQueue = new ArrayBlockingQueue<Payload>(
+        inQueue = new PayloadQueue(
                 conf.getInt(CONF_QUEUE_IN_LENGTH, DEFAULT_QUEUE_IN_LENGTH),
-                true);
-        outQueue = new ArrayBlockingQueue<Payload>(
-                conf.getInt(CONF_QUEUE_IN_LENGTH, DEFAULT_QUEUE_IN_LENGTH),
-                true);
+                conf.getInt(CONF_QUEUE_IN_MAXBYTES, DEFAULT_QUEUE_IN_MAXBYTES));
+        outQueue = new PayloadQueue(
+              conf.getInt(CONF_QUEUE_OUT_LENGTH, DEFAULT_QUEUE_OUT_LENGTH),
+              conf.getInt(CONF_QUEUE_OUT_MAXBYTES, DEFAULT_QUEUE_OUT_MAXBYTES));
+        filter = createFilter(conf);
+        filter.setSource(this);
+        filterName = conf.getString(CONF_FILTER_NAME, filterName);
+        isFallback = conf.getBoolean(CONF_FILTER_ISFALLBACK, isFallback);
+        List<String> baseList = conf.getStrings(CONF_FILTER_BASES,
+                                                (List<String>)null);
+        if (baseList != null
+            && !(baseList.size() == 1 && "*".equals(baseList.get(0)))) {
+            bases = new HashSet<String>(baseList);
+        }
+        new Thread(this).start();
     }
 
-    private Filter createFilter(Configuration configuration) {
-        Class<? extends Filter> filter = configuration.getClass(
-                CONF_FILTER_CLASS, Filter.class);
+    private ObjectFilter createFilter(Configuration configuration) {
+        Class<? extends ObjectFilter> filter = configuration.getClass(
+                CONF_FILTER_CLASS, ObjectFilter.class);
         log.debug("Got filter class " + filter + ". Commencing creation");
         return Configuration.create(filter, configuration);
     }
@@ -139,7 +178,49 @@ public class MUXFilterFeeder implements ObjectFilter {
         if (log.isTraceEnabled()) {
             log.trace("Queueing " + payload);
         }
+        if (!accepts(payload)) {
+            throw new IllegalArgumentException(String.format(
+                    "The MUXFilterFeeder '%s' does not accept %s",
+                    filterName, payload));
+        }
         inQueue.offer(payload, Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * Blocks until a Payload is available in the out queue or EOF is reached.
+     * @return a filtered Payload or null if EOF is reached.
+     */
+    public Payload getNextFilteredPayload() {
+        if (eofReached || !filter.hasNext()) {
+            return null;
+        }
+        Payload next = null;
+        while (!eofReached && next == null) {
+            try {
+                next = outQueue.poll(500, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                log.warn("Interrupted while waiting for Payload in out queue. "
+                         + "Retrying");
+            }
+        }
+        return eofReached ? null : next == STOP ? null : next;
+    }
+
+    /**
+     * @param payload the Payload to check.
+     * @return true if this filter will accept the payload in
+     * {@link #queuePayload}.
+     */
+    public boolean accepts(Payload payload) {
+        if (bases == null) {
+            return true;
+        }
+        if (payload.getRecord() == null) {
+            log.warn("A Payload without base was received in accepts("
+                     + payload + ") in filter '" + filterName + "'");
+            return false;
+        }
+        return bases.contains(payload.getRecord().getBase());
     }
 
     /**
@@ -161,11 +242,64 @@ public class MUXFilterFeeder implements ObjectFilter {
     }
 
     /**
-     * @return the number of Payloads currently in the queue.
+     * @return the number of Payloads currently in the input queue.
      */
-    public int getQueueSize() {
+    public int getInQueueSize() {
         return inQueue.size();
     }
+    /**
+     * @return the number of Payloads currently in the output queue.
+     */
+    public int getOutQueueSize() {
+        return outQueue.size();
+    }
+
+    public boolean isFallback() {
+        return isFallback;
+    }
+
+    public String toString() {
+        return "MUXFilterFeeder(" + filterName + ", " + filter + ")";
+    }
+
+    public void run() {
+        try {
+            while (!eofReached) {
+                try {
+                    Payload next = filter.next();
+                    if (next != null) {
+                        while (!eofReached) {
+                            try {
+                                outQueue.offer(next, Integer.MAX_VALUE,
+                                               TimeUnit.MILLISECONDS);
+                                break;
+                            } catch (InterruptedException e) {
+                                log.warn("Interrupted while trying to add "
+                                         + next + " to outQueue. Retrying");
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    log.warn(String.format(
+                            "Exception while calling next on filter '%s' in"
+                            + " MUXFilterFeeder '%s'. Sleeping a bit, then"
+                            + " retrying", filter, filterName), e);
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException ex) {
+                        log.warn("Interrupted while sleeping before next poll",
+                                 ex);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error(String.format(
+                    "Got unexpected exception in run-method for '%s'",
+                    filterName), e);
+        }
+    }
+
+/* ObjectFilter implementation */
 
     public boolean hasNext() {
         while (true) {
