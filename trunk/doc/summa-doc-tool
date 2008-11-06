@@ -169,7 +169,7 @@ class PropParser :
 		#
 		for prop in meta_class.iter_props():
 			doc = prop.get_doc()
-			doc = re.sub("(.|[\n\r])+/\*\*", "", doc)
+			doc = re.sub("(.|[\n\r])+/\*\*", "", doc) # We remove any sections before a /**. This is a hack to work around a bug in our regexes where the first prop picks up the class' comment
 			doc = re.sub("(^|\n)\s*\*", " ", doc)
 			doc = re.sub("\s+", " ", doc)
 			prop.set_doc(doc)
