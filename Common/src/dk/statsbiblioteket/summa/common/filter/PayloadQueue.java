@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -46,6 +46,9 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
 
     private long totalSize = 0;
     private long maxSize;
+    /**
+     * The flag is notified when elements are removed from the queue.
+     */
     private final Object flag = new Object();
 
     /**
@@ -95,6 +98,7 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
         Payload result = super.poll();
         if (result != null) {
             totalSize -= calculateSize(result);
+            flag.notifyAll();
         }
         return result;
     }
@@ -102,6 +106,7 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
     public Payload take() throws InterruptedException {
         Payload result = super.take();
         totalSize -= calculateSize(result);
+        flag.notifyAll();
         return result;
     }
 
@@ -109,6 +114,7 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
         boolean success = super.remove(o);
         if (success && o instanceof Payload) {
             totalSize -= calculateSize((Payload)o);
+            flag.notifyAll();
         }
         return success;
     }
@@ -116,12 +122,14 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
     public void clear() {
         super.clear();
         totalSize = 0;
+        flag.notifyAll();
     }
 
     public Payload poll(long timeout, TimeUnit unit) throws InterruptedException {
         Payload result = super.poll(timeout, unit);
         if (result != null) {
             totalSize -= calculateSize(result);
+            flag.notifyAll();
         }
         return result;
     }
@@ -129,11 +137,16 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
     public int drainTo(Collection<? super Payload> c) {
         int count = super.drainTo(c);
         totalSize = 0;
+        flag.notifyAll();
         return count;
     }
 
     public int drainTo(Collection<? super Payload> c, int maxElements) {
-        return super.drainTo(c, maxElements);    // TODO: Implement this
+        throw new UnsupportedOperationException(
+                "drainTo with max not supported yet");
+/*        int count = super.drainTo(c, maxElements);    // TODO: Implement this
+        flag.notifyAll();
+        return count;*/
     }
 
     /**
@@ -156,11 +169,6 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
             }
         }
         return size;
-    }
-    // Must be called after all extractions
-    private void postprocessExtraction(Payload payload) {
-        totalSize -= calculateSize(payload);
-        flag.notifyAll();
     }
 
     // TODO: Make proper estimations, not just loose guesses
