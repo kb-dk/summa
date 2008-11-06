@@ -1,0 +1,183 @@
+#!/usr/bin/python
+
+import sys
+import os
+import re
+from optparse import OptionParser 
+
+class JavaMetaProp :
+	def __init__ (self, parent_class, name, default=None, doc=None, codename=None):
+		self._name = name
+		self._parent_class = parent_class
+		self._default  = default
+		self._doc = doc
+		self._codename = codename
+
+	def set_default (self, default):
+		self._default = default
+	
+	def has_default (self):
+		return self._default != None
+
+	def get_default (self):
+		return self._default
+
+	def get_name (self):
+		return self._name
+
+	def get_class (self):
+		return self._parent_class
+	
+	def get_doc (self):
+		return self._doc
+		
+	def set_doc (self, doc):
+		self._doc = doc
+		
+	def set_codename (self, codename):
+		self._codename = codename
+	
+	def get_codename (self):
+		return self._codename
+	
+	def __str__ (self):
+		s = "%s, codename %s" % (self._name, self._codename)
+		if self._default != None:
+			s = s + ", default is %s:\n%s" % (self._default, self._doc)
+		else:
+			s = s + ", no default:\n%s" % self._doc
+		return s 
+
+class JavaMetaClass :
+	def __init__ (self, name, package):
+		self._name = name
+		self._package = package
+		self._props = {} # name -> JavaMetaProp mapping
+		self._children = {} # full_name -> JavaMetaClass map
+		self._parents = {} # full_name -> JavaMetaClass map
+	
+	def add_prop (self, prop):
+		self._props[prop.get_name()] = prop
+	
+	def get_prop (self, name):
+		return self._props[name]
+	
+	def iter_props (self):
+		return self._props.itervalues()
+	
+	def full_name (self):
+		return self._package + '.' + self._name
+
+	def add_child (self, child, notify_child= True):
+		self._children[child.full_name()] = child
+		if notify_child:
+			child.add_parent(self, notify_parent=False)
+	
+	def add_parent (self, parent, notify_parent=True):
+		self._parents[parent.full_name()] = parent
+		if notify_parent:
+			parent.add_child (self, notify_child=False)
+	
+	def has_parent (self, full_name):
+		if self.full_name() == full_name:
+			return True
+		for parent in self._parents.itervalues():
+			if parent.has_parent(full_name):
+				return True
+		return False
+	
+	def __str__ (self):
+		s = "Class: %s" % self.full_name()
+		for prop in self._props.itervalues():
+			s = s + "\n-------------------------------\n%s" % prop
+		return s
+ 
+class JavaMetaRepo :
+	def __init__ (self):
+		self._classes = {} # full_name -> JavaMetaClass mapping
+	
+	def add_class (self, meta_class):
+		self._classes[meta_class.full_name()] = meta_class
+		
+
+
+
+PACKAGE_REGEX = \
+r'^package ([^;]+);$'
+
+CLASS_REGEX = \
+r'/\*\*[^;]+public (class|interface) ([^ ]+)([^\{]*)\{$'
+
+COMMENT_REGEX = \
+r'/\*\*(?P<doc>(.|[\r\n])*?)(\*/)'
+
+PROPS_REGEX = \
+COMMENT_REGEX + r'\s*public static final (?P<javatype>[^ ]+) (?P<type>CONF|DEFAULT)_(?P<name>[^ ]+)\s*=\s*(?P<val>[^ ]+);$'
+
+class PropParser :
+	def __init__ (self):
+		parser = OptionParser()
+		parser.add_option("-v", "--verbose", action="store_true",
+				  help="Print verbose information about what the program is doing")
+		
+		self.options, args = parser.parse_args()
+		
+		self._class_re = re.compile(CLASS_REGEX, re.MULTILINE)
+		self._props_re = re.compile(PROPS_REGEX, re.MULTILINE)
+		self._package_re = re.compile(PACKAGE_REGEX, re.MULTILINE)
+
+	def parse (self, stream):
+		blob = None
+		try:
+			if callable(stream.readlines):
+				lines = stream.readlines()
+				blob = "".join(lines)
+		except AttributeError:
+			blob = file(stream)
+			blob = "".join(blob.readlines())
+		
+		package = self._package_re.search(blob).group(1)
+		classes = self._class_re.search(blob)
+		props = self._props_re.finditer(blob)
+		
+		#
+		# Resolve properties, default values, and doc strings
+		#
+		meta_class = JavaMetaClass (classes.group(2), package)
+		propgroups = {}
+		for prop in props:
+			propgroups[prop.group('type')+"_"+prop.group('name')] = prop.groupdict()
+		
+		propmap = {}
+		
+		for groups in propgroups.itervalues():
+			if groups['type'] == "CONF":
+				meta_prop = JavaMetaProp(meta_class, groups['val'], doc=groups['doc'], codename=groups['name'])
+				propmap[groups['name']] = meta_prop
+		
+		for default in propgroups.itervalues():
+			if default['type'] == "DEFAULT":
+				if not propmap.has_key(default['name']):
+					raise SystemError("ERROR: Default value '%(name)s' without a CONF_%(name)s. Please fix your code" % default)
+				propmap[default['name']].set_default(default['val'])
+		
+		for prop in propmap.itervalues():
+			meta_class.add_prop(prop)
+		
+		#
+		# Sanitize the doc strings
+		#
+		for prop in meta_class.iter_props():
+			doc = prop.get_doc()
+			doc = re.sub("(.|[\n\r])+/\*\*", "", doc)
+			doc = re.sub("(^|\n)\s*\*", " ", doc)
+			doc = re.sub("\s+", " ", doc)
+			prop.set_doc(doc)
+			
+		return meta_class
+				
+		
+if __name__ == "__main__" :
+	parser = PropParser()
+	meta_class = parser.parse(sys.argv[1])
+	print str(meta_class)
