@@ -37,7 +37,7 @@ import java.io.IOException;
  * based on {@link dk.statsbiblioteket.summa.common.Record#getBase()}.
  * The Payloads must contain a Record.
  * </p><p>
- * One straight forward use case is to mux several {@link XMLTransformer}s,
+ * One straight forward use case is to mux several XMLTransformers,
  * each responsible for handling a specific base.
  * </p><p>
  * The MUXFilter is - as all ObjectFilters - pull-based. There is a single
@@ -73,10 +73,16 @@ public class MUXFilter implements ObjectFilter, Runnable {
      */
     public static final String CONF_FILTERS = "summa.muxfilter.filters";
 
+    /**
+     * The number of ms to wait after trying to get a Payload from all feeders
+     * before a retry is performed.
+     */
+    public static final int POLL_INTERVAL = 200;
+
     private ObjectFilter source = null;
 
     private List<MUXFilterFeeder> feeders;
-    private Payload lastPolled = null;
+    private Payload availablePayload = null;
     private boolean eofReached = false;
 
     public MUXFilter(Configuration conf) {
@@ -98,8 +104,12 @@ public class MUXFilter implements ObjectFilter, Runnable {
                         filterConfKey), e);
             }
         }
-        log.trace("Constructed feeders, starting to fill the feeders");
-        new Thread(this).start();
+        if (feeders.size() > 0) {
+            log.trace("Constructed feeders, starting to fill the feeders");
+        } else {
+            log.warn("No feeders defined for MUXFilter. There will never be any"
+                     + " output but the source will be drained");
+        }
     }
 
     /**
@@ -196,6 +206,8 @@ public class MUXFilter implements ObjectFilter, Runnable {
                     source.getClass()));
         }
         this.source = (ObjectFilter)source;
+        log.debug("Source specified. Starting mux-thread");
+        new Thread(this).start();
     }
 
     public boolean pump() throws IOException {
@@ -219,28 +231,57 @@ public class MUXFilter implements ObjectFilter, Runnable {
             if (eofReached) {
                 return false;
             }
-            if (lastPolled != null) {
+            if (availablePayload != null) {
                 return true;
             }
-            lastPolled = getNextFilteredPayload();
+            availablePayload = getNextFilteredPayload();
         }
     }
 
-    private int lastPolledPosition;
+    private int lastPolledPosition = -1;
     /**
      * @return the next available Payload from the feeders by round-robin.
+     *         null is a valid value and does not indicate EOF (check for
+     *         EOF with {@link #eofReached}).
      */
     private Payload getNextFilteredPayload() {
-        if (eofReached) {
+        if (feeders.size() == 0 || eofReached) {
             return null;
         }
-        lastPolled = null;
-        boolean allSaysEOF = true;
-        int counter = 0;
-        while (!allSaysEOF && lastPolled == null && counter < feeders.size()) {
-            // TODO: Implement round-robin here
+        int feederPos = ++lastPolledPosition;
+        while (true) {
+            boolean allSaysEOF = true;
+            /* Iterate through all feeders, starting from feederPos and wrapping
+               to 0 when the last feeder is reached. If an available Payload is
+               encountered, it is returned.
+            */
+            for (int counter = 0 ; counter < feeders.size() ; counter++) {
+                if (feederPos++ > feeders.size()) {
+                    feederPos = 0;
+                }
+                MUXFilterFeeder feeder = feeders.get(feederPos);
+                if (!feeder.isEofReached()) {
+                    allSaysEOF = false;
+                    if (feeder.getOutQueueSize() > 0) {
+                        return feeder.getNextFilteredPayload();
+                    }
+                }
+            }
+            if (allSaysEOF) {
+                log.debug("All feeders says that EOF is reached");
+                eofReached = true;
+                return null;
+            }
+            log.trace("No Payloads was ready in any of the feeders. "
+                      + "Sleeping a bit and retrying");
+            // It's hard to do proper wait on multiple sources. Consider a flag
+            try {
+                Thread.sleep(POLL_INTERVAL);
+            } catch (InterruptedException e) {
+                log.warn("Interrupted while sleeping before re-querying "
+                         + "feeders", e);
+            }
         }
-        return null;
     }
 
     public Payload next() {
@@ -248,8 +289,8 @@ public class MUXFilter implements ObjectFilter, Runnable {
         if (!hasNext()) {
             throw new IllegalStateException("No more elements");
         }
-        Payload returnPayload = lastPolled;
-        lastPolled = null;
+        Payload returnPayload = availablePayload;
+        availablePayload = null;
         return returnPayload;
     }
 

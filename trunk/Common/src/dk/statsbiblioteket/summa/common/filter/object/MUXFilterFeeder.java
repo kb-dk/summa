@@ -28,7 +28,6 @@ import dk.statsbiblioteket.summa.common.Record;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.Set;
 import java.util.List;
@@ -258,6 +257,10 @@ public class MUXFilterFeeder implements ObjectFilter, Runnable {
         return isFallback;
     }
 
+    public boolean isEofReached() {
+        return eofReached;
+    }
+
     public String toString() {
         return "MUXFilterFeeder(" + filterName + ", " + filter + ")";
     }
@@ -347,6 +350,11 @@ public class MUXFilterFeeder implements ObjectFilter, Runnable {
         closed = true;
     }
 
+    /**
+     * This should only be called internally from MUXFilterFeeder. To retrieve
+     * the next processed Payload, use {@link #getNextFilteredPayload()}.
+     * @return the next payload to filter through {@link #filter}.
+     */
     public Payload next() {
         if (eofReached || !hasNext()) {
             throw new IllegalStateException("EOF reached. There is no next");
