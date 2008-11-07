@@ -1,5 +1,8 @@
 <xproperties>
     <xproperties>
+        <!--
+           Configuration for the Faceted Indexer
+        -->
         <entry>
             <key>summa.control.service.port</key>
             <value class="int">2784</value>
@@ -9,9 +12,15 @@
             <value class="int">27000</value>
         </entry>
 
+        <!-- The class implementing the Service interface -->
+        <entry>
+            <key>control.launcher.service.class</key>
+            <value class="string">dk.statsbiblioteket.summa.control.service.FilterService</value>
+        </entry>
+
         <entry>
             <key>filterpump.chainname</key>
-            <value class="string">Iterative test</value>
+            <value class="string">Simple faceted indexer</value>
         </entry>
         <entry>
             <key>filtercontrol.chains</key>
@@ -26,7 +35,7 @@
             <value class="xproperties">
                 <entry>
                     <key>summa.filter.sequence.filters</key>
-                    <value class="string">StorageReader, DocCreator, IndexUpdate</value>
+                    <value class="string">StorageReader, Muxer, OldToNewTransformer, DocumentCreator, IndexUpdate</value>
                 </entry>
                 <entry>
                     <key>StorageReader</key>
@@ -47,17 +56,90 @@
                         </entry>
                         <entry>
                             <key>summa.storage.recordreader.base</key>
-                            <value class="string">bar</value>
+                            <value class="string">oai</value>
+                        </entry>
+                        <entry>
+                            <key>summa.rpc.vendor</key>
+                            <value class="string">//localhost:28000/summa-storage</value>
                         </entry>
                     </value>
                 </entry>
                 <entry>
-                    <key>DocCreator</key>
+                    <key>Muxer</key>
+                    <value class="xproperties">
+                        <entry>
+                            <key>summa.muxfilter.filters</key>
+                            <value class="string">FagrefTransformer, OAITransformer</value>
+                        </entry>
+                        <key>FagrefTransformer</key>
+                        <value class="xproperties">
+                            <entry>
+                                <key>summa.muxfilter.filter.class</key>
+                                <value class="string">dk.statsbiblioteket.summa.index.XMLTransformer</value>
+                            </entry>
+                            <entry>
+                                <key>summa.muxfilter.filter.name</key>
+                                <value class="string">Fagref Transformer</value>
+                            </entry>
+                            <entry>
+                                <key>summa.muxfilter.filter.bases</key>
+                                <value class="string">fagref</value>
+                            </entry>
+                            <entry>
+                                <key>summa.xmltransformer.xslt</key>
+                                <value class="string">/tmp/summatest/data/fagref/fagref_index.xsl</value>
+                            </entry>
+                        </value>
+                        <key>OAITransformer</key>
+                        <value class="xproperties">
+                            <entry>
+                                <key>summa.muxfilter.filter.class</key>
+                                <value class="string">dk.statsbiblioteket.summa.index.XMLTransformer</value>
+                            </entry>
+                            <entry>
+                                <key>summa.muxfilter.filter.name</key>
+                                <value class="string">OAI Transformer</value>
+                            </entry>
+                            <entry>
+                                <key>summa.muxfilter.filter.bases</key>
+                                <value class="string">oai</value>
+                            </entry>
+                            <entry>
+                                <key>summa.xmltransformer.xslt</key>
+                                <value class="string">file:///tmp/summatest/data/oai/oai_index.xsl</value>
+                            </entry>
+                        </value>
+                    </value>
+                </entry>
+                <entry>
+                    <key>OldToNewTransformer</key>
+                    <value class="xproperties">
+                        <entry>
+                            <key>summa.filter.sequence.filterclass</key>
+                            <value class="string">dk.statsbiblioteket.summa.index.XMLTransformer</value>
+                        </entry>
+                        <entry>
+                            <key>summa.xmltransformer.xslt</key>
+                            <value class="string">LegacyToSummaDocumentXML.xslt</value>
+                        </entry>
+                    </value>
+                </entry>
+                <entry>
+                    <key>DocumentCreator</key>
                     <value class="xproperties">
                         <entry>
                             <key>summa.filter.sequence.filterclass</key>
                             <value class="string">
-                                dk.statsbiblioteket.summa.releasetest.IterativeHelperDocCreator
+                                dk.statsbiblioteket.summa.index.lucene.DocumentCreator
+                            </value>
+                        </entry>
+                        <entry>
+                            <key>summa.index.descriptorsetup</key>
+                            <value class="xproperties">
+                                <entry>
+                                    <key>summa.common.indexdescriptor.absolutelocation</key>
+                                    <value class="string">/tmp/summatest/data/oai/oai_IndexDescriptor.xml</value>
+                                </entry>
                             </value>
                         </entry>
                     </value>
@@ -81,15 +163,15 @@
                         </entry>
                         <entry>
                             <key>summa.index.indexrootlocation</key>
-                            <value class="string">[IndexRootLocation]</value>
+                            <value class="string">index</value>
                         </entry>
                         <entry>
                             <key>summa.index.consolidatetimeout</key>
                             <value class="int">-1</value>
                         </entry>
                         <entry>
-                            <key>summa.index.commit-timeout</key>
-                            <value class="int">1000</value>
+                            <key>summa.index.committimeout</key>
+                            <value class="int">5000</value>
                         </entry>
                         <entry>
                             <key>LuceneUpdater</key>
@@ -105,7 +187,7 @@
                                     <value class="xproperties">
                                         <entry>
                                             <key>summa.common.indexdescriptor.absolutelocation</key>
-                                            <value class="string">[IndexDescriptorLocation]</value>
+                                            <value class="string">/tmp/summatest/data/oai/oai_IndexDescriptor.xml</value>
                                         </entry>
                                     </value>
                                 </entry>
@@ -124,37 +206,37 @@
                                         <xproperties>
                                             <entry>
                                                 <key>summa.facet.name</key>
-                                                <value class="string">Title</value>
+                                                <value class="string">author</value>
                                             </entry>
                                             <entry>
                                                 <key>summa.facet.fields</key>
                                                 <value class="list">
-                                                    <item class="string">title</item>
+                                                    <item class="string">author_normalised</item>
                                                 </value>
                                             </entry>
                                         </xproperties>
                                         <xproperties>
                                             <entry>
                                                 <key>summa.facet.name</key>
-                                                <value class="string">BigFacet</value>
+                                                <value class="string">title</value>
                                             </entry>
                                             <entry>
                                                 <key>summa.facet.fields</key>
                                                 <value class="list">
-                                                    <item class="string">duplicate</item>
+                                                    <item class="string">main_titel</item>
                                                 </value>
                                             </entry>
                                         </xproperties>
                                         <xproperties>
                                             <entry>
                                                 <key>summa.facet.name</key>
-                                                <value class="string">onlyindex</value>
+                                                <value class="string">subject</value>
                                             </entry>
-                                        </xproperties>
-                                        <xproperties>
                                             <entry>
-                                                <key>summa.facet.name</key>
-                                                <value class="string">onlystore</value>
+                                                <key>summa.facet.fields</key>
+                                                <value class="list">
+                                                    <item class="string">lsubject</item>                                                    
+                                                </value>
                                             </entry>
                                         </xproperties>
                                     </value>
@@ -164,7 +246,7 @@
                     </value>
                 </entry>
             </value>
-        </entry>
+        </entry>                       
     </xproperties>
 </xproperties>
 
