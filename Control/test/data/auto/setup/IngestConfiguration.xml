@@ -35,14 +35,14 @@
             <key>SingleChain</key>
             <value class="xproperties">
                 <entry>
-                    <key>filterpump.filters</key>
+                    <key>summa.filter.sequence.filters</key>
                     <value class="string">FileWatcher, GUNZIPper, XMLSplitter, RecordWriter</value>
                 </entry>
                 <entry>
                     <key>FileWatcher</key>
                     <value class="xproperties">
                         <entry>
-                            <key>filterpump.filterclass</key>
+                            <key>summa.filter.sequence.filterclass</key>
                             <value class="string">dk.statsbiblioteket.summa.ingest.stream.FileWatcher</value>
                         </entry>
                         <entry>
@@ -63,7 +63,7 @@
                     <key>GUNZIPper</key>
                     <value class="xproperties">
                         <entry>
-                            <key>filterpump.filterclass</key>
+                            <key>summa.filter.sequence.filterclass</key>
                             <value class="string">dk.statsbiblioteket.summa.ingest.stream.GUNZIPFilter</value>
                         </entry>
                     </value>
@@ -72,7 +72,7 @@
                     <key>XMLSplitter</key>
                     <value class="xproperties">
                         <entry>
-                            <key>filterpump.filterclass</key>
+                            <key>summa.filter.sequence.filterclass</key>
                             <value class="string">dk.statsbiblioteket.summa.ingest.split.XMLSplitterFilter</value>
                         </entry>
                         <entry>
@@ -109,7 +109,7 @@
                     <key>RecordWriter</key>
                     <value class="xproperties">
                         <entry>
-                            <key>filterpump.filterclass</key>
+                            <key>summa.filter.sequence.filterclass</key>
                             <value class="string">dk.statsbiblioteket.summa.storage.api.filter.RecordWriter</value>
                         </entry>
                         <entry>

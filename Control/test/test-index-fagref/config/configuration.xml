@@ -26,14 +26,14 @@
             <key>SingleChain</key>
             <value class="xproperties">
                 <entry>
-                    <key>filterpump.filters</key>
+                    <key>summa.filter.sequence.filters</key>
                     <value class="string">StorageReader, XMLTransformer, OldToNewTransformer, DocumentCreator, IndexUpdate</value>
                 </entry>
                 <entry>
                     <key>StorageReader</key>
                     <value class="xproperties">
                         <entry>
-                            <key>filterpump.filterclass</key>
+                            <key>summa.filter.sequence.filterclass</key>
                             <value class="string">
                                 dk.statsbiblioteket.summa.storage.api.filter.RecordReader
                             </value>
@@ -60,7 +60,7 @@
                     <key>XMLTransformer</key>
                     <value class="xproperties">
                         <entry>
-                            <key>filterpump.filterclass</key>
+                            <key>summa.filter.sequence.filterclass</key>
                             <value class="string">dk.statsbiblioteket.summa.index.XMLTransformer</value>
                         </entry>
                         <entry>
@@ -73,7 +73,7 @@
                     <key>OldToNewTransformer</key>
                     <value class="xproperties">
                         <entry>
-                            <key>filterpump.filterclass</key>
+                            <key>summa.filter.sequence.filterclass</key>
                             <value class="string">dk.statsbiblioteket.summa.index.XMLTransformer</value>
                         </entry>
                         <entry>
@@ -86,7 +86,7 @@
                     <key>DocumentCreator</key>
                     <value class="xproperties">
                         <entry>
-                            <key>filterpump.filterclass</key>
+                            <key>summa.filter.sequence.filterclass</key>
                             <value class="string">
                                 dk.statsbiblioteket.summa.index.lucene.DocumentCreator
                             </value>
@@ -106,7 +106,7 @@
                     <key>IndexUpdate</key>
                     <value class="xproperties">
                         <entry>
-                            <key>filterpump.filterclass</key>
+                            <key>summa.filter.sequence.filterclass</key>
                             <value class="string">
                                 dk.statsbiblioteket.summa.index.IndexControllerImpl
                             </value>

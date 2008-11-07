@@ -66,8 +66,8 @@
         <appender-ref ref="CONSOLE" />
     </logger>
 
-    <logger name="dk.statsbiblioteket.summa.storage.api.filter.RecordWriter">
-        <level value="debug" />
+    <logger name="dk.statsbiblioteket.summa.common.filter">
+        <level value="trace" />
         <appender-ref ref="CONSOLE" />
     </logger>
 

@@ -144,10 +144,14 @@ public class MUXFilter implements ObjectFilter, Runnable {
                 }
             }
             if (nextPayload == null) {
+                log.warn("source.next() gave a null-pointer");
                 break;
             }
             MUXFilterFeeder feeder;
             try {
+                if (log.isTraceEnabled()) {
+                    log.trace("Getting feeder for " + nextPayload);
+                }
                 feeder = getFeeder(nextPayload);
             } catch (Exception e) {
                 log.error("Unexpected exception while getting feeder for "
@@ -155,9 +159,13 @@ public class MUXFilter implements ObjectFilter, Runnable {
                 continue;
             }
             if (feeder == null) {
+                // Warnings are issued by getFeeder
                 continue;
             }
             try {
+                if (log.isTraceEnabled()) {
+                    log.trace("Adding " + nextPayload + " to " + feeder);
+                }
                 feeder.queuePayload(nextPayload);
             } catch (InterruptedException e) {
                 log.warn(String.format(

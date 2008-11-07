@@ -12,20 +12,19 @@ import java.util.List;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.StateThread;
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
+import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * Sets up a chain of filters and pumps the last filter until no more data
+ * Sets up a chain of ObjectFilters and pumps the last filter until no more data
  * can be retrieved.
- * The filters are specified with {@link #CONF_FILTERS} which contains an array
- * of keys for the configuration. For each key, a subConfiguration is retrieved.
- * The subConfiguration contains the class-name of the wanted filter in the
- * property {@link #CONF_FILTER_CLASS} along with the filter-specific setup.
  * </p><p>
- * The filters are added in order of appearance.
+ * The setup of the filters is done with {@link FilterSequence}. See the JavaDoc
+ * for that class for property requirements.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -35,15 +34,12 @@ public class FilterPump extends StateThread implements Configurable {
     private Log log;
     private static Log classLog = LogFactory.getLog(FilterPump.class);
 
-    public static final String CONF_FILTERS = "filterpump.filters";
     /**
      * The name of the chain is used for feedback and debugging.
      */
     public static final String CONF_CHAIN_NAME =   "filterpump.chainname";
-    public static final String CONF_FILTER_CLASS = "filterpump.filterclass";
 
-    private ArrayList<Filter> filters = new ArrayList<Filter>(10);
-    private Filter lastFilter;
+    private FilterSequence sequence;
 
     private String chainName = "Unnamed Chain";
 
@@ -57,57 +53,8 @@ public class FilterPump extends StateThread implements Configurable {
         classLog.trace ("Creating chain log for chain: " + chainName);
         log = LogFactory.getLog(FilterPump.class.getName() + "." + chainName);
         log.info("Constructing FilterPump for chain '" + chainName + "'");
-        List<String> filterNames;
-        try {
-            filterNames = configuration.getStrings(CONF_FILTERS);
-        } catch (NullPointerException e) {
-            throw new IllegalArgumentException("No Filters specified in "
-                                               + "property " + CONF_FILTER_CLASS
-                                               + " for FilterPump");
-        }
-
-        buildChain(configuration, filterNames);
-        log.debug("Finished building chain '" + chainName + "' of "
-                  + filters.size() + " length");
-    }
-
-    private void buildChain(Configuration configuration,
-                            List<String> filterNames) throws IOException {
-        log.trace("Entering buildChain for '" + chainName + "'");
-        if (filterNames != null) {
-            Logs.log(log, Logs.Level.INFO, "Building filter chain with ",
-                     filterNames);
-            for (String filterName: filterNames) {
-                log.debug("Adding Filter '" + filterName
-                          + "' to chain");
-                //noinspection OverlyBroadCatchBlock
-                try {
-                    Configuration filterConfiguration =
-                            configuration.getSubConfiguration(filterName);
-                    Filter filter = createFilter(filterConfiguration);
-                    if (lastFilter != null) {
-                        log.trace("Chaining '" + filter + "' to the end of '"
-                                  + lastFilter + "'");
-                        filter.setSource(lastFilter);
-                    }
-                    lastFilter = filter;
-                    filters.add(lastFilter);
-                } catch (Exception e) {
-                    throw new IOException(String.format(
-                            "Could not create filter '%s'",
-                            filterName), e);
-                }
-            }
-        }
-        log.trace("Exiting buildChain for '" + chainName + "'");
-    }
-
-    @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    private Filter createFilter(Configuration configuration) {
-        Class<? extends Filter> filter =
-                configuration.getClass(CONF_FILTER_CLASS, Filter.class);
-        log.debug("Got filter class " + filter + ". Commencing creation");
-        return Configuration.create(filter, configuration);
+        sequence = new FilterSequence(configuration);
+        log.debug("Constructed filter sequence");
     }
 
     // TODO: Better feedback with Profiler
@@ -124,7 +71,7 @@ public class FilterPump extends StateThread implements Configurable {
             long pumpActions = 0;
             while (getStatus() == STATUS.running) {
                 pumpActions++;
-                if (!lastFilter.pump()) {
+                if (sequence.pump()) {
                     log.info(String.format("Finished pumping '%s' %d times",
                                            chainName, pumpActions));
                     break;
@@ -151,11 +98,7 @@ public class FilterPump extends StateThread implements Configurable {
     }
 
     private void close(boolean success) {
-        for (Filter filter: filters) {
-            log.debug("calling close(" + success + ") on filter '" + filter
-                      + "'");
-            filter.close(success);
-        }
+        sequence.close(success);
     }
 
     public String getChainName() {
@@ -165,10 +108,8 @@ public class FilterPump extends StateThread implements Configurable {
     public String toString() {
         StringWriter sw = new StringWriter(500);
         sw.append(getStatus().toString()).append(": ");
-        for (Filter filterf: filters) {
-            sw.append(filterf.getClass().toString()).append(" => ");
-        }
-        sw.append("pump");
+        sw.append(sequence.toString());
+        sw.append(" pump");
         return sw.toString();
     }
 
@@ -176,9 +117,6 @@ public class FilterPump extends StateThread implements Configurable {
      * @return a shallow copy of the list of the filters in this pump.
      */
     public List<Filter> getFilters() {
-        return new ArrayList<Filter>(filters);
+        return sequence.getFilters();
     }
-
 }
-
-

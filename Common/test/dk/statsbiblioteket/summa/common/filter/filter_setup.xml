@@ -16,14 +16,14 @@
             <key>TestPump1</key>
             <value class="xproperties">
                 <entry>
-                    <key>filterpump.filters</key>
+                    <key>summa.filter.sequence.filters</key>
                     <value class="string">Streamer, Converter</value>
                 </entry>
                 <entry>
                     <key>Streamer</key>
                     <value class="xproperties">
                         <entry>
-                            <key>filterpump.filterclass</key>
+                            <key>summa.filter.sequence.filterclass</key>
                             <value class="string">dk.statsbiblioteket.summa.common.filter.stream.DummyReader</value>
                         </entry>
                         <entry>
@@ -40,7 +40,7 @@
                     <key>Converter</key>
                     <value class="xproperties">
                         <entry>
-                            <key>filterpump.filterclass</key>
+                            <key>summa.filter.sequence.filterclass</key>
                             <value class="string">dk.statsbiblioteket.summa.common.filter.object.DummyStreamToRecords</value>
                         </entry>
                         <entry>
@@ -59,14 +59,14 @@
             <key>TestPump2</key>
             <value class="xproperties">
                 <entry>
-                    <key>filterpump.filters</key>
+                    <key>summa.filter.sequence.filters</key>
                     <value class="string">Streamer, Converter</value>
                 </entry>
                 <entry>
                     <key>Streamer</key>
                     <value class="xproperties">
                         <entry>
-                            <key>filterpump.filterclass</key>
+                            <key>summa.filter.sequence.filterclass</key>
                             <value class="string">dk.statsbiblioteket.summa.common.filter.stream.DummyReader</value>
                         </entry>
                         <entry>
@@ -83,7 +83,7 @@
                     <key>Converter</key>
                     <value class="xproperties">
                         <entry>
-                            <key>filterpump.filterclass</key>
+                            <key>summa.filter.sequence.filterclass</key>
                             <value class="string">dk.statsbiblioteket.summa.common.filter.object.DummyStreamToRecords</value>
                         </entry>
                         <entry>

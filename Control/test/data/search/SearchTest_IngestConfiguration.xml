@@ -31,14 +31,14 @@
             <key>SingleChain</key>
             <value class="xproperties">
                 <entry>
-                    <key>filterpump.filters</key>
+                    <key>summa.filter.sequence.filters</key>
                     <value class="string">Reader, Splitter, Writer</value>
                 </entry>
                 <entry>
                     <key>Reader</key>
                     <value class="xproperties">
                         <entry>
-                            <key>filterpump.filterclass</key>
+                            <key>summa.filter.sequence.filterclass</key>
                             <value class="string">dk.statsbiblioteket.summa.ingest.stream.FileReader</value>
                         </entry>
                         <entry>
@@ -63,7 +63,7 @@
                     <key>Splitter</key>
                     <value class="xproperties">
                         <entry>
-                            <key>filterpump.filterclass</key>
+                            <key>summa.filter.sequence.filterclass</key>
                             <value class="string">
                                 dk.statsbiblioteket.summa.ingest.split.XMLSplitterFilter
                             </value>
@@ -102,7 +102,7 @@
                     <key>Writer</key>
                     <value class="xproperties">
                         <entry>
-                            <key>filterpump.filterclass</key>
+                            <key>summa.filter.sequence.filterclass</key>
                             <value class="string">
                                 dk.statsbiblioteket.summa.storage.api.filter.RecordWriter
                             </value>
