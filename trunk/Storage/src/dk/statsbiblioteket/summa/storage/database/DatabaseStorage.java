@@ -200,7 +200,8 @@ public abstract class DatabaseStorage extends StorageBase {
         try {
             File locationFile = new File(location);
             File newLocationFile = Resolver.getPersistentFile(locationFile);
-
+            log.trace("locationFile: " + locationFile
+                      + ", persistent location file: " + newLocationFile);
             if (!locationFile.equals(newLocationFile)) {
                     log.debug("Storing new location '" + newLocationFile
                               + "' to property key " + CONF_LOCATION);

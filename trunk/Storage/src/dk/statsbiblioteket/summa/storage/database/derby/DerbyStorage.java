@@ -75,6 +75,12 @@ public class DerbyStorage extends DatabaseStorage implements Configurable {
                                  "storage" + File.separator + "derby");
             log.debug("Using default location '" + location + "'");
         }
+        if (!location.equals(location.getAbsoluteFile())) {
+            log.debug(String.format("Transforming relative location '%s' to "
+                                    + "absolute location'%s'",
+                                    location, location.getAbsoluteFile()));
+            location = location.getAbsoluteFile();
+        }
         if (conf.valueExists(CONF_CREATENEW)) {
                 createNew = conf.getBoolean(CONF_CREATENEW);
         }
