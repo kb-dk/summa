@@ -113,7 +113,7 @@ class JavaMetaClass :
 		self._parents[parent.full_name()] = parent
 		
 		#
-		# Import properties from parents recusrsively upwards
+		# Import properties from parents recursively upwards
 		#
 		if import_props:
 			for parent in self.get_all_parents():
@@ -135,8 +135,11 @@ class JavaMetaClass :
 		result = set()
 		for parent in self._parents.itervalues():
 			result.add(parent)
-			result.union(parent.get_all_parents())
+			result = result.union(parent.get_all_parents())
 		return list(result)
+	
+	def get_all_parent_names (self):
+		return [p.full_name() for p in self.get_all_parents()]
 	
 	def get_parent_names (self):
 		return self._parent_names
@@ -151,7 +154,7 @@ class JavaMetaClass :
 		result = set()
 		for child in self._children.itervalues():
 			result.add(child)
-			result.union(child.get_all_parents())
+			result = result.union(child.get_all_parents())
 		return list(result)
 	
 	def set_inheritance_decl (self, decl):
@@ -175,22 +178,31 @@ class JavaMetaClass :
 		extended, possibly None, and any following elements are
 		implemented interfaces		
 		"""
-		base_classes = re.search(r"(?<=extends )\s*(.*)", decl)
-		if base_classes != None:
-			base_classes = base_classes.group(1).split(",")
-			for i in range(len(base_classes)):
-				base_classes[i] = base_classes[i].strip()
+		#base_classes = re.search(r"(?<=extends )\s*(.*)\s*(?=($|implements))", decl)
+		#if base_classes != None:
+		#	base_classes = base_classes.group(1).split(",")
+		#	for i in range(len(base_classes)):
+		#		base_classes[i] = base_classes[i].strip()
+		#
+		#interfaces = []
+		#interface_decl = re.search(r"(?<=implements )\s*(.*)", decl)
+		#if interface_decl != None:
+		#	interfaces = interface_decl.group(1).split(",")
+		#	for i in range(len(interfaces)):
+		#		interfaces[i] = interfaces[i].strip()
+		#
+		#if base_classes != None:
+		#	interfaces.extend(base_classes)
+		#
+		pre_parents = decl.split(" ")
+		parents = []
+		for p in pre_parents:
+			parents.extend(p.split(","))
 		
-		interfaces = []
-		interface_decl = re.search(r"(?<=implements )\s*(.*)", decl)
-		if interface_decl != None:
-			interfaces = interface_decl.group(1).split(",")
-			for i in range(len(interfaces)):
-				interfaces[i] = interfaces[i].strip()
+		parents = map(lambda x : x.strip(), parents)
+		parents = filter(lambda x : x not in ["", ",", " ", "implements", "extends"], parents)
 		
-		if base_classes != None:
-			interfaces.extend(base_classes)
-		return interfaces
+		return parents
  
 class JavaMetaRepo :
 	def __init__ (self):
@@ -210,8 +222,8 @@ class JavaMetaRepo :
 			print >> sys.stderr, "Starting inheritance resolution"
 		for meta_class in self._classes.itervalues():
 			if self._verbose:
-				print >> sys.stderr, "Resolving %s" % meta_class.full_name()
-			for parent_name in meta_class.get_parent_names():				
+				print >> sys.stderr, "Resolving %s" % meta_class.full_name(), meta_class.get_all_parent_names()
+			for parent_name in meta_class.get_parent_names():
 				parent_class = self.find_class(parent_name)
 				
 				if parent_class != None:
@@ -396,6 +408,9 @@ class Formatter:
 		if not self._parent_filter:
 			return True
 		return meta_class.has_parent(self._parent_filter)
+	
+	def get_parent_filter (self):
+		return self._parent_filter
 
 class TermFormatter (Formatter) :
 	def __init__ (self, repo, parent_filter=None):
@@ -417,12 +432,14 @@ class ClassFormatter (Formatter) :
 		result = ""
 		for meta_class in repo.iter_classes():
 			if self.should_display (meta_class):
-				result += meta_class.full_name() + "\n"
+				result += meta_class.full_name() + " -> "
+				result += "[" + ", ".join([p.full_name() for p in meta_class.get_parents()]) + "] >>> "
+				result += str(meta_class.get_all_parent_names()) + "\n"
 		
 		return result
 
 MOIN_HEADER = \
-"""= Summa Property Documentation =
+"""= %(header)s =
 '''Contents'''
 [[TableOfContents(3)]]
 
@@ -452,8 +469,12 @@ class MoinFormatter (Formatter) :
 		Formatter.__init__ (self, repo, parent_filter)		
 	
 	def format (self, repo):
-		result = MOIN_HEADER
-		roots = repo.get_root_classes()
+		if self.get_parent_filter() == None:
+			header_dict = { "header" : "Summa Property Documentation" }
+		else:
+			header_dict = { "header" : "Summa Properties for %ss" % self._short_filter_name()}
+		result = MOIN_HEADER % header_dict
+		roots = list(repo.iter_classes())
 		roots.sort(lambda x, y : cmp (x.full_name(), y.full_name()))
 		
 		for meta_class in roots:
@@ -467,14 +488,12 @@ class MoinFormatter (Formatter) :
 				
 		class_dict = { "class" : meta_class.full_name() }		
 		
-		if len(meta_class.get_parents()) == 0:
-			# If no parents and no children don't document the class
-			if len(meta_class.get_children()) == 0:
-				return ""						
-			
-			result = MOIN_ROOT_CLASS_TEMPLATE % class_dict
-		else:
-			result = MOIN_CHILD_CLASS_TEMPLATE % class_dict
+		# If no props and no children, don't doc the class
+		if len(meta_class.get_children()) == 0 and \
+		   meta_class.num_props() == 0 :
+			return ""						
+		
+		result = MOIN_CHILD_CLASS_TEMPLATE % class_dict		
 				
 		for prop in meta_class.iter_props():
 			prop_dict = {
@@ -484,13 +503,27 @@ class MoinFormatter (Formatter) :
 			}
 			result += MOIN_PROP_TEMPLATE % prop_dict
 		
-		if format_children:
-			children = meta_class.get_all_children()
-			children.sort (lambda x, y : cmp (x.full_name(), y.full_name()))
-			for child in children:
-				result += self.format_class(child, format_children=False)
+		#if format_children:
+		#	children = meta_class.get_all_children()
+		#	children.sort (lambda x, y : cmp (x.full_name(), y.full_name()))
+		#	for child in children:
+		#		result += self.format_class(child, format_children=False)
 		
-		return result
+		return self._javadoc2moin(result)
+	
+	def _short_filter_name (self):
+		pf = self.get_parent_filter()
+		return pf[pf.rfind(".")+1 : ]
+	
+	def _javadoc2moin (self, string):
+		string = re.sub(r"<i>([^<]*)</i>", r"''\1''", string)
+		string = re.sub(r"<b>([^<]*)</b>", r"'''\1'''", string)
+		string = re.sub(r"\{@code ([^\}]*)\}", r"{{{\1}}}", string)
+		string = re.sub(r"<p></p>", "\n", string)
+		string = re.sub(r"<p\s*/>", "\n", string)
+		string = re.sub(r"<br\s*/>", "\n", string)
+		#string = re.sub(r"<[^>]>[^<]+</[^>]>", r"\1", string)
+		return string
 	
 FORMATTERS = {
 	"term"    : TermFormatter,
@@ -508,9 +541,9 @@ if __name__ == "__main__" :
 	opt_parser.add_option("-r", "--recursive", action="store_true",
 			  help="Do recursive descent into a directory an scan all .java files")
 	opt_parser.add_option("-f", "--formatter", metavar="FORMATTER",
-			  help="Which output formatter to use. Supported: %s" % FORMATTERS.keys())
+			  help="Which output formatter to use. Supported: %s" % ", ".join(FORMATTERS.keys()))
 	opt_parser.add_option("-p", "--parent", metavar="PARENT",
-			  help="Only use classes that are children of PARENT")
+			  help="Only output classes that are children of PARENT")
 	
 	
 	options, args = opt_parser.parse_args()
