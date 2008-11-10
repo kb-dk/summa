@@ -51,7 +51,7 @@ public class FilterControl extends StateThread implements Configurable,
 
     /**
      * The a list of names of chains to create.
-     * </p><p>
+     * <p/>
      * A sub-configuration will be requested from the configuration with the
      * name as key and that configuration will be used for creating a
      * FilterPump.
@@ -62,7 +62,7 @@ public class FilterControl extends StateThread implements Configurable,
      * If true, the chains will be started in order of appearance, the FilterControl
      * will wait for any previous chain to finish, before starting the next one.
      * If false, all chains will be started simultaneously.
-     * </p><p>
+     * <p/>
      * Default: True.
      */
     public static final String CONF_SEQUENTIAL = "filtercontrol.sequential";
