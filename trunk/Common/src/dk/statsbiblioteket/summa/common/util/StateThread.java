@@ -225,12 +225,14 @@ public abstract class StateThread implements Runnable {
      */
     public void waitForFinish(long timeout) throws InterruptedException {
         log.trace("Waiting for finish");
-        if (status == STATUS.ready
-            || status == STATUS.stopped
-            || status == STATUS.error) {
-            return;
+        while (true) {
+            if (status == STATUS.ready
+                || status == STATUS.stopped
+                || status == STATUS.error) {
+                return;
+            }
+            thread.join(timeout);
         }
-        thread.join(timeout);
     }
 
     /**
@@ -254,6 +256,3 @@ public abstract class StateThread implements Runnable {
     }
 
 }
-
-
-
