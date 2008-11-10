@@ -4,9 +4,12 @@ import dk.statsbiblioteket.summa.control.api.ControlConnection;
 import dk.statsbiblioteket.summa.control.api.rmi.ControlRMIConnection;
 import dk.statsbiblioteket.summa.control.server.shell.StatusCommand;
 import dk.statsbiblioteket.summa.common.shell.Core;
+import dk.statsbiblioteket.summa.common.shell.Script;
 import dk.statsbiblioteket.summa.common.rpc.SummaRMIConnectionFactory;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.qa.QAInfo;
+
+import java.util.Arrays;
 
 /**
  * Command line UI for managing the Control server.
@@ -19,9 +22,11 @@ public class ControlShell {
 
     private ConnectionManager<ControlConnection> connManager;
     private Core shell;
+    private Script script;
 
     public ControlShell(String rmiAddress) throws Exception {
         shell = new Core ();
+        script = null;
         shell.setPrompt ("control-shell> ");
 
         connManager = new ConnectionManager<ControlConnection> (
@@ -35,31 +40,41 @@ public class ControlShell {
         shell.installCommand(new StatusCommand(connManager, rmiAddress));
     }
 
-    public void run () {
-        // FIXME pass command line args to shell core
-        shell.run(new String[0]);
+    public void setScript (Script script) {
+        this.script = script;
+    }
+
+    public int run () {
+        int returnVal = shell.run(script);
         connManager.close();
+
+        return returnVal;
     }
 
     public static void printUsage () {
-        System.err.println ("USAGE:\n\tcontrol-shell <control-rmi-address>\n");
+        System.err.println ("USAGE:\n\tcontrol-shell <control-rmi-address> [script commands]\n");
         System.err.println ("For example:\n\tcontrol-shell //localhost:2768/summa-control");
     }
 
     public static void main (String[] args) {
         try {
-            if (args.length != 1) {
-            printUsage ();
-            System.exit (1);
-        }
+            if (args.length == 0) {
+                printUsage ();
+                System.exit (1);
+            }
 
-        ControlShell shell = new ControlShell(args[0]);
-        shell.run ();
+            ControlShell shell = new ControlShell(args[0]);
+
+            if (args.length > 1) {
+                // Schedule the script created by concatenating args from index 1
+                shell.setScript(new Script(args, 1));
+            }
+
+            System.exit(shell.run());
+
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-
     }
 
 }

@@ -19,16 +19,20 @@ public class FeedbackShellContext implements ShellContext {
     private Feedback feedback;
     private Log log;
     private Stack<String> lineBuffer;
+    private String lastError;
 
     public FeedbackShellContext (Feedback feedback) {
         this.feedback = feedback;
         lineBuffer = new Stack<String>();
+        lastError = null;
         log = LogFactory.getLog(FeedbackShellContext.class);
 
         log.trace ("Created with feedback " + feedback);
     }
 
     public void error(String msg) {
+        lineBuffer.clear();
+        lastError = msg;
         try {
             feedback.putMessage(new Message(Message.MESSAGE_ALERT,
                                             "[ERROR] " + msg));
@@ -99,6 +103,10 @@ public class FeedbackShellContext implements ShellContext {
         }
 
         lineBuffer.push(line);
+    }
+
+    public String getLastError() {
+        return lastError;
     }
 
     public void prompt(String msg) {
