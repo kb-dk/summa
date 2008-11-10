@@ -25,14 +25,9 @@ package dk.statsbiblioteket.summa.common.shell;
 import org.apache.commons.cli.*;
 
 import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.PushbackReader;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.StringTokenizer;
-import java.util.List;
-import java.util.ArrayList;
+import java.io.InputStreamReader;
+import java.util.*;
 import java.rmi.UnmarshalException;
 
 import dk.statsbiblioteket.summa.common.shell.notifications.AbortNotification;
@@ -56,7 +51,6 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         author = "mke")
 public class Core {
 
-    private BufferedReader in;
     private HashMap<String, Command> commands;
     private String lastTrace;
     private String header, prompt;
@@ -86,11 +80,15 @@ public class Core {
             this.shellCtx = shellCtx;
         } else {
             this.shellCtx = new ShellContext () {
-                private PushbackReader in = new PushbackReader
-                                       (new InputStreamReader(System.in), 2048);
-                private BufferedReader lineIn =  new BufferedReader(in, 1);
+
+                private Stack<String> lineBuffer = new Stack<String>();
+                private BufferedReader lineIn =  new BufferedReader(
+                                           new InputStreamReader(System.in), 1);
+                private String lastError = null;
 
                 public void error(String msg) {
+                    lineBuffer.clear();
+                    lastError = msg;
                     System.out.println ("[ERROR] " + msg);
                 }
 
@@ -107,26 +105,23 @@ public class Core {
                 }
 
                 public String readLine() {
+                    if (!lineBuffer.empty()) {
+                        return lineBuffer.pop();
+                    }
+
                     try {
-                        String line = lineIn.readLine().trim();
-                        return line;
+                        return lineIn.readLine().trim();
                     } catch (IOException e) {
                         throw new RuntimeException("Failed to read input", e);
                     }
                 }
 
                 public void pushLine (String line) {
-                    /* Make sure we do have a new line */
-                    if (!line.endsWith("\n")) {
-                        line = line + "\n";
-                    }
+                    lineBuffer.push(line.trim());                    
+                }
 
-                    try {
-                        in.unread (line.toCharArray());
-                    } catch (IOException e) {
-                        throw new RuntimeException ("Failed to push line: '"
-                                                    + line + "'", e);
-                    }
+                public String getLastError () {
+                    return lastError;
                 }
 
                 public void prompt (String prompt) {
@@ -197,7 +192,7 @@ public class Core {
      * @throws ParseException if there is an error parsing the command line
      *                        as entered by the user.
      */
-    private void do_main_iteration () throws Exception {
+    private void doMainIteration() throws Exception {
         String cmdString;
 
         shellCtx.prompt(getPrompt());
@@ -361,22 +356,72 @@ public class Core {
         }
     }
 
-    public void run (String[] args) {
+    /**
+     * Run the shell's main loop. If {@code script} is non-null the script will
+     * be executed and the shell core will exit afterwards. If {@code script}
+     * is {@code null} it will enter interactive mode reading commands from
+     * stdin.
+     *
+     * @param script a script to execute or {@code null} to enter interactive
+     *               mode
+     * @return 0 on a clean exit which also indicates the any script passed to
+     *         to the core returned without any errors. If this method returns
+     *         non-zero some error occured and the caller must understand the
+     *         error code in its current context.
+     */
+    public int run (Script script) {
+        int returnVal = 0;
+        Iterator<String> scriptIter = null;
+        String scriptStatement = null;
 
-        getShellContext().info (getHeader());
+        if (script != null) {
+            scriptIter = script.iterator();
+        }
+
+        /* Print a greeting if running interactively */
+        if (scriptIter == null) {
+            getShellContext().info(getHeader());
+        }
 
         while (true) {
             try {
-                do_main_iteration();
+                /* If the shell is scripted feed the next script line to the
+                 * parser*/
+                if (scriptIter != null) {
+                    if (getShellContext().getLastError() != null) {
+                        throw new AbortNotification("Error executing '"
+                                                    + scriptStatement + "'",
+                                                    returnVal == 0 ?
+                                                                -1 : returnVal);
+                    }
+
+                    if (scriptIter.hasNext()) {
+                        scriptStatement = scriptIter.next();
+                        getShellContext().pushLine(scriptStatement);
+                    } else {
+                        // Script is done. Exit the shell
+                        break;
+                    }
+                }
+
+                doMainIteration();
             }
             catch (Notification e) {
                 if (e instanceof BadCommandLineNotification) {
-                    printHelp (e.getCommand(), e.getMessage());
+                    if (scriptIter != null) {
+                        getShellContext().error ("Bad command line for '"
+                                                 + e.getCommand() + "': "
+                                                 + e.getMessage());
+                        returnVal = -2;
+                    } else {
+                        printHelp (e.getCommand(), e.getMessage());
+                    }
                 } else if (e instanceof AbortNotification) {
                     // This is a clean exit
                     if (!"".equals(e.getMessage())) {
                         shellCtx.info(e.getMessage());
                     }
+                    returnVal = ((AbortNotification)e).getReturnValue();
                     // Exit the shell
                     break;
                 } else if (e instanceof HelpNotification) {
@@ -384,13 +429,22 @@ public class Core {
                 } else if (e instanceof TraceNotification) {
                     handleTraceNotification((TraceNotification)e);
                 } else if (e instanceof SyntaxErrorNotification) {
-                    handleSyntaxErrorNotification((SyntaxErrorNotification)e);
+                    if (scriptIter != null) {
+                        getShellContext().error("Syntax error when parsing "
+                                                + "'" + scriptStatement
+                                                + "': "
+                                                + e.getMessage());
+                        returnVal = -3;
+                    } else {
+                        handleSyntaxErrorNotification((SyntaxErrorNotification)e);
+                    }
                 } else {
                     // This is a bug in the shell core
                     shellCtx.error ("Shell Core encountered an unknown "
                                     + "notification: " + e.getClass().getName());
                 }
             } catch (ParseException e) {
+                returnVal = -4;
                 getShellContext().error ("Error parsing command line: "
                         + e.getMessage());
             } catch (UnmarshalException e) {
@@ -413,6 +467,7 @@ public class Core {
 
 
         getShellContext().info ("Bye.");
+        return returnVal;
     }
 
 

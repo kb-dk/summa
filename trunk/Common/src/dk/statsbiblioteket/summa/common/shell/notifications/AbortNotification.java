@@ -34,12 +34,29 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         author = "mke")
 public class AbortNotification extends Notification {
 
+    private int returnVal;
+
+    public AbortNotification (Command cmd, String msg, int returnVal) {
+        super(cmd, msg);
+        this.returnVal = returnVal;
+    }
+
+    public AbortNotification (String msg, int returnVal) {
+        super(msg);
+        this.returnVal = returnVal; 
+    }
+
     public AbortNotification (Command cmd, String msg) {
-        super (cmd, msg);
+        this (cmd, msg, 0);
     }
 
     public AbortNotification (Command cmd) {
         super(cmd);
+        returnVal = 0;
+    }
+
+    public int getReturnValue () {
+        return returnVal;
     }
 
 }

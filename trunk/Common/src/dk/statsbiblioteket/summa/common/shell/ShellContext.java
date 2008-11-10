@@ -33,7 +33,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 public interface ShellContext {
 
     /**
-     * Print an error message to the user.
+     * Clear the line buffer (populated by calling {@link #pushLine(String)})
+     * and print an error message to the user.
      * @param msg the message to print
      */
     public void error (String msg);
@@ -71,6 +72,13 @@ public interface ShellContext {
      * @param line the line of input to add to the buffer
      */
     public void pushLine (String line);
+
+    /**
+     * Get the last error message sent to the shell context.
+     * @return the last error message sent to the shell or {@code null} if
+     *         no errors has been reported
+     */
+    public String getLastError ();
 
     /**
      * Print a prompt string to the user, without a trailing newline.

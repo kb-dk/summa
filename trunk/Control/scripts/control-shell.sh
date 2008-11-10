@@ -132,7 +132,7 @@ if [ "$ENABLE_JMX" == "true" ]; then
     JMX="$JMX_PORT $JMX_SSL $JMX_PASS $JMX_ACCESS";
 fi;
 
-COMMAND="$JAVA_HOME/bin/java $JVM_OPTS $SECURITY_POLICY $JMX -cp $CLASSPATH $MAINCLASS $*"
+COMMAND="$JAVA_HOME/bin/java $JVM_OPTS $SECURITY_POLICY $JMX -cp $CLASSPATH $MAINCLASS $@"
 
 # Report settings
 if [ ! -z $PRINT_CONFIG ]; then

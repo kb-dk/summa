@@ -17,10 +17,12 @@ public class VoidShellContext implements ShellContext {
 
     private Stack<String> lineBuffer;
     private String defaultLine;
+    private String lastError;
 
     public VoidShellContext () {
         lineBuffer = new Stack<String>();
         defaultLine = "";
+        lastError = null;
     }
 
     public VoidShellContext (String defaultLine) {
@@ -28,6 +30,8 @@ public class VoidShellContext implements ShellContext {
     }
 
     public void error(String msg) {
+        lineBuffer.clear();
+        lastError = msg;
         log.error (msg);
     }
 
@@ -53,6 +57,10 @@ public class VoidShellContext implements ShellContext {
 
     public void pushLine(String line) {
         lineBuffer.push(line);
+    }
+
+    public String getLastError() {
+        return lastError;
     }
 
     public void prompt(String msg) {

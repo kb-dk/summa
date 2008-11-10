@@ -28,6 +28,7 @@ import dk.statsbiblioteket.summa.common.shell.commands.Exec;
 
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Stack;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
@@ -46,11 +47,14 @@ public class ShellTest extends TestCase {
 
     public void setUp () throws Exception {        
         ctx = new ShellContext () {
-                private PushbackReader in = new PushbackReader
-                                       (new InputStreamReader(System.in), 2048);
-                private BufferedReader lineIn =  new BufferedReader(in, 1);
+                private Stack<String> lineBuffer = new Stack<String>();
+                private BufferedReader lineIn =  new BufferedReader(
+                                           new InputStreamReader(System.in), 1);
+                private String lastError = null;
 
                 public void error(String msg) {
+                    lineBuffer.clear();
+                    lastError = msg;
                     System.out.println ("[ERROR] " + msg);
                 }
 
@@ -67,26 +71,23 @@ public class ShellTest extends TestCase {
                 }
 
                 public String readLine() {
+                    if (!lineBuffer.empty()) {
+                        return lineBuffer.pop();
+                    }
+
                     try {
-                        String line = lineIn.readLine().trim();
-                        return line; 
+                        return lineIn.readLine().trim();
                     } catch (IOException e) {
                         throw new RuntimeException("Failed to read input", e);
                     }
                 }
 
                 public void pushLine (String line) {
-                    /* Make sure we do have a new line */
-                    if (!line.endsWith("\n")) {
-                        line = line + "\n";
-                    }
+                    lineBuffer.push(line.trim());
+                }
 
-                    try {
-                        in.unread (line.toCharArray());
-                    } catch (IOException e) {
-                        throw new RuntimeException ("Failed to push line: '"
-                                                    + line + "'", e);
-                    }
+                public String getLastError () {
+                    return lastError;
                 }
 
                 public void prompt (String prompt) {
@@ -242,6 +243,22 @@ public class ShellTest extends TestCase {
         assertFalse(iter.hasNext());
     }
 
+    public void testScriptTokens () throws Exception {
+        Script sc;
+
+        sc = new Script(new String[] {"foo", "-w"});
+        assertEquals("Should have exactly one statement",
+                     1, sc.getStatements().size());
+        assertEquals("Should have the statement 'foo -w'",
+                     "foo -w", sc.getStatements().get(0));
+
+        sc = new Script(new String[] {"foo", "-w"}, 1);
+        assertEquals("Should have exactly one statement",
+                     1, sc.getStatements().size());
+        assertEquals("Should have the statement '-w'",
+                     "-w", sc.getStatements().get(0));
+    }
+
     public void testShellContextPushLine () throws Exception {
         ctx.pushLine("foo");
         ctx.pushLine("bar\n");
@@ -273,6 +290,42 @@ public class ShellTest extends TestCase {
         assertEquals(line, "baz");
     }
 
+    public void testNonInteractiveQuit () throws Exception {
+        String script = "quit";
+        Core core = new Core (ctx, true);
+        int exitCode = core.run(new Script(script));
+        
+        assertEquals("Issuing the script '" + script
+                     + "' should return with code 0", 0, exitCode);
+    }
+
+    public void testNonInteractiveHelpQuit () throws Exception {
+        String script = "help;quit";
+        Core core = new Core (ctx, true);
+        int exitCode = core.run(new Script(script));
+
+        assertEquals("Issuing the script '" + script
+                     + "' should return with code 0", 0, exitCode);
+    }
+
+    public void testNonInteractiveBadCommand () throws Exception {
+        String script = "baaazooo -w --pretty; help; quit";
+        Core core = new Core (ctx, true);
+        int exitCode = core.run(new Script(script));
+
+        assertEquals("Issuing the script '" + script
+                     + "' should return with code -1", -1, exitCode);
+    }
+
+    public void testNonInteractiveBadSwitch () throws Exception {
+        String script = "help -boogawoo; help; quit";
+        Core core = new Core (ctx, true);
+        int exitCode = core.run(new Script(script));
+
+        assertEquals("Issuing the script '" + script
+                     + "' should return with code -4", -4, exitCode);
+    }
+
     public static void main (String[] args) {
         ShellTest test = new ShellTest();
         try {
@@ -283,7 +336,9 @@ public class ShellTest extends TestCase {
         }
 
         Core core = new Core (test.ctx, true);
-        core.run(args);
+        int exitCode = core.run(null);
+
+        System.exit(exitCode);
     }
 
 }

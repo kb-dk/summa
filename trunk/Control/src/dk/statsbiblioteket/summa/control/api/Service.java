@@ -42,7 +42,7 @@ public interface Service extends Configurable, Remote, Monitorable {
      * via {@link #getId}. </p>
      *
      * <p>The service's RMI service will also run under this name.</p>
-     * */
+     */
     public static final String CONF_SERVICE_ID = "summa.control.service.id";
 
     /**

@@ -31,7 +31,7 @@ public class ServiceShell {
 
     public void run () {
         // FIXME pass command line args to shell core
-        shell.run(new String[0]);
+        shell.run(null);
         connManager.close();
     }
 
