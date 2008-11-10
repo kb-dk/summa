@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -48,11 +48,13 @@ public class MultipleSourcesTest extends NoExitTestCase {
 
     public void setUp () throws Exception {
         super.setUp();
+        ReleaseTestCommon.setup();
         SearchTest.INDEX_ROOT.mkdirs();
     }
 
     public void tearDown() throws Exception {
         super.tearDown();
+//        ReleaseTestCommon.tearDown();
     }
 
     public void testFull() throws Exception {
