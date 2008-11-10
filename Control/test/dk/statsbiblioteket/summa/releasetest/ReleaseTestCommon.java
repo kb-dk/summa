@@ -1,6 +1,6 @@
 /**
  * Created: te 07-11-2008 20:46:59
- * CVS:     $Id:$
+ * CVS:     $Id$
  */
 package dk.statsbiblioteket.summa.releasetest;
 
@@ -27,7 +27,7 @@ public class ReleaseTestCommon {
             new File(System.getProperty("java.io.tmpdir"), "summatest"); 
     public static final File PERSISTENT_FOLDER =
             new File(TEST_ROOT, "persistent");
-    public static final File DATA_ROOTFOLDER = new File(TEST_ROOT, "summatest");
+    public static final File DATA_ROOT = new File(TEST_ROOT, "summatest");
 
     public static void setup() throws IOException {
         setupTestEnvironment();
@@ -50,6 +50,8 @@ public class ReleaseTestCommon {
         log.debug(String.format("Assigned %s to System property %s",
                                 PERSISTENT_FOLDER,
                                 Configuration.CONF_PERSISTENT_DIR));
+        System.setProperty(Resolver.SYSPROP_PERSISTENT_DIR,
+                           PERSISTENT_FOLDER.toString());
     }
 
     /**
@@ -75,20 +77,20 @@ public class ReleaseTestCommon {
     }
 
     /**
-     * Copies the data-foler under test in the Control-module to
-     * {@link #DATA_ROOTFOLDER}. If the data-folder already exists under the
+     * Copies the data-folder under test in the Control-module to
+     * {@link #DATA_ROOT}. If the data-folder already exists under the
      * destination-folder, it is deleted first.
      * @throws java.io.IOException if files could not be deleted or copied.
      */
     public static void setupTestFiles() throws IOException {
-        if (new File(DATA_ROOTFOLDER, "data").exists()) {
-            Files.delete(new File(DATA_ROOTFOLDER, "data"));
+        if (new File(DATA_ROOT, "data").exists()) {
+            Files.delete(new File(DATA_ROOT, "data"));
         }
         URL source = Resolver.getURL("data");
         if (source == null) {
             throw new FileNotFoundException(
                     "Unable to resolve the folder 'data'");
         }
-        Files.copy(new File(source.getFile()), DATA_ROOTFOLDER, false);
+        Files.copy(new File(source.getFile()), DATA_ROOT, false);
     }
 }
