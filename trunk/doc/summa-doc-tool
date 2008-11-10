@@ -31,7 +31,8 @@
 import sys
 import os
 import re
-from optparse import OptionParser 
+from optparse import OptionParser
+from datetime import datetime
 
 class JavaMetaProp :
 	def __init__ (self, parent_class, name, default=None, doc=None, codename=None):
@@ -439,7 +440,13 @@ class ClassFormatter (Formatter) :
 		return result
 
 MOIN_HEADER = \
-"""= %(header)s =
+"""
+##
+## %(stamp)s
+##
+
+= %(header)s =
+
 '''Contents'''
 [[TableOfContents(3)]]
 
@@ -473,6 +480,10 @@ class MoinFormatter (Formatter) :
 			header_dict = { "header" : "Summa Property Documentation" }
 		else:
 			header_dict = { "header" : "Summa Properties for %ss" % self._short_filter_name()}
+			
+		header_dict["stamp"] = "Generated on %s, with the command\n##\n## %s" % \
+		                       (datetime.now(), " ".join(sys.argv))
+			
 		result = MOIN_HEADER % header_dict
 		roots = list(repo.iter_classes())
 		roots.sort(lambda x, y : cmp (x.full_name(), y.full_name()))
