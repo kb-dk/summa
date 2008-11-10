@@ -306,6 +306,8 @@ public class FileReader implements ObjectFilter {
      *         files are available.
      */
     public synchronized Payload next() {
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("next() called");
         checkInit();
         if (todo.size() == 0) {
             log.info("next: No more files available");
