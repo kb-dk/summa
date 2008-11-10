@@ -84,6 +84,7 @@ public class MUXFilter implements ObjectFilter, Runnable {
     private List<MUXFilterFeeder> feeders;
     private Payload availablePayload = null;
     private boolean eofReached = false;
+    private Profiler profiler;
 
     public MUXFilter(Configuration conf) {
         log.debug("Constructing MUXFilter");
@@ -110,6 +111,9 @@ public class MUXFilter implements ObjectFilter, Runnable {
             log.warn("No feeders defined for MUXFilter. There will never be any"
                      + " output but the source will be drained");
         }
+        profiler = new Profiler();
+        profiler.setBpsSpan(100);
+        profiler.pause();
     }
 
     /**
@@ -125,9 +129,8 @@ public class MUXFilter implements ObjectFilter, Runnable {
      * If no feeders at all will accept the Payload, a warning is issued.
      */
     public void run() {
+        //noinspection DuplicateStringLiteralInspection
         log.trace("Starting run");
-        Profiler profiler = new Profiler();
-        profiler.setBpsSpan(100);
         while (source.hasNext()) {
             Payload nextPayload = null;
             while (nextPayload == null && source.hasNext()) {
@@ -162,16 +165,22 @@ public class MUXFilter implements ObjectFilter, Runnable {
                 // Warnings are issued by getFeeder
                 continue;
             }
-            try {
-                if (log.isTraceEnabled()) {
-                    log.trace("Adding " + nextPayload + " to " + feeder);
-                }
-                feeder.queuePayload(nextPayload);
-            } catch (InterruptedException e) {
-                log.warn(String.format(
-                        "Interrupted while offering %s to %s. Skipping to next "
-                        + "Payload", nextPayload, feeder), e);
+            if (log.isTraceEnabled()) {
+                //noinspection DuplicateStringLiteralInspection
+                log.trace("Adding " + nextPayload + " to " + feeder);
+            } else if (log.isDebugEnabled()) {
+                log.debug("Processing Payload with id "
+                          + nextPayload.getId());
             }
+            feeder.queuePayload(nextPayload);
+        }
+        sendEOFToFeeders();
+    }
+
+    private void sendEOFToFeeders() {
+        log.debug("Sending EOF to all feeders");
+        for (MUXFilterFeeder feeder: feeders) {
+            feeder.signalEOF();
         }
     }
 
@@ -237,6 +246,12 @@ public class MUXFilter implements ObjectFilter, Runnable {
     public boolean hasNext() {
         while (true) {
             if (eofReached) {
+                log.info(String.format(
+                        "Observed and processed %d Payloads in %s "
+                        + "(%s Payloads/sec). This includes processing time "
+                        + "outside of the muxer",
+                        profiler.getBeats(), profiler.getSpendTime(),
+                        profiler.getBps()));
                 return false;
             }
             if (availablePayload != null) {
@@ -256,7 +271,8 @@ public class MUXFilter implements ObjectFilter, Runnable {
         if (feeders.size() == 0 || eofReached) {
             return null;
         }
-        int feederPos = ++lastPolledPosition;
+        int feederPos = lastPolledPosition;
+        boolean hasSlept = false;
         while (true) {
             boolean allSaysEOF = true;
             /* Iterate through all feeders, starting from feederPos and wrapping
@@ -264,7 +280,7 @@ public class MUXFilter implements ObjectFilter, Runnable {
                encountered, it is returned.
             */
             for (int counter = 0 ; counter < feeders.size() ; counter++) {
-                if (feederPos++ > feeders.size()) {
+                if (++feederPos >= feeders.size()) {
                     feederPos = 0;
                 }
                 MUXFilterFeeder feeder = feeders.get(feederPos);
@@ -273,6 +289,8 @@ public class MUXFilter implements ObjectFilter, Runnable {
                     if (feeder.getOutQueueSize() > 0) {
                         return feeder.getNextFilteredPayload();
                     }
+                } else if (log.isTraceEnabled()) {
+                    log.trace("Feeder " + feeder + " is EOF");
                 }
             }
             if (allSaysEOF) {
@@ -280,8 +298,11 @@ public class MUXFilter implements ObjectFilter, Runnable {
                 eofReached = true;
                 return null;
             }
-            log.trace("No Payloads was ready in any of the feeders. "
-                      + "Sleeping a bit and retrying");
+            if (!hasSlept) {
+                log.trace("No Payloads was ready in any of the feeders. "
+                          + "Sleeping a bit and retrying");
+                hasSlept = true;
+            }
             // It's hard to do proper wait on multiple sources. Consider a flag
             try {
                 Thread.sleep(POLL_INTERVAL);

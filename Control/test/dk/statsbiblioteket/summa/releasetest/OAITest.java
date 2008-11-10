@@ -41,16 +41,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
- * This is a unit-test mimicking
- *http://wiki.statsbiblioteket.dk/summa/Community/Tutorials/MinimalDeployment1.0
- * as such, it is neccessary to follow steps 1.3-1.4 to get the test-data and
- * the XSLTs in place.
- * </p><p>
  * This test it partly manual, as the result (primarily the index) needs to be
- * inspected manually. It is places under the current directory, along with the
- * storage folder.
+ * inspected manually. It is placed in the System's temporary folder under
+ * the sub folder "summatest".
  */
 // TODO: Change the root to tmp-dir
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
@@ -68,85 +64,86 @@ public class OAITest extends NoExitTestCase {
 
     public void tearDown() throws Exception {
         super.tearDown();
-//        ReleaseTestCommon.tearDown();
+        ReleaseTestCommon.tearDown();
     }
 
     public void testIngest() throws Exception {
-        Profiler profiler = new Profiler();
+        getStorageService();
+        Profiler ingestProfiler = new Profiler();
+        FilterService ingest = performOAIIngest();
+        String ingestTime = ingestProfiler.getSpendTime();
+        log.info("Finished ingest in " + ingestTime);
+        ingest.stop();
+    }
+
+    public static StorageService getStorageService() throws IOException {
         Configuration storageConf = Configuration.load(Resolver.getURL(
-                        "test-storage-1/config/configuration.xml").getFile());
+                "test-storage-1/config/configuration.xml").getFile());
         storageConf.set(Service.CONF_SERVICE_ID, "StorageService");
         log.info("Starting storage");
         StorageService storage = new StorageService(storageConf);
         storage.start();
         storage.getStorage().clearBase("dummy");
-
-        Profiler ingestProfiler = new Profiler();
-        log.info("Starting ingest");
-        Configuration ingestConf = Configuration.load(Resolver.getURL(
-                        "test-ingest-oai/config/configuration.xml").getFile());
-        ingestConf.set(Service.CONF_SERVICE_ID, "IngestService");
-/**/        ingestConf.getSubConfiguration("SingleChain").
-                getSubConfiguration("Reader").
-                set(FileReader.CONF_ROOT_FOLDER,
-                    new File(ReleaseTestCommon.DATA_ROOT,
-                             "oai/minidump"));
-        FilterService ingest = new FilterService(ingestConf);
-        ingest.start();
-        while (ingest.getStatus().getCode() == Status.CODE.running) {
-            log.trace("Waiting for ingest ½ a second");
-            Thread.sleep(500);
-        }
-        String ingestTime = ingestProfiler.getSpendTime();
-        log.info("Finished ingest in " + ingestTime);
+        return storage;
     }
 
     public void testFull() throws Exception {
-        Profiler profiler = new Profiler();
-        Configuration storageConf = Configuration.load(Resolver.getURL(
-                        "test-storage-1/config/configuration.xml").getFile());
-        storageConf.set(Service.CONF_SERVICE_ID, "StorageService");
-        log.info("Starting storage");
-        StorageService storage = new StorageService(storageConf);
-        storage.start();
-        storage.getStorage().clearBase("dummy");
+        StorageService storage = getStorageService();
 
         Profiler ingestProfiler = new Profiler();
-        log.info("Starting ingest");
-        Configuration ingestConf = Configuration.load(Resolver.getURL(
-                        "test-ingest-oai/config/configuration.xml").getFile());
-        ingestConf.set(Service.CONF_SERVICE_ID, "IngestService");
-/**/        ingestConf.getSubConfiguration("SingleChain").
-                getSubConfiguration("Reader").
-                set(FileReader.CONF_ROOT_FOLDER,
-                    new File(ReleaseTestCommon.DATA_ROOT,
-                             "oai/minidump"));
-        FilterService ingest = new FilterService(ingestConf);
-        ingest.start();
-        while (ingest.getStatus().getCode() == Status.CODE.running) {
-            log.trace("Waiting for ingest ½ a second");
-            Thread.sleep(500);
-        }
+        FilterService ingest = performOAIIngest();
         String ingestTime = ingestProfiler.getSpendTime();
 
         Profiler indexProfiler = new Profiler();
+        performOAIIndex();
+        log.info("Finished indexing in " + indexProfiler.getSpendTime()
+                 + ", ingesting in " + ingestTime);
+
+        SearchService search = getSearchService();
+
+        ingest.stop();
+        search.stop();
+        storage.stop();
+    }
+
+    public static SearchService getSearchService() throws IOException {
+        log.info("Starting search");
+        String indexDescriptorLocation = new File(
+                ReleaseTestCommon.DATA_ROOT,
+                "oai/oai_IndexDescriptor.xml").toString();
+        Configuration searchConf = Configuration.load(Resolver.getURL(
+                "test-facet-search-1/config/configuration.xml").
+                getFile());
+        searchConf.set(Service.CONF_SERVICE_ID, "SearchService");
+        searchConf.getSubConfigurations(SearchNodeFactory.CONF_NODES).
+                get(0).
+                getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR).
+                set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
+                    indexDescriptorLocation);
+        SearchService search = new SearchService(searchConf);
+        search.start();
+        return search;
+    }
+
+    public static void performOAIIndex() throws IOException,
+                                                InterruptedException {
         log.info("Starting index");
         Configuration indexConf = Configuration.load(Resolver.getURL(
-                        "test-facet-index-1/config/configuration.xml").
+                "test-facet-index-1/config/configuration.xml").
                 getFile());
         indexConf.set(Service.CONF_SERVICE_ID, "IndexService");
         String oaiTransformerXSLT = new File(
                 ReleaseTestCommon.DATA_ROOT,
                 "oai/oai_index.xsl").toString();
         log.debug("oaiTransformerXSLT: " + oaiTransformerXSLT);
-/**/        indexConf.getSubConfiguration("SingleChain").
+        indexConf.getSubConfiguration("SingleChain").
                 getSubConfiguration("XMLTransformer").
                 set(XMLTransformer.CONF_XSLT, oaiTransformerXSLT);
         String indexDescriptorLocation = new File(
                 ReleaseTestCommon.DATA_ROOT,
                 "oai/oai_IndexDescriptor.xml").toString();
         log.debug("indexDescriptorLocation: " + indexDescriptorLocation);
-/**/        indexConf.getSubConfiguration("SingleChain").
+        indexConf.getSubConfiguration("SingleChain").
                 getSubConfiguration("DocumentCreator").
                 getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
@@ -163,25 +160,27 @@ public class OAITest extends NoExitTestCase {
             log.trace("Waiting for index ½ a second");
             Thread.sleep(500);
         }
-        log.info("Finished indexing in " + indexProfiler.getSpendTime()
-                 + ", ingesting in " + ingestTime);
+        index.stop();
+    }
 
-        log.info("Starting search");
-        Configuration searchConf = Configuration.load(Resolver.getURL(
-                        "test-facet-search-1/config/configuration.xml").
-                getFile());
-        searchConf.set(Service.CONF_SERVICE_ID, "SearchService");
-/**/        searchConf.getSubConfigurations(SearchNodeFactory.CONF_NODES).
-                get(0).
-                getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR).
-                set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
-                    indexDescriptorLocation);
-        SearchService search = new SearchService(searchConf);
-        search.start();
-
-        ingest.stop();
-        search.stop();
-        storage.stop();
+    public static FilterService performOAIIngest() throws IOException,
+                                                          InterruptedException {
+        log.info("Starting ingest");
+        Configuration ingestConf = Configuration.load(Resolver.getURL(
+                "test-ingest-oai/config/configuration.xml").getFile());
+        ingestConf.set(Service.CONF_SERVICE_ID, "IngestService");
+        ingestConf.getSubConfiguration("SingleChain").
+                getSubConfiguration("Reader").
+                set(FileReader.CONF_ROOT_FOLDER,
+                    new File(ReleaseTestCommon.DATA_ROOT,
+                             "oai/minidump"));
+        FilterService ingest = new FilterService(ingestConf);
+        ingest.start();
+        while (ingest.getStatus().getCode() == Status.CODE.running) {
+            log.trace("Waiting for ingest ½ a second");
+            Thread.sleep(500);
+        }
+        return ingest;
     }
 
 }
