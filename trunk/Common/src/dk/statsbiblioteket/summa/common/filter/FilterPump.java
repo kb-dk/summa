@@ -71,7 +71,7 @@ public class FilterPump extends StateThread implements Configurable {
             long pumpActions = 0;
             while (getStatus() == STATUS.running) {
                 pumpActions++;
-                if (sequence.pump()) {
+                if (!sequence.pump()) {
                     log.info(String.format("Finished pumping '%s' %d times",
                                            chainName, pumpActions));
                     break;
