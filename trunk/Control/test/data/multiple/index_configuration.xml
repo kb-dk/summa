@@ -68,47 +68,55 @@
                     <key>Muxer</key>
                     <value class="xproperties">
                         <entry>
+                            <key>summa.filter.sequence.filterclass</key>
+                            <value class="string">dk.statsbiblioteket.summa.common.filter.object.MUXFilter</value>
+                        </entry>
+                        <entry>
                             <key>summa.muxfilter.filters</key>
                             <value class="string">FagrefTransformer, OAITransformer</value>
                         </entry>
-                        <key>FagrefTransformer</key>
-                        <value class="xproperties">
-                            <entry>
-                                <key>summa.muxfilter.filter.class</key>
-                                <value class="string">dk.statsbiblioteket.summa.index.XMLTransformer</value>
-                            </entry>
-                            <entry>
-                                <key>summa.muxfilter.filter.name</key>
-                                <value class="string">Fagref Transformer</value>
-                            </entry>
-                            <entry>
-                                <key>summa.muxfilter.filter.bases</key>
-                                <value class="string">fagref</value>
-                            </entry>
-                            <entry>
-                                <key>summa.xmltransformer.xslt</key>
-                                <value class="string">/tmp/summatest/data/fagref/fagref_index.xsl</value>
-                            </entry>
-                        </value>
-                        <key>OAITransformer</key>
-                        <value class="xproperties">
-                            <entry>
-                                <key>summa.muxfilter.filter.class</key>
-                                <value class="string">dk.statsbiblioteket.summa.index.XMLTransformer</value>
-                            </entry>
-                            <entry>
-                                <key>summa.muxfilter.filter.name</key>
-                                <value class="string">OAI Transformer</value>
-                            </entry>
-                            <entry>
-                                <key>summa.muxfilter.filter.bases</key>
-                                <value class="string">oai</value>
-                            </entry>
-                            <entry>
-                                <key>summa.xmltransformer.xslt</key>
-                                <value class="string">file:///tmp/summatest/data/oai/oai_index.xsl</value>
-                            </entry>
-                        </value>
+                        <entry>
+                            <key>FagrefTransformer</key>
+                            <value class="xproperties">
+                                <entry>
+                                    <key>summa.muxfilter.filter.class</key>
+                                    <value class="string">dk.statsbiblioteket.summa.index.XMLTransformer</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.muxfilter.filter.name</key>
+                                    <value class="string">Fagref Transformer</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.muxfilter.filter.bases</key>
+                                    <value class="string">fagref</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.xmltransformer.xslt</key>
+                                    <value class="string">/tmp/summatest/data/fagref/fagref_index.xsl</value>
+                                </entry>
+                            </value>
+                        </entry>
+                        <entry>
+                            <key>OAITransformer</key>
+                            <value class="xproperties">
+                                <entry>
+                                    <key>summa.muxfilter.filter.class</key>
+                                    <value class="string">dk.statsbiblioteket.summa.index.XMLTransformer</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.muxfilter.filter.name</key>
+                                    <value class="string">OAI Transformer</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.muxfilter.filter.bases</key>
+                                    <value class="string">oai</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.xmltransformer.xslt</key>
+                                    <value class="string">file:///tmp/summatest/data/oai/oai_index.xsl</value>
+                                </entry>
+                            </value>
+                        </entry>
                     </value>
                 </entry>
                 <entry>

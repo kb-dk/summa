@@ -106,7 +106,9 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
     public Payload take() throws InterruptedException {
         Payload result = super.take();
         totalSize -= calculateSize(result);
-        flag.notifyAll();
+        synchronized (flag) {
+             flag.notifyAll();
+         }
         return result;
     }
 
@@ -114,7 +116,9 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
         boolean success = super.remove(o);
         if (success && o instanceof Payload) {
             totalSize -= calculateSize((Payload)o);
-            flag.notifyAll();
+            synchronized (flag) {
+                 flag.notifyAll();
+             }
         }
         return success;
     }
@@ -122,14 +126,18 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
     public void clear() {
         super.clear();
         totalSize = 0;
-        flag.notifyAll();
+        synchronized (flag) {
+             flag.notifyAll();
+         }
     }
 
     public Payload poll(long timeout, TimeUnit unit) throws InterruptedException {
         Payload result = super.poll(timeout, unit);
         if (result != null) {
             totalSize -= calculateSize(result);
-            flag.notifyAll();
+            synchronized (flag) {
+                flag.notifyAll();
+            }
         }
         return result;
     }
@@ -137,7 +145,9 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
     public int drainTo(Collection<? super Payload> c) {
         int count = super.drainTo(c);
         totalSize = 0;
-        flag.notifyAll();
+        synchronized (flag) {
+             flag.notifyAll();
+         }
         return count;
     }
 

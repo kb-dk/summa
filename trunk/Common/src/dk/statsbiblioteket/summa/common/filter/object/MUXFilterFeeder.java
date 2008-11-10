@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.Set;
 import java.util.List;
 import java.util.HashSet;
+import java.util.Queue;
 import java.io.IOException;
 
 /**
@@ -163,17 +164,16 @@ public class MUXFilterFeeder implements ObjectFilter, Runnable {
     private ObjectFilter createFilter(Configuration configuration) {
         Class<? extends ObjectFilter> filter = configuration.getClass(
                 CONF_FILTER_CLASS, ObjectFilter.class);
-        log.debug("Got filter class " + filter + ". Commencing creation");
+        log.debug(String.format("Got filter class %s. Commencing creation",
+                                filter));
         return Configuration.create(filter, configuration);
     }
 
     /**
      * Add a Payload to the queue, blocking until the queue accepts it.
      * @param payload the Payload to add.
-     * @throws InterruptedException if an interruption was received while
-     *                              offering payload to the queue.
      */
-    public void queuePayload(Payload payload) throws InterruptedException {
+    public void queuePayload(Payload payload) {
         if (log.isTraceEnabled()) {
             log.trace("Queueing " + payload);
         }
@@ -182,7 +182,7 @@ public class MUXFilterFeeder implements ObjectFilter, Runnable {
                     "The MUXFilterFeeder '%s' does not accept %s",
                     filterName, payload));
         }
-        inQueue.offer(payload, Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
+        uninterruptableOffer(payload, inQueue);
     }
 
     /**
@@ -190,19 +190,27 @@ public class MUXFilterFeeder implements ObjectFilter, Runnable {
      * @return a filtered Payload or null if EOF is reached.
      */
     public Payload getNextFilteredPayload() {
-        if (eofReached || !filter.hasNext()) {
+        if (eofReached) {
             return null;
         }
         Payload next = null;
         while (!eofReached && next == null) {
             try {
+                log.trace("Polling for next filtered payload");
                 next = outQueue.poll(500, TimeUnit.MILLISECONDS);
+                if (log.isTraceEnabled()) {
+                    log.trace("Got " + next);
+                }
             } catch (InterruptedException e) {
+                //noinspection DuplicateStringLiteralInspection
                 log.warn("Interrupted while waiting for Payload in out queue. "
                          + "Retrying");
             }
         }
-        return eofReached ? null : next == STOP ? null : next;
+        if (next == STOP) {
+            eofReached = true;
+        }
+        return eofReached ? null : next;
     }
 
     /**
@@ -223,21 +231,28 @@ public class MUXFilterFeeder implements ObjectFilter, Runnable {
     }
 
     /**
-     * Signal that no more Payloads will be added.
+     * Signal that no more Payloads will be added. Note that the signal will
+     * propagate through the queues and thus will only be visible when all
+     * previous queued Payloads are extracted.
      */
     public void signalEOF() {
         log.debug("signalEOF() entered");
-        eofReached = true;
+        uninterruptableOffer(STOP, inQueue);
+        log.trace("signalEOF() completed");
+    }
+
+    private void uninterruptableOffer(Payload payload, PayloadQueue queue) {
         while (true) {
             try {
-                inQueue.offer(STOP, Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
-                log.trace("signalEOF() completed");
+                queue.offer(payload, Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
                 return;
             } catch (InterruptedException e) {
-                log.warn("Interrupted while adding EOF-signal to inQueue. "
-                         + "Retrying", e);
+                log.warn(String.format(
+                        "Interrupted while adding %s to queue. Retrying",
+                        payload), e);
             }
         }
+
     }
 
     /**
@@ -258,7 +273,7 @@ public class MUXFilterFeeder implements ObjectFilter, Runnable {
     }
 
     public boolean isEofReached() {
-        return eofReached;
+        return eofReached || outQueue.peek() == STOP;
     }
 
     public String toString() {
@@ -267,19 +282,28 @@ public class MUXFilterFeeder implements ObjectFilter, Runnable {
 
     public void run() {
         try {
-            while (!eofReached) {
+            while (filter.hasNext()) {
                 try {
+                    log.trace("Polling filter for next processes Payload");
                     Payload next = filter.next();
+                    if (log.isTraceEnabled()) {
+                        log.trace("Got " + next);
+                    }
                     if (next != null) {
                         while (!eofReached) {
                             try {
+                                log.trace("Offering payload to outQueue");
                                 outQueue.offer(next, Integer.MAX_VALUE,
                                                TimeUnit.MILLISECONDS);
+                                log.trace("outQueue accepted Payload");
                                 break;
                             } catch (InterruptedException e) {
                                 log.warn("Interrupted while trying to add "
                                          + next + " to outQueue. Retrying");
                             }
+                        }
+                        if (next == STOP) {
+                            break;
                         }
                     }
                 } catch (Exception e) {
@@ -316,12 +340,14 @@ public class MUXFilterFeeder implements ObjectFilter, Runnable {
                 polledByHasNext =
                         inQueue.poll(Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
                 if (polledByHasNext == STOP) {
-                    eofReached = true;
+                    log.debug("STOP received in inQueue, adding to outQueue");
+                    uninterruptableOffer(STOP, outQueue);
+                    return false;
                 }
-                return !eofReached;
+                return true;
             } catch (InterruptedException e) {
-                log.warn("Interrupted while polling for next Payload.. "
-                         + "Retrying", e);
+                log.warn("Interrupted while polling for next Payload. Retrying",
+                         e);
             }
         }
     }
@@ -346,8 +372,8 @@ public class MUXFilterFeeder implements ObjectFilter, Runnable {
         if (closed) {
             return;
         }
-        filter.close(success);
         closed = true;
+        filter.close(success);
     }
 
     /**
