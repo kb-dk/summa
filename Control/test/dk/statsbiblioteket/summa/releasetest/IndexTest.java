@@ -144,9 +144,9 @@ public class IndexTest extends NoExitTestCase {
         String filterConfString =
                 Streams.getUTF8Resource("data/fagref/fagref_index_setup.xml");
         // TODO: Update this test to handle the new style with SummaDocument
-        filterConfString = filterConfString.replace("/tmp/summatest/data/"
-                                                    + "fagref/fagref_index.xsl",
-                                                    xsltLocation.toString());
+        filterConfString = filterConfString.replace(
+                "/tmp/summatest/data/fagref/fagref_index.xsl",
+                xsltLocation.toString());
         filterConfString =
                 filterConfString.replace(">/tmp/summatest/data/fagref<",
                                          ">" + INDEX_ROOT.toString() + "<");
@@ -155,25 +155,23 @@ public class IndexTest extends NoExitTestCase {
                                          + "fagref_IndexDescriptor.xml",
                                          descriptorLocation);
         // Yes, two replaces
-        filterConfString =
-                filterConfString.replace("/tmp/summatest/data/fagref/"
-                                         + "fagref_IndexDescriptor.xml",
-                                         descriptorLocation);
+        filterConfString = filterConfString.replace(
+                "/tmp/summatest/data/fagref/fagref_IndexDescriptor.xml",
+                descriptorLocation);
 
-        assertFalse("Replace should work",
-                    filterConfString.contains("/tmp/summatest/data/fagref/"
-                                              + "fagref_index.xsl"));
-        File indexConfFile = new File(System.getProperty("java.io.tmpdir"),
-                                                          "indexConf.xml");
+        assertFalse("Replace should work", filterConfString.contains(
+                "/tmp/summatest/data/fagref/fagref_index.xsl"));
+        File indexConfFile = new File(
+                System.getProperty("java.io.tmpdir"), "indexConf.xml");
         Files.saveString(filterConfString, indexConfFile);
 
         assertTrue("The index conf. should exist", indexConfFile.exists());
-        Configuration filterConf = Configuration.load(indexConfFile.getPath());
+        Configuration indexConf = Configuration.load(indexConfFile.getPath());
         assertNotNull("Configuration should contain "
                       + FilterControl.CONF_CHAINS,
-                      filterConf.getString(FilterControl.CONF_CHAINS));
+                      indexConf.getString(FilterControl.CONF_CHAINS));
 
-        FilterService indexService = new FilterService(filterConf);
+        FilterService indexService = new FilterService(indexConf);
         indexService.start();
 
         waitForService(indexService);
@@ -191,6 +189,10 @@ public class IndexTest extends NoExitTestCase {
                 EXPECTED_IDS);
 
         storage.close();
+    }
+
+    public void testFillStorage() throws Exception {
+        fillStorage();
     }
 
     /**
