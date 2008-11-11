@@ -1,0 +1,99 @@
+<xproperties>
+    <xproperties>
+        <entry>
+            <key>summa.control.service.port</key>
+            <value class="int">27077</value>
+        </entry>
+
+        <!-- The class implementing the Service interface -->
+        <entry>
+            <key>control.launcher.service.class</key>
+            <value class="string">dk.statsbiblioteket.summa.control.service.FilterService</value>
+        </entry>
+        
+        <entry>
+            <key>filterpump.chainname</key>
+            <value class="string">Simple file-based ingest for Horizon</value>
+        </entry>
+        <entry>
+            <key>filtercontrol.chains</key>
+            <value class="string">SingleChain</value>
+        </entry>
+        <entry>
+            <key>filtercontrol.sequential</key>
+            <value class="boolean">true</value>
+        </entry>
+        <entry>
+            <key>SingleChain</key>
+            <value class="xproperties">
+                <entry>
+                    <key>summa.filter.sequence.filters</key>
+                    <value class="string">Reader, SBMARCSplitter, Writer</value>
+                </entry>
+                <entry>
+                    <key>Reader</key>
+                    <value class="xproperties">
+                        <entry>
+                            <key>summa.filter.sequence.filterclass</key>
+                            <value class="string">dk.statsbiblioteket.summa.ingest.stream.FileReader</value>
+                        </entry>
+                        <entry>
+                            <key>summa.ingest.filereader.rootfolder</key>
+                            <value class="string">/tmp/summatest/data/horizon</value>
+                        </entry>
+                        <entry>
+                            <key>summa.ingest.filereader.recursive</key>
+                            <value class="boolean">true</value>
+                        </entry>
+                        <entry>
+                            <key>summa.ingest.filereader.filepattern</key>
+                            <value class="string">.*\.xml</value>
+                        </entry>
+                        <entry>
+                            <key>summa.ingest.filereader.completedpostfix</key>
+                            <value class="string">.completed</value>
+                        </entry>
+                    </value>
+                </entry>
+                <entry>
+                    <key>SBMARCSplitter</key>
+                    <value class="xproperties">
+                        <entry>
+                            <key>summa.filter.sequence.filterclass</key>
+                            <value class="string">dk.statsbiblioteket.summa.ingest.split.StreamController</value>
+                        </entry>
+                        <entry>
+                            <key>summa.ingest.stream.controller.parser</key>
+                            <value class="string">dk.statsbiblioteket.summa.ingest.split.SBMARCParser</value>
+                        </entry>
+                        <entry>
+                            <key>summa.ingest.marcparser.base</key>
+                            <value class="string">horizon</value>
+                        </entry>
+                        <entry>
+                            <key>summa.ingest.marcparser.id.prefix</key>
+                            <value class="string">horizon:</value>
+                        </entry>
+                    </value>
+                </entry>
+                <entry>
+                    <key>Writer</key>
+                    <value class="xproperties">
+                        <entry>
+                            <key>summa.filter.sequence.filterclass</key>
+                            <value class="string">
+                                dk.statsbiblioteket.summa.storage.api.filter.RecordWriter
+                            </value>
+                        </entry>
+                        <entry>
+                            <key>summa.rpc.vendor</key>
+                            <value class="string">//localhost:28000/summa-storage</value>
+                        </entry>
+                    </value>
+                </entry>
+            </value>
+        </entry>
+    </xproperties>
+</xproperties>
+
+
