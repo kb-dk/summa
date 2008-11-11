@@ -23,10 +23,11 @@
 package dk.statsbiblioteket.summa.control.client.shell;
 
 import dk.statsbiblioteket.summa.common.shell.Core;
-import dk.statsbiblioteket.summa.common.rpc.SummaRMIConnectionFactory;
+import dk.statsbiblioteket.summa.common.shell.Script;
+import dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.client.Client;
-import dk.statsbiblioteket.summa.control.api.rmi.ClientRMIConnection;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
 
@@ -37,7 +38,7 @@ import dk.statsbiblioteket.util.rpc.ConnectionContext;
  * {@link dk.statsbiblioteket.summa.common.shell} package.</p>
  *
  * <p>It can be run from the command line and can communicate with
- * any Client local or remotely via RMI.</p>
+ * any Client local or remotely via the configured RPC mechanism.</p>
  */
 public class ClientShell {
 
@@ -49,14 +50,11 @@ public class ClientShell {
         shell = new Core ();
         shell.setPrompt ("client-shell> ");
 
-        connManager = new ConnectionManager<ClientConnection> (
-                      new SummaRMIConnectionFactory<ClientRMIConnection>(null));
+        Configuration conf = Configuration.getSystemConfiguration(true);
 
-        // Although the client shell use a connection manager
-        // it does not currently use stateless connections. That would
-        // require the individual commands to manage their connections
-        // which is easy with a ConnectionManager instance , but requires
-        // a bit of work
+        connManager = new ConnectionManager<ClientConnection> (
+                          new GenericConnectionFactory<ClientConnection>(conf));
+
         shell.getShellContext().info ("Looking up client on " + rmiAddress);
         ConnectionContext<ClientConnection> ctx = connManager.get(rmiAddress);
         client = ctx.getConnection();
@@ -75,29 +73,37 @@ public class ClientShell {
         shell.installCommand(new SpecCommand(connManager, rmiAddress));
     }
 
-    public void run () {
-        // FIXME pass command line args to shell core
-        shell.run(null);
+    public int run (Script script) {
+        int returnVal = shell.run(script);
         connManager.close();
+
+        return returnVal;
     }
 
     public static void printUsage () {
-        System.err.println ("USAGE:\n\tclient-shell <client-rmi-address>\n");
-        System.err.println ("For example:\n\tclient-shell "
-                            + "//localhost:2768/control-client-2");
+        System.err.println ("USAGE:\n\tclient-shell <client-address> "
+                            + "[script commands]\n");
+        System.err.println ("For example:\n\tclient-shell //localhost:27000/c2");
     }
 
     public static void main (String[] args) {
-        try {
-            if (args.length != 1) {
-            printUsage ();
-            System.exit (1);
+        Script script = null;
+
+        if (args.length == 0) {
+                printUsage ();
+                System.exit (1);
         }
 
-        ClientShell shell = new ClientShell (args[0]);
-        shell.run ();
+        if (args.length > 1) {
+            script = new Script(args, 1);
+        }
+
+        try {
+            ClientShell shell = new ClientShell(args[0]);
+            System.exit(shell.run(script));
         } catch (Exception e) {
             e.printStackTrace();
+            System.exit(1);
         }
 
 
