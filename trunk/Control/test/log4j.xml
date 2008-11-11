@@ -64,9 +64,14 @@
         <level value="debug" />
         <appender-ref ref="CONSOLE" />
     </logger>
-
+<!--
     <logger name="dk.statsbiblioteket.summa.storage.api.filter.RecordReader">
         <level value="debug" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
+    -->
+    <logger name="dk.statsbiblioteket.summa">
+        <level value="info" />
         <appender-ref ref="CONSOLE" />
     </logger>
 

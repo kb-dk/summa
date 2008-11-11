@@ -77,8 +77,12 @@ public class XMLSplitterHandler extends DefaultHandler2 {
     private StringWriter sw;
     private StringWriter id;
 
-    void reset() {
+    void resetForNextRecord() {
         prepareScanForNextRecord();
+    }
+    void resetForNextStream() {
+        prepareScanForNextRecord();
+        outsideRecordPrefixStack.clear();
     }
 
     void prepareScanForNextRecord() {

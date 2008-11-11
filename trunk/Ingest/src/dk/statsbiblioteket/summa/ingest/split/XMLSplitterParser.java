@@ -64,9 +64,10 @@ public class XMLSplitterParser extends ThreadedStreamParser {
                 "http://xml.org/sax/properties/lexical-handler";
         SAXParser parser;
         try {
-            // TODO: Can we reuse a SAXParser?
+            // TODO: Can we reuse a SAXParser? Reset?
             log.trace("Constructing new SAXParser");
             parser = factory.newSAXParser();
+            handler.resetForNextStream();
             // Enable comment preservation
             parser.setProperty(LEXICAL_HANDLER, handler);
 
@@ -84,7 +85,7 @@ public class XMLSplitterParser extends ThreadedStreamParser {
             throw new RuntimeException("Could not instantiate SAXParser", e);
         }
         log.trace("Ready to parse");
-        handler.reset();
+        handler.resetForNextRecord();
         parser.parse(sourcePayload.getStream(), handler);
         log.debug("Finished parsing " + sourcePayload);
     }
