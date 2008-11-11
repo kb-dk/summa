@@ -6,6 +6,9 @@ import dk.statsbiblioteket.summa.control.server.shell.StatusCommand;
 import dk.statsbiblioteket.summa.common.shell.Core;
 import dk.statsbiblioteket.summa.common.shell.Script;
 import dk.statsbiblioteket.summa.common.rpc.SummaRMIConnectionFactory;
+import dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory;
+import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
@@ -22,15 +25,17 @@ public class ControlShell {
 
     private ConnectionManager<ControlConnection> connManager;
     private Core shell;
-    private Script script;
+    private String rmiAddress;
 
-    public ControlShell(String rmiAddress) throws Exception {
+    public ControlShell(Configuration conf) throws Exception {
         shell = new Core ();
-        script = null;
         shell.setPrompt ("control-shell> ");
 
+        rmiAddress = conf.getString(ConnectionConsumer.CONF_RPC_TARGET,
+                                    "//localhost:27000/summa-control");
+
         connManager = new ConnectionManager<ControlConnection> (
-                                    new SummaRMIConnectionFactory<ControlRMIConnection>(null));
+                         new GenericConnectionFactory<ControlConnection>(conf));
 
         shell.installCommand(new PingCommand(connManager, rmiAddress));
         shell.installCommand(new DeployCommand(connManager, rmiAddress));
@@ -40,11 +45,7 @@ public class ControlShell {
         shell.installCommand(new StatusCommand(connManager, rmiAddress));
     }
 
-    public void setScript (Script script) {
-        this.script = script;
-    }
-
-    public int run () {
+    public int run (Script script) {
         int returnVal = shell.run(script);
         connManager.close();
 
@@ -52,28 +53,23 @@ public class ControlShell {
     }
 
     public static void printUsage () {
-        System.err.println ("USAGE:\n\tcontrol-shell <control-rmi-address> [script commands]\n");
-        System.err.println ("For example:\n\tcontrol-shell //localhost:2768/summa-control");
+        System.err.println ("USAGE:\n\tcontrol-shell [script commands]\n");
     }
 
     public static void main (String[] args) {
+        Script script = null;
+        Configuration conf = Configuration.getSystemConfiguration(true);
+
+        if (args.length > 0) {
+            script = new Script(args);
+        }
+
         try {
-            if (args.length == 0) {
-                printUsage ();
-                System.exit (1);
-            }
-
-            ControlShell shell = new ControlShell(args[0]);
-
-            if (args.length > 1) {
-                // Schedule the script created by concatenating args from index 1
-                shell.setScript(new Script(args, 1));
-            }
-
-            System.exit(shell.run());
-
+            ControlShell shell = new ControlShell(conf);
+            System.exit(shell.run(script));
         } catch (Exception e) {
             e.printStackTrace();
+            System.exit(1);
         }
     }
 
