@@ -56,7 +56,7 @@
                         </entry>
                         <entry>
                             <key>summa.storage.recordreader.base</key>
-                            <value class="string">oai</value>
+                            <value class="string">*</value>
                         </entry>
                         <entry>
                             <key>summa.rpc.vendor</key>

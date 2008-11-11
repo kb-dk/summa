@@ -44,9 +44,11 @@ import java.io.IOException;
  * putting the resulting Payload in an out queue. The wrapped filter gets its
  * input Payloads from an inQueue.
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
+@QAInfo(level = QAInfo.Level.FINE,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
+        author = "te",
+        comment = "This is a central component, which uses threading. " 
+                  + "Please pay special attention to potential deadlocks")
 public class MUXFilterFeeder implements ObjectFilter, Runnable {
     private static Log log = LogFactory.getLog(MUXFilterFeeder.class);
 

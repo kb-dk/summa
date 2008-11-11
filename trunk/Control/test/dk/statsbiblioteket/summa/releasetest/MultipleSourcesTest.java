@@ -32,6 +32,8 @@ import dk.statsbiblioteket.summa.control.service.StorageService;
 import dk.statsbiblioteket.summa.control.service.FilterService;
 import dk.statsbiblioteket.summa.control.service.SearchService;
 import dk.statsbiblioteket.summa.index.XMLTransformer;
+import dk.statsbiblioteket.summa.storage.api.StorageIterator;
+import dk.statsbiblioteket.summa.ingest.stream.FileReader;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
@@ -65,10 +67,14 @@ public class MultipleSourcesTest extends NoExitTestCase {
         Profiler ingestProfiler = new Profiler();
         FilterService ingest = OAITest.performOAIIngest();
         String ingestTime = ingestProfiler.getSpendTime();
+        assertTrue("There should be more than 0 records from base oai",
+                   countRecords(storage, "oai") > 0);
 
         Profiler ingestProfilerFagref = new Profiler();
         FilterService ingestFagref = performFagrefIngest();
         String ingestFagrefTime = ingestProfilerFagref.getSpendTime();
+        assertTrue("There should be more than 0 records from base fagref",
+                   countRecords(storage, "fagref") > 0);
 
         Profiler indexProfiler = new Profiler();
         performMUXIndex();
@@ -84,6 +90,18 @@ public class MultipleSourcesTest extends NoExitTestCase {
         storage.stop();
     }
 
+    private int countRecords(StorageService storage, String base) throws
+                                                                  IOException {
+        StorageIterator iterator = new StorageIterator(storage.getStorage(),
+                            storage.getStorage().getRecordsFromBase(base));
+        int counter = 0;
+        while (iterator.hasNext()) {
+            counter++;
+            iterator.next();
+        }
+        return counter;
+    }
+
     public static FilterService performFagrefIngest() throws IOException,
                                                           InterruptedException {
         log.info("Starting ingest of OAI");
@@ -91,6 +109,11 @@ public class MultipleSourcesTest extends NoExitTestCase {
                         "test-ingest-fagref/config/configuration.xml").
                 getFile());
         ingestFagrefConf.set(Service.CONF_SERVICE_ID, "IngestServiceFagref");
+        ingestFagrefConf.getSubConfiguration("SingleChain").
+                getSubConfiguration("Reader").
+                set(FileReader.CONF_ROOT_FOLDER,
+                    new File(ReleaseTestCommon.DATA_ROOT,
+                             "fagref"));
         FilterService ingestFagref = new FilterService(ingestFagrefConf);
         ingestFagref.start();
         while (ingestFagref.getStatus().getCode() == Status.CODE.running) {
@@ -129,7 +152,7 @@ public class MultipleSourcesTest extends NoExitTestCase {
         indexConf.getSubConfiguration("SingleChain").
                 getSubConfiguration("Muxer").
                 getSubConfiguration("OAITransformer").
-                set(XMLTransformer.CONF_XSLT, fagrefTransformerXSLT);
+                set(XMLTransformer.CONF_XSLT, oaiTransformerXSLT);
 
         indexConf.getSubConfiguration("SingleChain").
                 getSubConfiguration("DocumentCreator").
