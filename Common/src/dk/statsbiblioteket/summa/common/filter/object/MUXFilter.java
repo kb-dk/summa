@@ -53,9 +53,11 @@ import java.io.IOException;
  */
 // TODO: Make a FilterProxy and a FilterSequencer.
 // TODO: Add optional consistent Payload ordering between feeders
-@QAInfo(level = QAInfo.Level.NORMAL,
+@QAInfo(level = QAInfo.Level.FINE,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
+        author = "te",
+        comment = "This is a central component, which uses threading. "
+                  + "Please pay special attention to potential deadlocks")
 public class MUXFilter implements ObjectFilter, Runnable {
     private static Log log = LogFactory.getLog(MUXFilter.class);
 
@@ -97,6 +99,8 @@ public class MUXFilter implements ObjectFilter, Runnable {
         feeders = new ArrayList<MUXFilterFeeder>(filterConfKeys.size());
         for (String filterConfKey: filterConfKeys) {
             try {
+                log.debug("Constructing feeder from conf '" + filterConfKey
+                          + "'");
                 feeders.add(new MUXFilterFeeder(
                         conf.getSubConfiguration(filterConfKey)));
             } catch (IOException e) {

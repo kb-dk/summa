@@ -64,6 +64,8 @@ public interface ReadableStorage extends Configurable {
      * Get an iterator over all records from the given base modified after the
      * given time. The iterator is sorted by record id.
      * <p/>
+     * If the base is null, all records for all bases are selected.
+     * <p/>
      * The implementation of this method should be very light in the case there
      * are no updates as change notification services might poll the storage
      * using this service.
@@ -72,7 +74,8 @@ public interface ReadableStorage extends Configurable {
      * {@link StorageIterator} on the returned iterator key.
      *
      * @param time a timestamp in milliseconds
-     * @param base the name of the original record base
+     * @param base the name of the original record base or null if all bases are
+     *             to be used.
      * @return an iterator key that can be used to iterate over all records
      *         modified after given time (sorted by record id)
      * @throws IOException on communication errors with the storage

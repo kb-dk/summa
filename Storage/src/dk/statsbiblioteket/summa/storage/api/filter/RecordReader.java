@@ -185,10 +185,14 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         log.trace("Constructing RecordReader");
         storage = new StorageReaderClient(conf);
         base = conf.getString(CONF_BASE, DEFAULT_BASE);
+        if ("*".equals(base) || "".equals(base)) {
+            log.trace("Catch-all base '" + base + "' was specified");
+            base = null;
+        }
         String progressFileString =
                 conf.getString(CONF_PROGRESS_FILE, null);
         if (progressFileString == null || "".equals(progressFileString)) {
-            progressFile = new File(("".equals(base) ? "" : base + ".")
+            progressFile = new File((base == null ? "" : base + ".")
                                     + DEFAULT_PROGRESS_FILE_POSTFIX);
             log.debug("No progress-file defined in key " + CONF_PROGRESS_FILE
                       + ". Constructing progress file '" + progressFile + "'");
@@ -204,10 +208,6 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
                                      DEFAULT_MAX_READ_RECORDS);
         maxReadSeconds = conf.getInt(CONF_MAX_READ_SECONDS,
                                      DEFAULT_MAX_READ_SECONDS);
-        // TODO: Support empty base in reader
-        if ("".equals(base)) {
-            throw new ConfigurationException("Empty base not supported yet");
-        }
 
         if (conf.getBoolean(CONF_STAY_ALIVE, DEFAULT_STAY_ALIVE)) {
             storageWatcher = new StorageWatcher(conf);
@@ -498,7 +498,9 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
 
     private void writeProgress() {
         if (usePersistence && recordCounter > 0) {
-            log.debug("Storing progress in '" + progressFile + "'");
+            log.debug("Storing progress in '" + progressFile + "' ("
+                      + recordCounter + " records has been extracted so far "
+                      + "from base " + base + ")");
             try {
                 Files.saveString(
                         String.format(TIMESTAMP_FORMAT, lastRecordTimestamp),

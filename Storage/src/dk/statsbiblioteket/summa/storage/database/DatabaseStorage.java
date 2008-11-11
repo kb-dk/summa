@@ -156,6 +156,7 @@ public abstract class DatabaseStorage extends StorageBase {
     private PreparedStatement stmtGetAll;
     private PreparedStatement stmtGetFromBase;
     private PreparedStatement stmtGetModifiedAfter;
+    private PreparedStatement stmtGetModifiedAfterAll;
     private PreparedStatement stmtGetFrom;
     private PreparedStatement stmtGetRecord;
     private PreparedStatement stmtClearBase;
@@ -298,11 +299,20 @@ public abstract class DatabaseStorage extends StorageBase {
                                     + " ON " + relationsClause
                                     + " WHERE " + BASE_COLUMN + "=?"
                                     + " AND " + MTIME_COLUMN + ">?"
-//                                    + " AND " + MTIME_COLUMN + "!=?"
                                     + " ORDER BY " + ID_COLUMN;
         log.debug("Preparing query getModifiedAfter with '"
                   + modifiedAfterQuery + "'");
         stmtGetModifiedAfter = getConnection().prepareStatement(modifiedAfterQuery);
+        String modifiedAfterAllQuery = "SELECT " + allCells
+                                       + " FROM " + RECORDS
+                                       + " LEFT JOIN " + RELATIONS
+                                       + " ON " + relationsClause
+                                       + " WHERE " + MTIME_COLUMN + ">?"
+                                       + " ORDER BY " + ID_COLUMN;
+        log.debug("Preparing query getModifiedAfterAll with '"
+                  + modifiedAfterAllQuery + "'");
+        stmtGetModifiedAfterAll = getConnection().prepareStatement(
+                modifiedAfterAllQuery);
 // TODO: Handle deletions and indexables
         String fromQuery = "SELECT " + allCells
                            + " FROM " + RECORDS
@@ -488,12 +498,22 @@ public abstract class DatabaseStorage extends StorageBase {
         log.debug("getRecordsModifiedAfter('" + time + "', " + base
                   + ") entered");
 
-        if (time > getModificationTime (base)) {
+        if (time > getModificationTime(base)) {
             log.debug ("Storage not flushed after " + time + ". Returning"
                        + " empty iterator");
             return EMPTY_ITERATOR_KEY;
         }
 
+        if (base == null) { // All bases
+            try {
+                stmtGetModifiedAfterAll.setTimestamp(1, new Timestamp(time));
+            } catch (SQLException e) {
+                throw new IOException(String.format(
+                        "Could not prepare stmtGetModifiedAfterAll with time"
+                        + " %d", time), e);
+            }
+            return prepareIterator(stmtGetModifiedAfterAll);
+        }
         //time += 1000;
         try {
             stmtGetModifiedAfter.setString(1, base);
