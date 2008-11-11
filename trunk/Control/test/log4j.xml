@@ -60,16 +60,16 @@
         <appender-ref ref="FILE"/>
     </appender>
       -->
-    <logger name="dk.statsbiblioteket.summa">
-        <level value="info" />
+    <logger name="dk.statsbiblioteket.summa.index.XMLTransformer">
+        <level value="debug" />
         <appender-ref ref="CONSOLE" />
     </logger>
-    <!--
+
     <logger name="dk.statsbiblioteket.summa.storage.api.filter.RecordReader">
         <level value="debug" />
         <appender-ref ref="CONSOLE" />
     </logger>
-    -->
+
 <!--    <logger name="dk.statsbiblioteket.summa.common.filter.object.MUXFilter">
         <level value="debug" />
         <appender-ref ref="CONSOLE" />
