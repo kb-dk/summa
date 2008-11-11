@@ -78,9 +78,7 @@ public class MultipleSourcesTest extends NoExitTestCase {
 
         Profiler indexProfiler = new Profiler();
         performMUXIndex();
-        log.info("Finished indexing in " + indexProfiler.getSpendTime()
-                 + ", ingesting OAI in " + ingestTime + ", fagref in "
-                 + ingestFagrefTime);
+        String indexTime = indexProfiler.getSpendTime();
 
         SearchService search = OAITest.getSearchService();
 
@@ -88,6 +86,10 @@ public class MultipleSourcesTest extends NoExitTestCase {
         ingestFagref.stop();
         search.stop();
         storage.stop();
+
+        log.info("Finished indexing in " + indexTime
+                 + ", ingesting OAI in " + ingestTime + ", fagref in "
+                 + ingestFagrefTime);
     }
 
     private int countRecords(StorageService storage, String base) throws

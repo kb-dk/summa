@@ -305,7 +305,11 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      */
     private boolean checkIterator() throws IOException {
         log.trace("checkIterator() called");
+        if (isEof()) {
+            return false;
+        }
         if (recordIterator == null) {
+            //noinspection DuplicateStringLiteralInspection
             log.debug(String.format("Creating initial record iterator for "
                                     + "Records modified after "
                                     + ISO_TIME, lastRecordTimestamp));
@@ -319,7 +323,12 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         } else if (recordIterator.hasNext()) {
             return true;
         } else {
+            if (storageWatcher == null) {
+                log.trace("storageWatcher is null, so no renew of iterator");
+                return false;
+            }
             // We have an iterator but it is empty
+            //noinspection DuplicateStringLiteralInspection
             log.debug(String.format("Updating record iterator for "
                                     + "Records modified after "
                                     + ISO_TIME, lastRecordTimestamp));
@@ -358,6 +367,9 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             return false;
         }
 
+        if (isEof()) {
+            return false;
+        }
         while (!recordIterator.hasNext()) {
             log.trace("hasNext: RecordIterater does not have next. Waiting and "
                       + "checking");
@@ -374,7 +386,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
                 return false;
             }
         }
-        return !eofReached;
+        return !isEof();
     }
 
     private void waitForStorageChange() {

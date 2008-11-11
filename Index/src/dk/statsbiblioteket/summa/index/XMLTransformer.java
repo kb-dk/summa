@@ -165,6 +165,7 @@ public class XMLTransformer extends ObjectFilterImpl {
             return;
         }
         try {
+            int inSize = payload.getRecord().getContent().length;
             StreamResult input = new StreamResult();
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             input.setOutputStream(out);
@@ -188,6 +189,11 @@ public class XMLTransformer extends ObjectFilterImpl {
                 } catch (UnsupportedEncodingException e) {
                     log.error("Unable to convert byte-array to UTF-8", e);
                 }
+            } else if (log.isDebugEnabled()) {
+                int outSize = payload.getRecord().getContent().length;
+                log.debug("Transformed " + payload + ". Input: " + inSize
+                          + " bytes, output: " + outSize + " bytes, XSLT: "
+                          + xsltLocation);
             }
 /*            if (log.isTraceEnabled()) {
                 log.trace("Transformed content for " + payload + ": "

@@ -56,8 +56,8 @@ import java.io.IOException;
 @QAInfo(level = QAInfo.Level.FINE,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te",
-        comment = "This is a central component, which uses threading. "
-                  + "Please pay special attention to potential deadlocks")
+        comment = "This is a central component, which uses threading."
+                  + " Please pay special attention to potential deadlocks")
 public class MUXFilter implements ObjectFilter, Runnable {
     private static Log log = LogFactory.getLog(MUXFilter.class);
 
@@ -328,6 +328,7 @@ public class MUXFilter implements ObjectFilter, Runnable {
     }
 
     public void remove() {
+        //noinspection DuplicateStringLiteralInspection
         throw new UnsupportedOperationException("Remove not supported");
     }
 }
