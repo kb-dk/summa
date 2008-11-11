@@ -39,6 +39,7 @@ import org.apache.commons.logging.Log;
 
 import java.io.IOException;
 import java.io.File;
+import java.net.URL;
 
 /**
  * Performs ingest, index and search on multiple sources using the MUXFilter.
@@ -61,14 +62,37 @@ public class MultipleSourcesTest extends NoExitTestCase {
 //        ReleaseTestCommon.tearDown();
     }
 
+    public void testTargetExistence() throws Exception {
+        URL fagrefLocation =
+                Resolver.getURL("targets/fagreferent/fagref_index.xsl");
+        log.debug("Fagref XSLT location was " + fagrefLocation);
+        assertNotNull("A location should be available for fagres XSTL",
+                      fagrefLocation);
+        URL sbmarcTestDataLocation =
+                Resolver.getURL("data/horizon/one_book.xml");
+        log.debug("SBMARC data location was " + sbmarcTestDataLocation);
+        assertNotNull("A location should be available for SBMARC",
+                      sbmarcTestDataLocation);
+    }
+
+    public void testHorizonIngest() throws Exception {
+        StorageService storage = OAITest.getStorageService();
+        FilterService horizon = performHorizonIngest();
+        assertEquals("There should be the expected number of horizon records",
+                     1, countRecords(storage, "horizon"));
+        log.debug("All OK. Closing down");
+        horizon.stop();
+        storage.stop();
+    }
+
     public void testFull() throws Exception {
         StorageService storage = OAITest.getStorageService();
 
         Profiler ingestProfiler = new Profiler();
-        FilterService ingest = OAITest.performOAIIngest();
-        String ingestTime = ingestProfiler.getSpendTime();
-        assertTrue("There should be more than 0 records from base oai",
-                   countRecords(storage, "oai") > 0);
+//        FilterService ingestOAI = OAITest.performOAIIngest();
+        String ingestOAITime = ingestProfiler.getSpendTime();
+//        assertTrue("There should be more than 0 records from base oai",
+ //                  countRecords(storage, "oai") > 0);
 
         Profiler ingestProfilerFagref = new Profiler();
         FilterService ingestFagref = performFagrefIngest();
@@ -76,20 +100,28 @@ public class MultipleSourcesTest extends NoExitTestCase {
         assertTrue("There should be more than 0 records from base fagref",
                    countRecords(storage, "fagref") > 0);
 
+        Profiler ingestProfilerHorizon = new Profiler();
+        FilterService ingestHorizon = performHorizonIngest();
+        String ingestHorizonTime = ingestProfilerHorizon.getSpendTime();
+        assertTrue("There should be more than 0 records from base horizon",
+                   countRecords(storage, "horizon") > 0);
+
         Profiler indexProfiler = new Profiler();
         performMUXIndex();
         String indexTime = indexProfiler.getSpendTime();
 
         SearchService search = OAITest.getSearchService();
 
-        ingest.stop();
+   //     ingestOAI.stop();
         ingestFagref.stop();
+        ingestHorizon.stop();
         search.stop();
         storage.stop();
 
         log.info("Finished indexing in " + indexTime
-                 + ", ingesting OAI in " + ingestTime + ", fagref in "
-                 + ingestFagrefTime);
+                 + ", ingesting OAI in " + ingestOAITime
+                 + ", horizon in " + ingestHorizonTime
+                 + ", fagref in " + ingestFagrefTime);
     }
 
     private int countRecords(StorageService storage, String base) throws
@@ -114,8 +146,7 @@ public class MultipleSourcesTest extends NoExitTestCase {
         ingestFagrefConf.getSubConfiguration("SingleChain").
                 getSubConfiguration("Reader").
                 set(FileReader.CONF_ROOT_FOLDER,
-                    new File(ReleaseTestCommon.DATA_ROOT,
-                             "fagref"));
+                    new File(ReleaseTestCommon.DATA_ROOT, "fagref"));
         FilterService ingestFagref = new FilterService(ingestFagrefConf);
         ingestFagref.start();
         while (ingestFagref.getStatus().getCode() == Status.CODE.running) {
@@ -125,6 +156,26 @@ public class MultipleSourcesTest extends NoExitTestCase {
         return ingestFagref;
     }
 
+    public static FilterService performHorizonIngest() throws IOException,
+                                                          InterruptedException {
+        log.info("Starting ingest of Horizon");
+        Configuration ingestFagrefConf = Configuration.load(Resolver.getURL(
+                        "data/multiple/horizon_ingest_configuration.xml").
+                getFile());
+        ingestFagrefConf.set(Service.CONF_SERVICE_ID, "IngestServiceHorizon");
+        ingestFagrefConf.getSubConfiguration("SingleChain").
+                getSubConfiguration("Reader").
+                set(FileReader.CONF_ROOT_FOLDER,
+                    new File(ReleaseTestCommon.DATA_ROOT, "horizon"));
+        FilterService ingestHorizon = new FilterService(ingestFagrefConf);
+        ingestHorizon.start();
+        while (ingestHorizon.getStatus().getCode() == Status.CODE.running) {
+            log.trace("Waiting for horizon ingest ½ a second");
+            Thread.sleep(500);
+        }
+        return ingestHorizon;
+    }
+
     private void performMUXIndex() throws IOException, InterruptedException {
         log.info("Starting index");
         Configuration indexConf = Configuration.load(Resolver.getURL(
@@ -132,15 +183,17 @@ public class MultipleSourcesTest extends NoExitTestCase {
                 getFile());
         indexConf.set(Service.CONF_SERVICE_ID, "IndexService");
 
-        String oaiTransformerXSLT = new File(
-                ReleaseTestCommon.DATA_ROOT,
-                "oai/oai_index.xsl").toString();
+        String oaiTransformerXSLT = Resolver.getURL(
+                "targets/oai/oai_index.xsl").getFile();
         log.debug("oaiTransformerXSLT: " + oaiTransformerXSLT);
 
-        String fagrefTransformerXSLT = new File(
-                ReleaseTestCommon.DATA_ROOT,
-                "fagref/fagref_index.xsl").toString();
+        String fagrefTransformerXSLT = Resolver.getURL(
+                "targets/fagreferent/fagref_index.xsl").getFile();
         log.debug("fagrefTransformerXSLT: " + fagrefTransformerXSLT);
+
+        String horizonTransformerXSLT = Resolver.getURL(
+                "targets/horizon/horizon_index.xsl").getFile();
+        log.debug("horizonTransformerXSLT: " + horizonTransformerXSLT);
 
         String indexDescriptorLocation = new File(
                 ReleaseTestCommon.DATA_ROOT,
@@ -155,6 +208,10 @@ public class MultipleSourcesTest extends NoExitTestCase {
                 getSubConfiguration("Muxer").
                 getSubConfiguration("OAITransformer").
                 set(XMLTransformer.CONF_XSLT, oaiTransformerXSLT);
+        indexConf.getSubConfiguration("SingleChain").
+                getSubConfiguration("Muxer").
+                getSubConfiguration("HorizonTransformer").
+                set(XMLTransformer.CONF_XSLT, horizonTransformerXSLT);
 
         indexConf.getSubConfiguration("SingleChain").
                 getSubConfiguration("DocumentCreator").

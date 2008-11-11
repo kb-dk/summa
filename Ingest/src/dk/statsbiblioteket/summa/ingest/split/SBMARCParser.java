@@ -190,7 +190,7 @@ public class SBMARCParser extends MARCParser {
         }
 
         // Status
-        System.out.println(dataFieldTag);
+//        System.out.println(dataFieldTag);
         if (STATUS_FIELD.equals(dataFieldTag) &&
             STATUS_FIELD_SUBFIELD.equals(subFieldCode)) {
             // d = deleted, c = corrected, n = new, "" = new or corrected
