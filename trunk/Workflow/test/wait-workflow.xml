@@ -20,9 +20,21 @@
                     </entry>
                     <entry>
                         <key>summa.workflow.step.wait.time</key>
-                        <value class="int">5</value>
+                        <value class="int">2</value>
                     </entry>
-                </xproperties>                
+                </xproperties>
+                <xproperties>
+                    <entry>
+                        <key>summa.workflow.step.class</key>
+                        <value class="string">
+                            dk.statsbiblioteket.summa.workflow.WaitStep
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>summa.workflow.step.wait.time</key>
+                        <value class="int">3</value>
+                    </entry>
+                </xproperties>
             </value>
         </entry>
     </xproperties>
