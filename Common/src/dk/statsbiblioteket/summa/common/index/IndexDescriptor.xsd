@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://statsbiblioteket.dk/2008/Descriptor">
+    <!-- XML Schema for Summa Index Descriptor.
+         The descriptor defines fields, groups and facets for a Summa index.
+         // TODO: Consider if the targetNamespace is okay 
+    -->
+
+    <xsd:element name="IndexDescriptor" type="IndexDescriptorType"/>
+    <xsd:complexType name="IndexDescriptorType">
+        <xsd:element name="groups" type="GroupsType"/>
+        <xsd:all>
+            <xsd:element name="fields" type="FieldsType"/>
+            <xsd:element name="defaultSearchFields" type="DefaultSearchFieldsType"/>
+        </xsd:all>
+        <xsd:attribute name="version" type="xsd:string" use="optional"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="GroupsType">
+        <xsd:sequence>
+            <xsd:element name="group" type="GroupType" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="GroupType">
+        <xsd:sequence>
+            <xsd:element name="groupField" type="GroupFieldType" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+        <xsd:attribute name="name" type="xsd:string" use="required"/>
+        <xsd:attribute name="isFacet" type="xsd:boolean" use="optional"/>
+        <xsd:attribute name="facetName" type="xsd:string" use="optional"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="GroupFieldType">
+        <xsd:attribute name="ref" type="xsd:string" use="required"/>
+        <xsd:attribute name="isFacet" type="xsd:boolean" use="optional"/>
+    </xsd:complexType>
+
+    <xsd:element name="customer" type="customerType"/>
+    <xsd:complexType name="customerType">
+        <xsd:sequence>
+            <xsd:element ref="adress" />
+        </xsd:sequence>
+        <xsd:attribute name="firstName"  type="xsd:string" use="required"/>
+        <xsd:attribute name="surname" type="xsd:string" use="required"/>
+    </xsd:complexType>
+    <xsd:element name="adress" type="adressType"/>
+    <xsd:complexType name="adressType">
+        <xsd:attribute name="street" type="xsd:string" use="required"/>
+        <xsd:attribute name="no" type="xsd:string" use="required"/>
+        <xsd:attribute name="zip" type="xsd:string" use="required"/>
+        <xsd:attribute name="city" type="xsd:string" use="required"/>
+    </xsd:complexType>
+    <xsd:element name="orderLine" type="orderLineType"/>
+    <xsd:complexType name="orderLineType">
+        <xsd:attribute name="itemno" type="xsd:string" use="required"/>
+        <xsd:attribute name="itemdesciption" type="xsd:string" use="required"/>
+        <xsd:attribute name="quantity" type="xsd:int" use="required"/>
+        <xsd:attribute name="price" type="xsd:double" use="required"/>
+    </xsd:complexType>
+</xsd:schema>
+
+
+
+
