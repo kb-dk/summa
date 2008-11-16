@@ -37,7 +37,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 /**
  * This filter converts dumps from XLibris Aleph library system to MARC-XML.
  * It is normally followed by the
- * {@link dk.statsbiblioteket.summa.ingest.split.SBMARCParser} filter.
+ * {@link dk.statsbiblioteket.summa.ingest.split.SBMARCParser} called from
+ * the {@link dk.statsbiblioteket.summa.ingest.split.StreamController} filter.
  * </p><p>
  * The Aleph2XML2-filter is stream-to-stream.
  * </p><p>

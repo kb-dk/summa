@@ -36,8 +36,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * Wrapper for a {@link dk.statsbiblioteket.summa.search.api.SummaSearcher}, which will normally translate to a
- * {@link dk.statsbiblioteket.summa.search.api.SummaSearcher}.
+ * Wrapper for a {@link dk.statsbiblioteket.summa.search.api.SummaSearcher},
+ * which will normally translate to a
+ * {@link dk.statsbiblioteket.summa.search.SummaSearcherImpl}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,

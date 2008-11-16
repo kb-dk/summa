@@ -1,7 +1,9 @@
 <xproperties>
     <xproperties>
         <!--
-           Configuration for the Faceted Indexer
+           This index-configuration is a stub. It should be populated with
+           transformers for the relevant bases. See MultipleSourcesTest for
+           details.
         -->
         <entry>
             <key>summa.control.service.port</key>
@@ -71,7 +73,7 @@
                             <key>summa.filter.sequence.filterclass</key>
                             <value class="string">dk.statsbiblioteket.summa.common.filter.object.MUXFilter</value>
                         </entry>
-                        <entry>
+<!--                        <entry>
                             <key>summa.muxfilter.filters</key>
                             <value class="string">FagrefTransformer, OAITransformer, HorizonTransformer</value>
                         </entry>
@@ -88,11 +90,11 @@
                                 </entry>
                                 <entry>
                                     <key>summa.muxfilter.filter.bases</key>
-                                    <value class="string">fagref</value>
+                                    <value class="string">fagreferent</value>
                                 </entry>
                                 <entry>
                                     <key>summa.xmltransformer.xslt</key>
-                                    <value class="string">/tmp/summatest/data/fagref/fagref_index.xsl</value>
+                                    <value class="string">/tmp/summatest/data/fagreferent/fagref_index.xsl</value>
                                 </entry>
                             </value>
                         </entry>
@@ -137,7 +139,7 @@
                                     <value class="string">horizon XSLT location</value>
                                 </entry>
                             </value>
-                        </entry>
+                        </entry>-->
                     </value>
                 </entry>
                 <entry>

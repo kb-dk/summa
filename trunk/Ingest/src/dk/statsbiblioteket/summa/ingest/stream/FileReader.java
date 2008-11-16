@@ -385,7 +385,8 @@ public class FileReader implements ObjectFilter {
             }
             if (!(payload.getStream() instanceof RenamingFileStream)) {
                 log.warn("close: Encountered payload with stream that was not "
-                         + "RenamingFileStream");
+                         + "RenamingFileStream. The stream was a "
+                         + payload.getStream().getClass().getName());
                 continue;
             }
             RenamingFileStream stream = (RenamingFileStream)payload.getStream();
