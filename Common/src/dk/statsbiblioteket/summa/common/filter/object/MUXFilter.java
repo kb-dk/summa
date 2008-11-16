@@ -51,8 +51,9 @@ import java.io.IOException;
  * flexible scheme, such as Payload order preservation, if left for later
  * improvements to the class.
  */
-// TODO: Make a FilterProxy and a FilterSequencer.
+// TODO: Make a FilterProxy.
 // TODO: Add optional consistent Payload ordering between feeders
+// TODO: Add option to turn off feeding of filters, making the start points
 @QAInfo(level = QAInfo.Level.FINE,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te",

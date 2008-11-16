@@ -38,7 +38,7 @@
 
 Old style descriptor
 
-<Index:document xmlns:Index="http://statsbiblioteket.dk/2004/Index" Index:defaultBoost="1" Index:defaultType="token" Index:defaultFreetext="true" Index:defaultSuggest="false" Index:defaultGroup="false" Index:langAutogroup="true" Index:resolver="fagref" Index:id="jh@example.com">
+<Index:document xmlns:Index="http://statsbiblioteket.dk/2004/Index" Index:defaultBoost="1" Index:defaultType="token" Index:defaultFreetext="true" Index:defaultSuggest="false" Index:defaultGroup="false" Index:langAutogroup="true" Index:resolver="fagreferent" Index:id="jh@example.com">
   <Index:fields>
     <Index:field Index:name="shortformat" Index:type="stored" Index:freetext="false"><![CDATA[<shortrecord><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description><dc:title>Fagekspert i urukaisk</dc:title><dc:creator>Jens Hansen</dc:creator><dc:type xml:lang="da">person</dc:type><dc:type xml:lang="en">person</dc:type><dc:identifier>jh@example.com</dc:identifier></rdf:Description></rdf:RDF></shortrecord>]]></Index:field>
     <Index:group Index:name="au" Index:navn="fo" Index:suggest="true">

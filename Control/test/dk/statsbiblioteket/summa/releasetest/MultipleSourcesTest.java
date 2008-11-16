@@ -26,6 +26,9 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
+import dk.statsbiblioteket.summa.common.filter.object.MUXFilter;
+import dk.statsbiblioteket.summa.common.filter.object.MUXFilterFeeder;
+import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.control.api.Service;
 import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.control.service.StorageService;
@@ -34,20 +37,43 @@ import dk.statsbiblioteket.summa.control.service.SearchService;
 import dk.statsbiblioteket.summa.index.XMLTransformer;
 import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.summa.ingest.stream.FileReader;
+import dk.statsbiblioteket.summa.search.api.SearchClient;
+import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
 import java.io.IOException;
 import java.io.File;
+import java.io.FilenameFilter;
+import java.io.StringWriter;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 import java.net.URL;
 
 /**
  * Performs ingest, index and search on multiple sources using the MUXFilter.
+ * </p><p>
+ * Tested sources are as follows (those prefixed with - are not done yet)<br />
+ * horizon: SBMARC (a subset of DanMARC2)<br />
+ * oai:     OAI-PMH harvested data<br />
+ * fagref:  proprietary format for describing a person at Statsbiblioteket<br />
+ * -nat:    Aleph, which is converted to MARC and parsed as SBMARC<br />
+ * -reklamefilm: Proprietary format for commercials at Statsbiblioteket<br />
+ * -csa:
+ * -etss:
+ * -doms:   OAI-PMH harvested data<br />
+ * -tusculanum:
  */
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
+        author = "te",
+        comment = "Must be extended to all targets to be complete")
 public class MultipleSourcesTest extends NoExitTestCase {
     private static Log log = LogFactory.getLog(MultipleSourcesTest.class);
 
@@ -62,66 +88,106 @@ public class MultipleSourcesTest extends NoExitTestCase {
 //        ReleaseTestCommon.tearDown();
     }
 
-    public void testTargetExistence() throws Exception {
-        URL fagrefLocation =
-                Resolver.getURL("targets/fagreferent/fagref_index.xsl");
-        log.debug("Fagref XSLT location was " + fagrefLocation);
-        assertNotNull("A location should be available for fagres XSTL",
-                      fagrefLocation);
-        URL sbmarcTestDataLocation =
-                Resolver.getURL("data/horizon/one_book.xml");
-        log.debug("SBMARC data location was " + sbmarcTestDataLocation);
-        assertNotNull("A location should be available for SBMARC",
-                      sbmarcTestDataLocation);
-    }
-
     public void testHorizonIngest() throws Exception {
         StorageService storage = OAITest.getStorageService();
-        FilterService horizon = performHorizonIngest();
+        performIngest("horizon");
         assertEquals("There should be the expected number of horizon records",
                      1, countRecords(storage, "horizon"));
         log.debug("All OK. Closing down");
-        horizon.stop();
+        storage.stop();
+    }
+
+    public void testNatIngest() throws Exception {
+        StorageService storage = OAITest.getStorageService();
+        performIngest("nat");
+        assertEquals("There should be the expected number of nat records",
+                     1, countRecords(storage, "nat"));
+        log.debug("All OK. Closing down");
+        storage.stop();
+    }
+
+    /* Checks that all sources has at least one Record.
+     *
+     */
+    public void testIngest() throws Exception {
+        StorageService storage = OAITest.getStorageService();
+        performIngest();
+        for (String source: getSources()) {
+            int recordCount = countRecords(storage, source);
+            log.debug("Records for source " + source + ": " + recordCount);
+            assertTrue("There should be at least one Record for " + source,
+                       recordCount > 0);
+        }
+        log.debug("All OK. Closing down");
         storage.stop();
     }
 
     public void testFull() throws Exception {
         StorageService storage = OAITest.getStorageService();
 
-        Profiler ingestProfiler = new Profiler();
-//        FilterService ingestOAI = OAITest.performOAIIngest();
-        String ingestOAITime = ingestProfiler.getSpendTime();
-//        assertTrue("There should be more than 0 records from base oai",
- //                  countRecords(storage, "oai") > 0);
-
-        Profiler ingestProfilerFagref = new Profiler();
-        FilterService ingestFagref = performFagrefIngest();
-        String ingestFagrefTime = ingestProfilerFagref.getSpendTime();
-        assertTrue("There should be more than 0 records from base fagref",
-                   countRecords(storage, "fagref") > 0);
-
-        Profiler ingestProfilerHorizon = new Profiler();
-        FilterService ingestHorizon = performHorizonIngest();
-        String ingestHorizonTime = ingestProfilerHorizon.getSpendTime();
-        assertTrue("There should be more than 0 records from base horizon",
-                   countRecords(storage, "horizon") > 0);
+        performIngest();
 
         Profiler indexProfiler = new Profiler();
         performMUXIndex();
         String indexTime = indexProfiler.getSpendTime();
 
         SearchService search = OAITest.getSearchService();
+        testSearch();
 
-   //     ingestOAI.stop();
-        ingestFagref.stop();
-        ingestHorizon.stop();
         search.stop();
         storage.stop();
 
-        log.info("Finished indexing in " + indexTime
-                 + ", ingesting OAI in " + ingestOAITime
-                 + ", horizon in " + ingestHorizonTime
-                 + ", fagref in " + ingestFagrefTime);
+        log.info("Finished indexing in " + indexTime);
+    }
+
+    /*
+     * Performs source-specific searched on the default searcher.
+     * This is used to verify that the index was updated properly.
+     */
+    private void testSearch() throws IOException {
+        log.debug("Testing searching");
+        Map<String, String> queries = new HashMap<String, String>(20);
+        queries.put("fagref", "omnilogi");
+        queries.put("horizon", "Kaoskyllingen");
+        queries.put("nat", "Byggesektorgruppen");
+        queries.put("oai", "hyperfine");
+        SearchClient searchClient =
+                new SearchClient(Configuration.newMemoryBased(
+                        ConnectionConsumer.CONF_RPC_TARGET, 
+                        "//localhost:28000/summa-searcher"));
+        StringWriter fails = new StringWriter(5000);
+        for (String source: getSources()) {
+            String query = queries.get(source);
+            assertNotNull("There must be a query for source " + source, query);
+            Request request = new Request();
+            request.put(DocumentSearcher.SEARCH_QUERY, query);
+            log.debug(String.format(
+                    "Verifying index prescence for source %s with query %s",
+                    source, query));
+            String result = searchClient.search(request).toXML();
+            log.trace(String.format(
+                    "Search result for query '%s' for source %s was:\n%s",
+                    query, source, result));
+            if (getSearchResultCount(result) == 0) {
+                if (fails.toString().length() != 0) {
+                    fails.append("\n");
+                }
+                fails.append(source).append(": no hits found for query '")
+                        .append(query).append("'");
+            }
+        }
+        if (fails.toString().length() != 0) {
+            fail("All sources should be indexed.\n" + fails.toString());
+        }
+    }
+
+    private Pattern HITCOUNT_PATTERN =
+            Pattern.compile(".+hitCount\\=\\\"([0-9]+)\\\".+", Pattern.DOTALL);
+    private int getSearchResultCount(String searchResult) {
+        Matcher matcher = HITCOUNT_PATTERN.matcher(searchResult);
+        assertTrue("We should always be capable of determining hitCount",
+                   matcher.matches());
+        return Integer.parseInt(matcher.group(1));
     }
 
     private int countRecords(StorageService storage, String base) throws
@@ -136,82 +202,135 @@ public class MultipleSourcesTest extends NoExitTestCase {
         return counter;
     }
 
-    public static FilterService performFagrefIngest() throws IOException,
-                                                          InterruptedException {
-        log.info("Starting ingest of OAI");
-        Configuration ingestFagrefConf = Configuration.load(Resolver.getURL(
-                        "test-ingest-fagref/config/configuration.xml").
-                getFile());
-        ingestFagrefConf.set(Service.CONF_SERVICE_ID, "IngestServiceFagref");
-        ingestFagrefConf.getSubConfiguration("SingleChain").
-                getSubConfiguration("Reader").
-                set(FileReader.CONF_ROOT_FOLDER,
-                    new File(ReleaseTestCommon.DATA_ROOT, "fagref"));
-        FilterService ingestFagref = new FilterService(ingestFagrefConf);
-        ingestFagref.start();
-        while (ingestFagref.getStatus().getCode() == Status.CODE.running) {
-            log.trace("Waiting for ingest ½ a second");
-            Thread.sleep(500);
+    static File INGEST_CONFIGURATIONS_ROOT =
+            new File(ReleaseTestCommon.DATA_ROOT, "multiple/ingest");
+    /*
+     * Ingests sample data for all sources specified in the header to the
+     * Storage defined in the relevant setups.
+     *
+     */
+    public static void performIngest() throws IOException,
+                                              InterruptedException {
+        Profiler profiler = new Profiler();
+        log.info("Ingesting test data");
+        List<String> sources = getSources();
+        assertTrue("There should be at least one source", sources.size() > 0);
+        for (String source: sources) {
+            performIngest(source);
         }
-        return ingestFagref;
+        log.info("Finished ingesting test data in " + profiler.getSpendTime());
     }
 
-    public static FilterService performHorizonIngest() throws IOException,
+    private static void performIngest(String source) throws IOException,
                                                           InterruptedException {
-        log.info("Starting ingest of Horizon");
-        Configuration ingestFagrefConf = Configuration.load(Resolver.getURL(
-                        "data/multiple/horizon_ingest_configuration.xml").
-                getFile());
-        ingestFagrefConf.set(Service.CONF_SERVICE_ID, "IngestServiceHorizon");
-        ingestFagrefConf.getSubConfiguration("SingleChain").
-                getSubConfiguration("Reader").
-                set(FileReader.CONF_ROOT_FOLDER,
-                    new File(ReleaseTestCommon.DATA_ROOT, "horizon"));
-        FilterService ingestHorizon = new FilterService(ingestFagrefConf);
-        ingestHorizon.start();
-        while (ingestHorizon.getStatus().getCode() == Status.CODE.running) {
-            log.trace("Waiting for horizon ingest ½ a second");
+        log.info("Ingesting source " + source);
+        Configuration ingestConf =Configuration.load(
+                new File(INGEST_CONFIGURATIONS_ROOT,
+                         source + "_ingest_configuration.xml").
+                        getAbsolutePath());
+        ingestConf.set(Service.CONF_SERVICE_ID, "IngestService" + source);
+        ingestConf.getSubConfiguration("SingleChain").
+                    getSubConfiguration("Reader").
+                    set(FileReader.CONF_ROOT_FOLDER,
+                        new File(ReleaseTestCommon.DATA_ROOT,
+                             "multiple/data/" + source).getAbsolutePath());
+        FilterService ingestService = new FilterService(ingestConf);
+        ingestService.start();
+        while (ingestService.getStatus().getCode() == Status.CODE.running) {
+            log.trace("Waiting for ingest of " + source + " ½ a second");
             Thread.sleep(500);
         }
-        return ingestHorizon;
+        ingestService.stop();
+        log.trace("Finished ingesting " + source);
+    }
+
+    public void testGetSources() throws Exception {
+        assertTrue("There should be more than one source", 
+                   getSources().size() > 0);
+    }
+
+    /**
+     * Generates a list of all sources by enumerating the ingest-configuration
+     * files in data/multiple/ingest.
+     * @return a list of all sources.
+     * @throws IOException if the enumeration could not be performed.
+     */
+    public static ArrayList<String> getSources() throws IOException {
+        final ArrayList<String> sources = new ArrayList<String>(20);
+        final Pattern INGEST_CONFIGURATION =
+                Pattern.compile("(.+)_ingest_configuration\\.xml");
+        log.trace("Locating sources in " + INGEST_CONFIGURATIONS_ROOT);
+        INGEST_CONFIGURATIONS_ROOT.listFiles(new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                log.debug("Checking " + name);
+                Matcher matcher = INGEST_CONFIGURATION.matcher(name);
+                if (matcher.matches()) {
+                    log.trace("Located source " + matcher.group(1));
+                    sources.add(matcher.group(1));
+                }
+                return true;
+            }
+        });
+        return sources;
     }
 
     private void performMUXIndex() throws IOException, InterruptedException {
         log.info("Starting index");
+        Configuration indexConf = getIndexConfiguration();
+
+        FilterService index = new FilterService(indexConf);
+        index.start();
+        while (index.getStatus().getCode() == Status.CODE.running) {
+            log.trace("Waiting for index ½ a second");
+            Thread.sleep(500);
+        }
+        index.stop();
+    }
+
+    public void testGetIndexConfiguration() throws Exception {
+        // Throws exceptions by itself if something is blatantly wrong
+        getIndexConfiguration();
+    }
+
+    private Configuration getIndexConfiguration() throws IOException {
         Configuration indexConf = Configuration.load(Resolver.getURL(
                         "data/multiple/index_configuration.xml").
                 getFile());
         indexConf.set(Service.CONF_SERVICE_ID, "IndexService");
 
-        String oaiTransformerXSLT = Resolver.getURL(
-                "targets/oai/oai_index.xsl").getFile();
-        log.debug("oaiTransformerXSLT: " + oaiTransformerXSLT);
-
-        String fagrefTransformerXSLT = Resolver.getURL(
-                "targets/fagreferent/fagref_index.xsl").getFile();
-        log.debug("fagrefTransformerXSLT: " + fagrefTransformerXSLT);
-
-        String horizonTransformerXSLT = Resolver.getURL(
-                "targets/horizon/horizon_index.xsl").getFile();
-        log.debug("horizonTransformerXSLT: " + horizonTransformerXSLT);
+        ArrayList<String> sources = getSources();
+        indexConf.getSubConfiguration("SingleChain").
+                getSubConfiguration("Muxer").
+                set(MUXFilter.CONF_FILTERS, sources);
+        for (String source: sources) {
+            log.trace("Updating index conf with source " + source);
+            Configuration sourceConf =
+                    indexConf.getSubConfiguration("SingleChain").
+                            getSubConfiguration("Muxer").
+                            createSubConfiguration(source);
+            sourceConf.set(MUXFilterFeeder.CONF_FILTER_CLASS,
+                           XMLTransformer.class.getName());
+            sourceConf.set(MUXFilterFeeder.CONF_FILTER_NAME,
+                           source + " transformer");
+            sourceConf.set(MUXFilterFeeder.CONF_FILTER_BASES, source);
+            String xsltRelativeLocation = String.format(
+                    "targets/%s/%1$s_index.xsl", source);
+            if ("fagref".equals(source)) {
+                xsltRelativeLocation = "targets/fagreferent/fagref_index.xsl";
+            } else if ("nat".equals(source)) {
+                xsltRelativeLocation = "targets/aleph/aleph_index.xsl";
+            }
+            URL sourceXSLT = Resolver.getURL(xsltRelativeLocation);
+            assertNotNull(String.format(
+                    "The XSLT for source %s should exist at the relative "
+                    + "location %s", source, xsltRelativeLocation), sourceXSLT);
+            sourceConf.set(XMLTransformer.CONF_XSLT, sourceXSLT.getFile());
+        }
 
         String indexDescriptorLocation = new File(
                 ReleaseTestCommon.DATA_ROOT,
-                "oai/oai_IndexDescriptor.xml").toString();
+                "multiple/index_descriptor.xml").toString();
         log.debug("indexDescriptorLocation: " + indexDescriptorLocation);
-
-        indexConf.getSubConfiguration("SingleChain").
-                getSubConfiguration("Muxer").
-                getSubConfiguration("FagrefTransformer").
-                set(XMLTransformer.CONF_XSLT, fagrefTransformerXSLT);
-        indexConf.getSubConfiguration("SingleChain").
-                getSubConfiguration("Muxer").
-                getSubConfiguration("OAITransformer").
-                set(XMLTransformer.CONF_XSLT, oaiTransformerXSLT);
-        indexConf.getSubConfiguration("SingleChain").
-                getSubConfiguration("Muxer").
-                getSubConfiguration("HorizonTransformer").
-                set(XMLTransformer.CONF_XSLT, horizonTransformerXSLT);
 
         indexConf.getSubConfiguration("SingleChain").
                 getSubConfiguration("DocumentCreator").
@@ -225,13 +344,6 @@ public class MultipleSourcesTest extends NoExitTestCase {
                 getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
                     indexDescriptorLocation);
-
-        FilterService index = new FilterService(indexConf);
-        index.start();
-        while (index.getStatus().getCode() == Status.CODE.running) {
-            log.trace("Waiting for index ½ a second");
-            Thread.sleep(500);
-        }
-        index.stop();
+        return indexConf;
     }
 }

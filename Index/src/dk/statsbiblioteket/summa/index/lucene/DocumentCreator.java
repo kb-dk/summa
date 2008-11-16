@@ -68,6 +68,7 @@ import org.w3c.dom.Node;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
+// TODO: Consider adding base as a standard field - stored as well as indexed
 public class DocumentCreator extends ObjectFilterImpl {
     private static Log log = LogFactory.getLog(DocumentCreator.class);
 
