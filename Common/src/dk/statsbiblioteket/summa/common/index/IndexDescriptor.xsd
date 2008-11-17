@@ -1,10 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
             targetNamespace="http://statsbiblioteket.dk/2008/Descriptor">
-    <!-- XML Schema for Summa Index Descriptor.
-         The descriptor defines fields, groups and facets for a Summa index.
-         // TODO: Consider if the targetNamespace is okay 
+    <!--
+     TODO: Consider if the targetNamespace is okay
+     TODO: Consider making this a 3-parter: Core, Lucene and Facet
     -->
+    <xsd:annotation>
+      <xsd:documentation xml:lang="en">
+         XML Schema for Summa Index Descriptor.
+         The descriptor defines fields, groups and facets for a Summa index.
+      </xsd:documentation>
+    </xsd:annotation>
 
     <xsd:element name="IndexDescriptor" type="IndexDescriptorType"/>
     <xsd:complexType name="IndexDescriptorType">
@@ -17,46 +23,121 @@
     </xsd:complexType>
 
     <xsd:complexType name="GroupsType">
+        <xsd:annotation>
+            <xsd:documentation>
+                A collection of groups.
+            </xsd:documentation>
+        </xsd:annotation>
         <xsd:sequence>
             <xsd:element name="group" type="GroupType" minOccurs="0" maxOccurs="unbounded"/>
         </xsd:sequence>
     </xsd:complexType>
 
     <xsd:complexType name="GroupType">
+        <xsd:annotation>
+            <xsd:documentation>
+        A group is a collection of fields. Groups gets expanded as part of
+        query expansion. Example: The user searches for "author:Bar".
+        'author' is a group with the groupFields 'author_normalised' and
+        'author_secondary'. The query is expanded to
+        "author_normalised:Bar OR author_secondary:Bar".
+        If isFacet is defined, the group will be a facet. Note that the
+        attribute isFacet on FieldTypes is ignored in this context.
+        The name of the facet will be the value defined in facetName. If
+        facetName is not defined, the name of the group will be the facet name.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="alias" type="AliasType" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
         <xsd:sequence>
             <xsd:element name="groupField" type="GroupFieldType" minOccurs="0" maxOccurs="unbounded"/>
         </xsd:sequence>
+
         <xsd:attribute name="name" type="xsd:string" use="required"/>
         <xsd:attribute name="isFacet" type="xsd:boolean" use="optional"/>
         <xsd:attribute name="facetName" type="xsd:string" use="optional"/>
     </xsd:complexType>
 
     <xsd:complexType name="GroupFieldType">
-        <xsd:attribute name="ref" type="xsd:string" use="required"/>
-        <xsd:attribute name="isFacet" type="xsd:boolean" use="optional"/>
+        <xsd:annotation>
+            <xsd:documentation>
+        field is a field in the group. The field must be defined
+        elsewhere in the XML.
+        excludeFromFacets has no effect if the group containing the
+        GroupFieldtype does not have isFacet="true". If the group has
+        isFacet="true" and excludeFromFacets is true, the field is not
+        used for faceting.
+            </xsd:documentation>
+        </xsd:annotation>
+        <!-- TODO: Use reference to the field to ensure existence -->
+        <xsd:attribute name="field" type="xsd:string" use="required"/>
+        <xsd:attribute name="excludeFromFacets" type="xsd:boolean" use="optional"/>
     </xsd:complexType>
 
-    <xsd:element name="customer" type="customerType"/>
-    <xsd:complexType name="customerType">
+
+    <xsd:complexType name="AliasType">
+        <xsd:annotation>
+            <xsd:documentation>
+        The alias is an alternative for group- or field-name. It is
+        resolved during query-expansion and is typically used to provide
+        localized queries. The query "author:Foo" could be written as
+        "forfatter:Foo" ('forfatter' is 'author' in danish) if the field or
+        group 'author' had the alias 'forfatter'.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:all>
+            <xsd:attribute name="name">
+                <xsd:restriction base="xsd:string">
+                    <xsd:minLength value="1"/>
+                </xsd:restriction>
+            </xsd:attribute>
+            <xsd:attribute name="lang" type="xsd:string"/>
+        </xsd:all>
+    </xsd:complexType>
+
+    <xsd:complexType name="FieldsType">
+        <xsd:annotation>
+            <!-- TODO: explain the default types -->
+            <xsd:documentation>
+          The attributes are mostly taken from SOLR schema.xml:
+          name:        the name for the field.
+          parent:      the name of a previously defined field or one of the
+                       build-in types. The build-in types are freetext, date.
+                       storedKeyword, keyword, text, sortkey, stored and number.
+                       It follows that fields can inherit from other fields.
+                       In that case super-fields, must be defined before
+                       sub-fields.
+          indexed:     true if this field should be indexed.
+          stored:      true if this field should be retrievable.
+          multiValued: true if this field may contain multiple values per
+                       document.
+          indexBoost:  the index-time boost for this field (default: 1.0).
+          queryBoost:  the query-time boost for this field (default: 1.0).
+          sortLocale:  the locale (see Java Locale) used for sorting the Field.
+          inFreeText:  if true, the tokens in this field are automatically added
+                       to the freetext field.
+          required:    the field must be present in the record-XML. This is used
+                       for validation of documents prior to indexing.
+            </xsd:documentation>
+        </xsd:annotation>
         <xsd:sequence>
-            <xsd:element ref="adress" />
+            <xsd:element name="alias" type="AliasType" minOccurs="0" maxOccurs="unbounded"/>
         </xsd:sequence>
-        <xsd:attribute name="firstName"  type="xsd:string" use="required"/>
-        <xsd:attribute name="surname" type="xsd:string" use="required"/>
+        <xsd:attribute name="name" type="xsd:string" use="required"/>
+        <xsd:attribute name="parent" type="xsd:string" use="optional"/>
+        <xsd:attribute name="indexed" type="xsd:boolean" use="optional"/>
+        <xsd:attribute name="stored" type="xsd:boolean" use="optional"/>
+        <xsd:attribute name="multiValued" type="xsd:boolean" use="optional"/>
+        <xsd:attribute name="indexBoost" type="xsd:float" use="optional"/>
+        <xsd:attribute name="queryBoost" type="xsd:float" use="optional"/>
+        <xsd:attribute name="sortLocale" type="xsd:string" use="optional"/>
+        <xsd:attribute name="inFreetext" type="xsd:boolean" use="optional"/>
+        <xsd:attribute name="required" type="xsd:boolean" use="optional"/>
     </xsd:complexType>
-    <xsd:element name="adress" type="adressType"/>
-    <xsd:complexType name="adressType">
-        <xsd:attribute name="street" type="xsd:string" use="required"/>
-        <xsd:attribute name="no" type="xsd:string" use="required"/>
-        <xsd:attribute name="zip" type="xsd:string" use="required"/>
-        <xsd:attribute name="city" type="xsd:string" use="required"/>
-    </xsd:complexType>
-    <xsd:element name="orderLine" type="orderLineType"/>
-    <xsd:complexType name="orderLineType">
-        <xsd:attribute name="itemno" type="xsd:string" use="required"/>
-        <xsd:attribute name="itemdesciption" type="xsd:string" use="required"/>
-        <xsd:attribute name="quantity" type="xsd:int" use="required"/>
-        <xsd:attribute name="price" type="xsd:double" use="required"/>
+
+    <xsd:complexType name="DefaultSearchFieldsType">
+
     </xsd:complexType>
 </xsd:schema>
 
