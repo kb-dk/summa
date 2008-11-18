@@ -42,8 +42,8 @@
             <alias name="titel" lang="da"/>
             <!-- Fields in group always refers to a field specified in the
                  fields-section -->
-            <field name="title"/>
-            <field name="titel"/>
+            <groupField ref="title"/>
+            <field ref="titel"/>
         </group>
         <group name="subtitle">
             <field name="lessimportanttitle"/>

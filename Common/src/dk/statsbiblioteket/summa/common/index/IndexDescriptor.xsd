@@ -12,26 +12,56 @@
       </xsd:documentation>
     </xsd:annotation>
 
-    <xsd:element name="IndexDescriptor" type="IndexDescriptorType"/>
-    <xsd:complexType name="IndexDescriptorType">
-        <xsd:element name="groups" type="GroupsType"/>
-        <xsd:all>
-            <xsd:element name="fields" type="FieldsType"/>
-            <xsd:element name="defaultSearchFields" type="DefaultSearchFieldsType"/>
-        </xsd:all>
-        <xsd:attribute name="version" type="xsd:string" use="optional"/>
-    </xsd:complexType>
+    <xsd:element name="IndexDescriptor">
+        <xsd:complexType>
+            <xsd:element name="groups" type="xsd:complexType">
+                <xsd:sequence>
+                    <xsd:element name="group" type="GroupType" minOccurs="0" maxOccurs="unbounded"/>
+                </xsd:sequence>
+            </xsd:element>
 
-    <xsd:complexType name="GroupsType">
-        <xsd:annotation>
-            <xsd:documentation>
-                A collection of groups.
-            </xsd:documentation>
-        </xsd:annotation>
-        <xsd:sequence>
-            <xsd:element name="group" type="GroupType" minOccurs="0" maxOccurs="unbounded"/>
-        </xsd:sequence>
-    </xsd:complexType>
+            <xsd:all>
+                <xsd:element name="fields" type="xsd:complexType">
+                    <xsd:sequence>
+                        <xsd:element name="field" type="FieldType" minOccurs="0" maxOccurs="unbounded"/>
+                    </xsd:sequence>
+                </xsd:element>
+
+                <xsd:element name="defaultSearchFields" type="xsd:complexType">
+                    <xsd:annotation>
+                        <xsd:documentation>
+        If no explicit field is given at query-time, the query gets expanded to
+        these fields.
+        <!-- TODO: Check if groups should be allowed here -->
+                        </xsd:documentation>
+                    </xsd:annotation>
+                    <xsd:sequence>
+                        <xsd:element name="field" type="xsd:anyType" minOccurs="0" maxOccurs="unbounded">
+                            <xsd:attribute name="ref" type="xsd:string"/>
+                        </xsd:element>
+                    </xsd:sequence>
+                </xsd:element>
+
+                <xsd:element name="QueryParser" type="xsd:complexType">
+                    <xsd:attribute name="defaultOperator" default="AND">
+                        <xsd:restriction base="xsd:string">
+                            <xsd:enumeration value="AND"/>
+                            <xsd:enumeration value="OR"/>
+                        </xsd:restriction>
+                    </xsd:attribute>
+                </xsd:element>
+                <!-- For alias-resolving -->
+                <xsd:element name="defaultLanguage" type="xsd:string">
+                    <xsd:annotation>
+                        <xsd:documentation>
+        The defaultLanguage is used for alias-resolving.
+                        </xsd:documentation>
+                    </xsd:annotation>
+                </xsd:element>
+            </xsd:all>
+        </xsd:complexType>
+        <xsd:attribute name="version" type="xsd:string" use="optional"/>
+    </xsd:element>
 
     <xsd:complexType name="GroupType">
         <xsd:annotation>
@@ -49,30 +79,26 @@
         </xsd:annotation>
         <xsd:sequence>
             <xsd:element name="alias" type="AliasType" minOccurs="0" maxOccurs="unbounded"/>
-        </xsd:sequence>
-        <xsd:sequence>
-            <xsd:element name="groupField" type="GroupFieldType" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element name="groupField" type="xsd:complexType" minOccurs="0" maxOccurs="unbounded">
+                <xsd:annotation>
+                    <xsd:documentation>
+                field is a field in the group. The field must be defined
+                elsewhere in the XML.
+                excludeFromFacets has no effect if the group containing the
+                GroupFieldtype does not have isFacet="true". If the group has
+                isFacet="true" and excludeFromFacets is true, the field is not
+                used for faceting.
+                    </xsd:documentation>
+                </xsd:annotation>
+                <!-- TODO: Use reference to the field to ensure existence -->
+                <xsd:attribute name="field" type="xsd:string" use="required"/>
+                <xsd:attribute name="excludeFromFacets" type="xsd:boolean" use="optional"/>
+            </xsd:element>
         </xsd:sequence>
 
         <xsd:attribute name="name" type="xsd:string" use="required"/>
         <xsd:attribute name="isFacet" type="xsd:boolean" use="optional"/>
         <xsd:attribute name="facetName" type="xsd:string" use="optional"/>
-    </xsd:complexType>
-
-    <xsd:complexType name="GroupFieldType">
-        <xsd:annotation>
-            <xsd:documentation>
-        field is a field in the group. The field must be defined
-        elsewhere in the XML.
-        excludeFromFacets has no effect if the group containing the
-        GroupFieldtype does not have isFacet="true". If the group has
-        isFacet="true" and excludeFromFacets is true, the field is not
-        used for faceting.
-            </xsd:documentation>
-        </xsd:annotation>
-        <!-- TODO: Use reference to the field to ensure existence -->
-        <xsd:attribute name="field" type="xsd:string" use="required"/>
-        <xsd:attribute name="excludeFromFacets" type="xsd:boolean" use="optional"/>
     </xsd:complexType>
 
 
@@ -86,17 +112,17 @@
         group 'author' had the alias 'forfatter'.
             </xsd:documentation>
         </xsd:annotation>
-        <xsd:all>
-            <xsd:attribute name="name">
+        <xsd:attribute name="name" use="required">
+            <xsd:simpleType>
                 <xsd:restriction base="xsd:string">
                     <xsd:minLength value="1"/>
                 </xsd:restriction>
-            </xsd:attribute>
-            <xsd:attribute name="lang" type="xsd:string"/>
-        </xsd:all>
+            </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute name="lang" type="xsd:string" use="optional"/>
     </xsd:complexType>
 
-    <xsd:complexType name="FieldsType">
+    <xsd:complexType name="FieldType">
         <xsd:annotation>
             <!-- TODO: explain the default types -->
             <xsd:documentation>
@@ -119,6 +145,11 @@
                        to the freetext field.
           required:    the field must be present in the record-XML. This is used
                        for validation of documents prior to indexing.
+
+          isFacet:     if true, this field will be a Facet. The name of the
+                       facet will be the value defined in facetName.
+          facetName:   If facetName is not defined, the name of the field will
+                       be the facet name.
             </xsd:documentation>
         </xsd:annotation>
         <xsd:sequence>
@@ -134,10 +165,8 @@
         <xsd:attribute name="sortLocale" type="xsd:string" use="optional"/>
         <xsd:attribute name="inFreetext" type="xsd:boolean" use="optional"/>
         <xsd:attribute name="required" type="xsd:boolean" use="optional"/>
-    </xsd:complexType>
-
-    <xsd:complexType name="DefaultSearchFieldsType">
-
+        <xsd:attribute name="isFacet" type="xsd:boolean" use="optional"/>
+        <xsd:attribute name="facetName" type="xsd:string" use="optional"/>
     </xsd:complexType>
 </xsd:schema>
 
