@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://statsbiblioteket.dk/2008/SummaDocument"
+            xmlns:summa="http://statsbiblioteket.dk/2008/SummaDocument">
+    <xsd:annotation>
+        <xsd:documentation xml:lang="en">
+            XML Schema for the Summa Document format - used by a document builder
+            for updaing a document index, such as Lucene. In a standard workflow,
+            All records that are to be indexed are ultimately transformed to
+            Summa Documents right before the index is updated.
+        </xsd:documentation>
+    </xsd:annotation>
+
+    <xsd:element name="fields">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="field" type="summa:Fieldtype" minOccurs="0" maxOccurs="unbounded"/>
+            </xsd:sequence>
+            <xsd:attribute name="version" type="xsd:string"/>
+            <xsd:attribute name="id" type="xsd:string"/>
+            <xsd:attribute name="boost" type="xsd:float"/>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:complexType name="Fieldtype">
+        <xsd:simpleContent>
+            <xsd:extension base="xsd:string">
+                <xsd:attribute name="name" type="xsd:string"/>
+                <xsd:attribute name="boost" type="xsd:float"/>
+            </xsd:extension>
+        </xsd:simpleContent>
+
+    </xsd:complexType>
+</xsd:schema>
