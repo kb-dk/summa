@@ -9,7 +9,7 @@
   field-name
   field-alias
   -->
-<IndexDescriptor version="1.0" xmlns="http://statsbiblioteket.dk/2008/Descriptor">
+<IndexDescriptor version="1.0" xmlns="http://statsbiblioteket.dk/2008/SummaIndexDescriptor">
     <!-- The different types are used by the field
 
     To be enabled at a later time
