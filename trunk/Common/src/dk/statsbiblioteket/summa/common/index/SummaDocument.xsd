@@ -16,19 +16,18 @@
             <xsd:sequence>
                 <xsd:element name="field" type="summa:Fieldtype" minOccurs="0" maxOccurs="unbounded"/>
             </xsd:sequence>
-            <xsd:attribute name="version" type="xsd:string"/>
-            <xsd:attribute name="id" type="xsd:string"/>
-            <xsd:attribute name="boost" type="xsd:float"/>
+            <xsd:attribute name="version" type="xsd:string" use="optional"/>
+            <xsd:attribute name="id" type="xsd:string" use="optional"/>
+            <xsd:attribute name="boost" type="xsd:float" use="optional"/>
         </xsd:complexType>
     </xsd:element>
 
     <xsd:complexType name="Fieldtype">
         <xsd:simpleContent>
             <xsd:extension base="xsd:string">
-                <xsd:attribute name="name" type="xsd:string"/>
-                <xsd:attribute name="boost" type="xsd:float"/>
+                <xsd:attribute name="name" type="xsd:string" use="required"/>
+                <xsd:attribute name="boost" type="xsd:float" use="optional"/>
             </xsd:extension>
         </xsd:simpleContent>
-
     </xsd:complexType>
 </xsd:schema>
