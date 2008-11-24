@@ -171,7 +171,7 @@ public class IndexGroup<F extends IndexField> {
             sw.append(alias.toXMLFragment());
         }
         for (F field: fields) {
-            sw.append("<field name=\"").append(field.getName());
+            sw.append("<field ref=\"").append(field.getName());
             sw.append("\"/>\n");
         }
         sw.append("</group>\n");
@@ -207,7 +207,7 @@ public class IndexGroup<F extends IndexField> {
             //noinspection DuplicateStringLiteralInspection
             if (child.getLocalName() != null
                 && child.getLocalName().equals("field")) {
-                Node fieldNameNode = child.getAttributes().getNamedItem("name");
+                Node fieldNameNode = child.getAttributes().getNamedItem("ref");
                 if (fieldNameNode == null
                     || fieldNameNode.getNodeValue().equals("")) {
                     //noinspection DuplicateStringLiteralInspection
@@ -216,14 +216,14 @@ public class IndexGroup<F extends IndexField> {
                             name));
                     continue;
                 }
-                String fieldName = fieldNameNode.getNodeValue();
-                log.trace("Found field name '" + fieldName + " in group '"
+                String fieldRef = fieldNameNode.getNodeValue();
+                log.trace("Found field ref '" + fieldRef + " in group '"
                           + name + "'");
-                F field = fieldProvider.getField(fieldName);
+                F field = fieldProvider.getField(fieldRef);
                 if (field == null) {
                     throw new ParseException(String.format(
                             "The field '%s' in group '%s' did not exist",
-                            fieldName, name), -1);
+                            fieldRef, name), -1);
                 }
                 addField(field);
             }

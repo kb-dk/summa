@@ -1,20 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-            targetNamespace="http://statsbiblioteket.dk/2008/SummaIndexDescriptor"
-            xmlns:summa="http://statsbiblioteket.dk/2008/SummaIndexDescriptor">
+            targetNamespace="http://statsbiblioteket.dk/summa/2008/IndexDescriptor"
+            elementFormDefault="qualified"
+            xmlns:summa="http://statsbiblioteket.dk/summa/2008/IndexDescriptor">
     <!--
      TODO: Consider making this a 3-parter: Core, Lucene and Facet
     -->
     <xsd:annotation>
         <xsd:documentation xml:lang="en">
             XML Schema for Summa Index Descriptor.
-            The descriptor defines fields, groups and facets for a Summa index.
+            The descriptor defines fields, groups and facets for a Summa index
+            and is heavily inspired by http://wiki.apache.org/solr/SchemaXml
+
+            When a name is resolved by the Summa query parser, the precedence
+            order is group-name, group-alias, field-name, field-alias.
         </xsd:documentation>
     </xsd:annotation>
 
     <xsd:element name="IndexDescriptor">
         <xsd:complexType>
-            <xsd:sequence>
+            <xsd:all>
                 <xsd:element name="groups" minOccurs="0" maxOccurs="1">
                     <xsd:complexType>
                         <xsd:sequence>
@@ -85,6 +90,7 @@
                         </xsd:attribute>
                     </xsd:complexType>
                 </xsd:element>
+
                 <!-- For alias-resolving -->
                 <xsd:element name="defaultLanguage" type="xsd:string" minOccurs="0" maxOccurs="1">
                     <xsd:annotation>
@@ -93,7 +99,7 @@
                         </xsd:documentation>
                     </xsd:annotation>
                 </xsd:element>
-            </xsd:sequence>
+            </xsd:all>
             <xsd:attribute name="version" type="xsd:string" use="optional"/>
         </xsd:complexType>
     </xsd:element>
@@ -199,7 +205,7 @@
         <xsd:attribute name="indexBoost" type="xsd:float" use="optional"/>
         <xsd:attribute name="queryBoost" type="xsd:float" use="optional"/>
         <xsd:attribute name="sortLocale" type="xsd:string" use="optional"/>
-        <xsd:attribute name="inFreetext" type="xsd:boolean" use="optional"/>
+        <xsd:attribute name="inFreeText" type="xsd:boolean" use="optional"/>
         <xsd:attribute name="required" type="xsd:boolean" use="optional"/>
         <xsd:attribute name="isFacet" type="xsd:boolean" use="optional"/>
         <xsd:attribute name="facetName" type="xsd:string" use="optional"/>

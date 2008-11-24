@@ -9,7 +9,7 @@
   field-name
   field-alias
   -->
-<IndexDescriptor version="1.0" xmlns="http://statsbiblioteket.dk/2008/SummaIndexDescriptor">
+<IndexDescriptor version="1.0" xmlns="http://statsbiblioteket.dk/summa/2008/IndexDescriptor">
     <!-- The different types are used by the field
 
     To be enabled at a later time
@@ -42,11 +42,11 @@
             <alias name="titel" lang="da"/>
             <!-- Fields in group always refers to a field specified in the
                  fields-section -->
-            <groupField ref="title"/>
+            <field ref="title"/>
             <field ref="titel"/>
         </group>
         <group name="subtitle">
-            <field name="lessimportanttitle"/>
+            <field ref="lessimportanttitle"/>
         </group>
     </groups>
 
@@ -75,7 +75,7 @@
 
         <field name="title" parent="text" indexed="true" stored="true"/>
         <field name="titel" parent="text" indexed="true" stored="true"/>
-        <field name="lessimportanttitle" type="text" indexed="true" stored="false"/>
+        <field name="lessimportanttitle" parent="text" indexed="true" stored="false"/>
 
 
         <!-- Taken directly from SOLR.
@@ -107,15 +107,14 @@ both match, the first appearing in the schema will be used.
          Optional. Default is "en". -->
     <defaultLanguage>da</defaultLanguage>
     
-    <!-- Field to use to determine and enforce document uniqueness.
-         Must be != "". Default is "id".
-    -->
-    <uniqueKey>id</uniqueKey>
-
     <!-- fields for the QueryParser to use when an explicit fieldname is absent
          Delimited by space.
          Optional. Default is "freetext". -->
-    <defaultSearchFields>freetext title id</defaultSearchFields>
+    <defaultSearchFields>
+        <field ref="freetext"/>
+        <field ref="title"/>
+        <field ref="id"/>
+    </defaultSearchFields>
 
     <!-- SummaQueryParser configuration (the equivalent to SolrQueryParser):
          defaultOperator="AND|OR".

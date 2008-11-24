@@ -35,15 +35,15 @@ public class IndexDescriptorTest extends TestCase {
 
     public static final String SIMPLE_DESCRIPTOR =
             "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
-            + "<IndexDescriptor version=\"1.0\" xmlns=\"http://statsbiblioteket.dk/2008/Descriptor\">\n"
+            + "<IndexDescriptor version=\"1.0\" xmlns=\"http://statsbiblioteket.dk/summa/2008/IndexDescriptor\">\n"
             + "    <groups>\n"
             + "        <group name=\"ti\">\n"
             + "            <alias name=\"tit\" lang=\"da\"/>\n"
-            + "            <field name=\"title\"/>\n"
-            + "            <field name=\"titel\"/>\n"
+            + "            <field ref=\"title\"/>\n"
+            + "            <field ref=\"titel\"/>\n"
             + "        </group>\n"
             + "        <group name=\"au\">\n"
-            + "            <field name=\"author\"/>\n"
+            + "            <field ref=\"author\"/>\n"
             + "        </group>\n"
             + "    </groups>\n"
             + "    <fields>\n"
@@ -59,7 +59,10 @@ public class IndexDescriptorTest extends TestCase {
             + "    </fields>\n"
             + "    <defaultLanguage>no</defaultLanguage>\n"
             + "    <uniqueKey>superid</uniqueKey>\n"
-            + "    <defaultSearchFields>superid nostore</defaultSearchFields>\n"
+            + "    <defaultSearchFields>"
+            + "<field ref=\"superid\"/>"
+            + "<field ref=\"nostore\"/>"
+            + "</defaultSearchFields>\n"
             + "    <QueryParser defaultOperator=\"AND\"/>\n"
             + "</IndexDescriptor>";
 
@@ -84,8 +87,6 @@ public class IndexDescriptorTest extends TestCase {
         };
         assertEquals("The default language should be as specified",
                      "no", id.getDefaultLanguage());
-        assertEquals("The unique key should be as specified",
-                     "superid", id.getUniqueKey());
         assertEquals("The default fields should be as specified",
                      "superid nostore",
                      Strings.join(id.getDefaultFields(), " "));
