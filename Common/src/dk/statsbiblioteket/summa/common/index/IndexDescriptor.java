@@ -35,15 +35,13 @@ import java.io.StringWriter;
 import java.io.ByteArrayInputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
-import java.util.Map;
-import java.util.List;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
+import java.util.*;
 import java.text.ParseException;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
@@ -80,7 +78,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
     private static Log log = LogFactory.getLog(IndexDescriptor.class);
 
     public static final String DESCRIPTOR_NAMESPACE =
-            "http://statsbiblioteket.dk/2008/Descriptor";
+            "http://statsbiblioteket.dk/summa/2008/IndexDescriptor";
     public static final String DESCRIPTOR_NAMESPACE_PREFIX = "id";
 
     /**
@@ -143,9 +141,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
     // TODO: Assign this based on XML
     protected F defaultField = createNewField();
     private String defaultLanguage = "en";
-    private String uniqueKey = "id";
-    private List<String> defaultFields = Arrays.asList(IndexField.FREETEXT,
-                                                       uniqueKey);
+    private List<String> defaultFields = Arrays.asList(IndexField.FREETEXT);
     private OPERATOR defaultOperator = OPERATOR.and;
 
     /**
@@ -300,6 +296,37 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         //noinspection DuplicateStringLiteralInspection
         log.trace("parse called");
 
+        Document document = parseXMLToDocument(xml);
+
+        parseDefaultLanguage(document);
+
+/*        uniqueKey = ParseUtil.getValue(
+                xPath, document, "id:IndexDescriptor/id:uniqueKey",
+                uniqueKey);
+        if ("".equals(uniqueKey)) {
+            throw new ParseException("Unique key specified to empty string",
+                                     -1);
+        }*/
+
+        parseDefaultSearchFields(document);
+
+        parseQueryParser(document);
+
+        parseFields(document);
+
+        parseGroups(document);
+
+        // Sanity check
+        for (String defaultField: defaultFields) {
+            if (allFields.get(defaultField) == null
+                && groups.get(defaultField) == null) {
+                log.warn("The specified default field '" + defaultField
+                         + "' did not have any corresponding field or group");
+            }
+        }
+    }
+
+    private Document parseXMLToDocument(String xml) throws ParseException {
         DocumentBuilderFactory builderFactory =
                 DocumentBuilderFactory.newInstance();
         builderFactory.setNamespaceAware(true);
@@ -328,56 +355,49 @@ public abstract class IndexDescriptor<F extends IndexField> implements
                     "Could not create ByteArrayInputStream from xml '"
                     + xml + "'", -1).initCause(e);
         }
+        return document;
+    }
 
+    private void parseDefaultSearchFields(Document document) throws ParseException {
+        NodeList defaultNodes;
+        final String DEFAULT_EXPR =
+                "id:IndexDescriptor/id:defaultSearchFields/id:field";
+        try {
+            defaultNodes = (NodeList)xPath.evaluate(DEFAULT_EXPR, document,
+                                                    XPathConstants.NODESET);
+        } catch (XPathExpressionException e) {
+            throw new ParseException(String.format(
+                    "Expression '%s' for selecting default search fields was"
+                    + " invalid", DEFAULT_EXPR), -1);
+        }
+        defaultFields = new ArrayList<String>(defaultNodes.getLength());
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("Located " + defaultNodes.getLength()
+                  + " default search field nodes");
+        for (int i = 0 ; i < defaultNodes.getLength(); i++) {
+            String dField = ParseUtil.getValue(xPath, defaultNodes.item(i),
+                                               "@ref", (String)null);
+            if (dField == null) {
+                log.warn("No ref-attribute for field in defaultSearchFields");
+            } else {
+                defaultFields.add(dField);
+            }
+        }
+        if (defaultFields.size() == 0) {
+            log.warn("No default fields specified");
+        } else {
+            log.info("Default search fields: " 
+                     + Logs.expand(defaultFields, 20));
+        }
+    }
+
+    private void parseDefaultLanguage(Document document) throws ParseException {
         defaultLanguage = ParseUtil.getValue(
                 xPath, document, "id:IndexDescriptor/id:defaultLanguage",
                 defaultLanguage);
+    }
 
-        uniqueKey = ParseUtil.getValue(
-                xPath, document, "id:IndexDescriptor/id:uniqueKey",
-                uniqueKey);
-        if ("".equals(uniqueKey)) {
-            throw new ParseException("Unique key specified to empty string",
-                                     -1);
-        }
-
-        String defaultSearchFields = ParseUtil.getValue(
-                xPath, document, "id:IndexDescriptor/id:defaultSearchFields",
-                Strings.join(defaultFields, " "));
-        defaultFields = Arrays.asList(defaultSearchFields.trim().split(" +"));
-        if (defaultFields.size() == 0) {
-            log.warn("No default fields specified");
-        }
-
-        String dop = ParseUtil.getValue(xPath, document,
-                "id:IndexDescriptor/id:QueryParser/@defaultOperator",
-                defaultOperator.toString());
-        if ("or".equals(dop.toLowerCase())) {
-            defaultOperator = OPERATOR.or;
-        } else if ("and".equals(dop.toLowerCase())) {
-            defaultOperator = OPERATOR.and;
-        } else {
-            log.warn("Unexpected value '" + dop
-                     + "' found in QueryParser#defaultOperator");
-        }
-
-
-        NodeList fieldNodes;
-        final String FIELD_EXPR = "/id:IndexDescriptor/id:fields/id:field";
-        try {
-            fieldNodes = (NodeList)xPath.evaluate(FIELD_EXPR, document,
-                                                 XPathConstants.NODESET);
-        } catch (XPathExpressionException e) {
-            throw new ParseException(String.format(
-                    "Expression '%s' for selecting fields was invalid",
-                    FIELD_EXPR), -1);
-        }
-        //noinspection DuplicateStringLiteralInspection
-        log.trace("Located " + fieldNodes.getLength() + " field nodes");
-        for (int i = 0 ; i < fieldNodes.getLength(); i++) {
-            addField(createNewField(fieldNodes.item(i)));
-        }
-
+    private void parseGroups(Document document) throws ParseException {
         NodeList groupNodes;
         //noinspection DuplicateStringLiteralInspection
         final String GROUP_EXPR = "/id:IndexDescriptor/id:groups/id:group";
@@ -394,14 +414,37 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         for (int i = 0 ; i < groupNodes.getLength(); i++) {
             addGroup(new IndexGroup<F>(groupNodes.item(i), this));
         }
+    }
 
-        // Sanity check
-        for (String defaultField: defaultFields) {
-            if (allFields.get(defaultField) == null
-                && groups.get(defaultField) == null) {
-                log.warn("The specified default field '" + defaultField
-                         + "' did not have any corresponding field or group");
-            }
+    private void parseFields(Document document) throws ParseException {
+        NodeList fieldNodes;
+        final String FIELD_EXPR = "/id:IndexDescriptor/id:fields/id:field";
+        try {
+            fieldNodes = (NodeList)xPath.evaluate(FIELD_EXPR, document,
+                                                 XPathConstants.NODESET);
+        } catch (XPathExpressionException e) {
+            throw new ParseException(String.format(
+                    "Expression '%s' for selecting fields was invalid",
+                    FIELD_EXPR), -1);
+        }
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("Located " + fieldNodes.getLength() + " field nodes");
+        for (int i = 0 ; i < fieldNodes.getLength(); i++) {
+            addField(createNewField(fieldNodes.item(i)));
+        }
+    }
+
+    private void parseQueryParser(Document document) throws ParseException {
+        String dop = ParseUtil.getValue(xPath, document,
+                "id:IndexDescriptor/id:QueryParser/@defaultOperator",
+                defaultOperator.toString());
+        if ("or".equals(dop.toLowerCase())) {
+            defaultOperator = OPERATOR.or;
+        } else if ("and".equals(dop.toLowerCase())) {
+            defaultOperator = OPERATOR.and;
+        } else {
+            log.warn("Unexpected value '" + dop
+                     + "' found in QueryParser#defaultOperator");
         }
     }
 
@@ -452,10 +495,12 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         sw.append("<defaultLanguage>").append(defaultLanguage);
         sw.append("</defaultLanguage>\n");
 
-        sw.append("<uniqueKey>").append(uniqueKey).append("</uniqueKey>\n");
+//        sw.append("<uniqueKey>").append(uniqueKey).append("</uniqueKey>\n");
 
-        sw.append("<defaultSearchFields>");
-        sw.append(Strings.join(defaultFields, " "));
+        sw.append("<defaultSearchFields>\n");
+        for (String defaultField: defaultFields) {
+            sw.append("  <field ref=\"").append(defaultField).append("\"/>\n");
+        }
         sw.append("</defaultSearchFields>\n");
 
         sw.append("<QueryParser defaultOperator=\"");
@@ -471,6 +516,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      * Close down the IndexDescriptor, freeing underlying threads.
      */
     public synchronized void close() {
+        //noinspection DuplicateStringLiteralInspection
         log.trace("close() called");
         if (listener != null) {
             listener.setActive(false);
@@ -637,20 +683,12 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         this.defaultLanguage = defaultLanguage;
     }
 
-    public void setUniqueKey(String uniqueKey) {
-        this.uniqueKey = uniqueKey;
-    }
-
     public void setDefaultFields(List<String> defaultFields) {
         this.defaultFields = defaultFields;
     }
 
     public void setDefaultOperator(OPERATOR defaultOperator) {
         this.defaultOperator = defaultOperator;
-    }
-
-    public String getUniqueKey() {
-        return uniqueKey;
     }
 
     public List<String> getDefaultFields() {
@@ -715,6 +753,3 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         return allFields;
     }
 }
-
-
-

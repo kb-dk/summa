@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<IndexDescriptor version="1.0" xmlns="http://statsbiblioteket.dk/2008/Descriptor">
+<IndexDescriptor version="1.0" xmlns="http://statsbiblioteket.dk/summa/2008/IndexDescriptor">
 
     <groups>
         <group name="au">
-            <field name="author_person"/>
-            <field name="author_normalised"/>
-            <field name="au_other"/>
+            <field ref="author_person"/>
+            <field ref="author_normalised"/>
+            <field ref="au_other"/>
         </group>
         <group name="ti">
-            <field name="main_titel"/>
-            <field name="sort_title"/>
+            <field ref="main_titel"/>
+            <field ref="sort_title"/>
         </group>
         <group name="su">
-            <field name="lsu_oai"/>
-            <field name="lsubject"/>
-            <field name="subject_other"/>
+            <field ref="lsu_oai"/>
+            <field ref="lsubject"/>
+            <field ref="subject_other"/>
         </group>
         <group name="lma">
-            <field name="lma_long"/>
+            <field ref="lma_long"/>
         </group>
     </groups>
 
@@ -53,7 +53,14 @@
         <field name="sort_year_desc" parent="keyword"/>
     </fields>
 
-    <defaultSearchFields>freetext au ti su lma id</defaultSearchFields>
+    <defaultSearchFields>
+        <field ref="freetext"/>
+        <field ref="au"/>
+        <field ref="ti"/>
+        <field ref="su"/>
+        <field ref="lma"/>
+        <field ref="id"/>
+    </defaultSearchFields>
 </IndexDescriptor>
 
 

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<IndexDescriptor version="1.0" xmlns="http://statsbiblioteket.dk/2008/Descriptor">
+<IndexDescriptor version="1.0" xmlns="http://statsbiblioteket.dk/summa/2008/IndexDescriptor">
 
     <groups>
         <group name="a">
-            <field name="author"/>
-            <field name="author_person"/>
+            <field ref="author"/>
+            <field ref="author_person"/>
         </group>
     </groups>
 
@@ -17,7 +17,11 @@
         <field name="variable" index="true" parent="token" inFreeText="false" required="false"/>
     </fields>
 
-    <defaultSearchFields>freetext a variable</defaultSearchFields>
+    <defaultSearchFields>
+        <field ref="freetext"/>
+        <field ref="a"/>
+        <field ref="variable"/>
+    </defaultSearchFields>
 </IndexDescriptor>
 
 
