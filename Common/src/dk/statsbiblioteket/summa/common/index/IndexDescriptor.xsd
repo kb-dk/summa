@@ -134,14 +134,16 @@
                     </xsd:annotation>
                     <!-- TODO: Use reference to the field to ensure existence -->
                     <xsd:attribute name="ref" type="xsd:string" use="required"/>
-                    <xsd:attribute name="excludeFromFacets" type="xsd:boolean" use="optional"/>
+<!--                    <xsd:attribute name="excludeFromFacets" type="xsd:boolean" use="optional"/>-->
+                    <xsd:anyAttribute processContents="lax"/>
                 </xsd:complexType>
             </xsd:element>
         </xsd:sequence>
 
         <xsd:attribute name="name" type="xsd:string" use="required"/>
-        <xsd:attribute name="isFacet" type="xsd:boolean" use="optional"/>
-        <xsd:attribute name="facetName" type="xsd:string" use="optional"/>
+<!--        <xsd:attribute name="isFacet" type="xsd:boolean" use="optional"/>
+        <xsd:attribute name="facetName" type="xsd:string" use="optional"/>-->
+        <xsd:anyAttribute processContents="lax"/>
     </xsd:complexType>
 
     <xsd:complexType name="AliasType">
@@ -207,7 +209,8 @@
         <xsd:attribute name="sortLocale" type="xsd:string" use="optional"/>
         <xsd:attribute name="inFreeText" type="xsd:boolean" use="optional"/>
         <xsd:attribute name="required" type="xsd:boolean" use="optional"/>
-        <xsd:attribute name="isFacet" type="xsd:boolean" use="optional"/>
-        <xsd:attribute name="facetName" type="xsd:string" use="optional"/>
+<!--        <xsd:attribute name="isFacet" type="xsd:boolean" use="optional"/>
+        <xsd:attribute name="facetName" type="xsd:string" use="optional"/>-->
+        <xsd:anyAttribute processContents="lax"/>
     </xsd:complexType>
 </xsd:schema>
