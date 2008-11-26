@@ -83,17 +83,20 @@ public interface ReadableStorage extends Configurable {
     long getRecordsModifiedAfter(long time, String base) throws IOException;
 
     /**
-     * Returns whether there has been changes in {@code base} after the time
-     * stamp {@code time}. If {@code base==null} this method checks whether
-     * <i>any</i> base has had changes after {@code time}.
+     * Returns the timestamp for the most recent modification in {@code base}.
      * <p/>
      * Change notification services polling the storage for changes should use
      * this method.
+     * <p/>
+     * <i>Warning</i>: Callers of this method should never compare the
+     * local system time with the returned timestamp.
      *
      * @param base the base in which to check for changes. If {@code base} is
-     *             {@code null} changes to all bases should be checked
-     * @return whether or not there has been changes to base at a time later
-     *         than {@code time}
+     *             {@code null} the most recent change across all bases is
+     *             returned
+     * @return the timestamp for the last change in {@code base}. If
+     *         {@code base} is unknown or has never received updates {@code 0}
+     *         is returned.
      * @throws IOException on communication errors with the storage service
      */
     long getModificationTime (String base) throws IOException;
