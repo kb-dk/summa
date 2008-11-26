@@ -34,11 +34,11 @@ import dk.statsbiblioteket.summa.common.configuration.Configurable;
  * One of the two interfaces comprising the core {@link Storage} interface in
  * Summa. The other interface is the {@link WritableStorage} interface.
  * <p/>
- * Iteration over the result sets returned by this interface is doner via
+ * Iteration over the result sets returned by this interface is done via
  * keys (in the form of {@code long}s which are passed to the {@link #next(long)}
  * or {@link #next(long,int)} methods until a
  * {@link java.util.NoSuchElementException} is thrown. Alternatively one can
- * use the {@link StorageIterator} class to handle all this behinf an
+ * use the {@link StorageIterator} class to handle all this behind an
  * {@link Iterator} facade.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
