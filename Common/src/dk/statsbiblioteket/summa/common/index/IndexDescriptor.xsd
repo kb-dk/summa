@@ -124,8 +124,8 @@
                 <xsd:complexType>
                     <xsd:annotation>
                         <xsd:documentation>
-                            field is a field in the group. The field must be defined
-                            elsewhere in the XML.
+                            field is a field in the group. It refers to the name of a
+                            field (not an alias).
                             excludeFromFacets has no effect if the group containing the
                             GroupFieldtype does not have isFacet="true". If the group has
                             isFacet="true" and excludeFromFacets is true, the field is not

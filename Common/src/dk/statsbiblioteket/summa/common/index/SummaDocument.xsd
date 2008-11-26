@@ -12,6 +12,7 @@
         </xsd:documentation>
     </xsd:annotation>
 
+    <!-- TODO: Consider adding resolver to facilitate lookup -->
 
     <xsd:element name="SummaDocument">
         <xsd:complexType>

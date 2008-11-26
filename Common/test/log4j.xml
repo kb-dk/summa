@@ -56,7 +56,7 @@
 
 
     <logger name="dk.statsbiblioteket">
-        <level value="trace" />
+        <level value="debug" />
         <appender-ref ref="CONSOLE" />
     </logger>
 
