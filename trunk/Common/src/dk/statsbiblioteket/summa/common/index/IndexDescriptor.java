@@ -73,6 +73,7 @@ import org.xml.sax.SAXException;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
+// TODO: Warn if aliases clashes with field- or group-names
 public abstract class IndexDescriptor<F extends IndexField> implements
                                    Configurable, FieldProvider<F> {
     private static Log log = LogFactory.getLog(IndexDescriptor.class);
