@@ -99,6 +99,16 @@ public class XMLSplitterFilter extends StreamController {
     public static final String CONF_COLLAPSE_PREFIX =
             "summa.ingest.xmlsplitter.collapseprefix";
 
+    /**
+     * If true, extracted ids which beginning matches {@link #CONF_ID_POSTFIX}
+     * will not have the postfix appended.
+     * </p><p>
+     * Default: "true".
+     * @see {@link #CONF_COLLAPSE_PREFIX}.
+     */
+    public static final String CONF_COLLAPSE_POSTFIX =
+            "summa.ingest.xmlsplitter.collapsepostfix";
+
 
     /**
      * The xml-element containing the individual records. The input stream will

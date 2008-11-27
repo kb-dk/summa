@@ -227,9 +227,8 @@ public class XMLSplitterHandler extends DefaultHandler2 {
                 return;
             }
             try {
-                // TODO: Handle target.collapsePrefix
                 Record record = new Record(
-                        target.idPrefix + id.toString(),
+                        id.toString(), // ID-modification is handled by parser
                         target.base,
                         (HEADER + sw.toString()).getBytes("utf-8"));
                 log.debug("Produced " + record);
