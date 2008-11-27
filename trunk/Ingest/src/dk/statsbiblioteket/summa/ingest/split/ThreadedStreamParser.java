@@ -183,12 +183,25 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
                 Payload newPayload = sourcePayload.clone();
                 newPayload.setRecord(record);
                 newPayload.setStream(null); // To avoid premature close
+                if (record.getId() != null) {
+                    newPayload.setID(record.getId());
+                }
+                postProcess(newPayload);
                 return newPayload;
             } catch (InterruptedException e) {
                 log.warn("Interrupted while waiting for Record. Retrying");
             }
         }
         throw new NoSuchElementException("Expected more Records, but got none");
+    }
+
+    /**
+     * Override this to perform processing on the Payload immediately before it
+     * is returned by {@link #next}.
+     * @param payload the Payload to post-process.
+     */
+    protected void postProcess(Payload payload) {
+        // Override if any post-processing is to be done
     }
 
     public void remove() {

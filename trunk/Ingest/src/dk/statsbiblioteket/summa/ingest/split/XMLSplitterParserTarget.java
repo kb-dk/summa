@@ -27,6 +27,9 @@ import org.apache.commons.logging.LogFactory;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.common.filter.Payload;
+
+import java.io.File;
 
 /**
  * Helper-class for XMLSplitterParser, containing information on how to
@@ -41,6 +44,7 @@ public class XMLSplitterParserTarget {
     public String idPrefix = "";
     public String idPostfix = "";
     public boolean collapsePrefix = true;
+    public boolean collapsePostfix = true;
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public String recordElement = "record";
     public String idElement ="id";
@@ -64,6 +68,8 @@ public class XMLSplitterParserTarget {
                 XMLSplitterFilter.CONF_ID_NAMESPACE, idNamespace);
         collapsePrefix = configuration.getBoolean(
                 XMLSplitterFilter.CONF_COLLAPSE_PREFIX, collapsePrefix);
+        collapsePostfix = configuration.getBoolean(
+                XMLSplitterFilter.CONF_COLLAPSE_POSTFIX, collapsePostfix);
         recordElement = configuration.getString(
                 XMLSplitterFilter.CONF_RECORD_ELEMENT, recordElement);
         idElement = configuration.getString(
@@ -97,5 +103,39 @@ public class XMLSplitterParserTarget {
                 XMLSplitterFilter.CONF_PRESERVE_NAMESPACES, preserveNamespaces);
         requireValid = configuration.getBoolean(
                 XMLSplitterFilter.CONF_REQUIRE_VALID, requireValid);
+    }
+
+    /**
+     * Adjusts the id for the Payload to fit prefix and postfix.
+     * @param payload the Payload to adjust the id for.
+     */
+    public void adjustID(Payload payload) {
+        String id = payload.getId();
+        String origin_tail = "";
+        try {
+            origin_tail = payload.getData(Payload.ORIGIN) == null ? "" :
+                          new File((String)payload.getData(Payload.ORIGIN)).
+                                  getParentFile().getName();
+            log.trace("Located expand-folder '" + origin_tail + "'");
+        } catch (Exception e) {
+            log.debug("Exception while locating expand-folder for " + payload,
+                      e);
+        }
+        String prefix = idPrefix.replace(XMLSplitterFilter.EXPAND_FOLDER,
+                                         origin_tail);
+        String postfix = idPostfix.replace(XMLSplitterFilter.EXPAND_FOLDER,
+                                           origin_tail);
+        if (collapsePrefix && id.startsWith(prefix)) {
+            prefix = "";
+        }
+        if (collapsePostfix && id.endsWith(postfix)) {
+            postfix = "";
+        }
+        id = prefix + id + postfix;
+        log.debug("Correcting id '" + payload.getId() + "' to '" + id + "'");
+        payload.setID(id);
+        if (payload.getRecord() != null) {
+            payload.getRecord().setId(payload.getId());
+        }
     }
 }

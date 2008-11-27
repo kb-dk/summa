@@ -60,7 +60,8 @@ import org.apache.lucene.document.Document;
  */
 // TODO: Add maximum number of segments property for consolidate
 // TODO: Add memory based flushing policy
-// TODO: Verify that adds + deletes inside the same commit works as expected 
+// TODO: Verify that adds + deletes inside the same commit works as expected
+// TODO: Explicitely add the field recordID
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")

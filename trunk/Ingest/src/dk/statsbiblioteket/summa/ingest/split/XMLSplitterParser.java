@@ -27,6 +27,7 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -50,10 +51,11 @@ public class XMLSplitterParser extends ThreadedStreamParser {
 
     private SAXParserFactory factory;
     private XMLSplitterHandler handler;
+    XMLSplitterParserTarget target;
 
     public XMLSplitterParser(Configuration conf) {
         super(conf);
-        XMLSplitterParserTarget target = new XMLSplitterParserTarget(conf);
+        target = new XMLSplitterParserTarget(conf);
         factory = SAXParserFactory.newInstance();
         factory.setNamespaceAware(true);
         handler = new XMLSplitterHandler(conf, this, target);
@@ -96,6 +98,10 @@ public class XMLSplitterParser extends ThreadedStreamParser {
         if (!running) {
             throw stopped;
         }
+    }
+
+    protected void postProcess(Payload payload) {
+        target.adjustID(payload);
     }
 
     /**
