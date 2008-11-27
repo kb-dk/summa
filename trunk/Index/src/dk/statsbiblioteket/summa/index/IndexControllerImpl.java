@@ -103,7 +103,7 @@ public class IndexControllerImpl extends StateThread implements
      * This property is optional. Default is -1 (disabled).
      */
     public static final String CONF_COMMIT_TIMEOUT =
-            "summa-index.commit-timeout";
+            "summa.index.committimeout";
     public static final int DEFAULT_COMMIT_TIMEOUT = -1;
 
     /**
