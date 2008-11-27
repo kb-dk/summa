@@ -39,6 +39,7 @@ public class XMLSplitterParserTarget {
     private static Log log = LogFactory.getLog(XMLSplitterParserTarget.class);
 
     public String idPrefix = "";
+    public String idPostfix = "";
     public boolean collapsePrefix = true;
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public String recordElement = "record";
@@ -57,6 +58,8 @@ public class XMLSplitterParserTarget {
     public XMLSplitterParserTarget(Configuration configuration) {
         idPrefix = configuration.getString(
                 XMLSplitterFilter.CONF_ID_PREFIX, idPrefix);
+        idPostfix = configuration.getString(
+                XMLSplitterFilter.CONF_ID_POSTFIX, idPostfix);
         idNamespace = configuration.getString(
                 XMLSplitterFilter.CONF_ID_NAMESPACE, idNamespace);
         collapsePrefix = configuration.getBoolean(
