@@ -43,10 +43,35 @@ public class XMLSplitterFilter extends StreamController {
     /**
      * The prefix to prepend to the extracted Record-ids.
      * </p><p>
-     * Default: "".
+     * Optional. Default is "".
+     * @see {@link #EXPAND_FOLDER}.
      */
     public static final String CONF_ID_PREFIX =
             "summa.ingest.xmlsplitter.idprefix";
+
+    /**
+     * The postfix to append to the extracted Record-ids.
+     * </p><p>
+     * Optional. Default is "".
+     * @see {@link #EXPAND_FOLDER}.
+     */
+    public static final String CONF_ID_POSTFIX =
+            "summa.ingest.xmlsplitter.idpostfix";
+
+    /**
+     * If this String is used inside {@link #CONF_ID_PREFIX} or
+     * {@link #CONF_ID_POSTFIX}, the last path element of the origin will
+     * replace the String. If ORIGIN is not present, the String will be replaced
+     * with "".
+     * </p></p>
+     * Example: An XMLSplitterFilter is positioned after a
+     * {@link dk.statsbiblioteket.summa.ingest.stream.FileReader}.
+     * FileReader adds the folder for the fetched file as the meta-data element
+     * {@link dk.statsbiblioteket.summa.common.filter.Payload#ORIGIN}.
+     * If the ORIGIN is "/home/summa/data/mysource/specialfolder/somefile.xml",
+     * the last path element is "specialfolder".
+     */
+    public static final String EXPAND_FOLDER = "{ORIGIN_LAST_PATH_ELEMENT}";
 
     /**
      * The XML namespace of the ID element matched by {@link #CONF_ID_ELEMENT}.
