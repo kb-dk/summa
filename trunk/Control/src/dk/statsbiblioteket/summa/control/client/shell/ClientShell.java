@@ -30,6 +30,7 @@ import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.client.Client;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
+import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * <p>A simple shell for communicating with a {@link Client}.</p>
@@ -40,6 +41,9 @@ import dk.statsbiblioteket.util.rpc.ConnectionContext;
  * <p>It can be run from the command line and can communicate with
  * any Client local or remotely via the configured RPC mechanism.</p>
  */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.QA_NEEDED,
+        author = "mke")
 public class ClientShell {
 
     private ConnectionManager<ClientConnection> connManager;
