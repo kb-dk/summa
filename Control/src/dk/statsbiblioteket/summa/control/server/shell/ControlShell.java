@@ -18,9 +18,8 @@ import java.util.Arrays;
  * Command line UI for managing the Control server.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "mke",
-        comment="Unfinished")
+        state = QAInfo.State.QA_NEEDED,
+        author = "mke")
 public class ControlShell {
 
     private ConnectionManager<ControlConnection> connManager;
