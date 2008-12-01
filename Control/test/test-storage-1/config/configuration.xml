@@ -15,7 +15,7 @@
          DatabaseControl -->
 
     <!-- The backend to use for Storage -->
-    <entry key="summa.storage.controller">dk.statsbiblioteket.summa.storage.database.derby.ControlDerby</entry>
+    <entry key="summa.storage.class">dk.statsbiblioteket.summa.storage.database.derby.DerbyStorage</entry>
 
     <!--
     <entry key="summa.storage.database.username"></entry>
