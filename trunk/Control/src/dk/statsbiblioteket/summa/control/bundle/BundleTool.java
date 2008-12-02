@@ -17,10 +17,12 @@ public class BundleTool {
     private boolean dryRun;
     private boolean sloppy;
     private boolean expandProps;
+    private String overrideAutostart;
     private String overrideName;
     private String bundleName;
     private File specFile;
     private File outputDir;
+    private File filesDir;
 
     private static void printHelp (Options options) {
         String usage = "java -jar summa-bundle.jar [options] <bundle-spec>";
@@ -35,8 +37,10 @@ public class BundleTool {
         boolean dryRun = false;
         boolean sloppy = false;
         boolean expandProps = false;
-        String overrideName = null;
-        String outputDir = null;
+        String overrideAutostart;
+        String overrideName;
+        String outputDir;
+        String fileDir;
         File specFile = null;
 
         // Build command line options
@@ -49,6 +53,8 @@ public class BundleTool {
         options.addOption("s", "sloppy", false, "Don't do validation of bundle contents");
         options.addOption("o", "output", true, "Directory to place the resulting bundle in");
         options.addOption("x", "expand-properties", false, "Expand @-enclosed system properties in the spec file");
+        options.addOption("a", "auto-start", true, "Override whether or not to enable auto start of the bundle");
+        options.addOption("f", "files", true, "Path to collect files for the bundle from");
 
         // Parse and validate command line
         try {
@@ -75,12 +81,14 @@ public class BundleTool {
         sloppy = cli.hasOption("sloppy");
         expandProps = cli.hasOption("expand-properties");
         overrideName = cli.getOptionValue("name");
-        outputDir = cli.getOptionValue("name", System.getProperty("user.dir"));
+        overrideAutostart = cli.getOptionValue("auto-start");
+        outputDir = cli.getOptionValue("output", System.getProperty("user.dir"));
+        fileDir = cli.getOptionValue("files", specFile.getParent());
 
         try {
-            new BundleTool(specFile, new File(outputDir),
+            new BundleTool(specFile, new File(outputDir), new File(fileDir),
                            verbose, dryRun, sloppy, expandProps,
-                           overrideName).run();
+                           overrideAutostart, overrideName).run();
         } catch (BundleLoadingException e) {
             System.err.println("Error loading bundle: " + e.getMessage());
             if (verbose) {
@@ -109,17 +117,19 @@ public class BundleTool {
     }
 
 
-    public BundleTool(File specFile, File outputDir,
+    public BundleTool(File specFile, File outputDir, File filesDir,
                       boolean verbose, boolean dryRun,
                       boolean sloppy, boolean expandProps,
-                      String overrideName) {
+                      String overrideAutostart, String overrideName) {
         this.specFile = specFile;
         this.outputDir = outputDir;
+        this.filesDir = filesDir;
         this.verbose = verbose;
         this.dryRun = dryRun;
         this.sloppy = sloppy;
         this.expandProps = expandProps;
         this.overrideName = overrideName;
+        this.overrideAutostart = overrideAutostart;
 
         if (!specFile.exists()) {
             throw new BundleLoadingException("No such bundle spec '"
@@ -151,6 +161,16 @@ public class BundleTool {
                                        + "' is not a directory");
         }
 
+        if (!filesDir.exists()) {
+            throw new RuntimeException("File source directory '" + filesDir
+                                       + "' does not exist");
+        }
+
+        if (!filesDir.isDirectory()) {
+            throw new RuntimeException("File source '" + filesDir
+                                       + "' is not a directory");
+        }
+
     }
 
     public void println (String line) {
@@ -163,7 +183,7 @@ public class BundleTool {
             println("Output dir: " + outputDir);
             println("Enable validation: " + !sloppy);
             println("Dry run: " + dryRun);
-            println("Bundle dir: " + specFile.getParent());
+            println("File input dir: " + filesDir);
         }
 
         BundleSpecBuilder builder = BundleSpecBuilder.open(specFile);
@@ -172,7 +192,7 @@ public class BundleTool {
         // This must be done before validation
         try {
             if (builder.getFiles().isEmpty()) {
-                builder.buildFileList(specFile.getParentFile());
+                builder.buildFileList(filesDir);
             }
         } catch (IOException e) {
             throw new BundleLoadingException("Failed to build file list for "
@@ -195,6 +215,19 @@ public class BundleTool {
             println("Skipping validation");
         }
 
+        // Autostart handling
+        if (overrideAutostart != null) {
+            boolean autostart = Boolean.parseBoolean(overrideAutostart);
+
+            if (verbose) {
+                println("Overriding autoStart to: " + autostart);
+            }
+
+            builder.setAutoStart(autostart);
+        } else if (verbose) {
+            println("Keeping original autoStart settings");
+        }
+
         // Get/Set bundle name
         bundleName = builder.getBundleId();
         if (overrideName != null) {
@@ -206,23 +239,22 @@ public class BundleTool {
         }
 
         // Always print the resume
-        println(builder.getDisplayString(true));
+        println("\n" + builder.getDisplayString(true));
+
+        println("Writing bundle to: "
+                + new File(outputDir, bundleName + Bundle.BUNDLE_EXT));
 
         // Roll bundle zip-file
         if (!dryRun) {
-            if (verbose) {
-                println("Writing bundle '" + bundleName + "' to '"
-                        + outputDir + "'");
-            }
-            builder.buildBundle(specFile.getParentFile(), outputDir);
+            builder.buildBundle(filesDir, outputDir);
 
             if (!new File(outputDir, bundleName + Bundle.BUNDLE_EXT).exists()) {
                 throw new RuntimeException("Unknown error writing bundle to '"
                                            + outputDir + "'");
             }
 
-        } else if (verbose) {
-            println("Skipped creation of bundle");
+        } else {
+            println("Dry run. Skipped creation of bundle, nothing written to disk");
         }
 
     }
@@ -263,7 +295,7 @@ public class BundleTool {
     }
 
     private void validate (BundleSpecBuilder builder) {
-        builder.checkFileList(specFile.getParentFile());
+        builder.checkFileList(filesDir);
         builder.checkPublicApi();
 
         if (builder.getInstanceId() != null) {
