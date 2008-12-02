@@ -103,6 +103,12 @@ public class MultipleSourcesTest extends NoExitTestCase {
     public void testDOMSFull() throws Exception {
         testFull(Arrays.asList("doms"));
     }
+    public void testETSSFull() throws Exception {
+        testFull(Arrays.asList("etss"));
+    }
+    public void testReklameFull() throws Exception {
+        testFull(Arrays.asList("reklamefilm"));
+    }
 
     public void testSpecificIngest(String base) throws Exception {
         StorageService storage = OAITest.getStorageService();
@@ -167,6 +173,8 @@ public class MultipleSourcesTest extends NoExitTestCase {
         queries.put("oai", "hyperfine");
         queries.put("csa", "demo");
         queries.put("doms", "omega");
+        queries.put("etss", "odontologica");
+        queries.put("reklamefilm", "dandruff");
         SearchClient searchClient =
                 new SearchClient(Configuration.newMemoryBased(
                         ConnectionConsumer.CONF_RPC_TARGET,
@@ -345,6 +353,8 @@ public class MultipleSourcesTest extends NoExitTestCase {
                 xsltRelativeLocation = "targets/fagreferent/fagref_index.xsl";
             } else if ("nat".equals(source)) {
                 xsltRelativeLocation = "targets/aleph/aleph_index.xsl";
+            } else if ("reklamefilm".equals(source)) {
+                xsltRelativeLocation = "targets/DanskReklameFilm/reklamefilm_index.xsl";
             }
             URL sourceXSLT = Resolver.getURL(xsltRelativeLocation);
             assertNotNull(String.format(
