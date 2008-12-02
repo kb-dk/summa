@@ -174,7 +174,7 @@ public class XMLTransformer extends ObjectFilterImpl {
             transformer.transform(so, input);
 /*            System.out.println("************************************");
             System.out.println(payload.getRecord().getContentAsUTF8());*/
-            payload.getRecord().setContent(out.toByteArray());
+            byte[] output = out.toByteArray();
 /*            System.out.println("------------------------------------");
             System.out.println(payload.getRecord().getContentAsUTF8());
             System.out.println("************************************");*/
@@ -185,20 +185,20 @@ public class XMLTransformer extends ObjectFilterImpl {
                             + "\n%s\n***** Result *****\n%s",
                             payload, xsltLocation,
                             payload.getRecord().getContentAsUTF8(),
-                            new String(out.toByteArray(), "utf-8")));
+                            new String(output, "utf-8")));
                 } catch (UnsupportedEncodingException e) {
                     log.error("Unable to convert byte-array to UTF-8", e);
                 }
             } else if (log.isDebugEnabled()) {
-                int outSize = payload.getRecord().getContent().length;
                 log.debug("Transformed " + payload + ". Input: " + inSize
-                          + " bytes, output: " + outSize + " bytes, XSLT: "
-                          + xsltLocation);
+                          + " bytes, output: " + output.length
+                          + " bytes, XSLT: " + xsltLocation);
             }
 /*            if (log.isTraceEnabled()) {
                 log.trace("Transformed content for " + payload + ": "
                           + payload.getRecord().getContentAsUTF8());
             }*/
+            payload.getRecord().setContent(output);
         } catch (TransformerException e) {
             log.warn("Transformer problems. Discarding payload " + payload, e);
         }
