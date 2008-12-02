@@ -610,7 +610,7 @@ public class Record implements Serializable, Comparable{
                    && indexable == other.isIndexable()
                    && ((parentIds == null && other.getParentIds() == null)
                        || (parentIds != null && parentIds.equals(other.getParentIds())))
-                   && Arrays.equals(data, other.getContent())
+                   && Arrays.equals(getContent(), other.getContent())
                    && ((childIds == null && other.getChildIds() == null) ||
                        (childIds != null) && Strings.join(childIds, ",").equals(
                     Strings.join(other.getChildIds(), ",")))
