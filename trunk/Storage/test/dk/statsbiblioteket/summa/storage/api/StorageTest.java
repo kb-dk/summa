@@ -353,8 +353,9 @@ public class StorageTest extends TestCase {
         assertEquals(3, recs.size());
 
         /* Check that the first record holds child relations to recC1, and recC2 */
-        assertEquals(recs.get(0).getChildren(),
-                     Arrays.asList(recs.get(1), recs.get(2)));
+        assertEquals(2, recs.get(0).getChildren().size());
+        assertEquals(recs.get(1), recs.get(0).getChildren().get(0));
+        assertEquals(recs.get(2), recs.get(0).getChildren().get(1));        
 
         /* Check that recC1 has child recC2 */
         assertEquals(recs.get(1).getChildren(),

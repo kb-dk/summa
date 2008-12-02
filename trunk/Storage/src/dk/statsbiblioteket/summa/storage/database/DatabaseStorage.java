@@ -163,13 +163,15 @@ public abstract class DatabaseStorage extends StorageBase {
     private PreparedStatement stmtDeleteRecord;
     private PreparedStatement stmtCreateRecord;
     private PreparedStatement stmtUpdateRecord;
-    private PreparedStatement stmtTouchRecord;
+    //private PreparedStatement stmtTouchRecord;
     private PreparedStatement stmtTouchParents;
-    private PreparedStatement stmtGetRecordState;
+    //private PreparedStatement stmtGetRecordState;
     private PreparedStatement stmtGetChildren;
     private PreparedStatement stmtGetParents;
     private PreparedStatement stmtCreateRelation;
-    private PreparedStatement stmtDeleteRelation;
+    //private PreparedStatement stmtDeleteRelation;
+    //private PreparedStatement stmtCountParents;
+    //private PreparedStatement stmtCountChildren;
 
     private static final int FETCH_SIZE = 10000;
 
@@ -389,12 +391,12 @@ public abstract class DatabaseStorage extends StorageBase {
         stmtUpdateRecord = getConnection().prepareStatement(updateRecordQuery);
 
         /* touchRecord */
-        String touchRecordQuery = "UPDATE " + RECORDS + " SET "
+        /*String touchRecordQuery = "UPDATE " + RECORDS + " SET "
                                    + MTIME_COLUMN + "=? "
                                    + "WHERE " + ID_COLUMN +"=?";
         log.debug("Preparing query touchRecord with '" + touchRecordQuery
                   + "'");
-        stmtTouchRecord = prepareStatement(touchRecordQuery);
+        stmtTouchRecord = prepareStatement(touchRecordQuery);*/
 
         /* touchParents */
         String touchParentsQuery = "UPDATE " + RECORDS
@@ -410,13 +412,13 @@ public abstract class DatabaseStorage extends StorageBase {
         stmtTouchParents = prepareStatement(touchParentsQuery);
 
         /* getRecordState (internal use) */
-        String getRecordStateQuery = "SELECT " + BASE_COLUMN
+        /*String getRecordStateQuery = "SELECT " + BASE_COLUMN
                                    + "," + DELETED_COLUMN
                                    + " FROM " + RECORDS
                                    + " WHERE " + ID_COLUMN + "=?";
         log.debug("Preparing query getRecordState with '" + getRecordStateQuery
                   + "'");
-        stmtGetRecordState = prepareStatement(getRecordStateQuery);
+        stmtGetRecordState = prepareStatement(getRecordStateQuery);*/
 
 
         /* getChildren */
@@ -456,13 +458,29 @@ public abstract class DatabaseStorage extends StorageBase {
                                                      createRelation);
 
         /* deleteRelation */
-        String deleteRelation = "DELETE FROM " + RELATIONS 
+        /*String deleteRelation = "DELETE FROM " + RELATIONS
                                 + " WHERE " + PARENT_ID_COLUMN + "=? "
                                 + " OR " + CHILD_ID_COLUMN + "=? ";
         log.debug("Preparing query deleteRelation with '" +
                                               deleteRelation + "'");
         stmtDeleteRelation = getConnection().prepareStatement(
-                                                     deleteRelation);
+                                                     deleteRelation);*/
+
+        /* countParents */
+        /*String countParents = "SELECT count(*) FROM " + RELATIONS
+                                + " WHERE " + CHILD_ID_COLUMN + "=?";
+        log.debug("Preparing query countParents with '" +
+                                              countParents + "'");
+        stmtCountParents = getConnection().prepareStatement(
+                                                     countParents);*/
+
+        /* countChildren */
+        /*String countChildren = "SELECT count(*) FROM " + RELATIONS
+                                + " WHERE " + PARENT_ID_COLUMN + "=?";
+        log.debug("Preparing query countChildren with '" +
+                                              countParents + "'");
+        stmtCountChildren = getConnection().prepareStatement(
+                                                     countChildren);*/
 
         log.trace("Finished preparing SQL statements");
     }
@@ -680,7 +698,8 @@ public abstract class DatabaseStorage extends StorageBase {
             }
         }
 
-        /* Touch parents recursively upwards */
+        /* Touch parents recursively upwards
+         * FIXME: The call to touchParents() might be pretty expensive... */
         try {
             touchParents(record.getId());
         } catch (IOException e) {
@@ -698,8 +717,19 @@ public abstract class DatabaseStorage extends StorageBase {
 
     /* Recursively touch parents upwards */
     private void touchParents(String id) throws IOException {
-        if (log.isTraceEnabled()) {
+        boolean doTrace = log.isTraceEnabled();
+
+        if (doTrace) {
             log.trace ("Touching parents of '" + id + "'");
+        }
+
+        List<Record> parents = getParents(id);
+
+        if (parents == null || parents.isEmpty()) {
+            if (doTrace) {
+                log.trace("No parents to update for record " + id);
+            }
+            return;
         }
 
         try {
@@ -716,7 +746,6 @@ public abstract class DatabaseStorage extends StorageBase {
         }
 
         // Recurse upwards
-        List<Record> parents = getParents(id);
         for (Record parent : parents) {
             touchParents(parent.getId());
         }
@@ -891,7 +920,7 @@ public abstract class DatabaseStorage extends StorageBase {
                                       + record.getId() + "': " + e.getMessage(),
                                       e);
         }
-
+        // FIXME: Is this call really not just an expensive no-op?
         updateRelations(record);
     }
 
@@ -935,6 +964,7 @@ public abstract class DatabaseStorage extends StorageBase {
                                       e);
         }
 
+        // FIXME: Is this call really not just an expensive no-op?
         updateRelations(record);
      }
 
@@ -1367,6 +1397,82 @@ public abstract class DatabaseStorage extends StorageBase {
                                       e);
         }
     }
+
+    /*private int countParents(String id) {
+        ResultSet results = null;
+
+        try {
+            stmtCountParents.setString(0, id);
+            stmtCountParents.execute();
+            results = stmtCountParents.getResultSet();
+
+            if (!results.next()) {
+                log.warn("No parent count returned for '" + id + "'. "
+                         + "Returning -1");
+                return -1;
+            }
+
+            int count = results.getInt(0);
+
+            if (results.next()) {
+                log.warn("countParents query returned more than one row. " +
+                         "This should never happen");
+            }
+
+            return count;
+        } catch (SQLException e) {
+            log.warn("Failed to count parents of '" + id + "': "
+                     + e.getMessage() + ". Returning -1", e);
+            return -1;
+        } finally {
+            if (results != null) {
+                try {
+                    results.close();
+                } catch (SQLException e) {
+                    log.error("Failed to close result set for countParents " +
+                              "query", e);
+                }
+            }
+        }
+    }*/
+
+    /*private int countChildren(String id) {
+        ResultSet results = null;
+
+        try {
+            stmtCountChildren.setString(0, id);
+            stmtCountChildren.execute();
+            results = stmtCountChildren.getResultSet();
+
+            if (!results.next()) {
+                log.warn("No child count returned for '" + id + "'. "
+                         + "Returning -1");
+                return -1;
+            }
+
+            int count = results.getInt(0);
+
+            if (results.next()) {
+                log.warn("countChildren query returned more than one row. " +
+                         "This should never happen");
+            }
+
+            return count;
+        } catch (SQLException e) {
+            log.warn("Failed to count children of '" + id + "': "
+                     + e.getMessage() + ". Returning -1", e);
+            return -1;
+        } finally {
+            if (results != null) {
+                try {
+                    results.close();
+                } catch (SQLException e) {
+                    log.error("Failed to close result set for countChildren " +
+                              "query", e);
+                }
+            }
+        }
+    }*/
 }
 
 
