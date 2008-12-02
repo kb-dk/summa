@@ -246,6 +246,27 @@
                                 </entry>
                             </value>
                         </entry>
+                        <entry>
+                            <key>tusculanum</key>
+                            <value class="xproperties">
+                                <entry>
+                                    <key>summa.muxfilter.filter.class</key>
+                                    <value class="string">dk.statsbiblioteket.summa.index.XMLTransformer</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.muxfilter.filter.name</key>
+                                    <value class="string">Tusculanum Transformer</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.muxfilter.filter.bases</key>
+                                    <value class="string">tusculanum</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.xmltransformer.xslt</key>
+                                    <value class="string">targets/MuseumTusculanum/mustusc_index.xsl</value>
+                                </entry>
+                            </value>
+                        </entry>
                     </value>
                 </entry>
 

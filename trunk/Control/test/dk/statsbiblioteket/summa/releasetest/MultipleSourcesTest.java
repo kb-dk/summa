@@ -109,6 +109,9 @@ public class MultipleSourcesTest extends NoExitTestCase {
     public void testReklameFull() throws Exception {
         testFull(Arrays.asList("reklamefilm"));
     }
+    public void testTusculanumFull() throws Exception {
+        testFull(Arrays.asList("tusculanum"));
+    }
 
     public void testSpecificIngest(String base) throws Exception {
         StorageService storage = OAITest.getStorageService();
@@ -175,6 +178,7 @@ public class MultipleSourcesTest extends NoExitTestCase {
         queries.put("doms", "omega");
         queries.put("etss", "odontologica");
         queries.put("reklamefilm", "dandruff");
+        queries.put("tusculanum", "fairies");
         SearchClient searchClient =
                 new SearchClient(Configuration.newMemoryBased(
                         ConnectionConsumer.CONF_RPC_TARGET,
@@ -347,7 +351,7 @@ public class MultipleSourcesTest extends NoExitTestCase {
             sourceConf.set(MUXFilterFeeder.CONF_FILTER_NAME,
                            source + " transformer");
             sourceConf.set(MUXFilterFeeder.CONF_FILTER_BASES, source);*/
-            String xsltRelativeLocation = String.format(
+/*            String xsltRelativeLocation = String.format(
                     "targets/%s/%1$s_index.xsl", source);
             if ("fagref".equals(source)) {
                 xsltRelativeLocation = "targets/fagreferent/fagref_index.xsl";
@@ -360,7 +364,7 @@ public class MultipleSourcesTest extends NoExitTestCase {
             assertNotNull(String.format(
                     "The XSLT for source %s should exist at the relative "
                     + "location %s", source, xsltRelativeLocation), sourceXSLT);
-            sourceConf.set(XMLTransformer.CONF_XSLT, sourceXSLT.getFile());
+            sourceConf.set(XMLTransformer.CONF_XSLT, sourceXSLT.getFile());*/
         }
 
         String indexDescriptorLocation = new File(
