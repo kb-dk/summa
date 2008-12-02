@@ -47,10 +47,7 @@ import java.io.IOException;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.StringWriter;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.net.URL;
@@ -97,6 +94,15 @@ public class MultipleSourcesTest extends NoExitTestCase {
     public void testFagrefIngest() throws Exception {
         testSpecificIngest("fagref");
     }
+    public void testFagrefFull() throws Exception {
+        testFull(Arrays.asList("fagref"));
+    }
+    public void testDOMSIngest() throws Exception {
+        testSpecificIngest("doms");
+    }
+    public void testDOMSFull() throws Exception {
+        testFull(Arrays.asList("doms"));
+    }
 
     public void testSpecificIngest(String base) throws Exception {
         StorageService storage = OAITest.getStorageService();
@@ -128,16 +134,23 @@ public class MultipleSourcesTest extends NoExitTestCase {
     }
 
     public void testFull() throws Exception {
-        StorageService storage = OAITest.getStorageService();
+        testFull(getSources());
+    }
 
-        performIngest();
+    public void testFull(List<String> sources) throws Exception {
+        Profiler storageProfiler = new Profiler();
+        StorageService storage = OAITest.getStorageService();
+        log.info("Finished starting Storage in "
+                 + storageProfiler.getSpendTime());
+
+        performIngest(sources);
 
         Profiler indexProfiler = new Profiler();
         performMUXIndex();
         String indexTime = indexProfiler.getSpendTime();
 
         SearchService search = OAITest.getSearchService();
-        testSearch();
+        testSearch(sources);
 
         search.stop();
         storage.stop();
@@ -145,11 +158,7 @@ public class MultipleSourcesTest extends NoExitTestCase {
         log.info("Finished indexing in " + indexTime);
     }
 
-    /*
-     * Performs source-specific searched on the default searcher.
-     * This is used to verify that the index was updated properly.
-     */
-    private void testSearch() throws IOException {
+    private void testSearch(List<String> sources) throws IOException {
         log.debug("Testing searching");
         Map<String, String> queries = new HashMap<String, String>(20);
         queries.put("fagref", "omnilogi");
@@ -157,12 +166,13 @@ public class MultipleSourcesTest extends NoExitTestCase {
         queries.put("nat", "Byggesektorgruppen");
         queries.put("oai", "hyperfine");
         queries.put("csa", "demo");
+        queries.put("doms", "omega");
         SearchClient searchClient =
                 new SearchClient(Configuration.newMemoryBased(
-                        ConnectionConsumer.CONF_RPC_TARGET, 
+                        ConnectionConsumer.CONF_RPC_TARGET,
                         "//localhost:28000/summa-searcher"));
         StringWriter fails = new StringWriter(5000);
-        for (String source: getSources()) {
+        for (String source: sources) {
             String query = queries.get(source);
             assertNotNull("There must be a query for source " + source, query);
             Request request = new Request();
@@ -179,7 +189,7 @@ public class MultipleSourcesTest extends NoExitTestCase {
                     fails.append("\n");
                 }
                 fails.append(source).append(": no hits found for query '")
-                        .append(query).append("'");
+                        .append(query).append("' for source ").append(source);
             }
         }
         if (fails.toString().length() != 0) {
@@ -217,9 +227,14 @@ public class MultipleSourcesTest extends NoExitTestCase {
      */
     public static void performIngest() throws IOException,
                                               InterruptedException {
+        List<String> sources = getSources();
+        performIngest(sources);
+    }
+
+    private static void performIngest(List<String> sources) throws IOException,
+                                                          InterruptedException {
         Profiler profiler = new Profiler();
         log.info("Ingesting test data");
-        List<String> sources = getSources();
         assertTrue("There should be at least one source", sources.size() > 0);
         for (String source: sources) {
             performIngest(source);

@@ -138,7 +138,12 @@ public class StreamController implements ObjectFilter {
         //noinspection AssignmentToNull
         payload = null;
         if (log.isTraceEnabled()) {
-            log.trace("next() produced " + newPayload);
+            try {
+                log.trace("next() produced " + newPayload + " with content\n"
+                          + newPayload.getRecord().getContentAsUTF8());
+            } catch (NullPointerException e) {
+                log.warn("NPE while dumping content of " + newPayload, e);
+            }
         }
         return newPayload;
     }

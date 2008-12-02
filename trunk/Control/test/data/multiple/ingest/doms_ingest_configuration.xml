@@ -39,7 +39,7 @@
                         </entry>
                         <entry>
                             <key>summa.ingest.filereader.rootfolder</key>
-                            <value class="string">/tmp/summatest/data/oai/incoming</value>
+                            <value class="string">[DOMS-data root will be inserted here]</value>
                         </entry>
                         <entry>
                             <key>summa.ingest.filereader.recursive</key>
@@ -64,7 +64,7 @@
                         </entry>
                         <entry>
                             <key>summa.ingest.xmlsplitter.idprefix</key>
-                            <value class="string">oai:</value>
+                            <value class="string">doms:</value>
                         </entry>
                         <entry>
                             <key>summa.ingest.xmlsplitter.collapse_prefix</key>
@@ -84,7 +84,7 @@
                         </entry>
                         <entry>
                             <key>summa.ingest.xmlsplitter.base</key>
-                            <value class="string">oai</value>
+                            <value class="string">doms</value>
                         </entry>
                         <entry>
                             <key>summa.ingest.xmlsplitter.preservenamespaces</key>
