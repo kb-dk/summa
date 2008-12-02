@@ -5,6 +5,9 @@
                 xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/"
                 xmlns:dc="http://purl.org/dc/elements/1.1/"
                 xmlns:Index="http://statsbiblioteket.dk/2004/Index"
+                xmlns:d="http://fedora.statsbiblioteket.dk/datatypes/digitalObjectBundle/"
+                xmlns:foxml="info:fedora/fedora-system:def/foxml#"
+                xmlns:dcterms="http://purl.org/dc/terms/"
                 version="1.0"
                 exclude-result-prefixes="xs xsl dc oai oai_dc">
     <!--xmlns:util="http://xml.apache.org/xalan/java/dk.statsbiblioteket.doms.disseminator.Util"-->
@@ -14,7 +17,7 @@
          documents:
          Short record elements will be generated from the first digital object
          only.
-         All elements in all DomsDC oai:datastreams will be indexed, for all
+         All elements in all DomsDC foxml:datastreams will be indexed, for all
          included documents in the bundle. However, only the first object will
          be used for main_titel
     -->
@@ -25,29 +28,29 @@
 
     <xsl:template match="oai:metadata">
         <Index:document Index:defaultBoost="1" Index:defaultType="token" Index:defaultFreetext="true" Index:defaultSuggest="false"
-                        Index:defaultGroup="false" Index:langAutogroup="true" Index:resolver="doms" Index:id="{oai:digitalObjectBundle/oai:digitalObject/@PID}">
+                        Index:defaultGroup="false" Index:langAutogroup="true" Index:resolver="doms" Index:id="{foxml:digitalObjectBundle/foxml:digitalObject/@PID}">
             <Index:fields>
-                <xsl:for-each select="oai:digitalObjectBundle">
+                <xsl:for-each select="d:digitalObjectBundle">
                     <!-- Short format -->
                     <Index:field Index:name="shortformat" Index:type="stored" Index:freetext="false">
                         <xsl:text disable-output-escaping="yes">&lt;![CDATA[</xsl:text>
                         <shortrecord>
                             <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
-                                <rdf:Description rdf:about="{oai:digitalObject/@PID}">
-                                    <dc:title><xsl:value-of select="oai:digitalObject[position()=1]/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:title"/></dc:title>
-                  <!--                  <dc:creator><xsl:value-of select="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:creator"/></dc:creator> -->
+                                <rdf:Description rdf:about="{foxml:digitalObject/@PID}">
+                                    <dc:title><xsl:value-of select="foxml:digitalObject[position()=1]/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:title"/></dc:title>
+                  <!--                  <dc:creator><xsl:value-of select="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:creator"/></dc:creator> -->
                                     <xsl:choose>
-                                        <xsl:when test="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/oai:issued">
+                                        <xsl:when test="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dcterms:issued">
                                             <!-- TODO: Check format of date -->
-                                            <dc:date><xsl:value-of select="substring(oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/oai:issued, 1, 4)"/></dc:date>
+                                            <dc:date><xsl:value-of select="substring(foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dcterms:issued, 1, 4)"/></dc:date>
                                         </xsl:when>
-                                        <xsl:when test="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/oai:created">
+                                        <xsl:when test="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dcterms:created">
                                             <!-- TODO: Check format of date -->
-                                            <dc:date><xsl:value-of select="substring(oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/oai:created, 1, 4)"/></dc:date>
+                                            <dc:date><xsl:value-of select="substring(foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dcterms:created, 1, 4)"/></dc:date>
                                         </xsl:when>
-                                        <xsl:when test="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:date">
+                                        <xsl:when test="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:date">
                                             <!-- TODO: Check format of date -->
-                                            <dc:date><xsl:value-of select="substring(oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:date, 1, 4)"/></dc:date>
+                                            <dc:date><xsl:value-of select="substring(foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:date, 1, 4)"/></dc:date>
                                         </xsl:when>
                                         <xsl:otherwise>
                                             <dc:date> </dc:date>
@@ -56,18 +59,18 @@
                                     </xsl:choose>
 
                                     <xsl:choose>
-                                        <xsl:when test="oai:digitalObject[position()=1]/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:type[@xml:lang='da']">
-                                            <dc:type xml:lang="da"><xsl:value-of select="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:type[@xml:lang='da']"/></dc:type>
+                                        <xsl:when test="foxml:digitalObject[position()=1]/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:type[@xml:lang='da']">
+                                            <dc:type xml:lang="da"><xsl:value-of select="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:type[@xml:lang='da']"/></dc:type>
                                         </xsl:when>
-                                        <xsl:when test="oai:digitalObject[position()=1]/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:type[not(@xml:lang)]">
-                                            <dc:type xml:lang="da"><xsl:value-of select="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:type[not(@xml:lang)]"/></dc:type>
+                                        <xsl:when test="foxml:digitalObject[position()=1]/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:type[not(@xml:lang)]">
+                                            <dc:type xml:lang="da"><xsl:value-of select="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:type[not(@xml:lang)]"/></dc:type>
                                         </xsl:when>
-                                        <xsl:when test="oai:digitalObject[position()=1]/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:type">
-                                            <dc:type xml:lang="da"><xsl:value-of select="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:type"/></dc:type>
+                                        <xsl:when test="foxml:digitalObject[position()=1]/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:type">
+                                            <dc:type xml:lang="da"><xsl:value-of select="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:type"/></dc:type>
                                         </xsl:when>
                                         <xsl:otherwise>
 																						<xsl:choose>
-																								<xsl:when test="starts-with(oai:digitalObject/@PID, 'doms:aarbog')">
+																								<xsl:when test="starts-with(foxml:digitalObject/@PID, 'doms:aarbog')">
 																														<dc:type xml:lang="da">Digital &#xE5;rbog</dc:type>
 																								</xsl:when>
 																								<xsl:otherwise>
@@ -80,18 +83,18 @@
 												<dc:format>todo</dc:format>
 											</xsl:for-each>
                                     <xsl:choose>
-                                        <xsl:when test="oai:digitalObject[position()=1]/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:type[@xml:lang='en']">
-                                            <dc:type xml:lang="en"><xsl:value-of select="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:type[@xml:lang='en']"/></dc:type>
+                                        <xsl:when test="foxml:digitalObject[position()=1]/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:type[@xml:lang='en']">
+                                            <dc:type xml:lang="en"><xsl:value-of select="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:type[@xml:lang='en']"/></dc:type>
                                         </xsl:when>
-                                        <xsl:when test="oai:digitalObject[position()=1]/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:type[not(@xml:lang)]">
-                                            <dc:type xml:lang="en"><xsl:value-of select="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:type[not(@xml:lang)]"/></dc:type>
+                                        <xsl:when test="foxml:digitalObject[position()=1]/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:type[not(@xml:lang)]">
+                                            <dc:type xml:lang="en"><xsl:value-of select="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:type[not(@xml:lang)]"/></dc:type>
                                         </xsl:when>
-                                        <xsl:when test="oai:digitalObject[position()=1]/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:type">
-                                            <dc:type xml:lang="en"><xsl:value-of select="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:type"/></dc:type>
+                                        <xsl:when test="foxml:digitalObject[position()=1]/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:type">
+                                            <dc:type xml:lang="en"><xsl:value-of select="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:type"/></dc:type>
                                         </xsl:when>
                                         <xsl:otherwise>
 																						<xsl:choose>
-																								<xsl:when test="starts-with(oai:digitalObject/@PID, 'doms:aarbog')">
+																								<xsl:when test="starts-with(foxml:digitalObject/@PID, 'doms:aarbog')">
 																														<dc:type xml:lang="en">Digital Yearbook</dc:type>
 																								</xsl:when>
 																								<xsl:otherwise>
@@ -102,7 +105,7 @@
                                     </xsl:choose>
 
                                     <!--TODO: Must be PID in storage-->
-                                    <dc:identifier><xsl:value-of select="oai:digitalObject/@PID"/></dc:identifier>
+                                    <dc:identifier><xsl:value-of select="foxml:digitalObject/@PID"/></dc:identifier>
 
                                 </rdf:Description>
                                </rdf:RDF>
@@ -112,17 +115,17 @@
 
                     <!-- Title group -->
                     <Index:group Index:name="ti" Index:navn="ti" Index:suggest="true">
-                        <xsl:for-each select="oai:digitalObject[position() = 1]/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:title">
+                        <xsl:for-each select="foxml:digitalObject[position() = 1]/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:title">
                             <Index:field Index:repeat="true" Index:name="main_titel" Index:navn="ht" Index:type="token" Index:boostFactor="10">
                                 <xsl:value-of select="."/>
                             </Index:field>
                         </xsl:for-each>
-                        <xsl:for-each select="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:title">
+                        <xsl:for-each select="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:title">
                             <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="10" Index:suggest="true">
                                 <xsl:value-of select="."/>
                             </Index:field>
                         </xsl:for-each>
-                        <xsl:for-each select="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:alternative">
+                        <xsl:for-each select="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:alternative">
                             <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="10" Index:suggest="true">
                                 <xsl:value-of select="."/>
                             </Index:field>
@@ -132,17 +135,17 @@
 
                     <!-- Author group -->
                 <!--    <Index:group Index:name="au" Index:navn="fo" Index:suggest="false">
-                        <xsl:for-each select="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:creator">
+                        <xsl:for-each select="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:creator">
                             <Index:field Index:name="author_main" Index:repeat="true" Index:navn="po" Index:type="token" Index:boostFactor="10">
                                 <xsl:value-of select="."/>
                             </Index:field>
                         </xsl:for-each>
-                        <xsl:for-each select="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:publisher">
+                        <xsl:for-each select="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:publisher">
                             <Index:field Index:repeat="true" Index:name="author_corporation" Index:navn="ko" Index:type="token" Index:boostFactor="10">
                                 <xsl:value-of select="."/>
                             </Index:field>
                         </xsl:for-each>
-                        <xsl:for-each select="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:contributor">
+                        <xsl:for-each select="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:contributor">
                             <Index:field Index:repeat="true" Index:name="au_other" Index:navn="fo_andet" Index:type="token">
                                 <xsl:value-of select="."/>
                             </Index:field>
@@ -153,7 +156,7 @@
                     <!-- Subject group -->
                     <Index:group Index:name="su" Index:navn="em" Index:suggest="true">
                         <!-- TODO: Check for qualified -->
-                        <xsl:for-each select="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:subject" >
+                        <xsl:for-each select="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:subject" >
                             <Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="10">
                                 <xsl:value-of select="."/>
                             </Index:field>
@@ -163,7 +166,7 @@
 										
 					<Index:group Index:name="lsubj" Index:navn="lem" Index:suggest="true">
                         <!-- TODO: Check for qualified -->
-                        <xsl:for-each select="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:subject" >
+                        <xsl:for-each select="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:subject" >
              		<Index:field Index:boostFactor="2" Index:type="keyword" Index:navn="lsu_oai" Index:name="lsu_oai" Index:repeat="false">
                                 <xsl:value-of select="."/>
                             </Index:field>
@@ -181,7 +184,7 @@
                       </Index:field>
                         <Index:field Index:repeat="true" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
                             <xsl:choose>
-                                <xsl:when test="starts-with(oai:digitalObject/@PID, 'doms:aarbog')">
+                                <xsl:when test="starts-with(foxml:digitalObject/@PID, 'doms:aarbog')">
                                     <xsl:value-of select="'digitalaarbog'" />
                                 </xsl:when>
                                 <xsl:otherwise>
@@ -204,33 +207,33 @@
 
                     <!-- Language -->
                     <Index:field Index:repeat="true" Index:name="lang" Index:navn="sp" Index:type="token">
-                        <xsl:value-of select="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:language" />
+                        <xsl:value-of select="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:language" />
                     </Index:field>
 
                     <!-- FreeText -->
-                    <xsl:for-each select="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:description">
+                    <xsl:for-each select="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:description">
                         <Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token">
                             <xsl:value-of select="." />
                         </Index:field>
                     </xsl:for-each>
-                    <xsl:for-each select="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:abstract">
+                    <xsl:for-each select="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:abstract">
                         <Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token">
                             <xsl:value-of select="." />
                         </Index:field>
                     </xsl:for-each>
-                    <xsl:for-each select="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:tableOfContents">
+                    <xsl:for-each select="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:tableOfContents">
                         <Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token">
                             <xsl:value-of select="." />
                         </Index:field>
                     </xsl:for-each>
  <!--
                     <Index:field Index:repeat="true" Index:name="other" Index:navn="other" Index:type="token">
-                        <xsl:value-of select="util:decodeBase64(oai:digitalObject/oai:datastream[@ID='CONTENT']/oai:datastreamVersion/oai:xmlContent/oai:content)" />
+                        <xsl:value-of select="util:decodeBase64(foxml:digitalObject/foxml:datastream[@ID='CONTENT']/foxml:datastreamVersion/foxml:xmlContent/oai:content)" />
                     </Index:field>
  -->
 
                     <!-- Author normalised -->
-                    <xsl:for-each select="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:creator">
+                    <xsl:for-each select="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:creator">
                         <Index:field Index:repeat="true" Index:name="author_normalised" Index:navn="lfo" Index:type="keyword" Index:boostFactor="10">
                             <!-- TODO: Normalising is probably better defined elsewhere. -->
                             <xsl:value-of select="translate(normalize-space(.), 'ABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅÁÉÍÓÚÝÑÄÖÜ½§!#¤%/()=?`+£${[]}|^~*,.-;:_\&quot;&amp;&lt;&gt;', 'abcdefghijklmnopqrstuvwxyzæøåáéíóúýñäöü')" />
@@ -239,7 +242,7 @@
 
                     <!-- Sort title -->
                     <xsl:for-each
-                            select="oai:digitalObject[position() = 1]/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:title">
+                            select="foxml:digitalObject[position() = 1]/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:title">
                         <Index:field Index:repeat="true" Index:name="sort_title" Index:navn="sort_titel" Index:type="keyword" Index:boostFactor="10">
                             <!-- TODO: Normalising is probably better defined elsewhere. -->
                             <xsl:value-of select="translate(normalize-space(.), 'ABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅÁÉÍÓÚÝÑÄÖÜ½§!#¤%/()=?`+£${[]}|^~*,.-;:_\&quot;&amp;&lt;&gt;', 'abcdefghijklmnopqrstuvwxyzæøåáéíóúýñäöü')" />
@@ -247,19 +250,19 @@
                     </xsl:for-each>
 
                     <!-- Date -->
-                    <xsl:for-each select="oai:digitalObject[position()=1]/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/oai:issued">
+                    <xsl:for-each select="foxml:digitalObject[position()=1]/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dcterms:issued">
                         <!-- TODO: Check format of date -->
                         <Index:field Index:repeat="true" Index:name="py" Index:navn="år" Index:type="token" Index:boostFactor="2">
                             <xsl:value-of select="." />
                         </Index:field>
                     </xsl:for-each>
-                    <xsl:for-each select="oai:digitalObject[position()=1]/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/oai:created">
+                    <xsl:for-each select="foxml:digitalObject[position()=1]/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dcterms:created">
                         <!-- TODO: Check format of date -->
                         <Index:field Index:repeat="true" Index:name="py" Index:navn="år" Index:type="token" Index:boostFactor="2">
                             <xsl:value-of select="." />
                         </Index:field>
                     </xsl:for-each>
-                    <xsl:for-each select="oai:digitalObject[position()=1]/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:date">
+                    <xsl:for-each select="foxml:digitalObject[position()=1]/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:date">
                         <!-- TODO: Check format of date -->
                         <Index:field Index:repeat="true" Index:name="py" Index:navn="år" Index:type="token" Index:boostFactor="2">
                             <xsl:value-of select="." />
@@ -268,62 +271,63 @@
 
                     <!-- Date sorting -->
                     <xsl:choose>
-                        <xsl:when test="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/oai:issued">
+                        <xsl:when test="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dcterms:issued">
                             <Index:field Index:name="sort_year_desc" Index:navn="sort_år_desc" Index:type="keyword" Index:boostFactor="1">
-                                <xsl:value-of select="substring(oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/oai:issued, 0, 4)"/>
+                                <xsl:value-of select="substring(foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dcterms:issued, 0, 4)"/>
                             </Index:field>
                             <Index:field Index:name="sort_year_asc" Index:navn="sort_år_asc" Index:type="keyword" Index:boostFactor="1">
-                                <xsl:value-of select="substring(oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/oai:issued, 0, 4)"/>
+                                <xsl:value-of select="substring(foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dcterms:issued, 0, 4)"/>
                             </Index:field>
                         </xsl:when>
-                        <xsl:when test="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/oai:created">
+                        <xsl:when test="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dcterms:created">
                             <Index:field Index:name="sort_year_desc" Index:navn="sort_år_desc" Index:type="keyword" Index:boostFactor="1">
-                                <xsl:value-of select="substring(oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/oai:created, 0, 4)"/>
+                                <xsl:value-of select="substring(foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dcterms:created, 0, 4)"/>
                             </Index:field>
                             <Index:field Index:name="sort_year_asc" Index:navn="sort_år_asc" Index:type="keyword" Index:boostFactor="1">
-                                <xsl:value-of select="substring(oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/oai:created, 0, 4)"/>
+                                <xsl:value-of select="substring(foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dcterms:created, 0, 4)"/>
                             </Index:field>
                         </xsl:when>
-                        <xsl:when test="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:date">
+                        <xsl:when test="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:date">
                             <Index:field Index:name="sort_year_desc" Index:navn="sort_år_desc" Index:type="keyword" Index:boostFactor="1">
-                                <xsl:value-of select="substring(oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:date, 0, 4)"/>
+                                <xsl:value-of select="substring(foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:date, 0, 4)"/>
                             </Index:field>
                             <Index:field Index:name="sort_year_asc" Index:navn="sort_år_asc" Index:type="keyword" Index:boostFactor="1">
-                                <xsl:value-of select="substring(oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:date, 0, 4)"/>
+                                <xsl:value-of select="substring(foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:date, 0, 4)"/>
                             </Index:field>
                         </xsl:when>
                     </xsl:choose>
                     <!-- Date limiting -->
+                    <!-- Important: The namespace for created is an estimated guess -->
                     <xsl:choose>
-                        <xsl:when test="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/oai:issued">
+                        <xsl:when test="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dcterms:issued">
                             <Index:field Index:name="year" Index:navn="year" Index:type="number" Index:boostFactor="1">
-                                <xsl:value-of select="substring(oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/oai:issued, 0, 4)"/>
+                                <xsl:value-of select="substring(foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dcterms:issued, 0, 4)"/>
                             </Index:field>
                          </xsl:when>
-                        <xsl:when test="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/oai:created">
+                        <xsl:when test="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dcterms:created">
                             <Index:field Index:name="year" Index:navn="year" Index:type="number" Index:boostFactor="1">
-                                <xsl:value-of select="substring(oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/oai:created, 0, 4)"/>
+                                <xsl:value-of select="substring(foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dcterms:created, 0, 4)"/>
                             </Index:field>
                            </xsl:when>
-                        <xsl:when test="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:date">
+                        <xsl:when test="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:date">
                             <Index:field Index:name="year" Index:navn="year" Index:type="number" Index:boostFactor="1">
-                                <xsl:value-of select="substring(oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:date, 0, 4)"/>
+                                <xsl:value-of select="substring(foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:date, 0, 4)"/>
                             </Index:field>
                           </xsl:when>
                     </xsl:choose>
 
                     <!-- Format -->
-                    <xsl:for-each select="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:format">
+                    <xsl:for-each select="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:format">
                         <Index:field Index:name="format" Index:navn="format" Index:type="token" Index:boostFactor="1">
                             <xsl:value-of select="." />
                         </Index:field>
                     </xsl:for-each>
-                    <xsl:for-each select="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:extent">
+                    <xsl:for-each select="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:extent">
                         <Index:field Index:name="format" Index:navn="format" Index:type="token" Index:boostFactor="1">
                             <xsl:value-of select="." />
                         </Index:field>
                     </xsl:for-each>
-                    <xsl:for-each select="oai:digitalObject/oai:datastream[@ID='DomsDC']/oai:datastreamVersion/oai:xmlContent/oai:qualifieddc/dc:medium">
+                    <xsl:for-each select="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:medium">
                         <Index:field Index:name="format" Index:navn="format" Index:type="token" Index:boostFactor="1">
                             <xsl:value-of select="." />
                         </Index:field>
