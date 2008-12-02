@@ -89,22 +89,27 @@ public class MultipleSourcesTest extends NoExitTestCase {
     }
 
     public void testHorizonIngest() throws Exception {
+        testSpecificIngest("horizon");
+    }
+    public void testCSAIngest() throws Exception {
+        testSpecificIngest("csa");
+    }
+    public void testFagrefIngest() throws Exception {
+        testSpecificIngest("fagref");
+    }
+
+    public void testSpecificIngest(String base) throws Exception {
         StorageService storage = OAITest.getStorageService();
-        performIngest("horizon");
-        assertEquals("There should be the expected number of horizon records",
-                     1, countRecords(storage, "horizon"));
+        performIngest(base);
+        int count = countRecords(storage, base);
+        log.info("Base " + base + " had " + count + " records");
+        assertTrue("There should be >= 1  number of " + base
+                     + " records, but there was 0", count > 0);
         log.debug("All OK. Closing down");
         storage.stop();
     }
 
-    public void testNatIngest() throws Exception {
-        StorageService storage = OAITest.getStorageService();
-        performIngest("nat");
-        assertEquals("There should be the expected number of nat records",
-                     1, countRecords(storage, "nat"));
-        log.debug("All OK. Closing down");
-        storage.stop();
-    }
+
 
     /* Checks that all sources has at least one Record.
      *
@@ -151,6 +156,7 @@ public class MultipleSourcesTest extends NoExitTestCase {
         queries.put("horizon", "Kaoskyllingen");
         queries.put("nat", "Byggesektorgruppen");
         queries.put("oai", "hyperfine");
+        queries.put("csa", "demo");
         SearchClient searchClient =
                 new SearchClient(Configuration.newMemoryBased(
                         ConnectionConsumer.CONF_RPC_TARGET, 
@@ -235,13 +241,18 @@ public class MultipleSourcesTest extends NoExitTestCase {
                         new File(ReleaseTestCommon.DATA_ROOT,
                              "multiple/data/" + source).getAbsolutePath());
         FilterService ingestService = new FilterService(ingestConf);
-        ingestService.start();
+        try {
+            ingestService.start();
+        } catch (Exception e) {
+            throw new RuntimeException("Got exception while ingesting source '"
+                                       + source + "'", e);
+        }
         while (ingestService.getStatus().getCode() == Status.CODE.running) {
             log.trace("Waiting for ingest of " + source + " ½ a second");
             Thread.sleep(500);
         }
         ingestService.stop();
-        log.trace("Finished ingesting " + source);
+        log.debug("Finished ingesting " + source);
     }
 
     public void testGetSources() throws Exception {
@@ -307,12 +318,12 @@ public class MultipleSourcesTest extends NoExitTestCase {
             Configuration sourceConf =
                     indexConf.getSubConfiguration("SingleChain").
                             getSubConfiguration("Muxer").
-                            createSubConfiguration(source);
-            sourceConf.set(MUXFilterFeeder.CONF_FILTER_CLASS,
+                            getSubConfiguration(source);
+/*            sourceConf.set(MUXFilterFeeder.CONF_FILTER_CLASS,
                            XMLTransformer.class.getName());
             sourceConf.set(MUXFilterFeeder.CONF_FILTER_NAME,
                            source + " transformer");
-            sourceConf.set(MUXFilterFeeder.CONF_FILTER_BASES, source);
+            sourceConf.set(MUXFilterFeeder.CONF_FILTER_BASES, source);*/
             String xsltRelativeLocation = String.format(
                     "targets/%s/%1$s_index.xsl", source);
             if ("fagref".equals(source)) {

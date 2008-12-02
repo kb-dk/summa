@@ -52,6 +52,7 @@ public class XMLSplitterParser extends ThreadedStreamParser {
     private SAXParserFactory factory;
     private XMLSplitterHandler handler;
     XMLSplitterParserTarget target;
+    private long lastRecordStart = System.nanoTime();
 
     public XMLSplitterParser(Configuration conf) {
         super(conf);
@@ -88,6 +89,7 @@ public class XMLSplitterParser extends ThreadedStreamParser {
         }
         log.trace("Ready to parse");
         handler.resetForNextRecord();
+        lastRecordStart = System.nanoTime();
         parser.parse(sourcePayload.getStream(), handler);
         log.debug("Finished parsing " + sourcePayload);
     }
@@ -111,7 +113,15 @@ public class XMLSplitterParser extends ThreadedStreamParser {
      */
     void queueRecord(Record record) {
         try {
+            if (log.isTraceEnabled()) {
+                //noinspection DuplicateStringLiteralInspection
+                log.trace(String.format(
+                        "Produced record in %.5f ms: %s. queueing",
+                        (System.nanoTime() - lastRecordStart) / 1000000.0,
+                        record));
+            }
             queue.put(record);
+            lastRecordStart = System.nanoTime();
         } catch (InterruptedException e) {
             throw new RuntimeException("Interrupted while adding to queue", e);
         }

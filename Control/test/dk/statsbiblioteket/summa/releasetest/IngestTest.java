@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.util.Iterator;
 
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
@@ -221,7 +222,7 @@ public class IngestTest extends NoExitTestCase {
     }
     private Configuration getWriterConfiguration() {
         Configuration writerConf = Configuration.newMemoryBased();
-        writerConf.set(RecordWriter.CONF_STORAGE, STORAGE_ADDRESS);
+        writerConf.set(ConnectionConsumer.CONF_RPC_TARGET, STORAGE_ADDRESS);
         return writerConf;
     }
 

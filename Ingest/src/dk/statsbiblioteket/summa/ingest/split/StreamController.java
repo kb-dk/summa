@@ -77,7 +77,10 @@ public class StreamController implements ObjectFilter {
         log.trace("makePayload() called");
         checkSource();
         if (payload != null) {
-            log.trace("makePayload: Payload already assigned");
+            if (log.isTraceEnabled()) {
+                log.trace("makePayload: Payload already assigned with "
+                          + payload);
+            }
             return;
         }
         while (payload == null) {
@@ -117,18 +120,26 @@ public class StreamController implements ObjectFilter {
 
 
     public boolean hasNext() {
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("hasNext() called");
         checkSource();
         if (payload == null) {
             makePayload();
         }
+        log.trace("hasNext() resolved to " + (payload != null));
         return payload != null;
     }
 
     public Payload next() {
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("next() called");
         makePayload();
         Payload newPayload = payload;
         //noinspection AssignmentToNull
         payload = null;
+        if (log.isTraceEnabled()) {
+            log.trace("next() produced " + newPayload);
+        }
         return newPayload;
     }
 
@@ -172,6 +183,7 @@ public class StreamController implements ObjectFilter {
             throw new IllegalArgumentException(
                     "StreamController can only be chained to ObjectFilters");
         }
+        log.debug("Assigning source " + source);
         source = (ObjectFilter)filter;
     }
 
