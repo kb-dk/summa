@@ -113,7 +113,7 @@
                             <value class="string">dk.statsbiblioteket.summa.storage.api.filter.RecordWriter</value>
                         </entry>
                         <entry>
-                            <key>summa.storage.recordwriter.storage</key>
+                            <key>summa.rpc.vendor</key>
                             <value class="string">//localhost:28000/summa-storage</value>
                         </entry>
                     </value>

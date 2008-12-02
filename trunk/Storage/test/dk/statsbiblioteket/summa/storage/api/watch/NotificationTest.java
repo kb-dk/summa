@@ -13,6 +13,7 @@ import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.database.derby.DerbyStorage;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.rmi.RMIStorageProxy;
 import dk.statsbiblioteket.util.Files;
 
 /**
@@ -67,7 +68,7 @@ public class NotificationTest extends TestCase {
     public static Configuration createConf () throws Exception {
 
         Configuration conf = Configuration.newMemoryBased(
-                Storage.CONF_CLASS,
+                RMIStorageProxy.CONF_BACKEND,
                 DerbyStorage.class,
                 DatabaseStorage.CONF_LOCATION,
                 testDBLocation + (storageCounter++),

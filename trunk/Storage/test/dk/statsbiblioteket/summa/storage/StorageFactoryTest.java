@@ -7,6 +7,7 @@ import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.database.derby.DerbyStorage;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
+import dk.statsbiblioteket.summa.storage.rmi.RMIStorageProxy;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -50,10 +51,10 @@ public class StorageFactoryTest extends TestCase {
     public void testCreateDerbyController() throws Exception {
         Configuration conf = Configuration.newMemoryBased();
         conf.set(DatabaseStorage.CONF_LOCATION, location.toString());
-        conf.set(Storage.CONF_CLASS, DerbyStorage.class.getName());
+        conf.set(RMIStorageProxy.CONF_BACKEND, DerbyStorage.class.getName());
         Storage storage = StorageFactory.createStorage(conf);
-        assertEquals("The controller should be a ControlDerby",
-                     DerbyStorage.class, storage.getClass());
+        assertEquals("The controller should be a RMIWrapper for Derby",
+                     RMIStorageProxy.class, storage.getClass());
         storage.close();
     }
 }

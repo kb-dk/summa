@@ -26,12 +26,12 @@ import java.io.IOException;
 import java.net.ConnectException;
 
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
-import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.api.StorageWriterClient;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.rpc.ConnectionContext;
 import dk.statsbiblioteket.util.Profiler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -39,7 +39,7 @@ import org.apache.commons.logging.LogFactory;
 /**
  * Connects to a Storage and ingests received Records into the storage.
  * The Storage is accessed via RMI at the address specified by
- * {@link #CONF_STORAGE}.
+ * {@link ConnectionConsumer#CONF_RPC_TARGET}.
  * </p><p>
  * Note: This ObjectFilter can only be chained after another ObjectFilter.
  * </p><p>
@@ -54,43 +54,30 @@ public class RecordWriter extends ObjectFilterImpl {
     /**
      * The Storage to connect to. This is a standard RMI address.
      * Example: //localhost:27000/summa-storage;
+     * Deprecated: use {@link ConnectionConsumer#CONF_RPC_TARGET} instead.
      */
-    public static final String CONF_STORAGE =
+    private static final String DEPRECATED_CONF_STORAGE =
             "summa.storage.recordwriter.storage";
 
-    private ConnectionContext<Storage> accessContext;
-    private Storage storage;
+    private StorageWriterClient storage;
     private Profiler profiler = new Profiler();
 
     /**
      * Established an RMI connection to the Storage specified in configuration.
-     * @param configuration contains setup information.
-     * @see {@link #CONF_STORAGE}.
+     * @param conf contains setup information.
+     * @see {@link ConnectionConsumer#CONF_RPC_TARGET}.
      * @throws java.io.IOException if the RecordWriter could not be constructed.
      */
-    public RecordWriter(Configuration configuration) throws IOException {
+    public RecordWriter(Configuration conf) throws IOException {
         log.trace("Constructing RecordWriter");
-        try {
-            accessContext =
-                    FilterCommons.getAccess(configuration, CONF_STORAGE);
-
-            if (accessContext == null) {
-                throw new ConnectException(String.format(
-                        "Failed to connect to storage with configuration key "
-                        + "%s. Got null ass accessContext. The configuration "
-                        + "values was '%s'", 
-                        CONF_STORAGE, configuration.valueExists(CONF_STORAGE) ?
-                                      configuration.get(CONF_STORAGE) : "NA"));
-            }
-
-            storage = accessContext.getConnection();
-        } catch (Exception e) {
-            throw new ConfigurationException(String.format(
-                    "Could not get storage for Filtercommons with property key "
-                    + "%s and value '%s'",
-                    CONF_STORAGE, configuration.valueExists(CONF_STORAGE) ?
-                                  configuration.get(CONF_STORAGE) : "NA"), e);
+        if (conf.valueExists(DEPRECATED_CONF_STORAGE)) {
+            log.warn(String.format("Old Storage address configuration detected."
+                                   + " The key %s has been replaced by %s",
+                                   DEPRECATED_CONF_STORAGE,
+                                   ConnectionConsumer.CONF_RPC_TARGET));
         }
+        storage = new StorageWriterClient(conf);
+
         // TODO: Perform a check to see if the Storage is alive
     }
 
@@ -111,10 +98,16 @@ public class RecordWriter extends ObjectFilterImpl {
             } else {
                 log.debug("Flushing record '" + record.getId() + "'");
             }
+            long startTime = System.nanoTime();
             storage.flush(record);
+            if (log.isTraceEnabled()) {
+                log.trace(String.format(
+                        "Flushed record to Storage in %.5f ms: %s",
+                        (System.nanoTime() - startTime) / 1000000.0,
+                        record));
+            }
             profiler.beat();
         } catch (IOException e) {
-            FilterCommons.reportError(accessContext, e);
             log.error("Exception flushing " + record, e);
             // TODO: Consider checking for fatal errors (the connection is down)
         }
@@ -122,7 +115,6 @@ public class RecordWriter extends ObjectFilterImpl {
 
     public synchronized void close(boolean success) {
         super.close(success);
-        FilterCommons.releaseAccess(accessContext);
         log.info("Closing down RecordWriter. " + getProcessStats()
                  + ". Total time: " + profiler.getSpendTime());
     }

@@ -94,6 +94,7 @@ public class XMLSplitterHandler extends DefaultHandler2 {
         insideRecordPrefixStack.clear();
         //outsideRecordPrefixStack.clear();  // TODO: Should this be cleared?
         insideRecordElementStack.clear();
+
     }
 
 

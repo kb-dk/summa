@@ -60,9 +60,7 @@
                     <value class="xproperties">
                         <entry>
                             <key>summa.filter.sequence.filterclass</key>
-                            <value class="string">
-                                dk.statsbiblioteket.summa.ingest.split.XMLSplitterFilter
-                            </value>
+                            <value class="string">dk.statsbiblioteket.summa.ingest.split.XMLSplitterFilter</value>
                         </entry>
                         <entry>
                             <key>summa.ingest.xmlsplitter.idprefix</key>
@@ -99,9 +97,7 @@
                     <value class="xproperties">
                         <entry>
                             <key>summa.filter.sequence.filterclass</key>
-                            <value class="string">
-                                dk.statsbiblioteket.summa.storage.api.filter.RecordWriter
-                            </value>
+                            <value class="string">dk.statsbiblioteket.summa.storage.api.filter.RecordWriter</value>
                         </entry>
                         <entry>
                             <key>summa.rpc.vendor</key>
@@ -113,5 +109,3 @@
         </entry>
     </xproperties>
 </xproperties>
-
-
