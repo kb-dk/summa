@@ -76,7 +76,7 @@
                         </entry>
                         <entry>
                             <key>summa.muxfilter.filters</key>
-                            <value class="string">csa, fagref, horizon, nat, oai, doms</value>
+                            <value class="string">csa, fagref, horizon, nat, oai, doms, etss, reklamefilm</value>
                         </entry>
                         <entry>
                             <key>csa</key>
@@ -201,6 +201,48 @@
                                 <entry>
                                     <key>summa.xmltransformer.xslt</key>
                                     <value class="string">targets/doms/doms_index.xsl</value>
+                                </entry>
+                            </value>
+                        </entry>
+                        <entry>
+                            <key>etss</key>
+                            <value class="xproperties">
+                                <entry>
+                                    <key>summa.muxfilter.filter.class</key>
+                                    <value class="string">dk.statsbiblioteket.summa.index.XMLTransformer</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.muxfilter.filter.name</key>
+                                    <value class="string">ETSS Transformer</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.muxfilter.filter.bases</key>
+                                    <value class="string">etss</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.xmltransformer.xslt</key>
+                                    <value class="string">targets/etss/etss_index.xsl</value>
+                                </entry>
+                            </value>
+                        </entry>
+                        <entry>
+                            <key>reklamefilm</key>
+                            <value class="xproperties">
+                                <entry>
+                                    <key>summa.muxfilter.filter.class</key>
+                                    <value class="string">dk.statsbiblioteket.summa.index.XMLTransformer</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.muxfilter.filter.name</key>
+                                    <value class="string">Reklamefilm Transformer</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.muxfilter.filter.bases</key>
+                                    <value class="string">reklamefilm</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.xmltransformer.xslt</key>
+                                    <value class="string">targets/DanskReklameFilm/reklamefilm_index.xsl</value>
                                 </entry>
                             </value>
                         </entry>
