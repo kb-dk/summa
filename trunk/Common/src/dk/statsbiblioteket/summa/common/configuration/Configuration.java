@@ -45,6 +45,7 @@ import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
 import dk.statsbiblioteket.summa.common.configuration.storage.RemoteStorage;
 import dk.statsbiblioteket.summa.common.configuration.storage.XStorage;
 import dk.statsbiblioteket.summa.common.util.Security;
+import dk.statsbiblioteket.summa.common.util.Environment;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -237,12 +238,21 @@ public class Configuration implements Serializable,
     }
 
     /**
-     * Look up a stored {@code String} value.
+     * Look up a stored {@code String} value. Any Ant-style references to system
+     * properties, like<br/>
+     * <pre>
+     *   ${user.home}
+     * </pre>
+     * will be expanded in the returned string. This expansion will not affect
+     * the string value stored in the configuration. It is not an error if
+     * the string contains a reference to an unknown property.
+     *
      * @param key the name of the value to look up.
      * @return the {@code String} representation of the value assciated with
      *         {@code key}. If the value does not exist, an exception is thrown.
      *         The returned string will not containing leading or trailing white
-     *         space
+     *         space. As described above any references to system properties
+     *         enclosed in <code>${prop.name}</code> will be escaped
      * @throws ConfigurationStorageException if there is an error communicating
      *                                       with the storage backend.
      * @throws NullPointerException          if there was no value corresponding
@@ -253,11 +263,21 @@ public class Configuration implements Serializable,
         if (val == null) {
             throw new NullPointerException("No such property: " + key);
         }
-        return val.toString().trim();
+        return Environment.escapeSystemProperties(val.toString().trim());
     }
 
     /**
-     * Look up a stored {@code String} value.
+     * Look up a stored {@code String} value with an optional fallback value.
+     * Any Ant-style references to system properties, like<br/>
+     * <pre>
+     *   ${user.home}
+     * </pre>
+     * will be expanded in the returned string. This expansion will not affect
+     * the string value stored in the configuration. It is not an error if
+     * the string contains a reference to an unknown property.
+     * <p/>
+     * System properties referenced in the fallback value will also be expanded
+     *
      * @param key          the name of the value to look up.
      * @param defaultValue if the value does not exist, return this instead.
      * @throws ConfigurationStorageException if there is an error communicating
@@ -265,16 +285,18 @@ public class Configuration implements Serializable,
      * @return the {@code String} representation of the value associated with
      *         {@code key} or the defaultValue, if the key did not exist.
      *         The returned string will not containing leading or trailing white
-     *         space
+     *         space. As described above any references to system properties
+     *         enclosed in <code>${prop.name}</code> will be escaped. System
+     *         property references in the default value will also be expanded
      */
     public String getString(String key, String defaultValue) {
         Object val = get(key);
         if (val == null) {
             log.debug("Unable to find property '" + key + "', using default "
                       + defaultValue);
-            return defaultValue;
+            return Environment.escapeSystemProperties(defaultValue);
         }
-        return val.toString().trim();
+        return Environment.escapeSystemProperties(val.toString().trim());
     }
 
     /**
@@ -412,6 +434,14 @@ public class Configuration implements Serializable,
     /**
      * Look up a list of Strings, previously stored with {@link #setStrings}.
      * All string elements will be trimmed for leading and trailing white space.
+     * <p/>
+     * Any references to system properties will be expanded. System properties
+     * a referenced in standard Ant-style syntax, eg:<br/>
+     * <pre>
+     *   ${user.home}
+     * </pre>
+     * This expansion will not change the actual value stored in the
+     * configuration.
      *
      * @param key the name of the property to look up.
      * @return value as a list of trimmed Strings.
@@ -427,14 +457,15 @@ public class Configuration implements Serializable,
             ArrayList<String> result =
                     new ArrayList<String>(((List)val).size());
             for (Object o: (List)val) {
-                result.add(o.toString().trim());
+                result.add(
+                       Environment.escapeSystemProperties(o.toString().trim()));
             }
             return result;
         }
         if (val instanceof String[]) {
             String[] val_a = (String[])val;
             for (int i = 0; i < val_a.length; i++) {
-                val_a[i] = val_a[i].trim();
+                val_a[i] = Environment.escapeSystemProperties(val_a[i].trim());
             }
             return Arrays.asList((String[]) val);
         }
@@ -444,14 +475,29 @@ public class Configuration implements Serializable,
         String[] unescaped = val.toString().split(", |,");
         ArrayList<String> result = new ArrayList<String>(unescaped.length);
         for (String s: unescaped) {
-            result.add(s.replaceAll("&comma;", ",").
-                         replaceAll("&amp;", "&").trim());
+            String escaped = s.replaceAll("&comma;", ",").
+                                                replaceAll("&amp;", "&").trim();
+            escaped = Environment.escapeSystemProperties(escaped);
+            result.add(escaped);
         }
         return result;
     }
 
     /**
      * Look up a list of Strings, previously stored with {@link #setStrings}.
+     * <p/>
+     * Any references to system properties will be expanded. System properties
+     * are referenced in standard Ant-style syntax, eg:<br/>
+     * <pre>
+     *   ${user.home}
+     * </pre>
+     * This expansion will not change the actual value stored in the
+     * configuration.
+     * <p/>
+     * System property references inside the {@code defaultValues} will also be
+     * escaped if need be. This will be done in a copy of {@code defaultValues}
+     * and the contents of {@code defaultValues} will not be changed.
+     *
      * @param key the name of the property to look up.
      * @param defaultValues the values to return if there is no list of Strings
      *                      specified for the given key.
@@ -461,18 +507,31 @@ public class Configuration implements Serializable,
         try {
             return getStrings(key);
         } catch (NullPointerException e) {
-            return defaultValues;
+            return Environment.escapeSystemProperties(defaultValues);
         } catch (IllegalArgumentException e) {
             log.warn(String.format(
                     "The property %s was expected to be a list of Strings, but "
                     + "it was not. Using default %s instead",
                     key, defaultValues));
-            return defaultValues;
+            return Environment.escapeSystemProperties(defaultValues);
         }
     }
 
     /**
      * Wrapper for the list-baset {@link #getStrings(String, List)} method.
+     * <p/>
+     * Any references to system properties will be expanded. System properties
+     * are referenced in standard Ant-style syntax, eg:<br/>
+     * <pre>
+     *   ${user.home}
+     * </pre>
+     * This expansion will not change the actual value stored in the
+     * configuration.
+     * <p/>
+     * System property references inside the {@code defaultValues} will also be
+     * escaped if need be. This will be done in a copy of {@code defaultValues}
+     * and the contents of {@code defaultValues} will not be changed.
+     *
      * @param key the name of the property to look up.
      * @param defaultValues the values to return if there is no list of Strings
      *                      specified for the given key.
@@ -481,6 +540,9 @@ public class Configuration implements Serializable,
     public String[] getStrings(String key, String[] defaultValues) {
         List<String> result = getStrings(key, defaultValues == null ? null :
                                               Arrays.asList(defaultValues));
+
+        // Sys props are already escaped from the getStrings() call,
+        // so we don't have to do that
         return result == null ? null :
                result.toArray(new String[result.size()]);
     }
