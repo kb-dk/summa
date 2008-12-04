@@ -2,7 +2,10 @@
 <xsl:stylesheet
         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 		xmlns:Index="http://statsbiblioteket.dk/2004/Index"
-		xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.openarchives.org/OAI/2.0/"
+        xmlns:oai="http://www.openarchives.org/OAI/2.0/"
+        xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/"
 		xmlns:xalan="http://xml.apache.org/xalan"
 		xmlns:java="http://xml.apache.org/xalan/java"
         exclude-result-prefixes="java xs xalan xsl dc oai_dc oai"
@@ -15,7 +18,7 @@
 	<xsl:include href="mustusc_author.xsl" />
 	<xsl:include href="mustusc_ma.xsl" />
 	<xsl:include href="mustusc_identifiers.xsl" />
-	    <xsl:include href="mustusc_su.xsl" />
+	<xsl:include href="mustusc_su.xsl" />
     <xsl:include href="mustusc_date.xsl" />
     <xsl:include href="mustusc_title.xsl" />
     <xsl:include href="mustusc_notes.xsl" />
@@ -28,7 +31,7 @@
         <Index:document Index:defaultBoost="1" Index:defaultType="token" Index:defaultFreetext="true" Index:defaultSuggest="false"
 				Index:defaultGroup="false" Index:langAutogroup="true" Index:resolver="http:www.statsbiblioteket.dk/mdc">
 			<xsl:attribute name="Index:id">
-				<xsl:value-of select="record/header/identifier"/>
+                <xsl:value-of select="record/header/identifier"/>
 			</xsl:attribute>
 
             <xsl:attribute name="Index:resolver">
