@@ -148,9 +148,11 @@ public class XMLSplitterHandler extends DefaultHandler2 {
         }
 
         // We're inside a Record
-        sw.append("<").append(qName);
-        for (String prefix: prefixes) {
-            sw.append(" ").append(prefix);
+        sw.append("<").append(target.preserveNamespaces ? qName : local);
+        if (target.preserveNamespaces) {
+            for (String prefix: prefixes) {
+                sw.append(" ").append(prefix);
+            }
         }
         insideRecordElementStack.add(qName);
         if (!rootRecordElement) { // Only clear inside prefixes
@@ -177,7 +179,9 @@ public class XMLSplitterHandler extends DefaultHandler2 {
         }
 
         for (int i = 0 ; i < atts.getLength() ; i++) {
-            sw.append(" ").append(atts.getQName(i)).append("=\"");
+            sw.append(" ").append(target.preserveNamespaces ?
+                                  atts.getQName(i) :
+                                  atts.getLocalName(i)).append("=\"");
             sw.append(ParseUtil.encode(atts.getValue(i))).append("\"");
             if (inId && !"".equals(target.idTag) &&
                 equalsAny(target.idTag,
@@ -213,7 +217,8 @@ public class XMLSplitterHandler extends DefaultHandler2 {
         } else {
             log.trace("endElement: " + qName);
         }
-        sw.append("</").append(qName).append(">");
+        sw.append("</").append(target.preserveNamespaces ? qName : localName);
+        sw.append(">");
         if (equalsAny(target.recordElement, qName, localName)) {
             // Record XML end reached
             log.debug("Record XML collected, creating Record");

@@ -88,7 +88,7 @@
                         </entry>
                         <entry>
                             <key>summa.ingest.xmlsplitter.preservenamespaces</key>
-                            <value class="boolean">true</value>
+                            <value class="boolean">false</value>
                         </entry>
                         <entry>
                             <key>summa.ingest.xmlsplitter.requirevalid</key>
