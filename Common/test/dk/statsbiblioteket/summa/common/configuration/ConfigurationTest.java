@@ -25,6 +25,7 @@ package dk.statsbiblioteket.summa.common.configuration;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.io.Serializable;
 
 import junit.framework.Test;
@@ -277,6 +278,49 @@ public class ConfigurationTest extends TestCase {
                   "be found");
         }
 
+    }
+
+    public void testExpandedSysProp () throws Exception {
+        Configuration conf = Configuration.newMemoryBased("foo.bar",
+                                                          "${user.home}");
+
+        assertEquals(System.getProperty("user.home"),
+                     conf.getString("foo.bar"));
+        
+        // Also test that we expand the default value
+        assertEquals(System.getProperty("user.home"),
+                     conf.getString("b0rk", "${user.home}"));
+    }
+
+    public void testExpandedSysPropList () throws Exception {
+        ArrayList<String> val = new ArrayList<String>(Arrays.asList("${user.dir}",
+                                                                    "bar"));
+        Configuration conf = Configuration.newMemoryBased("foo.bar",
+                                                          val);
+
+        List<String> expected = Arrays.asList(System.getProperty("user.dir"),
+                                              "bar");
+        assertEquals(expected,
+                     conf.getStrings("foo.bar"));
+
+        // Also test that we expand the default value
+        assertEquals(expected,
+                     conf.getStrings("b0rk", val));
+    }
+
+    public void testExpandedSysPropArray () throws Exception {
+        String[] val = new String[]{"${user.dir}", "bar"};
+        Configuration conf = Configuration.newMemoryBased("foo.bar",
+                                                          val);
+
+        String[] expected = new String[]{System.getProperty("user.dir"), "bar"};
+
+        assertTrue(Arrays.equals(expected,
+                                 conf.getStrings("foo.bar", new String[0])));
+
+        // Also test that we expand the default value
+        assertTrue(Arrays.equals(expected,
+                                 conf.getStrings("b0rk", val)));
     }
 
     public void testGetClass() throws Exception {
