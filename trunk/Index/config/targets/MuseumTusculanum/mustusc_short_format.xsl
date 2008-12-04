@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet
+        xmlns="http://www.openarchives.org/OAI/2.0/"
         xmlns:oai="http://www.openarchives.org/OAI/2.0/"
+        xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/"
         xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 		xmlns:Index="http://statsbiblioteket.dk/2004/Index"
 		xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
@@ -8,7 +10,6 @@
 		xmlns:java="http://xml.apache.org/xalan/java"
         exclude-result-prefixes="java xs xalan xsl dc oai_dc oai"
 		version="1.0" xmlns:dc="http://purl.org/dc/elements/1.1/"
-		xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchiv"
 				 xmlns:mdc="http://www.mtp.hum.ku.dk/library/uni/sta/oai2v1/"
 				xmlns:mtp_dc="http://www.mtp.hum.ku.dk/library/uni/sta/oai2v1/">
