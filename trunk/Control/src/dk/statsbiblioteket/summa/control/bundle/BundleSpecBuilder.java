@@ -406,6 +406,9 @@ public class BundleSpecBuilder {
     /**
      * Make sure that all files specified in the bundle's {@code fileList}
      * can be found in {@code bundleDir}.
+     * <p/>
+     * It will also be affirmed that the file specified as mainJar is mentioned
+     * in the fileList.
      *
      * @param bundleDir the directory to check for files in
      * @throws BundleFormatException if one of the files specified in the
@@ -423,6 +426,12 @@ public class BundleSpecBuilder {
             }
         }
 
+        if (!fileSet.contains(getMainJar())) {
+            throw new BundleFormatException("mainJar '"
+                                              + getMainJar()
+                                              + "' not in fileList");
+        }
+
         // TODO: Check the converse - that each file is listed in fileList
 
         // TODO: Check md5 if the md5 attribute exists on the file element
@@ -433,7 +442,10 @@ public class BundleSpecBuilder {
      * Like {@link #checkFileList(java.io.File)} but check for files in a
      * collection of directories, much like having multiple elements in a class
      * path.
-     *
+     * <p/>
+     * It will also be affirmed that the file specified as mainJar is mentioned
+     * in the fileList.
+     * 
      * @param bundleDirs array of directories to check to check for files in
      * @throws BundleFormatException if one of the files specified in the
      *                               bundle's fileList is not found in any of
@@ -455,6 +467,12 @@ public class BundleSpecBuilder {
                 throw new BundleFormatException("Listed file '"
                                               + filename + "' not found");
             }
+        }
+
+        if (!fileSet.contains(getMainJar())) {
+            throw new BundleFormatException("mainJar '"
+                                              + getMainJar()
+                                              + "' not in fileList");
         }
 
         // TODO: Check the converse - that each file is listed in fileList
