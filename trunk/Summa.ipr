@@ -450,6 +450,34 @@
   <component name="SvnBranchConfigurationManager">
     <option name="myConfigurationMap">
       <map>
+        <entry key="$PROJECT_DIR$/Control">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="branchUrls">
+                <list>
+                  <option value="https://gforge.statsbiblioteket.dk/svn/summa/771" />
+                  <option value="https://gforge.statsbiblioteket.dk/svn/summa/branches" />
+                  <option value="https://gforge.statsbiblioteket.dk/svn/summa/tags" />
+                </list>
+              </option>
+              <option name="trunkUrl" value="https://gforge.statsbiblioteket.dk/svn/summa/trunk" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
+        <entry key="$PROJECT_DIR$/Index">
+          <value>
+            <SvnBranchConfiguration>
+              <option name="branchUrls">
+                <list>
+                  <option value="https://gforge.statsbiblioteket.dk/svn/summa/771" />
+                  <option value="https://gforge.statsbiblioteket.dk/svn/summa/branches" />
+                  <option value="https://gforge.statsbiblioteket.dk/svn/summa/tags" />
+                </list>
+              </option>
+              <option name="trunkUrl" value="https://gforge.statsbiblioteket.dk/svn/summa/trunk" />
+            </SvnBranchConfiguration>
+          </value>
+        </entry>
         <entry key="$PROJECT_DIR$/Storage">
           <value>
             <SvnBranchConfiguration>

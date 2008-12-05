@@ -3,10 +3,11 @@ package dk.statsbiblioteket.summa.control.bundle;
 import org.apache.commons.cli.*;
 
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.io.File;
 import java.io.IOException;
+
+import dk.statsbiblioteket.summa.common.util.Environment;
+import dk.statsbiblioteket.util.Strings;
 
 /**
  * Main class for the Summa bundle builder tool.
@@ -22,7 +23,7 @@ public class BundleTool {
     private String bundleName;
     private File specFile;
     private File outputDir;
-    private File filesDir;
+    private File[] fileDirs;
 
     private static void printHelp (Options options) {
         String usage = "java -jar summa-bundle.jar [options] <bundle-spec>";
@@ -40,11 +41,11 @@ public class BundleTool {
         String overrideAutostart;
         String overrideName;
         String outputDir;
-        String fileDir;
+        String[] fileDirs;
         File specFile = null;
 
         // Build command line options
-        CommandLineParser cliParser = new PosixParser();
+        CommandLineParser cliParser = new GnuParser();
         Options options = new Options();
         options.addOption("h", "help", false, "Print help message and exit");
         options.addOption("v", "verbose", false, "Enable verbose ourput");
@@ -54,7 +55,11 @@ public class BundleTool {
         options.addOption("o", "output", true, "Directory to place the resulting bundle in");
         options.addOption("x", "expand-properties", false, "Expand @-enclosed system properties in the spec file");
         options.addOption("a", "auto-start", true, "Override whether or not to enable auto start of the bundle");
-        options.addOption("f", "files", true, "Path to collect files for the bundle from");
+        options.addOption("f", "files", true,
+                          "Path to collect files for the bundle from. "
+                          + "You may specify multiple paths by separated by"
+                          + "':'");
+
 
         // Parse and validate command line
         try {
@@ -71,6 +76,7 @@ public class BundleTool {
             specFile = new File (specFiles[0]);
 
         } catch (ParseException e) {
+            System.err.println("Error parsing command line: " + e.getMessage());
             printHelp(options);
             System.exit (2);
         }
@@ -83,10 +89,20 @@ public class BundleTool {
         overrideName = cli.getOptionValue("name");
         overrideAutostart = cli.getOptionValue("auto-start");
         outputDir = cli.getOptionValue("output", System.getProperty("user.dir"));
-        fileDir = cli.getOptionValue("files", specFile.getParent());
+
+        fileDirs = cli.getOptionValue("files") == null ?
+                                  null : cli.getOptionValue("files").split(":");
+        if (fileDirs == null) {
+            fileDirs = new String[] {specFile.getParent()};
+        }
+
+        File[] _fileDirs = new File[fileDirs.length];
+        for (int i = 0; i < fileDirs.length; i++) {
+            _fileDirs[i] = new File(fileDirs[i]);
+        }
 
         try {
-            new BundleTool(specFile, new File(outputDir), new File(fileDir),
+            new BundleTool(specFile, new File(outputDir), _fileDirs,
                            verbose, dryRun, sloppy, expandProps,
                            overrideAutostart, overrideName).run();
         } catch (BundleLoadingException e) {
@@ -117,13 +133,13 @@ public class BundleTool {
     }
 
 
-    public BundleTool(File specFile, File outputDir, File filesDir,
+    public BundleTool(File specFile, File outputDir, File[] fileDirs,
                       boolean verbose, boolean dryRun,
                       boolean sloppy, boolean expandProps,
                       String overrideAutostart, String overrideName) {
         this.specFile = specFile;
         this.outputDir = outputDir;
-        this.filesDir = filesDir;
+        this.fileDirs = fileDirs;
         this.verbose = verbose;
         this.dryRun = dryRun;
         this.sloppy = sloppy;
@@ -161,15 +177,18 @@ public class BundleTool {
                                        + "' is not a directory");
         }
 
-        if (!filesDir.exists()) {
-            throw new RuntimeException("File source directory '" + filesDir
-                                       + "' does not exist");
+        for (File dir : fileDirs) {
+            if (!dir.exists()) {
+                throw new RuntimeException("File source directory '" + fileDirs
+                                           + "' does not exist");
+            }
+            if (!dir.isDirectory()) {
+                throw new RuntimeException("File source '" + fileDirs
+                                           + "' is not a directory");
+            }
         }
 
-        if (!filesDir.isDirectory()) {
-            throw new RuntimeException("File source '" + filesDir
-                                       + "' is not a directory");
-        }
+
 
     }
 
@@ -183,7 +202,7 @@ public class BundleTool {
             println("Output dir: " + outputDir);
             println("Enable validation: " + !sloppy);
             println("Dry run: " + dryRun);
-            println("File input dir: " + filesDir);
+            println("File input dirs: " + Strings.join(fileDirs, ", "));
         }
 
         BundleSpecBuilder builder = BundleSpecBuilder.open(specFile);
@@ -192,7 +211,16 @@ public class BundleTool {
         // This must be done before validation
         try {
             if (builder.getFiles().isEmpty()) {
-                builder.buildFileList(filesDir);
+                if (verbose) {
+                    println("No fileList specified. Scanning input directories "
+                            + "to build file list:");
+                }
+                for (File dir: fileDirs) {
+                    if (verbose) {
+                        println("Scanning: " + dir);
+                    }
+                    builder.buildFileList(dir);
+                }
             }
         } catch (IOException e) {
             throw new BundleLoadingException("Failed to build file list for "
@@ -246,7 +274,7 @@ public class BundleTool {
 
         // Roll bundle zip-file
         if (!dryRun) {
-            builder.buildBundle(filesDir, outputDir);
+            builder.buildBundle(fileDirs, outputDir);
 
             if (!new File(outputDir, bundleName + Bundle.BUNDLE_EXT).exists()) {
                 throw new RuntimeException("Unknown error writing bundle to '"
@@ -264,38 +292,29 @@ public class BundleTool {
             println("Expanding system properties");
         }
 
-        // This is ridiculously inefficient, but it gets the job done...
-        for (Map.Entry entry: System.getProperties().entrySet()){
-            String pattern = "@" + entry.getKey().toString() + "@";
-            String newVal = entry.getValue().toString();
+        builder.setBundleId(
+                Environment.escapeSystemProperties(builder.getBundleId()));
+        builder.setDescription(
+                Environment.escapeSystemProperties(builder.getDescription()));
+        builder.setMainClass(
+                Environment.escapeSystemProperties(builder.getMainClass()));
+        builder.setMainJar(
+                Environment.escapeSystemProperties(builder.getMainJar()));
 
-            builder.setBundleId(builder.getBundleId().replace(pattern, newVal));
-            builder.setDescription(builder.getDescription().replace(pattern,
-                                                                    newVal));
-            builder.setMainClass(builder.getMainClass().replace(pattern,
-                                                                newVal));
-            builder.setMainJar(builder.getMainJar().replace(pattern, newVal));
+        // Update the API list
+        List<String> api = Environment.escapeSystemProperties(builder.getApi());
+        builder.getApi().clear();
+        builder.getApi().addAll(api);
 
-            // Update the API list
-            ArrayList<String> api = new ArrayList<String>();
-            for (String apiFile : builder.getApi()) {
-                api.add(apiFile.replace(pattern, newVal));
-            }
-            builder.getApi().clear();
-            builder.getApi().addAll(api);
-
-            // Update the File list
-            ArrayList<String> files = new ArrayList<String>();
-            for (String file : builder.getFiles()) {
-                files.add(file.replace(pattern, newVal));
-            }
-            builder.getFiles().clear();
-            builder.getFiles().addAll(api);
-        }
+        // Update the File list
+        List<String> files =
+                         Environment.escapeSystemProperties(builder.getFiles());
+        builder.getFiles().clear();
+        builder.getFiles().addAll(files);
     }
 
     private void validate (BundleSpecBuilder builder) {
-        builder.checkFileList(filesDir);
+        builder.checkFileList(fileDirs);
         builder.checkPublicApi();
 
         if (builder.getInstanceId() != null) {

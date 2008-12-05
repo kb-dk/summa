@@ -201,6 +201,10 @@ public class XMLTransformer extends ObjectFilterImpl {
             payload.getRecord().setContent(output);
         } catch (TransformerException e) {
             log.warn("Transformer problems. Discarding payload " + payload, e);
+            if (log.isTraceEnabled()) {
+                log.trace("Problematic record was:\n"
+                          + payload.getRecord().toString(true));
+            }
         }
     }
 

@@ -16,10 +16,12 @@
     <property name="release.api.jar" value="${release.api}.jar"/>
     <property name="release.bundles" value="${project.name}-test-bundles-${project.version}"/>
     <property name="release.bundles.zip" value="${release.bundles}.zip"/>
+    <property name="bundleTool.release.jar" value="summa-bundletool-${project.version}.jar"/>
 
     <!-- Persistent directories -->
     <property name="src.dir" value="${basedir}/src"/>
     <property name="test.src.dir" value="${basedir}/test"/>
+    <property name="config.dir" value="${basedir}/config"/>
 
     <!-- Temporary files and directories -->
     <property name="build.dir" value="${basedir}/${summa.classes.dir}"/>
@@ -350,6 +352,41 @@
                 <include name="*data/**/*"/>
             </zipfileset>
         </zip>
+    </target>
+
+    <target name=".release.bundleTool" depends="compile, .releaseCommon">
+        <delete dir="${tmp.dir}"/>
+        <mkdir dir="${tmp.dir}"/>
+
+        <mkdir dir="${dist.dir}"/>
+
+        <!-- Prepare libs for bundling -->
+        <unzip dest="${tmp.dir}">
+            <fileset dir="lib">
+                <include name="*.jar"/>
+                <exclude name="junit*.jar"/>
+            </fileset>
+            <fileset dir="${basedir}/..">
+                <include name="${summa.ilib.common}"/>
+            </fileset>
+        </unzip>
+
+        <!-- Prepare class files -->
+        <copy todir="${tmp.dir}">
+            <fileset dir="${build.dir}"
+                 includes="dk/statsbiblioteket/summa/**/*"/>
+        </copy>
+
+        <copy file="${config.dir}/log4j.xml" todir="${tmp.dir}"/>
+
+        <!-- Roll the .jar -->
+        <jar basedir="${tmp.dir}" compress="true"
+             jarfile="${dist.dir}/${bundleTool.release.jar}" includes="**/*">
+            <manifest>
+                <attribute name="Main-Class"
+                   value="dk.statsbiblioteket.summa.control.bundle.BundleTool"/>
+            </manifest>
+        </jar>
     </target>
 
     <target name="release" depends="distclean, depends, .scripts, .release.depends,.jar, doc">
@@ -914,7 +951,7 @@
         <delete dir="${tmp.dir}"/>
     </target>
 
-    <target name="all" depends="release, .release.bundles"/>
+    <target name="all" depends="release, .release.bundles, .release.bundleTool"/>
 
 </project>
 

@@ -16,6 +16,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.control.api.bundle.BundleRepository;
 import dk.statsbiblioteket.util.FileAlreadyExistsException;
+import dk.statsbiblioteket.util.Strings;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
@@ -402,6 +403,15 @@ public class BundleSpecBuilder {
         log.trace("Finished readPublicApi");
     }
 
+    /**
+     * Make sure that all files specified in the bundle's {@code fileList}
+     * can be found in {@code bundleDir}.
+     *
+     * @param bundleDir the directory to check for files in
+     * @throws BundleFormatException if one of the files specified in the
+     *                               bundle's fileList is not found in
+     *                               {@code bundleDir}
+     */
     public void checkFileList (File bundleDir) {
         log.trace("checkFileList called");
         // Check that each file in fileList exists
@@ -410,6 +420,40 @@ public class BundleSpecBuilder {
             if (!testFile.exists()) {
                 throw new BundleFormatException("Listed file '"
                                               + testFile + "' does not exist");
+            }
+        }
+
+        // TODO: Check the converse - that each file is listed in fileList
+
+        // TODO: Check md5 if the md5 attribute exists on the file element
+        log.trace("Finished checkFileList");
+    }
+
+    /**
+     * Like {@link #checkFileList(java.io.File)} but check for files in a
+     * collection of directories, much like having multiple elements in a class
+     * path.
+     *
+     * @param bundleDirs array of directories to check to check for files in
+     * @throws BundleFormatException if one of the files specified in the
+     *                               bundle's fileList is not found in any of
+     *                               the directories in {@code bundleDirs}
+     */
+    public void checkFileList (File[] bundleDirs) {
+        log.trace("checkFileList called");
+        // Check that each file in fileList exists
+        for (String filename : fileSet) {
+            boolean fileFound = false;
+            for (File dir: bundleDirs) {
+                File testFile = new File (dir, filename);
+                if (testFile.exists()) {
+                    fileFound = true;
+                    break;
+                }
+            }
+            if (!fileFound) {
+                throw new BundleFormatException("Listed file '"
+                                              + filename + "' not found");
             }
         }
 
@@ -534,37 +578,47 @@ public class BundleSpecBuilder {
      * <p>If the {@code mainJar} and spec file is not in the file list,
      * they will be added automatically.</p>
      *
-     * @param rootDir sourceRoot directory containing the files to be packed into the
+     * @param rootDirs directories containing the files to be packed into the
      *                bundle
-     * @param outputDir directory where to write the output file
+     * @param outputDir directory where to write the output {@code .bundle} file
      *
      * @throws NullPointerException if any of the arguments are null
-     * @throws IOException if {@code rootDir} does not exist or there is an error writing
-     *                     the bundle
-     * @throws FileAlreadyExistsException if {@code outputDir} is a regualr file
+     * @throws IOException if any of the {@code rootDirs} does not exist or
+     *                     there is an error writing the bundle
+     * @throws FileAlreadyExistsException if {@code outputDir} is a regular file
+     * @throws FileNotFoundException if any of the files listed in the bundle's
+     *                               fileSet can not be found in any of the
+     *                               specified root directories
      * @throws BundleFormatException if this builder does not have a bundle id
-     * @returns a file handle pointing at the written bundle
+     * @return a file handle pointing at the written bundle
      */
-    public File buildBundle (File rootDir, File outputDir) throws IOException {
-        log.trace("buildBundle(" + rootDir + ", " + outputDir + ") called");
+    public File buildBundle (File[] rootDirs, File outputDir)
+                                                            throws IOException {
+        log.trace("buildBundle([" + Strings.join(rootDirs, ", ") + "], "
+                  + outputDir + ") called");
+
         /* Validate parameters */
         if (getBundleId() == null) {
             throw new BundleFormatException("Bundle does not have a bundle id");
         }
 
-        if (rootDir == null) {
+        if (rootDirs == null) {
             throw new NullPointerException("rootDir argument is null");
         } else if (outputDir == null) {
             throw new NullPointerException("outputDir argument is null");
         }
 
-        if (!rootDir.isDirectory()) {
-            throw new IOException("rootDir not a directory '" + rootDir + "'");
-        } else if (outputDir.isFile()) {
-            throw new FileAlreadyExistsException("outputDir is a regular file '"
-                                                 + outputDir + "'");
+        for (File dir : rootDirs) {
+            if (!dir.isDirectory()) {
+                throw new IOException("rootDir not a directory '" + dir + "'");
+            } else if (outputDir.isFile()) {
+                throw new FileAlreadyExistsException("outputDir is a regular "
+                                                     + "file '"
+                                                     + outputDir + "'");
+            }
         }
 
+        /* Make sure the bundle spec file is listed */
         if (!hasFile(getFilename())) {
             addFile(getFilename());
         }
@@ -573,43 +627,100 @@ public class BundleSpecBuilder {
             addFile(getMainJar());
         }
 
-        log.trace("buildBundle: Making dirs '" + outputDir + "'");
-        /* Write the bundle spec */
-        outputDir.mkdirs();
-        log.trace("buildBundle: Calling write with File('" + rootDir + ", "
-                  + getFilename() + ")");
-        write(new File(rootDir, getFilename()));
-
         /* Write the actual zip ball */
         File bundleFile =  new File (outputDir,
                                      getBundleId() + Bundle.BUNDLE_EXT);
+
+        /* Make sure destination dir exist */
+        log.trace("buildBundle: Making dir '" + outputDir + "'");
+        outputDir.mkdirs();
 
         log.trace("buildBundle: Creating fileWriter for '" + bundleFile + "'");
         FileOutputStream fileWriter = new FileOutputStream(bundleFile);
         log.trace("buildBundle: Wrapping fileWriter i ZIP output stream");
         ZipOutputStream zipStream = new ZipOutputStream(fileWriter);
 
+        log.trace("buildBundle: Writing files to zip stream");
         byte[] buf = new byte[4096];
         int len;
         for (String file : getFiles()) {
-        log.trace("buildBundle: Adding '" + file + "' to ZIP stream");
+            log.trace("buildBundle: Adding '" + file + "' to ZIP stream");
+
+            // Don't write the bundle spec from the file, but from the
+            // in-memory bundle spec
+            if (file.equals("service.xml") || file.equals("client.xml")) {
+                continue;
+            }
+
             zipStream.putNextEntry(new ZipEntry(file));
-            FileInputStream in = new FileInputStream(new File(rootDir, file));
+            FileInputStream in = new FileInputStream(findFile(rootDirs, file));
             while ((len = in.read(buf)) > 0) {
                 zipStream.write(buf, 0, len);
             }
         }
 
-        log.trace("buildBundle: Flushing and closing streams");
-        /* Clean up */
-        zipStream.flush();
-        zipStream.finish();
-        zipStream.close();
-        fileWriter.flush();
-        fileWriter.close();
+        /* Write the bundle spec to the zip stream.
+         * The write() call closees the stream */
+        log.trace("buildBundle: Writing bundle spec to zip stream");
+        zipStream.putNextEntry(new ZipEntry(getFilename()));
+        write(zipStream);
 
-        log.trace("Finished buildBundle(" + rootDir + ", " + outputDir + ")");
+        log.trace("buildBundle: Flushing and closing streams");
+
+        /* Clean up:
+         * The streams are closed in the write() call above */
+
+        log.trace("buildBundle([" + Strings.join(rootDirs, ", ") + "], "
+                  + outputDir + ") finished");
         return bundleFile;
+    }
+
+    /**
+     * Like {@link #buildBundle(java.io.File[], java.io.File)}, but only take
+     * a single root directory to resolve files from.
+     *
+     * @param rootDir the single directory to check for files in
+     * @param outputDir the directory in which to place the final bundle
+     *
+     * @return a file object opinting to the newly created bundle
+     *
+     * @throws NullPointerException if any of the arguments are null
+     * @throws IOException if {@code rootDir} does not exist or there is an
+     *                     error writing the bundle
+     * @throws FileAlreadyExistsException if {@code outputDir} is a regualr file
+     * @throws FileNotFoundException if any of the files listed in the bundle's
+     *                               fileSet can not be found in the
+     *                               specified root directory
+     * @throws BundleFormatException if this builder does not have a bundle id
+     */
+    public File buildBundle (File rootDir, File outputDir)
+                                                            throws IOException {
+        if (rootDir == null) {
+            throw new NullPointerException("rootDir argument is null");
+        }
+
+        return buildBundle(new File[]{rootDir}, outputDir);
+    }
+
+    /**
+     * Locate {@code file} in one of the directories specified in {@code dirs}
+     * @param dirs directories in which to look for {@code file}
+     * @param file the name of the file to look for
+     * @return a {@link File} pointing to the first found file on the file
+     *         system matching {@code file}.
+     * @throws FileNotFoundException if {@code file} can not be found in any of
+     *                               the directories {@code dirs}
+     */
+    private File findFile(File[] dirs, String file)
+                                                  throws FileNotFoundException {
+        for (File dir : dirs) {
+            File f = new File(dir, file);
+            if (f.exists()) {
+                return f;
+            }
+        }
+
+        throw new FileNotFoundException(file);
     }
 
     /**
