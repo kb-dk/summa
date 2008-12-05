@@ -76,15 +76,14 @@
         <appender-ref ref="CONSOLE" />
     </logger>
     -->
-    <logger name="dk.statsbiblioteket.summa.ingest.split.StreamController">
-        <level value="trace" />
+    <logger name="dk.statsbiblioteket.summa.ingest.source.RecordGenerator">
+        <level value="debug" />
         <appender-ref ref="CONSOLE" />
     </logger>
-    <!--
-    <logger name="dk.statsbiblioteket.summa.ingest.split.XMLSplitterParser">
-        <level value="trace" />
+    <logger name="dk.statsbiblioteket.summa.index.IndexControllerImpl">
+        <level value="debug" />
         <appender-ref ref="CONSOLE" />
-    </logger>-->
+    </logger>
         <!--
     <logger name="dk.statsbiblioteket.summa.storage.api.filter.RecordReader">
         <level value="trace" />

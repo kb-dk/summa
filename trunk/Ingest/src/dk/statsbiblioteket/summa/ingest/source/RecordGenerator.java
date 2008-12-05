@@ -133,25 +133,27 @@ public class RecordGenerator implements ObjectFilter {
                             Pattern.DOTALL);
 
     /**
-     * All occurences of "$RANDOM_CHARS[min, max]" will be replaced by a random
-     * number of random chars, where the number of chars go from min to max.
+     * All occurences of "$RANDOM_CHARS[min, max, onlyletters]" will be replaced
+     * by a random number of random chars, where the number of chars go from min
+     * to max. If onlyletters is true, only a-z will be generated.
      */
     public static final String CONTENT_RANDOM_CHARS = "$RANDOM_CHARS";
     private Pattern PATTERN_RANDOM_CHARS =
-            Pattern.compile(".*?(\\$RANDOM_CHARS\\[(\\d+), *(\\d+)\\]).*",
-                            Pattern.DOTALL);
+            Pattern.compile(
+                    ".*?(\\$RANDOM_CHARS\\[(\\d+), *(\\d+), *(\\w+)\\]).*",
+                    Pattern.DOTALL);
 
     /**
      * All occurences of "$RANDOM_WORDS[min, max, minlength, maxlength]" will be
      * replaced by a random number of words, where the number of words go from
      * min to max, where each word will have a length going from minlength to
-     * maxlength.
+     * maxlength. If onlyletters is true, only a-z will be generated.
      */
     public static final String CONTENT_RANDOM_WORDS = "$RANDOM_WORDS";
     private Pattern PATTERN_RANDOM_WORDS =
             Pattern.compile(
-                ".*?(\\$RANDOM_WORDS\\[(\\d+), *(\\d+), *(\\d+), *(\\d+)\\]).*",
-                   Pattern.DOTALL);
+       ".*?(\\$RANDOM_WORDS\\[(\\d+), *(\\d+), *(\\d+), *(\\d+), *(\\w+)\\]).*",
+       Pattern.DOTALL);
 
     /**
      * All occurences of "$WORD_LIST[min, max, listname]" will be replaced by
@@ -174,7 +176,7 @@ public class RecordGenerator implements ObjectFilter {
     private int generatedRecords = 0;
     private long lastGeneration = 0;
     private Profiler profiler;
-    private Random random = new Random();
+    private Random random = new Random(87);
 
     public RecordGenerator(Configuration conf) throws ConfigurationException {
         this.conf = conf;
@@ -252,13 +254,21 @@ public class RecordGenerator implements ObjectFilter {
             log.trace("Generated " + payload + " (" + generatedRecords + "/"
                       + maxRecords + "), average speed is "
                       + profiler.getBps(true) + " Records/sec");
-        } else if (log.isDebugEnabled() ||
+        } else if ((log.isDebugEnabled() &&
+                    generatedRecords % (profiler.getBpsSpan() / 10) == 0)
+                   ||
                    (log.isInfoEnabled() &&
                     generatedRecords % profiler.getBpsSpan() == 0)) {
             //noinspection DuplicateStringLiteralInspection
-            log.trace("Generated Payload" + generatedRecords + "/"
+            String message = "Generated Payload" + generatedRecords + "/"
                       + maxRecords + ", average speed is "
-                      + profiler.getBps(true) + " Records/sec");
+                      + profiler.getBps(true) + " Records/sec. ETA: "
+                      + profiler.getTimeLeftAsString(true);
+            if (log.isDebugEnabled()) {
+                log.debug(message);
+            } else {
+                log.info(message);
+            }
         }
         return payload;
     }
@@ -285,6 +295,10 @@ public class RecordGenerator implements ObjectFilter {
         template = expandRandomWords(template);
         template = expandWordList(template);
         return template;
+    }
+
+    private int getRandomInt(int min, int max) {
+        return random.nextInt(max - min + 1) + min;
     }
 
     private String expandIncremental(String template) {
@@ -317,7 +331,7 @@ public class RecordGenerator implements ObjectFilter {
             }
             int min = Integer.parseInt(matcher.group(2));
             int max = Integer.parseInt(matcher.group(3));
-            int rand = random.nextInt(max - min) + min;
+            int rand = getRandomInt(min, max);
             template = template.substring(0, matcher.start(1))
                        + rand + template.substring(matcher.end(1),
                                                    template.length());
@@ -334,19 +348,27 @@ public class RecordGenerator implements ObjectFilter {
             }
             int min = Integer.parseInt(matcher.group(2));
             int max = Integer.parseInt(matcher.group(3));
+            boolean onlyLetters = Boolean.parseBoolean(matcher.group(4));
             template = template.substring(0, matcher.start(1))
-                       + randomChars(min, max)
+                       + randomChars(min, max, onlyLetters)
                        + template.substring(matcher.end(1), template.length());
         }
         return template;
     }
-    private String randomChars(int min, int max) {
-        int length = random.nextInt(max - min) + min;
+    private String randomChars(int min, int max, boolean onlyLetters) {
+        int length = getRandomInt(min, max);
         StringWriter sw = new StringWriter(length);
-        for (int i = 0 ; i < length ; i++) {
-            sw.append((char)(random.nextInt(127 - 33) + 33));
-        }
+        randomChars(sw, length, onlyLetters);
         return sw.toString();
+    }
+    private void randomChars(StringWriter sw, int length, boolean onlyLetters) {
+        for (int i = 0 ; i < length ; i++) {
+            if (onlyLetters) {
+                sw.append((char)getRandomInt(97, 122));
+            } else {
+                sw.append((char)getRandomInt(33, 127));
+            }
+        }
     }
 
     private String expandRandomWords(String template) {
@@ -360,14 +382,13 @@ public class RecordGenerator implements ObjectFilter {
             int max = Integer.parseInt(matcher.group(3));
             int minLength = Integer.parseInt(matcher.group(4));
             int maxLength = Integer.parseInt(matcher.group(5));
+            boolean onlyLetters = Boolean.parseBoolean(matcher.group(6));
 
-            int wordCount = random.nextInt(max - min) + min;
+            int wordCount = getRandomInt(min, max);
             StringWriter sw = new StringWriter(wordCount * maxLength);
             for (int i = 0 ; i < wordCount ; i++) {
-                int length = random.nextInt(maxLength - minLength) + minLength;
-                for (int j = 0 ; j < length ; j++) {
-                    sw.append((char)(random.nextInt(127 - 33) + 33));
-                }
+                int length = getRandomInt(minLength, maxLength);
+                randomChars(sw, length, onlyLetters);
                 if (i < wordCount-1) {
                     sw.append(" ");
                 }
@@ -380,12 +401,6 @@ public class RecordGenerator implements ObjectFilter {
         return template;
     }
 
-    /**
-     * All occurences of "$WORD_LIST[min, max, listname]" will be replaced by
-     * a number of words taken randomly from the list stored in the
-     * configuration under the key "listname". The numbers of words go from
-     * min to max.
-     */
     private String expandWordList(String template) {
         while (true) {
             Matcher matcher =
@@ -399,7 +414,7 @@ public class RecordGenerator implements ObjectFilter {
 
             List<String> words = getWords(listName);
 
-            int wordCount = random.nextInt(max - min) + min;
+            int wordCount = getRandomInt(min, max);
             StringWriter sw = new StringWriter(wordCount * 20);
             for (int i = 0 ; i < wordCount ; i++) {
                 sw.append(words.get(random.nextInt(words.size())));

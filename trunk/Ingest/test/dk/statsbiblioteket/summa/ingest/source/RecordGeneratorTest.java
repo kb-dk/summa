@@ -70,8 +70,10 @@ public class RecordGeneratorTest extends TestCase {
         String contentTemplate =
                 "Incremental number: $INCREMENTAL_NUMBER[a]\n"
                 + "Random number: $RANDOM_NUMBER[5, 10]\n"
-                + "Random chars: $RANDOM_CHARS[2, 6]\n"
-                + "Random words: $RANDOM_WORDS[1, 3, 5, 7]\n"
+                + "Random chars: $RANDOM_CHARS[2, 6, false]\n"
+                + "Random chars only letters: $RANDOM_CHARS[2, 6, true]\n"
+                + "Random words: $RANDOM_WORDS[1, 3, 5, 7, false]\n"
+                + "Random words only letters: $RANDOM_WORDS[1, 3, 5, 7, true]\n"
                 + "Word list: $WORD_LIST[2, 3, mylist]";
         conf.set(RecordGenerator.CONF_CONTENT_TEMPLATE, contentTemplate);
         ArrayList<String> myList = new ArrayList<String>(
@@ -83,5 +85,4 @@ public class RecordGeneratorTest extends TestCase {
             System.out.println(generator.expand(contentTemplate));
         }
     }
-
 }

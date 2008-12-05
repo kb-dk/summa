@@ -340,7 +340,7 @@ public class FacetTest extends NoExitTestCase {
         storage.close();
     }
 
-    private void updateIndex() throws Exception {
+    public static void updateIndex() throws Exception {
         Configuration indexConf = Configuration.load(
                 "data/search/FacetTest_IndexConfiguration.xml");
         IndexTest.updateIndex(indexConf);
