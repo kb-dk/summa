@@ -4,11 +4,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -827,15 +823,17 @@ public class BundleSpecBuilder {
         }
         msg += "\n";
 
+        // Push the API through a TreeSet to get alphabetic sorting
         msg+= "Public API:\n";
-        for (String api : getApi()) {
+        for (String api : new TreeSet<String>(getApi())) {
             msg += "\t" + api + "\n";
         }
         msg += "\n";
 
         if (printFiles) {
+            // Push the fileList through a TreeSet to get alphabetic sorting
             msg += "Files:\n";
-            for (String file : getFiles()) {
+            for (String file : new TreeSet<String>(getFiles())) {
                 msg += "\t" + file + "\n";
             }
             msg += "\n";
