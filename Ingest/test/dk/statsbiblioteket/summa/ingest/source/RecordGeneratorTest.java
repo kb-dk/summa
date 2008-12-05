@@ -24,6 +24,10 @@ import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 
+import java.util.List;
+import java.util.Arrays;
+import java.util.ArrayList;
+
 /**
  * RecordGenerator Tester.
  *
@@ -60,4 +64,24 @@ public class RecordGeneratorTest extends TestCase {
         assertEquals("Expansion of incrementalNumber should work",
                      "00Foo!$Hey!?\n1", generator.expand(contentTemplate));
     }
+    public void testDumpAll() throws Exception {
+        int RUNS = 3;
+        Configuration conf = Configuration.newMemoryBased();
+        String contentTemplate =
+                "Incremental number: $INCREMENTAL_NUMBER[a]\n"
+                + "Random number: $RANDOM_NUMBER[5, 10]\n"
+                + "Random chars: $RANDOM_CHARS[2, 6]\n"
+                + "Random words: $RANDOM_WORDS[1, 3, 5, 7]\n"
+                + "Word list: $WORD_LIST[2, 3, mylist]";
+        conf.set(RecordGenerator.CONF_CONTENT_TEMPLATE, contentTemplate);
+        ArrayList<String> myList = new ArrayList<String>(
+                Arrays.asList("foo", "bar", "baz", "fighters"));
+        conf.set("mylist", myList);
+        RecordGenerator generator = new RecordGenerator(conf);
+        for (int i = 0 ; i < RUNS ; i ++) {
+            System.out.println("*** run " + i + " ***");
+            System.out.println(generator.expand(contentTemplate));
+        }
+    }
+
 }
