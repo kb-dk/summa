@@ -260,7 +260,7 @@ public class IndexTest extends NoExitTestCase {
 
     public static void waitForService(FilterService service) 
                                   throws RemoteException, InterruptedException {
-        int TIMEOUT = 10000;
+        int TIMEOUT = 1000000;
         long endTime = System.currentTimeMillis() + TIMEOUT;
         log.debug("Waiting a maximum of " + TIMEOUT + " ms for service");
         while (!service.getStatus().getCode().equals(Status.CODE.stopped) &&
