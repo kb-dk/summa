@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -32,10 +32,13 @@ import org.apache.commons.logging.Log;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.io.StringWriter;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Random;
+import java.util.List;
 
 /**
  * Generates semi-random Records, usable for testing performance and
@@ -125,12 +128,18 @@ public class RecordGenerator implements ObjectFilter {
      * integer from min to max (both inclusive).
      */
     public static final String CONTENT_RANDOM_NUMBER = "$RANDOM_NUMBER";
+    private Pattern PATTERN_RANDOM_NUMBER =
+            Pattern.compile(".*?(\\$RANDOM_NUMBER\\[(\\d+), *(\\d+)\\]).*",
+                            Pattern.DOTALL);
 
     /**
      * All occurences of "$RANDOM_CHARS[min, max]" will be replaced by a random
      * number of random chars, where the number of chars go from min to max.
      */
     public static final String CONTENT_RANDOM_CHARS = "$RANDOM_CHARS";
+    private Pattern PATTERN_RANDOM_CHARS =
+            Pattern.compile(".*?(\\$RANDOM_CHARS\\[(\\d+), *(\\d+)\\]).*",
+                            Pattern.DOTALL);
 
     /**
      * All occurences of "$RANDOM_WORDS[min, max, minlength, maxlength]" will be
@@ -139,15 +148,23 @@ public class RecordGenerator implements ObjectFilter {
      * maxlength.
      */
     public static final String CONTENT_RANDOM_WORDS = "$RANDOM_WORDS";
+    private Pattern PATTERN_RANDOM_WORDS =
+            Pattern.compile(
+                ".*?(\\$RANDOM_WORDS\\[(\\d+), *(\\d+), *(\\d+), *(\\d+)\\]).*",
+                   Pattern.DOTALL);
 
     /**
      * All occurences of "$WORD_LIST[min, max, listname]" will be replaced by
      * a number of words taken randomly from the list stored in the
      * configuration under the key "listname". The numbers of words go from
-     * min to max.
+     * min to max. The word delimiter is space.
      */
-    public static final String CONTENT_WORDS_LIST = "$WORD_LIST";
+    public static final String CONTENT_WORD_LIST = "$WORD_LIST";
+    private Pattern PATTERN_WORD_LIST =
+            Pattern.compile(".*?(\\$WORD_LIST\\[(\\d+), *(\\d+), *(\\w+)\\]).*",
+                            Pattern.DOTALL);
 
+    private Configuration conf;
     private String contentTemplate;
     private String idTemplate = DEFAULT_ID_TEMPLATE;
     private String baseTemplate = DEFAULT_BASE;
@@ -157,8 +174,10 @@ public class RecordGenerator implements ObjectFilter {
     private int generatedRecords = 0;
     private long lastGeneration = 0;
     private Profiler profiler;
+    private Random random = new Random();
 
     public RecordGenerator(Configuration conf) throws ConfigurationException {
+        this.conf = conf;
         try {
             if (conf.valueExists(CONF_CONTENT_TEMPLATE_LOCATION)) {
                 contentTemplate = Resolver.getUTF8Content(
@@ -260,6 +279,15 @@ public class RecordGenerator implements ObjectFilter {
         if (!template.contains("$")) { // Trivial case
             return template;
         }
+        template = expandIncremental(template);
+        template = expandRandomNumber(template);
+        template = expandRandomChars(template);
+        template = expandRandomWords(template);
+        template = expandWordList(template);
+        return template;
+    }
+
+    private String expandIncremental(String template) {
         while (true) {
             Matcher incrementalNumber =
                     PATTERN_INCREMENTAL_NUMBER.matcher(template);
@@ -278,5 +306,128 @@ public class RecordGenerator implements ObjectFilter {
                                                    template.length());
         }
         return template;
+    }
+
+    private String expandRandomNumber(String template) {
+        while (true) {
+            Matcher matcher =
+                    PATTERN_RANDOM_NUMBER.matcher(template);
+            if (!matcher.matches()) {
+                 break;
+            }
+            int min = Integer.parseInt(matcher.group(2));
+            int max = Integer.parseInt(matcher.group(3));
+            int rand = random.nextInt(max - min) + min;
+            template = template.substring(0, matcher.start(1))
+                       + rand + template.substring(matcher.end(1),
+                                                   template.length());
+        }
+        return template;
+    }
+
+    private String expandRandomChars(String template) {
+        while (true) {
+            Matcher matcher =
+                    PATTERN_RANDOM_CHARS.matcher(template);
+            if (!matcher.matches()) {
+                 break;
+            }
+            int min = Integer.parseInt(matcher.group(2));
+            int max = Integer.parseInt(matcher.group(3));
+            template = template.substring(0, matcher.start(1))
+                       + randomChars(min, max)
+                       + template.substring(matcher.end(1), template.length());
+        }
+        return template;
+    }
+    private String randomChars(int min, int max) {
+        int length = random.nextInt(max - min) + min;
+        StringWriter sw = new StringWriter(length);
+        for (int i = 0 ; i < length ; i++) {
+            sw.append((char)(random.nextInt(127 - 33) + 33));
+        }
+        return sw.toString();
+    }
+
+    private String expandRandomWords(String template) {
+        while (true) {
+            Matcher matcher =
+                    PATTERN_RANDOM_WORDS.matcher(template);
+            if (!matcher.matches()) {
+                 break;
+            }
+            int min = Integer.parseInt(matcher.group(2));
+            int max = Integer.parseInt(matcher.group(3));
+            int minLength = Integer.parseInt(matcher.group(4));
+            int maxLength = Integer.parseInt(matcher.group(5));
+
+            int wordCount = random.nextInt(max - min) + min;
+            StringWriter sw = new StringWriter(wordCount * maxLength);
+            for (int i = 0 ; i < wordCount ; i++) {
+                int length = random.nextInt(maxLength - minLength) + minLength;
+                for (int j = 0 ; j < length ; j++) {
+                    sw.append((char)(random.nextInt(127 - 33) + 33));
+                }
+                if (i < wordCount-1) {
+                    sw.append(" ");
+                }
+            }
+
+            template = template.substring(0, matcher.start(1))
+                       + sw.toString()
+                       + template.substring(matcher.end(1), template.length());
+        }
+        return template;
+    }
+
+    /**
+     * All occurences of "$WORD_LIST[min, max, listname]" will be replaced by
+     * a number of words taken randomly from the list stored in the
+     * configuration under the key "listname". The numbers of words go from
+     * min to max.
+     */
+    private String expandWordList(String template) {
+        while (true) {
+            Matcher matcher =
+                    PATTERN_WORD_LIST.matcher(template);
+            if (!matcher.matches()) {
+                 break;
+            }
+            int min = Integer.parseInt(matcher.group(2));
+            int max = Integer.parseInt(matcher.group(3));
+            String listName = matcher.group(4);
+
+            List<String> words = getWords(listName);
+
+            int wordCount = random.nextInt(max - min) + min;
+            StringWriter sw = new StringWriter(wordCount * 20);
+            for (int i = 0 ; i < wordCount ; i++) {
+                sw.append(words.get(random.nextInt(words.size())));
+                if (i < wordCount-1) {
+                    sw.append(" ");
+                }
+            }
+
+            template = template.substring(0, matcher.start(1))
+                       + sw.toString()
+                       + template.substring(matcher.end(1), template.length());
+        }
+        return template;
+    }
+
+    private Map<String, List<String>> words =
+            new HashMap<String, List<String>>(10);
+    private List<String> getWords(String listName) {
+        List<String> result = words.get(listName);
+        if (result == null) {
+            result = conf.getStrings(listName);
+            if (result == null) {
+                throw new IllegalArgumentException(
+                        "The word-list '" + listName + "' was requested by the"
+                        + " template, but was not defined in the properties");
+            }
+            words.put(listName, result);
+        }
+        return result;
     }
 }
