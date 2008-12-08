@@ -171,6 +171,15 @@ public class URLRepository implements BundleRepository {
 
     }
 
+    /**
+     * List the contents of the repository. This always works for local
+     * {@code file://} repositories, but for remote repositories it requires
+     * the existence of a {@code bundles.list} file with the repo contents.
+     *
+     * @param regex regex returned bundles must match
+     * @return a list of bundles matching {@code regex}
+     * @throws IOException
+     */
     public List<String> list (String regex) throws IOException {
         log.trace ("Got list() request for '" + regex + "'");
 
