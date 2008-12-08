@@ -49,4 +49,13 @@ public class EnvironmentTest extends TestCase {
         assertEquals(source,
                      Environment.escapeSystemProperties(source));
     }
+
+    public void testNull () {
+        assertEquals(null,
+                     Environment.escapeSystemProperties((String)null));
+        assertEquals(null,
+                     Environment.escapeSystemProperties((String[])null));
+        assertEquals(null,
+                     Environment.escapeSystemProperties((Iterable<String>)null));
+    }
 }

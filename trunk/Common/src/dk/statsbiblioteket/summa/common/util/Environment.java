@@ -22,11 +22,17 @@ public class Environment {
      *    "Your home dir is /home/username"
      * </pre>
      *
-     * @param s the string to escape
+     * @param s the string to escape, if {@code s} is {@code null} this method
+     *          also returns {@code null}
      * @return the string with any system property references replaces by their
-     *         actual values
+     *         actual values, or {@code null} if the input string is
+     *         {@code null}
      */
     public static String escapeSystemProperties (String s) {
+        if (s == null) {
+            return null;
+        }
+
         String result = s;
 
         // Micro optimization to not escape anything if there are no refs in s
@@ -49,10 +55,16 @@ public class Environment {
      * Return a copy of {@code a} with all system property references expanded
      * as described in {@link #escapeSystemProperties(String)}.
      *
-     * @param a array from which to extract the strings to escape
-     * @return a copy of {@code a} with system property values expanded
+     * @param a array from which to extract the strings to escape, if {@code a}
+     *          is {@code null} this method also returns {@code null}
+     * @return a copy of {@code a} with system property values expanded, or
+     *         {@code null} if the input string is {@code null}
      */
     public static String[] escapeSystemProperties (String[] a) {
+        if (a == null) {
+            return null;
+        }
+
         String[] result = new String[a.length];
 
         for (int i = 0; i < a.length; i++) {
@@ -68,12 +80,19 @@ public class Environment {
      * property references expanded into a list. The system property expansion
      * occurs as described in {@link #escapeSystemProperties(String)}.
      *
-     * @param iterable an iterable object to extract strings to escape from
+     * @param iterable an iterable object to extract strings to escape from, if
+     *                 {@code a} is {@code null} this method also returns
+     *                 {@code null}
      * @return a list containing all the strings of {@code iterable}
-     *         with system property values expanded
+     *         with system property values expanded, or
+     *         {@code null} if the input string is {@code null}
      */
     public static List<String> escapeSystemProperties (
                                                     Iterable<String> iterable) {
+        if (iterable == null) {
+            return null;
+        }
+
         ArrayList<String> result = new ArrayList<String>();
 
         for (String s : iterable) {
