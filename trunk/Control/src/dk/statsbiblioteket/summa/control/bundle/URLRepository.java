@@ -23,6 +23,7 @@
 package dk.statsbiblioteket.summa.control.bundle;
 
 import dk.statsbiblioteket.util.Streams;
+import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.control.api.bundle.BundleRepository;
@@ -37,7 +38,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * <p>A {@link dk.statsbiblioteket.summa.control.api.bundle.BundleRepository} fetching bundles via Java {@link URL}s.</p>
+ * A {@link dk.statsbiblioteket.summa.control.api.bundle.BundleRepository}
+ * fetching bundles via Java {@link URL}s.
+ * <p/>
+ * This class can support listing of repository contents in two ways. The
+ * first is local-only and works on all {@code file://} URLs. The second
+ * requires the server to list all bundles in a file called {@code bundles.list}
+ * in the base URL of the repository.
  *
  * <p>Given a bundle id it is mapped to a URL as specified by the
  * {@link #CONF_REPO_ADDRESS} property in the {@link Configuration}.</p>
@@ -167,18 +174,47 @@ public class URLRepository implements BundleRepository {
     public List<String> list (String regex) throws IOException {
         log.trace ("Got list() request for '" + regex + "'");
 
-        if (!baseUrl.startsWith("file://")) {
-            throw new UnsupportedOperationException("Only 'file://'-based "
-                                                    + "repositories support "
-                                                    + "listing. Baseurl: "
-                                                    + baseUrl);
+        if (baseUrl.startsWith("file://")) {
+            return listDir(regex);
+        } else {
+            return listUrl(regex);
         }
+    }
 
+    public List<String> listDir (String regex) throws IOException {
         File baseDir = new File (new URL(baseUrl).getFile());
         Pattern pat = Pattern.compile(regex);
         List<String> result = new ArrayList <String> (10);
 
         for (String bdl : baseDir.list()) {
+            if (!bdl.endsWith(".bundle")) {
+                log.trace ("Skipping non-.bundle '" + bdl + "'");
+                continue;
+            }
+            bdl = bdl.replace (".bundle", "");
+            if (pat.matcher(bdl).matches()) {
+                result.add (bdl);
+                log.trace ("Match: " + bdl);
+            } else {
+                log.trace ("No match: " + bdl);
+            }
+        }
+
+        return result;
+    }
+
+    public List<String> listUrl (String regex) throws IOException {
+        log.debug("Downloading bundle list: " + baseUrl + "bundles.list");
+        URL url = new URL(baseUrl + "bundles.list");
+        ByteArrayOutputStream out = new ByteArrayOutputStream(2048);
+        Streams.pipe(url.openStream(), out);
+        String bundleList = new String(out.toByteArray());
+        String[] bundles = bundleList.split("\\s");
+
+        Pattern pat = Pattern.compile(regex);
+        List<String> result = new ArrayList <String> (10);
+
+        for (String bdl : bundles) {
             if (!bdl.endsWith(".bundle")) {
                 log.trace ("Skipping non-.bundle '" + bdl + "'");
                 continue;
