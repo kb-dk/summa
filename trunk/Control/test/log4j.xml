@@ -76,10 +76,12 @@
         <appender-ref ref="CONSOLE" />
     </logger>
     -->
+    <!--
     <logger name="dk.statsbiblioteket.summa.ingest.source.RecordGenerator">
-        <level value="debug" />
+        <level value="trace" />
         <appender-ref ref="CONSOLE" />
     </logger>
+    -->
     <logger name="dk.statsbiblioteket.summa.index.IndexControllerImpl">
         <level value="debug" />
         <appender-ref ref="CONSOLE" />

@@ -68,14 +68,18 @@
         <appender-ref ref="CONSOLE"/>
     </logger>-->
 
-    <logger name="dk.statsbiblioteket.summa.ingest.split">
+<!--    <logger name="dk.statsbiblioteket.summa.ingest.source.RecordGenerator">
+        <level value="trace" />
+        <appender-ref ref="CONSOLE" />
+    </logger>-->
+<!--    <logger name="dk.statsbiblioteket.summa.ingest.split">
         <level value="trace" />
         <appender-ref ref="CONSOLE"/>
-    </logger>
+    </logger>-->
 
     <!-- all loggeres inherit the root logger - so don't include the root appenders in the other loggers (will duplicate log entries in the log file) -->
     <root>
-        <level value="INFO" />
+        <level value="info" />
         <appender-ref ref="CONSOLE" />
     </root>
 

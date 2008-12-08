@@ -55,10 +55,8 @@ public class RecordGeneratorTest extends TestCase {
     public void testIncrementalNumber() throws Exception {
         Configuration conf = Configuration.newMemoryBased();
         String contentTemplate =
-                RecordGenerator.CONTENT_INCREMENTAL_NUMBER + "[a]"
-                + RecordGenerator.CONTENT_INCREMENTAL_NUMBER + "[b]"
-                + "Foo!$Hey!?\n"
-                + RecordGenerator.CONTENT_INCREMENTAL_NUMBER + "[b]";
+                "$INCREMENTAL_NUMBER[a]$INCREMENTAL_NUMBER[b]Foo!$Hey!?\n"
+                + "$INCREMENTAL_NUMBER[b]";
         conf.set(RecordGenerator.CONF_CONTENT_TEMPLATE, contentTemplate);
         RecordGenerator generator = new RecordGenerator(conf);
         assertEquals("Expansion of incrementalNumber should work",
