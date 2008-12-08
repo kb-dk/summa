@@ -72,6 +72,10 @@
         <ant inheritAll="false" dir="../Control" target="release"/>
     </target>
 
+    <target name=".releaseIngest">
+        <ant inheritAll="false" dir="../Ingest" target="release"/>
+    </target>
+
     <target name="depends">
         <!-- Check global dependencies -->
         <ant inheritall="false" dir=".." target="depends"/>
@@ -108,7 +112,14 @@
         <condition property="compileSearchTask" value=".phony" else=".releaseSearch">
             <available file="${basedir}/../${summa.ilib.search.api}"/>
         </condition>
-        <antcall target="${compileStorageTask}"/>
+        <antcall target="${compileSearchTask}"/>
+
+        <!-- Check that Ingest is compiled -->
+        <echo message="Checking whether Ingest is compiled"/>
+        <condition property="compileIngestTask" value=".phony" else=".releaseIngest">
+            <available file="${basedir}/../${summa.ilib.ingest}"/>
+        </condition>
+        <antcall target="${compileIngestTask}"/>
 
         <!-- Check that Storage is compiled -->
         <echo message="Checking whether Control API is compiled"/>
@@ -116,6 +127,13 @@
             <available file="${basedir}/../${summa.ilib.control.api}"/>
         </condition>
         <antcall target="${compileControlTask}"/>
+
+        <!-- Always copy internal libs over -->
+        <copy file="${basedir}/../${summa.ilib.common}" todir="${lib.dir}"/>
+        <copy file="${basedir}/../${summa.ilib.storage.api}" todir="${lib.dir}"/>
+        <copy file="${basedir}/../${summa.ilib.search.api}" todir="${lib.dir}"/>
+        <copy file="${basedir}/../${summa.ilib.ingest}" todir="${lib.dir}"/>
+        <copy file="${basedir}/../${summa.ilib.control.api}" todir="${lib.dir}"/>
 
         <!-- Store space-separated list of lib-filenames in lib.files -->
         <pathconvert refid="lib.path" property="lib.files" pathsep=" ">
@@ -143,11 +161,6 @@
         <copy file="${basedir}/../${summa.lib.commons-cli}" tofile="${summa.lib.commons-cli}"/>
         <copy file="${basedir}/../${summa.lib.junit}" tofile="${summa.lib.junit}"/>
         <copy file="${basedir}/../${summa.lib.sbutil}" tofile="${summa.lib.sbutil}"/>
-
-        <copy file="${basedir}/../${summa.ilib.common}" todir="${lib.dir}"/>
-        <copy file="${basedir}/../${summa.ilib.storage.api}" todir="${lib.dir}"/>
-        <copy file="${basedir}/../${summa.ilib.search.api}" todir="${lib.dir}"/>
-        <copy file="${basedir}/../${summa.ilib.control.api}" todir="${lib.dir}"/>
     </target>
 
 
