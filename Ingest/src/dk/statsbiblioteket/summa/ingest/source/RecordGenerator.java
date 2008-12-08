@@ -35,10 +35,7 @@ import java.io.UnsupportedEncodingException;
 import java.io.StringWriter;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Random;
-import java.util.List;
+import java.util.*;
 
 /**
  * Generates semi-random Records, usable for testing performance and
@@ -117,8 +114,8 @@ public class RecordGenerator implements ObjectFilter {
      */
     public static final String CONTENT_INCREMENTAL_NUMBER =
             "$INCREMENTAL_NUMBER";
-    private Pattern PATTERN_INCREMENTAL_NUMBER =
-            Pattern.compile(".*?(\\$INCREMENTAL_NUMBER\\[(\\w+)\\]).*",
+    private static Pattern PATTERN_INCREMENTAL_NUMBER =
+            Pattern.compile("(\\$INCREMENTAL_NUMBER\\[(\\w+)\\])",
                             Pattern.DOTALL);
     private Map<String, Integer> incrementalNumbers =
             new HashMap<String, Integer>(10);
@@ -139,7 +136,7 @@ public class RecordGenerator implements ObjectFilter {
      */
     public static final String CONTENT_TIMESTAMP =
             "$TIMESTAMP";
-    private Pattern PATTERN_TIMESTAMP =
+    private static Pattern PATTERN_TIMESTAMP =
             Pattern.compile(".*?(\\$TIMESTAMP\\[(\\w+)\\]).*", Pattern.DOTALL);
 
     /**
@@ -147,7 +144,7 @@ public class RecordGenerator implements ObjectFilter {
      * integer from min to max (both inclusive).
      */
     public static final String CONTENT_RANDOM_NUMBER = "$RANDOM_NUMBER";
-    private Pattern PATTERN_RANDOM_NUMBER =
+    private static Pattern PATTERN_RANDOM_NUMBER =
             Pattern.compile(".*?(\\$RANDOM_NUMBER\\[(\\d+), *(\\d+)\\]).*",
                             Pattern.DOTALL);
 
@@ -157,7 +154,7 @@ public class RecordGenerator implements ObjectFilter {
      * to max. If onlyletters is true, only a-z will be generated.
      */
     public static final String CONTENT_RANDOM_CHARS = "$RANDOM_CHARS";
-    private Pattern PATTERN_RANDOM_CHARS =
+    private static Pattern PATTERN_RANDOM_CHARS =
             Pattern.compile(
                     ".*?(\\$RANDOM_CHARS\\[(\\d+), *(\\d+), *(\\w+)\\]).*",
                     Pattern.DOTALL);
@@ -169,7 +166,7 @@ public class RecordGenerator implements ObjectFilter {
      * maxlength. If onlyletters is true, only a-z will be generated.
      */
     public static final String CONTENT_RANDOM_WORDS = "$RANDOM_WORDS";
-    private Pattern PATTERN_RANDOM_WORDS =
+    private static Pattern PATTERN_RANDOM_WORDS =
             Pattern.compile(
        ".*?(\\$RANDOM_WORDS\\[(\\d+), *(\\d+), *(\\d+), *(\\d+), *(\\w+)\\]).*",
        Pattern.DOTALL);
@@ -181,24 +178,31 @@ public class RecordGenerator implements ObjectFilter {
      * min to max. The word delimiter is space.
      */
     public static final String CONTENT_WORD_LIST = "$WORD_LIST";
-    private Pattern PATTERN_WORD_LIST =
+    private static Pattern PATTERN_WORD_LIST =
             Pattern.compile(".*?(\\$WORD_LIST\\[(\\d+), *(\\d+), *(\\w+)\\]).*",
                             Pattern.DOTALL);
 
     private Configuration conf;
-    private String contentTemplate;
-    private String idTemplate = DEFAULT_ID_TEMPLATE;
-    private String baseTemplate = DEFAULT_BASE;
     private int maxRecords = DEFAULT_RECORDS;
     private int minDelay = DEFAULT_MINDELAY;
+    private List<RecordToken> idTokens;
+    private List<RecordToken> baseTokens;
+    private List<RecordToken> contentTokens;
 
     private int generatedRecords = 0;
     private long lastGeneration = 0;
     private Profiler profiler;
     private Random random = new Random(87);
 
+    /**
+     * Extracts templates for id, base and content and parses them into tokens.
+     * The generator is ready for use after this.
+     * @param conf the configuration for the generator.
+     * @throws ConfigurationException if the configuration contained errors.
+     */
     public RecordGenerator(Configuration conf) throws ConfigurationException {
         this.conf = conf;
+        String contentTemplate;
         try {
             if (conf.valueExists(CONF_CONTENT_TEMPLATE_LOCATION)) {
                 contentTemplate = Resolver.getUTF8Content(
@@ -211,13 +215,273 @@ public class RecordGenerator implements ObjectFilter {
                     "Could not resolve template at '"
                     + conf.getString(CONF_CONTENT_TEMPLATE_LOCATION));
         }
-        baseTemplate = conf.getString(CONF_BASE_TEMPLATE, baseTemplate);
-        idTemplate = conf.getString(CONF_ID_TEMPLATE, idTemplate);
+        String idTemplate = conf.getString(CONF_ID_TEMPLATE,
+                                           DEFAULT_ID_TEMPLATE);
+        String baseTemplate = conf.getString(CONF_BASE_TEMPLATE, DEFAULT_BASE);
         maxRecords = conf.getInt(CONF_RECORDS, maxRecords);
         minDelay = conf.getInt(CONF_MINDELAY, minDelay);
+        idTokens = parseTemplate(idTemplate);
+        baseTokens = parseTemplate(baseTemplate);
+        contentTokens = parseTemplate(contentTemplate);
+
         profiler = new Profiler();
         profiler.setExpectedTotal(maxRecords);
         profiler.setBpsSpan(Math.max(3, Math.min(1000, maxRecords / 100)));
+    }
+
+    private Pattern PATTERN_GENERIC =
+            Pattern.compile("(\\$([A-Z]|_)+?\\[.*?\\])", Pattern.DOTALL);
+    private List<RecordToken> parseTemplate(String template) {
+        int lastEnd = 0;
+        List<RecordToken> tokens = new ArrayList<RecordToken>(100);
+        List<RecordToken> factories = new ArrayList<RecordToken>(10);
+        factories.add(new IncrementalNumberToken());
+        factories.add(new TimestampToken());
+        factories.add(new RandomIntToken());
+        factories.add(new RandomCharsToken());
+        factories.add(new RandomWordsToken());
+        factories.add(new WordListToken());
+        factories.add(new LiteralToken());
+
+        Matcher matcher = PATTERN_GENERIC.matcher(template);
+        while (matcher.find()) {
+            if (log.isTraceEnabled()) {
+                log.trace(String.format(
+                        "Parser matched generic pattern at pos(%d, %d) with "
+                          + "content '%s'",
+                        matcher.start(1), matcher.end(1), matcher.group(1)));
+            }
+            if (matcher.start(1) > lastEnd) {
+                tokens.add(new LiteralToken(
+                        template.substring(lastEnd, matcher.start(1))));
+            }
+            for (RecordToken tokenFactory: factories) {
+                RecordToken token =
+                        tokenFactory.createTokenIfMatch(matcher.group(1));
+                if (token != null) {
+                    tokens.add(token);
+                    break;
+                }
+            }
+            lastEnd = matcher.end(1);
+        }
+        if (lastEnd != template.length()) {
+            tokens.add(new LiteralToken(
+                    template.substring(lastEnd, template.length())));
+        }
+        log.debug("Constructed " + tokens.size() + " tokens");
+        return tokens;
+    }
+
+    static interface RecordToken {
+        public String getContent();
+        public RecordToken createTokenIfMatch(String template);
+    }
+
+    class IncrementalNumberToken implements RecordToken {
+        private String key;
+        public IncrementalNumberToken() { }
+        public IncrementalNumberToken(String key) {
+            log.debug("Creating IncrementalNumberToken(" + key + ")");
+            this.key = key;
+            if (!incrementalNumbers.containsKey(key)) {
+                incrementalNumbers.put(key, 0);
+            }
+        }
+        public String getContent() {
+            int counter = incrementalNumbers.get(key);
+            incrementalNumbers.put(key, counter+1);
+            return Integer.toString(counter);
+        }
+        public RecordToken createTokenIfMatch(String template) {
+            Matcher incrementalNumber =
+                    PATTERN_INCREMENTAL_NUMBER.matcher(template);
+            if (!incrementalNumber.matches()) {
+                 return null;
+            }
+            return new IncrementalNumberToken(incrementalNumber.group(2));
+        }
+    }
+
+    class TimestampToken implements RecordToken {
+        private String unit;
+
+        public TimestampToken() { }
+        public TimestampToken(String unit) {
+            log.debug("Creating TimestampToken(" + unit + ")");
+            this.unit = unit;
+        }
+        public String getContent() {
+            if ("ms".equals(unit)) {
+                return Long.toString(System.currentTimeMillis());
+            } else if ("iso".equals(unit)) {
+                return String.format("%1$tY%1$tm%1$td-%1$tH%1$tM%1$tS.%1$tL",
+                                      System.currentTimeMillis());
+            } else {
+                throw new IllegalArgumentException(
+                        "The unit '" + unit + "' for " + CONTENT_TIMESTAMP
+                        + " is not supported");
+            }
+        }
+        public TimestampToken createTokenIfMatch(String template) {
+            Matcher matcher = PATTERN_TIMESTAMP.matcher(template);
+            if (!matcher.matches()) {
+                 return null;
+            }
+            return new TimestampToken(matcher.group(2).toLowerCase());
+        }
+    }
+
+    class RandomIntToken implements RecordToken {
+        private int min;
+        private int max;
+        public RandomIntToken() { }
+        public RandomIntToken(int min, int max) {
+            log.debug("Creating RandomIntToken(" + min + ", " + max + ")");
+            this.min = min;
+            this.max = max;
+        }
+        public String getContent() {
+            return Integer.toString(getRandomInt(min, max));
+        }
+        public RecordToken createTokenIfMatch(String template) {
+            Matcher matcher =
+                    PATTERN_RANDOM_NUMBER.matcher(template);
+            if (!matcher.matches()) {
+                 return null;
+            }
+            int min = Integer.parseInt(matcher.group(2));
+            int max = Integer.parseInt(matcher.group(3));
+            return new RandomIntToken(min, max);
+        }
+    }
+
+    class RandomCharsToken implements RecordToken {
+        private int min;
+        private int max;
+        private boolean onlyLetters;
+        public RandomCharsToken() { }
+        public RandomCharsToken(int min, int max, boolean onlyLetters) {
+            log.debug("Creating RandomCharsToken(" + min + ", " + max + ", "
+                      + onlyLetters + ")");
+            this.min = min;
+            this.max = max;
+            this.onlyLetters = onlyLetters;
+        }
+        public String getContent() {
+            return randomChars(min, max, onlyLetters);
+        }
+        public RecordToken createTokenIfMatch(String template) {
+            Matcher matcher =
+                    PATTERN_RANDOM_CHARS.matcher(template);
+            if (!matcher.matches()) {
+                 return null;
+            }
+            int min = Integer.parseInt(matcher.group(2));
+            int max = Integer.parseInt(matcher.group(3));
+            boolean onlyLetters = Boolean.parseBoolean(matcher.group(4));
+            return new RandomCharsToken(min, max, onlyLetters);
+        }
+    }
+
+    class RandomWordsToken implements RecordToken {
+        private int min;
+        private int max;
+        private int minLength;
+        private int maxLength;
+        boolean onlyLetters;
+        public RandomWordsToken() { }
+        public RandomWordsToken(int min, int max, int minLength, int maxLength,
+                                boolean onlyLetters) {
+            log.debug("Creating RandomWordsToken(" + min + ", " + max + ", "
+                      + minLength + ", " + maxLength + ", " + onlyLetters
+                      + ")");
+            this.min = min;
+            this.max = max;
+            this.minLength = minLength;
+            this.maxLength = maxLength;
+            this.onlyLetters = onlyLetters;
+        }
+        public String getContent() {
+            int wordCount = getRandomInt(min, max);
+            StringWriter sw = new StringWriter(wordCount * maxLength);
+            for (int i = 0 ; i < wordCount ; i++) {
+                int length = getRandomInt(minLength, maxLength);
+                randomChars(sw, length, onlyLetters);
+                if (i < wordCount-1) {
+                    sw.append(" ");
+                }
+            }
+            return sw.toString();
+        }
+        public RecordToken createTokenIfMatch(String template) {
+            Matcher matcher =
+                    PATTERN_RANDOM_WORDS.matcher(template);
+            if (!matcher.matches()) {
+                 return null;
+            }
+            int min = Integer.parseInt(matcher.group(2));
+            int max = Integer.parseInt(matcher.group(3));
+            int minLength = Integer.parseInt(matcher.group(4));
+            int maxLength = Integer.parseInt(matcher.group(5));
+            boolean onlyLetters = Boolean.parseBoolean(matcher.group(6));
+            return new RandomWordsToken(min, max, minLength, maxLength,
+                                        onlyLetters);
+        }
+    }
+
+    class WordListToken implements RecordToken {
+        private int min;
+        private int max;
+        private List<String> words;
+        public WordListToken() { }
+        public WordListToken(int min, int max, String listName) {
+            log.debug("Creating WordListToken(" + min + ", " + max + ", "
+                      + listName + ")");
+            this.min = min;
+            this.max = max;
+            words = getWords(listName);
+        }
+        public String getContent() {
+            int wordCount = getRandomInt(min, max);
+            StringWriter sw = new StringWriter(wordCount * 20);
+            for (int i = 0 ; i < wordCount ; i++) {
+                sw.append(words.get(random.nextInt(words.size())));
+                if (i < wordCount-1) {
+                    sw.append(" ");
+                }
+            }
+            return sw.toString();
+        }
+        public RecordToken createTokenIfMatch(String template) {
+            Matcher matcher =
+                    PATTERN_WORD_LIST.matcher(template);
+            if (!matcher.matches()) {
+                 return null;
+            }
+            int min = Integer.parseInt(matcher.group(2));
+            int max = Integer.parseInt(matcher.group(3));
+            String listName = matcher.group(4);
+            return new WordListToken(min, max, listName);
+        }
+    }
+
+    class LiteralToken implements RecordToken {
+        private String literal;
+        public LiteralToken() { }
+        public LiteralToken(String literal) {
+            log.debug("Creating LiteralToken(" + literal + ")");
+            this.literal = literal;
+        }
+        public String getContent() {
+            return literal;
+        }
+        public RecordToken createTokenIfMatch(String template) {
+            if (template.length() == 0) {
+                return null;
+            }
+            return new LiteralToken(template);
+        }
     }
 
     /* ObjectFilter interface */
@@ -293,9 +557,9 @@ public class RecordGenerator implements ObjectFilter {
     }
 
     private Payload generatePayload() {
-        String content = expand(contentTemplate);
-        String id = expand(idTemplate);
-        String base = expand(baseTemplate);
+        String id = expand(idTokens);
+        String base = expand(baseTokens);
+        String content = expand(contentTokens);
         try {
             return new Payload(new Record(id, base, content.getBytes("utf-8")));
         } catch (UnsupportedEncodingException e) {
@@ -304,77 +568,34 @@ public class RecordGenerator implements ObjectFilter {
         }
     }
 
-    public String expand(String template) {
-        if (!template.contains("$")) { // Trivial case
-            return template;
+    /**
+     * Creates a a String based on a parsed template.
+     * @param tokens a template parsed to {@link RecordToken}s.
+     * @return pseudo-random content.
+     */
+    public String expand(List<RecordToken> tokens) {
+        StringWriter sw = new StringWriter(5000);
+        for (RecordToken token: tokens) {
+            sw.append(token.getContent());
         }
-        template = expandIncremental(template);
-        template = expandRandomNumber(template);
-        template = expandRandomChars(template);
-        template = expandRandomWords(template);
-        template = expandWordList(template);
-        template = expandTimestamp(template);
-        return template;
+        return sw.toString();
+    }
+
+    /**
+     * Parses the template into tokens and calls {@link #expand(java.util.List)}
+     * with the tokens. This should only be used for one-time calls, such as
+     * testing.
+     * @param template the template for the content.
+     * @return pseudo-random content based on the given template.
+     */
+    public String expand(String template) {
+        return expand(parseTemplate(template));
     }
 
     private int getRandomInt(int min, int max) {
         return random.nextInt(max - min + 1) + min;
     }
 
-    private String expandIncremental(String template) {
-        while (true) {
-            Matcher incrementalNumber =
-                    PATTERN_INCREMENTAL_NUMBER.matcher(template);
-            if (!incrementalNumber.matches()) {
-                 break;
-            }
-            String key = incrementalNumber.group(2);
-            //log.trace("Got key " + key + " for incremental number");
-            Integer counter = incrementalNumbers.get(key);
-            if (counter == null) {
-                counter = 0;
-            }
-            incrementalNumbers.put(key, counter+1);
-            template = template.substring(0, incrementalNumber.start(1))
-                    + counter + template.substring(incrementalNumber.end(1),
-                                                   template.length());
-        }
-        return template;
-    }
-
-    private String expandRandomNumber(String template) {
-        while (true) {
-            Matcher matcher =
-                    PATTERN_RANDOM_NUMBER.matcher(template);
-            if (!matcher.matches()) {
-                 break;
-            }
-            int min = Integer.parseInt(matcher.group(2));
-            int max = Integer.parseInt(matcher.group(3));
-            int rand = getRandomInt(min, max);
-            template = template.substring(0, matcher.start(1))
-                       + rand + template.substring(matcher.end(1),
-                                                   template.length());
-        }
-        return template;
-    }
-
-    private String expandRandomChars(String template) {
-        while (true) {
-            Matcher matcher =
-                    PATTERN_RANDOM_CHARS.matcher(template);
-            if (!matcher.matches()) {
-                 break;
-            }
-            int min = Integer.parseInt(matcher.group(2));
-            int max = Integer.parseInt(matcher.group(3));
-            boolean onlyLetters = Boolean.parseBoolean(matcher.group(4));
-            template = template.substring(0, matcher.start(1))
-                       + randomChars(min, max, onlyLetters)
-                       + template.substring(matcher.end(1), template.length());
-        }
-        return template;
-    }
     private String randomChars(int min, int max, boolean onlyLetters) {
         int length = getRandomInt(min, max);
         StringWriter sw = new StringWriter(length);
@@ -389,65 +610,6 @@ public class RecordGenerator implements ObjectFilter {
                 sw.append((char)getRandomInt(33, 127));
             }
         }
-    }
-
-    private String expandRandomWords(String template) {
-        while (true) {
-            Matcher matcher =
-                    PATTERN_RANDOM_WORDS.matcher(template);
-            if (!matcher.matches()) {
-                 break;
-            }
-            int min = Integer.parseInt(matcher.group(2));
-            int max = Integer.parseInt(matcher.group(3));
-            int minLength = Integer.parseInt(matcher.group(4));
-            int maxLength = Integer.parseInt(matcher.group(5));
-            boolean onlyLetters = Boolean.parseBoolean(matcher.group(6));
-
-            int wordCount = getRandomInt(min, max);
-            StringWriter sw = new StringWriter(wordCount * maxLength);
-            for (int i = 0 ; i < wordCount ; i++) {
-                int length = getRandomInt(minLength, maxLength);
-                randomChars(sw, length, onlyLetters);
-                if (i < wordCount-1) {
-                    sw.append(" ");
-                }
-            }
-
-            template = template.substring(0, matcher.start(1))
-                       + sw.toString()
-                       + template.substring(matcher.end(1), template.length());
-        }
-        return template;
-    }
-
-    private String expandWordList(String template) {
-        while (true) {
-            Matcher matcher =
-                    PATTERN_WORD_LIST.matcher(template);
-            if (!matcher.matches()) {
-                 break;
-            }
-            int min = Integer.parseInt(matcher.group(2));
-            int max = Integer.parseInt(matcher.group(3));
-            String listName = matcher.group(4);
-
-            List<String> words = getWords(listName);
-
-            int wordCount = getRandomInt(min, max);
-            StringWriter sw = new StringWriter(wordCount * 20);
-            for (int i = 0 ; i < wordCount ; i++) {
-                sw.append(words.get(random.nextInt(words.size())));
-                if (i < wordCount-1) {
-                    sw.append(" ");
-                }
-            }
-
-            template = template.substring(0, matcher.start(1))
-                       + sw.toString()
-                       + template.substring(matcher.end(1), template.length());
-        }
-        return template;
     }
 
     private Map<String, List<String>> words =
@@ -466,29 +628,4 @@ public class RecordGenerator implements ObjectFilter {
         return result;
     }
 
-    private String expandTimestamp(String template) {
-        while (true) {
-            Matcher matcher = PATTERN_TIMESTAMP.matcher(template);
-            if (!matcher.matches()) {
-                 break;
-            }
-            String unit = matcher.group(2).toLowerCase();
-            String value;
-
-            if ("ms".equals(unit)) {
-                value = Long.toString(System.currentTimeMillis());
-            } else if ("iso".equals(unit)) {
-                value = String.format("%1$tY%1$tm%1$td-%1$tH%1$tM%1$tS.%1$tL",
-                                      System.currentTimeMillis());
-            } else {
-                throw new IllegalArgumentException(
-                        "The unit '" + unit + "' for " + CONTENT_TIMESTAMP
-                        + " is not supported");
-            }
-            template = template.substring(0, matcher.start(1))
-                       + value
-                       + template.substring(matcher.end(1), template.length());
-        }
-        return template;
-    }
 }
