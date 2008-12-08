@@ -27,14 +27,12 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.filter.object.MUXFilter;
-import dk.statsbiblioteket.summa.common.filter.object.MUXFilterFeeder;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.control.api.Service;
 import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.control.service.StorageService;
 import dk.statsbiblioteket.summa.control.service.FilterService;
 import dk.statsbiblioteket.summa.control.service.SearchService;
-import dk.statsbiblioteket.summa.index.XMLTransformer;
 import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.summa.ingest.stream.FileReader;
 import dk.statsbiblioteket.summa.search.api.SearchClient;
@@ -50,7 +48,6 @@ import java.io.StringWriter;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
-import java.net.URL;
 
 /**
  * Performs ingest, index and search on multiple sources using the MUXFilter.
@@ -209,9 +206,9 @@ public class MultipleSourcesTest extends NoExitTestCase {
         }
     }
 
-    private Pattern HITCOUNT_PATTERN =
+    private static Pattern HITCOUNT_PATTERN =
             Pattern.compile(".+hitCount\\=\\\"([0-9]+)\\\".+", Pattern.DOTALL);
-    private int getSearchResultCount(String searchResult) {
+    public static int getSearchResultCount(String searchResult) {
         Matcher matcher = HITCOUNT_PATTERN.matcher(searchResult);
         assertTrue("We should always be capable of determining hitCount",
                    matcher.matches());
@@ -340,12 +337,12 @@ public class MultipleSourcesTest extends NoExitTestCase {
         indexConf.getSubConfiguration("SingleChain").
                 getSubConfiguration("Muxer").
                 set(MUXFilter.CONF_FILTERS, sources);
-        for (String source: sources) {
+/*        for (String source: sources) {
             log.trace("Updating index conf with source " + source);
             Configuration sourceConf =
                     indexConf.getSubConfiguration("SingleChain").
                             getSubConfiguration("Muxer").
-                            getSubConfiguration(source);
+                            getSubConfiguration(source);*/
 /*            sourceConf.set(MUXFilterFeeder.CONF_FILTER_CLASS,
                            XMLTransformer.class.getName());
             sourceConf.set(MUXFilterFeeder.CONF_FILTER_NAME,
@@ -365,7 +362,7 @@ public class MultipleSourcesTest extends NoExitTestCase {
                     "The XSLT for source %s should exist at the relative "
                     + "location %s", source, xsltRelativeLocation), sourceXSLT);
             sourceConf.set(XMLTransformer.CONF_XSLT, sourceXSLT.getFile());*/
-        }
+        //}
 
         String indexDescriptorLocation = new File(
                 ReleaseTestCommon.DATA_ROOT,
