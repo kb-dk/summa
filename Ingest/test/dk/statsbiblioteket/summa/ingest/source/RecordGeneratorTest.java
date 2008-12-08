@@ -72,6 +72,8 @@ public class RecordGeneratorTest extends TestCase {
                 + "Random number: $RANDOM_NUMBER[5, 10]\n"
                 + "Random chars: $RANDOM_CHARS[2, 6, false]\n"
                 + "Random chars only letters: $RANDOM_CHARS[2, 6, true]\n"
+                + "Timestamp (ms): $TIMESTAMP[ms]\n"
+                + "Timestamp (iso): $TIMESTAMP[iso]\n"
                 + "Random words: $RANDOM_WORDS[1, 3, 5, 7, false]\n"
                 + "Random words only letters: $RANDOM_WORDS[1, 3, 5, 7, true]\n"
                 + "Word list: $WORD_LIST[2, 3, mylist]";

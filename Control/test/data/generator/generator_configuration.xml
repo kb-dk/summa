@@ -47,7 +47,7 @@
                         </entry>
                         <entry>
                             <key>summa.ingest.generator.idtemplate</key>
-                            <value class="string">fagref:dummy_$INCREMENTAL_NUMBER[id]</value>
+                            <value class="string">fagref:dummy_$TIMESTAMP[ms]_$INCREMENTAL_NUMBER[id]</value>
                         </entry>
                         <entry>
                             <key>summa.ingest.generator.delay</key>
@@ -55,7 +55,7 @@
                         </entry>
                         <entry>
                             <key>summa.ingest.generator.records</key>
-                            <value class="int">500</value>
+                            <value class="int">10000</value>
                         </entry>
                         <entry>
                             <key>summa.ingest.generator.base</key>

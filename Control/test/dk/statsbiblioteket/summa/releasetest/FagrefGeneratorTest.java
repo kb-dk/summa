@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -102,7 +102,7 @@ public class FagrefGeneratorTest extends NoExitTestCase {
                               "Astronomi", "Tryllebær", "Tegneserier",
                               "Palæontologi", "Drømme", "Kaslafniansk")));
         conf.set(RecordGenerator.CONF_CONTENT_TEMPLATE_LOCATION,
-                 "/data/generator/fagref_template.xml");
+                 "data/generator/fagref_template.xml");
         return new RecordGenerator(conf);
     }
 

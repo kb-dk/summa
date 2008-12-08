@@ -124,6 +124,25 @@ public class RecordGenerator implements ObjectFilter {
             new HashMap<String, Integer>(10);
 
     /**
+     * All occurences of "$TIMESTAMP[unit]" will be replaced by the current time
+     * as dictated by unit. Valid units are<br />
+     * ms: System.currentTimeMillis.<br />
+     * iso: YYYYMMDD-HHmmSS.ms (example: 20081108-103945.123).<br />
+     * Note that the granularity of ms will often be too large for creating
+     * uniqueue ids, so creating an {@link #CONF_ID_TEMPLATE} of
+     * "myPrefix_$TIMESTAMP[ms]" is normally a bad idea. Use
+     * "myPrefix_$TIMESTAMP[ms]$INCREMENTAL_COUNTER[idCounter]" instead.
+     * </p><p>
+     * Note: It takes considerable power to format the timestamp as iso.
+     * If the goal is to produce thousands of test-records on 2008-level
+     * hardware, it might wise to avoid this unit.
+     */
+    public static final String CONTENT_TIMESTAMP =
+            "$TIMESTAMP";
+    private Pattern PATTERN_TIMESTAMP =
+            Pattern.compile(".*?(\\$TIMESTAMP\\[(\\w+)\\]).*", Pattern.DOTALL);
+
+    /**
      * All occurences of "$RANDOM_NUMBER[min, max]" will be replaced by a random
      * integer from min to max (both inclusive).
      */
@@ -294,6 +313,7 @@ public class RecordGenerator implements ObjectFilter {
         template = expandRandomChars(template);
         template = expandRandomWords(template);
         template = expandWordList(template);
+        template = expandTimestamp(template);
         return template;
     }
 
@@ -444,5 +464,31 @@ public class RecordGenerator implements ObjectFilter {
             words.put(listName, result);
         }
         return result;
+    }
+
+    private String expandTimestamp(String template) {
+        while (true) {
+            Matcher matcher = PATTERN_TIMESTAMP.matcher(template);
+            if (!matcher.matches()) {
+                 break;
+            }
+            String unit = matcher.group(2).toLowerCase();
+            String value;
+
+            if ("ms".equals(unit)) {
+                value = Long.toString(System.currentTimeMillis());
+            } else if ("iso".equals(unit)) {
+                value = String.format("%1$tY%1$tm%1$td-%1$tH%1$tM%1$tS.%1$tL",
+                                      System.currentTimeMillis());
+            } else {
+                throw new IllegalArgumentException(
+                        "The unit '" + unit + "' for " + CONTENT_TIMESTAMP
+                        + " is not supported");
+            }
+            template = template.substring(0, matcher.start(1))
+                       + value
+                       + template.substring(matcher.end(1), template.length());
+        }
+        return template;
     }
 }

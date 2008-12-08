@@ -258,11 +258,16 @@ public class IndexTest extends NoExitTestCase {
         return storage;
     }
 
-    public static void waitForService(FilterService service) 
+    public static void waitForService(FilterService service)
                                   throws RemoteException, InterruptedException {
-        int TIMEOUT = 1000000;
-        long endTime = System.currentTimeMillis() + TIMEOUT;
-        log.debug("Waiting a maximum of " + TIMEOUT + " ms for service");
+        int TIMEOUT = 10000;
+        waitForService(service, TIMEOUT);
+    }
+
+    public static void waitForService(FilterService service, int timeout)
+                                  throws RemoteException, InterruptedException {
+        long endTime = System.currentTimeMillis() + timeout;
+        log.debug("Waiting a maximum of " + timeout + " ms for service");
         while (!service.getStatus().getCode().equals(Status.CODE.stopped) &&
                System.currentTimeMillis() < endTime) {
             log.trace("Sleeping a bit");
@@ -300,7 +305,7 @@ public class IndexTest extends NoExitTestCase {
                     descriptorLocation.getFile());
         FilterService indexService = new FilterService(conf);
         indexService.start();
-        waitForService(indexService);
+        waitForService(indexService, Integer.MAX_VALUE);
         indexService.stop();
     }
 }

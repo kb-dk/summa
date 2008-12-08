@@ -539,7 +539,9 @@ public class IndexControllerImpl extends StateThread implements
         if (log.isDebugEnabled()) {
             //noinspection DuplicateStringLiteralInspection
             log.debug("update(" + payload + ") finished - update count for the "
-                      + "current location is " + profiler.getBeats());
+                      + "current location is " + profiler.getBeats()
+                      + " at current rate " + profiler.getBps(true)
+                      + " records/sec");
         }
         return requestCommit;
     }
