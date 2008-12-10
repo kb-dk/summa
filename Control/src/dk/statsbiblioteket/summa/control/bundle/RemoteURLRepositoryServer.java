@@ -15,8 +15,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * A {@link dk.statsbiblioteket.summa.control.api.bundle.BundleRepository} exposing an RMI interface. It wraps
- * a child {@link URLRepository} soring the bundles.
+ * A {@link dk.statsbiblioteket.summa.control.api.bundle.BundleRepository}
+ * exposing an RMI interface. It wraps a child {@link URLRepository} storing
+ * the bundles.
  */
 public class RemoteURLRepositoryServer extends UnicastRemoteObject
                                        implements RemoteRepository,

@@ -104,7 +104,7 @@ public class RecordGenerator implements ObjectFilter {
     public static final String CONF_ID_TEMPLATE =
             "summa.ingest.generator.idtemplate";
     public static final String DEFAULT_ID_TEMPLATE =
-            "dummy_$INCREMENTAL_NUMBER[id]";
+            "dummy_$TIMESTAMP[ms]_$INCREMENTAL_NUMBER[id]";
 
     /**
      * All occurences of "$INCREMENTAL_NUMBER[key]" will be replaced by an
@@ -160,10 +160,11 @@ public class RecordGenerator implements ObjectFilter {
                     Pattern.DOTALL);
 
     /**
-     * All occurences of "$RANDOM_WORDS[min, max, minlength, maxlength]" will be
+     * All occurences of
+     * "$RANDOM_WORDS[min, max, minlength, maxlength, onlyLetters]" will be
      * replaced by a random number of words, where the number of words go from
      * min to max, where each word will have a length going from minlength to
-     * maxlength. If onlyletters is true, only a-z will be generated.
+     * maxlength. If onlyLetters is true, only a-z will be generated.
      */
     public static final String CONTENT_RANDOM_WORDS = "$RANDOM_WORDS";
     private static Pattern PATTERN_RANDOM_WORDS =
