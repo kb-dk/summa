@@ -100,6 +100,11 @@ public class BundleLoader implements Configurable {
             log.trace("Added JVM arg " + arg);
         }
 
+        /* Add explicit JVM args */
+        for (String arg : builder.getJvmArgs()) {
+            jvmArgs.add(arg);
+        }
+
         log.trace("Returning BundleStub for instance '"
                   + builder.getInstanceId() + "' of '"
                   + builder.getBundleId() + "'");

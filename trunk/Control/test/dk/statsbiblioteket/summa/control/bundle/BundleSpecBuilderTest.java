@@ -10,6 +10,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.Arrays;
 
 public class BundleSpecBuilderTest extends TestCase {
 
@@ -25,6 +26,8 @@ public class BundleSpecBuilderTest extends TestCase {
     + "  <description>myDescription</description>\n"
     + "  <property name=\"myProp1\" value=\"myProp1Value\"/>\n"
     + "  <property name=\"myProp2\" value=\"myProp2Value\"/>\n"
+    + "  <jvmArg>-Xmx64m</jvmArg>\n"
+    + "  <jvmArg>-Xms32m</jvmArg>\n"
     + "  <publicApi>\n"
     + "    <file>myLib-1.1.jar</file>\n"
     + "  </publicApi>\n"
@@ -150,6 +153,9 @@ public class BundleSpecBuilderTest extends TestCase {
 
         assertEquals("myProp1Value", b.getProperty("myProp1"));
         assertEquals("myProp2Value", b.getProperty("myProp2"));
+
+        assertEquals(Arrays.asList("-Xmx64m", "-Xms32m"),
+                     b.getJvmArgs());
         try {
             b.getProperty("myPropNonExistant");
             fail("Retrieving a non-existing property should raise a NPE");

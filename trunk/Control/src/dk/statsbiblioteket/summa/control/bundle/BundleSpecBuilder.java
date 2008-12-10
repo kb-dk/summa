@@ -34,12 +34,14 @@ public class BundleSpecBuilder {
     private boolean autoStart;
     private Bundle.Type bundleType;
     private Configuration properties;
+    private List<String> jvmArgs;
     private HashSet<String> fileSet;
     private HashSet<String> apiSet;
 
     public BundleSpecBuilder () {
         bundleType = Bundle.Type.SERVICE;
         properties = Configuration.newMemoryBased();
+        jvmArgs = new ArrayList<String>();
         fileSet = new HashSet<String>();
         apiSet = new HashSet<String>();
         autoStart = false;
@@ -82,6 +84,9 @@ public class BundleSpecBuilder {
     public boolean hasApi (String jarFile) { return apiSet.contains(jarFile); }
     public Collection<String> getApi () { return apiSet; }
 
+    public List<String> getJvmArgs () { return jvmArgs; }
+    public void addJvmArg (String arg) { jvmArgs.add(arg); }
+
     public void write (OutputStream out) throws IOException {
         if (out == null) {
             throw new NullPointerException("output argument is null");
@@ -119,6 +124,12 @@ public class BundleSpecBuilder {
 
             if (description != null) {
                 out.println ("  <description>" + description + "</description>");
+            }
+
+            if (!jvmArgs.isEmpty()) {
+                for (String arg : jvmArgs) {
+                    out.println("  <jvmArg>" + arg + "</jvmArg>");
+                }
             }
 
             if (properties.getStorage().size() != 0) {
@@ -331,6 +342,8 @@ public class BundleSpecBuilder {
                 readFilelist (node);
             } else if ("publicApi".equals(node.getNodeName())) {
                 readPublicApi (node);
+            } else if ("jvmArg".equals(node.getNodeName())) {
+                addJvmArg(node.getTextContent());
             } else if ("property".equals(node.getNodeName())) {
                 String name = node.getAttributes().getNamedItem("name").getNodeValue();
                 String value = node.getAttributes().getNamedItem("value").getNodeValue();
