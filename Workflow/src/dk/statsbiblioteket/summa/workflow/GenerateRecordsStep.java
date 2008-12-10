@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -31,12 +31,18 @@ import org.apache.commons.logging.Log;
 import java.io.IOException;
 
 /**
- * A {@link WorkflowStep} that adds a number of template-based pseudo-random
+ * A {@link WorkflowStep} that commits a number of template-based pseudo-random
  * records to a given storage.
  * </p><p>
  * The properties for the step is the properties from {@link RecordGenerator}
  * combined with the properties from {@link StorageWriterClient} (basically
  * this means {@link ConnectionConsumer#CONF_RPC_TARGET}).
+ * <p/>
+ * Records are committed in batches in a size specified by the
+ * {@link #CONF_BATCH_SIZE} property in each invocation of {@link #run()} .
+ * This means that one will have to invoke the {@code run()} method
+ * {@link RecordGenerator#CONF_RECORDS}/{@link #CONF_BATCH_SIZE} times before
+ * the record generator is depleted.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -44,21 +50,42 @@ import java.io.IOException;
 public class GenerateRecordsStep implements WorkflowStep {
     private static Log log = LogFactory.getLog(GenerateRecordsStep.class);
 
+    /**
+     * The number of records to extract in each invocation of the {@link #run()}
+     * method. Default value is {@link #DEFAULT_BATCH_SIZE}.
+     */
+    public static final String CONF_BATCH_SIZE =
+                                "summa.workflow.step.generaterecords.batchsize";
+
+    /**
+     * Default value for the {@link #CONF_BATCH_SIZE} property
+     */
+    public static final int DEFAULT_BATCH_SIZE = 100;
+
     private RecordGenerator generator;
     private StorageWriterClient writer;
+    private int batchSize;
 
     public GenerateRecordsStep(Configuration conf) {
         generator = new RecordGenerator(conf);
         writer = new StorageWriterClient(conf);
+        batchSize = conf.getInt(CONF_BATCH_SIZE, DEFAULT_BATCH_SIZE);
         log.debug("Generated GenerateRecordsStep");
     }
 
     public void run() {
+        if (generator == null) {
+            log.trace("Record generator depleted");
+            return;
+        }
+
         log.debug("Starting record generation");
         Profiler profiler = new Profiler();
         profiler.setBpsSpan(1000);
         int feedback = 1000;
-        while (generator.hasNext()) {
+        int count = 0;
+        while (generator.hasNext() && count < batchSize) {
+            count++;
             try {
                 writer.flush(generator.next().getRecord());
                 profiler.beat();
@@ -72,11 +99,17 @@ public class GenerateRecordsStep implements WorkflowStep {
                         "Exception while flushing record", e);
             }
         }
-        log.info(String.format(
-                "Finished creating %d records in %s, total average speed %s "
-                + "records/second with an average speed for the last 1000 "
-                + "records of %s",
-                profiler.getBeats(), profiler.getSpendTime(),
-                profiler.getBps(false), profiler.getBps(true)));
+
+        // Reset our selves if generator is depleted
+        if (!generator.hasNext()) {
+            log.info(String.format(
+                    "Record generator depleted. Created "
+                    + "%d records in %s, total average speed %s"
+                    + " records/second with an average speed for the last 1000"
+                    + " records of %s",
+                    profiler.getBeats(), profiler.getSpendTime(),
+                    profiler.getBps(false), profiler.getBps(true)));
+            generator = null;
+        }
     }
 }

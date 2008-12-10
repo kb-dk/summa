@@ -1,0 +1,88 @@
+<xproperties>
+
+    <!--
+         A workflow pushing 10 random records to a designated storage, pausing
+         5s and pushing another batch of records in a continous loop
+    -->
+
+    <xproperties>
+        <!-- Loop the workflow -->
+        <entry>
+            <key>summa.workflow.loop</key>
+            <value class="boolean">true</value>
+        </entry>
+
+        <!-- List of steps to perform -->
+        <entry>
+            <key>summa.workflow.steps</key>
+            <value class="list">
+
+                <!-- the Wait step -->
+                <xproperties>
+                    <entry>
+                        <key>summa.workflow.step.class</key>
+                        <value class="string">
+                            dk.statsbiblioteket.summa.workflow.WaitStep
+                        </value>
+                    </entry>
+
+                    <!-- Number of seconds to pause -->
+                    <entry>
+                        <key>summa.workflow.step.wait.time</key>
+                        <value class="int">5</value>
+                    </entry>
+                </xproperties>
+
+                <!-- Record generation step -->
+                <xproperties>
+                    <entry>
+                        <key>summa.workflow.step.class</key>
+                        <value class="string">
+                            dk.statsbiblioteket.summa.workflow.GenerateRecordsStep
+                        </value>
+                    </entry>
+
+                    <!-- Number of records to commit per run -->
+                    <entry>
+                        <key>summa.workflow.step.generaterecords.batchsize</key>
+                        <value class="int">10</value>
+                    </entry>
+
+                    <!-- The storage module to talk to -->
+                    <entry>
+                        <key>summa.rpc.vendor</key>
+                        <value class="string">
+                            //localhost:28000/summa-storage
+                        </value>
+                    </entry>
+
+                    <!-- Configuration for the embedded RecordGenerator -->
+                    <entry>
+                        <key>summa.ingest.generator.records</key>
+                        <value class="int">100</value>
+                    </entry>
+                    <entry>
+                        <key>summa.ingest.generator.template</key>
+                        <value class="string">
+                            Record $INCREMENTAL_NUMBER[recCount]: $RANDOM_WORDS[1, 20, 1, 10]
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>summa.ingest.generator.idtemplate</key>
+                        <value class="string">
+                            dummy_$INCREMENTAL_NUMBER[recId]
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>summa.ingest.generator.base</key>
+                        <value class="string">
+                            dummy
+                        </value>
+                    </entry>
+                </xproperties>
+            </value>
+        </entry>
+    </xproperties>
+</xproperties>
+
+
