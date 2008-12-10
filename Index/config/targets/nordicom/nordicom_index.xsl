@@ -12,14 +12,12 @@
     <xsl:include href="nordicom_title.xsl" />
     <xsl:include href="nordicom_subject.xsl" />
     <xsl:include href="nordicom_publisher.xsl" />
-    <!-- <xsl:include href="nordicom_other.xsl" />
+    <xsl:include href="nordicom_other.xsl" />
     <xsl:include href="nordicom_notes.xsl" />
-    <xsl:include href="nordicom_relations.xsl" />
-    <xsl:include href="nordicom_classification.xsl" />
-    <xsl:include href="nordicom_identificers.xsl" />
+  <!--   <xsl:include href="nordicom_identificers.xsl" />
     <xsl:include href="nordicom_material.xsl" />
-    <xsl:include href="nordicom_lcl.xsl" />
-    <xsl:include href="nordicom_lma.xsl" /> -->
+    <xsl:include href="nordicom_lcl.xsl" /> -->
+    <xsl:include href="nordicom_lma.xsl" />
 
 
     <xsl:output version="1.0" encoding="UTF-8" indent="yes" method="xml"/>
@@ -37,14 +35,11 @@
                     <xsl:call-template name="title" />
                     <xsl:call-template name="subject" />
                     <xsl:call-template name="publication_data" />
-                    <!-- <xsl:call-template name="other" />
+                    <xsl:call-template name="other" />
                     <xsl:call-template name="notes" />
-                    <xsl:call-template name="relations" />
-                    <xsl:call-template name="classification" />
-
-                    <xsl:call-template name="material" />
-                    <xsl:call-template name="lcl" />
-                    <xsl:call-template name="lma" />   -->
+                   <!--   <xsl:call-template name="material" />
+                    <xsl:call-template name="lcl" /> -->
+                    <xsl:call-template name="lma" />
 
                     <!--
 
