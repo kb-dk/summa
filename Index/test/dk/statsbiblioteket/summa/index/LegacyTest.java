@@ -45,6 +45,10 @@ public class LegacyTest  extends TestCase {
         super(name);
     }
 
+    /*
+     * Converts xmlResource using the given XSLT, creating a Record with the
+     * given id.
+     */
     public String transform(String xmlResource, String id, URL xslt) throws
                                                                      Exception {
         String content = Streams.getUTF8Resource(xmlResource);
@@ -58,6 +62,18 @@ public class LegacyTest  extends TestCase {
         transformer.processPayload(payload);
         return payload.getRecord().getContentAsUTF8();
     }
+/*
+    public void testMultiVolume() throws Exception {
+        String CONCATENATED = "data/horizon/oldConcatenated.xml";
+        String EXPLICIT = "data/horizon/newExplicit.xml";
+        URL xslt = XMLTransformerTest.getURL("LegacyMultiVolumeConverter.xslt");
+
+        String transformed = transform(EXPLICIT, "horizon_multi", xslt);
+        String expected = Streams.getUTF8Resource(CONCATENATED);
+        // TODO: We need a proper XML comparator
+        assertEquals("The new style document should be as expected",
+                     expected, transformed);
+    }*/
 
     public void testFagref() throws Exception {
         String OLD_JENS = "data/fagref/jens.hansen.oldstyle.xml";

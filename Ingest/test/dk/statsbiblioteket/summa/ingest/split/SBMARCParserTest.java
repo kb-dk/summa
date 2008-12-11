@@ -96,7 +96,9 @@ public class SBMARCParserTest extends TestCase {
     }
 
     public void testSingleRecordExtraction() throws Exception {
-        String EXPECTED_ID = "sb:6661666";     // From one_book.xml, field 001*a
+//        String EXPECTED_ID = "sb:6661666";     // From one_book.xml, field 001*a
+        String EXPECTED_ID = "sb:3319632";     // From one_book.xml, field 994*z
+
         String EXPECTED_PARENT = "sb:aParent"; // From one_book.xml, field 014*a
         // From one_book.xml, field 015
         List<String> EXPECTED_CHILDREN = Arrays.asList(

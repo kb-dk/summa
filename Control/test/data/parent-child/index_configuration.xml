@@ -41,7 +41,7 @@
             <value class="xproperties">
                 <entry>
                     <key>summa.filter.sequence.filters</key>
-                    <value class="string">StorageReader, horizon, OldToNewTransformer, DocumentCreator, IndexUpdate</value>
+                    <value class="string">StorageReader, MultiVolumeLegacy, horizon, OldToNewTransformer, DocumentCreator, IndexUpdate</value>
                 </entry>
                 <entry>
                     <key>StorageReader</key>
@@ -81,6 +81,20 @@
                         <entry>
                             <key>summa.xmltransformer.xslt</key>
                             <value class="string">targets/horizon/horizon_index.xsl</value>
+                        </entry>
+                    </value>
+                </entry>
+
+                <entry>
+                    <key>MultiVolumeLegacy</key>
+                    <value class="xproperties">
+                        <entry>
+                            <key>summa.filter.sequence.filterclass</key>
+                            <value class="string">dk.statsbiblioteket.summa.index.XMLTransformer</value>
+                        </entry>
+                        <entry>
+                            <key>summa.xmltransformer.xslt</key>
+                            <value class="string">LegacyMultiVolumeConverter.xslt</value>
                         </entry>
                     </value>
                 </entry>

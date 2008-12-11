@@ -52,7 +52,8 @@ public class DescriptorConverterTest extends TestCase {
 
     public void testConvert() throws Exception {
         String old = Resolver.getUTF8Content(OLD_DESCRIPTOR);
-        log.info("New style:\n" + new DescriptorConverter().convert(old));
+        System.out.println("New style:\n"
+                           + new DescriptorConverter().convert(old));
     }
 
     public void testConvertNoComment() throws Exception {

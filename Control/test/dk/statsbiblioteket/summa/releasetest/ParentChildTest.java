@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -27,6 +27,7 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.control.service.StorageService;
 import dk.statsbiblioteket.summa.control.service.SearchService;
 import dk.statsbiblioteket.summa.control.service.FilterService;
@@ -36,6 +37,8 @@ import dk.statsbiblioteket.summa.ingest.stream.FileReader;
 import dk.statsbiblioteket.summa.search.api.SearchClient;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
+import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
@@ -74,6 +77,7 @@ public class ParentChildTest extends NoExitTestCase {
                  + storageProfiler.getSpendTime());
 
         performIngest();
+        testMultiExistence(storage);
 
         Profiler indexProfiler = new Profiler();
         performIndex();
@@ -88,22 +92,95 @@ public class ParentChildTest extends NoExitTestCase {
         log.info("Finished indexing in " + indexTime);
     }
 
+    public void testDump() throws Exception {
+        StorageService storage = OAITest.getStorageService();
+        performIngest();
+        dumpMultiRecord(storage, "horizon:parent1");
+    }
+
+    private void dumpMultiRecord(StorageService storage, String recordID)
+            throws IOException {
+        Record record = storage.getStorage().getRecord(recordID,
+                                                       Integer.MAX_VALUE);
+        System.out.print("Start ");
+        printRecord(record, 0);
+    }
+
+    private void printRecord(Record record, int level) {
+        System.out.println("record at level " + level);
+        System.out.println(record.getContentAsUTF8());
+        if (record.getParents() != null) {
+            for (Record parent: record.getParents()) {
+                System.out.print("\nParent ");
+                printRecord(parent, level+1);
+            }
+        }
+
+        if (record.getChildren() != null) {
+            for (Record child: record.getChildren()) {
+                System.out.print("\nChild ");
+                printRecord(child, level+1);
+            }
+        }
+    }
+
+    /*
+     * Verifies that the expected records are created and marked properly in
+     * Storage. See the readme.txt in data/parent-child/horizondump for details.
+     */
+    private void testMultiExistence(StorageService storageService) throws
+                                                                   Exception {
+        Storage storage = storageService.getStorage();
+        StorageIterator iterator = new StorageIterator(
+                storage, storage.getRecordsFromBase("horizon"));
+        int counter = 0;
+        while (iterator.hasNext()) {
+            counter++;
+            iterator.next();
+        }
+        assertEquals("There should be the correct number of records in storage",
+                     6, counter);
+    }
+
     private void testSearch() throws IOException {
         log.debug("Testing searching");
         SearchClient searchClient =
                 new SearchClient(Configuration.newMemoryBased(
                         ConnectionConsumer.CONF_RPC_TARGET,
                         "//localhost:28000/summa-searcher"));
-        String query = "Kaoskyllingen";
+
+        assertcount(searchClient, "basic test", "Kaoskyllingen", 2);
+
+        assertcount(searchClient,
+                    "child1 only parent", "Parental Mitzy Stardust", 1);
+        assertcount(searchClient,
+                    "child2 only parent", "Parental uundgåelige", 1);
+        assertcount(searchClient,
+                    "child2 all", "uundgåelige", 1);
+        assertcount(searchClient,
+                    "child4 only parent", "Parental reign", 1);
+        assertcount(searchClient,
+                    "child4 all", "reign", 1);
+    }
+
+    private void assertcount(SearchClient searchClient, String testCase,
+                             String query, int expectedHits) throws IOException{
+        String result = performSearch(searchClient, query);
+        int count = MultipleSourcesTest.getSearchResultCount(result);
+        assertEquals("The query '" + query + "' for the case '" + testCase
+                     + "' should yield the expected number of hits",
+                     expectedHits, count);
+    }
+
+    private String performSearch(SearchClient searchClient, String query)
+                                                            throws IOException {
         Request request = new Request();
         request.put(DocumentSearcher.SEARCH_QUERY, query);
         String result = searchClient.search(request).toXML();
         log.trace(String.format(
                 "Search result for query '%s' was:\n%s",
                 query, result));
-        int count = MultipleSourcesTest.getSearchResultCount(result);
-        assertEquals("The query 'Kaoskyllingen' should yield a single hit",
-                     1, count);
+        return result;
     }
 
     private void performIngest()  throws IOException, InterruptedException {
