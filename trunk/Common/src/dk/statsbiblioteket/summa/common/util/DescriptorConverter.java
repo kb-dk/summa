@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -231,6 +231,7 @@ public class DescriptorConverter {
 
     private void addExtras(Document doc, StringWriter out) {
         out.append("  <defaultLanguage>da</defaultLanguage>\n");
+        out.append("  <defaultSearchFields>\n");
         out.append("    <field ref=\"freetext\"/>\n");
         out.append("  </defaultSearchFields>\n");
         out.append("  <QueryParser defaultOperator=\"AND\"/>\n");
