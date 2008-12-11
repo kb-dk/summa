@@ -20,10 +20,12 @@
 package dk.statsbiblioteket.summa.ingest.split;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Record;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.log4j.Level;
 
 import javax.xml.stream.XMLStreamReader;
 import java.io.UnsupportedEncodingException;
@@ -135,6 +137,10 @@ public class SBMARCParser extends MARCParser {
             }
             return other.sortField == null ? 1 :
                    sortField.compareTo(other.sortField);
+        }
+
+        public String toString() {
+            return "child(" + id + ")";
         }
     }
 
@@ -295,6 +301,10 @@ public class SBMARCParser extends MARCParser {
                 childrenIDs.add(child.id);
             }
             record.setChildIds(childrenIDs);
+        }
+        if (log.isTraceEnabled()) {
+            Logs.log(log, Logs.Level.TRACE, "Children for Record " + id + ": ",
+                     children);
         }
         return record;
     }

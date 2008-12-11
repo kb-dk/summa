@@ -220,6 +220,7 @@ public class Record implements Serializable, Comparable{
      * @param parents       the ID for the parent record. {@link #parentIds}.
      * @param children     the ID's for the children records. {@link #childIds}.
      * @param meta         metadata for the Record.
+     * @param contentCompressed if true, content is GZipped.
      */
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public void init(String id, String base, boolean deleted, boolean indexable,
@@ -469,6 +470,7 @@ public class Record implements Serializable, Comparable{
 
         setParentIds(newParentIds);
         this.parents = parents;
+        
     }
 
     /**
@@ -621,19 +623,6 @@ public class Record implements Serializable, Comparable{
                       + ". Returning false", e);
             return false;
         }
-    }
-
-    /**
-     * As we cannot rely on the underlying storage for fine granularity of
-     * time, we use seconds when comparing timestamps.
-     * @param time1 a timestamp in milliseconds, as used by
-     *              System.currentTimeMsillis.
-     * @param time2 a timestamp in milliseconds, as used by
-     *              System.currentTimeMillis.
-     * @return true if the timestamps are equal down to second resolution.
-     */
-    private boolean timeEquals(long time1, long time2) {
-        return time1 / 1000 == time2 / 1000;
     }
 
     /**

@@ -1,57 +1,573 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <IndexDescriptor version="1.0" xmlns="http://statsbiblioteket.dk/summa/2008/IndexDescriptor">
-
-    <groups>
-        <group name="au">
-            <field ref="author_person"/>
-            <field ref="author_normalised"/>
-            <field ref="au_other"/>
-        </group>
-        <group name="ti">
-            <field ref="main_titel"/>
-            <field ref="sort_title"/>
-        </group>
-        <group name="su">
-            <field ref="lsu_oai"/>
-            <field ref="lsubject"/>
-            <field ref="subject_other"/>
-        </group>
-        <group name="lma">
-            <field ref="lma_long"/>
-        </group>
-    </groups>
-
-    <fields>
-        <!-- TODO: Check how defaultType="token" works -->
-        <field name="token" index="true" inFreeText="true" required="true"/>
-        <!-- TODO: Consider compression of shortformat -->
-        <field name="shortformat" parent="stored" indexed="false" inFreeText="false" required="true"/>
-
-        <field name="author_normalised" parent="token" multiValued="true" queryBoost="10"/>
-        <field name="author_person" parent="token" multiValued="true" queryBoost="10"/>
-        <field name="author_corporation" parent="token" multiValued="true"/>
-        <field name="au_other" parent="token" multiValued="true" queryBoost="5"/>
-
-        <field name="main_titel" parent="token" queryBoost="10"/>
-        <field name="sort_title" parent="keyword" sortLocale="da"/>
-
-        <field name="lsubject" parent="keyword" inFreeText="true" queryBoost="10"/>
-        <field name="subject_other" parent="keyword" inFreeText="true" queryBoost="10"/>
-        <field name="lsu_oai" parent="keyword" inFreeText="true" queryBoost="10"/>
-
-        <field name="no" parent="token" queryBoost="7"/>
-        <field name="ma_long" parent="token" multiValued="true"/>
-        <field name="lma_long" parent="keyword"/>
-
-        <field name="id" parent="keyword"/>
-        <field name="ww" parent="keyword"/>
-        <field name="ma_short" parent="token"/>
-        <field name="ltarget" parent="keyword"/>
-        <field name="openUrl" parent="keyword"/>
-        <field name="pu" parent="token"/>
-        <field name="py" parent="token"/>
-        <field name="sort_year_desc" parent="keyword"/>
-    </fields>
+<!-- This index descriptor was automatically generated
+ and should be verified before use, as some elements
+ are not present in the old search descriptor format -->
+  <groups>
+    <group name="ti">
+      <alias name="ti" lang="da"/>
+      <field ref="title"/>
+      <field ref="se"/>
+      <field ref="main_titel"/>
+    </group>
+    <group name="cl">
+      <alias name="cl" lang="da"/>
+      <field ref="class_other"/>
+      <field ref="ddc_kw"/>
+      <field ref="dk"/>
+      <field ref="inst"/>
+      <field ref="kl"/>
+      <field ref="lcc_kw"/>
+      <field ref="nlm_kw"/>
+    </group>
+    <group name="au">
+      <alias name="fo" lang="da"/>
+      <field ref="author_main"/>
+      <field ref="author_person"/>
+      <field ref="au_other"/>
+      <field ref="author_corporation"/>
+    </group>
+    <group name="lma">
+      <alias name="lma" lang="da"/>
+      <field ref="lma_long"/>
+      <field ref="ltarget"/>
+    </group>
+    <group name="ma">
+      <alias name="ma" lang="da"/>
+      <field ref="ma_short"/>
+    </group>
+    <group name="numbers">
+      <alias name="nr" lang="da"/>
+      <field ref="isbn_other"/>
+      <field ref="issn_other"/>
+      <field ref="isbn"/>
+      <field ref="issn"/>
+      <field ref="number"/>
+      <field ref="standard_number"/>
+      <field ref="id"/>
+      <field ref="ww"/>
+    </group>
+    <group name="lsubj">
+      <alias name="lem" lang="da"/>
+      <field ref="mesh"/>
+      <field ref="su_corp"/>
+      <field ref="su_lc"/>
+      <field ref="su_pe"/>
+      <field ref="lsu_ser_sol"/>
+      <field ref="lsu_ulrichs"/>
+      <field ref="lsu_ulrichs_hier"/>
+      <field ref="su_dk"/>
+      <field ref="lsu_oai"/>
+      <field ref="lsubject"/>
+    </group>
+    <group name="su">
+      <alias name="em" lang="da"/>
+      <field ref="subject_dk5"/>
+      <field ref="subject_serial_solutions"/>
+      <field ref="subject_ulrichs"/>
+      <field ref="subject_controlled"/>
+      <field ref="subject_other"/>
+    </group>
+    <group name="lcl">
+      <alias name="lcl" lang="da"/>
+      <field ref="lcl_csa"/>
+      <field ref="ldcc"/>
+      <field ref="lcl_all"/>
+      <field ref="ldbk"/>
+      <field ref="lddc"/>
+      <field ref="ldk5"/>
+      <field ref="lfn"/>
+      <field ref="linst"/>
+      <field ref="lkl"/>
+      <field ref="llcc"/>
+      <field ref="lnlm"/>
+      <field ref="ludk"/>
+    </group>
+  </groups>
+  <fields>
+    <field name="title" parent="text" boost="10.0" multiValued="true" inFreeText="true">
+      <alias name="titel" lang="da"/>
+      <!-- resolver: doms -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+      <!-- hasSuggest: true -->
+    </field>
+    <field name="se" parent="text" boost="8.0" multiValued="true" inFreeText="true">
+      <alias name="se" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+    </field>
+    <field name="main_titel" parent="text" boost="6.0" multiValued="true" inFreeText="true">
+      <alias name="ht" lang="da"/>
+      <!-- resolver: oai -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+      <!-- hasSuggest: true -->
+    </field>
+    <field name="class_other" parent="text" boost="5.0" multiValued="true" inFreeText="true">
+      <alias name="klassif" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+      <!-- hasSuggest: true -->
+    </field>
+    <field name="ddc_kw" parent="text" boost="10.0" multiValued="true" inFreeText="true">
+      <alias name="ddc_kw" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+      <!-- hasSuggest: true -->
+    </field>
+    <field name="dk" parent="text" boost="10.0" multiValued="true" inFreeText="true">
+      <alias name="dk" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+      <!-- hasSuggest: true -->
+    </field>
+    <field name="inst" parent="text" boost="10.0" multiValued="true" inFreeText="true">
+      <alias name="inst" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+      <!-- hasSuggest: true -->
+    </field>
+    <field name="kl" parent="text" boost="10.0" multiValued="true" inFreeText="true">
+      <alias name="kl" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+      <!-- hasSuggest: true -->
+    </field>
+    <field name="lcc_kw" parent="text" boost="5.0" multiValued="true" inFreeText="true">
+      <alias name="lcc_kw" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+      <!-- hasSuggest: true -->
+    </field>
+    <field name="nlm_kw" parent="text" boost="8.0" multiValued="true" inFreeText="true">
+      <alias name="nlm_kw" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+      <!-- hasSuggest: true -->
+    </field>
+    <field name="author_main" parent="text" boost="1.0" multiValued="true" inFreeText="true">
+      <alias name="po" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+    </field>
+    <field name="author_person" parent="text" boost="10.0" multiValued="true" inFreeText="true">
+      <alias name="pe" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+    </field>
+    <field name="au_other" parent="text" boost="6.0" multiValued="true" inFreeText="true">
+      <alias name="fo_andet" lang="da"/>
+      <!-- resolver: oai -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+    </field>
+    <field name="author_corporation" parent="text" boost="1.0" multiValued="true" inFreeText="true">
+      <alias name="ko" lang="da"/>
+      <!-- resolver: oai -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+    </field>
+    <field name="lma_long" parent="keyword" boost="1.0" inFreeText="true">
+      <alias name="lma_lang" lang="da"/>
+      <!-- resolver: oai -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+    </field>
+    <field name="ltarget" parent="keyword" boost="1.0">
+      <alias name="datakilde" lang="da"/>
+      <!-- resolver: oai -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+    </field>
+    <field name="ma_short" parent="text" boost="4.0" multiValued="true" inFreeText="true">
+      <alias name="ma_kort" lang="da"/>
+      <!-- resolver: oai -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+    </field>
+    <field name="isbn_other" parent="number" boost="6.0" inFreeText="true">
+      <alias name="ib" lang="da"/>
+      <!-- resolver: aleph -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexNumberAnalyzer -->
+    </field>
+    <field name="issn_other" parent="number" boost="6.0" inFreeText="true">
+      <alias name="is" lang="da"/>
+      <!-- resolver: aleph -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexNumberAnalyzer -->
+    </field>
+    <field name="isbn" parent="number" boost="10.0" inFreeText="true">
+      <alias name="ib" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexNumberAnalyzer -->
+    </field>
+    <field name="issn" parent="number" boost="10.0" inFreeText="true">
+      <alias name="is" lang="da"/>
+      <alias name="in" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexNumberAnalyzer -->
+    </field>
+    <field name="number" parent="number" boost="10.0" multiValued="true" inFreeText="true">
+      <alias name="nummer" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexNumberAnalyzer -->
+    </field>
+    <field name="standard_number" parent="number" boost="10.0" inFreeText="true">
+      <alias name="is" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexNumberAnalyzer -->
+    </field>
+    <field name="id" parent="number" boost="8.0" multiValued="true" inFreeText="true">
+      <alias name="id" lang="da"/>
+      <!-- resolver: oai -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexNumberAnalyzer -->
+    </field>
+    <field name="ww" parent="text" boost="1.0" multiValued="true" inFreeText="true">
+      <alias name="ww" lang="da"/>
+      <!-- resolver: oai -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+    </field>
+    <field name="mesh" parent="keyword" boost="10.0" inFreeText="true">
+      <alias name="lms" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+      <!-- hasSuggest: true -->
+    </field>
+    <field name="su_corp" parent="keyword" boost="10.0" inFreeText="true">
+      <alias name="lek" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+      <!-- hasSuggest: true -->
+    </field>
+    <field name="su_lc" parent="keyword" boost="10.0" inFreeText="true">
+      <alias name="llcm" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+      <!-- hasSuggest: true -->
+    </field>
+    <field name="su_pe" parent="keyword" boost="10.0" inFreeText="true">
+      <alias name="lep" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+      <!-- hasSuggest: true -->
+    </field>
+    <field name="lsu_ser_sol" parent="keyword" boost="2.0" inFreeText="true">
+      <alias name="lsu_ser_sol" lang="da"/>
+      <!-- resolver: http:www.statsbiblioteket.dk/etss -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+      <!-- hasSuggest: true -->
+    </field>
+    <field name="lsu_ulrichs" parent="keyword" boost="2.0" inFreeText="true">
+      <alias name="lsu_ulrichs_1" lang="da"/>
+      <!-- resolver: http:www.statsbiblioteket.dk/etss -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+      <!-- hasSuggest: true -->
+    </field>
+    <field name="lsu_ulrichs_hier" parent="keyword" boost="2.0" inFreeText="true">
+      <alias name="lsu_ulrichs_hier" lang="da"/>
+      <!-- resolver: http:www.statsbiblioteket.dk/etss -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+      <!-- hasSuggest: true -->
+    </field>
+    <field name="su_dk" parent="keyword" boost="10.0" inFreeText="true">
+      <alias name="ldb" lang="da"/>
+      <!-- resolver: https://sedna.statsbiblioteket.dk:8280/urn/ -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+      <!-- hasSuggest: true -->
+    </field>
+    <field name="lsu_oai" parent="keyword" boost="2.0" inFreeText="true">
+      <alias name="lsu_oai" lang="da"/>
+      <!-- resolver: oai -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+      <!-- hasSuggest: true -->
+    </field>
+    <field name="lsubject" parent="keyword" boost="2.0" inFreeText="true">
+      <alias name="lsubject" lang="da"/>
+      <!-- resolver: oai -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+      <!-- hasSuggest: true -->
+    </field>
+    <field name="subject_dk5" parent="text" boost="10.0" multiValued="true" inFreeText="true">
+      <alias name="au" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+      <!-- hasSuggest: true -->
+    </field>
+    <field name="subject_serial_solutions" parent="text" boost="2.0" multiValued="true" inFreeText="true">
+      <alias name="uk_ser_sol" lang="da"/>
+      <!-- resolver: http:www.statsbiblioteket.dk/etss -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+    </field>
+    <field name="subject_ulrichs" parent="text" boost="2.0" multiValued="true" inFreeText="true">
+      <alias name="uk_ulrichs" lang="da"/>
+      <!-- resolver: http:www.statsbiblioteket.dk/etss -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+    </field>
+    <field name="subject_controlled" parent="text" boost="6.0" multiValued="true" inFreeText="true">
+      <alias name="ke" lang="da"/>
+      <!-- resolver: https://sedna.statsbiblioteket.dk:8280/urn/ -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+      <!-- hasSuggest: true -->
+    </field>
+    <field name="subject_other" parent="text" boost="2.0" multiValued="true" inFreeText="true">
+      <alias name="uk" lang="da"/>
+      <!-- resolver: oai -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+    </field>
+    <field name="lcl_csa" parent="keyword" boost="10.0" inFreeText="true">
+      <alias name="lcl_csa" lang="da"/>
+      <!-- resolver:  -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+      <!-- hasSuggest: true -->
+    </field>
+    <field name="ldcc" parent="keyword" boost="10.0" inFreeText="true">
+      <alias name="lddc" lang="da"/>
+      <!-- resolver: aleph -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+      <!-- hasSuggest: true -->
+    </field>
+    <field name="lcl_all" parent="keyword" boost="10.0" inFreeText="true">
+      <alias name="lcl_all" lang="da"/>
+      <alias name="lddc" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+      <!-- hasSuggest: true -->
+    </field>
+    <field name="ldbk" parent="keyword" boost="10.0" inFreeText="true">
+      <alias name="ldbk" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+      <!-- hasSuggest: true -->
+    </field>
+    <field name="lddc" parent="keyword" boost="10.0" inFreeText="true">
+      <alias name="lddc" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+      <!-- hasSuggest: true -->
+    </field>
+    <field name="ldk5" parent="keyword" boost="10.0" inFreeText="true">
+      <alias name="ldk5" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+      <!-- hasSuggest: true -->
+    </field>
+    <field name="lfn" parent="keyword" boost="10.0" inFreeText="true">
+      <alias name="lfn" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+      <!-- hasSuggest: true -->
+    </field>
+    <field name="linst" parent="keyword" boost="10.0" inFreeText="true">
+      <alias name="linst" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+      <!-- hasSuggest: true -->
+    </field>
+    <field name="lkl" parent="keyword" boost="10.0" inFreeText="true">
+      <alias name="lkl" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+      <!-- hasSuggest: true -->
+    </field>
+    <field name="llcc" parent="keyword" boost="10.0" inFreeText="true">
+      <alias name="llcc" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+      <!-- hasSuggest: true -->
+    </field>
+    <field name="lnlm" parent="keyword" boost="10.0" inFreeText="true">
+      <alias name="lnlm" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+      <!-- hasSuggest: true -->
+    </field>
+    <field name="ludk" parent="keyword" boost="10.0" inFreeText="true">
+      <alias name="ludk" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+      <!-- hasSuggest: true -->
+    </field>
+    <field name="cluster" parent="keyword" boost="1.0">
+      <alias name="klynge" lang="da"/>
+      <!-- resolver:  -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+    </field>
+    <field name="lso" parent="keyword" boost="1.0" inFreeText="true">
+      <alias name="lvp" lang="da"/>
+      <!-- resolver:  -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+    </field>
+    <field name="author_descr" parent="text" boost="1.0" multiValued="true" inFreeText="true">
+      <alias name="fb" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+    </field>
+    <field name="barcode" parent="text" boost="1.0" inFreeText="true">
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+    </field>
+    <field name="barcode_normalised" parent="keyword" boost="10.0" inFreeText="true">
+      <alias name="l_stregkode" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+    </field>
+    <field name="call" parent="text" boost="4.0" inFreeText="true">
+      <alias name="opst" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+    </field>
+    <field name="collection" parent="text" boost="10.0" multiValued="true">
+      <alias name="samling" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+    </field>
+    <field name="collection_normalised" parent="keyword" boost="10.0" inFreeText="true">
+      <alias name="l_samling" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+    </field>
+    <field name="country" parent="text" boost="1.0" multiValued="true" inFreeText="true">
+      <alias name="ul" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+    </field>
+    <field name="itype" parent="text" boost="4.0" inFreeText="true">
+      <alias name="matkat" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+    </field>
+    <field name="l_call" parent="keyword" boost="10.0" inFreeText="true">
+      <alias name="lop" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+    </field>
+    <field name="location" parent="text" boost="10.0" multiValued="true">
+      <alias name="lokation" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+    </field>
+    <field name="location_normalised" parent="keyword" boost="10.0" inFreeText="true">
+      <alias name="l_lokation" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+    </field>
+    <field name="ma_long" parent="text" boost="1.0" multiValued="true" inFreeText="true">
+      <alias name="ma_lang" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+    </field>
+    <field name="op" parent="text" boost="2.0" multiValued="true">
+      <alias name="op" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+    </field>
+    <field name="original_language" parent="text" boost="1.0" multiValued="true" inFreeText="true">
+      <alias name="ou" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+    </field>
+    <field name="other" parent="text" boost="1.0" multiValued="true" inFreeText="true">
+      <alias name="andet" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+    </field>
+    <field name="place" parent="text" boost="1.0" multiValued="true" inFreeText="true">
+      <alias name="pu" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+    </field>
+    <field name="series_normalised" parent="keyword" boost="10.0" inFreeText="true">
+      <alias name="lse" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+    </field>
+    <field name="ww" parent="text" boost="1.0" multiValued="true" inFreeText="true">
+      <alias name="ww" lang="da"/>
+      <!-- resolver: horizon -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+    </field>
+    <field name="ip" parent="text" boost="4.0" multiValued="true" inFreeText="true">
+      <alias name="ip" lang="da"/>
+      <!-- resolver: http:www.statsbiblioteket.dk/etss -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+    </field>
+    <field name="lip" parent="keyword" boost="1.0" multiValued="true" inFreeText="true">
+      <alias name="lip" lang="da"/>
+      <!-- resolver: http:www.statsbiblioteket.dk/etss -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+    </field>
+    <field name="commercials_subject" parent="keyword" boost="6.0" multiValued="true" inFreeText="true">
+      <alias name="reklamefilm_subj" lang="da"/>
+      <!-- resolver: https://sedna.statsbiblioteket.dk:8280/urn/ -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+    </field>
+    <field name="author_normalised" parent="keyword" boost="10.0" inFreeText="true">
+      <alias name="lfo" lang="da"/>
+      <!-- resolver: oai -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+    </field>
+    <field name="format" parent="text" boost="1.0" multiValued="true" inFreeText="true">
+      <alias name="format" lang="da"/>
+      <!-- resolver: oai -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+    </field>
+    <field name="lang" parent="text" boost="1.0" multiValued="true" inFreeText="true">
+      <alias name="sp" lang="da"/>
+      <!-- resolver: oai -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+    </field>
+    <field name="llang" parent="keyword" boost="10.0" inFreeText="true">
+      <alias name="lsp" lang="da"/>
+      <!-- resolver: oai -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+    </field>
+    <field name="no" parent="text" boost="1.0" multiValued="true" inFreeText="true">
+      <alias name="no" lang="da"/>
+      <!-- resolver: oai -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+    </field>
+    <field name="openUrl" parent="stored" boost="1.0">
+      <alias name="openUrl" lang="da"/>
+      <!-- resolver: oai -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+    </field>
+    <field name="pu" parent="text" boost="2.0" multiValued="true" inFreeText="true">
+      <alias name="fl" lang="da"/>
+      <!-- resolver: oai -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+    </field>
+    <field name="py" parent="text" boost="2.0" multiValued="true" inFreeText="true">
+      <alias name="år" lang="da"/>
+      <alias name="?r" lang="da"/>
+      <!-- resolver: oai -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+    </field>
+    <field name="rt" parent="text" boost="1.0" multiValued="true" inFreeText="true">
+      <alias name="rt" lang="da"/>
+      <!-- resolver: oai -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+    </field>
+    <field name="shortformat" parent="stored" boost="1.0">
+      <!-- resolver: oai -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexStandardAnalyzer -->
+    </field>
+    <field name="sort_title" parent="keyword" boost="6.0" inFreeText="true">
+      <alias name="sort_titel" lang="da"/>
+      <!-- resolver: oai -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+    </field>
+    <field name="sort_year_asc" parent="keyword" boost="10.0" inFreeText="true">
+      <alias name="sort_år_asc" lang="da"/>
+      <alias name="sort_?r_asc" lang="da"/>
+      <!-- resolver: oai -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+    </field>
+    <field name="sort_year_desc" parent="keyword" boost="10.0" inFreeText="true">
+      <alias name="sort_år_desc" lang="da"/>
+      <alias name="sort_?r_desc" lang="da"/>
+      <!-- resolver: oai -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexKeywordAnalyzer -->
+    </field>
+    <field name="year" parent="number" boost="2.0" multiValued="true" inFreeText="true">
+      <alias name="year" lang="da"/>
+      <!-- resolver: oai -->
+      <!-- analyzer: dk.statsbiblioteket.summa.common.analysis.FindexNumberAnalyzer -->
+    </field>
+  </fields>
+  <defaultLanguage>da</defaultLanguage>
 
     <defaultSearchFields>
         <field ref="freetext"/>
@@ -61,6 +577,10 @@
         <field ref="lma"/>
         <field ref="id"/>
     </defaultSearchFields>
+
+  <QueryParser defaultOperator="AND"/>
+  <!-- The following group- and field-names clashes
+       with aliases: ww au -->
 </IndexDescriptor>
 
 
