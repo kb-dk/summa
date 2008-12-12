@@ -18,8 +18,8 @@
             <xsl:for-each select="mc:field[@type='009_00']/mc:subfield[@type='a' or @type='b']">
                 <xsl:if test="contains(.,'a')">
                     <xsl:choose>
-                        <xsl:when test="contains(/marc/mc:record/mc:field[@type='008_00']/mc:subfield[@type='t'],'m') or contains(/marc/mc:record/mc:field[@type='008_00']/mc:subfield[@type='t'],'s')">
-                            <xsl:for-each select="/marc/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g' or @type='h']">
+                        <xsl:when test="contains(/mc:record/mc:field[@type='008_00']/mc:subfield[@type='t'],'m') or contains(/mc:record/mc:field[@type='008_00']/mc:subfield[@type='t'],'s')">
+                            <xsl:for-each select="/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g' or @type='h']">
                                 <xsl:choose>
                                     <xsl:when test="contains(.,'xx')">
                                         <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
@@ -41,12 +41,12 @@
                             </xsl:for-each>
                         </xsl:when>
 
-                        <xsl:when test="contains(/marc/mc:record/mc:field[@type='008_00']/mc:subfield[@type='t'],'a')">
+                        <xsl:when test="contains(/mc:record/mc:field[@type='008_00']/mc:subfield[@type='t'],'a')">
 
                             <xsl:choose>
-                                <xsl:when test="/marc/mc:record/mc:field[@type='557_00']">
+                                <xsl:when test="/mc:record/mc:field[@type='557_00']">
                                     <xsl:choose>
-                                        <xsl:when test="contains(/marc/mc:record/mc:field[@type='008_00']/mc:subfield[@type='r'],'ap')">
+                                        <xsl:when test="contains(/mc:record/mc:field[@type='008_00']/mc:subfield[@type='r'],'ap')">
                                             <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
                                                 <xsl:text>artikel</xsl:text>
                                             </Index:field>
@@ -65,7 +65,7 @@
                                     </xsl:choose>
                                 </xsl:when>
 
-                                <xsl:when test="/marc/mc:record/mc:field[@type='558_00']">
+                                <xsl:when test="/mc:record/mc:field[@type='558_00']">
                                     <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
                                         <xsl:text>artikel</xsl:text>
                                     </Index:field>
@@ -74,7 +74,7 @@
                                     </Index:field>
                                 </xsl:when>
 
-                                <xsl:when test="contains(/marc/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g' or @type='h'],'xe')">
+                                <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g' or @type='h'],'xe')">
                                     <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
                                         <xsl:text>artikel</xsl:text>
                                     </Index:field>

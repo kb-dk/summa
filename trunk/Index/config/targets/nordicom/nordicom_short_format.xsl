@@ -96,15 +96,15 @@
                         <dc:type xml:lang="da">
                             <xsl:for-each select=".">
                                 <xsl:choose>
-                                    <xsl:when test="contains(/marc/mc:record/mc:field[@type='008_00']/mc:subfield[@type='t'],'a')">
+                                    <xsl:when test="contains(/mc:record/mc:field[@type='008_00']/mc:subfield[@type='t'],'a')">
                                         <xsl:choose>
-                                            <xsl:when test="/marc/mc:record/mc:field[@type='557_00']">
+                                            <xsl:when test="/mc:record/mc:field[@type='557_00']">
                                                 <xsl:text>tidsskriftartikel</xsl:text>
                                             </xsl:when>
-                                            <xsl:when test="/marc/mc:record/mc:field[@type='558_00']">
+                                            <xsl:when test="/mc:record/mc:field[@type='558_00']">
                                                 <xsl:text>artikel i bog</xsl:text>
                                             </xsl:when>
-                                            <xsl:when test="contains(/marc/mc:record/mc:field[@type='009']/mc:subfield[@type='g'],'xe')">
+                                            <xsl:when test="contains(/mc:record/mc:field[@type='009']/mc:subfield[@type='g'],'xe')">
                                                 <xsl:text>e-artikel</xsl:text>
                                             </xsl:when>
                                             <xsl:otherwise>
@@ -114,14 +114,14 @@
                                     </xsl:when>
                                     <xsl:otherwise>
                                         <xsl:choose>
-                                            <xsl:when test="contains(/marc/mc:record/mc:field[@type='009_00']/mc:subfield[@type='a'],'a')">
+                                            <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='a'],'a')">
                                                 <xsl:choose>
-                                                    <xsl:when test="contains(/marc/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'],'xx')">
+                                                    <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'],'xx')">
                                                         <xsl:choose>
-                                                            <xsl:when test="contains(/marc/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'][position() >1],'xe')">
+                                                            <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'][position() >1],'xe')">
                                                                 <xsl:text>bog og e-bog</xsl:text>
                                                             </xsl:when>
-                                                            <xsl:when test="contains(/marc/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'][position() >1],'tb')">
+                                                            <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'][position() >1],'tb')">
                                                                 <xsl:text>bog og cd-rom</xsl:text>
                                                             </xsl:when>
                                                             <xsl:otherwise>
@@ -129,9 +129,9 @@
                                                             </xsl:otherwise>
                                                         </xsl:choose>
                                                     </xsl:when>
-                                                    <xsl:when test="contains(/marc/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'],'xe')">
+                                                    <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'],'xe')">
                                                         <xsl:choose>
-                                                            <xsl:when test="contains(/marc/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'][position() >1],'xx')">
+                                                            <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'][position() >1],'xx')">
                                                                 <xsl:text>bog og e-bog</xsl:text>
                                                             </xsl:when>
                                                             <xsl:otherwise>
@@ -144,10 +144,10 @@
                                                     </xsl:otherwise>
                                                 </xsl:choose>
                                             </xsl:when>
-                                            <xsl:when test="contains(/marc/mc:record/mc:field[@type='009_00']/mc:subfield[@type='a'],'m')">
+                                            <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='a'],'m')">
                                                 <xsl:text>film</xsl:text>
                                             </xsl:when>
-                                            <xsl:when test="contains(/marc/mc:record/mc:field[@type='009_00']/mc:subfield[@type='a'],'r')">
+                                            <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='a'],'r')">
                                                 <xsl:text>musik og lyd</xsl:text>
                                             </xsl:when>
                                             <xsl:otherwise>
@@ -162,15 +162,15 @@
                         <dc:type xml:lang="en">
                             <xsl:for-each select=".">
                                 <xsl:choose>
-                                    <xsl:when test="contains(/marc/mc:record/mc:field[@type='008_00']/mc:subfield[@type='t'],'a')">
+                                    <xsl:when test="contains(/mc:record/mc:field[@type='008_00']/mc:subfield[@type='t'],'a')">
                                         <xsl:choose>
-                                            <xsl:when test="/marc/mc:record/mc:field[@type='557_00']">
+                                            <xsl:when test="/mc:record/mc:field[@type='557_00']">
                                                 <xsl:text>journal article</xsl:text>
                                             </xsl:when>
-                                            <xsl:when test="/marc/mc:record/mc:field[@type='558_00']">
+                                            <xsl:when test="/mc:record/mc:field[@type='558_00']">
                                                 <xsl:text>book article</xsl:text>
                                             </xsl:when>
-                                            <xsl:when test="contains(/marc/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'],'xe')">
+                                            <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'],'xe')">
                                                 <xsl:text>e-article</xsl:text>
                                             </xsl:when>
                                             <xsl:otherwise>
@@ -180,14 +180,14 @@
                                     </xsl:when>
                                     <xsl:otherwise>
                                         <xsl:choose>
-                                            <xsl:when test="contains(/marc/mc:record/mc:field[@type='009_00']/mc:subfield[@type='a'],'a')">
+                                            <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='a'],'a')">
                                                 <xsl:choose>
-                                                    <xsl:when test="contains(/marc/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'],'xx')">
+                                                    <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'],'xx')">
                                                         <xsl:choose>
-                                                            <xsl:when test="contains(/marc/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'][position() >1],'xe')">
+                                                            <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'][position() >1],'xe')">
                                                                 <xsl:text>book and e-book</xsl:text>
                                                             </xsl:when>
-                                                            <xsl:when test="contains(/marc/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'][position() >1],'tb')">
+                                                            <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'][position() >1],'tb')">
                                                                 <xsl:text>book and cd-rom</xsl:text>
                                                             </xsl:when>
                                                             <xsl:otherwise>
@@ -195,9 +195,9 @@
                                                             </xsl:otherwise>
                                                         </xsl:choose>
                                                     </xsl:when>
-                                                    <xsl:when test="contains(/marc/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'],'xe')">
+                                                    <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'],'xe')">
                                                         <xsl:choose>
-                                                            <xsl:when test="contains(/marc/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'][position() >1],'xx')">
+                                                            <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'][position() >1],'xx')">
                                                                 <xsl:text>book and e-book</xsl:text>
                                                             </xsl:when>
                                                             <xsl:otherwise>
@@ -210,10 +210,10 @@
                                                     </xsl:otherwise>
                                                 </xsl:choose>
                                             </xsl:when>
-                                            <xsl:when test="contains(/marc/mc:record/mc:field[@type='009_00']/mc:subfield[@type='a'],'m')">
+                                            <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='a'],'m')">
                                                 <xsl:text>film</xsl:text>
                                             </xsl:when>
-                                            <xsl:when test="contains(/marc/mc:record/mc:field[@type='009_00']/mc:subfield[@type='a'],'r')">
+                                            <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='a'],'r')">
                                                 <xsl:text>music and sound</xsl:text>
                                             </xsl:when>
                                             <xsl:otherwise>
@@ -272,10 +272,10 @@
                         <dc:format>
                             <xsl:for-each select=".">
                                 <xsl:choose>
-                                    <xsl:when test="contains(/marc/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'][position()=1],'xe')">
+                                    <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'][position()=1],'xe')">
                                         <xsl:choose>
-                                            <xsl:when test="contains(/marc/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'][position() >1],'xx')
-                                                        or contains(/marc/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'][position() >1],'tb')">
+                                            <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'][position() >1],'xx')
+                                                        or contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'][position() >1],'tb')">
                                                 <xsl:text>mono</xsl:text>
                                             </xsl:when>
                                             <xsl:otherwise>
