@@ -239,7 +239,7 @@ public class AutoDiscoverTest extends TestCase {
     private void checkRecords(StorageService storage) throws IOException {
         StorageIterator records = new StorageIterator(
                 storage.getStorage(),
-                storage.getStorage().getRecordsFromBase("fagref"));
+                storage.getStorage().getRecordsModifiedAfter(0, "fagref", null));
         int count = 0;
         while (records.hasNext()) {
             records.next();

@@ -25,12 +25,17 @@ package dk.statsbiblioteket.summa.control.client.shell;
 import dk.statsbiblioteket.summa.common.shell.Core;
 import dk.statsbiblioteket.summa.common.shell.Script;
 import dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory;
+import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
+import dk.statsbiblioteket.summa.control.api.ControlConnection;
 import dk.statsbiblioteket.summa.control.client.Client;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
+import dk.statsbiblioteket.util.rpc.ConnectionFactory;
 import dk.statsbiblioteket.util.qa.QAInfo;
+
+import java.io.IOException;
 
 /**
  * <p>A simple shell for communicating with a {@link Client}.</p>
@@ -50,7 +55,7 @@ public class ClientShell {
     private ClientConnection client;
     private Core shell;
 
-    public ClientShell (String rmiAddress) throws Exception {
+    public ClientShell (String target) throws Exception {
         shell = new Core ();
         shell.setPrompt ("client-shell> ");
 
@@ -59,22 +64,61 @@ public class ClientShell {
         connManager = new ConnectionManager<ClientConnection> (
                           new GenericConnectionFactory<ClientConnection>(conf));
 
-        shell.getShellContext().info ("Looking up client on " + rmiAddress);
-        ConnectionContext<ClientConnection> ctx = connManager.get(rmiAddress);
-        client = ctx.getConnection();
-        connManager.release (ctx);
+        /**
+         * If 'target' looks like an RMI address try that. Else try looking up
+         * a client connection via the control server 
+         */
+        if (target.startsWith("//")) {
+            shell.getShellContext().info ("Looking up client on address "
+                                          + target);
+            ConnectionContext<ClientConnection> ctx = connManager.get(target);
+            client = ctx.getConnection();
+            connManager.release (ctx);
+        } else {
+            shell.getShellContext().info ("Looking up client "
+                                          + target);
+            client = getClientConnection(conf, target);
+        }
 
-        shell.installCommand(new StatusCommand(connManager, rmiAddress));
-        shell.installCommand(new DeployCommand(connManager, rmiAddress));
-        shell.installCommand(new StartServiceCommand(connManager, rmiAddress));
-        shell.installCommand(new StopServiceCommand(connManager, rmiAddress));
-        shell.installCommand(new ServicesCommand(connManager, rmiAddress));
-        shell.installCommand(new PingCommand(connManager, rmiAddress));
-        shell.installCommand(new IdCommand(connManager, rmiAddress));
-        shell.installCommand(new RepositoryCommand(connManager, rmiAddress));
-        shell.installCommand(new KillCommand(connManager, rmiAddress));
-        shell.installCommand(new RemoveServiceCommand(connManager, rmiAddress));
-        shell.installCommand(new SpecCommand(connManager, rmiAddress));
+        if (client == null) {
+            throw new IOException("Unable to connect to client: " + target);
+        }
+
+        shell.installCommand(new StatusCommand(connManager, target));
+        shell.installCommand(new DeployCommand(connManager, target));
+        shell.installCommand(new StartServiceCommand(connManager, target));
+        shell.installCommand(new StopServiceCommand(connManager, target));
+        shell.installCommand(new ServicesCommand(connManager, target));
+        shell.installCommand(new PingCommand(connManager, target));
+        shell.installCommand(new IdCommand(connManager, target));
+        shell.installCommand(new RepositoryCommand(connManager, target));
+        shell.installCommand(new KillCommand(connManager, target));
+        shell.installCommand(new RemoveServiceCommand(connManager, target));
+        shell.installCommand(new SpecCommand(connManager, target));
+    }
+
+    /**
+     * Look up a {@link ClientConnection} given its instanceId.
+     * This is done by looking it up via the Control server.
+     * @param conf configuration used to look up the address of the
+     *             Control server
+     * @param target instance id of the client
+     * @return a connection to the client
+     */
+    private ClientConnection getClientConnection(Configuration conf,
+                                                 String target)
+                                                            throws IOException {
+        ConnectionFactory<ControlConnection> connFact =
+                         new GenericConnectionFactory<ControlConnection>(conf);
+        String controlAddress = conf.getString(ConnectionConsumer.CONF_RPC_TARGET,
+                                               "//localhost:27000/summa-control");
+        ControlConnection control = connFact.createConnection(controlAddress);
+
+        if (control == null) {
+            return null;
+        }
+
+        return control.getClient(target);
     }
 
     public int run (Script script) {
@@ -85,9 +129,9 @@ public class ClientShell {
     }
 
     public static void printUsage () {
-        System.err.println ("USAGE:\n\tclient-shell <client-address> "
+        System.err.println ("USAGE:\n\tclient-shell <instanceId|client-address> "
                             + "[script commands]\n");
-        System.err.println ("For example:\n\tclient-shell //localhost:27000/c2");
+        System.err.println ("For example:\n\tclient-shell //localhost:27000/c2\nOr:\n\tclient-shell client-1 status");
     }
 
     public static void main (String[] args) {

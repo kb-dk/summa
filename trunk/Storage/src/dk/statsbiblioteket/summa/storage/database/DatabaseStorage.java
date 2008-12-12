@@ -36,6 +36,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.summa.storage.StorageBase;
+import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Zips;
 import dk.statsbiblioteket.util.Strings;
@@ -177,6 +178,64 @@ public abstract class DatabaseStorage extends StorageBase {
 
     private Map<Long, ResultIterator> iterators =
             new HashMap<Long, ResultIterator>(10);
+
+    /**
+     * A variation of {@link QueryOptions} used to keep track
+     * of recursion depths for expanding children and parents
+     */
+    private static class RecursionQueryOptions extends QueryOptions {
+
+        private int childRecursionDepth;
+        private int parentRecursionHeight;
+
+        public RecursionQueryOptions (QueryOptions original) {
+            super(original);
+            resetRecursionLevels();
+        }
+
+        public int childRecursionDepth() {
+            return childRecursionDepth;
+        }
+
+        public int parentRecursionHeight() {
+            return parentRecursionHeight;
+        }
+
+        public RecursionQueryOptions decChildRecursionDepth() {
+            childRecursionDepth--;
+            return this;
+        }
+
+        public RecursionQueryOptions decParentRecursionHeight() {
+            parentRecursionHeight--;
+            return this;
+        }
+
+        public RecursionQueryOptions resetRecursionLevels(){
+            childRecursionDepth = childDepth();
+            parentRecursionHeight = parentHeight();
+            return this;
+        }
+
+        /**
+         * Ensure that {@code options} is a RecursionQueryOptions. If it already
+         * is, just reset it and return it.
+         * @param options the QueryOptions to convert to a RecursionQueryOptions
+         * @return the input wrapped as a RecursionQueryOptions, or just the
+         *         input if it is already recursive
+         */
+        public static RecursionQueryOptions wrap (QueryOptions options) {
+            if (options == null) {
+                return null;
+            }
+
+            if (options instanceof RecursionQueryOptions) {
+                return ((RecursionQueryOptions)options).resetRecursionLevels();
+            } else {
+                return new RecursionQueryOptions(options);
+            }
+        }
+    }
 
     public DatabaseStorage() throws IOException {
         // We need to define this to declare RemoteException
@@ -495,23 +554,13 @@ public abstract class DatabaseStorage extends StorageBase {
 
     public synchronized long getAllRecords() throws IOException {
         log.debug("getAllRecords entered");
-        return prepareIterator(stmtGetAll);
+        return prepareIterator(stmtGetAll, null);
     }
 
-    public synchronized long getRecordsFromBase(String base)
-                                                            throws IOException {
-        log.debug("getRecordsFromBase('" + base + "') entered");
-        try {
-            stmtGetFromBase.setString(1, base);
-        } catch (SQLException e) {
-            throw new IOException("Could not prepare stmtGetFromBase with "
-                                      + "base '" + base + "'", e);
-        }
-        return prepareIterator(stmtGetFromBase);
-    }
-
+    @Override
     public synchronized long getRecordsModifiedAfter(long time,
-                                                               String base)
+                                                     String base,
+                                                     QueryOptions options)
                                                         throws IOException {
         log.debug("getRecordsModifiedAfter('" + time + "', " + base
                   + ") entered");
@@ -530,7 +579,7 @@ public abstract class DatabaseStorage extends StorageBase {
                         "Could not prepare stmtGetModifiedAfterAll with time"
                         + " %d", time), e);
             }
-            return prepareIterator(stmtGetModifiedAfterAll);
+            return prepareIterator(stmtGetModifiedAfterAll, options);
         }
         //time += 1000;
         try {
@@ -542,32 +591,13 @@ public abstract class DatabaseStorage extends StorageBase {
                                       + "with base '" + base + "' and time "
                                       + time, e);
         }
-        return prepareIterator(stmtGetModifiedAfter);
+        return prepareIterator(stmtGetModifiedAfter, options);
     }    
 
-    public synchronized long getRecordsFrom(String id, String base)
+    @Override
+    public Record getRecord(String id, QueryOptions options)
                                                         throws IOException {
-        log.debug("getRecordsFrom('" + base + "', '" + id + "') entered");
-        try {
-            stmtGetFrom.setString(1, base);
-            stmtGetFrom.setString(2, id);
-        } catch (SQLException e) {
-            throw new IOException("Could not prepare stmtGetFrom "
-                                      + "with base '" + base + "' and id '"
-                                      + id + "'", e);
-        }
-        return prepareIterator(stmtGetFrom);
-    }
-
-    /**
-     * Convenience method to fetch a single record
-     * @param id id of record to fetch
-     * @return the record or {@code null} if the record is not found
-     * @throws IOException on communication errors with the database
-     */
-    public Record getRecord(String id, int expansionDepth)
-                                                        throws IOException {
-        log.trace("getRecord('" + id + "', " + expansionDepth + ")");
+        log.trace("getRecord('" + id + "', " + options + ")");
 
         try {
             stmtGetRecord.setString(1, id);
@@ -601,7 +631,17 @@ public abstract class DatabaseStorage extends StorageBase {
                     }
                 }
 
-                expandChildRecords(record, expansionDepth);
+                if (options != null && !options.allowsRecord(record)) {
+                    if (log.isDebugEnabled()) {
+                        log.debug("Record '" + id
+                                  + "' not allowed by query options. "
+                                  + "Returning null");
+                    }
+                    return null;
+                }
+
+                expandRelations(record, options);
+
             } finally {
                 resultSet.close();
             }
@@ -614,9 +654,10 @@ public abstract class DatabaseStorage extends StorageBase {
 
     /* Expand child records if we need to and there indeed
      * are any children to expand */
-    private void expandChildRecords (Record record, int expansionDepth)
+    private void expandChildRecords (Record record,
+                                     RecursionQueryOptions options)
                                                         throws IOException {
-        if (expansionDepth == 0) {
+        if (options.childRecursionDepth() == 0) {
             return;
         }
 
@@ -631,7 +672,7 @@ public abstract class DatabaseStorage extends StorageBase {
             }
 
             List<Record> children = getRecords(childIds,
-                                               expansionDepth - 1);
+                                               options.decChildRecursionDepth());
             if (children.isEmpty()) {
                 record.setChildren(null);
             } else {
@@ -640,16 +681,46 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
+    /* Expand parent records if we need to and there indeed
+     * are any parents to expand */
+    private void expandParentRecords (Record record,
+                                      RecursionQueryOptions options)
+                                                        throws IOException {
+        if (options.parentRecursionHeight() == 0) {
+            return;
+        }
+
+        List<String> parentIds = record.getParentIds();
+
+        if (parentIds != null && parentIds.size() != 0) {
+
+            if (log.isTraceEnabled()) {
+                log.trace ("Expanding parents of record '"
+                           + record.getId() + "': "
+                           + Strings.join(parentIds, ", "));
+            }
+
+            List<Record> parents = getRecords(parentIds,
+                                              options.decParentRecursionHeight());
+            if (parents.isEmpty()) {
+                record.setParents(null);
+            } else {
+                record.setParents(parents);
+            }
+        }
+    }
+
+    @Override
     public Record next(long iteratorKey) throws IOException {
         boolean error = false;
         ResultIterator iterator = iterators.get(iteratorKey);
+
         if (iterator == null) {
             throw new IllegalArgumentException("No result iterator with key "
                                       + iteratorKey);
         }
 
         try {
-
             if (!iterator.hasNext()) {
                 iterator.close();
                 iterators.remove(iterator.getKey());
@@ -657,7 +728,8 @@ public abstract class DatabaseStorage extends StorageBase {
                                                   + " depleted");
             }
 
-            return iterator.getRecord();
+            Record r = iterator.getRecord();
+            return expandRelations(r, iterator.getQueryOptions());
         } catch (SQLException e) {
             error = true;
             throw new IOException("SQLException: " + e.getMessage(), e);
@@ -671,6 +743,27 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
+    private Record expandRelations(Record r, QueryOptions options)
+                                                             throws IOException{
+        if (options == null) {
+            return r;
+        }
+
+        // This also makes sure that the recursion levels are reset
+        RecursionQueryOptions opts = RecursionQueryOptions.wrap(options);
+
+        if (opts.childDepth() != 0) {
+            expandChildRecords(r, opts);
+        }
+
+        if (opts.parentHeight() != 0) {
+            expandParentRecords(r, opts);
+        }
+
+        return r;
+    }
+
+    @Override
     public void flush(Record record) throws IOException {
         if (log.isTraceEnabled()) {
             log.trace("Flushing " + record.toString(true));
@@ -701,7 +794,7 @@ public abstract class DatabaseStorage extends StorageBase {
         /* Touch parents recursively upwards
          * FIXME: The call to touchParents() might be pretty expensive... */
         try {
-            touchParents(record.getId());
+            touchParents(record.getId(), null);
         } catch (IOException e) {
             // Consider this non-fatal
             log.error("Failed to touch parents of '" + record.getId() + "': "
@@ -716,14 +809,15 @@ public abstract class DatabaseStorage extends StorageBase {
     }
 
     /* Recursively touch parents upwards */
-    private void touchParents(String id) throws IOException {
+    private void touchParents(String id, QueryOptions options)
+                                                            throws IOException {
         boolean doTrace = log.isTraceEnabled();
 
         if (doTrace) {
             log.trace ("Touching parents of '" + id + "'");
         }
 
-        List<Record> parents = getParents(id);
+        List<Record> parents = getParents(id, options);
 
         if (parents == null || parents.isEmpty()) {
             if (doTrace) {
@@ -747,18 +841,22 @@ public abstract class DatabaseStorage extends StorageBase {
 
         // Recurse upwards
         for (Record parent : parents) {
-            touchParents(parent.getId());
+            touchParents(parent.getId(), options);
         }
     }
 
     /**
      * Get all immediate parent records of the record with the given id.
      * @param id the id of the record to look up parents for
+     * @param options query options to match. Only records returning true
+     *                on {@link QueryOptions#allowsRecord(Record)} are returned.
+     *                If this argument is {@code null} all records are allowed
      * @return A list of parent records. This list will be empty if there are no
      *         parents
      * @throws IOException on communication errors with the db
      */
-    protected List<Record> getParents (String id) throws IOException {
+    protected List<Record> getParents (String id, QueryOptions options)
+                                                            throws IOException {
         List<Record> parents = new ArrayList<Record>(1);
 
         try {
@@ -766,11 +864,19 @@ public abstract class DatabaseStorage extends StorageBase {
             stmtGetParents.execute();
 
             ResultSet results = stmtGetParents.getResultSet();
-            ResultIterator iter = new ResultIterator(results);
+            ResultIterator iter = new ResultIterator(results, null);
 
             while (iter.hasNext()) {
                 try {
-                    parents.add(scanRecord(results, iter));
+                    Record r = iter.getRecord();
+                    if (options != null && options.allowsRecord(r)) {
+                        parents.add(r);
+                    } else if (options == null) {
+                        parents.add(r);
+                    } else if (log.isTraceEnabled()) {
+                        log.trace("Parent record '" + r.getId()
+                                  + "' not allowed by query options");
+                    }
                 } catch (IOException e) {
                     throw new IOException("Error scanning parent records "
                                               + "for '" + id + "': "
@@ -794,30 +900,42 @@ public abstract class DatabaseStorage extends StorageBase {
     /**
      * Get all immediate child records of the record with the given id.
      * @param id the id of the record to look up children for
+     * @param options query options to match. Only records returning true
+     *                on {@link QueryOptions#allowsRecord(Record)} are returned.
+     *                If this argument is {@code null} all records are allowed
      * @return A list of child records. This list will be empty if there are no
      *         parents
      * @throws IOException on communication errors with the db
      */
-    protected List<Record> getChildren (String id) throws IOException {
-        List<Record> parents = new ArrayList<Record>(3);
+    protected List<Record> getChildren (String id, QueryOptions options)
+                                                            throws IOException {
+        List<Record> children = new ArrayList<Record>(3);
 
         try {
             stmtGetChildren.setString(1, id);
             stmtGetChildren.execute();
 
             ResultSet results = stmtGetChildren.getResultSet();
-            ResultIterator iter = new ResultIterator(results);
+            ResultIterator iter = new ResultIterator(results, null);
 
             while (iter.hasNext()) {
-                parents.add(scanRecord(results, iter));
+                Record r = iter.getRecord();
+                if (options != null && options.allowsRecord(r)) {
+                    children.add(r);
+                } else if (options == null) {
+                    children.add(r);
+                } else if (log.isTraceEnabled()) {
+                    log.trace("Parent record '" + r.getId()
+                              + "' not allowed by query options");
+                }
             }
 
             if (log.isTraceEnabled()) {
                 log.trace ("Looked up children for '" + id +"': "
-                           + Strings.join (parents, ";"));
+                           + Strings.join (children, ";"));
             }
 
-            return parents;
+            return children;
 
         } catch (SQLException e) {
             throw new IOException("Failed to get children for record '"
@@ -825,6 +943,7 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
+    @Override
     public void clearBase (String base) throws IOException {
         log.info ("Clearing base '" + base + "'");
 
@@ -1087,7 +1206,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * @param resultSet     a SQL result set. The result set will be stepped
      *                      to the beginning of the following record
      * @param iter          a result iterator on which to update record
-     *                      availability via {@link ResultIterator#setHasNext}
+     *                      availability via {@link ResultIterator#setResultSetHasNext}
      * @return              a Record based on the result set.
      * @throws SQLException if there was a problem extracting values from the
      *                      SQL result set.
@@ -1189,7 +1308,7 @@ public abstract class DatabaseStorage extends StorageBase {
         }
 
         if (iter != null) {
-            iter.setHasNext (hasNext);
+            iter.setResultSetHasNext(hasNext);
         }
 
         /* The result set cursor will now be on the start of the next record */
@@ -1225,7 +1344,8 @@ public abstract class DatabaseStorage extends StorageBase {
      * @return a RecordIterator of the result.
      * @throws IOException - also on no getConnection() and SQLExceptions.
      */
-    private long prepareIterator(PreparedStatement statement) throws
+    private long prepareIterator(PreparedStatement statement,
+                                 QueryOptions options) throws
                                                                IOException {
         log.debug("Getting results for '" + statement + "'");
         ResultSet resultSet;
@@ -1243,7 +1363,7 @@ public abstract class DatabaseStorage extends StorageBase {
              log.error("SQLException in prepareIterator", e);
              throw new IOException("SQLException", e);
          }
-         return createRecordIterator(resultSet);
+         return createRecordIterator(resultSet, options);
     }
 
     protected class ResultIterator {
@@ -1257,17 +1377,30 @@ public abstract class DatabaseStorage extends StorageBase {
 
         private long lastAccess = key;
         private ResultSet resultSet;
-        private boolean hasNext;
+        private boolean resultSetHasNext;
+        private Record nextRecord;
+        private RecursionQueryOptions options;
 
-        public ResultIterator(ResultSet resultSet) throws SQLException {
+        public ResultIterator(ResultSet resultSet,
+                              QueryOptions options)
+                                              throws SQLException, IOException {
             this.resultSet = resultSet;
+            this.options = options == null ?
+                                      null : new RecursionQueryOptions(options);
 
-            /* The result set starts before the first row, so step into it */
-            hasNext = resultSet.next();
+            // The iterator start "outside" the result set, so step into it
+            resultSetHasNext = resultSet.next();
+
+            // This also updates resultSetHasNext
+            nextRecord = nextValidRecord();
 
             log.trace("Constructed Record iterator with initial hasNext: "
-                      + hasNext);
+                      + resultSetHasNext);
             lastAccess = System.currentTimeMillis();
+        }
+
+        public RecursionQueryOptions getQueryOptions () {
+            return options;
         }
 
         public long getKey() {
@@ -1277,7 +1410,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
         public boolean hasNext() {
             lastAccess = System.currentTimeMillis();
-            return hasNext;
+            return nextRecord != null;
         }
 
         /**
@@ -1290,28 +1423,58 @@ public abstract class DatabaseStorage extends StorageBase {
         public Record getRecord() throws SQLException, IOException {
             lastAccess = System.currentTimeMillis();
 
-            if (!hasNext) {
+            if (nextRecord == null) {
                 throw new NoSuchElementException("Iterator " + key
                                                  + " depleted");
             }
 
-            /* scanRecord() steps the resultSet to the next record.
-             * It will update the state of the iterator appropriately */
-            Record record = DatabaseStorage.scanRecord(resultSet, this);
+
+            Record record = nextRecord;
+            nextRecord = nextValidRecord();
 
             if (log.isTraceEnabled()) {
                 log.trace("getRecord returning '" + record.getId() + "'");
             }
 
-            /* The naive solution to updating hasNext is to just do:
-             *   hasNext = !resultSet.isAfterLast();
+            /* The naive solution to updating resultSetHasNext is to just do:
+             *   resultSetHasNext = !resultSet.isAfterLast();
              * here, but the ResultSet type does not allow this unless it is
              * of a scrollable type, which we do not use for resource limitation
-             * purposes. Instead the hasNext state is updated ny scanRecord()
+             * purposes. Instead the resultSetHasNext state is updated ny scanRecord()
              */            
 
             return record;
 //            rs.getStatement().close();//note: rs is closed when stmt is closed
+        }
+
+        private Record nextValidRecord () throws SQLException, IOException {
+            // This check should _not_ use the method resultSetHasNext() because
+            // it is only the state of the resultSet that is important here
+            if (!resultSetHasNext) {
+                return null;
+            }
+
+            /* scanRecord() steps the resultSet to the next record.
+             * It will update the state of the iterator appropriately */
+            Record r = DatabaseStorage.scanRecord(resultSet, this);
+
+            // Allow all mode
+            if (options == null) {
+                return r;
+            }
+
+            while (resultSetHasNext && !options.allowsRecord(r)) {
+                r = DatabaseStorage.scanRecord(resultSet, this);
+            }
+
+            if (options.allowsRecord(r)) {
+                return r;
+            }
+
+            // If we end here there are no more records and the one we have
+            // is not OK by the options
+            resultSetHasNext = false;
+            return null;
         }
 
         public void close() {
@@ -1324,10 +1487,10 @@ public abstract class DatabaseStorage extends StorageBase {
         /**
          * Called from
          * {@link DatabaseStorage#scanRecord(ResultSet,ResultIterator)}.
-         * @param hasNext
+         * @param resultSetHasNext
          */
-        public void setHasNext(boolean hasNext) {
-            this.hasNext = hasNext;
+        public void setResultSetHasNext(boolean resultSetHasNext) {
+            this.resultSetHasNext = resultSetHasNext;
         }
     }
 
@@ -1339,12 +1502,13 @@ public abstract class DatabaseStorage extends StorageBase {
      * @return an iterator over the resultset
      * @throws IOException on SQLException
      */
-    private long createRecordIterator(ResultSet resultSet) throws
-                                                               IOException {
+    private long createRecordIterator(ResultSet resultSet,
+                                      QueryOptions options)
+                                                       throws IOException {
         log.trace("createRecordIterator entered with result set " + resultSet);
         ResultIterator iterator;
         try {
-            iterator = new ResultIterator(resultSet);
+            iterator = new ResultIterator(resultSet, options);
             log.trace("createRecordIterator: Got iterator " + iterator.getKey()
                       + " adding to iterator-list");
             iterators.put(iterator.getKey(), iterator);
@@ -1384,6 +1548,7 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
+    @Override
     public void close() throws IOException {
         try {
             getConnection().close();

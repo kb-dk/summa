@@ -21,7 +21,7 @@
     </appender>
 
     <logger name="dk.statsbiblioteket.summa">
-        <level value="INFO" />
+        <level value="TRACE" />
         <appender-ref ref="CONSOLE" />
     </logger>
 

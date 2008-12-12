@@ -218,7 +218,7 @@ public class MultipleSourcesTest extends NoExitTestCase {
     private int countRecords(StorageService storage, String base) throws
                                                                   IOException {
         StorageIterator iterator = new StorageIterator(storage.getStorage(),
-                            storage.getStorage().getRecordsFromBase(base));
+                            storage.getStorage().getRecordsModifiedAfter(0, base, null));
         int counter = 0;
         while (iterator.hasNext()) {
             counter++;

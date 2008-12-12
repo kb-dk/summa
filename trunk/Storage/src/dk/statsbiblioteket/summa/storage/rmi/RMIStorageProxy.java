@@ -3,6 +3,7 @@ package dk.statsbiblioteket.summa.storage.rmi;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.api.rmi.RemoteStorage;
 import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.database.derby.DerbyStorage;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.storage.XStorage;
@@ -131,18 +132,12 @@ public class RMIStorageProxy extends UnicastRemoteObject
     }
 
     /* Reader methods */
-    public long getRecordsFromBase(String base) throws RemoteException {
+    @Override
+    public long getRecordsModifiedAfter(long time, String base,
+                                        QueryOptions options)
+                                                        throws RemoteException {
         try {
-            return backend.getRecordsFromBase(base);
-        } catch (IOException e) {
-            throw new RemoteException("Failed to get records from base '"
-                                      + base + "': " + e.getMessage(), e);
-        }
-    }
-
-    public long getRecordsModifiedAfter(long time, String base) throws RemoteException {
-        try {
-            return backend.getRecordsModifiedAfter(time, base);
+            return backend.getRecordsModifiedAfter(time, base, options);
         } catch (IOException e) {
             throw new RemoteException("Failed to get records modified after "
                                       + time + " from base '"
@@ -150,6 +145,7 @@ public class RMIStorageProxy extends UnicastRemoteObject
         }
     }
 
+    @Override
     public long getModificationTime (String base) throws RemoteException {
         try {
             return backend.getModificationTime (base);
@@ -160,19 +156,11 @@ public class RMIStorageProxy extends UnicastRemoteObject
         }
     }
 
-    public long getRecordsFrom(String id, String base) throws RemoteException {
+    @Override
+    public List<Record> getRecords(List<String> ids, QueryOptions options)
+                                                        throws RemoteException {
         try {
-            return backend.getRecordsFrom(id, base);
-        } catch (IOException e) {
-            throw new RemoteException("Failed to get records from id '"+id
-                                      +"' from base '" + base + "': "
-                                      + e.getMessage(), e);
-        }
-    }
-
-    public List<Record> getRecords(List<String> ids, int expansionDepth) throws RemoteException {
-        try {
-            return backend.getRecords(ids, expansionDepth);
+            return backend.getRecords(ids, options);
         } catch (IOException e) {
             throw new RemoteException("Failed to get records "
                                       + Logs.expand(ids, 5) +": "
@@ -180,15 +168,18 @@ public class RMIStorageProxy extends UnicastRemoteObject
         }
     }
 
-    public Record getRecord(String id, int expansionDepth) throws RemoteException {
+    @Override
+    public Record getRecord(String id, QueryOptions options)
+                                                        throws RemoteException {
         try {
-            return backend.getRecord(id, expansionDepth);
+            return backend.getRecord(id, options);
         } catch (IOException e) {
             throw new RemoteException("Failed to get record '" + id + "': "
                                       + e.getMessage(), e);
         }
     }
 
+    @Override
     public Record next(long iteratorKey) throws RemoteException {
         try {
             return backend.next(iteratorKey);
@@ -199,6 +190,7 @@ public class RMIStorageProxy extends UnicastRemoteObject
         }
     }
 
+    @Override
     public List<Record> next(long iteratorKey, int maxRecords) throws RemoteException {
         try {
             return backend.next(iteratorKey, maxRecords);
@@ -210,6 +202,7 @@ public class RMIStorageProxy extends UnicastRemoteObject
         }
     }
 
+    @Override
     public void flush(Record record) throws RemoteException {
         try {
             backend.flush(record);
@@ -219,6 +212,7 @@ public class RMIStorageProxy extends UnicastRemoteObject
         }
     }
 
+    @Override
     public void flushAll(List<Record> records) throws RemoteException {
         try {
             backend.flushAll(records);
@@ -229,6 +223,7 @@ public class RMIStorageProxy extends UnicastRemoteObject
         }
     }
 
+    @Override
     public void close() throws RemoteException {
         try {
             RemoteHelper.unExportRemoteInterface (serviceName, registryPort);
@@ -252,6 +247,7 @@ public class RMIStorageProxy extends UnicastRemoteObject
         }
     }
 
+    @Override
     public void clearBase(String base) throws RemoteException {
         try {
             backend.clearBase(base);

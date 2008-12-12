@@ -36,27 +36,14 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
         super (conf);
     }
 
-    public long getRecordsFromBase(String base) throws IOException {
-        ReadableStorage storage = getConnection();
-
-        try {
-            return storage.getRecordsFromBase(base);
-        } catch (Throwable t) {
-            connectionError(t);
-            throw new IOException("getRecordsFromBase("+base+") failed: "
-                                  + t.getMessage(), t);
-        } finally {
-            releaseConnection();
-        }
-    }
-
-
-    public long getRecordsModifiedAfter(long time, String base)
+    @Override
+    public long getRecordsModifiedAfter(long time, String base,
+                                        QueryOptions options)
                                                             throws IOException {
         ReadableStorage storage = getConnection();
 
         try {
-            return storage.getRecordsModifiedAfter(time, base);
+            return storage.getRecordsModifiedAfter(time, base, options);
         } catch (Throwable t) {
             connectionError(t);
             throw new IOException("getRecordsModifiedAfter("+time+", "+base
@@ -66,6 +53,7 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
         }
     }
 
+    @Override
     public long getModificationTime (String base) throws IOException {
         ReadableStorage storage = getConnection();
 
@@ -80,50 +68,40 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
         }
     }
 
-    public long getRecordsFrom(String id, String base) throws IOException {
+    @Override
+    public List<Record> getRecords(List<String> ids, QueryOptions options)
+                                                            throws IOException {
         ReadableStorage storage = getConnection();
 
         try {
-            return storage.getRecordsFrom(id, base);
+            return storage.getRecords(ids, options);
         } catch (Throwable t) {
             connectionError(t);
-            throw new IOException("getRecordsFrom("+id+", "+base
-                                  +") failed: " + t.getMessage(), t);
-        } finally {
-            releaseConnection();
-        }
-    }
-
-    public List<Record> getRecords(List<String> ids, int expansionDepth) throws IOException {
-        ReadableStorage storage = getConnection();
-
-        try {
-            return storage.getRecords(ids, expansionDepth);
-        } catch (Throwable t) {
-            connectionError(t);
-            throw new IOException("getRecords("+ Logs.expand(ids, 10)+", depth="
-                                  + expansionDepth + ") failed: "
+            throw new IOException("getRecords("+ Logs.expand(ids, 10)
+                                  +", options="+ options + ") failed: "
                                   + t.getMessage(), t);
         } finally {
             releaseConnection();
         }
     }
 
-    public Record getRecord(String id, int expansionDepth) throws IOException {
+    @Override
+    public Record getRecord(String id, QueryOptions options) throws IOException {
         ReadableStorage storage = getConnection();
 
         try {
-            return storage.getRecord(id, expansionDepth);
+            return storage.getRecord(id, options);
         } catch (Throwable t) {
             connectionError(t);
-            throw new IOException("getRecord("+id+", depth="
-                                  + expansionDepth + ") failed: "
+            throw new IOException("getRecord("+id+", options="
+                                  + options + ") failed: "
                                   + t.getMessage(), t);
         } finally {
             releaseConnection();
         }
     }
 
+    @Override
     public Record next(long iteratorKey) throws IOException {
         ReadableStorage storage = getConnection();
 
@@ -138,6 +116,7 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
         }
     }
 
+    @Override
     public List<Record> next(long iteratorKey, int maxRecords)
                                                             throws IOException {
         ReadableStorage storage = getConnection();

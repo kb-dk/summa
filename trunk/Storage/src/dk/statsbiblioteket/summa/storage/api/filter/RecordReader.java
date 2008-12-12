@@ -314,7 +314,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
                                     + "Records modified after "
                                     + ISO_TIME, lastRecordTimestamp));
             long iterKey =
-                    storage.getRecordsModifiedAfter(lastRecordTimestamp, base);
+                    storage.getRecordsModifiedAfter(lastRecordTimestamp, base, null);
 
             lastIteratorUpdate = System.currentTimeMillis();
             recordIterator = new StorageIterator(storage, iterKey);
@@ -333,7 +333,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
                                     + "Records modified after "
                                     + ISO_TIME, lastRecordTimestamp));
             long iterKey =
-                    storage.getRecordsModifiedAfter(lastRecordTimestamp, base);
+                    storage.getRecordsModifiedAfter(lastRecordTimestamp, base, null);
 
             lastIteratorUpdate = System.currentTimeMillis();
             recordIterator = new StorageIterator(storage, iterKey);
