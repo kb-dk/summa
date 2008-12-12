@@ -25,10 +25,7 @@ package dk.statsbiblioteket.summa.common;
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
 
 import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.util.Logs;
@@ -115,20 +112,20 @@ public class Record implements Serializable, Comparable{
      * parent-record, this must be null. If a parent-record is present,
      * {@link #indexable} will normally be false.
      */
-    private List<String> parentIds;
+    private LinkedHashSet<String> parentIds;
     /**
      * A list of Record instances representing the parents of this record
      */
-    private List<Record> parents;
+    private LinkedHashSet<Record> parents;
     /**
      * The ids of the children-records for this record, if any. If there are
      * no children-records, this must be null.
      */
-    private List<String> childIds;
+    private LinkedHashSet<String> childIds;
     /**
      * A list of Record instances representing the children of this record
      */
-    private List<Record> children;
+    private LinkedHashSet<Record> children;
 
     /**
      * Meta-data for the Record, such as validation-state. Used for filter-
@@ -362,13 +359,15 @@ public class Record implements Serializable, Comparable{
     }
 
     public List<String> getParentIds() {
-        return parentIds;
+        return parentIds == null ? null : new ArrayList<String>(parentIds);
     }
 
     /**
      * Sets the parent-IDs for this Record. This copies the content of the
      * given parentIDs to the Record, so callers are free to clear the given
      * list after this method is called.
+     * </p><p>
+     * Note: Duplicates are removed as part of the copy.
      * @param parentIds the IDs to assign to the Record.
      */
     public void setParentIds(List<String> parentIds) {
@@ -383,13 +382,12 @@ public class Record implements Serializable, Comparable{
             //noinspection AssignmentToNull
             this.parentIds = null;
         } else {
-            this.parentIds = new ArrayList<String>(parentIds.size());
-            this.parentIds.addAll(parentIds);
+            this.parentIds = new LinkedHashSet<String>(parentIds);
         }
     }
 
     public List<String> getChildIds() {
-        return childIds;
+        return childIds == null ? null : new ArrayList<String>(childIds);
     }
 
     /**
@@ -401,7 +399,8 @@ public class Record implements Serializable, Comparable{
      */
     public void setChildIds(List<String> childIds) {
         if (childIds == null) {
-            this.childIds = childIds;
+            this.childIds = null;
+            return;
         } else if (childIds.isEmpty()) {
             //noinspection DuplicateStringLiteralInspection
             log.warn("No childIds should be stated by null, not the empty "
@@ -410,8 +409,7 @@ public class Record implements Serializable, Comparable{
             //noinspection AssignmentToNull
             this.childIds = null;
         } else {
-            this.childIds = new ArrayList<String>(childIds.size());
-            this.childIds.addAll(childIds);
+            this.childIds = new LinkedHashSet<String>(childIds);
         }
 
         children = null;
@@ -435,7 +433,7 @@ public class Record implements Serializable, Comparable{
         }
 
         setChildIds(newChildIds);
-        this.children = children;
+        this.children = new LinkedHashSet<Record>(children);
     }
 
     /**
@@ -448,7 +446,7 @@ public class Record implements Serializable, Comparable{
      *         resolved
      */
     public List<Record> getChildren () {
-        return children;
+        return children == null ? null : new ArrayList<Record>(children);
     }
 
     /**
@@ -469,7 +467,7 @@ public class Record implements Serializable, Comparable{
         }
 
         setParentIds(newParentIds);
-        this.parents = parents;
+        this.parents = new LinkedHashSet<Record>(parents);
         
     }
 
@@ -483,7 +481,7 @@ public class Record implements Serializable, Comparable{
      *         resolved
      */
     public List<Record> getParents () {
-        return parents;
+        return parents == null ? null : new ArrayList<Record>(parents);
     }
 
     public long getLastModified() {
@@ -649,9 +647,11 @@ public class Record implements Serializable, Comparable{
                         + "), modificationTime("
                         + timeToString(getModificationTime())
                         + "), parentIds("
-                        + (parentIds == null ? "" : Logs.expand(parentIds, 5))
+                        + (parentIds == null ? "" :
+                           Logs.expand(new ArrayList<String>(parentIds), 5))
                         + "), childIds("
-                        + (childIds == null ? "" : Logs.expand(childIds, 5))
+                        + (childIds == null ? "" :
+                           Logs.expand(new ArrayList<String>(childIds), 5))
                         + "), meta("
                         + (meta == null ? "" : Logs.expand(
                                 Arrays.asList(meta.keySet().toArray()), 5))
