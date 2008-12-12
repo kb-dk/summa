@@ -139,7 +139,7 @@ public class FacetTest extends NoExitTestCase {
                 Resolver.getURL("data/search/input/part1").getFile()));
         assertTrue("Hans Jensen data should be ingested",
                     storage.getRecords(
-                        Arrays.asList("fagref:hj@example.com"), 0).size() == 1);
+                        Arrays.asList("fagref:hj@example.com"), null).size() == 1);
         storage.close();
     }
 
@@ -273,7 +273,7 @@ public class FacetTest extends NoExitTestCase {
     }
 
     private int countRecords(Storage storage, String base) throws IOException {
-        long iterKey = storage.getRecordsFromBase(base);
+        long iterKey = storage.getRecordsModifiedAfter(0, base, null);
         Iterator<Record> i = new StorageIterator(storage, iterKey);
         int counter = 0;
         while (i.hasNext()) {

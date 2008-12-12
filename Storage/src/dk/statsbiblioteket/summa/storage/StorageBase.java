@@ -31,6 +31,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.WritableStorage;
 import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
+import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -162,7 +163,7 @@ public abstract class StorageBase implements Storage {
 
         /* Make sure parent records are correct */
         if (record.getParentIds() != null) {
-            List<Record> parents = getRecords(record.getParentIds(), 0);
+            List<Record> parents = getRecords(record.getParentIds(), null);
 
             /* If a record has any *existing* parents it is not indexable */
             if (parents != null && !parents.isEmpty()) {
@@ -190,7 +191,7 @@ public abstract class StorageBase implements Storage {
 
         /* Make sure child records are correct */
         if (record.getChildIds() != null) {
-            List<Record> children = getRecords(record.getChildIds(), 0);
+            List<Record> children = getRecords(record.getChildIds(), null);
 
             /* Assert that the existing child records have this record set
              * as parent and that they are marked not indexable  */
@@ -268,11 +269,11 @@ public abstract class StorageBase implements Storage {
      * Simple implementation of {@link ReadableStorage#getRecords} fetching
      * each record one at a time and collecting them in a list.
      */
-    public List<Record> getRecords (List<String> ids, int expansionDepth)
+    public List<Record> getRecords (List<String> ids, QueryOptions options)
                                                         throws IOException {
         ArrayList<Record> result = new ArrayList<Record>(ids.size());
         for (String id : ids) {
-            Record r = getRecord(id, expansionDepth);
+            Record r = getRecord(id, options);
             if (r != null) {
                 result.add(r);
             }

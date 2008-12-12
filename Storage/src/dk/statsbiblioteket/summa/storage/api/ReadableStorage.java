@@ -47,20 +47,6 @@ import dk.statsbiblioteket.summa.common.configuration.Configurable;
 public interface ReadableStorage extends Configurable {
 
     /**
-     * Get an iterator over all records in the database from the given base
-     * sorted by record id.
-     * <p/>
-     * For convenient iteration over the result set one can use a
-     * {@link StorageIterator} on the returned iterator key.
-     *
-     * @param base the name of the original record base
-     * @return a iterator key over that can be used to iterate over all records
-     *         from {@code base} sorted by record id.
-     * @throws IOException on communication errors
-     */
-    long getRecordsFromBase(String base) throws IOException;
-
-    /**
      * Get an iterator over all records from the given base modified after the
      * given time. The iterator is sorted by record id.
      * <p/>
@@ -76,11 +62,15 @@ public interface ReadableStorage extends Configurable {
      * @param time a timestamp in milliseconds
      * @param base the name of the original record base or null if all bases are
      *             to be used.
+     * @param options a possible {@code null} set of options to apply to the
+     *                query. Please see the documentation for
+     *                {@link QueryOptions} on how it is interpreted
      * @return an iterator key that can be used to iterate over all records
      *         modified after given time (sorted by record id)
      * @throws IOException on communication errors with the storage
      */
-    long getRecordsModifiedAfter(long time, String base) throws IOException;
+    long getRecordsModifiedAfter(long time, String base, QueryOptions options)
+                                                             throws IOException;
 
     /**
      * Returns the timestamp for the most recent modification in {@code base}.
@@ -102,34 +92,18 @@ public interface ReadableStorage extends Configurable {
     long getModificationTime (String base) throws IOException;
 
     /**
-     * Get an iterator over all records from the given base "from" the given id.
-     * I.e. get all records with id "larger than" the given id.
-     * The iterator is sorted by record id.
-     * <p/>
-     * For convenient iteration over the result set one can use a
-     * {@link StorageIterator} on the returned iterator key.
-     *
-     * @param id record id
-     * @param base the name of the original record base
-     * @return an iterator key that can be used to iterate over all records
-     *         "from" the given id (sorted by id)
-     * @throws IOException on communication errors with the storage service
-     */
-    long getRecordsFrom(String id, String base) throws IOException;
-
-    /**
      * Get the records with the given ids. Child records will be expanded
      * recursively to a depth of {@code expansionDepth}
      * @param ids list of ids to fetch
-     * @param expansionDepth the level of recursion any child records should
-     *        be expanded to. 0 indicates that only the flat records should be
-     *        returned, -1 that all child records should be expanded
+     * @param options a possible {@code null} set of options to apply to the
+     *                query. Please see the documentation for
+     *                {@link QueryOptions} on how it is interpreted
      * @return a list of the requested Records. The list will be ordered
      *         arcording to the {@code ids} parameter. If one or more records
      *         can not be found they will be omitted from the list.
      * @throws IOException on communication errors with the storage
      */
-    List<Record> getRecords(List<String> ids, int expansionDepth)
+    List<Record> getRecords(List<String> ids, QueryOptions options)
                                                              throws IOException;
 
     /**
@@ -139,14 +113,14 @@ public interface ReadableStorage extends Configurable {
      * If {@code expansionDepth == 0} no child expansion will occur, and a
      * depth of {@code -1} will do recursive expansion of all children.
      * @param id the id of the record to retrieve
-     * @param expansionDepth the depth to expand child records to. {@code 0}
-     *                       means no expansion and {@code -1} means recursive
-     *                       expansion of all children
+     * @param options a possible {@code null} set of options to apply to the
+     *                query. Please see the documentation for
+     *                {@link QueryOptions} on how it is interpreted
      * @return the requested record or {@code null} if it wasn't found. Expanded
      *         child records can be retrieved with {@link Record#getChildren}
      * @throws IOException on communication errors
      */
-    Record getRecord (String id, int expansionDepth) throws IOException;
+    Record getRecord (String id, QueryOptions options) throws IOException;
 
     /**
      * Return the next record in the record iteration identified by the given

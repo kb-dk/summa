@@ -29,6 +29,7 @@ package dk.statsbiblioteket.summa.storage;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.storage.StorageBase;
 import dk.statsbiblioteket.summa.storage.api.StorageIterator;
+import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.rmi.RemoteException;
@@ -55,19 +56,21 @@ public class FakeAccess extends StorageBase {
         this.recordCount = recordCount;
     }
 
-    public long getRecordsFromBase(String base) throws RemoteException {
+    public long getRecordsFromBase(String base, QueryOptions options)
+                                                        throws RemoteException {
         position = 0;
         return 0L;
     }
 
-    public long getRecordsModifiedAfter(long time, String base) throws
-                                                               RemoteException {
+    public long getRecordsModifiedAfter(long time,
+                                        String base, QueryOptions options)
+                                                        throws RemoteException {
         position = 0;
         return 0L;
     }
 
-    public long getRecordsFrom(String name, String base) throws
-                                                               RemoteException {
+    public long getRecordsFrom(String name, String base, QueryOptions options)
+                                                        throws RemoteException {
         if (!recordExists(name)) {
             throw new RemoteException("Record '" + name + "' does not exist");
         }
@@ -75,7 +78,7 @@ public class FakeAccess extends StorageBase {
         return 0L;
     }
 
-    public Record getRecord(String name, int expansionDepth)
+    public Record getRecord(String name, QueryOptions options)
                                                         throws RemoteException {
         try {
             if (recordExists(name)) {

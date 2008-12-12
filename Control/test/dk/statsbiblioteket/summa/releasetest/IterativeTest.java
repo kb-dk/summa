@@ -522,7 +522,7 @@ public class IterativeTest extends NoExitTestCase {
     }
 
     private int countRecords(String base) throws IOException {
-        long iterKey = storage.getRecordsFromBase(base);
+        long iterKey = storage.getRecordsModifiedAfter(0, base, null);
         Iterator<Record> iterator = new StorageIterator(storage, iterKey); 
         int counter = 0;
         while (iterator.hasNext()) {

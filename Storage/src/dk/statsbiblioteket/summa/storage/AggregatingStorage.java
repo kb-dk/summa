@@ -1,9 +1,6 @@
 package dk.statsbiblioteket.summa.storage;
 
-import dk.statsbiblioteket.summa.storage.api.Storage;
-import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
-import dk.statsbiblioteket.summa.storage.api.StorageWriterClient;
-import dk.statsbiblioteket.summa.storage.api.StorageFactory;
+import dk.statsbiblioteket.summa.storage.api.*;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -275,24 +272,9 @@ public class AggregatingStorage extends StorageBase {
         }
     }
 
-    public long getRecordsFromBase(String base) throws IOException {
-        if (log.isTraceEnabled()) {
-            log.trace ("getRecordsFromBase('"+base+"')");
-        }
-
-        StorageReaderClient reader = getSubStorageReader(base);
-
-        if (reader == null) {
-            log.warn("No sub storage configured for base '" + base + "'");
-            return UNKNOWN_BASE_KEY;
-        }
-
-        long iterKey = reader.getRecordsFromBase(base);
-        iterators.put(iterKey, new IteratorContext(reader, base, iterKey));
-        return iterKey;
-    }
-
-    public long getRecordsModifiedAfter(long time, String base) throws IOException {
+    @Override
+    public long getRecordsModifiedAfter(long time, String base,
+                                        QueryOptions options) throws IOException {
         if (log.isTraceEnabled()) {
             log.trace ("getRecordsModifiedAfter("+time+", '"+base+"')");
         }
@@ -304,11 +286,12 @@ public class AggregatingStorage extends StorageBase {
             return UNKNOWN_BASE_KEY;
         }
 
-        long iterKey = reader.getRecordsModifiedAfter(time, base);
+        long iterKey = reader.getRecordsModifiedAfter(time, base, options);
         iterators.put(iterKey, new IteratorContext(reader, base, iterKey));
         return iterKey;
     }
 
+    @Override
     public long getModificationTime (String base) throws IOException {
         if (log.isTraceEnabled()) {
             log.trace ("getModificationTime("+base+")");
@@ -324,48 +307,34 @@ public class AggregatingStorage extends StorageBase {
         return reader.getModificationTime (base);
     }
 
-    public long getRecordsFrom(String id, String base) throws IOException {
-        if (log.isTraceEnabled()) {
-            log.trace ("getRecordsFrom('"+id+"', '"+base+"')");
-        }
-
-        StorageReaderClient reader = getSubStorageReader(base);
-
-        if (reader == null) {
-            log.warn("No sub storage configured for base '" + base + "'");
-            return UNKNOWN_BASE_KEY;
-        }
-
-        long iterKey = reader.getRecordsFrom(id, base);
-        iterators.put(iterKey, new IteratorContext(reader, base, iterKey));
-        return iterKey;
-    }
-
-    public List<Record> getRecords(List<String> ids, int expansionDepth) throws IOException {
+    @Override
+    public List<Record> getRecords(List<String> ids, QueryOptions options)
+                                                            throws IOException {
         if (log.isTraceEnabled()) {
             log.trace ("getRecords("+ Logs.expand(ids, 5)
-                                    +", "+expansionDepth+")");
+                                    +", "+options+")");
         }
 
         /* FIXME: This should be parallized*/
         List<Record> result = new ArrayList<Record>(ids.size());
         for (StorageReaderClient reader : readers.values()) {
-            List<Record> recs = reader.getRecords(ids, expansionDepth);
+            List<Record> recs = reader.getRecords(ids, options);
             result.addAll(recs);
         }
 
         return result;
     }
 
-    public Record getRecord(String id, int expansionDepth) throws IOException {
+    @Override
+    public Record getRecord(String id, QueryOptions options) throws IOException {
         if (log.isTraceEnabled()) {
-            log.trace ("getRecord('"+id+"', "+expansionDepth+")");
+            log.trace ("getRecord('"+id+"', "+options+")");
         }
 
         /* FIXME: This should be parallized*/
         Record r;
         for (StorageReaderClient reader : readers.values()) {
-            r = reader.getRecord(id, expansionDepth);
+            r = reader.getRecord(id, options);
             if (r != null) {
                 return r;
             }
@@ -375,6 +344,7 @@ public class AggregatingStorage extends StorageBase {
         return null;
     }
 
+    @Override
     public Record next(long iteratorKey) throws IOException {
         if (iteratorKey == UNKNOWN_BASE_KEY) {
             throw new NoSuchElementException("Empty iterator " + iteratorKey);
@@ -390,6 +360,7 @@ public class AggregatingStorage extends StorageBase {
         return iter.getReader().next(iteratorKey);
     }
 
+    @Override
     public List<Record> next(long iteratorKey, int maxRecords)
                                                             throws IOException {
         if (iteratorKey == UNKNOWN_BASE_KEY) {
@@ -406,6 +377,7 @@ public class AggregatingStorage extends StorageBase {
         return iter.getReader().next(iteratorKey, maxRecords);
     }
 
+    @Override
     public void flush(Record record) throws IOException {
         if (log.isTraceEnabled()) {
             log.trace ("flush("+record+")");
@@ -422,6 +394,7 @@ public class AggregatingStorage extends StorageBase {
         writer.flush(record);
     }
 
+    @Override
     public void flushAll(List<Record> records) throws IOException {
         /* FIXME: Batch records into groups for each base and commit batches of records instead of singles */
         for (Record r : records) {
@@ -440,6 +413,7 @@ public class AggregatingStorage extends StorageBase {
      * @throws IOException on communication errors with the storage or any
      *                     of the sub storages
      */
+    @Override
     public void close() throws IOException {
         log.info ("Closing");
 
@@ -454,6 +428,7 @@ public class AggregatingStorage extends StorageBase {
         log.info ("Closed");
     }
 
+    @Override
     public void clearBase(String base) throws IOException {
         if (log.isTraceEnabled()) {
             log.trace ("clearBase("+base+")");

@@ -75,7 +75,7 @@ public class StorageWS {
         Record record;
 
         try {
-            List<Record> recs = getStorageClient().getRecords(Arrays.asList(id), 0);
+            List<Record> recs = getStorageClient().getRecords(Arrays.asList(id), null);
 
             if (recs.size() == 0) {
                 retXML = null;

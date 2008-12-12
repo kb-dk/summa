@@ -232,14 +232,14 @@ public class IngestTest extends NoExitTestCase {
                 DatabaseStorage.CONF_LOCATION));
         Storage storage = StorageFactory.createStorage(storageConf);
 
-        long iterKey = storage.getRecordsModifiedAfter(0, TESTBASE);
+        long iterKey = storage.getRecordsModifiedAfter(0, TESTBASE, null);
         Iterator<Record> iterator = new StorageIterator(storage, iterKey);
         assertFalse("The Storage should be empty", iterator.hasNext());
 
         Record record = new Record("foo", TESTBASE, new byte[0]);
         storage.flush(record);
 
-        iterKey = storage.getRecordsModifiedAfter(0, TESTBASE);
+        iterKey = storage.getRecordsModifiedAfter(0, TESTBASE, null);
         iterator = new StorageIterator(storage, iterKey);
         assertTrue("The Storage should contain something", iterator.hasNext());
         assertEquals("The first record should have id as expected",
@@ -291,7 +291,7 @@ public class IngestTest extends NoExitTestCase {
                       + " ConnectionContext", ctx);
         Storage remoteStorage = ctx.getConnection();
 
-        long iterKey = storage.getRecordsModifiedAfter(0, TESTBASE);
+        long iterKey = storage.getRecordsModifiedAfter(0, TESTBASE, null);
         Iterator<Record> iterator = new StorageIterator(storage, iterKey);
         assertTrue("The iterator should have at least one element",
                    iterator.hasNext());
@@ -349,7 +349,7 @@ public class IngestTest extends NoExitTestCase {
         assertTrue("The ingester should have stopped by now",
                    ingester.getStatus().getCode().equals(Status.CODE.stopped));
 
-        long iterKey = storage.getRecordsModifiedAfter(0, TESTBASE);
+        long iterKey = storage.getRecordsModifiedAfter(0, TESTBASE, null);
         Iterator<Record> iterator = new StorageIterator(storage, iterKey);
         assertTrue("The iterator should have at least one element",
                    iterator.hasNext());

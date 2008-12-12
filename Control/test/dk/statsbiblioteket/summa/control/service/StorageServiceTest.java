@@ -121,7 +121,7 @@ public class StorageServiceTest extends NoExitTestCase {
                       + " ConnectionContext", ctx);
         Storage remoteStorage = ctx.getConnection();
         remoteStorage.flush(new Record("foo", "bar", new byte[0]));
-        long iterKey = remoteStorage.getRecordsModifiedAfter(0, "bar");
+        long iterKey = remoteStorage.getRecordsModifiedAfter(0, "bar", null);
         Iterator<Record> recordIterator = new StorageIterator(remoteStorage,
                                                               iterKey);
         

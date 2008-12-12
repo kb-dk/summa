@@ -39,6 +39,7 @@ import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageIterator;
+import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
@@ -100,8 +101,8 @@ public class ParentChildTest extends NoExitTestCase {
 
     private void dumpMultiRecord(StorageService storage, String recordID)
             throws IOException {
-        Record record = storage.getStorage().getRecord(recordID,
-                                                       Integer.MAX_VALUE);
+        QueryOptions options = new QueryOptions(null, null, -1, 0);
+        Record record = storage.getStorage().getRecord(recordID, options);
         System.out.print("Start ");
         printRecord(record, 0);
     }
@@ -132,7 +133,7 @@ public class ParentChildTest extends NoExitTestCase {
                                                                    Exception {
         Storage storage = storageService.getStorage();
         StorageIterator iterator = new StorageIterator(
-                storage, storage.getRecordsFromBase("horizon"));
+                storage, storage.getRecordsModifiedAfter(0, "horizon", null));
         int counter = 0;
         while (iterator.hasNext()) {
             counter++;

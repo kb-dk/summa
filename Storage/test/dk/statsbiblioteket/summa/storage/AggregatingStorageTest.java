@@ -106,7 +106,7 @@ public class AggregatingStorageTest extends TestCase {
     }
 
     public void testGetNonExisitingRecord() throws Exception {
-        Record r = storage.getRecord("nosuchrecord", 0);
+        Record r = storage.getRecord("nosuchrecord", null);
 
         assertNull(r);
     }
@@ -116,7 +116,7 @@ public class AggregatingStorageTest extends TestCase {
         storage.flush(r);
 
         assertBaseCount(base1, 1);
-        assertEquals(r, storage.getRecord(testId1, 0));
+        assertEquals(r, storage.getRecord(testId1, null));
     }
 
     public void testIteration() throws Exception {
@@ -133,7 +133,7 @@ public class AggregatingStorageTest extends TestCase {
     }
 
     public void assertBaseCount (String base, long expected) throws Exception {
-        long iterKey = storage.getRecordsFromBase(base);
+        long iterKey = storage.getRecordsModifiedAfter(0, base, null);
         Iterator<Record> iter = new StorageIterator(storage, iterKey);
         
         long actual = 0;

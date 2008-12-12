@@ -128,7 +128,7 @@ public class SearchTest extends NoExitTestCase {
      */
     public static void verifyStorage(Storage storage, String id) throws
                                                                      Exception {
-        long iterKey = storage.getRecordsModifiedAfter(0, BASE);
+        long iterKey = storage.getRecordsModifiedAfter(0, BASE, null);
         Iterator<Record> recordIterator = new StorageIterator(storage, iterKey);
 
         assertTrue("The iterator should have at least one element",

@@ -234,7 +234,7 @@ public class IndexTest extends NoExitTestCase {
         ingester.start();
         waitForService(ingester);
 
-        long iterKey = storage.getRecordsModifiedAfter(0, TESTBASE);
+        long iterKey = storage.getRecordsModifiedAfter(0, TESTBASE, null);
         Iterator<Record> iterator = new StorageIterator(storage, iterKey);
         assertTrue("The iterator should have at least one element",
                    iterator.hasNext());
@@ -247,7 +247,7 @@ public class IndexTest extends NoExitTestCase {
         assertFalse("After " + NUM_RECORDS + " Records, iterator should finish",
                     iterator.hasNext());
 
-        iterKey = storage.getRecordsModifiedAfter(0, TESTBASE);
+        iterKey = storage.getRecordsModifiedAfter(0, TESTBASE, null);
         iterator = new StorageIterator(storage, iterKey);
         Record gurli = iterator.next();
         String fileContent =

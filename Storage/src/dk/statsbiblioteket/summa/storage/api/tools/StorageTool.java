@@ -79,7 +79,7 @@ public class StorageTool {
         }
 
         System.err.println("Getting records " + Logs.expand(ids, 10) + "");
-        List<Record> recs = storage.getRecords (ids, 0);
+        List<Record> recs = storage.getRecords (ids, null);
 
         for (Record r : recs) {
             printRecord(r, true);
@@ -103,7 +103,7 @@ public class StorageTool {
         }
 
         System.err.println("Getting records " + Logs.expand(ids, 10) + "");
-        List<Record> recs = reader.getRecords (ids, 0);
+        List<Record> recs = reader.getRecords (ids, null);
 
         for (Record r : recs) {
             System.err.println("Touching '" + r.getId() + "'");
@@ -132,7 +132,7 @@ public class StorageTool {
         String base = argv[1];
 
         System.err.println ("Getting records from base '" + base + "'");
-        long iterKey = storage.getRecordsFromBase(base); 
+        long iterKey = storage.getRecordsModifiedAfter(0, base, null);
         Iterator<Record> records = new StorageIterator(storage, iterKey);
         Record rec;
 
@@ -164,7 +164,7 @@ public class StorageTool {
         String recordId = argv[1];
         String xsltUrl = argv[2];
 
-        Record r = storage.getRecord(recordId, 0);
+        Record r = storage.getRecord(recordId, null);
 
         if (r == null) {
             System.err.println("No such record '" + recordId + "'");
