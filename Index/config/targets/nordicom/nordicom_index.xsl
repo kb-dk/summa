@@ -24,10 +24,16 @@
         <Index:document Index:defaultBoost="1" Index:defaultType="token" Index:defaultFreetext="true" Index:defaultSuggest="false"
                         Index:defaultGroup="false" Index:langAutogroup="true" Index:resolver="nordicom">
             <xsl:attribute name="Index:id">
-                <xsl:value-of select="mc:record/mc:field[@type='994']/mc:subfield[@type='z']" />
+	    	<xsl:text>ncom_</xsl:text>
+                <xsl:value-of select="mc:record/mc:field[@type='001_00']/mc:subfield[@type='a']" />
             </xsl:attribute>
 
-            <xsl:for-each select="marc/mc:record">
+            <xsl:for-each select="mc:record/mc:field[@type='001_00']/mc:subfield[@type='f']">
+                <xsl:text>Denne Nordicom post er kategoriseret efter: </xsl:text>
+                <xsl:value-of select="." />
+            </xsl:for-each>
+
+            <xsl:for-each select="mc:record">
                 <Index:fields>
                     <xsl:call-template name="shortformat" />
                     <xsl:call-template name="author" />
