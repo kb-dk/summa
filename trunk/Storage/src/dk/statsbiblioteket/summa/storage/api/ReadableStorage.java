@@ -48,7 +48,8 @@ public interface ReadableStorage extends Configurable {
 
     /**
      * Get an iterator over all records from the given base modified after the
-     * given time. The iterator is sorted by record id.
+     * given time. The iterator is sorted by timestamps and records with
+     * identical timestamps are sorted by record id.
      * <p/>
      * If the base is null, all records for all bases are selected.
      * <p/>

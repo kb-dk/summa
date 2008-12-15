@@ -250,6 +250,28 @@ public class StorageTest extends TestCase {
         assertTrue(storage.getModificationTime (null) > testStartTime);
     }
 
+    public void testAddTwoWithTimestampSort () throws Exception {
+        Record rec1 = new Record(testId1, testBase1, testContent1);
+        Record rec2 = new Record(testId2, testBase1, testContent1);
+
+        // Commit the records with id sorting reversed with 100ms delay
+        storage.flush (rec2);
+        Thread.sleep(100);
+        storage.flush(rec1);
+
+        long iterKey = storage.getRecordsModifiedAfter(0, testBase1, null);
+        Iterator<Record> iter = new StorageIterator(storage, iterKey);
+
+        Record r = iter.next();
+        assertEquals(rec2, r); // The first record flushed should be first
+
+        r = iter.next();
+        assertEquals(rec1, r); // The last record flushed should be last
+
+        assertFalse("Storage should contain exactly two records",
+                    iter.hasNext());
+    }
+
     public void testClearTwo () throws Exception {
         testAddTwo();
         storage.clearBase(testBase1);
