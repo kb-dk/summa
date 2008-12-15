@@ -9,7 +9,7 @@
 
     <xsl:template name="title">
         <xsl:choose>
-            <xsl:when test="mc:record/mc:field[@type='001_00']/mc:subfield[@type='f']=new">
+            <xsl:when test="mc:field[@type='001_00']/mc:subfield[@type='f']='new'">
                 <Index:group Index:name="ti" Index:navn="ti" >
                     <xsl:for-each select="mc:field[@type='245_00']/mc:subfield[@type='a']">
                         <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="10"  Index:suggest="true">

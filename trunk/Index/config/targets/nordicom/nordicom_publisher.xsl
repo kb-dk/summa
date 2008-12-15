@@ -8,7 +8,7 @@
 
     <xsl:template name="publication_data">
         <xsl:choose>
-            <xsl:when test="mc:record/mc:field[@type='001_00']/mc:subfield[@type='f']=new">
+            <xsl:when test="mc:field[@type='001_00']/mc:subfield[@type='f']='new'">
 
                 <xsl:for-each select="mc:field[@type='260_00']/mc:subfield[@type='b']">
                     <Index:field Index:repeat="true" Index:name="pu" Index:navn="fl" Index:type="token" Index:boostFactor="4">
