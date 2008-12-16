@@ -23,26 +23,19 @@
 package dk.statsbiblioteket.summa.index;
 
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.transform.stream.StreamResult;
-import java.io.InputStream;
-import java.io.IOException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.URL;
-import java.net.MalformedURLException;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.configuration.Resolver;
-import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
+import dk.statsbiblioteket.summa.common.util.XSLTUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -91,70 +84,17 @@ public class XMLTransformer extends ObjectFilterImpl {
         log.debug("Extracted XSLT location '" + xsltLocation
                   + "' from properties");
         try {
-            createTransformer(xsltLocation);
-        } catch (IndexServiceException e) {
+            transformer = XSLTUtil.createTransformer(xsltLocation);
+        } catch (TransformerException e) {
             throw new ConfigurationException("Unable to create transformer", e);
         }
         log.info("Transformer for '" + xsltLocation + "' ready for use");
     }
 
-    /**
-     * Create a transformer based on the given XSLTLocation. The transformer
-     * will be used for the lifetime of the object or until a new transformer
-     * is created by an outside call to createTransformer.
-     * @param xsltLocation the location of the XSLY.
-     * @throws IndexServiceException thrown if for some reason a Transformer
-     *                               could not be instantiated.
-     *                               This is normally due to problems with the
-     *                               xsltLocation.
-     */
-    public synchronized void createTransformer(String xsltLocation) throws
-                                                         IndexServiceException {
-
-        log.debug("Requesting and compiling XSLT from '" + xsltLocation + "'");
-
-        TransformerFactory tfactory = TransformerFactory.newInstance();
-        InputStream in = null;
-        try {
-            URL url = Resolver.getURL(xsltLocation);
-            if (url == null) {
-                throw new ConfigurationException(
-                        "Unable to resolve '" + xsltLocation + "' to URL");
-            }
-            in = url.openStream();
-            transformer = tfactory.newTransformer(
-                    new StreamSource(in, url.toString()));
-        } catch (MalformedURLException e) {
-            throw new IndexServiceException("The URL to the XSLT is not a "
-                                            + "valid URL: " + xsltLocation, e);
-        } catch (IOException e) {
-            throw new IndexServiceException("Unable to open the XSLT resource, "
-                                            + "check the destination: "
-                                            + xsltLocation, e);
-        } catch (TransformerConfigurationException e) {
-            throw new IndexServiceException("Wrongly configured transformer for"
-                                            + "XSLT at '" + xsltLocation + "'",
-                                            e);
-        } catch (TransformerException e) {
-            throw new IndexServiceException("Unable to instantiate Transformer,"
-                                            + " a system configuration error?",
-                                            e);
-        } finally {
-            try {
-                if (in != null) {
-                    in.close();
-                }
-            } catch (IOException e) {
-                log.warn("Non-fatal IOException while closing stream to '"
-                         + xsltLocation + "'");
-            }
-        }
-    }
-
 
     /**
      * Transform the content of Record from one XML-block to another, using the
-     * transformer from {@link #createTransformer(String)}.
+     * transformer from {@link dk.statsbiblioteket.summa.common.util.XSLTUtil#createTransformer(String)}.
      * @param payload the wrapper containing the Record with the content.
      */
     protected synchronized void processPayload(Payload payload) {
@@ -165,40 +105,8 @@ public class XMLTransformer extends ObjectFilterImpl {
             return;
         }
         try {
-            int inSize = payload.getRecord().getContent().length;
-            StreamResult input = new StreamResult();
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            input.setOutputStream(out);
-            Source so = new StreamSource(
-                    new ByteArrayInputStream(payload.getRecord().getContent()));
-            transformer.transform(so, input);
-/*            System.out.println("************************************");
-            System.out.println(payload.getRecord().getContentAsUTF8());*/
-            byte[] output = out.toByteArray();
-/*            System.out.println("------------------------------------");
-            System.out.println(payload.getRecord().getContentAsUTF8());
-            System.out.println("************************************");*/
-            if (log.isTraceEnabled()) {
-                try {
-                    log.trace(String.format(
-                        "Transformed %s using XSLT from %s\n***** Source *****"
-                            + "\n%s\n***** Result *****\n%s",
-                            payload, xsltLocation,
-                            payload.getRecord().getContentAsUTF8(),
-                            new String(output, "utf-8")));
-                } catch (UnsupportedEncodingException e) {
-                    log.error("Unable to convert byte-array to UTF-8", e);
-                }
-            } else if (log.isDebugEnabled()) {
-                log.debug("Transformed " + payload + ". Input: " + inSize
-                          + " bytes, output: " + output.length
-                          + " bytes, XSLT: " + xsltLocation);
-            }
-/*            if (log.isTraceEnabled()) {
-                log.trace("Transformed content for " + payload + ": "
-                          + payload.getRecord().getContentAsUTF8());
-            }*/
-            payload.getRecord().setContent(output);
+            payload.getRecord().setContent(XSLTUtil.transformContent(
+                    transformer, payload.getRecord().getContent()));
         } catch (TransformerException e) {
             log.warn("Transformer problems. Discarding payload " + payload, e);
             if (log.isTraceEnabled()) {
