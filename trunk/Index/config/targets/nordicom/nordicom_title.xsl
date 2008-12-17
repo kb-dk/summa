@@ -106,6 +106,11 @@
                         <xsl:value-of select="."/>
                     </Index:field>
                 </xsl:for-each>
+                <xsl:for-each select="mc:field[@type='120_00']/mc:subfield[@type='a']">
+                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="10"  Index:suggest="true">
+                        <xsl:value-of select="."/>
+                    </Index:field>
+                </xsl:for-each>
                 <xsl:for-each select="mc:field[@type='110_00']/mc:subfield[@type='a']">
                     <Index:field Index:repeat="true" Index:name="main_titel" Index:navn="ht" Index:type="token" Index:boostFactor="10"  Index:suggest="true">
                         <xsl:for-each select=".">

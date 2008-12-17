@@ -8,110 +8,153 @@
                 version="1.0">
 
     <xsl:template name="lma">
-        <Index:group Index:freetext="false" Index:navn="lma" Index:name="lma">
-            <xsl:for-each select=".">
-                <Index:field Index:repeat="false" Index:name="ltarget" Index:navn="datakilde" Index:type="keyword" Index:freetext="false">
-                    <xsl:text>Nordicom</xsl:text>
-                </Index:field>
-            </xsl:for-each>
+        <xsl:choose>
+            <xsl:when test="mc:field[@type='001_00']/mc:subfield[@type='f']='new'">
+                <Index:group Index:freetext="false" Index:navn="lma" Index:name="lma">
+                    <xsl:for-each select=".">
+                        <Index:field Index:repeat="false" Index:name="ltarget" Index:navn="datakilde" Index:type="keyword" Index:freetext="false">
+                            <xsl:text>Nordicom</xsl:text>
+                        </Index:field>
+                    </xsl:for-each>
 
-            <xsl:for-each select="mc:field[@type='009_00']/mc:subfield[@type='a' or @type='b']">
-                <xsl:if test="contains(.,'a')">
-                    <xsl:choose>
-                        <xsl:when test="contains(/mc:record/mc:field[@type='008_00']/mc:subfield[@type='t'],'m') or contains(/mc:record/mc:field[@type='008_00']/mc:subfield[@type='t'],'s')">
-                            <xsl:for-each select="/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g' or @type='h']">
-                                <xsl:choose>
-                                    <xsl:when test="contains(.,'xx')">
-                                        <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
-                                            <xsl:text>bog</xsl:text>
-                                        </Index:field>
-                                        <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
-                                            <xsl:text>trykt_bog</xsl:text>
-                                        </Index:field>
-                                    </xsl:when>
-                                    <xsl:when test="contains(.,'xe')">
-                                        <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
-                                            <xsl:text>bog</xsl:text>
-                                        </Index:field>
-                                        <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
-                                            <xsl:text>e_bog</xsl:text>
-                                        </Index:field>
-                                    </xsl:when>
-                                </xsl:choose>
-                            </xsl:for-each>
-                        </xsl:when>
-
-                        <xsl:when test="contains(/mc:record/mc:field[@type='008_00']/mc:subfield[@type='t'],'a')">
-
+                    <xsl:for-each select="mc:field[@type='009_00']/mc:subfield[@type='a' or @type='b']">
+                        <xsl:if test="contains(.,'a')">
                             <xsl:choose>
-                                <xsl:when test="/mc:record/mc:field[@type='557_00']">
+                                <xsl:when test="contains(/mc:record/mc:field[@type='008_00']/mc:subfield[@type='t'],'m') or contains(/mc:record/mc:field[@type='008_00']/mc:subfield[@type='t'],'s')">
+                                    <xsl:for-each select="/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g' or @type='h']">
+                                        <xsl:choose>
+                                            <xsl:when test="contains(.,'xx')">
+                                                <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
+                                                    <xsl:text>bog</xsl:text>
+                                                </Index:field>
+                                                <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
+                                                    <xsl:text>trykt_bog</xsl:text>
+                                                </Index:field>
+                                            </xsl:when>
+                                            <xsl:when test="contains(.,'xe')">
+                                                <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
+                                                    <xsl:text>bog</xsl:text>
+                                                </Index:field>
+                                                <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
+                                                    <xsl:text>e_bog</xsl:text>
+                                                </Index:field>
+                                            </xsl:when>
+                                        </xsl:choose>
+                                    </xsl:for-each>
+                                </xsl:when>
+
+                                <xsl:when test="contains(/mc:record/mc:field[@type='008_00']/mc:subfield[@type='t'],'a')">
+
                                     <xsl:choose>
-                                        <xsl:when test="contains(/mc:record/mc:field[@type='008_00']/mc:subfield[@type='r'],'ap')">
+                                        <xsl:when test="/mc:record/mc:field[@type='557_00']">
+                                            <xsl:choose>
+                                                <xsl:when test="contains(/mc:record/mc:field[@type='008_00']/mc:subfield[@type='r'],'ap')">
+                                                    <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
+                                                        <xsl:text>artikel</xsl:text>
+                                                    </Index:field>
+                                                    <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
+                                                        <xsl:text>tss_art</xsl:text>
+                                                    </Index:field>
+                                                </xsl:when>
+                                                <xsl:otherwise>
+                                                    <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
+                                                        <xsl:text>artikel</xsl:text>
+                                                    </Index:field>
+                                                    <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
+                                                        <xsl:text>tss_art</xsl:text>
+                                                    </Index:field>
+                                                </xsl:otherwise>
+                                            </xsl:choose>
+                                        </xsl:when>
+
+                                        <xsl:when test="/mc:record/mc:field[@type='558_00']">
                                             <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
                                                 <xsl:text>artikel</xsl:text>
                                             </Index:field>
                                             <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
-                                                <xsl:text>tss_art</xsl:text>
+                                                <xsl:text>bog_art</xsl:text>
                                             </Index:field>
                                         </xsl:when>
-                                        <xsl:otherwise>
+
+                                        <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g' or @type='h'],'xe')">
                                             <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
                                                 <xsl:text>artikel</xsl:text>
                                             </Index:field>
                                             <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
-                                                <xsl:text>tss_art</xsl:text>
+                                                <xsl:text>e_art</xsl:text>
+                                            </Index:field>
+                                        </xsl:when>
+
+                                        <xsl:otherwise>
+                                            <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
+                                                <xsl:text>bog</xsl:text>
+                                            </Index:field>
+                                            <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
+                                                <xsl:text>tss_specif</xsl:text>
+                                            </Index:field>
+                                            <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
+                                                <xsl:text>trykt_bog</xsl:text>
                                             </Index:field>
                                         </xsl:otherwise>
                                     </xsl:choose>
                                 </xsl:when>
-
-                                <xsl:when test="/mc:record/mc:field[@type='558_00']">
-                                    <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
-                                        <xsl:text>artikel</xsl:text>
-                                    </Index:field>
-                                    <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
-                                        <xsl:text>bog_art</xsl:text>
-                                    </Index:field>
-                                </xsl:when>
-
-                                <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g' or @type='h'],'xe')">
-                                    <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
-                                        <xsl:text>artikel</xsl:text>
-                                    </Index:field>
-                                    <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
-                                        <xsl:text>e_art</xsl:text>
-                                    </Index:field>
-                                </xsl:when>
-
-                                <xsl:otherwise>
-                                    <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
-                                        <xsl:text>bog</xsl:text>
-                                    </Index:field>
-                                    <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
-                                        <xsl:text>tss_specif</xsl:text>
-                                    </Index:field>
-                                    <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
-                                        <xsl:text>trykt_bog</xsl:text>
-                                    </Index:field>
-                                </xsl:otherwise>
                             </xsl:choose>
+                        </xsl:if>
+
+                        <xsl:if test="contains(.,'m')">
+                            <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
+                                <xsl:text>film</xsl:text>
+                            </Index:field>
+                        </xsl:if>
+
+                        <xsl:if test="contains(.,'r')">
+                            <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
+                                <xsl:text>lyd_musik</xsl:text>
+                            </Index:field>
+                        </xsl:if>
+                    </xsl:for-each>
+
+                </Index:group>
+            </xsl:when>
+
+            <!-- Det gamle format -->
+
+            <xsl:otherwise>
+                <Index:group Index:freetext="false" Index:navn="lma" Index:name="lma">
+                    <xsl:for-each select=".">
+                        <Index:field Index:repeat="false" Index:name="ltarget" Index:navn="datakilde" Index:type="keyword" Index:freetext="false">
+                            <xsl:text>Nordicom</xsl:text>
+                        </Index:field>
+                    </xsl:for-each>
+
+                    <xsl:choose>
+                        <xsl:when test="/mc:record/mc:field[@type='140_00']/mc:subfield[@type='a']">
+                            <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
+                                <xsl:text>artikel</xsl:text>
+                            </Index:field>
+                            <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
+                                <xsl:text>bog_art</xsl:text>
+                            </Index:field>
                         </xsl:when>
+                        <xsl:when test="/mc:record/mc:field[@type='150_00']/mc:subfield[@type='a']">
+                            <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
+                                <xsl:text>artikel</xsl:text>
+                            </Index:field>
+                            <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
+                                <xsl:text>tss_art</xsl:text>
+                            </Index:field>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
+                                <xsl:text>bog</xsl:text>
+                            </Index:field>
+                            <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
+                                <xsl:text>trykt_bog</xsl:text>
+                            </Index:field>
+                        </xsl:otherwise>
                     </xsl:choose>
-                </xsl:if>
-
-                <xsl:if test="contains(.,'m')">
-                    <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
-                        <xsl:text>film</xsl:text>
-                    </Index:field>
-                </xsl:if>
-
-                <xsl:if test="contains(.,'r')">
-                    <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
-                        <xsl:text>lyd_musik</xsl:text>
-                    </Index:field>
-                </xsl:if>
-            </xsl:for-each>
-
-        </Index:group>
+                </Index:group>
+            </xsl:otherwise>
+        </xsl:choose>
     </xsl:template>
 </xsl:stylesheet>
