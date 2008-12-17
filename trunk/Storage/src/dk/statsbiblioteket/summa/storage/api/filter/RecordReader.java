@@ -46,7 +46,6 @@ import java.util.GregorianCalendar;
 import java.util.NoSuchElementException;
 import java.util.Iterator;
 import java.util.Arrays;
-import java.util.concurrent.Semaphore;
 
 /**
  * Retrieves Records from storage based on the criteria given in the properties.
@@ -134,6 +133,36 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
     public static final String DEFAULT_BASE = "";
 
     /**
+     * Number of records to extract before storing a progress file.
+     * The file will also be written if {@link #CONF_PROGRESS_GRACETIME} is
+     * passed.
+     * <p/>
+     * If the batch size is negative then progress will never be written
+     * no matter how many records are read, but surpassing the gracetime
+     * will still trigger a write.
+     * <p/>
+     * This property is optional.
+     * Default is {@link #DEFAULT_PROGRESS_BATCH_SIZE}
+     */
+    public static final String CONF_PROGRESS_BATCH_SIZE =
+            "summa.storage.recordreader.progress.batchsize";
+    public static final long DEFAULT_PROGRESS_BATCH_SIZE = 500;
+
+    /**
+     * Number of milliseconds to wait while writing a progress file.
+     * The progress file will also be written if
+     * {@link #CONF_PROGRESS_BATCH_SIZE} records has been extracted.
+     * If the grace time is negative the progress file will never be written
+     * because of time based rules, only by surpassing the batch size.
+     * <p/>
+     * This property is optional.
+     * Default is {@link #DEFAULT_PROGRESS_GRACETIME}
+     */
+    public static final String CONF_PROGRESS_GRACETIME =
+            "summa.storage.recordreader.progress.gracetime";
+    public static final long DEFAULT_PROGRESS_GRACETIME = 5000;
+
+    /**
      * If true, the connection should stay alive after the initial poll.
      * Calls to hasNext(), next() and pump() will block until new Records are
      * added to the Storage or close is called.
@@ -147,11 +176,147 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             "summa.storage.recordreader.stayalive";
     public static final boolean DEFAULT_STAY_ALIVE = false;
 
+
+    /**
+     * Helper class used to only flush the progress file when needed.
+     * <p/>
+     * This class does NOT count the number of records read. It may receive
+     * more or less updates than the number of records.
+     */
+    private static class ProgressTracker {
+
+        private long lastExternalUpdate;
+        private long lastInternalUpdate;
+        private long batchSize;
+        private long graceTime;
+        private long numUpdates;
+        private long numUpdatesLastFlush;
+        private File progressFile;
+
+        public ProgressTracker (File progressFile,
+                                long batchSize, long graceTime) {
+            this.batchSize = batchSize;
+            this.graceTime = graceTime;
+            this.progressFile = progressFile;
+        }
+
+        /**
+         * Register an update at time {@code timestamp}. The progress file
+         * will be updated if needed
+         * @param timestamp
+         */
+        public void updated (long timestamp) {
+            lastExternalUpdate = timestamp;
+            lastInternalUpdate = System.currentTimeMillis();
+            numUpdates++;
+            checkProgressFile();
+        }
+
+        /**
+         * Check if the progress file needs updating and do it if that
+         * is the case
+         */
+        private void checkProgressFile () {
+            if (graceTime >= 0 &&
+                System.currentTimeMillis() - lastInternalUpdate > graceTime) {
+                updateProgressFile();
+                return;
+            }
+
+            if (batchSize >= 0 &&
+                numUpdates - numUpdatesLastFlush > batchSize) {
+                updateProgressFile();
+                return;
+            }
+        }
+
+        /**
+         * Force an update of the progress file. This will not respect
+         * the batch size or gracetime settings in any way
+         */
+        public void updateProgressFile() {
+            lastInternalUpdate = System.currentTimeMillis();
+
+            log.debug("Storing progress in '" + progressFile + "' ("
+                      + numUpdates + " records has been extracted so far)");
+            try {
+                Files.saveString(
+                        String.format(TIMESTAMP_FORMAT, lastExternalUpdate),
+                        progressFile);
+            } catch (IOException e) {
+                log.error("close(true): Unable to store progress in file '"
+                          + progressFile + "': " + e.getMessage(), e);
+            }
+            numUpdatesLastFlush = numUpdates;
+        }
+
+        /**
+         * Read the last modification time in from the progress file
+         */
+        public void loadProgress () {
+            log.debug("Attempting to get previous progress stored in file "
+                      + progressFile);
+
+            if (progressFile.exists() && progressFile.isFile() &&
+                progressFile.canRead()) {
+                log.trace("getStartTime has persistence file");
+                try {
+                    long startTime = getTimestamp(progressFile,
+                                                  Files.loadString(progressFile));
+                    if (log.isDebugEnabled()) {
+                        try {
+                            log.debug(String.format(
+                                    "Extracted timestamp " + ISO_TIME
+                                    + " from '%2$s'", startTime, progressFile));
+                        } catch (Exception e) {
+                            log.warn("Could not output properly formatted timestamp"
+                                     + " for " + startTime + " ms");
+                        }
+                    }
+                    lastExternalUpdate = startTime;
+                    lastInternalUpdate = System.currentTimeMillis();
+                } catch (IOException e) {
+                    //noinspection DuplicateStringLiteralInspection
+                    log.error("getStartTime: Unable to open existing file '"
+                              + progressFile + "'. Returning 0");
+                }
+            }
+        }
+
+        public long getLastUpdate() {
+            return lastExternalUpdate;
+        }
+
+        public void clearProgressFile() {
+            if (progressFile.exists()) {
+                progressFile.delete();
+            }
+        }
+
+        static long getTimestamp(File progressFile, String xml) {
+            Matcher matcher = TIMESTAMP_PATTERN.matcher(xml);
+            if (!matcher.matches() || matcher.groupCount() != 6) {
+                //noinspection DuplicateStringLiteralInspection
+                log.error("getTimestamp: Could not locate timestamp in "
+                          + "file '" + progressFile + "' containing '"
+                          + xml + "'. Returning 0");
+                return 0;
+            }
+            return new GregorianCalendar(Integer.parseInt(matcher.group(1)),
+                                         Integer.parseInt(matcher.group(2))-1, //WTF?
+                                         Integer.parseInt(matcher.group(3)),
+                                         Integer.parseInt(matcher.group(4)),
+                                         Integer.parseInt(matcher.group(5)),
+                                         Integer.parseInt(matcher.group(6))).
+                    getTimeInMillis();
+        }
+    }
+
     @SuppressWarnings({"FieldCanBeLocal"})
     private ReadableStorage storage;
     @SuppressWarnings({"FieldCanBeLocal"})
     private String base = DEFAULT_BASE;
-    private File progressFile;
+    private ProgressTracker progressTracker;
     private boolean usePersistence = DEFAULT_USE_PERSISTENCE;
     private boolean startFromScratch = DEFAULT_START_FROM_SCRATCH;
     private int maxReadRecords = DEFAULT_MAX_READ_RECORDS;
@@ -185,21 +350,26 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         log.trace("Constructing RecordReader");
         storage = new StorageReaderClient(conf);
         base = conf.getString(CONF_BASE, DEFAULT_BASE);
+
         if ("*".equals(base) || "".equals(base)) {
             log.trace("Catch-all base '" + base + "' was specified");
             base = null;
         }
+
         String progressFileString =
                 conf.getString(CONF_PROGRESS_FILE, null);
+        File progressFile;
         if (progressFileString == null || "".equals(progressFileString)) {
             progressFile = new File((base == null ? "" : base + ".")
-                                    + DEFAULT_PROGRESS_FILE_POSTFIX);
+                                         + DEFAULT_PROGRESS_FILE_POSTFIX);
             log.debug("No progress-file defined in key " + CONF_PROGRESS_FILE
                       + ". Constructing progress file '" + progressFile + "'");
         } else {
+            progressFile = new File(progressFileString);
             log.debug("Progress.file is " + progressFile.getCanonicalFile());
         }
         progressFile = progressFile.getAbsoluteFile();
+
         usePersistence = conf.getBoolean(CONF_USE_PERSISTENCE,
                                          DEFAULT_USE_PERSISTENCE);
         startFromScratch = conf.getBoolean(CONF_START_FROM_SCRATCH,
@@ -208,6 +378,19 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
                                      DEFAULT_MAX_READ_RECORDS);
         maxReadSeconds = conf.getInt(CONF_MAX_READ_SECONDS,
                                      DEFAULT_MAX_READ_SECONDS);
+
+        if (usePersistence) {
+            log.debug("Enabling progress tracker");
+            progressTracker =
+                  new ProgressTracker(progressFile,
+                                      conf.getLong(CONF_PROGRESS_BATCH_SIZE,
+                                                   DEFAULT_PROGRESS_BATCH_SIZE),
+                                      conf.getLong(CONF_PROGRESS_GRACETIME,
+                                                   DEFAULT_PROGRESS_GRACETIME));
+        } else {
+            log.info("Progress tracking disabled");
+            progressTracker = null;
+        }
 
         if (conf.getBoolean(CONF_STAY_ALIVE, DEFAULT_STAY_ALIVE)) {
             storageWatcher = new StorageWatcher(conf);
@@ -219,7 +402,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
                       + " was false");
         }
 
-        lastRecordTimestamp = getStartTime() + 1000; // TODO: Fix the 1s hack
+        lastRecordTimestamp = getStartTime();
         lastIteratorUpdate = lastRecordTimestamp;
         log.trace("RecordReader constructed, ready for pumping");
     }
@@ -242,56 +425,23 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
     private long getStartTime() {
         if (startFromScratch || !usePersistence) {
             log.trace("getStartTime: Starttime set to 0");
-            return 0;
-        }
-        log.debug("Attempting to get previous progress stored in file "
-                  + progressFile);
-        if (progressFile.exists() && progressFile.isFile() &&
-            progressFile.canRead()) {
-            log.trace("getStartTime has persistence file");
-            try {
-                long startTime = getTimestamp(progressFile,
-                                              Files.loadString(progressFile));
-                if (log.isDebugEnabled()) {
-                    try {
-                        log.debug(String.format(
-                                "Extracted timestamp " + ISO_TIME
-                                + " from '%2$s'", startTime, progressFile));
-                    } catch (Exception e) {
-                        log.warn("Could not output properly formatted timestamp"
-                                 + " for " + startTime + " ms");
-                    }
-                }
-                return startTime;
-            } catch (IOException e) {
-                //noinspection DuplicateStringLiteralInspection
-                log.error("getStartTime: Unable to open existing file '"
-                          + progressFile + "'. Returning 0");
-                return 0;
-            }
-        }
-        //noinspection DuplicateStringLiteralInspection
-        log.trace("getStartTime: Could not get storage progress file '"
-                  + progressFile + "'. Returning 0 as lastTimestamp");
-        return 0;
-    }
 
-    static long getTimestamp(File progressFile, String xml) {
-        Matcher matcher = TIMESTAMP_PATTERN.matcher(xml);
-        if (!matcher.matches() || matcher.groupCount() != 6) {
-            //noinspection DuplicateStringLiteralInspection
-            log.error("getTimestamp: Could not locate timestamp in "
-                      + "file '" + progressFile + "' containing '"
-                      + xml + "'. Returning 0");
+            if (progressTracker != null) {
+                progressTracker.updated(0);
+            }
+
             return 0;
         }
-        return new GregorianCalendar(Integer.parseInt(matcher.group(1)),
-                                     Integer.parseInt(matcher.group(2))-1,
-                                     Integer.parseInt(matcher.group(3)),
-                                     Integer.parseInt(matcher.group(4)),
-                                     Integer.parseInt(matcher.group(5)),
-                                     Integer.parseInt(matcher.group(6))).
-                getTimeInMillis();
+
+        if (progressTracker != null) {
+            progressTracker.loadProgress();
+            log.info("Resuming from " + progressTracker.getLastUpdate());
+            return progressTracker.getLastUpdate();
+        } else {
+            log.debug("Not set to resume or keep progress state. "
+                      + "Starting from time 0");
+            return 0;
+        }
     }
 
     /**
@@ -466,7 +616,9 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             markEof();
         }
 
-        writeProgress(); // TODO: Is this too aggressive?
+        if (progressTracker != null) {
+            progressTracker.updated(lastRecordTimestamp);
+        }
 
         return payload;
     }
@@ -503,24 +655,9 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         //noinspection DuplicateStringLiteralInspection
         log.debug("close(" + success + ") entered");
         markEof();
-        if (success) {
-            writeProgress();
-        }
-    }
-
-    private void writeProgress() {
-        if (usePersistence && recordCounter > 0) {
-            log.debug("Storing progress in '" + progressFile + "' ("
-                      + recordCounter + " records has been extracted so far "
-                      + "from base " + base + ")");
-            try {
-                Files.saveString(
-                        String.format(TIMESTAMP_FORMAT, lastRecordTimestamp),
-                        progressFile);
-            } catch (IOException e) {
-                log.error("close(true): Unable to store progress in file '"
-                          + progressFile + "'");
-            }
+        if (success && progressTracker != null) {
+            progressTracker.updated(lastRecordTimestamp);
+            progressTracker.updateProgressFile(); // Force a flush of the progress
         }
     }
 
@@ -528,8 +665,8 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
      * If a progress-file is existing, it is cleared.
      */
     public void clearProgressFile() {
-        if (progressFile != null && progressFile.exists()) {
-            progressFile.delete();
+        if (progressTracker != null) {
+            progressTracker.clearProgressFile();
         }
     }
 
