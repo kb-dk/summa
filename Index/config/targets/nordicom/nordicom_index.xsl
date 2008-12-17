@@ -42,7 +42,7 @@
                     <xsl:call-template name="lma" />
 
                     <xsl:choose>
-                        <xsl:when test="mc:record/mc:field[@type='001_00']/mc:subfield[@type='f']=new">
+                        <xsl:when test="mc:field[@type='001_00']/mc:subfield[@type='f']='new'">
 
                             <xsl:for-each select="mc:field[@type='008_00']/mc:subfield[@type='l']">
                                 <Index:field Index:repeat="true" Index:name="lang" Index:navn="sp" Index:type="token">
@@ -202,11 +202,11 @@
                                     <xsl:value-of select="."/>
                                 </Index:field>
                             </xsl:for-each>
+                         </xsl:when>
 
-                       <!-- Det gamle format -->     
+                       <!-- Det gamle format -->
 
 
-                        </xsl:when>
                         <xsl:otherwise>
                             <xsl:for-each select="mc:field[@type='090_00']/mc:subfield[@type='b']">
                                 <Index:field Index:repeat="true" Index:name="lang" Index:navn="sp" Index:type="token">
@@ -269,7 +269,7 @@
                                                     </xsl:if>
                                                 </xsl:if>
                                             </xsl:otherwise>
-                                        </xsl:choose>                                   
+                                        </xsl:choose>
                                 </xsl:for-each>
                             </Index:field>
 
