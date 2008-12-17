@@ -245,7 +245,7 @@ public class CoreMapBitStuffed extends CoreMapImpl {
 
     private void fitStructure(int docID, int[] tagIDs) {
         if (docID > index.length - 2) {
-            int newSize = Math.min(
+            int newSize = index.length + Math.min(
                     MAX_GROWTH_SIZE, Math.max(
                     MIN_GROWTH_SIZE,
                     (int)(index.length * CONTENT_GROWTHFACTOR)));
@@ -258,9 +258,10 @@ public class CoreMapBitStuffed extends CoreMapImpl {
         }
         // Check value capacity
         if (valuePos + tagIDs.length >= values.length) {
-            int newSize = (int)Math.max(MIN_GROWTH_SIZE, Math.max(
-                                        values.length * CONTENT_GROWTHFACTOR,
-                                        values.length + tagIDs.length));
+            int newSize = values.length
+                          + (int)Math.max(MIN_GROWTH_SIZE, Math.max(
+                    values.length * CONTENT_GROWTHFACTOR,
+                    values.length + tagIDs.length));
             //noinspection DuplicateStringLiteralInspection
             log.debug("Expanding value array from " + values.length
                       + " to " + newSize);
