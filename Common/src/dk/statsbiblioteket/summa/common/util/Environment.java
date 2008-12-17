@@ -1,15 +1,21 @@
 package dk.statsbiblioteket.summa.common.util;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import java.util.Map;
 import java.util.Collection;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 /**
  * Helper class with static methods to support escaping system properties
  * and environment variables in strings.
  */
 public class Environment {
+    private static Log log = LogFactory.getLog(Environment.class);
 
     /**
      * Escape any system properties references in Ant-like syntax, eg. the
@@ -101,4 +107,50 @@ public class Environment {
 
         return result;
     }
+
+    /**
+     * Determines the version of the running JVM. If the version is incompatible
+     * with Lucene (See
+     * http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6707044
+     * for details) an Error is thrown. Running with an incompatible version
+     * introduces biterrors in large Lucene indexes (statistically speaking).
+     * </p><p>
+     * It is highly recommended to call this method very early, to provide a
+     * fail-fast handling of the incompatibility.
+     * @return the version of the curent JVM or null if it could not be
+     *         determined.
+     * @throws Error if the version is incompatible with Lucene.
+     */
+    public static String checkJavaVersion() throws Error {
+        String version = System.getProperty("java.runtime.version");
+        Matcher matcher = version == null ? null :
+                          VERSION_PATTERN.matcher(version);
+        if (version == null || !matcher.matches()) {
+            log.warn("Unable to determine Java runtime version by property "
+                     + "'java.runtime.version'. Please check that the JVM does"
+                     + " not have bug #6707044 (see http://bugs.sun.com/bugdat"
+                     + "abase/view_bug.do?bug_id=6707044) for details");
+            return version;
+        }
+        // version should be like "1.6.0_10-b33"
+        if (!(matcher.group(1).equals("1") && matcher.group(2).equals("6")
+              && matcher.group(3).equals("0"))) {
+            return version; // Only versions 1.6.0_* are critical
+        }
+        int update = Integer.parseInt(matcher.group(4));
+        int build = Integer.parseInt(matcher.group(5));
+        if ((update >= 4 && update <= 10) && !(update == 10 && build > 25)) {
+            throw new Error(
+                    "Incompatible Java runtime version. Due to the bug http://"
+                    + "bugs.sun.com/bugdatabase/view_bug.do?bug_id=6707044, "
+                    + "running with Java runtime versions from 1.6.0_04 to "
+                    + "1.6.0.10-b25 will sometimes result in corrupted Lucene "
+                    + "indexes. The current Java runtime version is "
+                    + version);
+        }
+        log.debug("Java runtime version is " + version + ". All OK");
+        return version;
+    }
+    private static Pattern VERSION_PATTERN = Pattern.compile(
+            "([0-9]+)\\.([0-9]+)\\.([0-9]+)\\_([0-9]+)\\-b([0-9]+)");
 }

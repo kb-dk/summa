@@ -58,4 +58,9 @@ public class EnvironmentTest extends TestCase {
         assertEquals(null,
                      Environment.escapeSystemProperties((Iterable<String>)null));
     }
+
+    public void testCheckJavaVersion() throws Exception {
+        System.out.println("Current JVM version: "
+                           + Environment.checkJavaVersion());
+    }
 }

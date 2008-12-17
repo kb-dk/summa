@@ -60,6 +60,11 @@ public class Configuration implements Serializable,
                                       Configurable {
     private final static Log log = LogFactory.getLog(Configuration.class);
 
+    /**
+     * Fail-fast check for Java version
+     */
+    private static transient String version = Environment.checkJavaVersion();
+
     private ConfigurationStorage storage;
 
     /**
