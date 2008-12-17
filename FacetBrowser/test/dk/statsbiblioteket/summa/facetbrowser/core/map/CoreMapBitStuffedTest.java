@@ -76,7 +76,7 @@ public class CoreMapBitStuffedTest extends TestCase {
         map.add(1, 1, new int[]{12, 34});
         map.add(3, 0, new int[]{23, 34});
         assertEquals("The map should contain 4 elements",
-                     3, map.getDocCount());
+                     4, map.getDocCount());
     }
 
     protected String dump(int[] ints) {
@@ -242,6 +242,39 @@ public class CoreMapBitStuffedTest extends TestCase {
             fail("Requesting an unknown document should fail");
         } catch(Exception e) {
             // Expected
+        }
+    }
+
+    public void testHugeJumpInDocID() throws Exception {
+        CoreMap map = bo.getCoreMap();
+        Random random = new Random();
+        int maxFacet = bo.getStructure().getFacets().size();
+        int MAX_TAG_ADDITIONS = 10;
+        int MAX_TAG_ID = 10000;
+
+        int[] tagIDs = new int[random.nextInt(MAX_TAG_ADDITIONS)];
+        for (int j = 0 ; j < tagIDs.length ; j++) {
+            tagIDs[j] = random.nextInt(MAX_TAG_ID);
+        }
+        map.add(0, random.nextInt(maxFacet), tagIDs);
+        map.add(20000, random.nextInt(maxFacet), tagIDs);
+    }
+
+    /* Throws exceptions if it cannot scale to RUNS documents */
+    public void testScale() throws Exception {
+        CoreMap map = bo.getCoreMap();
+        Random random = new Random();
+        int maxFacet = bo.getStructure().getFacets().size();
+        int MAX_TAG_ADDITIONS = 10;
+        int MAX_TAG_ID = 10000;
+        int RUNS = 20000;
+        for (int i = 0 ; i< RUNS ; i++) {
+            int[] tagIDs = new int[random.nextInt(MAX_TAG_ADDITIONS)];
+            for (int j = 0 ; j < tagIDs.length ; j++) {
+                tagIDs[j] = random.nextInt(MAX_TAG_ID);
+            }
+            map.add(i, random.nextInt(maxFacet),
+                    tagIDs);
         }
     }
 

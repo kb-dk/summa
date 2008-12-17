@@ -37,7 +37,6 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.browse.TagCounter;
 import dk.statsbiblioteket.summa.search.document.DocIDCollector;
-import dk.statsbiblioteket.util.Logs;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -244,7 +243,9 @@ public class CoreMapBitStuffed extends CoreMapImpl {
     }
 
     private void fitStructure(int docID, int[] tagIDs) {
-        if (docID > index.length - 2) {
+        index = fitArray(index, docID + 2, "index");
+        values = fitArray(values, valuePos + tagIDs.length + 2, "values");
+/*        if (docID > index.length - 2) {
             int newSize = Math.min(
                     index.length + MAX_GROWTH_SIZE, Math.max(
                     index.length + MIN_GROWTH_SIZE,
@@ -267,7 +268,38 @@ public class CoreMapBitStuffed extends CoreMapImpl {
             int[] exp = new int[newSize];
             System.arraycopy(values, 0, exp, 0, values.length);
             values = exp;
+        }*/
+    }
+
+    /**
+     * Ensures that an element can be inserted at pos by potentially expanding
+     * the array.
+     * @param array the array that should have room for an element at pos.
+     * @param pos   the position of an element.
+     * @param arrayDesignation the name of the array - used for debugging.
+     * @return the array if not expanded and the new array if expanded.
+     */
+    private int[] fitArray(int[] array, int pos, String arrayDesignation) {
+        if (pos > array.length - 1) {
+            int newSize = Math.min(
+                    Integer.MAX_VALUE,
+                    Math.max(pos + 1 + MIN_GROWTH_SIZE,
+                             (int)(array.length * CONTENT_GROWTHFACTOR)));
+            if (pos > newSize - 1) {
+                throw new IllegalArgumentException(String.format(
+                        "Unable to expand the array %s of length %d to contain"
+                        + " element at position %d as the position is > "
+                        + "Integer.MAX_VALUE", arrayDesignation, array.length,
+                                               pos));
+            }
+            //noinspection DuplicateStringLiteralInspection
+            log.debug("Expanding " + arrayDesignation + " array from "
+                      + array.length + " to " + newSize);
+            int[] exp = new int[newSize];
+            System.arraycopy(array, 0, exp, 0, array.length);
+            return exp;
         }
+        return array;
     }
 
 //    private int EMPTY_VALUE = calculateValue(getEmptyFacet(), 0);
