@@ -23,9 +23,9 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.MarcAnnotations;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.Level;
 
 import javax.xml.stream.XMLStreamReader;
 import java.io.UnsupportedEncodingException;
@@ -48,6 +48,13 @@ import java.util.Arrays;
  *   <li>state (deleted or not)<br />
  *       Taken from field 004, subfield r.<br />
  *       d=deleted, c=corrected, n=new, ""=new or corrected</li>
+ *   <li>type (Main, Bind and Section. Used for multi volume handling)<br />
+ *       Taken from field 004, subfield a.<br />
+ *       h=hovedpost (main), b=bind (english name unknown), s=sektion (section).
+ *       sektions require that a parent exists.
+ *       hovedposts with existing parents are classified as sections.<br />
+ *       The type is stored as meta-data for the Record after processing.
+ *       </li>
  *   <li>parent<br />
  *       Taken from field 014, subfield a.<br />
  *       014 *x is logged with a warning, but otherwise ignored</li>
@@ -76,10 +83,6 @@ public class SBMARCParser extends MARCParser {
     public static final String SBID_FIELD = "994";
     public static final String SBID_FIELD_SUBFIELD = "z";
 
-    public static final String STATUS_FIELD = "004";
-    public static final String STATUS_FIELD_SUBFIELD = "r";
-    public static final String STATUS_DELETED = "d";
-
     public static final String PARENT_FIELD = "014";
     public static final String PARENT_FIELD_SUBFIELD_ID = "a";
     public static final String PARENT_FIELD_SUBFIELD_SBID = "z";
@@ -88,6 +91,15 @@ public class SBMARCParser extends MARCParser {
     public static final String CHILD_FIELD_SUBFIELD_ID = "a";
     public static final String CHILD_FIELD_SUBFIELD_SBID = "z";
     public static final String CHILD_FIELD_SUBFIELD_SORT = "v";
+
+    public static final String STATUS_FIELD = "004";
+    public static final String STATUS_FIELD_SUBFIELD = "r";
+    public static final String STATUS_DELETED = "d";
+    public static final String TYPE_FIELD_SUBFIELD = "a";
+    public static final String TYPE_HOVEDPOST = "h";
+    public static final String TYPE_SEKTION = "s";
+    public static final String TYPE_BIND = "b";
+
 
     /**
      * The id.
@@ -101,6 +113,11 @@ public class SBMARCParser extends MARCParser {
      * Whether or not this MARC record is a deletion.
      */
     private boolean isDeleted;
+    /**
+     * The type of the record with regards to multi volume.
+     */
+    private MarcAnnotations.MultiVolumeType type =
+            MarcAnnotations.MultiVolumeType.NOTMULTI;
     /**
      * The parent for the MARC record. This is often null.
      */
@@ -144,25 +161,29 @@ public class SBMARCParser extends MARCParser {
         }
     }
 
+    @Override
     protected void initializeNewParse() {
         id = null;
         idPriority = -1;
         isDeleted = false;
+        type = MarcAnnotations.MultiVolumeType.NOTMULTI;
         parent = null;
         children.clear();
         lastChildID = null;
         lastChildSort = null;
     }
 
+    @Override
     protected void setLeader(String content) {
         // Do nothing af we do not need the leader for anything in SB-MARC
     }
 
+    @Override
     protected void beginDataField(String tag, String ind1, String ind2) {
         // Do nothing as we extract the wanted information from the subfields
     }
 
-
+    @Override
     protected void endDataField(String tag) {
         // If child id and potentially sortField was received, add a child
         if (lastChildID != null) {
@@ -180,6 +201,7 @@ public class SBMARCParser extends MARCParser {
         lastChildSort = null;
     }
 
+    @Override
     protected void setSubField(String dataFieldTag, String dataFieldInd1,
                                String dataFieldInd2, String subFieldCode,
                                String subFieldContent) {
@@ -195,16 +217,25 @@ public class SBMARCParser extends MARCParser {
             return;
         }
 
-        // Status
-//        System.out.println(dataFieldTag);
-        if (STATUS_FIELD.equals(dataFieldTag) &&
-            STATUS_FIELD_SUBFIELD.equals(subFieldCode)) {
-            // d = deleted, c = corrected, n = new, "" = new or corrected
-            log.trace("Status for " + id + " is '" + subFieldContent + "'");
-            if (STATUS_DELETED.equals(subFieldContent)) {
-                isDeleted = true;
+        // Status and type
+        if (STATUS_FIELD.equals(dataFieldTag)) {
+            if (STATUS_FIELD_SUBFIELD.equals(subFieldCode)) {
+                // d = deleted, c = corrected, n = new, "" = new or corrected
+                log.trace("Status for " + id + " is '" + subFieldContent + "'");
+                if (STATUS_DELETED.equals(subFieldContent)) {
+                    isDeleted = true;
+                }
+                return;
             }
-            return;
+        } else if (TYPE_FIELD_SUBFIELD.equals(subFieldCode)) {
+            log.trace("Type (004*a) for " + id + " is " + subFieldContent);
+            if (TYPE_HOVEDPOST.equals(subFieldContent)) {
+                type = MarcAnnotations.MultiVolumeType.HOVEDPOST;
+            } else if (TYPE_SEKTION.equals(subFieldContent)) {
+                type = MarcAnnotations.MultiVolumeType.SEKTION;
+            } else if (TYPE_BIND.equals(subFieldContent)) {
+                type = MarcAnnotations.MultiVolumeType.BIND;
+            } // We only handle the three types above and ignore the rest
         }
 
         // Parent
@@ -274,6 +305,7 @@ public class SBMARCParser extends MARCParser {
         return xml.toString();
     }
 
+    @Override
     protected Record makeRecord(String xml) {
         if (id == null) {
             log.warn("makerecord called but no ID was extracted from MARC "
@@ -289,6 +321,26 @@ public class SBMARCParser extends MARCParser {
         log.trace("Setting deleted-status for Record " + id + " to "
                   + isDeleted);
         record.setDeleted(isDeleted);
+
+        if (type == MarcAnnotations.MultiVolumeType.HOVEDPOST
+                && parent != null) {
+            log.debug("Changed type from hovedpost to sektion for '" + id
+                      + "' as a parent existed");
+            type = MarcAnnotations.MultiVolumeType.SEKTION;
+        }
+        if (type == MarcAnnotations.MultiVolumeType.SEKTION
+                && parent == null) {
+            log.debug("Changed type from sektion to notmulti for '" + id 
+                      + "' as a parent did not exist");
+            type = MarcAnnotations.MultiVolumeType.NOTMULTI;
+        }
+        if (type != MarcAnnotations.MultiVolumeType.NOTMULTI) {
+            log.debug("Marking '" + id + "' as " + type);
+            record.getMeta().put(
+                    MarcAnnotations.META_MULTI_VOLUME_TYPE,
+                    type.toString());
+        }
+
         if (parent != null) {
             record.setParentIds(Arrays.asList(parent));
         }
