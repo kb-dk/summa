@@ -198,6 +198,11 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             this.batchSize = batchSize;
             this.graceTime = graceTime;
             this.progressFile = progressFile;
+
+            log.debug(String.format(
+                    "Created ProgressTracker with batchSize(%d), graceTime(%d),"
+                    + " and progressFile(%s)",
+                    batchSize, graceTime, progressFile));
         }
 
         /**
