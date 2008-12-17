@@ -23,15 +23,24 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.Record;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
+import java.io.StringWriter;
+
 /**
  * Legacy multi volume handling of Marc2-like records (the DanMarc2 subset used
- * at Statsbiblioteket). For a given Record, the content and the content of
- * its children are passed through an XSLT. The outputs are concatenated and
- * the field 245 is renamed to 247 or 248 for children, depending on the type
- * of child.
+ * at Statsbiblioteket). For a given Record, the content of its children are
+ * passed through an XSLT. The outputs are concatenated to the parent Record and
+ * the field 245 is renamed to 247 or 248 for all children, depending on the
+ * type of child.
+ * </p><p>
+ * The result of the transforming and concatenation is put back into the Record-
+ * content.
+ * </p><p>
+ * All this is rather kludgy and is expected to be replaced by a more explicit
+ * structure at som epoint in the future.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -56,6 +65,35 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
     }
 
     protected void processPayload(Payload payload) {
+        if (payload.getRecord() == null
+            || payload.getRecord().getContent() == null
+            || payload.getRecord().getContent().length == 0) {
+            log.debug("No content for " + payload);
+            return;
+        }
+        Record record = payload.getRecord();
+        if (record.getChildren() == null || record.getChildren().size() == 0) {
+            log.debug("No children for " + payload);
+            return;
+        }
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("Processing " + record.getChildren().size() + " level 1"
+                  + " children");
+        StringWriter output = new StringWriter(5000);
+        addProcessedContent(output, record, 0);
         //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    /**
+     * Append the content of record to the output. For each child, perform a
+     * recursive call with level+1 as depth.
+     * @param output where to append the content.
+     * @param record the record to transform.
+     * @param level if 0, the content is added without transformation.
+     *        If level is 1,
+     */
+    private void addProcessedContent(StringWriter output, Record record,
+                                     int level) {
+        // TODO: Implement this
     }
 }
