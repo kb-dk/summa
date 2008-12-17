@@ -24,6 +24,7 @@ package dk.statsbiblioteket.summa.control.client.shell;
 
 import dk.statsbiblioteket.summa.common.shell.Core;
 import dk.statsbiblioteket.summa.common.shell.Script;
+import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -55,30 +56,102 @@ public class ClientShell {
     private ClientConnection client;
     private Core shell;
 
+    /**
+     * Helper class exposing a ConnectionFactory that establish ClientConnection
+     * objects by proxying through a ControlConnection.
+     * <p/>
+     * The key point is that this class only need the client id and not the
+     * whole RMI address to look up a client
+     */
+    private static class ClientProxyConnectionFactory
+                                 extends ConnectionFactory<ClientConnection> {
+        private ShellContext ctx;
+        private ConnectionFactory<ControlConnection> controlConnFact;
+        private String controlAddress;
+
+        public ClientProxyConnectionFactory (Configuration conf,
+                                             ShellContext ctx) {
+            this.ctx = ctx;
+            controlConnFact =
+                         new GenericConnectionFactory<ControlConnection>(conf);
+            controlAddress = conf.getString(ConnectionConsumer.CONF_RPC_TARGET,
+                                            "//localhost:27000/summa-control");
+        }
+
+        public ClientConnection createConnection(String connectionId) {
+            ctx.prompt("Looking up Control server at " + controlAddress + " ... ");
+            ControlConnection control =
+                               controlConnFact.createConnection(controlAddress);
+
+            if (control == null) {
+                ctx.error("No connection to Control");
+                return null;
+            } else {
+                try {
+                    ctx.info("Control reports "
+                             + control.getStatus().toString());
+                } catch (IOException e) {
+                    // Yeah we eat the stack trace. Shoot me
+                    ctx.error("Connection error: " + e.getMessage());
+                    return null;
+                }
+            }
+
+            ctx.prompt("Looking up client '"
+                       + connectionId + "' via Control server ... ");
+            try {
+                ClientConnection client = control.getClient(connectionId);
+
+                if (client == null) {
+                    ctx.error("No connection to Client '" + connectionId + "'");
+                    return null;
+                }
+
+                ctx.info("Client reports " + client.getStatus().toString());
+
+                // Do a 'noia check that the client ids match up
+                String clientId = client.getId();
+                if (!connectionId.equals(clientId)) {
+                    ctx.warn("Client reports id '" + clientId
+                             + "'. Expected '" + connectionId + "'");
+                }
+
+                return client;
+
+            } catch (IOException e) {
+                // Yeah we eat the stack trace (again). Shoot me
+                ctx.error("Connection error: " + e.getMessage());
+                return null;
+            }
+        }
+    }
+
     public ClientShell (String target) throws Exception {
         shell = new Core ();
         shell.setPrompt ("client-shell> ");
 
         Configuration conf = Configuration.getSystemConfiguration(true);
 
-        connManager = new ConnectionManager<ClientConnection> (
-                          new GenericConnectionFactory<ClientConnection>(conf));
+        ConnectionFactory<ClientConnection> connFact;
 
         /**
          * If 'target' looks like an RMI address try that. Else try looking up
          * a client connection via the control server 
          */
         if (target.startsWith("//")) {
-            shell.getShellContext().info ("Looking up client on address "
-                                          + target);
-            ConnectionContext<ClientConnection> ctx = connManager.get(target);
-            client = ctx.getConnection();
-            connManager.release (ctx);
+            connFact = new GenericConnectionFactory<ClientConnection>(conf);
         } else {
-            shell.getShellContext().info ("Looking up client "
-                                          + target);
-            client = getClientConnection(conf, target);
+            connFact = new ClientProxyConnectionFactory(conf,
+                                                       shell.getShellContext());
         }
+
+        connManager = new ConnectionManager<ClientConnection>(connFact);
+
+        shell.getShellContext().info ("Looking up client '" + target + "'");
+        ConnectionContext<ClientConnection> ctx = connManager.get(target);
+        client = ctx.getConnection();
+        connManager.release (ctx);
+
 
         if (client == null) {
             throw new IOException("Unable to connect to client: " + target);
@@ -106,19 +179,43 @@ public class ClientShell {
      * @return a connection to the client
      */
     private ClientConnection getClientConnection(Configuration conf,
-                                                 String target)
+                                                 String target,
+                                                 ShellContext ctx)
                                                             throws IOException {
         ConnectionFactory<ControlConnection> connFact =
                          new GenericConnectionFactory<ControlConnection>(conf);
         String controlAddress = conf.getString(ConnectionConsumer.CONF_RPC_TARGET,
                                                "//localhost:27000/summa-control");
+
+        ctx.prompt("Looking up Control server at " + controlAddress + " ... ");
         ControlConnection control = connFact.createConnection(controlAddress);
 
         if (control == null) {
+            ctx.error("No connection to Control");
             return null;
+        } else {
+            ctx.info("Control reports " + control.getStatus().toString());
         }
 
-        return control.getClient(target);
+        ctx.prompt("Looking up client '"
+                   + target + "' via Control server ... ");
+        ClientConnection client = control.getClient(target);
+
+        if (client == null) {
+            ctx.error("No connection to Client '" + target + "'");
+            return null;
+        } else {
+            ctx.info("Client reports " + client.getStatus().toString());
+        }
+
+        // Do a 'noia check that the client ids match up
+        String clientId = client.getId();
+        if (!target.equals(clientId)) {
+            ctx.warn("Client reports id '" + clientId
+                     + "'. Expected '" + target + "'");
+        }
+
+        return client; 
     }
 
     public int run (Script script) {
