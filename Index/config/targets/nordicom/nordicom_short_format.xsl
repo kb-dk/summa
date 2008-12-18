@@ -360,37 +360,14 @@
                                     </dc:date>
                                 </xsl:for-each>
 
-                                <xsl:if test="contains(mc:record/mc:field[@type='150_00']/mc:subfield[@type='a'],ISSN)">
-                                    <xsl:variable name="issn" select="normalize-space(substring-after(mc:field[@type='150_00']/mc:subfield[@type='a'],'ISSN'))"/>
-                                    <dc:identifier>
-                                        <xsl:value-of select="substring($issn,1,9)"/>
-                                    </dc:identifier>
-                                </xsl:if>
-
                                 <dc:format>
                                     <xsl:for-each select=".">
-                                        <xsl:choose>
-                                            <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'][position()=1],'xe')">
-                                                <xsl:choose>
-                                                    <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'][position() >1],'xx')
-                                                        or contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'][position() >1],'tb')">
-                                                        <xsl:text>mono</xsl:text>
-                                                    </xsl:when>
-                                                    <xsl:otherwise>
-                                                        <xsl:text>todo</xsl:text>
-                                                    </xsl:otherwise>
-                                                </xsl:choose>
-                                            </xsl:when>
-                                            <xsl:otherwise>
-                                                <xsl:text>mono</xsl:text>
-                                            </xsl:otherwise>
-                                        </xsl:choose>
+                                        <xsl:text>todo</xsl:text>
                                     </xsl:for-each>
                                 </dc:format>
 
                             </rdf:Description>
                         </rdf:RDF>
-
                     </shortrecord>
                     <xsl:text disable-output-escaping="yes">]]&gt;</xsl:text>
                 </Index:field>
