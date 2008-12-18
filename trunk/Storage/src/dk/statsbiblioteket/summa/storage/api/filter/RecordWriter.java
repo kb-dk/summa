@@ -23,7 +23,6 @@
 package dk.statsbiblioteket.summa.storage.api.filter;
 
 import java.io.IOException;
-import java.net.ConnectException;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
@@ -85,6 +84,7 @@ public class RecordWriter extends ObjectFilterImpl {
      * Flushes Records to Storage.
      * @param payload the Payload containing the Record to flush.
      */
+    @Override
     protected void processPayload(Payload payload) {
         Record record = payload.getRecord();
         if (record == null) {
@@ -94,9 +94,9 @@ public class RecordWriter extends ObjectFilterImpl {
         try {
             if (log.isTraceEnabled()) {
                 //noinspection DuplicateStringLiteralInspection
-                log.trace("Flushing " + record);
+                log.trace("Flushing " + record.toString(true));
             } else {
-                log.debug("Flushing record '" + record.getId() + "'");
+                log.debug("Flushing record '" + record + "'");
             }
             long startTime = System.nanoTime();
             storage.flush(record);
@@ -113,6 +113,7 @@ public class RecordWriter extends ObjectFilterImpl {
         }
     }
 
+    @Override
     public synchronized void close(boolean success) {
         super.close(success);
         log.info("Closing down RecordWriter. " + getProcessStats()
