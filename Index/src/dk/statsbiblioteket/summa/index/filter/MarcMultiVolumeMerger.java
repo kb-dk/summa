@@ -75,6 +75,7 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
         }
     }
 
+    @Override
     protected void processPayload(Payload payload) {
         if (payload.getRecord() == null
             || payload.getRecord().getContent() == null

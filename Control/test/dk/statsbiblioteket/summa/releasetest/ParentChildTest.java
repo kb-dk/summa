@@ -93,6 +93,19 @@ public class ParentChildTest extends NoExitTestCase {
         log.info("Finished indexing in " + indexTime);
     }
 
+    public void testParentExistence() throws Exception {
+        StorageService storage = OAITest.getStorageService();
+        performIngest();
+        QueryOptions options = new QueryOptions(null, null, -1, 0);
+        Record record =
+                storage.getStorage().getRecord("horizon:parent1", options);
+        assertNotNull("The record should exist", record);
+        assertTrue("The record chould have child-IDs",
+                   record.getChildIds().size() > 0);
+        assertTrue("The record chould have children",
+                   record.getChildren().size() > 0);
+    }
+
     public void testDump() throws Exception {
         StorageService storage = OAITest.getStorageService();
         performIngest();
@@ -110,6 +123,7 @@ public class ParentChildTest extends NoExitTestCase {
     private void printRecord(Record record, int level) {
         System.out.println("record at level " + level);
         System.out.println(record.getContentAsUTF8());
+
         if (record.getParents() != null) {
             for (Record parent: record.getParents()) {
                 System.out.print("\nParent ");

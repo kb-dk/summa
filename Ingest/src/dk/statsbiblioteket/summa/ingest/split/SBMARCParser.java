@@ -155,6 +155,7 @@ public class SBMARCParser extends MARCParser {
                    sortField.compareTo(other.sortField);
         }
 
+        @Override
         public String toString() {
             return "child(" + id + ")";
         }
@@ -306,7 +307,7 @@ public class SBMARCParser extends MARCParser {
     }
 
     @Override
-    protected Record makeRecord(String xml) {
+    protected Record makeRecord(String xml) {       
         if (id == null) {
             log.warn("makerecord called but no ID was extracted from MARC "
                      + "record from " + sourcePayload);

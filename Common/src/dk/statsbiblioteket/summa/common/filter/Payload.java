@@ -213,7 +213,7 @@ public class Payload {
             throw new IllegalStateException("Either stream or record "
                                             + "must be defined");
         }
-        log.debug("Assigned stream: " + stream + " and record: " + record
+        log.trace("Assigned stream: " + stream + " and record: " + record
                   + " to Payload");
         this.stream = stream;
         this.record = record;

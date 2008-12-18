@@ -37,7 +37,6 @@ import java.util.Arrays;
 
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
-import org.apache.lucene.analysis.CharArraySet;
 
 public class MarcMultiVolumeMergerTest extends TestCase implements
                                                         ObjectFilter {
@@ -49,6 +48,7 @@ public class MarcMultiVolumeMergerTest extends TestCase implements
         super(name);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
         Record parent = createRecord("parent_book1.xml");
@@ -81,6 +81,7 @@ public class MarcMultiVolumeMergerTest extends TestCase implements
                 "data/horizon/" + filename).getBytes("utf-8"));
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
         records.clear();
