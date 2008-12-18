@@ -24,12 +24,6 @@ package dk.statsbiblioteket.summa.index;
 
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.Source;
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.transform.stream.StreamResult;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.UnsupportedEncodingException;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
@@ -105,7 +99,7 @@ public class XMLTransformer extends ObjectFilterImpl {
             return;
         }
         try {
-            payload.getRecord().setContent(XSLTUtil.transformContent(
+            payload.getRecord().setRawContent(XSLTUtil.transformContent(
                     transformer, payload.getRecord().getContent()));
         } catch (TransformerException e) {
             log.warn("Transformer problems. Discarding payload " + payload, e);
