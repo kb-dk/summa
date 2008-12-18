@@ -24,10 +24,14 @@ import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.MarcAnnotations;
+import dk.statsbiblioteket.summa.common.util.XSLTUtil;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
-import java.io.StringWriter;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import java.io.*;
 
 /**
  * Legacy multi volume handling of Marc2-like records (the DanMarc2 subset used
@@ -40,7 +44,7 @@ import java.io.StringWriter;
  * content.
  * </p><p>
  * All this is rather kludgy and is expected to be replaced by a more explicit
- * structure at som epoint in the future.
+ * XML-structure.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -58,10 +62,17 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
             "summa.ingest.marcmultivolume.xslt";
     public static final String DEFAULT_MERGE_XSLT = "sb-multivolume.xslt";
 
+    private Transformer transformer;
 
     public MarcMultiVolumeMerger(Configuration conf) {
         String xsltLocation = conf.getString(CONF_MERGE_XSLT,
                                              DEFAULT_MERGE_XSLT);
+        try {
+            transformer = XSLTUtil.createTransformer(xsltLocation);
+        } catch (TransformerException e) {
+            throw new ConfigurationException(
+                    "Unable to create Transformer for '" + xsltLocation + "'");
+        }
     }
 
     protected void processPayload(Payload payload) {
@@ -80,8 +91,14 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
         log.trace("Processing " + record.getChildren().size() + " level 1"
                   + " children");
         StringWriter output = new StringWriter(5000);
-        addProcessedContent(output, record, 0);
-        //To change body of implemented methods use File | Settings | File Templates.
+        try {
+            addProcessedContent(output, record, 0);
+            log.trace("Finished processing content for " + payload);
+            record.setRawContent(output.toString().getBytes("utf-8"));
+        } catch (Exception e) {
+            log.warn("Exception transforming " + payload
+                     + ". The content will not be updated", e);
+        }
     }
 
     /**
@@ -89,11 +106,72 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
      * recursive call with level+1 as depth.
      * @param output where to append the content.
      * @param record the record to transform.
-     * @param level if 0, the content is added without transformation.
-     *        If level is 1,
+     * @param level if 0, the content is added without transformation, except
+     *        for the end-record-tag. All children are then processed and
+     *        appended and the end-record-tag is added.
+     *        If level is >0, the content is transformed by the XSLT given
+     *        by {@link #CONF_MERGE_XSLT} and appended, sans XML-header and
+     *        record-tags.
+     * @throws javax.xml.transform.TransformerException if there was an error
+     *         during transformation.
      */
     private void addProcessedContent(StringWriter output, Record record,
-                                     int level) {
-        // TODO: Implement this
+                                     int level) throws TransformerException {
+        String content = record.getContentAsUTF8();
+        int endPos = content.lastIndexOf("</record>");
+        if (endPos == -1) {
+            throw new IllegalArgumentException("The Record " + record
+                                               + " did not end in </record>");
+        }
+        if (level == 0) {
+            output.append(content.subSequence(0, endPos));
+        } else {
+            byte[] transformed = XSLTUtil.transformContent(
+                    transformer, record.getContent());
+            BufferedReader read;
+            try {
+                read = new BufferedReader(new InputStreamReader(
+                        new ByteArrayInputStream(transformed), "utf-8"));
+            } catch (UnsupportedEncodingException e) {
+                throw new TransformerException(
+                        "utf-8 not supported while transforming " + record, e);
+            }
+            String line;
+            try {
+                while ((line = read.readLine()) != null) {
+                    if (line.startsWith("<?")) {
+                        line = line.substring(line.indexOf("?>") + 2);
+                    }
+                    if (line.contains("tag=\"24x\"")) {
+                        MarcAnnotations.MultiVolumeType type =
+                                MarcAnnotations.MultiVolumeType.fromString(
+                                        record.getMeta(MarcAnnotations.
+                                                META_MULTI_VOLUME_TYPE));
+                        if (type.equals(MarcAnnotations.MultiVolumeType.BIND)) {
+                            line = line.replace("tag=\"24x\"", "tag=\"248\"");
+                        } else if (type.equals(
+                                MarcAnnotations.MultiVolumeType.SEKTION)) {
+                            line = line.replace("tag=\"24x\"", "tag=\"247\"");
+                        }
+                    }
+                    line = line.replace(
+                            "xmlns=\"http://www.loc.gov/MARC21/slim\"", "");
+
+                    output.append(line).append("\n");
+                }
+            } catch (IOException e) {
+                throw new TransformerException(
+                        "IOException reading content from " + record, e);
+            }
+        }
+
+        if (record.getChildren() != null) {
+            for (Record child: record.getChildren()) {
+                addProcessedContent(output, child, level+1);
+            }
+        }
+        if (level == 0) {
+            output.append(content.subSequence(endPos, content.length()));
+        }
     }
 }
