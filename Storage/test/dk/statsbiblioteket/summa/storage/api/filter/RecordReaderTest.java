@@ -62,7 +62,7 @@ public class RecordReaderTest extends TestCase {
                      String.format(RecordReader.TIMESTAMP_FORMAT, t));
     }
 
-    public void testTimestampExtraction() throws Exception {
+   /*public void testTimestampExtraction() throws Exception {
         Calendar t = new GregorianCalendar(2008, 3, 17, 21, 50, 57);
         long expectedMS = t.getTimeInMillis();
         String formatted = String.format(RecordReader.TIMESTAMP_FORMAT, t);
@@ -70,7 +70,7 @@ public class RecordReaderTest extends TestCase {
                      + "match the expected point in time",
                      expectedMS, RecordReader.getTimestamp(new File("foo"), 
                                                            formatted));
-    }
+    }*/
 
     private static final String expected =
             "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n"

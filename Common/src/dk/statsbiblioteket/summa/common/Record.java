@@ -662,11 +662,10 @@ public class Record implements Serializable, Comparable{
                    && deleted == other.isDeleted()
                    && indexable == other.isIndexable()
                    && ((parentIds == null && other.getParentIds() == null)
-                       || (parentIds != null && parentIds.equals(other.getParentIds())))
+                       || (parentIds != null && deepEquals(parentIds, other.getParentIds())))
                    && Arrays.equals(getContent(), other.getContent())
                    && ((childIds == null && other.getChildIds() == null) ||
-                       (childIds != null) && Strings.join(childIds, ",").equals(
-                    Strings.join(other.getChildIds(), ",")))
+                       (childIds != null) && deepEquals(childIds, other.getChildIds()))
                     && ((!hasMeta() == !other.hasMeta()) 
                         || (hasMeta() && getMeta().equals(other.getMeta())));
         } catch (Exception e) {
@@ -776,6 +775,35 @@ public class Record implements Serializable, Comparable{
         record.setDeleted(true);
         record.setIndexable(false);
         return record;
+    }
+
+    /**
+     * Deep equality check of iterables. Used to check equality of parentIds
+     * and childrenIds lists
+     * @param a first iterable to compare
+     * @param b second iterable to compare
+     * @return true iff a and b has the same number of elements and all elements
+     *         respond true to and equals()
+     */
+    private static <E extends Comparable> boolean deepEquals
+                                                (Iterable<E> a, Iterable<E> b) {
+        Iterator<? extends Comparable> ia = a.iterator();
+        Iterator<? extends Comparable> ib = b.iterator();
+
+        while (ia.hasNext()) {
+            if (!ib.hasNext()) {
+                return false;
+            }
+            if (!ia.next().equals(ib.next())) {
+                return false;
+            }
+        }
+
+        if (ib.hasNext()) {
+            return false;
+        }
+
+        return true;
     }
 }
 

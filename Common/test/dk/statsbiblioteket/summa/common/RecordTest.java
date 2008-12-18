@@ -118,4 +118,27 @@ public class RecordTest extends TestCase {
         r.setRawContent(data, true);
         assertEquals(orig, r.getContentAsUTF8());
     }
+
+    public void testEquals () throws Exception {
+        Record r1_1 = new Record("id1", "base1", "".getBytes());
+        Record r1_2 = new Record("id1", "base1", "".getBytes());
+        Record r2 = new Record("id2", "base1", "".getBytes());
+
+        r1_1.setContent("Hello world".getBytes(), false);
+        r1_2.setContent("Hello world".getBytes(), true);
+        assertEquals(r1_1, r1_2);
+
+        r1_1.setParentIds(Arrays.asList("foo", "bar"));
+        r1_2.setParentIds(Arrays.asList("foo", "bar"));
+        assertEquals(r1_1, r1_2);
+
+        r1_1.setChildIds(Arrays.asList("quiz", "show"));
+        r1_2.setChildIds(Arrays.asList("quiz", "show"));
+        assertEquals(r1_1, r1_2);
+
+        assertFalse(r1_1.equals(r2));
+        assertFalse(r1_2.equals(r2));
+
+
+    }
 }
