@@ -79,7 +79,7 @@ public class ClientShell {
         }
 
         public ClientConnection createConnection(String connectionId) {
-            ctx.prompt("Looking up Control server at " + controlAddress + " ... ");
+            ctx.debug("Looking up Control server at " + controlAddress + " ... ");
             ControlConnection control =
                                controlConnFact.createConnection(controlAddress);
 
@@ -88,7 +88,7 @@ public class ClientShell {
                 return null;
             } else {
                 try {
-                    ctx.info("Control reports "
+                    ctx.debug("Control reports "
                              + control.getStatus().toString());
                 } catch (IOException e) {
                     // Yeah we eat the stack trace. Shoot me
@@ -97,7 +97,7 @@ public class ClientShell {
                 }
             }
 
-            ctx.prompt("Looking up client '"
+            ctx.debug("Looking up client '"
                        + connectionId + "' via Control server ... ");
             try {
                 ClientConnection client = control.getClient(connectionId);
@@ -107,7 +107,7 @@ public class ClientShell {
                     return null;
                 }
 
-                ctx.info("Client reports " + client.getStatus().toString());
+                ctx.debug("Client reports " + client.getStatus().toString());
 
                 // Do a 'noia check that the client ids match up
                 String clientId = client.getId();
