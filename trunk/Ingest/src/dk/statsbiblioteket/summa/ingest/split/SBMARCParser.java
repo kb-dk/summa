@@ -226,15 +226,16 @@ public class SBMARCParser extends MARCParser {
                 }
                 return;
             }
-        } else if (TYPE_FIELD_SUBFIELD.equals(subFieldCode)) {
-            log.trace("Type (004*a) for " + id + " is " + subFieldContent);
-            if (TYPE_HOVEDPOST.equals(subFieldContent)) {
-                type = MarcAnnotations.MultiVolumeType.HOVEDPOST;
-            } else if (TYPE_SEKTION.equals(subFieldContent)) {
-                type = MarcAnnotations.MultiVolumeType.SEKTION;
-            } else if (TYPE_BIND.equals(subFieldContent)) {
-                type = MarcAnnotations.MultiVolumeType.BIND;
-            } // We only handle the three types above and ignore the rest
+            else if (TYPE_FIELD_SUBFIELD.equals(subFieldCode)) {
+                log.trace("Type (004*a) for " + id + " is " + subFieldContent);
+                if (TYPE_HOVEDPOST.equals(subFieldContent)) {
+                    type = MarcAnnotations.MultiVolumeType.HOVEDPOST;
+                } else if (TYPE_SEKTION.equals(subFieldContent)) {
+                    type = MarcAnnotations.MultiVolumeType.SEKTION;
+                } else if (TYPE_BIND.equals(subFieldContent)) {
+                    type = MarcAnnotations.MultiVolumeType.BIND;
+                } // We only handle the three types above and ignore the rest
+            }
         }
 
         // Parent
