@@ -193,6 +193,7 @@ public class StorageTest extends TestCase {
         List<Record> recs = storage.getRecords(Arrays.asList(testId1), null);
 
         assertEquals(1, recs.size());
+        assertNotNull(recs.get(0).getParentIds());
         assertEquals(rec, recs.get(0));
 
         assertEquals(null, recs.get(0).getChildren());
