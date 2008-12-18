@@ -100,7 +100,6 @@ public class SBMARCParser extends MARCParser {
     public static final String TYPE_SEKTION = "s";
     public static final String TYPE_BIND = "b";
 
-
     /**
      * The id.
      */
@@ -316,6 +315,7 @@ public class SBMARCParser extends MARCParser {
         try {
             record = new Record(id, base, xml.getBytes("utf-8"));
         } catch (UnsupportedEncodingException e) {
+            //noinspection DuplicateStringLiteralInspection
             throw new RuntimeException("utf-8 not supported", e);
         }
         log.trace("Setting deleted-status for Record " + id + " to "

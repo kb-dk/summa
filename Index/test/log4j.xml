@@ -99,8 +99,8 @@
         <appender-ref ref="FILE" />
     </logger>
 
-    <logger name="dk.statsbiblioteket.summa.cluster">
-        <level value="trace" />
+    <logger name="dk.statsbiblioteket.summa">
+        <level value="info" />
         <appender-ref ref="FILE" />
     </logger>
 
