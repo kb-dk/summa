@@ -228,7 +228,7 @@ public class Record implements Serializable, Comparable{
         setBase(base);
         setDeleted(deleted);
         setIndexable(indexable);
-        setContent(data);
+        setRawContent(data);
         setCreationTime(creationTime);
         setModificationTime(lastModified);
         setParentIds(parents);
@@ -293,26 +293,79 @@ public class Record implements Serializable, Comparable{
         indexable = isIndexable;
     }
 
+    /**
+     * Get the content in uncompressed form, no matter if it is internally
+     * compressed or not.
+     * @return uncompressed content.
+     */
     public byte[] getContent() {
+        return getContent(true);
+    }
+
+    /**
+     * Get the content in internal form or uncompressed form, depending on
+     * the autoUncompress value.
+     * @param autoUncompress if true, the content is always returned in
+     *                       uncompressed form. If false, the content is
+     *                       returned directly: If it is compressed, it will
+     *                       be returned compressed.
+     * @return the content in compressed or uncompressed form, depending on
+     *         internal structure and the autoUncompress value.
+     */
+    public byte[] getContent(boolean autoUncompress) {
+        if (contentCompressed && autoUncompress) {
+            return Zips.gunzipBuffer(data);
+        }
+        return data;
+    }
+
+    /**
+     * If the content is compressed, uncompress it.
+     */
+    public void unCompressContent() {
         if (contentCompressed) {
             // this call also sets contentCompressed = false
-            setContent(Zips.gunzipBuffer(data));
+            setRawContent(Zips.gunzipBuffer(data));
         }
+    }
 
-        return data;
+    /**
+     * If the content is uncompressed, compress it.
+     */
+    public void compressContent() {
+        if (!contentCompressed) {
+            // this call also sets contentCompressed = false
+            setRawContent(Zips.gzipBuffer(data), true);
+        }
+    }
+
+    /**
+     * Store {@code content} as the data payload of this record. Be aware that
+     * the content should be uncompressed, to avoid unclear semantics and
+     * potential double-compression.
+     * @param content    raw payload to use as record data.
+     * @param doCompress if {@code true}, the  {@code content} will be
+     *                   compressed upon storing.
+     */
+    public void setContent(byte[] content, boolean doCompress) {
+        setRawContent(content, false);
+        if (doCompress) {
+            compressContent();
+        }
     }
 
     /**
      * Set the content payload of this record. use this method to store
      * raw uncompressed data on the record. If you want to store compressed
      * data in the record (and have it transparently uncompressed on access)
-     * use {@link #setContent(byte[], boolean)} instead.
+     * use {@link #setRawContent(byte[], boolean)} instead.
      *
-     * @param content raw payload to use as record data
+     * @param content raw payload to use as record data.
      */
-    public void setContent(byte[] content) {
-        setContent(content,  false);
+    public void setRawContent(byte[] content) {
+        setRawContent(content,  false);
     }
+
 
     /**
      * Store {@code content} as the data payload of this record. If
@@ -320,11 +373,11 @@ public class Record implements Serializable, Comparable{
      * lazily (with GZip) on the first request to {@link #getContent()} or
      * {@link #getContentAsUTF8()}.
      *
-     * @param content raw payload to use as record data
+     * @param content raw payload to use as record data.
      * @param contentCompressed if {@code true} {@code content} will be
-     *                          uncompressed using GZipwhen read
+     *                          uncompressed using GZipwhen read.
      */
-    public void setContent(byte[] content, boolean contentCompressed) {
+    public void setRawContent(byte[] content, boolean contentCompressed) {
         if (content == null) {
             //noinspection DuplicateStringLiteralInspection
             throw new IllegalArgumentException("data must be specified for "
