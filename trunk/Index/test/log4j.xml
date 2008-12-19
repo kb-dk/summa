@@ -23,7 +23,7 @@
     <!-- -->
 
     <appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
-        <param name="Threshold" value="info"/><!-- or ERROR or INFO -->
+        <param name="Threshold" value="trace"/><!-- or ERROR or INFO -->
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
         </layout>
