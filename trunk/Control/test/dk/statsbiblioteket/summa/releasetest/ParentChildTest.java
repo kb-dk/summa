@@ -43,7 +43,6 @@ import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
-import java.util.List;
 import java.io.IOException;
 import java.io.File;
 
@@ -60,12 +59,14 @@ import java.io.File;
 public class ParentChildTest extends NoExitTestCase {
     private static Log log = LogFactory.getLog(ParentChildTest.class);
 
+    @Override
     public void setUp () throws Exception {
         super.setUp();
         ReleaseTestCommon.setup();
         SearchTest.INDEX_ROOT.mkdirs();
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
         ReleaseTestCommon.tearDown();
@@ -110,12 +111,22 @@ public class ParentChildTest extends NoExitTestCase {
         StorageService storage = OAITest.getStorageService();
         performIngest();
         dumpMultiRecord(storage, "horizon:parent1");
+
     }
+
+/*    public void testDumpHorizon() throws Exception {
+        StorageService storage = OAITest.getStorageService();
+        performIngest();
+        dumpMultiRecord(storage, "horizon_2114623");
+    }*/
 
     private void dumpMultiRecord(StorageService storage, String recordID)
             throws IOException {
         QueryOptions options = new QueryOptions(null, null, -1, 0);
         Record record = storage.getStorage().getRecord(recordID, options);
+        if (record == null) {
+            System.out.println("Record with id '" + recordID + "' is null");
+        }
         System.out.print("Start ");
         printRecord(record, 0);
     }
