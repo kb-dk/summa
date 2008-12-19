@@ -1,0 +1,104 @@
+<xproperties>
+    <xproperties>
+        <entry>
+            <key>filterpump.chainname</key>
+            <value class="string">Test-Chain</value>
+        </entry>
+        <entry>
+            <key>filtercontrol.chains</key>
+            <value class="string">TestPump1, TestPump2</value>
+        </entry>
+        <entry>
+            <key>filtercontrol.sequential</key>
+            <value class="boolean">true</value>
+        </entry>
+        <entry>
+            <key>TestPump1</key>
+            <value class="xproperties">
+                <entry>
+                    <key>summa.filter.sequence.filters</key>
+                    <value class="string">Streamer, Converter</value>
+                </entry>
+                <entry>
+                    <key>Streamer</key>
+                    <value class="xproperties">
+                        <entry>
+                            <key>summa.filter.sequence.filterclass</key>
+                            <value class="string">dk.statsbiblioteket.summa.common.filter.stream.DummyReader</value>
+                        </entry>
+                        <entry>
+                            <key>dummyreader.bodycount</key>
+                            <value class="int">3</value>
+                        </entry>
+                        <entry>
+                            <key>dummyreader.bodysize</key>
+                            <value class="int">100</value>
+                        </entry>
+                    </value>
+                </entry>
+                <entry>
+                    <key>Converter</key>
+                    <value class="xproperties">
+                        <entry>
+                            <key>summa.filter.sequence.filterclass</key>
+                            <value class="string">dk.statsbiblioteket.summa.common.filter.object.DummyStreamToRecords</value>
+                        </entry>
+                        <entry>
+                            <key>dummystreamtorecords.datasize</key>
+                            <value class="int">99</value>
+                        </entry>
+                        <entry>
+                            <key>dummyreader.bodysize</key>
+                            <value class="int">100</value>
+                        </entry>
+                    </value>
+                </entry>
+            </value>
+        </entry>
+        <entry>
+            <key>TestPump2</key>
+            <value class="xproperties">
+                <entry>
+                    <key>summa.filter.sequence.filters</key>
+                    <value class="string">Streamer, Converter</value>
+                </entry>
+                <entry>
+                    <key>Streamer</key>
+                    <value class="xproperties">
+                        <entry>
+                            <key>summa.filter.sequence.filterclass</key>
+                            <value class="string">dk.statsbiblioteket.summa.common.filter.stream.DummyReader</value>
+                        </entry>
+                        <entry>
+                            <key>dummyreader.bodycount</key>
+                            <value class="int">3</value>
+                        </entry>
+                        <entry>
+                            <key>dummyreader.bodysize</key>
+                            <value class="int">100</value>
+                        </entry>
+                    </value>
+                </entry>
+                <entry>
+                    <key>Converter</key>
+                    <value class="xproperties">
+                        <entry>
+                            <key>summa.filter.sequence.filterclass</key>
+                            <value class="string">dk.statsbiblioteket.summa.common.filter.object.DummyStreamToRecords</value>
+                        </entry>
+                        <entry>
+                            <key>dummystreamtorecords.datasize</key>
+                            <value class="int">99</value>
+                        </entry>
+                        <entry>
+                            <key>dummyreader.bodysize</key>
+                            <value class="int">100</value>
+                        </entry>
+                    </value>
+                </entry>
+            </value>
+        </entry>
+    </xproperties>
+</xproperties>
+
+
