@@ -275,6 +275,7 @@ public class SBMARCParser extends MARCParser {
      * @param code the subfield code.
      * @return the XML for the begin subfield tag.
      */
+    @Override
     @SuppressWarnings({"UnusedDeclaration"})
     protected String beginSubFieldTagToString(XMLStreamReader reader,
                                               String tag, String ind1,
@@ -337,7 +338,10 @@ public class SBMARCParser extends MARCParser {
             type = MarcAnnotations.MultiVolumeType.NOTMULTI;
         }
         if (type != MarcAnnotations.MultiVolumeType.NOTMULTI) {
-            log.debug("Marking '" + id + "' as " + type);
+            //noinspection DuplicateStringLiteralInspection
+            log.debug("Marking '" + id + "' as " + type + " with "
+                      + (parent == null ? "no parent" : "parent " + parent)
+                      + " and " + children.size() + " children");
             record.getMeta().put(
                     MarcAnnotations.META_MULTI_VOLUME_TYPE,
                     type.toString());
