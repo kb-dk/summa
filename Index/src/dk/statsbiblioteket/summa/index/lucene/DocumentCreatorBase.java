@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -55,7 +55,7 @@ public abstract class DocumentCreatorBase extends ObjectFilterImpl {
                       + "' resolved to index field '"
                       + indexField.getName() + "'");
         }
-        log.trace("Creating field '" + fieldName + "' with boost " + boost);
+//        log.trace("Creating field '" + fieldName + "' with boost " + boost);
         Field field = new Field(fieldName, content, indexField.getStore(),
                                 indexField.getIndex(),
                                 indexField.getTermVector());

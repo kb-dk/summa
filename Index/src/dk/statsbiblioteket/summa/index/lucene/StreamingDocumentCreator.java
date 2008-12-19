@@ -72,6 +72,8 @@ public class StreamingDocumentCreator extends DocumentCreatorBase {
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     private static final String SUMMA_FIELD = "field";
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
+    private static final String SUMMA_FIELDS = "fields";
+    @SuppressWarnings({"DuplicateStringLiteralInspection"})
     private static final String SUMMA_BOOST = "boost";
     private static final String SUMMA_NAME = "name";
 
@@ -213,10 +215,34 @@ public class StreamingDocumentCreator extends DocumentCreatorBase {
                                Payload payload)
             throws ParseException, XMLStreamException, IndexServiceException {
         long startTime = System.nanoTime();
+
+        // Fields
+        if (!reader.hasNext()) {
+            throw new ParseException(String.format(
+                    "Expected content in %s", payload),
+                    reader.getLocation().getCharacterOffset());
+        }
+        while(reader.hasNext()) {
+            reader.next();
+            if (reader.getEventType() == XMLStreamReader.START_ELEMENT
+                && SUMMA_FIELDS.equals(reader.getLocalName())
+                && SUMMA_NAMESPACE.equals(reader.getName().getNamespaceURI())) {
+                log.trace("Found <" + SUMMA_FIELDS + ">. Parsing fields");
+                break;
+            }
+        }
+
+        // TODO: Add check for field-count. If 0, then log a workflow warning
         //noinspection DuplicateStringLiteralInspection
         log.trace("Adding fields to Lucene Document for " + payload);
         while (reader.hasNext()) {
             reader.next();
+            if (reader.getEventType() == XMLStreamReader.END_ELEMENT
+                && SUMMA_FIELDS.equals(reader.getLocalName())
+                && SUMMA_NAMESPACE.equals(reader.getName().getNamespaceURI())) {
+                log.trace("Reached </" + SUMMA_FIELDS + ">. No more fields");
+                break;
+            }
             if (reader.getEventType() != XMLStreamReader.START_ELEMENT) {
                 if (reader.getEventType() == XMLStreamReader.CHARACTERS
                     || reader.getEventType() == XMLStreamReader.COMMENT) {
