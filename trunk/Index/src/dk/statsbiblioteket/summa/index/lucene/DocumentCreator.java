@@ -35,20 +35,17 @@ import java.io.ByteArrayInputStream;
 import java.text.ParseException;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.xml.DefaultNamespaceContext;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
-import dk.statsbiblioteket.summa.common.index.IndexField;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexField;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.util.ParseUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.document.Field;
 import org.xml.sax.SAXException;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Document;
@@ -69,7 +66,7 @@ import org.w3c.dom.Node;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 // TODO: Consider adding base as a standard field - stored as well as indexed
-public class DocumentCreator extends ObjectFilterImpl {
+public class DocumentCreator extends DocumentCreatorBase {
     private static Log log = LogFactory.getLog(DocumentCreator.class);
 
     // TODO: Entity-encode fields
@@ -146,11 +143,13 @@ public class DocumentCreator extends ObjectFilterImpl {
      * @param payload the container for the Record-content to convert.
      */
     // TODO: If not added, mark meta-data with unadded and continue gracefully
+    @Override
     public void processPayload(Payload payload) {
         //noinspection DuplicateStringLiteralInspection
         log.debug("processPayload(" + payload + ") called");
         long startTime = System.currentTimeMillis();
         if (payload.getRecord() == null) {
+            //noinspection DuplicateStringLiteralInspection
             throw new IllegalArgumentException(payload + " has no Record");
         }
         Document dom;
@@ -183,6 +182,7 @@ public class DocumentCreator extends ObjectFilterImpl {
             log.debug("processPayload: Could not extract boost from document '"
             + "' with XPath-expression '" + boostExpr + "'", e);
         }
+        //noinspection DuplicateStringLiteralInspection
         log.trace("Adding fields to Lucene Document for " + payload);
         try {
             NodeList singleFields = (NodeList)
@@ -215,6 +215,7 @@ public class DocumentCreator extends ObjectFilterImpl {
         payload.getData().put(Payload.LUCENE_DOCUMENT, luceneDoc);
         // TODO: Consider if the SearchDescriptor is needed
 //        payload.getData().put(Payload.SEARCH_DESCRIPTOR, descriptor);
+        //noinspection DuplicateStringLiteralInspection
         log.debug("Added Lucene Document and SearchDescriptor to payload "
                   + payload + ". Processing time was "
                   + (System.currentTimeMillis() - startTime) + " ms");
@@ -283,68 +284,7 @@ public class DocumentCreator extends ObjectFilterImpl {
                   + (System.currentTimeMillis() - startTime) + " ms");
     }
 
-    private LuceneIndexField addFieldToDocument(
-            LuceneIndexDescriptor descriptor,
-            org.apache.lucene.document.Document luceneDoc, String fieldName,
-            String content, Float boost) throws IndexServiceException {
-        LuceneIndexField indexField = descriptor.getFieldForIndexing(fieldName);
-        if (indexField == null) {
-            throw new IndexServiceException(String.format(
-                    "The field name '%s' could not be resolved. This should"
-                    + " never happen (fallback should be the default "
-                    + "field)", fieldName
-            ));
-        }
-        if (!fieldName.equals(indexField.getName())) {
-            log.debug("The field name '" + fieldName
-                      + "' resolved to index field '"
-                      + indexField.getName() + "'");
-        }
-        log.trace("Creating field '" + fieldName + "' with boost " + boost);
-        Field field = new Field(fieldName, content, indexField.getStore(),
-                                indexField.getIndex(),
-                                indexField.getTermVector());
-        if (!boost.equals(DEFAULT_BOOST)) {
-            field.setBoost(indexField.getIndexBoost() * boost);
-        }
-
-        if (log.isTraceEnabled()) {
-            log.trace("Adding field '" + fieldName + "' with " + content.length()
-                      + " characters and boost " + field.getBoost()
-                      + " to Lucene Document");
-        }
-        luceneDoc.add(field);
-        return indexField;
-    }
-
-    private void addToFreetext(LuceneIndexDescriptor descriptor,
-                               org.apache.lucene.document.Document luceneDoc,
-                               String fieldName,
-                               String content) throws IndexServiceException {
-        LuceneIndexField freetext =
-                descriptor.getFieldForIndexing(IndexField.FREETEXT);
-        if (freetext == null) {
-            throw new IndexServiceException(String.format(
-                    "The field freetext with name '%s' could not be "
-                    + "resolved. This should never happen (fallback "
-                    + "should be the default field)",
-                    IndexField.FREETEXT));
-        }
-        if (!IndexField.FREETEXT.equals(freetext.getName())) {
-            log.warn("The field '" + IndexField.FREETEXT + "' could not"
-                     + " be located, so the content of field '" + fieldName
-                     + "' is not added to freetext");
-        } else {
-            Field freeField = new Field(freetext.getName(), content,
-                                        freetext.getStore(),
-                                        freetext.getIndex(),
-                                        freetext.getTermVector());
-            freeField.setBoost(freetext.getIndexBoost());
-            log.trace("Adding content from '" + fieldName + "' to freetext");
-            luceneDoc.add(freeField);
-        }
-    }
-
+    @Override
     public synchronized void close(boolean success) {
         super.close(success);
         log.info("Closing down Documentcreator. " + getProcessStats());
