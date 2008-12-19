@@ -157,7 +157,49 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
                      4, singleFields.getLength());
     }
 
-    public void testSimpleTransformation() throws Exception {
+    public void testsimpletransformation() throws Exception {
+        Configuration conf = getCreatorConf();
+        testSimpleTransformation(new DocumentCreator(conf));
+    }
+
+    public void testStreamTransformation() throws Exception {
+        Configuration conf = getCreatorConf();
+        testSimpleTransformation(new StreamingDocumentCreator(conf));
+    }
+
+    public void testTransformationSpeed() throws Exception {
+        int WARM = 10;
+        int RUNS = 10;
+        int SUBRUNS = 10;
+
+        System.out.println("Creating creators");
+        Configuration conf = getCreatorConf();
+        ObjectFilter dom = new DocumentCreator(conf);
+        ObjectFilter stream = new StreamingDocumentCreator(conf);
+
+        System.out.println("Performing warm up");
+        for (int i = 0 ; i < WARM ; i++) {
+            speed(dom, SUBRUNS);
+            speed(stream, SUBRUNS);
+        }
+
+        System.out.println("\nNumbers are transformation/s");
+        System.out.println("DOM\tStream");
+        for (int i = 0 ; i < RUNS ; i++) {
+            System.out.println(speed(dom, SUBRUNS) + "\t" 
+                               + speed(stream, SUBRUNS));
+        }
+    }
+
+    public double speed(ObjectFilter creator, int runs) throws Exception {
+        long startTime = System.currentTimeMillis();
+        for (int i = 0 ; i < runs ; i++) {
+            testSimpleTransformation(creator);
+        }
+        return runs * 1000 / (System.currentTimeMillis() - startTime);
+    }
+
+    private Configuration getCreatorConf() throws IOException {
         File descriptorLocation = File.createTempFile("descriptor", ".xml");
         descriptorLocation.deleteOnExit();
         Files.saveString(SIMPLE_DESCRIPTOR, descriptorLocation);
@@ -171,12 +213,15 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
                    descriptorLocation.getAbsoluteFile().exists());
 
         Configuration conf = new Configuration(new XStorage(confLocation));
-
         LuceneIndexDescriptor id = new LuceneIndexDescriptor(
                     conf.getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR));
         assertNotNull("A descriptor should be created", id);
+        return conf;
+    }
 
-        DocumentCreator creator = new DocumentCreator(conf);
+    public void testSimpleTransformation(ObjectFilter creator) throws
+                                                                  Exception {
+
         creator.setSource(this);
         Payload processed = creator.next();
         assertNotNull("Payload should have a document", 
