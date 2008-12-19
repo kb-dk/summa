@@ -957,8 +957,10 @@ public abstract class DatabaseStorage extends StorageBase {
     }
 
     private void createNewRecord(Record record) throws IOException {
-        log.debug("Creating new record '" + record.getId() + "' from base '"
-                      + record.getBase() + "'");
+        if (log.isTraceEnabled()) {
+            log.trace("Preparing to create or update record: "
+                      + record.toString(true));
+        }
 
         long now = System.currentTimeMillis();
         Timestamp nowStamp = new Timestamp(now);
@@ -975,14 +977,24 @@ public abstract class DatabaseStorage extends StorageBase {
                                          record.getMeta().toFormalBytes() :
                                          new byte[0]);
             stmtCreateRecord.execute();
+            if (log.isDebugEnabled()) {
+                log.debug("Created new record: " + record);
+            }
         } catch (SQLIntegrityConstraintViolationException e) {
-            log.debug ("Record '" + record.getId() + "' already stored. "
-                       + "Updating instead");
+            if (log.isTraceEnabled()) {
+                log.trace ("Record '" + record.getId() + "' already stored. "
+                           + "Updating instead");
+            }
             updateRecord(record);
+            if (log.isDebugEnabled()) {
+                log.debug("Updated record: " + record);
+            }
+
             return;
+
         } catch (SQLException e) {
-            throw new IOException("SQLException creating new record '"
-                                      + record.getId() + "'", e);
+            throw new IOException("SQLException creating new record " + record
+                                  + ": " + e.getMessage(), e);
         }
 
         /* We must create the relations before calling updateRelations() or else
@@ -990,8 +1002,8 @@ public abstract class DatabaseStorage extends StorageBase {
         try {
             createRelations(record);
         } catch (SQLException e) {
-            throw new IOException("Error creating relations for '"
-                                      + record.getId() + "': " + e.getMessage(),
+            throw new IOException("Error creating relations for "
+                                      + record + ": " + e.getMessage(),
                                       e);
         }
         // FIXME: Is this call really not just an expensive no-op?

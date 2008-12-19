@@ -96,7 +96,7 @@ public class RecordWriter extends ObjectFilterImpl {
                 //noinspection DuplicateStringLiteralInspection
                 log.trace("Flushing " + record.toString(true));
             } else {
-                log.debug("Flushing record '" + record + "'");
+                log.debug("Flushing record " + record);
             }
             long startTime = System.nanoTime();
             storage.flush(record);
