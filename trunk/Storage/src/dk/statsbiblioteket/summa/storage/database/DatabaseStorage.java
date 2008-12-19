@@ -917,8 +917,8 @@ public abstract class DatabaseStorage extends StorageBase {
         // FIXME: Some transactional safety here would be nice
         if (rec.getChildIds() != null) {
             for (String childId : rec.getChildIds()) {
-                if (log.isTraceEnabled()) {
-                    log.trace ("Creating relation: " + rec.getId()
+                if (log.isDebugEnabled()) {
+                    log.debug ("Creating relation: " + rec.getId()
                                + " -> " + childId);
                 }
                 stmtCreateRelation.setString(1, rec.getId());
@@ -937,8 +937,8 @@ public abstract class DatabaseStorage extends StorageBase {
 
         if (rec.getParentIds() != null) {
             for (String parentId : rec.getParentIds()) {
-                if (log.isTraceEnabled()) {
-                    log.trace ("Creating relation: " + parentId
+                if (log.isDebugEnabled()) {
+                    log.debug ("Creating relation: " + parentId
                                + " -> " + rec.getId());
                 }
                 stmtCreateRelation.setString(1, parentId);
