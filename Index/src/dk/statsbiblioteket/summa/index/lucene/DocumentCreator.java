@@ -61,12 +61,16 @@ import org.w3c.dom.Node;
  * the description must be stored in the sub-property 
  * {@link LuceneIndexUtils#CONF_DESCRIPTOR} with parameters from
  * {@link dk.statsbiblioteket.summa.common.index.IndexDescriptor}.
+ * @deprecated
+ * {@link dk.statsbiblioteket.summa.index.lucene.StreamingDocumentCreator}
+ * has same functionality and significantly better performance.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 // TODO: Consider adding base as a standard field - stored as well as indexed
 public class DocumentCreator extends DocumentCreatorBase {
+    @SuppressWarnings({"deprecation"})
     private static Log log = LogFactory.getLog(DocumentCreator.class);
 
     // TODO: Entity-encode fields
@@ -290,6 +294,3 @@ public class DocumentCreator extends DocumentCreatorBase {
         log.info("Closing down Documentcreator. " + getProcessStats());
     }
 }
-
-
-

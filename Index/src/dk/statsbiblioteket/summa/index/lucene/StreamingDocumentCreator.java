@@ -40,8 +40,8 @@ import java.io.ByteArrayInputStream;
 import java.text.ParseException;
 
 /**
- * Stream-based converter from SummaDocumentXML to Lucene Documents. The
- * generated Document is added to the Payload's data under the key
+ * Stream-based converter from SummaDocumentXML to Lucene Documents.
+ * The generated Document is added to the Payload's data under the key
  * {@link Payload#LUCENE_DOCUMENT}.
  * </p><p>
  * see SummaDocumentXMLSample.xml.

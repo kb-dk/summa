@@ -38,6 +38,20 @@ import org.apache.lucene.document.Field;
 public abstract class DocumentCreatorBase extends ObjectFilterImpl {
     private static Log log = LogFactory.getLog(DocumentCreatorBase.class);
 
+    /**
+     * Adds the content for a given field to the Lucene Document, handling
+     * field-resolving, boosts and error-handling.
+     * @param descriptor an index-descriptor for the index that should receive
+     *                   the Document.
+     * @param luceneDoc  the Lucene Document to update.
+     * @param fieldName  the name of the field. This will be resolved by the
+     *                   descriptor.
+     * @param content    the content for the field.
+     * @param boost      the boost for the field. Null means no explicit boost.
+     * @return the generated field. Note that the field if also added to the
+     *         document.
+     * @throws IndexServiceException in case of errors.
+     */
     protected LuceneIndexField addFieldToDocument(
             LuceneIndexDescriptor descriptor,
             org.apache.lucene.document.Document luceneDoc, String fieldName,
@@ -73,6 +87,17 @@ public abstract class DocumentCreatorBase extends ObjectFilterImpl {
         return indexField;
     }
 
+    /**
+     * A special case of {@link #addFieldToDocument} that adds to the freetext-
+     * field.
+     * @param descriptor an index-descriptor for the index that should receive
+     *                   the Document.
+     * @param luceneDoc  the Lucene Document to update.
+     * @param fieldName  the name of the field. This will be resolved by the
+     *                   descriptor.
+     * @param content    the content for the field.
+     * @throws IndexServiceException in case of errors.
+     */
     protected void addToFreetext(LuceneIndexDescriptor descriptor,
                                org.apache.lucene.document.Document luceneDoc,
                                String fieldName,
