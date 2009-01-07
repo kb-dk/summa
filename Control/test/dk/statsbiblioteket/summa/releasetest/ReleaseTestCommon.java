@@ -86,11 +86,14 @@ public class ReleaseTestCommon {
         if (new File(DATA_ROOT, "data").exists()) {
             Files.delete(new File(DATA_ROOT, "data"));
         }
-        URL source = Resolver.getURL("data");
+        URL source = Resolver.getURL("data/multiple");
         if (source == null) {
             throw new FileNotFoundException(
                     "Unable to resolve the folder 'data'");
         }
-        Files.copy(new File(source.getFile()), DATA_ROOT, false);
+        File sourceRoot = new File(source.getFile()).getParentFile();
+        log.debug("Copying test-files from " + sourceRoot + " to "
+                  + DATA_ROOT);
+        Files.copy(sourceRoot, DATA_ROOT, false);
     }
 }

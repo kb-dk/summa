@@ -26,7 +26,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
-import dk.statsbiblioteket.summa.common.filter.object.MUXFilter;
+import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.control.api.Service;
@@ -39,6 +39,7 @@ import dk.statsbiblioteket.summa.ingest.stream.FileReader;
 import dk.statsbiblioteket.summa.search.api.SearchClient;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
+import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
@@ -263,7 +264,8 @@ public class MultipleSourcesTest extends NoExitTestCase {
                         getAbsolutePath());
         ingestConf.set(Service.CONF_SERVICE_ID, "IngestService" + source);
         ingestConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
-                    getSubConfiguration("Reader").
+                getSubConfigurations(FilterSequence.CONF_FILTERS).get(0).
+//                    getSubConfiguration("Reader").
                     set(FileReader.CONF_ROOT_FOLDER,
                         new File(ReleaseTestCommon.DATA_ROOT,
                              "multiple/data/" + source).getAbsolutePath());
@@ -336,7 +338,7 @@ public class MultipleSourcesTest extends NoExitTestCase {
                 getFile());
         indexConf.set(Service.CONF_SERVICE_ID, "IndexService");
 
-        ArrayList<String> sources = getSources();
+        //ArrayList<String> sources = getSources();
 /*        indexconf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfiguration("Muxer").
                 set(MUXFilter.CONF_FILTERS, sources);*/
@@ -373,14 +375,18 @@ public class MultipleSourcesTest extends NoExitTestCase {
         log.debug("indexDescriptorLocation: " + indexDescriptorLocation);
 
         indexConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
-                getSubConfiguration("DocumentCreator").
+                getSubConfigurations(FilterSequence.CONF_FILTERS).get(3).
+//                getSubConfiguration("DocumentCreator").
                 getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
                     indexDescriptorLocation);
 
         indexConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
-                getSubConfiguration("IndexUpdate").
-                getSubConfiguration("LuceneUpdater").
+                getSubConfigurations(FilterSequence.CONF_FILTERS).get(4).
+                getSubConfigurations(IndexControllerImpl.CONF_MANIPULATORS).
+                get(0).
+//                getSubConfiguration("IndexUpdate").
+//                getSubConfiguration("LuceneUpdater").
                 getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
                     indexDescriptorLocation);
