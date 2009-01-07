@@ -62,6 +62,7 @@ public class XMLSplitterParser extends ThreadedStreamParser {
         handler = new XMLSplitterHandler(conf, this, target);
     }
 
+    @Override
     protected void protectedRun() throws Exception {
         String LEXICAL_HANDLER =
                 "http://xml.org/sax/properties/lexical-handler";
@@ -102,6 +103,7 @@ public class XMLSplitterParser extends ThreadedStreamParser {
         }
     }
 
+    @Override
     protected void postProcess(Payload payload) {
         target.adjustID(payload);
     }

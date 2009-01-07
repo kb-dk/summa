@@ -382,7 +382,8 @@ public class SBMARCParser extends MARCParser {
     }
 
     private void unsupported(String dataFieldTag, String subFieldCode) {
-        log.warn(String.format(
+        // TODO: More severe warning for Payload-log
+        log.debug(String.format(
                 "Received unsupported subfield code '%s' in field %s "
                 + "for record '%s' in %s. Ignoring subfield",
                 subFieldCode, dataFieldTag, id, sourcePayload));

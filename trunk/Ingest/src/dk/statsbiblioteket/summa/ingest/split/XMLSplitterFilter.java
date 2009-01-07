@@ -182,6 +182,7 @@ public class XMLSplitterFilter extends StreamController {
         log.info("Created XMLSplitterFilter");
     }
 
+    @Override
     protected Class<? extends StreamParser> getDefaultStreamParserClass() {
         return XMLSplitterParser.class;
     }
