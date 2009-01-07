@@ -55,6 +55,20 @@ public abstract class DatabaseStorage extends StorageBase {
     private static Log log = LogFactory.getLog(DatabaseStorage.class);
 
     /**
+     * The number of minutes iterators opened with
+     * {@link #getRecordsModifiedAfter} are valid if they are unused. After the
+     * specified amount of inactivity they may be cleaned up by the storage.
+     * The default value is {@link #DEFAULT_ITERATOR_TIMEOUT}.
+     */
+    public static final String CONF_ITERATOR_TIMEOUT =
+                                       "summa.storage.database.iteratortimeout";
+
+    /**
+     * Default value for the {@link #CONF_ITERATOR_TIMEOUT} property
+     */
+    public static final long DEFAULT_ITERATOR_TIMEOUT = 120;
+
+    /**
      * The property-key for the username for the underlying database, if needed.
      */
     public static String CONF_USERNAME = "summa.storage.database.username";
@@ -169,7 +183,9 @@ public abstract class DatabaseStorage extends StorageBase {
     private static final int FETCH_SIZE = 10000;
 
     private Map<Long, ResultIterator> iterators =
-            new HashMap<Long, ResultIterator>(10);
+                                         new HashMap<Long, ResultIterator>(10);
+
+    private ResultIteratorReaper iteratorReaper;
 
     /**
      * A variation of {@link QueryOptions} used to keep track
@@ -230,11 +246,11 @@ public abstract class DatabaseStorage extends StorageBase {
     }
 
     public DatabaseStorage() throws IOException {
-        // We need to define this to declare RemoteException
+        this(0);
     }
 
     public DatabaseStorage(int port) throws IOException {
-        // We need to define this to declare RemoteException
+
     }
 
     public DatabaseStorage(Configuration configuration) throws IOException {
@@ -273,19 +289,27 @@ public abstract class DatabaseStorage extends StorageBase {
 
     /**
      * The initializer connects to the database and prepares SQL statements.
-     * It is recommended that this is called by all constructors.
-     * @param configuration    the setup for the database.
+     * You <i>must</i> call this in all constructors of sub classes of
+     * DatabaseStorage.
+     * @param conf    the setup for the database.
      * @throws ConfigurationException if the initialization could not finish.
      * @throws IOException on failing to connect to the database
      */
-    protected void init(Configuration configuration) throws IOException {
+    protected void init(Configuration conf) throws IOException {
         log.trace("init called");
-        connectToDatabase(configuration);
+        connectToDatabase(conf);
         try {
             prepareStatements();
         } catch (SQLException e) {
             throw new ConfigurationException("SQLException in init", e);
         }
+
+        iteratorReaper =
+               new ResultIteratorReaper(iterators,
+                                        conf.getLong(CONF_ITERATOR_TIMEOUT,
+                                                     DEFAULT_ITERATOR_TIMEOUT));
+        iteratorReaper.runInThread();
+
         log.debug("Initialization finished");
     }
 
@@ -1340,17 +1364,88 @@ public abstract class DatabaseStorage extends StorageBase {
          }
          return createRecordIterator(resultSet, options);
     }
+    
+    
+    /**
+     * Creates new RecordIterator from the given resultset and getConnection(),
+     * i.e. creates new key and saves the given resultset and getConnection() and
+     * "forwards" the resultset by one row to keep a step ahead.
+     * @param resultSet the results to wrap.
+     * @return an iterator over the resultset
+     * @throws IOException on SQLException
+     */
+    private long createRecordIterator(ResultSet resultSet,
+                                      QueryOptions options)
+                                                       throws IOException {
+        log.trace("createRecordIterator entered with result set " + resultSet);
+        ResultIterator iterator;
+        try {
+            iterator = new ResultIterator(resultSet, options);
+            log.trace("createRecordIterator: Got iterator " + iterator.getKey()
+                      + " adding to iterator-list");
+            iterators.put(iterator.getKey(), iterator);
+        } catch (SQLException e) {
+            log.error("SQLException creating record iterator", e);
+            throw new IOException("SQLException creating record iterator",
+                                      e);
+        }
+        log.trace("returning new StorageIterator");
+        return iterator.getKey();
+    }
+
+    /* Our version of a boolean packed as integer is that 0 = false, everything
+       else = true. This should match common practice.
+     */
+    private int boolToInt(boolean isTrue) {
+        return isTrue ? 1 : 0;
+    }
+    private static boolean intToBool(int anInt) {
+        return anInt != 0;
+    }
+
+    /**
+     * Queries the connection for information on the currently connected
+     * database. This can be used as a ping, as it will throw an exception if
+     * the info could not be retrieved.
+     * @return some info on the underlying database. The only guarantee is that
+     *         this will not be an empty string, if a connection to a database
+     *         is established.
+     * @throws IOException if the info could not be retireved.
+     */
+    public String getDatabaseInfo() throws IOException {
+        try {
+            return getConnection().getMetaData().getDatabaseProductName();
+        } catch (SQLException e) {
+            throw new IOException("Could not get catalog info", e);
+        }
+    }
+
+    @Override
+    public void close() throws IOException {
+        log.info("Closing");
+
+        iteratorReaper.stop();
+
+        try {
+            getConnection().close();
+            if (!getConnection().isClosed()) {
+                throw new IOException("close was called on the connection, "
+                                          + "but the connection state is not "
+                                          + "closed");
+            }
+        } catch (SQLException e) {
+            throw new IOException("SQLException when closing connection",
+                                      e);
+        }
+
+        log.info("Closed");
+    }
 
     protected class ResultIterator {
         private Log log = LogFactory.getLog(ResultIterator.class);
 
-        private long key = System.currentTimeMillis();
-
-        public long getLastAccess() {
-            return lastAccess;
-        }
-
-        private long lastAccess = key;
+        private long key;        
+        private long lastAccess;
         private ResultSet resultSet;
         private boolean resultSetHasNext;
         private Record nextRecord;
@@ -1371,9 +1466,15 @@ public abstract class DatabaseStorage extends StorageBase {
 
             log.trace("Constructed Record iterator with initial hasNext: "
                       + resultSetHasNext);
-            lastAccess = System.currentTimeMillis();
+            
+            key = System.currentTimeMillis();
+            lastAccess = key;
         }
 
+        public long getLastAccess() {
+            return lastAccess;
+        }
+        
         public RecursionQueryOptions getQueryOptions () {
             return options;
         }
@@ -1470,74 +1571,75 @@ public abstract class DatabaseStorage extends StorageBase {
     }
 
     /**
-     * Creates new RecordIterator from the given resultset and getConnection(),
-     * i.e. creates new key and saves the given resultset and getConnection() and
-     * "forwards" the resultset by one row to keep a step ahead.
-     * @param resultSet the results to wrap.
-     * @return an iterator over the resultset
-     * @throws IOException on SQLException
+     * Helper class to clean up unused iterators. It should be started
+     * via the runInThread() method
      */
-    private long createRecordIterator(ResultSet resultSet,
-                                      QueryOptions options)
-                                                       throws IOException {
-        log.trace("createRecordIterator entered with result set " + resultSet);
-        ResultIterator iterator;
-        try {
-            iterator = new ResultIterator(resultSet, options);
-            log.trace("createRecordIterator: Got iterator " + iterator.getKey()
-                      + " adding to iterator-list");
-            iterators.put(iterator.getKey(), iterator);
-        } catch (SQLException e) {
-            log.error("SQLException creating record iterator", e);
-            throw new IOException("SQLException creating record iterator",
-                                      e);
+    private static class ResultIteratorReaper implements Runnable {
+
+        private Map<Long,ResultIterator> iterators;
+        private Thread t;
+        private boolean mayRun;
+        private long graceTimeMinutes;
+        
+        public ResultIteratorReaper (Map<Long,ResultIterator> iterators,
+                                     long graceTimeMinutes) {
+            this.iterators = iterators;
+            this.graceTimeMinutes = graceTimeMinutes;
+            mayRun = true;
         }
-        log.trace("returning new StorageIterator");
-        return iterator.getKey();
-    }
-
-    /* Our version of a boolean packed as integer is that 0 = false, everything
-       else = true. This should match common practice.
-     */
-    private int boolToInt(boolean isTrue) {
-        return isTrue ? 1 : 0;
-    }
-    private static boolean intToBool(int anInt) {
-        return anInt != 0;
-    }
-
-    /**
-     * Queries the connection for information on the currently connected
-     * database. This can be used as a ping, as it will throw an exception if
-     * the info could not be retrieved.
-     * @return some info on the underlying database. The only guarantee is that
-     *         this will not be an empty string, if a connection to a database
-     *         is established.
-     * @throws IOException if the info could not be retireved.
-     */
-    public String getDatabaseInfo() throws IOException {
-        try {
-            return getConnection().getMetaData().getDatabaseProductName();
-        } catch (SQLException e) {
-            throw new IOException("Could not get catalog info", e);
+        
+        public void runInThread () {
+            t = new Thread(this);
+            t.setDaemon(true); // Allow JVM to exit we the reaper is running
+            t.start();
         }
-    }
 
-    @Override
-    public void close() throws IOException {
-        try {
-            getConnection().close();
-            if (!getConnection().isClosed()) {
-                throw new IOException("close was called on the connection, "
-                                          + "but the connection state is not "
-                                          + "closed");
+        public void stop () {
+            log.debug("Got stop request");
+            mayRun = false;
+            t.interrupt();
+        }
+
+        public void run() {
+            log.info("Starting");
+            while (mayRun) {
+                try {
+                    Thread.sleep(graceTimeMinutes*60*60);
+                    fullSweep();
+                } catch (InterruptedException e) {
+                    log.info("Interrupted");
+                }
             }
-        } catch (SQLException e) {
-            throw new IOException("SQLException when closing connection",
-                                      e);
+            log.info("Stopped");
+        }
+
+        private void fullSweep() {
+            log.debug("Scanning iterators for timeouts");
+
+            long now = System.currentTimeMillis();
+            List<Long> deadIters = new ArrayList<Long>();
+
+            for (ResultIterator iter : iterators.values()) {
+                if (iter.getLastAccess() + graceTimeMinutes*60*60 <= now) {
+                    deadIters.add(iter.getKey());
+                }
+            }
+
+            for (Long key : deadIters) {
+                ResultIterator iter = iterators.remove(key);
+
+                if (iter != null) {
+                    log.info("Iterator " + iter.getKey() + " timed out");
+                } else {
+                    log.warn("Iterator " + iter.getKey() + " timed out, "
+                             + "but is not around anymore");
+                }
+            }
+
+            log.debug("Scan complete");
         }
     }
-
+    
     /*private int countParents(String id) {
         ResultSet results = null;
 
