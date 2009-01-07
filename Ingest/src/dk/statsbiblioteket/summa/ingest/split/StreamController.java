@@ -83,37 +83,45 @@ public class StreamController implements ObjectFilter {
             }
             return;
         }
-        while (payload == null) {
-            try {
-                log.trace("makePayload(): Calling parser.hasNext()");
-                if (parser.hasNext()) {
-                    log.trace("makePayload(): Calling parser.next()");
-                    payload = parser.next();
-                    return;
-                } else {
-                    log.trace("makePayload(): parser.hasNext() == false");
+        long startTime = System.nanoTime();
+        try {
+            while (payload == null) {
+                try {
+                    log.trace("makePayload(): Calling parser.hasNext()");
+                    if (parser.hasNext()) {
+                        log.trace("makePayload(): Calling parser.next()");
+                        payload = parser.next();
+                        return;
+                    } else {
+                        log.trace("makePayload(): parser.hasNext() == false");
+                    }
+                } catch (Exception e) {
+                    log.warn("Exception requesting payload from parser, "
+                             + "skipping to next stream payload", e);
+                    parser.stop();
                 }
-            } catch (Exception e) {
-                log.warn("Exception requesting payload from parser, "
-                         + "skipping to next stream payload", e);
-                parser.stop();
-            }
 
-            if (source.hasNext()) {
-                log.trace("makePayload(): Source hasNext, "
-                          + "calling source.next()");
-                Payload streamPayload = source.next();
-                if (streamPayload == null) {
-                    log.warn(String.format(
-                            "Got null Payload from source %s after hasNext()"
-                            + " == true", source));
+                if (source.hasNext()) {
+                    log.trace("makePayload(): Source hasNext, "
+                              + "calling source.next()");
+                    Payload streamPayload = source.next();
+                    if (streamPayload == null) {
+                        log.warn(String.format(
+                                "Got null Payload from source %s after hasNext()"
+                                + " == true", source));
+                    }
+                    log.debug("makePayload: Opening source stream payload "
+                              + streamPayload);
+                    parser.open(streamPayload);
+                } else {
+                    log.debug("makePayload: No more stream payloads available");
+                    return;
                 }
-                log.debug("makePayload: Opening source stream payload "
-                          + streamPayload);
-                parser.open(streamPayload);
-            } else {
-                log.debug("makePayload: No more stream payloads available");
-                return;
+            }
+        } finally {
+            if (log.isTraceEnabled()) {
+                log.trace("Requested payload from parser in "
+                          + (System.nanoTime() - startTime) + " ns");
             }
         }
     }
