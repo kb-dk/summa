@@ -12,15 +12,18 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+@SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class FilterPumpTest extends TestCase {
     public FilterPumpTest(String name) {
         super(name);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
     }
@@ -51,7 +54,7 @@ public class FilterPumpTest extends TestCase {
 
 
         Configuration pumpConf = new Configuration(pumpStorage);
-        pumpConf.set(FilterPump.CONF_CHAIN_NAME, "FilterPumpTest");
+        pumpConf.set(Filter.CONF_FILTER_NAME, "FilterPumpTest");
         pumpConf.setStrings(FilterSequence.CONF_FILTERS,
                             Arrays.asList("Streamer", "Converter"));
 

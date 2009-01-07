@@ -173,13 +173,13 @@ import dk.statsbiblioteket.util.qa.QAInfo;
  */
 // TODO: Check whether FMT must be ML and whether LDR sould be <leader>
 @QAInfo(level = QAInfo.Level.NORMAL,
-       state = QAInfo.State.IN_DEVELOPMENT,
+       state = QAInfo.State.QA_NEEDED,
        author = "te, hal")
 public class Aleph2XML2 extends ObjectFilterImpl {
     private static Log log = LogFactory.getLog(Aleph2XML2.class);
 
-    @SuppressWarnings({"UnusedDeclaration"})
     public Aleph2XML2(Configuration conf){
+        super(conf);
     }
 
     /**
@@ -195,6 +195,7 @@ public class Aleph2XML2 extends ObjectFilterImpl {
         return content.replaceAll("\\p{Cntrl}","");
     }
 
+    @Override
     protected void processPayload(Payload payload) {
         if (payload.getStream() == null) {
             throw new IllegalArgumentException("No stream in " + payload);
@@ -249,10 +250,12 @@ public class Aleph2XML2 extends ObjectFilterImpl {
             this.debugID = debugID;
         }
 
+        @Override
         public void close() throws IOException {
             source.close();
         }
 
+        @Override
         public int read() throws IOException {
             while (true) {
                 if (bufferPos != -1) {
@@ -467,12 +470,14 @@ public class Aleph2XML2 extends ObjectFilterImpl {
                     buffer.add(aByte);
                 }
             } catch (UnsupportedEncodingException e) {
+                //noinspection DuplicateStringLiteralInspection
                 throw new RuntimeException("utf-8 not supported", e);
             }
 
         }
     }
     
+    @Override
     public synchronized void close(boolean success) {
         super.close(success);
         log.info("Closing down Aleph2XML2. " + getProcessStats());

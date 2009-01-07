@@ -61,15 +61,17 @@ import java.util.Iterator;
 public class FacetTest extends NoExitTestCase {
     private static Log log = LogFactory.getLog(FacetTest.class);
 
+    @Override
     public void setUp () throws Exception {
         super.setUp();
         cleanup();
         SearchTest.INDEX_ROOT.mkdirs();
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
-//        cleanup();
+        cleanup();
     }
 
     private void cleanup() throws Exception {

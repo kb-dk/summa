@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -35,10 +35,10 @@ import java.io.IOException;
  * Wraps a sequence of ObjectFilters - in the Composite Pattern this would be a
  * node.
  * </p><p>
- * The filters are specified with {@link #CONF_FILTERS} which contains an array
- * of keys for the configuration. For each key, a subConfiguration is retrieved.
- * The subConfiguration contains the class-name of the wanted filter in the
- * property {@link #CONF_FILTER_CLASS} along with the filter-specific setup.
+ * The filters are specified by a list of subconfigurations. the key for the
+ * list is {@link #CONF_FILTERS}. Each subconfiguration contains the class-name
+ * of the wanted filter in the property {@link #CONF_FILTER_CLASS} along with
+ * the filter-specific setup.
  * </p><p>
  * The filters are added in order of appearance.
  */
@@ -59,7 +59,7 @@ public class FilterSequence implements ObjectFilter {
     /**
      * The ObjectFilter class to instantiate.
      * </p><p>
-     * This property is mandatory for each sub configuration stated in
+     * This property is mandatory for each sub configuration in
      * {@link #CONF_FILTERS}.
      */
     public static final String CONF_FILTER_CLASS =
@@ -70,16 +70,26 @@ public class FilterSequence implements ObjectFilter {
 
     public FilterSequence(Configuration conf) throws IOException {
         log.trace("Creating FilterSequence");
-        List<String> filterNames;
+        List<Configuration> filterConfigurations;
         try {
-            filterNames = conf.getStrings(CONF_FILTERS);
-        } catch (NullPointerException e) {
-            throw new ConfigurationException(String.format(
-                    "No Filters specified in property %s for FilterSequence",
-                    CONF_FILTERS), e);
+            filterConfigurations = conf.getSubConfigurations(CONF_FILTERS);
+        } catch (IOException e) {
+            try {
+                List<String> filterNames = conf.getStrings(CONF_FILTERS);
+                throw new ConfigurationException(String.format(
+                        "A list of Strings was specified in the property %s. A "
+                        + "list of xproperties with filter-setups was expected."
+                        + " Maybe an old configuration-file hasn't been updated"
+                        + " to the list-of-xproperties style? Encountered "
+                        + "Strings was %s",
+                        CONF_FILTERS, Logs.expand(filterNames, 10)), e);
+            } catch (Exception e2) {
+                throw new ConfigurationException(String.format(
+                        "No Filters specified in property %s for "
+                        + "FilterSequence", CONF_FILTERS), e);
+            }
         }
-
-        buildChain(conf, filterNames);
+        buildChain(filterConfigurations);
         if (lastFilter == null) {
             throw new ConfigurationException(
                     "No filters created in FilterSequence");
@@ -88,31 +98,29 @@ public class FilterSequence implements ObjectFilter {
                   + " length");
     }
 
-    private void buildChain(Configuration configuration,
-                            List<String> filterNames) throws IOException {
+    private void buildChain(List<Configuration> filterConfigurations)
+                                                            throws IOException {
         log.trace("Entering buildChain");
-        if (filterNames != null) {
-            Logs.log(log, Logs.Level.INFO, "Building filter sequence with ",
-                     filterNames);
-            for (String filterName: filterNames) {
-                log.debug("Adding Filter '" + filterName + "' to sequence");
-                //noinspection OverlyBroadCatchBlock
-                try {
-                    Configuration filterConfiguration =
-                            configuration.getSubConfiguration(filterName);
-                    ObjectFilter filter = createFilter(filterConfiguration);
-                    if (lastFilter != null) {
-                        log.trace("Chaining '" + filter + "' to the end of '"
-                                  + lastFilter + "'");
-                        filter.setSource(lastFilter);
-                    }
-                    lastFilter = filter;
-                    filters.add(lastFilter);
-                } catch (Exception e) {
-                    throw new IOException(String.format(
-                            "Could not create filter '%s'",
-                            filterName), e);
+        if (filterConfigurations == null) {
+            log.warn("buildChain: No filter configurations");
+            return;
+        }
+        Logs.log(log, Logs.Level.INFO, "Building filter sequence with "
+                 + filterConfigurations.size() + " filters");
+        for (Configuration filterConf: filterConfigurations) {
+            try {
+                ObjectFilter filter = createFilter(filterConf);
+                log.debug("Adding Filter '" + filter + "' to sequence");
+                if (lastFilter != null) {
+                    log.trace("Chaining '" + filter + "' to the end of '"
+                              + lastFilter + "'");
+                    filter.setSource(lastFilter);
                 }
+                lastFilter = filter;
+                filters.add(lastFilter);
+            } catch (Exception e) {
+                throw new IOException(String.format(
+                        "Could not create filter '%s'", filterConf), e);
             }
         }
         log.trace("Exiting buildChain");

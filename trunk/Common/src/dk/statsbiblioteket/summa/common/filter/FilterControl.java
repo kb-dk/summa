@@ -22,8 +22,8 @@
  */
 package dk.statsbiblioteket.summa.common.filter;
 
-import java.io.IOException;
 import java.io.StringWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,24 +50,25 @@ public class FilterControl extends StateThread implements Configurable,
     private List<FilterPump> pumps;
 
     /**
-     * The a list of names of chains to create.
-     * <p/>
-     * A sub-configuration will be requested from the configuration with the
-     * name as key and that configuration will be used for creating a
-     * FilterPump.
+     * The a list of Configurations for the chains. Each configuration will be
+     * used for the constructor in {@link FilterPump}.
+     * </p><p>
+     * Mandatory.
      */
     public static final String CONF_CHAINS = "filtercontrol.chains";
 
     /**
-     * If true, the chains will be started in order of appearance, the FilterControl
-     * will wait for any previous chain to finish, before starting the next one.
+     * If true, the chains will be started in order of appearance: the
+     * FilterControl will wait for any previous chain to finish, before starting
+     * the next one.
      * If false, all chains will be started simultaneously.
      * <p/>
-     * Default: True.
+     * Optional. Default is true.
      */
     public static final String CONF_SEQUENTIAL = "filtercontrol.sequential";
+    public static final boolean DEFAULT_SEQUENTIAL = true;
 
-    private boolean sequential = true;
+    private boolean sequential = DEFAULT_SEQUENTIAL;
 
     /**
      * The FilterControl sets up the Filter Chains defines by the configuration.
@@ -81,30 +82,36 @@ public class FilterControl extends StateThread implements Configurable,
     public FilterControl(Configuration configuration) throws
                                                       ConfigurationException {
         log.trace("Creating FilterControl");
-        List<String> chains = configuration.getStrings(CONF_CHAINS);
-        pumps = new ArrayList<FilterPump>(chains.size());
-        for (String chain: chains) {
-            log.info("Creating chain '" + chain + "'");
+        List<Configuration> chainConfs;
+        try {
+            chainConfs = configuration.getSubConfigurations(CONF_CHAINS);
+        } catch (IOException e) {
+            throw new ConfigurationException(String.format(
+                    "Could not locate a list of chain-Configurations at key %s",
+                    CONF_CHAINS), e);
+        }
+        pumps = new ArrayList<FilterPump>(chainConfs.size());
+        for (Configuration chainConf : chainConfs) {
             try {
-                Configuration subConfiguration =
-                        configuration.getSubConfiguration(chain);
-                log.trace("Got configuration for chain '" + chain + "'");
-                FilterPump pump = new FilterPump(subConfiguration);
+                FilterPump pump = new FilterPump(chainConf);
+                log.info("Created chain '" + pump + "'");
                 pumps.add(pump);
             } catch (Exception e) {
                 throw new ConfigurationException(String.format(
-                         "Error creating chain '%s': " + e.getMessage(), chain),
-                          e);
+                         "Error creating chain '%s': " + e.getMessage(),
+                         chainConf), e);
             }
         }
         try {
             sequential = configuration.getBoolean(CONF_SEQUENTIAL);
             log.info("Sequential ingest set to " + sequential);
         } catch (Exception e) {
-            log.info(CONF_SEQUENTIAL + " not specified. Defaulting to true");
+            log.info(CONF_SEQUENTIAL + " not specified. Defaulting to "
+                     + sequential);
         }
     }
 
+    @Override
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     protected void runMethod() {
         log.info("Activating filter pump(s)");
@@ -145,6 +152,7 @@ public class FilterControl extends StateThread implements Configurable,
     /**
      * Expansion of stop that calls stop on all filter pumps.
      */
+    @Override
     public void stop() {
         if (pumps == null) {
             log.warn("stop called for uninitialized pumps");
@@ -176,10 +184,8 @@ public class FilterControl extends StateThread implements Configurable,
         return sw.toString();
     }
 
-    // TODO: Consider is this should not be accessible
+    // TODO: Consider if this should not be accessible
     public List<FilterPump> getPumps() {
         return pumps;
     }
 }
-
-

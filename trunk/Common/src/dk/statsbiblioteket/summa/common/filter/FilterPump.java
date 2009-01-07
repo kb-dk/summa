@@ -32,13 +32,13 @@ public class FilterPump extends StateThread implements Configurable {
     private static Log classLog = LogFactory.getLog(FilterPump.class);
 
     /**
-     * The name of the chain is used for feedback and debugging.
+     * The name of the chain if no name is stated by
+     * {@link Filter#CONF_FILTER_NAME}.
      */
-    public static final String CONF_CHAIN_NAME =   "filterpump.chainname";
-
+    public static final String DEFAULT_CHAIN_NAME = "Unnamed Chain";
     private FilterSequence sequence;
 
-    private String chainName = "Unnamed Chain";
+    private String chainName = DEFAULT_CHAIN_NAME;
 
     long objectCounter = 0;
     long streamBytesCounter = 0;
@@ -46,7 +46,7 @@ public class FilterPump extends StateThread implements Configurable {
     public FilterPump(Configuration configuration) throws IOException {
         classLog.trace ("Constructing FilterPump with config class "
                         + configuration.getClass());
-        chainName = configuration.getString(CONF_CHAIN_NAME, chainName);
+        chainName = configuration.getString(Filter.CONF_FILTER_NAME, chainName);
         classLog.trace ("Creating chain log for chain: " + chainName);
         log = LogFactory.getLog(FilterPump.class.getName() + "." + chainName);
         log.info("Constructing FilterPump for chain '" + chainName + "'");
@@ -61,6 +61,7 @@ public class FilterPump extends StateThread implements Configurable {
      * {@link #stop} methods of FilterPump. It is not advisable to call it
      * explicitly.
      */
+    @Override
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     protected void runMethod() {
         log.debug("Running FilterChain '" + chainName + "'");
@@ -102,6 +103,7 @@ public class FilterPump extends StateThread implements Configurable {
         return chainName;
     }
 
+    @Override
     public String toString() {
         StringWriter sw = new StringWriter(500);
         sw.append(getStatus().toString()).append(": ");

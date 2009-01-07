@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -29,22 +29,25 @@ import org.apache.commons.logging.Log;
  * Adds the given key and value to the meta data for the Payloads.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_NEEDED,
         author = "te")
 public class DummyFilter extends ObjectFilterImpl {
-    private static Log log = LogFactory.getLog(DummyFilter.class);
+//    private static Log log = LogFactory.getLog(DummyFilter.class);
 
     public static final String CONF_KEY =   "key";
+    @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public static final String CONF_VALUE = "value";
 
     private String key;
     private String value;
 
     public DummyFilter(Configuration conf) {
+        super(conf);
         key =   conf.getString(CONF_KEY);
         value = conf.getString(CONF_VALUE);
     }
 
+    @Override
     protected void processPayload(Payload payload) {
         payload.getData().put(key, value);
     }

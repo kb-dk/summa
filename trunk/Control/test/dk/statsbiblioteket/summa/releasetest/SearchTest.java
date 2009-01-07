@@ -22,17 +22,9 @@
  */
 package dk.statsbiblioteket.summa.releasetest;
 
-import javax.management.NotificationListener;
-import javax.management.Notification;
-import javax.management.AttributeChangeNotification;
-import javax.management.remote.JMXServiceURL;
-import javax.management.remote.JMXConnector;
-import javax.management.remote.JMXConnectorFactory;
 import java.io.File;
 import java.io.IOException;
-import java.rmi.RMISecurityManager;
 import java.rmi.RemoteException;
-import java.security.Permission;
 import java.net.URL;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
@@ -47,6 +39,8 @@ import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.index.IndexException;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.filter.FilterControl;
+import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
 import dk.statsbiblioteket.summa.common.util.Security;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
@@ -77,6 +71,7 @@ import org.apache.commons.logging.LogFactory;
 public class SearchTest extends NoExitTestCase {
     private static Log log = LogFactory.getLog(SearchTest.class);
 
+    @Override
     public void setUp () throws Exception {
         super.setUp();
         Security.checkSecurityManager();
@@ -84,6 +79,7 @@ public class SearchTest extends NoExitTestCase {
         INDEX_ROOT.mkdirs();
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
         cleanup();
@@ -114,7 +110,9 @@ public class SearchTest extends NoExitTestCase {
 
         Configuration conf = Configuration.load(
                 "data/search/SearchTest_IngestConfiguration.xml");
-        conf.getSubConfiguration("SingleChain").getSubConfiguration("Reader").
+        conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
+                getSubConfigurations(FilterSequence.CONF_FILTERS).get(0).
+//                getSubConfiguration("Reader").
                 set(FileReader.CONF_ROOT_FOLDER, folder.getAbsolutePath());
 
         FilterService ingester = new FilterService(conf);
@@ -156,8 +154,8 @@ public class SearchTest extends NoExitTestCase {
         storage.close();
     }
 
-    public static File INDEX_ROOT = new File(System.getProperty("java.io.tmpdir"),
-                               "testindex");
+    public static File INDEX_ROOT =
+            new File(System.getProperty("java.io.tmpdir"), "testindex");
 
     private SummaSearcher createSearchService() throws Exception {
         return SummaSearcherFactory.createSearcher(getSearcherConfiguration());
@@ -211,14 +209,15 @@ public class SearchTest extends NoExitTestCase {
         } catch (IndexException e) {
             // Expected
         }
-        JMXServiceURL url = new JMXServiceURL(
-                "service:jmx:rmi:///jndi/rmi://:2783/dk.statsbiblioteket.summa.control.service.SearchService:type=Service");     // 2783
+/*        JMXServiceURL url = new JMXServiceURL(
+                "service:jmx:rmi:///jndi/rmi://:2783/dk.statsbiblioteket.summa."
+                + "control.service.SearchService:type=Service");     // 2783
         JMXConnector jmxc = JMXConnectorFactory.connect(url, null);
-
+*/
         Thread.sleep(Integer.MAX_VALUE);
     }
 
-    private static class ClientListener implements NotificationListener {
+/*    private static class ClientListener implements NotificationListener {
             public void handleNotification(Notification notification,
                                            Object handback) {
                 log.debug("\nReceived notification:");
@@ -237,7 +236,7 @@ public class SearchTest extends NoExitTestCase {
             }
         }
 
-
+  */
     public static void updateIndex() throws Exception {
         Configuration indexConf = Configuration.load(
                 "data/search/SearchTest_IndexConfiguration.xml");

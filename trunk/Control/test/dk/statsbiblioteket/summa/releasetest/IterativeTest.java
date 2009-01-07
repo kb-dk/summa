@@ -470,18 +470,18 @@ public class IterativeTest extends NoExitTestCase {
                                                  InterruptedException {
         Configuration conf = getIndexConfiguration();
         // Ensure that consolidate is called
-        conf.getSubConfiguration("SingleChain").
+        conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfiguration("IndexUpdate").
                 set(IndexControllerImpl.CONF_CONSOLIDATE_MAX_DOCUMENTS, 1);
         // Ensure that deletes are removed
-        conf.getSubConfiguration("SingleChain").
+        conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfiguration("IndexUpdate").
                 getSubConfiguration("LuceneUpdater").
                 set(LuceneManipulator.CONF_MAX_SEGMENTS_ON_CONSOLIDATE, 1);
         // Sanity-check
         assertEquals("The value for consolidatetimeout should be present",
                      -1,
-                     conf.getSubConfiguration("SingleChain").
+                     conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                              getSubConfiguration("IndexUpdate").
                              getInt(IndexControllerImpl.
                              CONF_CONSOLIDATE_TIMEOUT));

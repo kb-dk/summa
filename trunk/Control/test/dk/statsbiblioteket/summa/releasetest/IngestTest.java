@@ -29,6 +29,7 @@ import java.util.Iterator;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
@@ -72,7 +73,7 @@ public class IngestTest extends NoExitTestCase {
     private static final String FOOTER =
     "</innerrecords>\n"
     + "</outer>\n";
-
+       
     private final static String THREE_RECORDS =
     HEADER
     + "<record id=\"recordA\">\n"
@@ -313,7 +314,8 @@ public class IngestTest extends NoExitTestCase {
 
     // with proper use of FilterChain
     public void testFullIngestWorkflow() throws Exception {
-        File dataLocation = new File("/tmp/summatest/data/5records");
+        File dataLocation = new File(Resolver.getURL(
+                "data/5records").getFile());
         System.out.println("Note: This is a pseudo-unit-test as it requires "
                            + "that the test-folder 5records are copied to "
                            + dataLocation);
@@ -328,14 +330,15 @@ public class IngestTest extends NoExitTestCase {
         Storage storage = StorageFactory.createStorage(storageConf);
 
         // FIXME: Use classloader to locate the test root
-        File filterConfFile = new File("Control/test/data/5records/"
-                                       + "filter_setup.xml").getAbsoluteFile();
+        File filterConfFile = new File(Resolver.getURL(
+                "data/5records/filter_setup.xml").getFile());
         assertTrue("The filter conf. '" + filterConfFile + "' should exist",
                    filterConfFile.exists());
         Configuration filterConf = Configuration.load(filterConfFile.getPath());
         assertNotNull("Configuration should contain "
                       + FilterControl.CONF_CHAINS,
-                      filterConf.getString(FilterControl.CONF_CHAINS));
+                      filterConf.getSubConfigurations(
+                              FilterControl.CONF_CHAINS));
 
         FilterService ingester = new FilterService(filterConf);
         ingester.start();

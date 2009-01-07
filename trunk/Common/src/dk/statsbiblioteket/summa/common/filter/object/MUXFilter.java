@@ -55,7 +55,7 @@ import java.io.IOException;
 // TODO: Add optional consistent Payload ordering between feeders
 // TODO: Add option to turn off feeding of filters, making the start points
 @QAInfo(level = QAInfo.Level.FINE,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_NEEDED,
         author = "te",
         comment = "This is a central component, which uses threading."
                   + " Please pay special attention to potential deadlocks")
@@ -63,18 +63,26 @@ public class MUXFilter implements ObjectFilter, Runnable {
     private static Log log = LogFactory.getLog(MUXFilter.class);
 
     /**
-     * A list of Strings specifying the subProperties for the Filters to mux.
-     * Note that Filters may appear more than once in the list, in which case
-     * more instances are created. Multiple instances of the same Filter might
-     * be used together with ProxyFilters to provide Threaded execution.
+     * A list of sub-properties for the Filters to mux. Note that a
+     * {@link MUXFilterFeeder} is created for each configuration, so
+     * inspection of the properties for MUXFilterFeeder might be relevant.
      * </p><p>
-     * For each unique Filter specified in this property, a subConfiguration
-     * must exist in the Configuration. Note that {@link MUXFilterFeeder}
-     *
+     * Hint: Multiple instances of the same Filter can be used together with
+     * ProxyFilters to provide Threaded execution.
      * </p><p>
      * This property is mandatory.
      */
     public static final String CONF_FILTERS = "summa.muxfilter.filters";
+
+    /**
+     * The number of instances to create from a given sub-property.
+     * This provides an easy way to parallize filters.
+     * </p><p>
+     * Optional. Default is 1.
+     */
+    public static final String CONF_INSTANCES =
+            "summa.muxfilter.filter.instances";
+    public static final int DEFAULT_INSTANCES = 1;
 
     /**
      * The number of ms to wait after trying to get a Payload from all feeders
@@ -96,25 +104,27 @@ public class MUXFilter implements ObjectFilter, Runnable {
                     "A value for the key %s must exist in the Configuration",
                     CONF_FILTERS));
         }
-        List<String> filterConfKeys = conf.getStrings(CONF_FILTERS);
-        feeders = new ArrayList<MUXFilterFeeder>(filterConfKeys.size());
-        for (String filterConfKey: filterConfKeys) {
-            try {
-                log.debug("Constructing feeder from conf '" + filterConfKey
-                          + "'");
-                feeders.add(new MUXFilterFeeder(
-                        conf.getSubConfiguration(filterConfKey)));
-            } catch (IOException e) {
-                throw new Configurable.ConfigurationException(String.format(
-                        "Unable to create MUXFilterFeeder with key '%s'",
-                        filterConfKey), e);
+        List<Configuration> filterConfs;
+        try {
+            filterConfs = conf.getSubConfigurations(CONF_FILTERS);
+        } catch (IOException e) {
+            throw new ConfigurationException(String.format(
+                    "Unable to extract Filter configurations from key %s",
+                    CONF_FILTERS), e);
+        }
+        feeders = new ArrayList<MUXFilterFeeder>(filterConfs.size());
+        for (Configuration filterConf: filterConfs) {
+            for (int i = 0 ;
+                 i < filterConf.getInt(CONF_INSTANCES, DEFAULT_INSTANCES) ;
+                 i++) {
+                feeders.add(new MUXFilterFeeder(filterConf));
             }
         }
         if (feeders.size() > 0) {
             log.trace("Constructed feeders, starting to fill the feeders");
         } else {
             log.warn("No feeders defined for MUXFilter. There will never be any"
-                     + " output but the source will be drained");
+                     + " output although the source will be drained");
         }
         profiler = new Profiler();
         profiler.setBpsSpan(100);
