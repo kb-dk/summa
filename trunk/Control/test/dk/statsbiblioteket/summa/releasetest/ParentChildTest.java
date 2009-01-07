@@ -29,6 +29,7 @@ import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
+import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
 import dk.statsbiblioteket.summa.control.service.StorageService;
 import dk.statsbiblioteket.summa.control.service.SearchService;
 import dk.statsbiblioteket.summa.control.service.FilterService;
@@ -214,7 +215,8 @@ public class ParentChildTest extends NoExitTestCase {
         Configuration ingestConf =Configuration.load(
                 "data/parent-child/horizon_ingest_configuration.xml");
         ingestConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
-                getSubConfiguration("Reader").
+                getSubConfigurations(FilterSequence.CONF_FILTERS).get(0).
+//                getSubConfiguration("Reader").
                 set(FileReader.CONF_ROOT_FOLDER,
                     new File(ReleaseTestCommon.DATA_ROOT,
                              "parent-child/horizondump").getAbsolutePath());

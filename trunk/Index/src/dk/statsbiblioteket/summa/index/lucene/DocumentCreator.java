@@ -100,6 +100,10 @@ public class DocumentCreator extends DocumentCreatorBase {
      */
     public DocumentCreator(Configuration conf) throws ConfigurationException {
         super(conf);
+        log.warn("The " + getClass().getName() + " is deprecated. Unless there "
+                 + "is a special reason not to, the "
+                 + StreamingDocumentCreator.class.getName() + " should be used"
+                 + " instead as it is much faster");
         descriptor = LuceneIndexUtils.getDescriptor(conf);
         initXPaths();
         createDocumentBuilder();
