@@ -32,6 +32,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
+import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.ingest.stream.FileReader;
 import dk.statsbiblioteket.summa.ingest.split.XMLSplitterFilter;
@@ -113,6 +114,7 @@ public class IngestTest extends NoExitTestCase {
 
     private static int storageCounter = 0;
 
+    @Override
     public void setUp () throws Exception {
         super.setUp();
         if (sourceRoot.exists()) {
@@ -127,6 +129,7 @@ public class IngestTest extends NoExitTestCase {
         Files.saveString("Dummy content", new File(sourceRoot, "dummy.dummy"));
         deleteOldStorages();
     }
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
         Files.delete(sourceRoot);
@@ -290,7 +293,7 @@ public class IngestTest extends NoExitTestCase {
         ConnectionContext<Storage> ctx = cm.get(STORAGE_ADDRESS);
         assertNotNull("The ConnectionManager should return an Storage"
                       + " ConnectionContext", ctx);
-        Storage remoteStorage = ctx.getConnection();
+        ctx.getConnection();
 
         long iterKey = storage.getRecordsModifiedAfter(0, TESTBASE, null);
         Iterator<Record> iterator = new StorageIterator(storage, iterKey);
@@ -316,9 +319,6 @@ public class IngestTest extends NoExitTestCase {
     public void testFullIngestWorkflow() throws Exception {
         File dataLocation = new File(Resolver.getURL(
                 "data/5records").getFile());
-        System.out.println("Note: This is a pseudo-unit-test as it requires "
-                           + "that the test-folder 5records are copied to "
-                           + dataLocation);
 
         assertTrue("The test-data should be present at " + dataLocation,
                    dataLocation.exists());
@@ -329,12 +329,14 @@ public class IngestTest extends NoExitTestCase {
         Configuration storageConf = getStorageConfiguration();
         Storage storage = StorageFactory.createStorage(storageConf);
 
-        // FIXME: Use classloader to locate the test root
         File filterConfFile = new File(Resolver.getURL(
                 "data/5records/filter_setup.xml").getFile());
         assertTrue("The filter conf. '" + filterConfFile + "' should exist",
                    filterConfFile.exists());
         Configuration filterConf = Configuration.load(filterConfFile.getPath());
+        filterConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
+                getSubConfigurations(FilterSequence.CONF_FILTERS).get(0).
+                set(FileReader.CONF_ROOT_FOLDER, dataLocation.getPath());
         assertNotNull("Configuration should contain "
                       + FilterControl.CONF_CHAINS,
                       filterConf.getSubConfigurations(

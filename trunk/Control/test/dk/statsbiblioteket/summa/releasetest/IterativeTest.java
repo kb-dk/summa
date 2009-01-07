@@ -44,6 +44,7 @@ import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
+import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.api.StorageIterator;
@@ -76,6 +77,7 @@ public class IterativeTest extends NoExitTestCase {
     private Storage storage;
     public static final String BASE = "bar";
 
+    @Override
     public void setUp () throws Exception {
         super.setUp();
         IngestTest.deleteOldStorages();
@@ -83,11 +85,13 @@ public class IterativeTest extends NoExitTestCase {
             Files.delete(IndexTest.INDEX_ROOT);
         }
         IndexTest.INDEX_ROOT.mkdirs();
+        IterativeHelperDocCreator.processedIDs.clear();
 
         Configuration storageConf = IngestTest.getStorageConfiguration();
         storage = StorageFactory.createStorage(storageConf);
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
         storage.close();
@@ -127,7 +131,8 @@ public class IterativeTest extends NoExitTestCase {
     Tests whether the helper class is capable of creating a Lucene Document.
      */
     public void testDocumentCreation() throws Exception {
-        IterativeHelperDocCreator creator = new IterativeHelperDocCreator(null);
+        IterativeHelperDocCreator creator =
+                new IterativeHelperDocCreator(Configuration.newMemoryBased());
         Payload payload = getPayload("foo");
         creator.processPayload(payload);
         Document doc = (Document)payload.getData(Payload.LUCENE_DOCUMENT);
@@ -146,7 +151,7 @@ public class IterativeTest extends NoExitTestCase {
                      1, IterativeHelperDocCreator.processedIDs.size());
         FacetMap facetMap = getFacetMap();
         assertEquals("The TagHandler should have the correct number of Facets",
-                     2, facetMap.getTagHandler().getFacets().size());
+                     4, facetMap.getTagHandler().getFacets().size());
         assertEquals("The coreMap should have the correct number of docs",
                      1, facetMap.getCoreMap().getDocCount());
         facetMap.close();
@@ -179,6 +184,8 @@ public class IterativeTest extends NoExitTestCase {
     Updates an index two times with separate indexers.
      */
     public void testMultipartUpdate() throws Exception {
+        assertEquals("No ids should be processed before start of test",
+                     0, IterativeHelperDocCreator.processedIDs.size());
         storage.flush(new Record("foo1", BASE, new byte[0]));
         updateIndex();
         assertEquals("The number of processed ids should be correct at first",
@@ -396,7 +403,7 @@ public class IterativeTest extends NoExitTestCase {
                 "data/iterative/IterativeTest_FacetSearchConfiguration.xml");
         Structure structure = new Structure(conf);
         assertEquals("There should be the right number of Facets defined",
-                     2, structure.getFacetNames().size());
+                     4, structure.getFacetNames().size());
         TagHandler tagHandler =
                 TagHandlerFactory.getTagHandler(conf, structure, false);
         CoreMap coreMap = CoreMapFactory.getCoreMap(conf, structure);
@@ -471,18 +478,24 @@ public class IterativeTest extends NoExitTestCase {
         Configuration conf = getIndexConfiguration();
         // Ensure that consolidate is called
         conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
-                getSubConfiguration("IndexUpdate").
+                getSubConfigurations(FilterSequence.CONF_FILTERS).get(2).
+//                getSubConfiguration("IndexUpdate").
                 set(IndexControllerImpl.CONF_CONSOLIDATE_MAX_DOCUMENTS, 1);
         // Ensure that deletes are removed
         conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
-                getSubConfiguration("IndexUpdate").
-                getSubConfiguration("LuceneUpdater").
+                getSubConfigurations(FilterSequence.CONF_FILTERS).get(2).
+//                getSubConfiguration("IndexUpdate").
+             getSubConfigurations(IndexControllerImpl.CONF_MANIPULATORS).get(0).
+//                getSubConfiguration("LuceneUpdater").
                 set(LuceneManipulator.CONF_MAX_SEGMENTS_ON_CONSOLIDATE, 1);
         // Sanity-check
         assertEquals("The value for consolidatetimeout should be present",
                      -1,
-                     conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
-                             getSubConfiguration("IndexUpdate").
+                     conf.getSubConfigurations(FilterControl.CONF_CHAINS).
+                             get(0).
+                             getSubConfigurations(FilterSequence.CONF_FILTERS).
+                             get(2).
+//                             getSubConfiguration("IndexUpdate").
                              getInt(IndexControllerImpl.
                              CONF_CONSOLIDATE_TIMEOUT));
         updateIndex(conf);
