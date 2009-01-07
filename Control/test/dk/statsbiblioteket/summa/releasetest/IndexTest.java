@@ -35,6 +35,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
 import dk.statsbiblioteket.summa.common.filter.Filter;
+import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
@@ -64,6 +65,7 @@ public class IndexTest extends NoExitTestCase {
     public static final String TESTBASE = "fagref";
     public static final int NUM_RECORDS = 3;
 
+    @Override
     public void setUp () throws Exception {
         super.setUp();
         IngestTest.deleteOldStorages();
@@ -98,8 +100,9 @@ public class IndexTest extends NoExitTestCase {
         assertEquals("There should be no existing indexes", 0, countIndexes());
         Configuration indexConf = Configuration.load(
                 "data/search/IndexTest_IndexConfiguration.xml");
-        indexConf.getSubConfiguration("SingleChain").
-                getSubConfiguration("IndexUpdate").
+        indexConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
+                getSubConfigurations(FilterSequence.CONF_FILTERS).get(4).
+//                getSubConfiguration("IndexUpdate").
                 set(IndexControllerImpl.CONF_CREATE_NEW_INDEX, false);
         updateIndex(indexConf);
         assertEquals("After update one the number of indexes should be correct",
@@ -169,7 +172,8 @@ public class IndexTest extends NoExitTestCase {
         Configuration indexConf = Configuration.load(indexConfFile.getPath());
         assertNotNull("Configuration should contain "
                       + FilterControl.CONF_CHAINS,
-                      indexConf.getString(FilterControl.CONF_CHAINS));
+                      indexConf.getSubConfigurations(
+                              FilterControl.CONF_CHAINS));
 
         FilterService indexService = new FilterService(indexConf);
         indexService.start();
@@ -192,7 +196,7 @@ public class IndexTest extends NoExitTestCase {
     }
 
     public void testFillStorage() throws Exception {
-        fillStorage();
+        fillStorage().close();
     }
 
     /**
@@ -228,7 +232,8 @@ public class IndexTest extends NoExitTestCase {
         Configuration filterConf = Configuration.load(filterConfFile.getPath());
         assertNotNull("Configuration should contain "
                       + FilterControl.CONF_CHAINS,
-                      filterConf.getString(FilterControl.CONF_CHAINS));
+                      filterConf.getSubConfigurations(
+                              FilterControl.CONF_CHAINS));
 
         FilterService ingester = new FilterService(filterConf);
         ingester.start();
@@ -288,18 +293,25 @@ public class IndexTest extends NoExitTestCase {
         assertNotNull("The descriptor location should not be null",
                       descriptorLocation);
 
-        Configuration chain = conf.getSubConfiguration("SingleChain");
-        chain.getSubConfiguration("FagrefTransformer").
+        Configuration chain = conf.getSubConfigurations(
+                FilterControl.CONF_CHAINS).get(0);
+        chain.getSubConfigurations(FilterSequence.CONF_FILTERS).get(1).
+//        chain.getSubConfiguration("FagrefTransformer").
                 set(XMLTransformer.CONF_XSLT, xsltLocation.getFile());
-        chain.getSubConfiguration("DocumentCreator").getSubConfiguration(
+        chain.getSubConfigurations(FilterSequence.CONF_FILTERS).get(3).
+//        chain.getSubConfiguration("DocumentCreator").
+                getSubConfiguration(
                 LuceneIndexUtils.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
                     descriptorLocation.getFile());
-        chain.getSubConfiguration("IndexUpdate").
+        chain.getSubConfigurations(FilterSequence.CONF_FILTERS).get(4).
+//        chain.getSubConfiguration("IndexUpdate").
                 set(IndexControllerImpl.CONF_INDEX_ROOT_LOCATION,
                     SearchTest.INDEX_ROOT.toString());
-        chain.getSubConfiguration("IndexUpdate").
-                getSubConfiguration("LuceneUpdater").
+        chain.getSubConfigurations(FilterSequence.CONF_FILTERS).get(4).
+//        chain.getSubConfiguration("IndexUpdate").
+        getSubConfigurations(IndexControllerImpl.CONF_MANIPULATORS).get(0).
+//                getSubConfiguration("LuceneUpdater").
                 getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
                     descriptorLocation.getFile());

@@ -25,6 +25,7 @@ import dk.statsbiblioteket.summa.common.lucene.LuceneIndexField;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
 import dk.statsbiblioteket.summa.common.index.IndexField;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 import org.apache.lucene.document.Field;
@@ -37,6 +38,10 @@ import org.apache.lucene.document.Field;
         author = "te")
 public abstract class DocumentCreatorBase extends ObjectFilterImpl {
     private static Log log = LogFactory.getLog(DocumentCreatorBase.class);
+
+    protected DocumentCreatorBase(Configuration conf) {
+        super(conf);
+    }
 
     /**
      * Adds the content for a given field to the Lucene Document, handling

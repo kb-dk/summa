@@ -28,6 +28,7 @@ import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.filter.FilterControl;
 import dk.statsbiblioteket.summa.control.service.StorageService;
 import dk.statsbiblioteket.summa.control.service.SearchService;
 import dk.statsbiblioteket.summa.control.service.FilterService;
@@ -212,7 +213,7 @@ public class ParentChildTest extends NoExitTestCase {
     private void performIngest()  throws IOException, InterruptedException {
         Configuration ingestConf =Configuration.load(
                 "data/parent-child/horizon_ingest_configuration.xml");
-        ingestConf.getSubConfiguration("SingleChain").
+        ingestConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfiguration("Reader").
                 set(FileReader.CONF_ROOT_FOLDER,
                     new File(ReleaseTestCommon.DATA_ROOT,
@@ -258,13 +259,13 @@ public class ParentChildTest extends NoExitTestCase {
                 "parent-child/index_descriptor.xml").toString();
         log.debug("indexDescriptorLocation: " + indexDescriptorLocation);
 
-        indexConf.getSubConfiguration("SingleChain").
+        indexConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfiguration("DocumentCreator").
                 getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
                     indexDescriptorLocation);
 
-        indexConf.getSubConfiguration("SingleChain").
+        indexConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfiguration("IndexUpdate").
                 getSubConfiguration("LuceneUpdater").
                 getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR).

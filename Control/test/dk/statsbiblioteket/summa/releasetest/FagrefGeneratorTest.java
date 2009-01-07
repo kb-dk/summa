@@ -50,12 +50,14 @@ public class FagrefGeneratorTest extends NoExitTestCase {
         super(name);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
         ReleaseTestCommon.setup();
         SearchTest.INDEX_ROOT.mkdirs();
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
         ReleaseTestCommon.tearDown();

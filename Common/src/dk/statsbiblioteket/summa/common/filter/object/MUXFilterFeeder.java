@@ -32,7 +32,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.Set;
 import java.util.List;
 import java.util.HashSet;
-import java.util.Queue;
 import java.io.IOException;
 
 /**
@@ -45,9 +44,9 @@ import java.io.IOException;
  * input Payloads from an inQueue.
  */
 @QAInfo(level = QAInfo.Level.FINE,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_NEEDED,
         author = "te",
-        comment = "This is a central component, which uses threading. " 
+        comment = "This is a central component which uses threading. "
                   + "Please pay special attention to potential deadlocks")
 public class MUXFilterFeeder implements ObjectFilter, Runnable {
     private static Log log = LogFactory.getLog(MUXFilterFeeder.class);
@@ -129,6 +128,7 @@ public class MUXFilterFeeder implements ObjectFilter, Runnable {
             "summa.muxfilter.filter.bases";
     public static final String DEFAULT_FILTER_BASES = "*";
 
+    @SuppressWarnings({"DuplicateStringLiteralInspection"})
     private static final Payload STOP =
             new Payload(new Record("EOF", "Dummy", new byte[0]));
 
@@ -278,6 +278,7 @@ public class MUXFilterFeeder implements ObjectFilter, Runnable {
         return eofReached || outQueue.peek() == STOP;
     }
 
+    @Override
     public String toString() {
         return "MUXFilterFeeder(" + filterName + ", " + filter + ")";
     }

@@ -26,6 +26,7 @@ import java.io.IOException;
 
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -43,7 +44,13 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
     private ObjectFilter source;
     private long payloadCount = 0;
     private long totalTimeNS = 0;
-    
+
+    private String name;
+
+    public ObjectFilterImpl(Configuration conf) {
+        name = conf.getString(CONF_FILTER_NAME, this.getClass().getName());
+    }
+
     public boolean hasNext() {
         checkSource();
         return source.hasNext();
@@ -64,6 +71,10 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
         return payload;
     }
 
+    /**
+     * Perform implementation-specific processing of the given Payload.
+     * @param payload the Payload to process.
+     */
     protected abstract void processPayload(Payload payload);
 
     public void remove() {
@@ -115,9 +126,23 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
      *         Sample output: "Processed 1234 Payloads at 1.43232 ms/Payload" 
      */
     public String getProcessStats() {
-        return String.format(
-                "Processed %d Payloads at %s ms/Payload",
-                payloadCount, payloadCount == 0 ? "NA" :
-                totalTimeNS / 1000000.0 / payloadCount);
+        //noinspection DuplicateStringLiteralInspection
+        return "Processed " + payloadCount + " Payloads at "
+               + (payloadCount == 0 ? "NA" :
+                  totalTimeNS / 1000000.0 / payloadCount)
+               + " ms/Payload";
     }
- }
+
+    /**
+     * @return the name of the filter, if specified. Else the class name of the
+     *         object.
+     */
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public String toString() {
+        return "Filter '" + getName() + "' " + getProcessStats();
+    }
+}

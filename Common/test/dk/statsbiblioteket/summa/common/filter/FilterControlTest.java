@@ -1,6 +1,6 @@
 package dk.statsbiblioteket.summa.common.filter;
 
-import java.util.Arrays;
+import java.util.List;
 import java.io.File;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -9,19 +9,17 @@ import dk.statsbiblioteket.summa.common.configuration.storage.XStorage;
 import dk.statsbiblioteket.summa.common.filter.object.DummyStreamToRecords;
 import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
 import dk.statsbiblioteket.summa.common.filter.stream.DummyReader;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-/**
- * FilterControl Tester.
- *
- * @author <Authors name>
- * @since <pre>03/26/2008</pre>
- * @version 1.0
- */
+@SuppressWarnings({"DuplicateStringLiteralInspection"})
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.QA_NEEDED,
+        author = "te")
 public class FilterControlTest extends TestCase {
     private static Log log = LogFactory.getLog(FilterControlTest.class);
 
@@ -29,10 +27,12 @@ public class FilterControlTest extends TestCase {
         super(name);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
     }
@@ -45,23 +45,25 @@ public class FilterControlTest extends TestCase {
         return new TestSuite(FilterControlTest.class);
     }
     private void makeSimple(ConfigurationStorage storage) throws Exception {
-        ConfigurationStorage streamSub =
-                storage.createSubStorage("Streamer");
+        List<ConfigurationStorage> chainConfs =
+                storage.createSubStorages(FilterControl.CONF_CHAINS, 1);
+        chainConfs.get(0).put(Filter.CONF_FILTER_NAME, "FilterPumptest");
+        List<ConfigurationStorage> filterConfs =
+                chainConfs.get(0).createSubStorages(
+                        FilterSequence.CONF_FILTERS,  1);
+
+        ConfigurationStorage streamSub = filterConfs.get(0);
+        streamSub.put(Filter.CONF_FILTER_NAME, "Streamer");
         streamSub.put(FilterSequence.CONF_FILTER_CLASS,
                        DummyReader.class.getName());
         streamSub.put(DummyReader.CONF_BODY_COUNT, 3);
         streamSub.put(DummyReader.CONF_BODY_SIZE, 100);
 
-        ConfigurationStorage convertSub =
-                storage.createSubStorage("Converter");
+        ConfigurationStorage convertSub = filterConfs.get(1);
+        streamSub.put(Filter.CONF_FILTER_NAME, "Converter");
         convertSub.put(FilterSequence.CONF_FILTER_CLASS,
                        DummyStreamToRecords.class.getName());
         convertSub.put(DummyStreamToRecords.CONF_DATA_SIZE, 99);
-
-        Configuration pumpConf = new Configuration(storage);
-        pumpConf.set(FilterPump.CONF_CHAIN_NAME, "FilterPumpTest");
-        pumpConf.setStrings(FilterSequence.CONF_FILTERS,
-                            Arrays.asList("Streamer", "Converter"));
     }
 
     public void testDumpConfig() throws Exception {
@@ -69,7 +71,7 @@ public class FilterControlTest extends TestCase {
         ConfigurationStorage pumpStorage =
                 ingesterStorage.createSubStorage("TestPump");
         makeSimple(pumpStorage);
-        Configuration ingestConf = new Configuration(ingesterStorage);
+        new Configuration(ingesterStorage);
     }
 
     /*
@@ -79,15 +81,16 @@ public class FilterControlTest extends TestCase {
      */
     private int simpleResult() throws Exception {
         XStorage ingesterStorage = new XStorage();
-        ConfigurationStorage pumpStorage =
-                ingesterStorage.createSubStorage("TestPump");
+        ConfigurationStorage pumpStorage = ingesterStorage.createSubStorages(
+                FilterControl.CONF_CHAINS, 1).get(0);
+        pumpStorage.put(Filter.CONF_FILTER_NAME, "TestPump");
         makeSimple(pumpStorage);
         Configuration ingestConf = new Configuration(ingesterStorage);
-        ingestConf.setStrings(FilterControl.CONF_CHAINS,
-                              Arrays.asList("TestPump"));
+//        ingestConf.setStrings(FilterControl.CONF_CHAINS,
+//                              Arrays.asList("TestPump"));
         ingestConf.set(FilterControl.CONF_SEQUENTIAL, true);
-        FilterControl ingester =
-                new FilterControl(new Configuration(ingesterStorage));
+        FilterControl ingester = new FilterControl(
+                new Configuration(ingesterStorage));
         ingester.start();
         ingester.waitForFinish();
         return DummyStreamToRecords.getIdCount();
@@ -99,7 +102,8 @@ public class FilterControlTest extends TestCase {
         assertTrue("The number of processed records after run 1 should be > 0",
                    simpleResult() > beginCount);
         beginCount = DummyStreamToRecords.getIdCount();
-        assertTrue("The number of processed records after run 1 should be > 0",
+        assertTrue("The number of processed records after run 1 should be > 0, "
+                   + "counted by the Dummy filter",
                    simpleResult() > beginCount);
     }
 
@@ -117,16 +121,19 @@ public class FilterControlTest extends TestCase {
         DummyStreamToRecords.clearIdCount();
 
         XStorage ingesterStorage = new XStorage();
-        ConfigurationStorage pumpStorage1 =
-                ingesterStorage.createSubStorage("TestPump1");
+        List<ConfigurationStorage> chains =
+                ingesterStorage.createSubStorages(FilterControl.CONF_CHAINS, 2);
+
+        ConfigurationStorage pumpStorage1 = chains.get(0);
+        pumpStorage1.put(Filter.CONF_FILTER_NAME, "TestPump1");
         makeSimple(pumpStorage1);
-        ConfigurationStorage pumpStorage2 =
-                ingesterStorage.createSubStorage("TestPump2");
+        ConfigurationStorage pumpStorage2 = chains.get(1);
+        pumpStorage1.put(Filter.CONF_FILTER_NAME, "TestPump2");
         makeSimple(pumpStorage2);
 
         Configuration ingestConf = new Configuration(ingesterStorage);
-        ingestConf.setStrings(FilterControl.CONF_CHAINS,
-                              Arrays.asList("TestPump1", "TestPump2"));
+//        ingestConf.setStrings(FilterControl.CONF_CHAINS,
+//                              Arrays.asList("TestPump1", "TestPump2"));
         ingestConf.set(FilterControl.CONF_SEQUENTIAL, true);
 
         FilterControl ingester =
@@ -151,17 +158,13 @@ public class FilterControlTest extends TestCase {
 
         assertNotNull("Configuration should contain "
                       + FilterControl.CONF_CHAINS,
-                      conf.getString(FilterControl.CONF_CHAINS));
+                      conf.getSubConfigurations(FilterControl.CONF_CHAINS));
 
         FilterControl ingester = new FilterControl(conf);
         ingester.start();
         ingester.waitForFinish();
         assertEquals("The number of records processed  should be double of "
                      + "a single run",
-                     singleRun*2, DummyStreamToRecords.getIdCount());
-
+                     singleRun * 2, DummyStreamToRecords.getIdCount());
     }
 }
-
-
-

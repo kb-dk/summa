@@ -65,6 +65,7 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
     private Transformer transformer;
 
     public MarcMultiVolumeMerger(Configuration conf) {
+        super(conf);
         String xsltLocation = conf.getString(CONF_MERGE_XSLT,
                                              DEFAULT_MERGE_XSLT);
         try {

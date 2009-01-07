@@ -27,6 +27,7 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
+import dk.statsbiblioteket.summa.common.filter.FilterControl;
 import dk.statsbiblioteket.summa.control.service.StorageService;
 import dk.statsbiblioteket.summa.control.service.FilterService;
 import dk.statsbiblioteket.summa.control.service.SearchService;
@@ -136,19 +137,19 @@ public class OAITest extends NoExitTestCase {
                 ReleaseTestCommon.DATA_ROOT,
                 "oai/oai_index.xsl").toString();
         log.debug("oaiTransformerXSLT: " + oaiTransformerXSLT);
-        indexConf.getSubConfiguration("SingleChain").
+        indexConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfiguration("XMLTransformer").
                 set(XMLTransformer.CONF_XSLT, oaiTransformerXSLT);
         String indexDescriptorLocation = new File(
                 ReleaseTestCommon.DATA_ROOT,
                 "oai/oai_IndexDescriptor.xml").toString();
         log.debug("indexDescriptorLocation: " + indexDescriptorLocation);
-        indexConf.getSubConfiguration("SingleChain").
+        indexConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfiguration("DocumentCreator").
                 getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
                     indexDescriptorLocation);
-        indexConf.getSubConfiguration("SingleChain").
+        indexConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfiguration("IndexUpdate").
                 getSubConfiguration("LuceneUpdater").
                 getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR).
@@ -169,7 +170,7 @@ public class OAITest extends NoExitTestCase {
         Configuration ingestConf = Configuration.load(Resolver.getURL(
                 "test-ingest-oai/config/configuration.xml").getFile());
         ingestConf.set(Service.CONF_SERVICE_ID, "IngestService");
-        ingestConf.getSubConfiguration("SingleChain").
+        ingestConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfiguration("Reader").
                 set(FileReader.CONF_ROOT_FOLDER,
                     new File(ReleaseTestCommon.DATA_ROOT,
@@ -182,5 +183,4 @@ public class OAITest extends NoExitTestCase {
         }
         return ingest;
     }
-
 }

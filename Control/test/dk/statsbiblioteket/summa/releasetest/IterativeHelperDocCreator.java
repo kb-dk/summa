@@ -41,7 +41,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
  */
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_NEEDED,
         author = "te")
 public class IterativeHelperDocCreator extends ObjectFilterImpl {
     private static Log log = LogFactory.getLog(IterativeHelperDocCreator.class);
@@ -50,9 +50,10 @@ public class IterativeHelperDocCreator extends ObjectFilterImpl {
 
     @SuppressWarnings({"UnusedDeclaration"})
     public IterativeHelperDocCreator(Configuration conf) {
-
+        super(conf);
     }
 
+    @Override
     protected void processPayload(Payload payload) {
         log.debug("Processing " + payload);
         Document luceneDoc = new Document();

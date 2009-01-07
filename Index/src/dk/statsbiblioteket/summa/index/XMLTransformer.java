@@ -39,7 +39,7 @@ import org.apache.commons.logging.LogFactory;
  * for further transformation to a Lucene Document object by CreateDocument).
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_NEEDED,
         author = "te")
 public class XMLTransformer extends ObjectFilterImpl {
     private static Log log = LogFactory.getLog(XMLTransformer.class);
@@ -61,6 +61,7 @@ public class XMLTransformer extends ObjectFilterImpl {
      * @see {@link #CONF_XSLT}.
      */
     public XMLTransformer(Configuration conf) {
+        super(conf);
         try {
             xsltLocation = conf.getString(CONF_XSLT);
             // Extract XSLT
@@ -91,6 +92,7 @@ public class XMLTransformer extends ObjectFilterImpl {
      * transformer from {@link dk.statsbiblioteket.summa.common.util.XSLTUtil#createTransformer(String)}.
      * @param payload the wrapper containing the Record with the content.
      */
+    @Override
     protected synchronized void processPayload(Payload payload) {
         //noinspection DuplicateStringLiteralInspection
         log.trace("processPayload(" + payload + ") called");
@@ -110,6 +112,7 @@ public class XMLTransformer extends ObjectFilterImpl {
         }
     }
 
+    @Override
     public synchronized void close(boolean success) {
         super.close(success);
         log.info("Closing down XMLTransformer for '" + xsltLocation + "'. "

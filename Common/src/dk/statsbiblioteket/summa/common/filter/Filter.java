@@ -37,6 +37,15 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public interface Filter {
+
+    /**
+     * Used in configurations to state the name of the filter. The name of the
+     * filter should be used for feedback and debugging purposes only.
+     * </p><p>
+     * Support for filter-name is optional for Filters. 
+     */
+    public static final String CONF_FILTER_NAME = "filter.name";
+
     /**
      * Set the source for the Filter. This allows for chaining. Implementations
      * of Filter will normally put constraints on the type of Filters they
@@ -76,8 +85,4 @@ public interface Filter {
      * @param success if true a normal shutdown should take place.
      */
     public void close(boolean success);
-
 }
-
-
-

@@ -28,6 +28,8 @@ import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
+import dk.statsbiblioteket.summa.common.filter.FilterControl;
+import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
 import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
@@ -38,18 +40,15 @@ import dk.statsbiblioteket.summa.control.service.StorageService;
 import dk.statsbiblioteket.summa.control.service.FilterService;
 import dk.statsbiblioteket.summa.control.service.SearchService;
 import dk.statsbiblioteket.summa.search.api.SearchClient;
-import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.IndexWatcher;
 import dk.statsbiblioteket.summa.search.SearchNodeFactory;
-import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
-import dk.statsbiblioteket.summa.search.SummaSearcherFactory;
 import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
 import dk.statsbiblioteket.summa.ingest.stream.FileReader;
 import dk.statsbiblioteket.summa.index.XMLTransformer;
-import dk.statsbiblioteket.summa.index.IndexController;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
-import dk.statsbiblioteket.summa.index.lucene.DocumentCreator;
+import dk.statsbiblioteket.summa.index.IndexController;
+import dk.statsbiblioteket.summa.index.IndexManipulator;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 import junit.framework.TestCase;
@@ -72,12 +71,14 @@ import java.util.List;
  * IndexController <LuceneManipulator, FacetManipulator> => (Index) =>
  * SummaSearcher <LuceneSearchNode, FacetSearchNode>.
  */
+@SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_NEEDED,
         author = "te")
 public class AutoDiscoverTest extends TestCase {
     private static Log log = LogFactory.getLog(AutoDiscoverTest.class);
 
+    @Override
     public void setUp () throws Exception {
         super.setUp();
         if (TEST_DIR.exists()) {
@@ -91,6 +92,7 @@ public class AutoDiscoverTest extends TestCase {
         new File(INGEST_FOLDER).mkdirs();
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
     }
@@ -170,9 +172,12 @@ public class AutoDiscoverTest extends TestCase {
         Configuration conf =
                 Configuration.load("data/auto/setup/IngestConfiguration.xml");
         conf.set(DatabaseStorage.CONF_LOCATION, new File(TEST_DIR, "storage"));
-        conf.getSubConfiguration("SingleChain").
-                getSubConfiguration("FileWatcher").
+        conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
+                getSubConfigurations(FilterSequence.CONF_FILTERS).get(0).
                 set(FileReader.CONF_ROOT_FOLDER, INGEST_FOLDER);
+/*        conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
+                getSubConfiguration("FileWatcher").
+                set(FileReader.CONF_ROOT_FOLDER, INGEST_FOLDER);*/
         FilterService ingest = new FilterService(conf);
         ingest.start();
         return ingest;
@@ -192,20 +197,25 @@ public class AutoDiscoverTest extends TestCase {
         Configuration conf =
                 Configuration.load("data/auto/setup/IndexConfiguration.xml");
         conf.set(DatabaseStorage.CONF_LOCATION, new File(TEST_DIR, "storage"));
-        conf.getSubConfiguration("IndexChain").
-                getSubConfiguration("FagrefTransformer").
+        conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
+                getSubConfigurations(FilterSequence.CONF_FILTERS).get(1).
+//                getSubConfiguration("FagrefTransformer").
                 set(XMLTransformer.CONF_XSLT, FAGREF_XSLT);
-        conf.getSubConfiguration("IndexChain").
-                getSubConfiguration("DocumentCreator").
+        conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
+                getSubConfigurations(FilterSequence.CONF_FILTERS).get(3).
+//                getSubConfiguration("DocumentCreator").
                 getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION, INDEX_DESCRIPTOR);
-        conf.getSubConfiguration("IndexChain").
-                getSubConfiguration("IndexUpdate").
-                getSubConfiguration("LuceneUpdater").
+        conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
+                getSubConfigurations(FilterSequence.CONF_FILTERS).get(4).
+                getSubConfigurations(IndexControllerImpl.CONF_MANIPULATORS).get(0).
+//                getSubConfiguration("IndexUpdate").
+//                getSubConfiguration("LuceneUpdater").
                 getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION, INDEX_DESCRIPTOR);
-        conf.getSubConfiguration("IndexChain").
-                getSubConfiguration("IndexUpdate").
+        conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
+                getSubConfigurations(FilterSequence.CONF_FILTERS).get(4).
+//                getSubConfiguration("IndexUpdate").
                 set(IndexControllerImpl.CONF_INDEX_ROOT_LOCATION, INDEX_ROOT);
         FilterService index = new FilterService(conf);
         index.start();
@@ -222,14 +232,17 @@ public class AutoDiscoverTest extends TestCase {
 
         checkRecords(storage);
         assertTrue("The index root must exist", new File(INDEX_ROOT).exists());
-        assertEquals("The INDEX_ROOT/YYMMDD_HHMM/lucene-folder should contain "
-                     + "the right number of files",
-                     3, new File(INDEX_ROOT).listFiles()[0].
-                listFiles()[1].listFiles().length);
-        assertTrue("The INDEX_ROOT/YYMMDD_HHMM/facet/author.dat should be > 0 "
-                   + "bytes ",
-                      new File(INDEX_ROOT).listFiles()[0].
-                listFiles()[0].listFiles()[0].length() > 0);
+        File luceneDir = new File(new File(INDEX_ROOT).listFiles()[0],
+                                  "lucene");
+        // 5 files: 1 segment/record (3 records), 2 bookkeeping files 
+        assertEquals("The Lucene folder (" + luceneDir
+                     + ") should contain the right number of files",
+                     5, luceneDir.listFiles().length);
+        File facetDir = new File(new File(INDEX_ROOT).listFiles()[0], 
+                                 "facet");
+        assertTrue("The INDEX_ROOT/YYMMDD_HHMM/facet/author.dat (" + INDEX_ROOT
+                   + ") should be > 0 bytes ",
+                   facetDir.listFiles()[0].length() > 0);
 
         index.stop();
         ingest.stop();

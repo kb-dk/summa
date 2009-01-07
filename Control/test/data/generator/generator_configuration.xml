@@ -14,80 +14,101 @@
             <key>control.launcher.service.class</key>
             <value class="string">dk.statsbiblioteket.summa.control.service.FilterService</value>
         </entry>
-        
+
         <entry>
-            <key>filterpump.chainname</key>
+            <key>filter.name</key>
             <value class="string">Fagref generator test</value>
-        </entry>
-        <entry>
-            <key>filtercontrol.chains</key>
-            <value class="string">SingleChain</value>
         </entry>
         <entry>
             <key>filtercontrol.sequential</key>
             <value class="boolean">true</value>
         </entry>
         <entry>
-            <key>SingleChain</key>
-            <value class="xproperties">
-                <entry>
-                    <key>summa.filter.sequence.filters</key>
-                    <value class="string">Generator, Writer</value>
-                </entry>
-                <entry>
-                    <key>Generator</key>
-                    <value class="xproperties">
-                        <entry>
-                            <key>summa.filter.sequence.filterclass</key>
-                            <value class="string">dk.statsbiblioteket.summa.ingest.source.RecordGenerator</value>
-                        </entry>
-                        <entry>
-                            <key>summa.ingest.generator.template.location</key>
-                            <value class="string">data/generator/fagref_template.xml</value>
-                        </entry>
-                        <entry>
-                            <key>summa.ingest.generator.idtemplate</key>
-                            <value class="string">fagref:dummy_$TIMESTAMP[ms]_$INCREMENTAL_NUMBER[id]</value>
-                        </entry>
-                        <entry>
-                            <key>summa.ingest.generator.delay</key>
-                            <value class="int">0</value>
-                        </entry>
-                        <entry>
-                            <key>summa.ingest.generator.records</key>
-                            <value class="int">10000</value>
-                        </entry>
-                        <entry>
-                            <key>summa.ingest.generator.base</key>
-                            <value class="string">fagref</value>
-                        </entry>
-                        <entry>
-                            <key>firstname</key>
-                            <value class="string">Hans, Jens, Ole, Jesper, Kaj, Søren, Benny, Børge, M'Bala, Mikkel, Thomas</value>
-                        </entry>
-                        <entry>
-                            <key>surname</key>
-                            <value class="string">Jensen, Hansen, Sørensen, Karlsson, Primbulus, Sølvtromme, Kobberhammer, Guldskovl, de Trix, And</value>
-                        </entry>
-                        <entry>
-                            <key>areaOfExpertise</key>
-                            <value class="string">Guld, Biologi, Omnilogi, Østindien, Vestpakistan, USA, Æbler, Blommer, Pærer, Datalogi, Astrofysik, Astrologi, Astronomi, Tryllebær, Tegneserier, Palæontologi, Drømme, Kaslafniansk</value>
-                        </entry>
-                    </value>
-                </entry>
-                <entry>
-                    <key>Writer</key>
-                    <value class="xproperties">
-                        <entry>
-                            <key>summa.filter.sequence.filterclass</key>
-                            <value class="string">dk.statsbiblioteket.summa.storage.api.filter.RecordWriter</value>
-                        </entry>
-                        <entry>
-                            <key>summa.rpc.vendor</key>
-                            <value class="string">//localhost:28000/summa-storage</value>
-                        </entry>
-                    </value>
-                </entry>
+            <key>filtercontrol.chains</key>
+            <value class="list">
+                <xproperties>
+                    <entry>
+                        <key>filter.name</key>
+                        <value class="string">SingleChain</value>
+                    </entry>
+                    <entry>
+                        <key>summa.filter.sequence.filters</key>
+                        <value class="list">
+
+                            <xproperties>
+                                <entry>
+                                    <key>filter.name</key>
+                                    <value class="string">Generator</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.filter.sequence.filterclass</key>
+                                    <value class="string">dk.statsbiblioteket.summa.ingest.source.RecordGenerator</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.ingest.generator.template.location</key>
+                                    <value class="string">data/generator/fagref_template.xml</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.ingest.generator.idtemplate</key>
+                                    <value class="string">fagref:dummy_$TIMESTAMP[ms]_$INCREMENTAL_NUMBER[id]</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.ingest.generator.delay</key>
+                                    <value class="int">0</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.ingest.generator.records</key>
+                                    <value class="int">10000</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.ingest.generator.base</key>
+                                    <value class="string">fagref</value>
+                                </entry>
+                                <entry>
+                                    <key>firstname</key>
+                                    <value class="string">Hans, Jens, Ole, Jesper, Kaj,
+                                        Søren, Benny, Børge, M'Bala, Mikkel, Thomas
+                                    </value>
+                                </entry>
+                                <entry>
+                                    <key>surname</key>
+                                    <value class="string">Jensen, Hansen, Sørensen,
+                                        Karlsson, Primbulus, Sølvtromme, Kobberhammer,
+                                        Guldskovl, de Trix, And
+                                    </value>
+                                </entry>
+                                <entry>
+                                    <key>areaOfExpertise</key>
+                                    <value class="string">Guld, Biologi, Omnilogi,
+                                        Østindien, Vestpakistan, USA, Æbler, Blommer,
+                                        Pærer, Datalogi, Astrofysik, Astrologi,
+                                        Astronomi, Tryllebær, Tegneserier, Palæontologi,
+                                        Drømme, Kaslafniansk
+                                    </value>
+                                </entry>
+                            </xproperties>
+
+                            <xproperties>
+                                <entry>
+                                    <key>filter.name</key>
+                                    <value class="string">Writer</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.filter.sequence.filterclass</key>
+                                    <value class="string">
+                                        dk.statsbiblioteket.summa.storage.api.filter.RecordWriter
+                                    </value>
+                                </entry>
+                                <entry>
+                                    <key>summa.rpc.vendor</key>
+                                    <value class="string">
+                                        //localhost:28000/summa-storage
+                                    </value>
+                                </entry>
+                            </xproperties>
+                        </value>
+                    </entry>
+                </xproperties>
             </value>
         </entry>
     </xproperties>

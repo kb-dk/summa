@@ -52,7 +52,7 @@ import java.text.ParseException;
  * {@link dk.statsbiblioteket.summa.common.index.IndexDescriptor}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_NEEDED,
         author = "te")
 public class StreamingDocumentCreator extends DocumentCreatorBase {
     private static Log log = LogFactory.getLog(StreamingDocumentCreator.class);
@@ -90,6 +90,7 @@ public class StreamingDocumentCreator extends DocumentCreatorBase {
      */
     public StreamingDocumentCreator(Configuration conf) throws
                                                         ConfigurationException {
+        super(conf);
         inputFactory = XMLInputFactory.newInstance();
         // TODO: Check to see if we need to handle CData-events
 //        inputFactory.setProperty("report-cdata-event", Boolean.TRUE);

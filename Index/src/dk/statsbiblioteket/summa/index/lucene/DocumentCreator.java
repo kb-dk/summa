@@ -65,8 +65,8 @@ import org.w3c.dom.Node;
  * {@link dk.statsbiblioteket.summa.index.lucene.StreamingDocumentCreator}
  * has same functionality and significantly better performance.
  */
-@QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+@QAInfo(level = QAInfo.Level.NOT_NEEDED,
+        state = QAInfo.State.QA_OK, // due to deprecation
         author = "te")
 // TODO: Consider adding base as a standard field - stored as well as indexed
 public class DocumentCreator extends DocumentCreatorBase {
@@ -99,6 +99,7 @@ public class DocumentCreator extends DocumentCreatorBase {
      *                                configuration.
      */
     public DocumentCreator(Configuration conf) throws ConfigurationException {
+        super(conf);
         descriptor = LuceneIndexUtils.getDescriptor(conf);
         initXPaths();
         createDocumentBuilder();

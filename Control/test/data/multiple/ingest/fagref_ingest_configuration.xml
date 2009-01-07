@@ -10,101 +10,110 @@
             <key>control.launcher.service.class</key>
             <value class="string">dk.statsbiblioteket.summa.control.service.FilterService</value>
         </entry>
-        
+
         <entry>
-            <key>filterpump.chainname</key>
-            <value class="string">Simple file-based ingest</value>
-        </entry>
-        <entry>
-            <key>filtercontrol.chains</key>
-            <value class="string">SingleChain</value>
+            <key>filter.name</key>
+            <value class="string">Simple file-based fagref ingest</value>
         </entry>
         <entry>
             <key>filtercontrol.sequential</key>
             <value class="boolean">true</value>
         </entry>
         <entry>
-            <key>SingleChain</key>
-            <value class="xproperties">
-                <entry>
-                    <key>summa.filter.sequence.filters</key>
-                    <value class="string">Reader, Splitter, Writer</value>
-                </entry>
-                <entry>
-                    <key>Reader</key>
-                    <value class="xproperties">
-                        <entry>
-                            <key>summa.filter.sequence.filterclass</key>
-                            <value class="string">dk.statsbiblioteket.summa.ingest.stream.FileReader</value>
-                        </entry>
-                        <entry>
-                            <key>summa.ingest.filereader.rootfolder</key>
-                            <value class="string">/tmp/summatest/data/fagref</value>
-                        </entry>
-                        <entry>
-                            <key>summa.ingest.filereader.recursive</key>
-                            <value class="boolean">true</value>
-                        </entry>
-                        <entry>
-                            <key>summa.ingest.filereader.filepattern</key>
-                            <value class="string">.*\.xml</value>
-                        </entry>
-                        <entry>
-                            <key>summa.ingest.filereader.completedpostfix</key>
-                            <value class="string">.completed</value>
-                        </entry>
-                    </value>
-                </entry>
-                <entry>
-                    <key>Splitter</key>
-                    <value class="xproperties">
-                        <entry>
-                            <key>summa.filter.sequence.filterclass</key>
-                            <value class="string">dk.statsbiblioteket.summa.ingest.split.XMLSplitterFilter</value>
-                        </entry>
-                        <entry>
-                            <key>summa.ingest.xmlsplitter.idprefix</key>
-                            <value class="string">fagref:</value>
-                        </entry>
-                        <entry>
-                            <key>summa.ingest.xmlsplitter.collapse_prefix</key>
-                            <value class="boolean">true</value>
-                        </entry>
-                        <entry>
-                            <key>summa.ingest.xmlsplitter.recordelement</key>
-                            <value class="string">fagref</value>
-                        </entry>
-                        <entry>
-                            <key>summa.ingest.xmlsplitter.idelement</key>
-                            <value class="string">email</value>
-                        </entry>
-                        <entry>
-                            <key>summa.ingest.xmlsplitter.base</key>
-                            <value class="string">fagref</value>
-                        </entry>
-                        <entry>
-                            <key>summa.ingest.xmlsplitter.preservenamespaces</key>
-                            <value class="boolean">true</value>
-                        </entry>
-                        <entry>
-                            <key>summa.ingest.xmlsplitter.requirevalid</key>
-                            <value class="boolean">false</value>
-                        </entry>
-                    </value>
-                </entry>
-                <entry>
-                    <key>Writer</key>
-                    <value class="xproperties">
-                        <entry>
-                            <key>summa.filter.sequence.filterclass</key>
-                            <value class="string">dk.statsbiblioteket.summa.storage.api.filter.RecordWriter</value>
-                        </entry>
-                        <entry>
-                            <key>summa.rpc.vendor</key>
-                            <value class="string">//localhost:28000/summa-storage</value>
-                        </entry>
-                    </value>
-                </entry>
+            <key>filtercontrol.chains</key>
+            <value class="list">
+                <xproperties>
+                    <entry>
+                        <key>filter.name</key>
+                        <value class="string">SingleChain</value>
+                    </entry>
+                    <entry>
+                        <key>summa.filter.sequence.filters</key>
+                        <value class="list">
+
+                            <xproperties>
+                                <entry>
+                                    <key>filter.name</key>
+                                    <value class="string">Reader</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.filter.sequence.filterclass</key>
+                                    <value class="string">dk.statsbiblioteket.summa.ingest.stream.FileReader</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.ingest.filereader.rootfolder</key>
+                                    <value class="string">/tmp/summatest/data/fagref</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.ingest.filereader.recursive</key>
+                                    <value class="boolean">true</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.ingest.filereader.filepattern</key>
+                                    <value class="string">.*\.xml</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.ingest.filereader.completedpostfix</key>
+                                    <value class="string">.completed</value>
+                                </entry>
+                            </xproperties>
+
+                            <xproperties>
+                                <entry>
+                                    <key>filter.name</key>
+                                    <value class="string">Splitter</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.filter.sequence.filterclass</key>
+                                    <value class="string">dk.statsbiblioteket.summa.ingest.split.XMLSplitterFilter</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.ingest.xmlsplitter.idprefix</key>
+                                    <value class="string">fagref:</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.ingest.xmlsplitter.collapse_prefix</key>
+                                    <value class="boolean">true</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.ingest.xmlsplitter.recordelement</key>
+                                    <value class="string">fagref</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.ingest.xmlsplitter.idelement</key>
+                                    <value class="string">email</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.ingest.xmlsplitter.base</key>
+                                    <value class="string">fagref</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.ingest.xmlsplitter.preservenamespaces</key>
+                                    <value class="boolean">true</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.ingest.xmlsplitter.requirevalid</key>
+                                    <value class="boolean">false</value>
+                                </entry>
+                            </xproperties>
+
+                            <xproperties>
+                                <entry>
+                                    <key>filter.name</key>
+                                    <value class="string">Writer</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.filter.sequence.filterclass</key>
+                                    <value class="string">dk.statsbiblioteket.summa.storage.api.filter.RecordWriter</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.rpc.vendor</key>
+                                    <value class="string">//localhost:28000/summa-storage</value>
+                                </entry>
+                            </xproperties>
+                        </value>
+                    </entry>
+                </xproperties>
             </value>
         </entry>
     </xproperties>

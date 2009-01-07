@@ -45,7 +45,7 @@ import org.apache.commons.logging.LogFactory;
  * Note: Only Record is stored. All other data in Payload is ignored.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_NEEDED,
         author = "te")
 public class RecordWriter extends ObjectFilterImpl {
     private static final Log log = LogFactory.getLog(RecordWriter.class);
@@ -68,6 +68,7 @@ public class RecordWriter extends ObjectFilterImpl {
      * @throws java.io.IOException if the RecordWriter could not be constructed.
      */
     public RecordWriter(Configuration conf) throws IOException {
+        super(conf);
         log.trace("Constructing RecordWriter");
         if (conf.valueExists(DEPRECATED_CONF_STORAGE)) {
             log.warn(String.format("Old Storage address configuration detected."

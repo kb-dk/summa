@@ -59,11 +59,9 @@ public class IndexControllerImpl extends StateThread implements
     private static Log failLog = LogFactory.getLog(LOG_FAILED);
 
     /**
-     * A comma-delimited string of the keys for the manipulators. For each
-     * of these names, a substorage will be extracted and used as the setup
-     * for a manipulator.
+     * A list of sub-configurations for the manipulators.
      * </p><p>
-     * This property is mandatory. No default.
+     * This property is mandatory.
      */
     public static final String CONF_MANIPULATORS = "summa.index.manipulators";
 
@@ -220,19 +218,20 @@ public class IndexControllerImpl extends StateThread implements
                                              + indexRoot
                                              + "' to absolute path");
         }
-        List<String> manipulatorKeys;
+        List<Configuration> manipulatorConfs;
         try {
-            manipulatorKeys = conf.getStrings(CONF_MANIPULATORS);
-            if (manipulatorKeys.size() == 0) {
+            manipulatorConfs = conf.getSubConfigurations(CONF_MANIPULATORS);
+            if (manipulatorConfs.size() == 0) {
                 log.warn("No manipulators specified in " + CONF_MANIPULATORS
                          +". This is probably an error");
             } else {
-                log.debug("Got " + manipulatorKeys.size()
-                          + " manipulator configuration keys");
+                log.debug("Got " + manipulatorConfs.size()
+                          + " manipulator configurations");
             }
         } catch (Exception e) {
-            throw new ConfigurationException("Could not get value for key "
-                                             + CONF_MANIPULATORS);
+            throw new ConfigurationException(
+                    "Could not get sub-configurations for key "
+                    + CONF_MANIPULATORS);
         }
         log.trace("Extracting basic setup");
         commitTimeout =
@@ -253,21 +252,19 @@ public class IndexControllerImpl extends StateThread implements
                   + ", consolidateMaxDocuments: " + consolidateMaxDocuments
                   + ", consolidateMaxCommits: " + consolidateMaxCommits);
         //noinspection DuplicateStringLiteralInspection
-        log.trace("Creating " + manipulatorKeys.size() + " manipulators");
-        manipulators = new ArrayList<IndexManipulator>(manipulatorKeys.size());
-        for (String manipulatorKey: manipulatorKeys) {
+        log.trace("Creating " + manipulatorConfs.size() + " manipulators");
+        manipulators = new ArrayList<IndexManipulator>(manipulatorConfs.size());
+        for (Configuration manipulatorConf: manipulatorConfs) {
             //noinspection OverlyBroadCatchBlock
             try {
-                log.trace("Creating manipulator for key '" + manipulatorKey
-                          + "'");
+                log.trace("Creating manipulator");
                 IndexManipulator manipulator =
-                    createManipulator(conf.getSubConfiguration(manipulatorKey));
-                log.trace("Manipulator created for key '" + manipulatorKey
-                          + "'");
+                        createManipulator(manipulatorConf);
+                log.trace("Manipulator created");
                 manipulators.add(manipulator);
             } catch (Exception e) {
-                throw new RuntimeException("Could not create manipulator '"
-                                           + manipulatorKey + "'", e);
+                throw new ConfigurationException(
+                        "Could not create manipulator", e);
             }
         }
         log.debug("Manipulators created, opening index");
@@ -328,6 +325,7 @@ public class IndexControllerImpl extends StateThread implements
         }
     }
 
+    @Override
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     protected void runMethod() {
         while (isRunning()) {
