@@ -32,8 +32,16 @@ import java.util.List;
 public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
                                  implements Configurable, ReadableStorage {
 
+    /**
+     * Create a new storage reader. If no RPC vendor is defined in the
+     * {@link #CONF_RPC_TARGET} property of {@code conf} then the reader will
+     * default to {@code //localhost:28000/summa-storage}
+     *
+     * @param conf configuration used to instantiate the underlying
+     *             {@link ConnectionConsumer}
+     */
     public StorageReaderClient(Configuration conf) {
-        super (conf);
+        super (conf, "//localhost:28000/summa-storage");
     }
 
     @Override

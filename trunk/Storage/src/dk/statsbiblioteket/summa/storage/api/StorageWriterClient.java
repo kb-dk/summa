@@ -32,8 +32,16 @@ import java.util.List;
 public class StorageWriterClient extends ConnectionConsumer<WritableStorage>
                                  implements WritableStorage {
 
+    /**
+     * Create a new storage writer. If no RPC vendor is defined in the
+     * {@link #CONF_RPC_TARGET} property of {@code conf} then the writer will
+     * default to {@code //localhost:28000/summa-storage}
+     *
+     * @param conf configuration used to instantiate the underlying
+     *             {@link ConnectionConsumer}
+     */
     public StorageWriterClient(Configuration conf) {
-        super(conf);
+        super(conf, "//localhost:28000/summa-storage");
     }
 
     public void flush(Record record) throws IOException {

@@ -99,6 +99,35 @@ public class ConnectionConsumer<E> implements Configurable {
     }
 
     /**
+     * Like {@link #ConnectionConsumer(Configuration)}, but use
+     * {@code defaultVendor} if {@link #CONF_RPC_TARGET} is not set in
+     * {@code conf}.
+     * <p></p>
+     * The {@code ConnectionConsumer} utilizes a {@link GenericConnectionFactory}
+     * underneath so the configuration may override any of the standard
+     * properties for this class to customize the behavior of the connection
+     * consumer. These include
+     * {@link GenericConnectionFactory#CONF_RETRIES},
+     * {@link GenericConnectionFactory#CONF_GRACE_TIME},
+     * and {@link GenericConnectionFactory#CONF_FACTORY}.
+     *
+     * @param conf configuration used to instantiate the connection consumer
+     * @param defaultVendor the RPC vendor to use as fallback
+     */
+    public ConnectionConsumer (Configuration conf, String defaultVendor) {
+        ConnectionFactory<E> connFact = new GenericConnectionFactory<E> (conf);
+        connMan = new ConnectionManager<E>(connFact);
+        try {
+            connId = conf.getString(CONF_RPC_TARGET, defaultVendor);
+        } catch (NullPointerException e) {
+            throw new ConfigurationException(CONF_RPC_TARGET + " not set. No"
+                                             + "RPC vendor");
+        }
+        conn = null;
+        log.debug("Created ConnectionConsumer for " + connId);
+    }
+
+    /**
      * Look up a connection. When done using the connection it is the caller's
      * duty to release it again using {@link #releaseConnection()}. This is
      * typically done in a {@code finally} clause.
