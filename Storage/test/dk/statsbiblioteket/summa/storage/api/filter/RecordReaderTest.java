@@ -25,14 +25,12 @@ package dk.statsbiblioteket.summa.storage.api.filter;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.regex.Pattern;
-import java.io.File;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import junit.framework.Assert;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.storage.api.filter.RecordReader;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -59,7 +57,7 @@ public class RecordReaderTest extends TestCase {
         Calendar t = new GregorianCalendar(2008, 3, 17, 21, 50, 57);
         Assert.assertEquals("The timestamp should be properly formatted",
                      expected,
-                     String.format(RecordReader.TIMESTAMP_FORMAT, t));
+                     String.format(ProgressTracker.TIMESTAMP_FORMAT, t));
     }
 
    /*public void testTimestampExtraction() throws Exception {
@@ -87,7 +85,7 @@ public class RecordReaderTest extends TestCase {
                     + "([0-9]{4})([0-9]{2})([0-9]{2})-"
                     + "([0-9]{2})([0-9]{2})([0-9]{2})"
                     + "</" + TAG + ">", Pattern.DOTALL);*/
-        pfull = RecordReader.TIMESTAMP_PATTERN;
+        pfull = ProgressTracker.TIMESTAMP_PATTERN;
         assertTrue("Pattern should match extended case",
                    pfull.matcher("<lastRecordTimestamp>20080417-215057"
                                  + "</lastRecordTimestamp>").matches());
