@@ -28,6 +28,7 @@ import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
+import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
 import dk.statsbiblioteket.summa.control.service.StorageService;
 import dk.statsbiblioteket.summa.control.service.FilterService;
 import dk.statsbiblioteket.summa.control.service.SearchService;
@@ -35,6 +36,7 @@ import dk.statsbiblioteket.summa.control.api.Service;
 import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.ingest.stream.FileReader;
 import dk.statsbiblioteket.summa.index.XMLTransformer;
+import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import dk.statsbiblioteket.summa.search.SearchNodeFactory;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Profiler;
@@ -57,12 +59,14 @@ import java.io.IOException;
 public class OAITest extends NoExitTestCase {
     private static Log log = LogFactory.getLog(OAITest.class);
 
+    @Override
     public void setUp () throws Exception {
         super.setUp();
         ReleaseTestCommon.setup();
         SearchTest.INDEX_ROOT.mkdirs();
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
         ReleaseTestCommon.tearDown();
@@ -138,20 +142,25 @@ public class OAITest extends NoExitTestCase {
                 "oai/oai_index.xsl").toString();
         log.debug("oaiTransformerXSLT: " + oaiTransformerXSLT);
         indexConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
-                getSubConfiguration("XMLTransformer").
+                getSubConfigurations(FilterSequence.CONF_FILTERS).get(1).
+//                getSubConfiguration("XMLTransformer").
                 set(XMLTransformer.CONF_XSLT, oaiTransformerXSLT);
         String indexDescriptorLocation = new File(
                 ReleaseTestCommon.DATA_ROOT,
                 "oai/oai_IndexDescriptor.xml").toString();
         log.debug("indexDescriptorLocation: " + indexDescriptorLocation);
         indexConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
-                getSubConfiguration("DocumentCreator").
+                getSubConfigurations(FilterSequence.CONF_FILTERS).get(3).
+//                getSubConfiguration("DocumentCreator").
                 getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
                     indexDescriptorLocation);
         indexConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
-                getSubConfiguration("IndexUpdate").
-                getSubConfiguration("LuceneUpdater").
+                getSubConfigurations(FilterSequence.CONF_FILTERS).get(4).
+                getSubConfigurations(IndexControllerImpl.CONF_MANIPULATORS).
+                get(0).
+//                getSubConfiguration("IndexUpdate").
+//                getSubConfiguration("LuceneUpdater").
                 getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
                     indexDescriptorLocation);
@@ -171,7 +180,8 @@ public class OAITest extends NoExitTestCase {
                 "test-ingest-oai/config/configuration.xml").getFile());
         ingestConf.set(Service.CONF_SERVICE_ID, "IngestService");
         ingestConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
-                getSubConfiguration("Reader").
+                getSubConfigurations(FilterSequence.CONF_FILTERS).get(0).
+//                getSubConfiguration("Reader").
                 set(FileReader.CONF_ROOT_FOLDER,
                     new File(ReleaseTestCommon.DATA_ROOT,
                              "oai/minidump"));
