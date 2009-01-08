@@ -29,12 +29,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
 import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
 
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
+import dk.statsbiblioteket.summa.common.util.BitUtil;
 
 /**
  * On an abstract level, ingesting is just a chain of filters. In the beginning
@@ -78,30 +78,7 @@ public abstract class StreamFilter extends InputStream implements Configurable,
      * @throws EOFException if EOF was reached during read.
      */
     public long readLong() throws IOException {
-        return readLong(this);
-    }
-
-    private static long readLong(InputStream in) throws IOException {
-        ByteBuffer bb = ByteBuffer.allocate(8);
-        for (int i = 0 ; i < 8 ; i++) {
-            int value = in.read();
-            if (value == Payload.EOF) {
-                throw new EOFException("Attempting to read past EOF");
-            }
-            bb.put((byte)value);
-        }
-        return bb.getLong(0);
-    }
-
-    /**
-     * Convertes the given long to an array of bytes of length 8.
-     * @param value the long to convert to bytes.
-     * @return the long as bytes in big-endian order.
-     */
-    protected static byte[] longToBytes(long value) {
-        ByteBuffer bb = ByteBuffer.allocate(8);
-        bb.putLong(value);
-        return bb.array();
+        return BitUtil.readLong(this);
     }
 
     /**
@@ -143,14 +120,14 @@ public abstract class StreamFilter extends InputStream implements Configurable,
          */
         public static MetaInfo getMetaInfo(InputStream stream) throws IOException {
             try {
-                long idLength = readLong(stream);
+                long idLength = BitUtil.readLong(stream);
                 ByteArrayOutputStream idStream =
                         new ByteArrayOutputStream((int)idLength);
                 for (int i = 0 ; i < idLength ; i++) {
                     idStream.write(stream.read());
                 }
                 String id = idStream.toString("utf-8");
-                long contentLength = readLong(stream);
+                long contentLength = BitUtil.readLong(stream);
                 return new MetaInfo(id, contentLength);
             } catch (EOFException e) {
                 // Consider making a more proper check for EOF at the beginning
@@ -175,8 +152,8 @@ public abstract class StreamFilter extends InputStream implements Configurable,
             } catch (UnsupportedEncodingException e) {
                 throw new RuntimeException("utf-8 encoding not supported", e);
             }
-            byte[] idSizeBytes = longToBytes(idBytes.length);
-            byte[] contentSizeBytes = longToBytes(contentLength);
+            byte[] idSizeBytes = BitUtil.longToBytes(idBytes.length);
+            byte[] contentSizeBytes = BitUtil.longToBytes(contentLength);
 
             byte[] buffer = new byte[idBytes.length + 2 * 8];
             System.arraycopy(idSizeBytes, 0,

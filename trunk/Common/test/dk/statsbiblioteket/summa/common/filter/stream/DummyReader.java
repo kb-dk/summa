@@ -29,6 +29,7 @@ import java.util.Random;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.util.BitUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -78,7 +79,7 @@ public class DummyReader extends StreamFilter {
 
     private ArrayList<Integer> createContent() {
         ArrayList<Integer> content = new ArrayList<Integer>(bodySize + 8);
-        byte[] theLong = longToBytes(bodySize);
+        byte[] theLong = BitUtil.longToBytes(bodySize);
         for (byte l: theLong) {
             content.add(0xff & l);
         }
