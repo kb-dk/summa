@@ -8,6 +8,7 @@ import java.util.Random;
 
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.util.BitUtil;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -61,7 +62,7 @@ public class StreamFilterTest extends TestCase {
          */
         protected void setLong(long value) {
             content = new ArrayList<Integer>( 8);
-            byte[] theLong = longToBytes(value);
+            byte[] theLong = BitUtil.longToBytes(value);
             for (byte l: theLong) {
                 content.add(0xff & l);
             }

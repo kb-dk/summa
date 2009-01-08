@@ -1,6 +1,7 @@
 package dk.statsbiblioteket.summa.common.filter;
 
 import java.util.Arrays;
+import java.util.List;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
@@ -38,25 +39,28 @@ public class FilterPumpTest extends TestCase {
 
     public void testBasics() throws Exception {
         XStorage pumpStorage = new XStorage();
+        List<ConfigurationStorage> filters =
+                pumpStorage.createSubStorages(FilterSequence.CONF_FILTERS, 2);
 
-        ConfigurationStorage streamSub =
-                pumpStorage.createSubStorage("Streamer");
+        ConfigurationStorage streamSub = filters.get(0);
+//                pumpStorage.createSubStorage("Streamer");
+        streamSub.put(Filter.CONF_FILTER_NAME, "Streamer");
         streamSub.put(FilterSequence.CONF_FILTER_CLASS,
                        DummyReader.class.getName());
         streamSub.put(DummyReader.CONF_BODY_COUNT, 3);
         streamSub.put(DummyReader.CONF_BODY_SIZE, 100);
 
-        ConfigurationStorage convertSub =
-                pumpStorage.createSubStorage("Converter");
+        ConfigurationStorage convertSub = filters.get(1);
+//                pumpStorage.createSubStorage("Converter");
+        streamSub.put(Filter.CONF_FILTER_NAME, "Converter");
         convertSub.put(FilterSequence.CONF_FILTER_CLASS,
                        DummyStreamToRecords.class.getName());
         convertSub.put(DummyStreamToRecords.CONF_DATA_SIZE, 99);
 
-
         Configuration pumpConf = new Configuration(pumpStorage);
         pumpConf.set(Filter.CONF_FILTER_NAME, "FilterPumpTest");
-        pumpConf.setStrings(FilterSequence.CONF_FILTERS,
-                            Arrays.asList("Streamer", "Converter"));
+//        pumpConf.setStrings(FilterSequence.CONF_FILTERS,
+//                            Arrays.asList("Streamer", "Converter"));
 
         FilterPump pump = new FilterPump(pumpConf);
 
