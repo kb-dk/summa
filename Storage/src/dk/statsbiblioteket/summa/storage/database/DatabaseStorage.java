@@ -1151,18 +1151,72 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     protected void createSchema() throws IOException {
         log.debug("Creating database schema");
+        doCreateSchema();
+    }
+
+    private void doCreateSchema() {
+
+        /* RECORDS */
         try {
-            // Do this in a separate call to avoid massively nested code block
-            doCreateSchema();
+            doCreateSummaRecordsTable();
         } catch (SQLException e) {
-            throw new IOException("Could not create schema: "
-                                      + e.getMessage(), e);
+            if (log.isDebugEnabled()) {
+                log.info("Failed to create table for record data: "
+                         + e.getMessage(), e);
+            } else {
+                log.info("Failed to create table for record data: "
+                         + e.getMessage());
+            }
+        }
+
+        /* RELATIONS */
+        try {
+            doCreateSummaRelationsTable();
+        } catch (SQLException e) {
+            if (log.isDebugEnabled()) {
+                log.info("Failed to create table for record relations: "
+                         + e.getMessage(), e);
+            } else {
+                log.info("Failed to create table for record relations: "
+                         + e.getMessage());
+            }
         }
     }
 
-    private void doCreateSchema() throws SQLException {
+    private void doCreateSummaRelationsTable() throws SQLException {
+        Statement stmt;
 
-        /* RECORDS */
+        String createRelationsQuery =
+                "CREATE TABLE " + RELATIONS + " ("
+                + PARENT_ID_COLUMN     + " VARCHAR(" + ID_LIMIT + "), "
+                + CHILD_ID_COLUMN      + " VARCHAR(" + ID_LIMIT + ") )";
+        log.debug("Creating table "+RELATIONS+" with query: '"
+                  + createRelationsQuery + "'");
+        stmt = getConnection().createStatement();
+        stmt.execute(createRelationsQuery);
+        stmt.close();
+
+        /* RELATIONS INDEXES */
+        String createRelationsPCIndexQuery =
+                "CREATE UNIQUE INDEX pc ON "
+                + RELATIONS + "("+PARENT_ID_COLUMN+","+CHILD_ID_COLUMN+")";
+        log.debug("Creating index 'pc' on table "+RELATIONS+" with query: '"
+                  + createRelationsPCIndexQuery + "'");
+        stmt = getConnection().createStatement();
+        stmt.execute(createRelationsPCIndexQuery);
+        stmt.close();
+
+        String createRelationsCIndexQuery =
+                "CREATE INDEX c ON "
+                + RELATIONS + "("+CHILD_ID_COLUMN+ ")";
+        log.debug("Creating index 'c' on table "+RELATIONS+" with query: '"
+                  + createRelationsCIndexQuery + "'");
+        stmt = getConnection().createStatement();
+        stmt.execute(createRelationsCIndexQuery);
+        stmt.close();
+    }
+
+    private void doCreateSummaRecordsTable() throws SQLException {
         String createRecordsQuery =
                 "CREATE TABLE " + RECORDS + " ("
                 + ID_COLUMN        + " VARCHAR(" + ID_LIMIT + ") PRIMARY KEY, "
@@ -1196,36 +1250,6 @@ public abstract class DatabaseStorage extends StorageBase {
                   + createRecordsMTimeIndexQuery + "'");
         stmt = getConnection().createStatement();
         stmt.execute(createRecordsMTimeIndexQuery);
-        stmt.close();
-
-        /* RELATIONS */
-        String createRelationsQuery =
-                "CREATE TABLE " + RELATIONS + " ("
-                + PARENT_ID_COLUMN     + " VARCHAR(" + ID_LIMIT + "), "
-                + CHILD_ID_COLUMN      + " VARCHAR(" + ID_LIMIT + ") )";
-        log.debug("Creating table "+RELATIONS+" with query: '"
-                  + createRelationsQuery + "'");
-        stmt = getConnection().createStatement();
-        stmt.execute(createRelationsQuery);
-        stmt.close();
-
-        /* RELATIONS INDEXES */
-        String createRelationsPCIndexQuery =
-                "CREATE UNIQUE INDEX pc ON "
-                + RELATIONS + "("+PARENT_ID_COLUMN+","+CHILD_ID_COLUMN+")";
-        log.debug("Creating index 'pc' on table "+RELATIONS+" with query: '"
-                  + createRelationsPCIndexQuery + "'");
-        stmt = getConnection().createStatement();
-        stmt.execute(createRelationsPCIndexQuery);
-        stmt.close();
-
-        String createRelationsCIndexQuery =
-                "CREATE INDEX c ON "
-                + RELATIONS + "("+CHILD_ID_COLUMN+ ")";
-        log.debug("Creating index 'c' on table "+RELATIONS+" with query: '"
-                  + createRelationsCIndexQuery + "'");
-        stmt = getConnection().createStatement();
-        stmt.execute(createRelationsCIndexQuery);
         stmt.close();
     }
 
