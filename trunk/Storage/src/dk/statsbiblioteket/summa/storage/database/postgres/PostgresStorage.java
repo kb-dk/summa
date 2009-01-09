@@ -112,4 +112,12 @@ public class PostgresStorage extends DatabaseStorage implements Configurable {
     protected Connection getConnection() {
         return connection;
     }
+
+    protected String getMetaColumnDataDeclaration() {
+        return "BYTEA";
+    }
+
+    protected String getDataColumnDataDeclaration() {
+        return "BYTEA";
+    }
 }

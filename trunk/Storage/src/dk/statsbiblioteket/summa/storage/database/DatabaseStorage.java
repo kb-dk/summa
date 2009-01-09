@@ -197,8 +197,7 @@ public abstract class DatabaseStorage extends StorageBase {
     public static final int ID_LIMIT =       255;
     public static final int BASE_LIMIT =     31;
     public static final int DATA_LIMIT =     50*1024*1024;
-    public static final int META_LIMIT =     50*1024*1024; // MAX_VALUE instead?
-    private static final int BLOB_MAX_SIZE = 50*1024*1024; // MAX_VALUE instead?
+
 
     private static final long EMPTY_ITERATOR_KEY = -1;
 
@@ -1170,10 +1169,11 @@ public abstract class DatabaseStorage extends StorageBase {
                 + BASE_COLUMN      + " VARCHAR(" + BASE_LIMIT + "), "
                 + DELETED_COLUMN   + " INTEGER, "
                 + INDEXABLE_COLUMN + " INTEGER, "
-                + DATA_COLUMN      + " BLOB(" + BLOB_MAX_SIZE + "), "
+                + DATA_COLUMN      + getDataColumnDataDeclaration()
                 + CTIME_COLUMN     + " TIMESTAMP, "
                 + MTIME_COLUMN     + " TIMESTAMP, "
-                + META_COLUMN      + " BLOB(" + META_LIMIT + ") )";
+                + META_COLUMN      + getMetaColumnDataDeclaration()
+                + ")";
         log.debug("Creating table "+RECORDS+" with query: '"
                   + createRecordsQuery + "'");
 
@@ -1228,6 +1228,10 @@ public abstract class DatabaseStorage extends StorageBase {
         stmt.execute(createRelationsCIndexQuery);
         stmt.close();
     }
+
+    protected abstract String getMetaColumnDataDeclaration();
+
+    protected abstract String getDataColumnDataDeclaration();
 
     /**
      * Extract elements from a SQL result set and create a Record from these
