@@ -70,13 +70,47 @@ public abstract class DatabaseStorage extends StorageBase {
 
     /**
      * The property-key for the username for the underlying database, if needed.
+     * The default value is {@link #DEFAULT_USERNAME}.
      */
     public static String CONF_USERNAME = "summa.storage.database.username";
+    /**
+     * Default value for {@link #CONF_USERNAME}.
+     */
+    public static String DEFAULT_USERNAME = "summa";
+
     /**
      * The property-key for the the password for the underlying database, if
      * needed.
      */
     public static String CONF_PASSWORD = "summa.storage.database.password";
+
+    /**
+     * The name of the database to connect to. Default value is
+     * {@link #DEFAULT_DATABASE}.
+     */
+    public static String CONF_DATABASE = "summa.storage.database.name";
+
+    /**
+     * Default value for {@link #CONF_DATABASE}.
+     */
+    public static String DEFAULT_DATABASE = "summa";
+
+    /**
+     * The port to connect to the datatbase on.
+     */
+    public static String CONF_PORT = "summa.storage.database.port";
+
+    /**
+     * The hostname to connect to the datatbase on. Default is
+     * {@link #DEFAULT_HOST}.
+     */
+    public static String CONF_HOST = "summa.storage.database.host";
+
+    /**
+     * Default value for {@link #CONF_HOST}.
+     */
+    public static String DEFAULT_HOST = "localhost";
+
     /**
      * The property-key for the boolean value determining if a new database
      * should be created is there is no existing database. If createnew is
