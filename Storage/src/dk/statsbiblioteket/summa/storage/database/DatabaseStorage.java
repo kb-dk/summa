@@ -1169,7 +1169,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 + BASE_COLUMN      + " VARCHAR(" + BASE_LIMIT + "), "
                 + DELETED_COLUMN   + " INTEGER, "
                 + INDEXABLE_COLUMN + " INTEGER, "
-                + DATA_COLUMN      + " " + getDataColumnDataDeclaration()
+                + DATA_COLUMN      + " " + getDataColumnDataDeclaration() + ", "
                 + CTIME_COLUMN     + " TIMESTAMP, "
                 + MTIME_COLUMN     + " TIMESTAMP, "
                 + META_COLUMN      + " " + getMetaColumnDataDeclaration()
