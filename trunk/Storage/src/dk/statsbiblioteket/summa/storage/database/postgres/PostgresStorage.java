@@ -37,7 +37,7 @@ public class PostgresStorage extends DatabaseStorage implements Configurable {
                 username = conf.getString(CONF_USERNAME, DEFAULT_USERNAME);
                 password = conf.getString(CONF_PASSWORD, null);
                 database = conf.getString(CONF_DATABASE, DEFAULT_DATABASE);
-                host = conf.getString(CONF_DATABASE, DEFAULT_HOST);
+                host = conf.getString(CONF_HOST, DEFAULT_HOST);
                 port = conf.getInt(CONF_PORT, -1);
 
                 log.debug("PostgresStorage extracted properties username: " + username
@@ -69,9 +69,9 @@ public class PostgresStorage extends DatabaseStorage implements Configurable {
         // Add user/pass
         String sans = connectionURL;
         if (username != null && !"".equals(username)) {
-            connectionURL += ";user=" + username;
+            connectionURL += "?user=" + username;
             sans = connectionURL;
-            connectionURL += password == null ? "" : ";password=" + password;
+            connectionURL += password == null ? "" : "&password=" + password;
         }
         log.debug("Connection-URL (sans password): '" + sans + "'");
 
