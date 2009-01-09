@@ -51,6 +51,9 @@ public class DerbyStorage extends DatabaseStorage implements Configurable {
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public static final String driver = "org.apache.derby.jdbc.EmbeddedDriver";
 
+    private static final int BLOB_MAX_SIZE = 50*1024*1024; // MAX_VALUE instead?
+    public static final int META_LIMIT =     50*1024*1024; // MAX_VALUE instead?
+
     private String username;
     private String password;
     private File location;
@@ -180,7 +183,15 @@ public class DerbyStorage extends DatabaseStorage implements Configurable {
 
     protected Connection getConnection() {
         return connection;
-    }    
+    }
+
+    protected String getMetaColumnDataDeclaration() {
+        return " BLOB(" + META_LIMIT + ")";
+    }
+
+    protected String getDataColumnDataDeclaration() {
+        return " BLOB(" + BLOB_MAX_SIZE + "), ";
+    }
 }
 
 
