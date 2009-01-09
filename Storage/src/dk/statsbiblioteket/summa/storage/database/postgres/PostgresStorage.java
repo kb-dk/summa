@@ -96,6 +96,16 @@ public class PostgresStorage extends DatabaseStorage implements Configurable {
         }
 
         log.info("Connected to database: " + connectionURL);
+
+        try {            
+            createSchema();
+            log.info ("Created new database schemas");
+        } catch (Exception e) {
+            log.info("Database schemas NOT created");
+            if (log.isDebugEnabled()) {
+                log.info(e);
+            }
+        }
     }
 
     protected Connection getConnection() {
