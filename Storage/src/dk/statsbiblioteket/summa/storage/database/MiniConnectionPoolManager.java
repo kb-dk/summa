@@ -34,7 +34,9 @@ import javax.sql.PooledConnection;
  * <p>
  * The public methods of this class are thread-safe.
  * <p>
- * This class is based on the work of Christian d'Heureuse, www.source-code.biz
+ * This class is based on the work of Christian d'Heureuse, www.source-code.biz.
+ * For more information see
+ * <a href="http://www.source-code.biz/snippets/java/8.htm">www.source-code.biz/snippets/java/8.htm</a>
  */
 public class MiniConnectionPoolManager {
 
@@ -111,12 +113,17 @@ public class MiniConnectionPoolManager {
         while (!recycledConnections.isEmpty()) {
             PooledConnection pconn = recycledConnections.pop();
             try {
-                pconn.close(); }
-            catch (SQLException e2) {
-                if (e == null) e = e2; }
+                pconn.close();
+            } catch (SQLException e2) {
+                if (e == null) {
+                    e = e2;
+                }
+            }
         }
 
-        if (e != null) throw e;
+        if (e != null) {
+            throw e;
+        }
     }
 
     /**
@@ -141,8 +148,9 @@ public class MiniConnectionPoolManager {
         }
 
         try {
-            if (!semaphore.tryAcquire(timeout,TimeUnit.SECONDS))
+            if (!semaphore.tryAcquire(timeout,TimeUnit.SECONDS)) {
                 throw new TimeoutException();
+            }
         } catch (InterruptedException e) {
             throw new RuntimeException("Interrupted while waiting for "
                                        + "a database connection.",e);
@@ -154,7 +162,9 @@ public class MiniConnectionPoolManager {
             ok = true;
             return conn;
         } finally {
-            if (!ok) semaphore.release();
+            if (!ok) {
+                semaphore.release();
+            }
         }
     }
 
