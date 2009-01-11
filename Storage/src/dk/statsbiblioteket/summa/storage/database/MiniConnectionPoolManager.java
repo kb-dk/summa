@@ -18,9 +18,11 @@ package dk.statsbiblioteket.summa.storage.database;
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import java.util.concurrent.Semaphore;
 import java.util.Stack;
-import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
@@ -43,7 +45,7 @@ public class MiniConnectionPoolManager {
     private ConnectionPoolDataSource       dataSource;
     private int                            maxConnections;
     private int                            timeout;
-    private PrintWriter                    logWriter;
+    private Log                            log;
     private Semaphore                      semaphore;
     private Stack<PooledConnection>        recycledConnections;
     private int                            activeConnections;
@@ -81,15 +83,11 @@ public class MiniConnectionPoolManager {
      */
     public MiniConnectionPoolManager (ConnectionPoolDataSource dataSource,
                                       int maxConnections, int timeout) {
+        log = LogFactory.getLog(this.getClass().getName());
+
         this.dataSource = dataSource;
         this.maxConnections = maxConnections;
         this.timeout = timeout;
-
-        try {
-            logWriter = dataSource.getLogWriter(); }
-        catch (SQLException e) {
-
-        }
 
         if (maxConnections < 1) {
             throw new IllegalArgumentException("Invalid maxConnections value.");
@@ -97,32 +95,37 @@ public class MiniConnectionPoolManager {
 
         semaphore = new Semaphore(maxConnections,true);
         recycledConnections = new Stack<PooledConnection>();
-        poolConnectionEventListener = new PoolConnectionEventListener(); }
+        poolConnectionEventListener = new PoolConnectionEventListener();
+
+        log.debug("Created for source " + dataSource.getClass()
+                  + " and max connections " + maxConnections
+                  + " and timeout " + timeout);
+    }
 
     /**
      * Closes all unused pooled connections.
      */
     public synchronized void dispose() throws SQLException {
         if (isDisposed) {
+            log.debug("Already disposed");
             return;
         }
 
+        log.debug("Disposing of all connections");
+
         isDisposed = true;
-        SQLException e = null;
 
         while (!recycledConnections.isEmpty()) {
             PooledConnection pconn = recycledConnections.pop();
             try {
                 pconn.close();
-            } catch (SQLException e2) {
-                if (e == null) {
-                    e = e2;
+                if (log.isTraceEnabled ()) {
+                    log.trace("Closed connection " + pconn);
                 }
+            } catch (SQLException e) {
+                log.warn("Error disposing of " + pconn + ": " + e.getMessage (),
+                         e);
             }
-        }
-
-        if (e != null) {
-            throw e;
         }
     }
 
@@ -140,6 +143,11 @@ public class MiniConnectionPoolManager {
      */
     public Connection getConnection() throws SQLException {
         // This routine is unsynchronized, because semaphore.tryAcquire() may block.
+
+        if (log.isTraceEnabled ()) {
+            log.trace("Getting connection");
+        }
+
         synchronized (this) {
             if (isDisposed) {
                 throw new IllegalStateException("Connection pool"
@@ -177,8 +185,14 @@ public class MiniConnectionPoolManager {
         PooledConnection pconn;
 
         if (!recycledConnections.empty()) {
+            if (log.isTraceEnabled()) {
+                log.trace("Getting pooled connection");
+            }
             pconn = recycledConnections.pop();
         } else {
+            if (log.isTraceEnabled()) {
+                log.trace("Requesting new pooled connection");
+            }
             pconn = dataSource.getPooledConnection();
         }
 
@@ -192,11 +206,16 @@ public class MiniConnectionPoolManager {
 
     private synchronized void recycleConnection (PooledConnection pconn) {
         if (isDisposed) {
-            disposeConnection (pconn); return;
+            disposeConnection (pconn);
+            return;
         }
 
         if (activeConnections <= 0) {
             throw new AssertionError();
+        }
+
+        if (log.isTraceEnabled()) {
+            log.trace("Recycling connection " + pconn);
         }
 
         activeConnections--;
@@ -210,9 +229,13 @@ public class MiniConnectionPoolManager {
             throw new AssertionError();
         }
 
+        if (log.isTraceEnabled()) {
+            log.trace("Disposing of connection " + pconn);
+        }
+
         activeConnections--;
         semaphore.release();
-        closeConnectionNoEx (pconn);
+        closeConnectionNoEx(pconn);
         assertInnerState();
     }
 
@@ -220,20 +243,8 @@ public class MiniConnectionPoolManager {
         try {
             pconn.close();
         } catch (SQLException e) {
-            log ("Error while closing database connection: "+e.toString());
-        }
-    }
-
-    private void log (String msg) {
-        String s = "MiniConnectionPoolManager: "+msg;
-
-        try {
-            if (logWriter == null)
-                System.err.println (s);
-            else
-                logWriter.println (s);
-        } catch (Exception e) {
-
+            log.warn ("Error while closing database connection: "
+                      + e.getMessage(), e);
         }
     }
 
@@ -269,8 +280,8 @@ public class MiniConnectionPoolManager {
     /**
      * Returns the number of active (open) connections of this pool.
      * This is the number of <code>Connection</code> objects that have been
-     * issued by {@link #getConnection()} for which <code>Connection.close()</code>
-     * has not yet been called.
+     * issued by {@link #getConnection()} for which
+     * <code>Connection.close()</code> has not yet been called.
      * @return the number of active connections.
      **/
     public synchronized int getActiveConnections() {
