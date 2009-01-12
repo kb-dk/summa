@@ -61,7 +61,8 @@ public class MiniConnectionPoolManager {
         private static final long serialVersionUID = 1;
 
         public TimeoutException () {
-            super ("Timeout while waiting for a free database connection."); }
+            super ("Timeout while waiting for a free database connection.");
+        }
     }
 
     /**
