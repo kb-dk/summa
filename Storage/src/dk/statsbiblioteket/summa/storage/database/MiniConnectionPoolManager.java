@@ -58,10 +58,23 @@ public class MiniConnectionPoolManager {
      */
     public static class TimeoutException extends RuntimeException {
 
-        private static final long serialVersionUID = 1;
-
         public TimeoutException () {
             super ("Timeout while waiting for a free database connection.");
+        }
+    }
+
+    /**
+     * Thrown in {@link MiniConnectionPoolManager#getConnection()} when there
+     * is an error looking up a connection from the pooling data source.
+     */
+    public static class ConnectionException extends RuntimeException {
+
+        public ConnectionException (String msg) {
+            super (msg);
+        }
+
+        public ConnectionException (String msg, Throwable cause) {
+            super (msg, cause);
         }
     }
 
@@ -142,7 +155,7 @@ public class MiniConnectionPoolManager {
      * @throws TimeoutException when no connection becomes available within
      *                          <code>timeout</code> seconds
      */
-    public Connection getConnection() throws SQLException {
+    public Connection getConnection() {
         // This routine is unsynchronized, because semaphore.tryAcquire() may block.
 
         if (log.isTraceEnabled ()) {
@@ -161,7 +174,7 @@ public class MiniConnectionPoolManager {
                 throw new TimeoutException();
             }
         } catch (InterruptedException e) {
-            throw new RuntimeException("Interrupted while waiting for "
+            throw new ConnectionException("Interrupted while waiting for "
                                        + "a database connection.",e);
         }
 
@@ -177,7 +190,7 @@ public class MiniConnectionPoolManager {
         }
     }
 
-    private synchronized Connection getConnection2() throws SQLException {
+    private synchronized Connection getConnection2() {
         if (isDisposed) {
             throw new IllegalStateException("Connection pool has "
                                             + "been disposed.");   // test again with lock
@@ -194,10 +207,24 @@ public class MiniConnectionPoolManager {
             if (log.isTraceEnabled()) {
                 log.trace("Requesting new pooled connection");
             }
-            pconn = dataSource.getPooledConnection();
+            try {
+                pconn = dataSource.getPooledConnection();
+            } catch (Exception e) {
+                throw new ConnectionException("Error creating new pooled "
+                                              + "connection: " + e.getMessage(),
+                                              e);
+            }
         }
 
-        Connection conn = pconn.getConnection();
+        Connection conn;
+        try {
+            conn = pconn.getConnection();
+        } catch (SQLException e) {
+            throw new ConnectionException("Error extracting physical connection"
+                                          + " from pooled connection: "
+                                          + e.getMessage(), e);
+        }
+
         activeConnections++;
         pconn.addConnectionEventListener (poolConnectionEventListener);
         assertInnerState();
