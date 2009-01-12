@@ -23,13 +23,13 @@ import org.apache.commons.logging.LogFactory;
 
 import java.util.concurrent.Semaphore;
 import java.util.Stack;
+import java.util.Map;
+import java.util.HashMap;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.PreparedStatement;
 import java.util.concurrent.TimeUnit;
-import javax.sql.ConnectionPoolDataSource;
-import javax.sql.ConnectionEvent;
-import javax.sql.ConnectionEventListener;
-import javax.sql.PooledConnection;
+import javax.sql.*;
 
 /**
  * A simple standalone JDBC connection pool manager.
@@ -48,8 +48,12 @@ public class MiniConnectionPoolManager {
     private Log                            log;
     private Semaphore                      semaphore;
     private Stack<PooledConnection>        recycledConnections;
+    private Map<Connection,ConnectionContext>
+                                           connectionMap;
+    private Map<StatementHandle,String>    statements;
     private int                            activeConnections;
     private PoolConnectionEventListener    poolConnectionEventListener;
+    private PoolStatementEventListener     statementEventListener;
     private boolean                        isDisposed;
 
     /**
@@ -75,6 +79,74 @@ public class MiniConnectionPoolManager {
 
         public ConnectionException (String msg, Throwable cause) {
             super (msg, cause);
+        }
+    }
+
+    /**
+     * Opaque handle type used for representing pooled prepared statements
+     */
+    public static class StatementHandle {
+
+        private static int handleCount = 0;
+        private int handle;
+        private String sql;
+
+        StatementHandle(String sql) {
+            synchronized (this.getClass()) {
+                handle = handleCount;
+                handleCount++;
+            }
+
+            this.sql = sql;
+        }
+
+        int get() {
+            return handle;
+        }
+
+        @Override
+        public int hashCode() {
+            return handle;
+        }
+
+        String getSql() {
+            return sql;
+        }
+    }
+
+    /**
+     * Helper class used to keep track of prepared statements per pooled
+     * connection
+     */
+    private static class ConnectionContext {
+
+        private PooledConnection pconn;
+        private Map<StatementHandle, PreparedStatement> statements;
+
+        public ConnectionContext (PooledConnection pconn) {
+            this.pconn = pconn;
+            statements = new HashMap<StatementHandle,PreparedStatement>();
+        }
+
+        public PooledConnection getPooledConnection() {
+            return pconn;
+        }
+
+        public PreparedStatement getStatement(StatementHandle handle) {
+            return statements.get(handle);
+        }
+
+        public boolean hasStatement(StatementHandle handle) {
+            return statements.containsKey(handle);
+        }
+
+        public PreparedStatement prepareStatement(StatementHandle handle)
+                                                           throws SQLException {
+            Connection conn = pconn.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(handle.getSql());
+
+            statements.put(handle, stmt);
+            return stmt;
         }
     }
 
@@ -109,7 +181,10 @@ public class MiniConnectionPoolManager {
 
         semaphore = new Semaphore(maxConnections,true);
         recycledConnections = new Stack<PooledConnection>();
+        connectionMap = new HashMap<Connection,ConnectionContext>();
+
         poolConnectionEventListener = new PoolConnectionEventListener();
+        statementEventListener = new PoolStatementEventListener();
 
         log.debug("Created for source " + dataSource.getClass()
                   + " and max connections " + maxConnections
@@ -131,6 +206,7 @@ public class MiniConnectionPoolManager {
 
         while (!recycledConnections.isEmpty()) {
             PooledConnection pconn = recycledConnections.pop();
+
             try {
                 pconn.close();
                 if (log.isTraceEnabled ()) {
@@ -141,6 +217,33 @@ public class MiniConnectionPoolManager {
                          e);
             }
         }
+    }
+
+    public StatementHandle prepareStatement(String sql) {
+        return new StatementHandle(sql);
+    }
+
+    public PreparedStatement getStatement(StatementHandle handle)
+                                                            throws SQLException{
+        Connection conn = getConnection();
+        ConnectionContext connCtx = getConnectionContext(conn);
+
+        PreparedStatement stmt = connCtx.getStatement(handle);
+
+        if (stmt == null) {
+            stmt = connCtx.prepareStatement(handle);
+        }
+
+        // Set our selves up for closing the connection when
+        // the statement is closed
+        connCtx.getPooledConnection().addStatementEventListener(
+                                                        statementEventListener);
+
+        return stmt;
+    }
+
+    private ConnectionContext getConnectionContext(Connection conn) {
+        return connectionMap.get(conn);
     }
 
     /**
@@ -199,6 +302,7 @@ public class MiniConnectionPoolManager {
         PooledConnection pconn;
 
         if (!recycledConnections.empty()) {
+            // Recycle an old connection
             if (log.isTraceEnabled()) {
                 log.trace("Getting pooled connection");
             }
@@ -208,7 +312,12 @@ public class MiniConnectionPoolManager {
                 log.trace("Requesting new pooled connection");
             }
             try {
+                // Request new pooled connection from data source
+                // and register a connection context for prepared statements
                 pconn = dataSource.getPooledConnection();
+                connectionMap.put(pconn.getConnection(),
+                                  new ConnectionContext(pconn));
+
             } catch (Exception e) {
                 throw new ConnectionException("Error creating new pooled "
                                               + "connection: " + e.getMessage(),
@@ -302,6 +411,38 @@ public class MiniConnectionPoolManager {
             PooledConnection pconn = (PooledConnection)event.getSource();
             pconn.removeConnectionEventListener (this);
             disposeConnection (pconn);
+        }
+    }
+
+    /**
+     * The purpose of this listener is to close the parent connection
+     * when a prepared statement is closed.
+     */
+    private class PoolStatementEventListener implements StatementEventListener {
+
+        public void statementClosed(StatementEvent event) {
+            try {
+                PooledConnection pconn = (PooledConnection)event.getSource();
+                pconn.removeStatementEventListener(this);
+                pconn.getConnection().close();
+            } catch (SQLException e) {
+                log.warn("Failed to release pooled connection after closing "
+                         + "prepared statement '" + event.getStatement()
+                         + "': " + e.getMessage(), e);
+            }
+        }
+
+        public void statementErrorOccurred(StatementEvent event) {
+            try {
+                PooledConnection pconn = (PooledConnection)event.getSource();
+                pconn.removeStatementEventListener(this);
+                pconn.getConnection().close();
+            } catch (SQLException e) {
+                log.warn("Failed to release pooled connection after error on "
+                         + "prepared statement '" + event.getStatement()
+                         + "': " + event.getSQLException()
+                         + ". Error was: " + e.getMessage(), e);
+            }
         }
     }
 
