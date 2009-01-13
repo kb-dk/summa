@@ -31,6 +31,8 @@ import java.sql.PreparedStatement;
 import java.util.concurrent.TimeUnit;
 import javax.sql.*;
 
+import dk.statsbiblioteket.util.Strings;
+
 /**
  * A simple standalone JDBC connection pool manager.
  * <p>
@@ -48,9 +50,6 @@ public class MiniConnectionPoolManager {
     private Log                            log;
     private Semaphore                      semaphore;
     private Stack<PooledConnection>        recycledConnections;
-    private Map<Connection,ConnectionContext>
-                                           connectionMap;
-    private Map<StatementHandle,String>    statements;
     private int                            activeConnections;
     private PoolConnectionEventListener    poolConnectionEventListener;
     private PoolStatementEventListener     statementEventListener;
@@ -85,13 +84,14 @@ public class MiniConnectionPoolManager {
     /**
      * Opaque handle type used for representing pooled prepared statements
      */
-    public static class StatementHandle {
+    public static class PooledStatementHandle
+                                    implements DatabaseStorage.StatementHandle {
 
         private static int handleCount = 0;
         private int handle;
         private String sql;
 
-        StatementHandle(String sql) {
+        PooledStatementHandle(String sql) {
             synchronized (this.getClass()) {
                 handle = handleCount;
                 handleCount++;
@@ -112,41 +112,9 @@ public class MiniConnectionPoolManager {
         String getSql() {
             return sql;
         }
-    }
 
-    /**
-     * Helper class used to keep track of prepared statements per pooled
-     * connection
-     */
-    private static class ConnectionContext {
-
-        private PooledConnection pconn;
-        private Map<StatementHandle, PreparedStatement> statements;
-
-        public ConnectionContext (PooledConnection pconn) {
-            this.pconn = pconn;
-            statements = new HashMap<StatementHandle,PreparedStatement>();
-        }
-
-        public PooledConnection getPooledConnection() {
-            return pconn;
-        }
-
-        public PreparedStatement getStatement(StatementHandle handle) {
-            return statements.get(handle);
-        }
-
-        public boolean hasStatement(StatementHandle handle) {
-            return statements.containsKey(handle);
-        }
-
-        public PreparedStatement prepareStatement(StatementHandle handle)
-                                                           throws SQLException {
-            Connection conn = pconn.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(handle.getSql());
-
-            statements.put(handle, stmt);
-            return stmt;
+        public String toString() {
+            return "" + handle;
         }
     }
 
@@ -181,7 +149,6 @@ public class MiniConnectionPoolManager {
 
         semaphore = new Semaphore(maxConnections,true);
         recycledConnections = new Stack<PooledConnection>();
-        connectionMap = new HashMap<Connection,ConnectionContext>();
 
         poolConnectionEventListener = new PoolConnectionEventListener();
         statementEventListener = new PoolStatementEventListener();
@@ -219,31 +186,30 @@ public class MiniConnectionPoolManager {
         }
     }
 
-    public StatementHandle prepareStatement(String sql) {
-        return new StatementHandle(sql);
+    public PooledStatementHandle prepareStatement(String sql) {
+        return new PooledStatementHandle(sql);
     }
 
-    public PreparedStatement getStatement(StatementHandle handle)
+    public PreparedStatement getStatement(PooledStatementHandle handle)
                                                             throws SQLException{
-        Connection conn = getConnection();
-        ConnectionContext connCtx = getConnectionContext(conn);
+        PooledConnection pconn = getPooledConnection();
+        Connection conn = pconn.getConnection();
 
-        PreparedStatement stmt = connCtx.getStatement(handle);
-
-        if (stmt == null) {
-            stmt = connCtx.prepareStatement(handle);
+        if (log.isTraceEnabled()) {
+            log.trace("Getting statement for handle " + handle
+                      + " on connection " + pconn.hashCode());
         }
+
+        // We prepare a new statement on each invocation. This might look insane
+        // but the JDBC _should_ be caching the statements for us
+        // (Derby does this at least)
+        PreparedStatement stmt = conn.prepareStatement(handle.getSql());
 
         // Set our selves up for closing the connection when
         // the statement is closed
-        connCtx.getPooledConnection().addStatementEventListener(
-                                                        statementEventListener);
+        pconn.addStatementEventListener(statementEventListener);
 
         return stmt;
-    }
-
-    private ConnectionContext getConnectionContext(Connection conn) {
-        return connectionMap.get(conn);
     }
 
     /**
@@ -259,10 +225,27 @@ public class MiniConnectionPoolManager {
      *                          <code>timeout</code> seconds
      */
     public Connection getConnection() {
+        PooledConnection pconn = getPooledConnection();
+
+        try {
+            return pconn.getConnection();
+        } catch (SQLException e) {
+            throw new ConnectionException("Error extracting physical connection"
+                                          + " from pooled connection: "
+                                          + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Get a PooledConnection from the connection pool.
+     * @return
+     */
+    protected PooledConnection getPooledConnection() {
         // This routine is unsynchronized, because semaphore.tryAcquire() may block.
 
         if (log.isTraceEnabled ()) {
-            log.trace("Getting connection");
+            log.trace("Getting connection, with " + getActiveConnections()
+                      + " connections currently active");
         }
 
         synchronized (this) {
@@ -283,9 +266,9 @@ public class MiniConnectionPoolManager {
 
         boolean ok = false;
         try {
-            Connection conn = getConnection2();
+            PooledConnection pconn = _getPooledConnection();
             ok = true;
-            return conn;
+            return pconn;
         } finally {
             if (!ok) {
                 semaphore.release();
@@ -293,7 +276,12 @@ public class MiniConnectionPoolManager {
         }
     }
 
-    private synchronized Connection getConnection2() {
+    /**
+     * Internal helper method to fetch a pooled connection. Should only be used
+     * inside getPooledConnection()
+     * @return a pooled connection, new, or recycled
+     */
+    private synchronized PooledConnection _getPooledConnection() {
         if (isDisposed) {
             throw new IllegalStateException("Connection pool has "
                                             + "been disposed.");   // test again with lock
@@ -315,9 +303,6 @@ public class MiniConnectionPoolManager {
                 // Request new pooled connection from data source
                 // and register a connection context for prepared statements
                 pconn = dataSource.getPooledConnection();
-                connectionMap.put(pconn.getConnection(),
-                                  new ConnectionContext(pconn));
-
             } catch (Exception e) {
                 throw new ConnectionException("Error creating new pooled "
                                               + "connection: " + e.getMessage(),
@@ -325,20 +310,11 @@ public class MiniConnectionPoolManager {
             }
         }
 
-        Connection conn;
-        try {
-            conn = pconn.getConnection();
-        } catch (SQLException e) {
-            throw new ConnectionException("Error extracting physical connection"
-                                          + " from pooled connection: "
-                                          + e.getMessage(), e);
-        }
-
         activeConnections++;
         pconn.addConnectionEventListener (poolConnectionEventListener);
         assertInnerState();
 
-        return conn;
+        return pconn;
     }
 
     private synchronized void recycleConnection (PooledConnection pconn) {
@@ -351,14 +327,16 @@ public class MiniConnectionPoolManager {
             throw new AssertionError();
         }
 
-        if (log.isTraceEnabled()) {
-            log.trace("Recycling connection " + pconn);
-        }
-
         activeConnections--;
         semaphore.release();
         recycledConnections.push (pconn);
         assertInnerState();
+
+        if (log.isTraceEnabled()) {
+            log.trace("Recycled connection " + pconn.hashCode()
+                      + ", now " + getActiveConnections()
+                      + " active connections");
+        }
     }
 
     private synchronized void disposeConnection (PooledConnection pconn) {
@@ -366,9 +344,7 @@ public class MiniConnectionPoolManager {
             throw new AssertionError();
         }
 
-        if (log.isTraceEnabled()) {
-            log.trace("Disposing of connection " + pconn);
-        }
+        log.debug("Disposing of connection " + pconn.hashCode());
 
         activeConnections--;
         semaphore.release();
@@ -404,13 +380,29 @@ public class MiniConnectionPoolManager {
         public void connectionClosed (ConnectionEvent event) {
             PooledConnection pconn = (PooledConnection)event.getSource();
             pconn.removeConnectionEventListener (this);
-            recycleConnection (pconn);
+            recycleConnection (pconn); // Reuse the connection
+
+            if (log.isTraceEnabled()) {
+                log.trace("Handled ConnectionClosedEvent for "
+                          + pconn.hashCode()
+                          + ", now " + getActiveConnections()
+                          + " active connections");
+            }
         }
 
         public void connectionErrorOccurred (ConnectionEvent event) {
+            log.trace("ConnectionErrorEvent: "
+                      + event.getSQLException().getMessage(),
+                      event.getSQLException());
+
             PooledConnection pconn = (PooledConnection)event.getSource();
             pconn.removeConnectionEventListener (this);
-            disposeConnection (pconn);
+            disposeConnection (pconn); // Drop the connection
+
+            log.info("Handled ConnectionErrorEvent, now "
+                     + getActiveConnections() + " active connections. "
+                     + "Error was: " + event.getSQLException().getMessage(),
+                     event.getSQLException());
         }
     }
 
@@ -421,28 +413,31 @@ public class MiniConnectionPoolManager {
     private class PoolStatementEventListener implements StatementEventListener {
 
         public void statementClosed(StatementEvent event) {
-            try {
-                PooledConnection pconn = (PooledConnection)event.getSource();
-                pconn.removeStatementEventListener(this);
-                pconn.getConnection().close();
-            } catch (SQLException e) {
-                log.warn("Failed to release pooled connection after closing "
-                         + "prepared statement '" + event.getStatement()
-                         + "': " + e.getMessage(), e);
+            PooledConnection pconn = (PooledConnection)event.getSource();
+            pconn.removeStatementEventListener(this);
+            recycleConnection(pconn);
+
+            if (log.isTraceEnabled()) {
+                log.trace("Handled StatementClosedEvent for " + pconn.hashCode()
+                          + ", now " + getActiveConnections()
+                          + " active connections");
             }
+
         }
 
         public void statementErrorOccurred(StatementEvent event) {
-            try {
-                PooledConnection pconn = (PooledConnection)event.getSource();
-                pconn.removeStatementEventListener(this);
-                pconn.getConnection().close();
-            } catch (SQLException e) {
-                log.warn("Failed to release pooled connection after error on "
-                         + "prepared statement '" + event.getStatement()
-                         + "': " + event.getSQLException()
-                         + ". Error was: " + e.getMessage(), e);
-            }
+            log.trace("StatementErrorEvent: "
+                      + event.getSQLException().getMessage(),
+                      event.getSQLException());
+
+            PooledConnection pconn = (PooledConnection)event.getSource();
+            pconn.removeStatementEventListener(this);
+            disposeConnection(pconn); // Mark connection for disposal
+
+            log.info("Handled ConnectionErrorEvent, now "
+                     + getActiveConnections() + " active connections. "
+                     + "Error was: " + event.getSQLException().getMessage(),
+                     event.getSQLException());
         }
     }
 
