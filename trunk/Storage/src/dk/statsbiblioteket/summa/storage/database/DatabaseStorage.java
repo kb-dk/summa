@@ -96,6 +96,18 @@ public abstract class DatabaseStorage extends StorageBase {
     public static String DEFAULT_DATABASE = "summa";
 
     /**
+     * Maximum number of concurrent connections to keep to the database.
+     * Default value is {@link #DEFAULT_MAX_CONNECTIONS}.
+     */
+    public static String CONF_MAX_CONNECTIONS =
+                                        "summa.storage.database.maxconnections";
+
+    /**
+     * Default value for {@link #CONF_MAX_CONNECTIONS}.
+     */
+    public static int DEFAULT_MAX_CONNECTIONS = 10;
+
+    /**
      * The port to connect to the datatbase on.
      */
     public static String CONF_PORT = "summa.storage.database.port";
@@ -201,24 +213,32 @@ public abstract class DatabaseStorage extends StorageBase {
 
     private static final long EMPTY_ITERATOR_KEY = -1;
 
-    private PreparedStatement stmtGetModifiedAfter;
-    private PreparedStatement stmtGetModifiedAfterAll;
-    private PreparedStatement stmtGetRecord;
-    private PreparedStatement stmtClearBase;
-    private PreparedStatement stmtDeleteRecord;
-    private PreparedStatement stmtCreateRecord;
-    private PreparedStatement stmtUpdateRecord;
-    private PreparedStatement stmtTouchParents;
-    private PreparedStatement stmtGetChildren;
-    private PreparedStatement stmtGetParents;
-    private PreparedStatement stmtCreateRelation;    
+    private StatementHandle stmtGetModifiedAfter;
+    private StatementHandle stmtGetModifiedAfterAll;
+    private StatementHandle stmtGetRecord;
+    private StatementHandle stmtClearBase;
+    private StatementHandle stmtDeleteRecord;
+    private StatementHandle stmtCreateRecord;
+    private StatementHandle stmtUpdateRecord;
+    private StatementHandle stmtTouchParents;
+    private StatementHandle stmtGetChildren;
+    private StatementHandle stmtGetParents;
+    private StatementHandle stmtCreateRelation;
 
-    private static final int FETCH_SIZE = 10000;
+    private static final int FETCH_SIZE = 1000;
 
     private Map<Long, ResultIterator> iterators =
                                          new HashMap<Long, ResultIterator>(10);
 
     private ResultIteratorReaper iteratorReaper;
+
+    /**
+     * Opaque datatype used to represent preparedStatements. Implementors
+     * of the {@link DatabaseStorage} class should provide custom
+     * implementations of this datatype and return it from
+     * {@code #prepareStatement()}
+     */
+    public interface StatementHandle {}
 
     /**
      * A variation of {@link QueryOptions} used to keep track
@@ -331,10 +351,12 @@ public abstract class DatabaseStorage extends StorageBase {
     protected void init(Configuration conf) throws IOException {
         log.trace("init called");
         connectToDatabase(conf);
+
         try {
             prepareStatements();
         } catch (SQLException e) {
-            throw new ConfigurationException("SQLException in init", e);
+            throw new IOException("Failed to prepare SQL statements: "
+                                  + e.getMessage(), e);
         }
 
         iteratorReaper =
@@ -359,9 +381,54 @@ public abstract class DatabaseStorage extends StorageBase {
                                                         throws IOException;
 
     /**
-     * @return a connection to a SQL-compatible database.
+     * Look up a connection from a connection pool. The returned connection
+     * <i>must</i> be closed by the caller. This should typically be done in a
+     * <code>finally</code> clause.
+     * <p/>
+     * Unclosed connections will lead to connection leaking which can end up
+     * locking up the entire storage
+     *
+     * @return a connection to a SQL-compatible database. The returned
+     *         connection <i>must</i> be closed by the caller to avoid
+     *         connection leaking
      */
     protected abstract Connection getConnection();
+
+    /**
+     * Set up a prepared statement and return an opaque handle to it.
+     * <p/>
+     * A copy of the {@link PreparedStatement} can be retrieved by calling
+     * {@link #getStatement}. PreparedStatements <i>must</i> be
+     * closed by invoking the {@link PreparedStatement#close} method when the
+     * client is done using them. This should typically be done in a
+     * <code>finally</code> clause to make sure statements
+     * (and thus connections) are not leaked.
+     * <p/>
+     * Connection leaking can end up locking up the entire storage process
+     * @param sql SQL statement for the prepared statement
+     * @return a handle that can be used to retrieve a PreparedStatement
+     */
+    protected abstract StatementHandle prepareStatement(String sql)
+                                                            throws SQLException;
+
+    /**
+     * Look up a prepared statement given a handle as constructed by
+     * {@link #prepareStatement(String)}.
+     * <p/>
+     * Note that PreparedStatements <i>must</i> be
+     * closed by invoking the {@link PreparedStatement#close} method when the
+     * client is done using them. This should typically be done in a
+     * <code>finally</code> clause to make sure statements
+     * (and thus connections) are not leaked.
+     * <p/>
+     * Connection leaking can end up locking up the entire storage process
+     *
+     * @param handle statement handle as obtained when calling
+     *               {@link #prepareStatement(String)}
+     * @return a prepared statement that <i>must</i> be closed by the caller
+     */
+    protected abstract PreparedStatement getStatement(StatementHandle handle)
+                                                            throws SQLException;
 
     /**
      * Prepare relevant SQL statements for later use.
@@ -396,7 +463,8 @@ public abstract class DatabaseStorage extends StorageBase {
                                     + MTIME_COLUMN + ", " + ID_COLUMN;
         log.debug("Preparing query getModifiedAfter with '"
                   + modifiedAfterQuery + "'");
-        stmtGetModifiedAfter = getConnection().prepareStatement(modifiedAfterQuery);
+        stmtGetModifiedAfter = prepareStatement(modifiedAfterQuery);
+        log.debug("getModifiedAfter handle: " + stmtGetModifiedAfter);
 
         String modifiedAfterAllQuery = "SELECT " + allCells
                                        + " FROM " + RECORDS
@@ -407,8 +475,8 @@ public abstract class DatabaseStorage extends StorageBase {
                                        + MTIME_COLUMN + ", " + ID_COLUMN;
         log.debug("Preparing query getModifiedAfterAll with '"
                   + modifiedAfterAllQuery + "'");
-        stmtGetModifiedAfterAll = getConnection().prepareStatement(
-                                                         modifiedAfterAllQuery);
+        stmtGetModifiedAfterAll = prepareStatement(modifiedAfterAllQuery);
+        log.debug("getModifiedAfterAll handle: " + stmtGetModifiedAfterAll);
 
         String getRecordQuery = "SELECT " + allCells
                                 + " FROM " + RECORDS
@@ -416,14 +484,16 @@ public abstract class DatabaseStorage extends StorageBase {
                                 + " ON " + relationsClause
                                 + " WHERE " + RECORDS + "." + ID_COLUMN + "=?";
         log.debug("Preparing query getRecord with '" + getRecordQuery + "'");
-        stmtGetRecord = getConnection().prepareStatement(getRecordQuery);
+        stmtGetRecord = prepareStatement(getRecordQuery);
+        log.debug("getRecord handle: " + stmtGetRecord);
 
         String clearBaseQuery = "UPDATE " + RECORDS
                                 + " SET " + DELETED_COLUMN + "=1"
                                 + " WHERE " + BASE_COLUMN + "=?";
         log.debug("Preparing query clearBase with '"
                   + clearBaseQuery + "'");
-        stmtClearBase = getConnection().prepareStatement(clearBaseQuery);
+        stmtClearBase = prepareStatement(clearBaseQuery);
+        log.debug("clearBase handle: " + stmtClearBase);
 
         /*
          FIXME: We might want a prepared statement to fetch multiple records in
@@ -435,7 +505,7 @@ public abstract class DatabaseStorage extends StorageBase {
                                 + " FROM " + RECORDS
                                 + " WHERE " + ID_COLUMN + " IN ?";
         log.debug("Preparing query recordsQuery with '" + getRecordsQuery + "'");
-        stmtGetRecords = getConnection().prepareStatement(getRecordsQuery);
+        stmtGetRecords = prepareStatement(getRecordsQuery);
          */
 
         String deleteRecordQuery = "UPDATE " + RECORDS
@@ -444,7 +514,8 @@ public abstract class DatabaseStorage extends StorageBase {
                                    + " WHERE " + ID_COLUMN + "=?";
         log.debug("Preparing query deleteRecord with '"
                   + deleteRecordQuery + "'");
-        stmtDeleteRecord = getConnection().prepareStatement(deleteRecordQuery);
+        stmtDeleteRecord = prepareStatement(deleteRecordQuery);
+        log.debug("deleteRecord handle: " + stmtDeleteRecord);
 
         /* createRecord */
         String createRecordQuery = "INSERT INTO " + RECORDS
@@ -459,7 +530,8 @@ public abstract class DatabaseStorage extends StorageBase {
                                        + ") VALUES (?,?,?,?,?,?,?,?)";
         log.debug("Preparing query createRecord with '" + createRecordQuery
                   + "'");
-        stmtCreateRecord = getConnection().prepareStatement(createRecordQuery);
+        stmtCreateRecord = prepareStatement(createRecordQuery);
+        log.debug("createRecord handle: " + stmtCreateRecord);
 
         /* updateRecord */
         String updateRecordQuery = "UPDATE " + RECORDS + " SET "
@@ -472,7 +544,8 @@ public abstract class DatabaseStorage extends StorageBase {
                                    + "WHERE " + ID_COLUMN +"=?";
         log.debug("Preparing query updateRecord with '" + updateRecordQuery
                   + "'");
-        stmtUpdateRecord = getConnection().prepareStatement(updateRecordQuery);
+        stmtUpdateRecord = prepareStatement(updateRecordQuery);
+        log.debug("updateRecord handle: " + stmtUpdateRecord);
 
         /* touchRecord */
         /*String touchRecordQuery = "UPDATE " + RECORDS + " SET "
@@ -494,6 +567,7 @@ public abstract class DatabaseStorage extends StorageBase {
         log.debug("Preparing query touchParents with '" + touchParentsQuery
                   + "'");
         stmtTouchParents = prepareStatement(touchParentsQuery);
+        log.debug("touchParents handle: " + stmtTouchParents);
 
         /* getChildren */
         String getChildrenQuery = "SELECT " + allCells
@@ -507,6 +581,7 @@ public abstract class DatabaseStorage extends StorageBase {
         log.debug("Preparing query getChildren with '" + getChildrenQuery
                   + "'");
         stmtGetChildren = prepareStatement(getChildrenQuery);
+        log.debug("getChildren handle: " + stmtGetChildren);
 
         /* getParents */
         String getParentsQuery = "SELECT " + allCells
@@ -520,6 +595,7 @@ public abstract class DatabaseStorage extends StorageBase {
         log.debug("Preparing query getParents with '" + getParentsQuery
                   + "'");
         stmtGetParents = prepareStatement(getParentsQuery);
+        log.debug("getParents handle: " + stmtGetParents);
 
         /* createRelation */
         String createRelation = "INSERT INTO " + RELATIONS
@@ -528,8 +604,8 @@ public abstract class DatabaseStorage extends StorageBase {
                                        + ") VALUES (?,?)";
         log.debug("Preparing query createRelation with '" +
                                               createRelation + "'");
-        stmtCreateRelation = getConnection().prepareStatement(
-                                                     createRelation);
+        stmtCreateRelation = prepareStatement(createRelation);
+        log.debug("createRelation handle: " + stmtCreateRelation);
 
         /* deleteRelation */
         /*String deleteRelation = "DELETE FROM " + RELATIONS
@@ -537,7 +613,7 @@ public abstract class DatabaseStorage extends StorageBase {
                                 + " OR " + CHILD_ID_COLUMN + "=? ";
         log.debug("Preparing query deleteRelation with '" +
                                               deleteRelation + "'");
-        stmtDeleteRelation = getConnection().prepareStatement(
+        stmtDeleteRelation = prepareStatement(
                                                      deleteRelation);*/
 
         /* countParents */
@@ -545,7 +621,7 @@ public abstract class DatabaseStorage extends StorageBase {
                                 + " WHERE " + CHILD_ID_COLUMN + "=?";
         log.debug("Preparing query countParents with '" +
                                               countParents + "'");
-        stmtCountParents = getConnection().prepareStatement(
+        stmtCountParents = prepareStatement(
                                                      countParents);*/
 
         /* countChildren */
@@ -553,18 +629,10 @@ public abstract class DatabaseStorage extends StorageBase {
                                 + " WHERE " + PARENT_ID_COLUMN + "=?";
         log.debug("Preparing query countChildren with '" +
                                               countParents + "'");
-        stmtCountChildren = getConnection().prepareStatement(
+        stmtCountChildren = prepareStatement(
                                                      countChildren);*/
 
         log.trace("Finished preparing SQL statements");
-    }
-
-    private PreparedStatement prepareStatement(String statement) throws
-                                                                 SQLException {
-        PreparedStatement preparedStatement =
-                getConnection().prepareStatement(statement);
-        preparedStatement.setFetchSize(FETCH_SIZE);
-        return preparedStatement;
     }
 
     @Override
@@ -572,6 +640,34 @@ public abstract class DatabaseStorage extends StorageBase {
                                                      String base,
                                                      QueryOptions options)
                                                         throws IOException {
+        PreparedStatement stmt;
+
+        try {
+            if (base == null) {
+                stmt = getStatement(stmtGetModifiedAfterAll);
+            } else {
+                stmt = getStatement(stmtGetModifiedAfter);
+            }
+        } catch (SQLException e) {
+            throw new IOException("Failed to get prepared statement "
+                                  + stmtGetModifiedAfterAll);
+        }
+
+        // doGetRecordsModifiedAfter creates and iterator and 'stmt' will
+        // be closed together with that iterator
+        return doGetRecordsModifiedAfter(time, base, options, stmt);
+    }
+
+    /*
+     * This method is responsible for closing 'stmt'. This is handled implicitly
+     * since 'stmt' is added to a ResultIterator and it will be closed when
+     * the iterator is closed.
+     */
+    private synchronized long doGetRecordsModifiedAfter(long time,
+                                                        String base,
+                                                        QueryOptions options,
+                                                        PreparedStatement stmt)
+                                                            throws IOException {
         log.debug("getRecordsModifiedAfter('" + time + "', " + base
                   + ") entered");
 
@@ -581,36 +677,63 @@ public abstract class DatabaseStorage extends StorageBase {
             return EMPTY_ITERATOR_KEY;
         }
 
-        if (base == null) { // All bases
+        // Prepared stmt for all bases
+        if (base == null) {
             try {
-                stmtGetModifiedAfterAll.setTimestamp(1, new Timestamp(time));
+                stmt.setTimestamp(1, new Timestamp(time));
             } catch (SQLException e) {
                 throw new IOException(String.format(
                         "Could not prepare stmtGetModifiedAfterAll with time"
                         + " %d", time), e);
             }
-            return prepareIterator(stmtGetModifiedAfterAll, options);
+
+            // stmt will be closed when the iterator is closed
+            return prepareIterator(stmt, options);
         }
 
-        //time += 1000;
+        // Prepared stmt for a specfic base
         try {
-            stmtGetModifiedAfter.setString(1, base);
-            stmtGetModifiedAfter.setTimestamp(2, new Timestamp(time));
+            stmt.setString(1, base);
+            stmt.setTimestamp(2, new Timestamp(time));
         } catch (SQLException e) {
             throw new IOException("Could not prepare stmtGetModifiedAfter "
                                       + "with base '" + base + "' and time "
                                       + time, e);
         }
-        return prepareIterator(stmtGetModifiedAfter, options);
+        return prepareIterator(stmt, options);
     }    
 
     @Override
     public Record getRecord(String id, QueryOptions options)
-                                                        throws IOException {
+                                                            throws IOException {
+        PreparedStatement stmt;
+
+        try {
+            stmt = getStatement(stmtGetRecord);
+        } catch (SQLException e) {
+            throw new IOException("Failed to get prepared statement "
+                                  + stmtGetModifiedAfterAll);
+        }
+
+        try {
+            return doGetRecord(id, options, stmt);
+        } finally {
+            try {
+                stmt.close();
+            } catch (SQLException e) {
+                log.warn("Failed to close statement: " + e.getMessage(), e);
+            }
+        }
+
+    }
+
+    private Record doGetRecord(String id, QueryOptions options,
+                               PreparedStatement stmt)
+                                                            throws IOException {
         log.trace("getRecord('" + id + "', " + options + ")");
 
         try {
-            stmtGetRecord.setString(1, id);
+            stmt.setString(1, id);
         } catch (SQLException e) {
             throw new IOException("Could not prepare stmtGetRecord "
                                       + "with id '" + id + "''", e);
@@ -618,7 +741,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
         Record record = null;
         try {
-            ResultSet resultSet = stmtGetRecord.executeQuery();
+            ResultSet resultSet = stmt.executeQuery();
 
             if (!resultSet.next()) {
                 log.debug("No such record '" + id + "'");
@@ -838,17 +961,28 @@ public abstract class DatabaseStorage extends StorageBase {
             return;
         }
 
+        PreparedStatement stmt = null;
         try {
+            stmt = getStatement(stmtTouchParents);
+
             long now = System.currentTimeMillis();
             Timestamp nowStamp = new Timestamp(now);
-            stmtTouchParents.setTimestamp (1, nowStamp);
-            stmtTouchParents.setString(2, id);
-            stmtTouchParents.execute();
+            stmt.setTimestamp (1, nowStamp);
+            stmt.setString(2, id);
+            stmt.executeUpdate();
         } catch (SQLException e) {
             log.error ("Failed to touch parents of '" + id + "': "
                        + e.getMessage(), e);
             // Consider this non-fatal
             return;
+        } finally {
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                } catch (SQLException e) {
+                    log.warn("Failed to close statement: " + e.getMessage(), e);
+                }
+            }
         }
 
         // Recurse upwards
@@ -869,14 +1003,35 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     protected List<Record> getParents (String id, QueryOptions options)
                                                             throws IOException {
-        List<Record> parents = new ArrayList<Record>(1);
+        PreparedStatement stmt;
 
         try {
-            stmtGetParents.setString(1, id);
-            stmtGetParents.execute();
+            stmt = getStatement(stmtGetParents);
+        } catch (SQLException e) {
+            throw new IOException("Failed to look up statement "
+                                  + stmtGetParents + ": " + e.getMessage(), e);
+        }
 
-            ResultSet results = stmtGetParents.getResultSet();
-            ResultIterator iter = new ResultIterator(results, null);
+        // doGetParents() will close stmt
+        return doGetParents(id, options, stmt);
+
+    }
+
+    /*
+     * This method is responsible for closing stmt itself
+     */
+    private List<Record> doGetParents (String id, QueryOptions options,
+                                       PreparedStatement stmt)
+                                                            throws IOException {
+        List<Record> parents = new ArrayList<Record>(1);
+        ResultIterator iter = null;
+
+        try {
+            stmt.setString(1, id);
+            stmt.execute();
+
+            ResultSet results = stmt.getResultSet();
+            iter = new ResultIterator(stmt, results, null);
 
             while (iter.hasNext()) {
                 try {
@@ -906,6 +1061,10 @@ public abstract class DatabaseStorage extends StorageBase {
         } catch (SQLException e) {
             throw new IOException("Failed to get parents for record '"
                                       + id + "': " + e.getMessage(), e);
+        } finally {
+            if (iter != null) {
+                iter.close();
+            }
         }
     }
 
@@ -921,14 +1080,34 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     protected List<Record> getChildren (String id, QueryOptions options)
                                                             throws IOException {
-        List<Record> children = new ArrayList<Record>(3);
+        PreparedStatement stmt;
 
         try {
-            stmtGetChildren.setString(1, id);
-            stmtGetChildren.execute();
+            stmt = getStatement(stmtGetChildren);
+        } catch (SQLException e) {
+            throw new IOException("Failed to look up statement "
+                                  + stmtGetChildren + ": " + e.getMessage(), e);
+        }
 
-            ResultSet results = stmtGetChildren.getResultSet();
-            ResultIterator iter = new ResultIterator(results, null);
+        // doGetChildren() will close stmt
+        return doGetChildren(id, options, stmt);
+    }
+
+    /*
+     * This method is responsible for closing stmt itself
+     */
+    private List<Record> doGetChildren (String id, QueryOptions options,
+                                        PreparedStatement stmt)
+                                                            throws IOException {
+        List<Record> children = new ArrayList<Record>(3);
+        ResultIterator iter = null;
+
+        try {
+            stmt.setString(1, id);
+            stmt.execute();
+
+            ResultSet results = stmt.getResultSet();
+            iter = new ResultIterator(stmt, results, null);
 
             while (iter.hasNext()) {
                 Record r = iter.getRecord();
@@ -952,25 +1131,64 @@ public abstract class DatabaseStorage extends StorageBase {
         } catch (SQLException e) {
             throw new IOException("Failed to get children for record '"
                                       + id + "': " + e.getMessage(), e);
+        } finally {
+            if (iter != null) {
+                iter.close();
+            }
         }
     }
 
     @Override
     public void clearBase (String base) throws IOException {
+        PreparedStatement stmt;
+
+        try {
+            stmt = getStatement(stmtClearBase);
+        } catch (SQLException e) {
+            throw new IOException("Failed to look up statement "
+                                  + stmtClearBase + ": " + e.getMessage(), e);
+        }
+
+        try {
+            doClearBase(base, stmt);
+        } finally {
+            try {
+                stmt.close();
+            } catch (SQLException e) {
+                log.warn("Failed to close statement: " + e.getMessage(), e);
+            }
+        }
+    }
+
+    private void doClearBase (String base, PreparedStatement stmt)
+                                                            throws IOException {
         log.info ("Clearing base '" + base + "'");
 
         try {
-            stmtClearBase.setString(1, base);
-            stmtClearBase.execute();
+            stmt.setString(1, base);
+            stmt.executeUpdate();
             updateModificationTime(base);
         } catch (SQLException e) {
             throw new IOException("SQLException clearing base '"
-                                      + base + "'", e);
+                                      + base + "': " + e.getMessage(), e);
+        }
+    }
+
+    private void createRelations (Record rec) throws SQLException {
+        PreparedStatement stmt;
+
+        stmt = getStatement(stmtCreateRelation);
+
+        try {
+            doCreateRelations(rec, stmt);
+        } finally {
+            stmt.close();
         }
     }
 
     /* Create parent/child and child/parent relations for the given record */
-    private void createRelations (Record rec) throws SQLException {
+    private void doCreateRelations (Record rec, PreparedStatement stmt)
+                                                           throws SQLException {
         // FIXME: Some transactional safety here would be nice
         if (rec.getChildIds() != null) {
             for (String childId : rec.getChildIds()) {
@@ -978,11 +1196,11 @@ public abstract class DatabaseStorage extends StorageBase {
                     log.debug ("Creating relation: " + rec.getId()
                                + " -> " + childId);
                 }
-                stmtCreateRelation.setString(1, rec.getId());
-                stmtCreateRelation.setString(2, childId);
+                stmt.setString(1, rec.getId());
+                stmt.setString(2, childId);
 
                 try {
-                    stmtCreateRelation.execute();
+                    stmt.executeUpdate();
                 } catch (SQLIntegrityConstraintViolationException e) {
                     if (log.isDebugEnabled()) {
                         log.debug ("Relation "+ rec.getId() + " -> "
@@ -998,11 +1216,11 @@ public abstract class DatabaseStorage extends StorageBase {
                     log.debug ("Creating relation: " + parentId
                                + " -> " + rec.getId());
                 }
-                stmtCreateRelation.setString(1, parentId);
-                stmtCreateRelation.setString(2, rec.getId());
+                stmt.setString(1, parentId);
+                stmt.setString(2, rec.getId());
 
                 try {
-                    stmtCreateRelation.execute();
+                    stmt.executeUpdate();
                 } catch (SQLIntegrityConstraintViolationException e) {
                     if (log.isDebugEnabled()) {
                         log.debug ("Relation "+ parentId + " -> "
@@ -1014,6 +1232,29 @@ public abstract class DatabaseStorage extends StorageBase {
     }
 
     private void createNewRecord(Record record) throws IOException {
+        PreparedStatement stmt;
+
+        try {
+            stmt = getStatement(stmtCreateRecord);
+        } catch (SQLException e) {
+            throw new IOException("Failed to look up prepared statement "
+                                  + stmtCreateRecord + ": " + e.getMessage(),
+                                  e);
+        }
+
+        try {
+            doCreateNewRecord(record, stmt);
+        } finally {
+            try {
+                stmt.close();
+            } catch (SQLException e) {
+                log.warn("Failed to close statement: " + e.getMessage(), e);
+            }
+        }
+    }
+
+    private void doCreateNewRecord(Record record, PreparedStatement stmt)
+                                                            throws IOException {
         if (log.isTraceEnabled()) {
             log.trace("Preparing to create or update record: "
                       + record.toString(true));
@@ -1023,17 +1264,17 @@ public abstract class DatabaseStorage extends StorageBase {
         Timestamp nowStamp = new Timestamp(now);
 
         try {
-            stmtCreateRecord.setString(1, record.getId());
-            stmtCreateRecord.setString(2, record.getBase());
-            stmtCreateRecord.setInt(3, boolToInt(record.isDeleted()));
-            stmtCreateRecord.setInt(4, boolToInt(record.isIndexable()));
-            stmtCreateRecord.setTimestamp(5, nowStamp);
-            stmtCreateRecord.setTimestamp(6, nowStamp);
-            stmtCreateRecord.setBytes(7, Zips.gzipBuffer(record.getContent()));
-            stmtCreateRecord.setBytes(8,record.hasMeta() ?
+            stmt.setString(1, record.getId());
+            stmt.setString(2, record.getBase());
+            stmt.setInt(3, boolToInt(record.isDeleted()));
+            stmt.setInt(4, boolToInt(record.isIndexable()));
+            stmt.setTimestamp(5, nowStamp);
+            stmt.setTimestamp(6, nowStamp);
+            stmt.setBytes(7, Zips.gzipBuffer(record.getContent()));
+            stmt.setBytes(8,record.hasMeta() ?
                                          record.getMeta().toFormalBytes() :
                                          new byte[0]);
-            stmtCreateRecord.execute();
+            stmt.executeUpdate();
             if (log.isDebugEnabled()) {
                 log.debug("Created new record: " + record);
             }
@@ -1067,25 +1308,48 @@ public abstract class DatabaseStorage extends StorageBase {
         updateRelations(record);
     }
 
-    /* Note that creationTime isn't touched */
     private void updateRecord(Record record) throws IOException {
+        PreparedStatement stmt;
+
+        try {
+            stmt = getStatement(stmtUpdateRecord);
+        } catch (SQLException e) {
+            throw new IOException("Failed to look up prepared statement "
+                                  + stmtUpdateRecord + ": " + e.getMessage(),
+                                  e);
+        }
+
+        try {
+            doUpdateRecord(record, stmt);
+        } finally {
+            try {
+                stmt.close();
+            } catch (SQLException e) {
+                log.warn("Failed to close statement: " + e.getMessage(), e);
+            }
+        }
+    }
+
+    /* Note that creationTime isn't touched */
+    private void doUpdateRecord(Record record, PreparedStatement stmt)
+                                                            throws IOException {
         // FIXME: Add child records recursively (parents?)
         long now = System.currentTimeMillis();
         Timestamp nowStamp = new Timestamp(now);
 
         try {
-            stmtUpdateRecord.setString(1, record.getBase());
-            stmtUpdateRecord.setInt(2, boolToInt(record.isDeleted()));
-            stmtUpdateRecord.setInt(3, boolToInt(record.isIndexable()));
-            stmtUpdateRecord.setTimestamp(4, nowStamp);
-            stmtUpdateRecord.setBytes(5, Zips.gzipBuffer(record.getContent()));
-            stmtUpdateRecord.setBytes(6, record.hasMeta() ?
+            stmt.setString(1, record.getBase());
+            stmt.setInt(2, boolToInt(record.isDeleted()));
+            stmt.setInt(3, boolToInt(record.isIndexable()));
+            stmt.setTimestamp(4, nowStamp);
+            stmt.setBytes(5, Zips.gzipBuffer(record.getContent()));
+            stmt.setBytes(6, record.hasMeta() ?
                                          record.getMeta().toFormalBytes() :
                                          new byte[0]);
-            stmtUpdateRecord.setString(7, record.getId());
-            stmtUpdateRecord.execute();
+            stmt.setString(7, record.getId());
+            stmt.executeUpdate();
 
-            if (stmtUpdateRecord.getUpdateCount() == 0) {
+            if (stmt.getUpdateCount() == 0) {
                 log.warn("The record with id '" + record.getId()
                          + "' was marked as modified, but did not exist in the"
                          + " database. The record will be added as new");
@@ -1112,15 +1376,38 @@ public abstract class DatabaseStorage extends StorageBase {
      }
 
     private int deleteRecord(String id) throws IOException {
+        PreparedStatement stmt;
+
+        try {
+            stmt = getStatement(stmtDeleteRecord);
+        } catch (SQLException e) {
+            throw new IOException("Failed to look up prepared statement "
+                                  + stmtDeleteRecord + ": " + e.getMessage(),
+                                  e);
+        }
+
+        try {
+            return doDeleteRecord(id, stmt);
+        } finally {
+            try {
+                stmt.close();
+            } catch (SQLException e) {
+                log.warn("Failed to close statement: " + e.getMessage(), e);
+            }
+        }
+    }
+
+    private int doDeleteRecord(String id, PreparedStatement stmt)
+                                                            throws IOException {
         long now = System.currentTimeMillis();
         Timestamp nowStamp = new Timestamp(now);
 
         try {
-            stmtDeleteRecord.setTimestamp(1, nowStamp);
-            stmtDeleteRecord.setBoolean(2, true);
-            stmtDeleteRecord.setString(3, id);
+            stmt.setTimestamp(1, nowStamp);
+            stmt.setBoolean(2, true);
+            stmt.setString(3, id);
             // TODO: Consider stmt.close();
-            return stmtDeleteRecord.executeUpdate();
+            return stmt.executeUpdate();
         } catch (SQLException e) {
             log.error("SQLException deleting record '" + id + "'", e);
             throw new IOException("SQLException deleting record '"
@@ -1156,34 +1443,46 @@ public abstract class DatabaseStorage extends StorageBase {
 
     private void doCreateSchema() {
 
-        /* RECORDS */
-        try {
-            doCreateSummaRecordsTable();
-        } catch (SQLException e) {
-            if (log.isDebugEnabled()) {
-                log.info("Failed to create table for record data: "
-                         + e.getMessage(), e);
-            } else {
-                log.info("Failed to create table for record data: "
-                         + e.getMessage());
-            }
-        }
+        Connection conn = getConnection();
 
-        /* RELATIONS */
         try {
-            doCreateSummaRelationsTable();
-        } catch (SQLException e) {
-            if (log.isDebugEnabled()) {
-                log.info("Failed to create table for record relations: "
+            /* RECORDS */
+            try {
+                doCreateSummaRecordsTable(conn);
+            } catch (SQLException e) {
+                if (log.isDebugEnabled()) {
+                    log.info("Failed to create table for record data: "
+                             + e.getMessage(), e);
+                } else {
+                    log.info("Failed to create table for record data: "
+                             + e.getMessage());
+                }
+            }
+
+            /* RELATIONS */
+            try {
+                doCreateSummaRelationsTable(conn);
+            } catch (SQLException e) {
+                if (log.isDebugEnabled()) {
+                    log.info("Failed to create table for record relations: "
+                             + e.getMessage(), e);
+                } else {
+                    log.info("Failed to create table for record relations: "
+                             + e.getMessage());
+                }
+            }
+        } finally {
+            try {
+                conn.close();
+            } catch (SQLException e) {
+                log.warn("Failed to close connection to database: "
                          + e.getMessage(), e);
-            } else {
-                log.info("Failed to create table for record relations: "
-                         + e.getMessage());
             }
         }
     }
 
-    private void doCreateSummaRelationsTable() throws SQLException {
+    private void doCreateSummaRelationsTable(Connection conn)
+                                                           throws SQLException {
         Statement stmt;
 
         String createRelationsQuery =
@@ -1192,7 +1491,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 + CHILD_ID_COLUMN      + " VARCHAR(" + ID_LIMIT + ") )";
         log.debug("Creating table "+RELATIONS+" with query: '"
                   + createRelationsQuery + "'");
-        stmt = getConnection().createStatement();
+        stmt = conn.createStatement();
         stmt.execute(createRelationsQuery);
         stmt.close();
 
@@ -1202,7 +1501,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 + RELATIONS + "("+PARENT_ID_COLUMN+","+CHILD_ID_COLUMN+")";
         log.debug("Creating index 'pc' on table "+RELATIONS+" with query: '"
                   + createRelationsPCIndexQuery + "'");
-        stmt = getConnection().createStatement();
+        stmt = conn.createStatement();
         stmt.execute(createRelationsPCIndexQuery);
         stmt.close();
 
@@ -1211,12 +1510,13 @@ public abstract class DatabaseStorage extends StorageBase {
                 + RELATIONS + "("+CHILD_ID_COLUMN+ ")";
         log.debug("Creating index 'c' on table "+RELATIONS+" with query: '"
                   + createRelationsCIndexQuery + "'");
-        stmt = getConnection().createStatement();
+        stmt = conn.createStatement();
         stmt.execute(createRelationsCIndexQuery);
         stmt.close();
     }
 
-    private void doCreateSummaRecordsTable() throws SQLException {
+    private void doCreateSummaRecordsTable(Connection conn)
+                                                           throws SQLException {
         String createRecordsQuery =
                 "CREATE TABLE " + RECORDS + " ("
                 + ID_COLUMN        + " VARCHAR(" + ID_LIMIT + ") PRIMARY KEY, "
@@ -1231,7 +1531,7 @@ public abstract class DatabaseStorage extends StorageBase {
         log.debug("Creating table "+RECORDS+" with query: '"
                   + createRecordsQuery + "'");
 
-        Statement stmt = getConnection().createStatement();
+        Statement stmt = conn.createStatement();
         stmt.execute(createRecordsQuery);
         stmt.close();
 
@@ -1240,7 +1540,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 "CREATE UNIQUE INDEX i ON " + RECORDS + "("+ID_COLUMN+")";
         log.debug("Creating index 'i' on table "+RECORDS+" with query: '"
                   + createRecordsIdIndexQuery + "'");
-        stmt = getConnection().createStatement();
+        stmt = conn.createStatement();
         stmt.execute(createRecordsIdIndexQuery);
         stmt.close();
 
@@ -1248,7 +1548,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 "CREATE INDEX m ON " + RECORDS + "("+MTIME_COLUMN+")";
         log.debug("Creating index 'm' on table "+RECORDS+" with query: '"
                   + createRecordsMTimeIndexQuery + "'");
-        stmt = getConnection().createStatement();
+        stmt = conn.createStatement();
         stmt.execute(createRecordsMTimeIndexQuery);
         stmt.close();
     }
@@ -1411,38 +1711,31 @@ public abstract class DatabaseStorage extends StorageBase {
         log.debug("Getting results for '" + statement + "'");
         ResultSet resultSet;
          try {
-//             longConn.setAutoCommit(false);
              resultSet = statement.executeQuery();
-             /*
-               FIXME: assert that resultSet.getType() != ResultSet.TYPE_FORWARD_ONLY,
-               or else resultSet.previous() will fail.
-               If this fails we might need some class derived from ResultSet that
-               can do manual caching for us
-               */
              log.debug("Got resultSet from '" + statement.toString() + "'");
          } catch (SQLException e) {
              log.error("SQLException in prepareIterator", e);
              throw new IOException("SQLException", e);
          }
-         return createRecordIterator(resultSet, options);
+         return createRecordIterator(statement, resultSet, options);
     }
     
     
     /**
-     * Creates new RecordIterator from the given resultset and getConnection(),
-     * i.e. creates new key and saves the given resultset and getConnection() and
-     * "forwards" the resultset by one row to keep a step ahead.
+     * Create and register a ResultIterator for a
+     * <code>(statement,resultset, queryOptions)</code> tuple.
      * @param resultSet the results to wrap.
      * @return an iterator over the resultset
      * @throws IOException on SQLException
      */
-    private long createRecordIterator(ResultSet resultSet,
+    private long createRecordIterator(PreparedStatement stmt,
+                                      ResultSet resultSet,
                                       QueryOptions options)
                                                        throws IOException {
         log.trace("createRecordIterator entered with result set " + resultSet);
         ResultIterator iterator;
         try {
-            iterator = new ResultIterator(resultSet, options);
+            iterator = new ResultIterator(stmt, resultSet, options);
             log.trace("createRecordIterator: Got iterator " + iterator.getKey()
                       + " adding to iterator-list");
             iterators.put(iterator.getKey(), iterator);
@@ -1475,10 +1768,22 @@ public abstract class DatabaseStorage extends StorageBase {
      * @throws IOException if the info could not be retireved.
      */
     public String getDatabaseInfo() throws IOException {
+        Connection conn = null;
+
         try {
-            return getConnection().getMetaData().getDatabaseProductName();
+            conn = getConnection();
+            return conn.getMetaData().getDatabaseProductName();
         } catch (SQLException e) {
             throw new IOException("Could not get catalog info", e);
+        } finally {
+            try {
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                log.warn("Failed to close connection database: "
+                         + e.getMessage(), e);
+            }
         }
     }
 
@@ -1488,18 +1793,6 @@ public abstract class DatabaseStorage extends StorageBase {
 
         iteratorReaper.stop();
 
-        try {
-            getConnection().close();
-            if (!getConnection().isClosed()) {
-                throw new IOException("close was called on the connection, "
-                                          + "but the connection state is not "
-                                          + "closed");
-            }
-        } catch (SQLException e) {
-            throw new IOException("SQLException when closing connection",
-                                      e);
-        }
-
         log.info("Closed");
     }
 
@@ -1508,14 +1801,17 @@ public abstract class DatabaseStorage extends StorageBase {
 
         private long key;        
         private long lastAccess;
+        private PreparedStatement stmt;
         private ResultSet resultSet;
         private boolean resultSetHasNext;
         private Record nextRecord;
         private RecursionQueryOptions options;
 
-        public ResultIterator(ResultSet resultSet,
+        public ResultIterator(PreparedStatement stmt,
+                              ResultSet resultSet,
                               QueryOptions options)
                                               throws SQLException, IOException {
+            this.stmt = stmt;
             this.resultSet = resultSet;
             this.options = options == null ?
                                       null : new RecursionQueryOptions(options);
@@ -1616,10 +1912,15 @@ public abstract class DatabaseStorage extends StorageBase {
         }
 
         public void close() {
-            log.warn("Close in ResultIterator not implemented yet");
-//            rs.getStatement().close();//note: rs is closed when stmt is closed
-//            resultSet.close();
-            // TODO: Implement this
+            try {
+                // This also closes the result set
+                log.debug("Closing iterator " + this);
+                resultSet.close();
+                stmt.close();
+            } catch (Exception e) {
+                log.warn("Failed to close iterator statement " + stmt + ": "
+                         + e.getMessage(), e);
+            }
         }
 
         /**
@@ -1651,13 +1952,18 @@ public abstract class DatabaseStorage extends StorageBase {
         }
         
         public void runInThread () {
-            t = new Thread(this);
+            t = new Thread(this, "IteratorReaper");
             t.setDaemon(true); // Allow JVM to exit we the reaper is running
             t.start();
         }
 
         public void stop () {
-            log.debug("Got stop request");
+            log.debug("Got stop request. Closing all iterators");
+
+            for (ResultIterator iter : iterators.values()) {
+                iter.close();
+            }
+
             mayRun = false;
             t.interrupt();
         }
@@ -1689,6 +1995,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
             for (Long key : deadIters) {
                 ResultIterator iter = iterators.remove(key);
+                iter.close();
 
                 if (iter != null) {
                     log.info("Iterator " + iter.getKey() + " timed out");

@@ -30,17 +30,19 @@ import java.io.File;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.PreparedStatement;
 
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
+import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager;
 import dk.statsbiblioteket.summa.storage.StorageUtils;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.derby.jdbc.EmbeddedConnectionPoolDataSource;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -49,7 +51,6 @@ public class DerbyStorage extends DatabaseStorage implements Configurable {
     private static Log log = LogFactory.getLog(DerbyStorage.class);
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    public static final String driver = "org.apache.derby.jdbc.EmbeddedDriver";
 
     private static final int BLOB_MAX_SIZE = 50*1024*1024; // MAX_VALUE instead?
     public static final int META_LIMIT =     50*1024*1024; // MAX_VALUE instead?
@@ -57,10 +58,12 @@ public class DerbyStorage extends DatabaseStorage implements Configurable {
     private String username;
     private String password;
     private File location;
+    private int maxConnections;
     private boolean createNew = true;
     private boolean forceNew = false;
 
-    private Connection connection;
+    private EmbeddedConnectionPoolDataSource dataSource;
+    private MiniConnectionPoolManager pool;
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public DerbyStorage(Configuration conf) throws IOException {
@@ -68,7 +71,10 @@ public class DerbyStorage extends DatabaseStorage implements Configurable {
         log.trace("Constructing ControlDerby");
         username = conf.getString(CONF_USERNAME, "");
         password = conf.getString(CONF_PASSWORD, "");
+        maxConnections = conf.getInt(CONF_MAX_CONNECTIONS,
+                                     DEFAULT_MAX_CONNECTIONS);
 
+        // Database file location
         if (conf.valueExists(CONF_LOCATION)) {
             log.debug("Property '" + CONF_LOCATION + "' exists, using value '"
                       + conf.getString(CONF_LOCATION) + "' as location");
@@ -78,16 +84,20 @@ public class DerbyStorage extends DatabaseStorage implements Configurable {
                                  "storage" + File.separator + "derby");
             log.debug("Using default location '" + location + "'");
         }
+
         if (!location.equals(location.getAbsoluteFile())) {
             log.debug(String.format("Transforming relative location '%s' to "
                                     + "absolute location'%s'",
                                     location, location.getAbsoluteFile()));
             location = location.getAbsoluteFile();
         }
+
+        // Create new DB?
         if (conf.valueExists(CONF_CREATENEW)) {
                 createNew = conf.getBoolean(CONF_CREATENEW);
         }
 
+        // Force new DB?
         if (conf.valueExists(CONF_FORCENEW)) {
                 forceNew = conf.getBoolean(CONF_FORCENEW);
         }
@@ -101,14 +111,12 @@ public class DerbyStorage extends DatabaseStorage implements Configurable {
         log.trace("Construction completed");
     }
 
-    // TODO: Consider is authentication should be used or not
+    @Override
     protected void connectToDatabase(Configuration configuration) throws
                                                                IOException {
-        //noinspection DuplicateStringLiteralInspection
-        log.info("Establishing connection to JavaDB with driver '"
-                 + driver + "', username '" + username + "', password "
-                 + (password == null || "".equals(password) ?
-                    "[undefined]" : "[defined]")
+        log.info("Establishing connection to Derby with  username '" + username
+                 + "', password " + (password == null || "".equals(password) ?
+                                            "[undefined]" : "[defined]")
                  + ", location '" + location + "', createNew " + createNew
                  + " and forceNew " + forceNew);
 
@@ -132,65 +140,65 @@ public class DerbyStorage extends DatabaseStorage implements Configurable {
                 log.debug("A new database will be created at '" + location
                           + "'");
             } else {
-                throw new RemoteException("No database exists at '" + location
+                throw new IOException("No database exists at '" + location
                                           + " and createNew is false. The "
                                           + "metadata storage cannot run "
                                           + "without a backend. Exiting");
             }
         }
 
-        //noinspection NonConstantStringShouldBeStringBuffer,DuplicateStringLiteralInspection
-        String connectionURL = "jdbc:derby:" + location;
+        dataSource = new EmbeddedConnectionPoolDataSource();
+
+        dataSource.setDatabaseName(location.getAbsolutePath());
+
         if (createNew) {
-            //noinspection DuplicateStringLiteralInspection
-            connectionURL += ";create=true";
-        }
-        String sans = connectionURL;
-        if (username != null && !"".equals(username)) {
-//            System.setProperty("derby.connection.requireAuthentication",
-//                               "true");
-            log.warn("Authentication is not currently supported");
-            connectionURL += ";user=" + username;
-            sans = connectionURL;
-            connectionURL += password == null ? "" : ";password=" + password;
-        }
-        log.debug("Connection-URL (sans password): '" + sans + "'");
-
-        try{
-            Class.forName(driver);
-        } catch(java.lang.ClassNotFoundException e) {
-            throw new RemoteException("Could not connect to the Derby JDBC "
-                                      + "embedded driver '" + driver + "'", e);
+            dataSource.setCreateDatabase("create");
         }
 
-        try {
-            connection = DriverManager.getConnection(connectionURL);
-        } catch (SQLException e) {
-            throw new RemoteException("Could not establish connection to '"
-                                      + sans + "'"
-                                      + (password == null
-                                         || "".equals(password)
-                                         ? ""
-                                         : " [password defined]"), e);
+        if (username != null) {
+            dataSource.setUser(username);
         }
+
+        if (password != null) {
+            dataSource.setPassword(password);
+        }
+
+        pool = new MiniConnectionPoolManager(dataSource, maxConnections);
+
 
         log.info("Connected to database at '" + location + "'");
+        
         if (createNew) {
             log.info("Creating new table for '" + location + "'");
             createSchema();
         }
     }
 
+    @Override
     protected Connection getConnection() {
-        return connection;
+        return pool.getConnection();
     }
 
+    @Override
+    protected StatementHandle prepareStatement(String sql) {
+        return pool.prepareStatement(sql);
+    }
+
+    @Override
+    protected PreparedStatement getStatement(StatementHandle handle)
+                                                            throws SQLException{
+        return pool.getStatement(
+                       (MiniConnectionPoolManager.PooledStatementHandle)handle);
+    }
+
+    @Override
     protected String getMetaColumnDataDeclaration() {
         return " BLOB(" + META_LIMIT + ")";
     }
 
+    @Override
     protected String getDataColumnDataDeclaration() {
-        return " BLOB(" + BLOB_MAX_SIZE + "), ";
+        return " BLOB(" + BLOB_MAX_SIZE + ")";
     }
 }
 
