@@ -29,7 +29,7 @@ public class DummyResponse implements Response {
     }
 
     public String getName () {
-        return "DummyResponse with ids " + Strings.join(ids, ", ");
+        return "DummyResponse";
     }
 
     public void merge (Response other) throws ClassCastException {
@@ -38,6 +38,7 @@ public class DummyResponse implements Response {
         opens += ", " + resp.opens;
         closes += ", " + resp.closes;
         searches += ", " + resp.searches;
+        ids.addAll(resp.ids);
     }
 
     public String toXML () {

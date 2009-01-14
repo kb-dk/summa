@@ -23,6 +23,7 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.SearchClient;
@@ -33,11 +34,18 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class SummaSearcherAggregatorTest extends TestCase {
+    private static Log log =
+            LogFactory.getLog(SummaSearcherAggregatorTest.class);
+
     public SummaSearcherAggregatorTest(String name) {
         super(name);
     }
@@ -75,9 +83,7 @@ public class SummaSearcherAggregatorTest extends TestCase {
                        + "' should work. Got result " + result,
                        result.contains("<ids>" + shard + "</ids>"));
         }
-        for (SummaSearcher searcher : searchers) {
-            searcher.close();
-        }
+        closeSearchers(searchers);
     }
 
     private List<SummaSearcher> getSearchers() throws IOException {
@@ -92,6 +98,28 @@ public class SummaSearcherAggregatorTest extends TestCase {
     public void testAggregator() throws IOException {
         List<SummaSearcher> searchers = getSearchers();
         SummaSearcher aggregator = createAggregator(SHARDS);
+        Request request = new Request();
+        request.put("zoo", "baz");
+        String result = aggregator.search(request).toXML();
+        log.info("The result from the combined search was:\n" + result);
+        String[] actual = result.substring(result.lastIndexOf("<ids>") + 5,
+                                               result.lastIndexOf("</ids>")).
+                split(", ");
+        Arrays.sort(actual);
+        String[] expected = Arrays.copyOf(SHARDS, SHARDS.length);
+        Arrays.sort(expected);
+        assertEquals("The result should contain elements from all shards",
+                     Strings.join(expected, ", "),
+                     Strings.join(actual, ", "));
+        closeSearchers(searchers);
+        aggregator.close();
+    }
+
+    private void closeSearchers(List<SummaSearcher> searchers) throws
+                                                               IOException {
+        for (SummaSearcher searcher : searchers) {
+            searcher.close();
+        }
     }
 
     private SummaSearcher createAggregator(String[] shards) throws IOException {
@@ -99,10 +127,11 @@ public class SummaSearcherAggregatorTest extends TestCase {
         List<Configuration> connections = conf.createSubConfigurations(
                 SummaSearcherAggregator.CONF_SEARCHERS, shards.length);
         for (int shardNumber = 0 ; shardNumber < shards.length ; shardNumber++){
-            //connections.get(shardNumber).set(SearchClient.CONF_RPC_TARGET());
+            connections.get(shardNumber).set(
+                    SearchClient.CONF_RPC_TARGET,
+                    "//localhost:28000/" + shards[shardNumber]);
         }
-        // TODO: Implement this
-        return null;
+        return new SummaSearcherAggregator(conf);
     }
 
     private SummaSearcher createSearcher(String id) throws IOException {
