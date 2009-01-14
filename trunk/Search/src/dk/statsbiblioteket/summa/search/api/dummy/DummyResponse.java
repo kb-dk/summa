@@ -1,7 +1,6 @@
 package dk.statsbiblioteket.summa.search.api.dummy;
 
 import dk.statsbiblioteket.summa.search.api.Response;
-import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.Strings;
 
 import java.util.ArrayList;

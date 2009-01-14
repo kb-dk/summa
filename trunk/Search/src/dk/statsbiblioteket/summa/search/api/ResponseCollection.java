@@ -197,13 +197,6 @@ public class ResponseCollection implements Collection<Response>, Serializable {
     public synchronized void clear() {
         responses.clear();
     }
-
-    private String encode(String in) {
-        in = in.replaceAll("&", "&amp;");
-        in = in.replaceAll("\"", "&quot;");
-        in = in.replaceAll("<", "&lt;");
-        return in.replaceAll(">", "&gt;");
-    }
 }
 
 
