@@ -556,26 +556,15 @@
         <root url="jar://$PROJECT_DIR$/lib/src/sbutil-0.3.4-src.zip!/sbutil-0.3.4/src" />
       </SOURCES>
     </library>
-    <library name="lucene-core-2.3.0">
+    <library name="lucene-core-2.4.0">
       <CLASSES>
-        <root url="jar://$PROJECT_DIR$/lib/lucene-core-2.3.0.jar!/" />
+        <root url="jar://$PROJECT_DIR$/lib/lucene-core-2.4.0.jar!/" />
       </CLASSES>
       <JAVADOC>
-        <root url="jar://$PROJECT_DIR$/lib/apidocs/lucene-2.3.0-apidocs.zip!/" />
+        <root url="jar://$PROJECT_DIR$/lib/apidocs/lucene-2.4.0-apidocs.zip!/" />
       </JAVADOC>
       <SOURCES>
-        <root url="jar://$PROJECT_DIR$/lib/src/lucene-core-2.3.0-src.zip!/lucene-2.3.0/src/java" />
-      </SOURCES>
-    </library>
-    <library name="lucene-queries-2.3.0">
-      <CLASSES>
-        <root url="jar://$PROJECT_DIR$/lib/lucene-queries-2.3.0.jar!/" />
-      </CLASSES>
-      <JAVADOC>
-        <root url="jar://$PROJECT_DIR$/lib/apidocs/lucene-queries-2.3.0-javadoc.zip!/" />
-      </JAVADOC>
-      <SOURCES>
-        <root url="jar://$PROJECT_DIR$/lib/src/lucene-queries-2.3.0-src.zip!/src/java" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/src/java" />
       </SOURCES>
     </library>
     <library name="postgres">
