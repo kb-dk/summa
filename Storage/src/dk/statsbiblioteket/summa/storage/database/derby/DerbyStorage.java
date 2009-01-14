@@ -65,7 +65,6 @@ public class DerbyStorage extends DatabaseStorage implements Configurable {
     private EmbeddedConnectionPoolDataSource dataSource;
     private MiniConnectionPoolManager pool;
 
-    @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public DerbyStorage(Configuration conf) throws IOException {
         super(conf);
         log.trace("Constructing ControlDerby");
