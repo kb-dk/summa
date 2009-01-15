@@ -1301,7 +1301,7 @@ public abstract class DatabaseStorage extends StorageBase {
             return;
 
         } catch (SQLException e) {
-            throw new IOException("SQLException creating new record " + record
+            throw new IOException("Error creating new record " + record
                                   + ": " + e.getMessage(), e);
         }
 
