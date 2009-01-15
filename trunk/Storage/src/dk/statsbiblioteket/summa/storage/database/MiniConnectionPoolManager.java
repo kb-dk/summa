@@ -20,6 +20,7 @@ package dk.statsbiblioteket.summa.storage.database;
  */
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.h2.jdbc.JdbcPreparedStatement;
 
 import java.util.concurrent.Semaphore;
 import java.util.Stack;
@@ -109,7 +110,7 @@ public class MiniConnectionPoolManager {
             return handle;
         }
 
-        String getSql() {
+        public String getSql() {
             return sql;
         }
 

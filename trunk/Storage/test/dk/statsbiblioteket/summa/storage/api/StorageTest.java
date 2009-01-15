@@ -3,6 +3,7 @@ package dk.statsbiblioteket.summa.storage.api;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
+import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.summa.storage.database.derby.DerbyStorage;
 import dk.statsbiblioteket.util.Files;
 
@@ -38,7 +39,7 @@ public class StorageTest extends TestCase {
 
         Configuration conf = Configuration.newMemoryBased(
                 Storage.CONF_CLASS,
-                DerbyStorage.class,
+                H2Storage.class,
                 DatabaseStorage.CONF_LOCATION,
                 testDBLocation + (storageCounter++),
                 DatabaseStorage.CONF_FORCENEW,
@@ -49,8 +50,11 @@ public class StorageTest extends TestCase {
     }
 
     public void setUp () throws Exception {
-        if (new File(testDBLocation + storageCounter).exists()) {
+        if (new File(testDBLocation + storageCounter).exists() ||
+            new File(testDBLocation + storageCounter + ".data.db").exists()) {
             Files.delete (testDBLocation + storageCounter);
+            Files.delete(testDBLocation + storageCounter + ".data.db");
+            Files.delete(testDBLocation + storageCounter + ".data.db");
         }
 
         storage = StorageFactory.createStorage(createConf());
