@@ -2072,7 +2072,7 @@ public abstract class DatabaseStorage extends StorageBase {
             List<Long> deadIters = new ArrayList<Long>();
 
             for (ResultIterator iter : iterators.values()) {
-                if (iter.getLastAccess() + graceTimeMinutes*60*60 <= now) {
+                if (iter.getLastAccess() + graceTimeMinutes*60*1000 <= now) {
                     deadIters.add(iter.getKey());
                 }
             }
