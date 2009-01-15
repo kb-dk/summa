@@ -10,6 +10,7 @@ import java.rmi.RemoteException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 
 import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
@@ -175,6 +176,22 @@ public class H2Storage extends DatabaseStorage implements Configurable {
             log.info("Creating new table for '" + location + "'");
             createSchema();
         }
+    }
+
+    /**
+     * We override this method because H2 only uses its custom
+     * JdbcSQLExceptions, and not the proper exceptions according to the
+     * JDBC api
+     * @param e sql exception to inspect
+     * @return whether or not {@code e} represents an integrity constraint
+     *         violation
+     */
+    @Override
+    protected boolean isIntegrityConstraintViolation (SQLException e) {
+        // The H2 error codes for integrity constraint violations are
+        // numbers between 23000 and 23999
+        return (e instanceof SQLIntegrityConstraintViolationException ||
+                (e.getErrorCode() >= 23000 && e.getErrorCode() < 24000));
     }
 
     @Override

@@ -432,6 +432,23 @@ public abstract class DatabaseStorage extends StorageBase {
                                                             throws SQLException;
 
     /**
+     * Not all database backends return real
+     * {@link SQLIntegrityConstraintViolationException}s when they should, but
+     * use custom vendor-specific error codes that can be retrieved by calling
+     * {@link java.sql.SQLException#getErrorCode()}.
+     * <p/>
+     * The default implementation of this method simply checks if {@code e}
+     * is {@code instanceof SQLIntegrityConstraintViolationExceptio}.
+     *
+     * @param e the sql exception to inspect the real cause for
+     * @return whether or not {@code e} was due to an integrity constraint
+     *         violation
+     */
+    protected boolean isIntegrityConstraintViolation (SQLException e) {
+        return e instanceof SQLIntegrityConstraintViolationException;
+    }
+
+    /**
      * Prepare relevant SQL statements for later use.
      * @throws SQLException if the syntax of a statement was wrong or the
      *                      connection to the database was faulty.
@@ -1208,10 +1225,15 @@ public abstract class DatabaseStorage extends StorageBase {
 
                 try {
                     stmt.executeUpdate();
-                } catch (SQLIntegrityConstraintViolationException e) {
-                    if (log.isDebugEnabled()) {
-                        log.debug ("Relation "+ rec.getId() + " -> "
-                                   + childId + ", already known");
+                } catch (SQLException e) {
+                    if (isIntegrityConstraintViolation(e)) {
+                        if (log.isDebugEnabled()) {
+                            log.debug ("Relation "+ rec.getId() + " -> "
+                                       + childId + ", already known");
+                        }
+                    } else {
+                        throw new SQLException("Error creating child relations"
+                                               + " for " + rec.getId (), e);
                     }
                 }
             }
@@ -1228,10 +1250,15 @@ public abstract class DatabaseStorage extends StorageBase {
 
                 try {
                     stmt.executeUpdate();
-                } catch (SQLIntegrityConstraintViolationException e) {
-                    if (log.isDebugEnabled()) {
-                        log.debug ("Relation "+ parentId + " -> "
-                                   + rec.getId() + ", already known");
+                } catch (SQLException e) {
+                    if (isIntegrityConstraintViolation(e)) {
+                        if (log.isDebugEnabled()) {
+                            log.debug ("Relation "+ parentId + " -> "
+                                       + rec.getId() + ", already known");
+                        }
+                    } else {
+                        throw new SQLException("Error creating parent relations"
+                                               + " for " + rec.getId(), e);
                     }
                 }
             }
@@ -1285,24 +1312,26 @@ public abstract class DatabaseStorage extends StorageBase {
             if (log.isDebugEnabled()) {
                 log.debug("Created new record: " + record);
             }
-        } catch (SQLIntegrityConstraintViolationException e) {
-            // The constraint violation is because we already have the record,
-            // so update the record instead...
-
-            if (log.isTraceEnabled()) {
-                log.trace ("Record '" + record.getId() + "' already stored. "
-                           + "Updating instead");
-            }
-            updateRecord(record);
-            if (log.isDebugEnabled()) {
-                log.debug("Updated record: " + record);
-            }
-
-            return;
-
         } catch (SQLException e) {
-            throw new IOException("Error creating new record " + record
-                                  + ": " + e.getMessage(), e);
+            if (isIntegrityConstraintViolation(e)) {
+                // The constraint violation is because we already have the
+                // record, so update the record instead...
+
+                if (log.isTraceEnabled()) {
+                    log.trace ("Record '" + record.getId() + "' already stored. "
+                               + "Updating instead");
+                }
+                updateRecord(record);
+                if (log.isDebugEnabled()) {
+                    log.debug("Updated record: " + record);
+                }
+
+                return;
+            } else {
+                throw new IOException("Error creating new record " + record
+                                      + ": " + e.getMessage(), e);
+            }
+
         }
 
         try {
