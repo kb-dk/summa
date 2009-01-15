@@ -101,6 +101,10 @@ public class H2Storage extends DatabaseStorage implements Configurable {
             location = location.getAbsoluteFile();
         }
 
+        if (!location.getParentFile().exists()) {
+            location.getParentFile().mkdirs ();
+        }
+
         // Create new DB?
         if (conf.valueExists(CONF_CREATENEW)) {
                 createNew = conf.getBoolean(CONF_CREATENEW);

@@ -56,8 +56,6 @@ public class StorageTest extends TestCase {
             Files.delete (dbRoot);
         }
 
-        dbRoot.mkdirs();
-
         storage = StorageFactory.createStorage(createConf());
 
         /* We get spurious errors where the connection to the db isn't ready
