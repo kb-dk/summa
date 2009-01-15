@@ -2056,7 +2056,7 @@ public abstract class DatabaseStorage extends StorageBase {
             log.info("Starting");
             while (mayRun) {
                 try {
-                    Thread.sleep(graceTimeMinutes*60*60);
+                    Thread.sleep(graceTimeMinutes*60*1000);
                     fullSweep();
                 } catch (InterruptedException e) {
                     log.info("Interrupted");
