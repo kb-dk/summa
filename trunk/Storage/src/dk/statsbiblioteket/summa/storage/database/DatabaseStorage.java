@@ -944,8 +944,14 @@ public abstract class DatabaseStorage extends StorageBase {
 
     }
 
-    /* Recursively touch parents upwards */
-    private void touchParents(String id, QueryOptions options)
+    /**
+     *  Touch (that is, set the 'mtime' to now) the parents
+     * of <code>id</code> recursively upwards
+     * @param id the id of the records which parents to touch
+     * @param options any query options that may affect how the touching is
+     *                handled
+     */
+    protected void touchParents(String id, QueryOptions options)
                                                             throws IOException {
         boolean doTrace = log.isTraceEnabled();
 
@@ -1443,6 +1449,10 @@ public abstract class DatabaseStorage extends StorageBase {
 
     private void doTouchRecord(String id, long lastModified,
                                PreparedStatement stmt) throws IOException {
+        if (log.isTraceEnabled()) {
+            log.trace("Touching '" + id + "'");
+        }
+
         try {
             stmt.setTimestamp(1, new Timestamp(lastModified));
             stmt.setString(2, id);
