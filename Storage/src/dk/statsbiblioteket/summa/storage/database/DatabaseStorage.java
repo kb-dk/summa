@@ -209,7 +209,7 @@ public abstract class DatabaseStorage extends StorageBase {
     public static final int ID_LIMIT =       255;
     public static final int BASE_LIMIT =     31;
     public static final int DATA_LIMIT =     50*1024*1024;
-
+    private static final int FETCH_SIZE = 100;
 
     private static final long EMPTY_ITERATOR_KEY = -1;
 
@@ -225,8 +225,6 @@ public abstract class DatabaseStorage extends StorageBase {
     private StatementHandle stmtGetChildren;
     private StatementHandle stmtGetParents;
     private StatementHandle stmtCreateRelation;
-
-    private static final int FETCH_SIZE = 1000;
 
     private Map<Long, ResultIterator> iterators =
                                          new HashMap<Long, ResultIterator>(10);
@@ -688,6 +686,16 @@ public abstract class DatabaseStorage extends StorageBase {
                                                             throws IOException {
         log.debug("getRecordsModifiedAfter('" + time + "', " + base
                   + ") entered");
+
+        // Set the statement up for fetching of large result sets, see fx.
+        // http://jdbc.postgresql.org/documentation/83/query.html#query-with-cursor
+        try {
+            stmt.getConnection().setAutoCommit(false);
+            stmt.setFetchSize(FETCH_SIZE);
+        } catch (SQLException e) {
+            throw new IOException("Error preparing connection for cursoring: "
+                                  + e.getMessage(), e);
+        }
 
         if (time > getModificationTime(base)) {
             log.debug ("Storage not flushed after " + time + ". Returning"
