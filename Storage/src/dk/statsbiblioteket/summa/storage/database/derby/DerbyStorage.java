@@ -32,12 +32,16 @@ import java.rmi.RemoteException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
+import java.sql.Timestamp;
+import java.util.List;
 
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager;
 import dk.statsbiblioteket.summa.storage.StorageUtils;
+import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -198,6 +202,47 @@ public class DerbyStorage extends DatabaseStorage implements Configurable {
     @Override
     protected String getDataColumnDataDeclaration() {
         return " BLOB(" + BLOB_MAX_SIZE + ")";
+    }
+
+    /**
+     * The method {@link DatabaseStorage#touchParents} does the touching
+     * in one single SQL call. This call involves a nested <code>SELECT</code>
+     * which triggers a known performance bug in Derby,
+     * <a href="https://issues.apache.org/jira/browse/DERBY-4007">DERBY-4007</a>.
+     * <p/>
+     * Because of this we override the generic method with one that does manual
+     * looping over all parents. It should still perform fairly good.
+     *
+     * @param id the record id of the record which parents to update
+     * @param options any query options that may affect how the touching should
+     *                be carried out
+     * @throws IOException in case of communication errors with the database
+     */
+    @Override
+    protected void touchParents(String id, QueryOptions options)
+                                                            throws IOException {
+        boolean doTrace = log.isTraceEnabled();
+
+        if (doTrace) {
+            log.trace ("Touching parents of '" + id + "'");
+        }
+
+        List<Record> parents = getParents(id, options);
+
+        if (parents == null || parents.isEmpty()) {
+            if (doTrace) {
+                log.trace("No parents to update for record " + id);
+            }
+            return;
+        }
+
+        long now = System.currentTimeMillis();
+
+        // Touch each parent and recurse upwards
+        for (Record parent : parents) {
+            touchRecord(parent.getId(), now);
+            touchParents(parent.getId(), options);
+        }
     }
 }
 
