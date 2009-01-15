@@ -21,28 +21,22 @@ import org.apache.commons.logging.LogFactory;
  * @see SummaSearcherImpl
  */
 public class SummaSearcherDummy implements SummaSearcher {
-    private static final Log log = LogFactory.getLog (SummaSearcherDummy.class);
 
-    /**
-     * See {@link SearchNodeDummy#CONF_ID}.
-     */
-    public static final String CONF_ID = SearchNodeDummy.CONF_ID;
+    private static final Log log = LogFactory.getLog (SummaSearcherDummy.class);
 
     private int closeCount;
     private int searchCount;
-    private String id;
 
     public SummaSearcherDummy(Configuration conf) {
         closeCount = 0;
         searchCount = 0;
-        id = conf.getString(CONF_ID, this.toString());
     }
 
     public ResponseCollection search(Request request) throws IOException {
         log.info ("Got request (" + searchCount + "): " + request);
 
         ResponseCollection resp = new ResponseCollection ();
-        resp.add (new DummyResponse(id, 0, 0, closeCount, searchCount));
+        resp.add (new DummyResponse(0, 0, closeCount, searchCount));
 
         searchCount++;
         return resp;

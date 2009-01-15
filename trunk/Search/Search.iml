@@ -17,7 +17,7 @@
     <orderEntry type="library" name="log4j-1.2.14" level="project" />
     <orderEntry type="library" name="commons-cli-1.1" level="project" />
     <orderEntry type="library" name="sbutil" level="project" />
-    <orderEntry type="library" name="lucene-core-2.4.0" level="project" />
+    <orderEntry type="library" name="lucene-core-2.3.0" level="project" />
     <orderEntry type="module" module-name="Storage" />
     <orderEntry type="module-library">
       <library>

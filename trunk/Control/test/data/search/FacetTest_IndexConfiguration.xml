@@ -122,7 +122,7 @@
                                 </entry>
                                 <entry>
                                     <key>summa.index.createnewindex</key>
-                                    <value class="boolean">false</value>
+                                    <value class="boolean">true</value>
                                 </entry>
                                 <entry>
                                     <key>summa.index.indexrootlocation</key>
