@@ -220,6 +220,7 @@ public abstract class DatabaseStorage extends StorageBase {
     private StatementHandle stmtDeleteRecord;
     private StatementHandle stmtCreateRecord;
     private StatementHandle stmtUpdateRecord;
+    private StatementHandle stmtTouchRecord;
     private StatementHandle stmtTouchParents;
     private StatementHandle stmtGetChildren;
     private StatementHandle stmtGetParents;
@@ -548,12 +549,12 @@ public abstract class DatabaseStorage extends StorageBase {
         log.debug("updateRecord handle: " + stmtUpdateRecord);
 
         /* touchRecord */
-        /*String touchRecordQuery = "UPDATE " + RECORDS + " SET "
+        String touchRecordQuery = "UPDATE " + RECORDS + " SET "
                                    + MTIME_COLUMN + "=? "
                                    + "WHERE " + ID_COLUMN +"=?";
         log.debug("Preparing query touchRecord with '" + touchRecordQuery
                   + "'");
-        stmtTouchRecord = prepareStatement(touchRecordQuery);*/
+        stmtTouchRecord = prepareStatement(touchRecordQuery);
 
         /* touchParents */
         String touchParentsQuery = "UPDATE " + RECORDS
@@ -1417,18 +1418,40 @@ public abstract class DatabaseStorage extends StorageBase {
         // FIXME: Should we updateRelations()?
     }
 
-    /*public void touchRecord(String id, long lastModified) throws
-                                                           RemoteException {
-        // TODO: Check for existence before touching
+    protected void touchRecord (String id, long lastModified)
+                                                            throws IOException {
+        PreparedStatement stmt;
+
         try {
-            stmtTouchRecord.setTimestamp(1, new Timestamp(lastModified));
-            stmtTouchRecord.setString(2, id);
-            stmtTouchRecord.execute();
+            stmt = getStatement(stmtTouchRecord);
         } catch (SQLException e) {
-            throw new RemoteException("SQLException touching record '"
-                                      + id + "'", e);
+            throw new IOException("Failed to look up prepared statement "
+                                  + stmtTouchRecord + ": " + e.getMessage(),
+                                  e);
         }
-    }*/
+
+        try {
+            doTouchRecord(id, lastModified, stmt);
+        } finally {
+            try {
+                stmt.close();
+            } catch (SQLException e) {
+                log.warn("Failed to close statement: " + e.getMessage(), e);
+            }
+        }
+    }
+
+    private void doTouchRecord(String id, long lastModified,
+                               PreparedStatement stmt) throws IOException {
+        try {
+            stmt.setTimestamp(1, new Timestamp(lastModified));
+            stmt.setString(2, id);
+            stmt.execute();
+        } catch (SQLException e) {
+            throw new IOException("SQLException touching record '"
+                                  + id + "'", e);
+        }
+    }
 
     /**
      * Creates the tables {@link #RECORDS} and {@link #RELATIONS} and relevant

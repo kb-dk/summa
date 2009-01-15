@@ -29,18 +29,10 @@ public class SearchNodeDummy extends SearchNodeImpl {
 
     private static final Log log = LogFactory.getLog (SearchNodeDummy.class);
 
-    /**
-     * The id for the dummy. This will be part of the response.
-     * </p><p>
-     * Optional. Default is {@code this.toString();}.
-     */
-    public static final String CONF_ID = "search.dummy.id";
-
     private int warmupCount;
     private int openCount;
     private int closeCount;
     private int searchCount;
-    private String id;
 
     public SearchNodeDummy(Configuration conf) {
         super (conf);
@@ -49,7 +41,6 @@ public class SearchNodeDummy extends SearchNodeImpl {
         openCount = 0;
         closeCount = 0;
         searchCount = 0;
-        id = conf.getString(CONF_ID, this.toString());
     }
 
     protected void managedWarmup (String request) {
@@ -70,8 +61,8 @@ public class SearchNodeDummy extends SearchNodeImpl {
     protected void managedSearch (Request request, ResponseCollection responses) throws RemoteException {
         log.info ("Search:\tRequest:" + request + "\n\tResponses: " + responses);
 
-        responses.add(new DummyResponse(id, warmupCount, openCount,
-                                        closeCount, searchCount));
+        responses.add (new DummyResponse(warmupCount, openCount,
+                                         closeCount, searchCount));
         searchCount++;
     }
 }

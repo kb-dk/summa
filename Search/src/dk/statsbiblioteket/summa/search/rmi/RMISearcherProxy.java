@@ -37,14 +37,12 @@ public class RMISearcherProxy extends UnicastRemoteObject
      */
     public static final String CONF_REGISTRY_PORT =
                                              "summa.searcher.rmi.registry.port";
-    public static final int DEFAULT_REGISTRY_PORT = 28000;
 
     /**
      * Configuration property defining the name under which the searcher should
      * run. Default is 'summa-searcher'.
      */
     public static final String CONF_SERVICE_NAME = "summa.searcher.rmi.name";
-    public static final String DEFAULT_SERVICE_NAME = "summa-searcher";
 
     public static final Class<? extends SummaSearcher> DEFAULT_BACKEND =
                                                         SummaSearcherImpl.class;
@@ -110,8 +108,8 @@ public class RMISearcherProxy extends UnicastRemoteObject
         backend = SummaSearcherFactory.createSearcher (backendConf);
         log.trace ("Created searcher: " + backend.getClass().getName());
 
-        serviceName = conf.getString (CONF_SERVICE_NAME, DEFAULT_SERVICE_NAME);
-        registryPort = conf.getInt(CONF_REGISTRY_PORT, DEFAULT_REGISTRY_PORT);
+        serviceName = conf.getString (CONF_SERVICE_NAME, "summa-searcher");
+        registryPort = conf.getInt(CONF_REGISTRY_PORT, 28000);
         
         RemoteHelper.exportRemoteInterface (this, registryPort, serviceName);
 
