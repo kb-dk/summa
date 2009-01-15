@@ -689,6 +689,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
         // Set the statement up for fetching of large result sets, see fx.
         // http://jdbc.postgresql.org/documentation/83/query.html#query-with-cursor
+        // This prevents an OOM for backends like Postgres
         try {
             stmt.getConnection().setAutoCommit(false);
             stmt.setFetchSize(FETCH_SIZE);
