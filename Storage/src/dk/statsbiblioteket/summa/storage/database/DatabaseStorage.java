@@ -1286,6 +1286,9 @@ public abstract class DatabaseStorage extends StorageBase {
                 log.debug("Created new record: " + record);
             }
         } catch (SQLIntegrityConstraintViolationException e) {
+            // The constraint violation is because we already have the record,
+            // so update the record instead...
+
             if (log.isTraceEnabled()) {
                 log.trace ("Record '" + record.getId() + "' already stored. "
                            + "Updating instead");
@@ -1302,8 +1305,6 @@ public abstract class DatabaseStorage extends StorageBase {
                                   + ": " + e.getMessage(), e);
         }
 
-        /* We must create the relations before calling updateRelations() or else
-         * said method will recurse infinitely */
         try {
             createRelations(record);
         } catch (SQLException e) {
@@ -1311,8 +1312,7 @@ public abstract class DatabaseStorage extends StorageBase {
                                       + record + ": " + e.getMessage(),
                                       e);
         }
-        // FIXME: Is this call really not just an expensive no-op?
-        updateRelations(record);
+        
     }
 
     private void updateRecord(Record record) throws IOException {
