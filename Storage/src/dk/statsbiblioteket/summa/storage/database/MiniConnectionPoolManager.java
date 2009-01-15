@@ -20,19 +20,14 @@ package dk.statsbiblioteket.summa.storage.database;
  */
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.h2.jdbc.JdbcPreparedStatement;
 
 import java.util.concurrent.Semaphore;
 import java.util.Stack;
-import java.util.Map;
-import java.util.HashMap;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
 import java.util.concurrent.TimeUnit;
 import javax.sql.*;
-
-import dk.statsbiblioteket.util.Strings;
 
 /**
  * A simple standalone JDBC connection pool manager.
@@ -279,7 +274,10 @@ public class MiniConnectionPoolManager {
 
     /**
      * Internal helper method to fetch a pooled connection. Should only be used
-     * inside getPooledConnection()
+     * inside getPooledConnection().
+     * <p/>
+     * One <i>must</i> be holding the {@code semaphore} when entering
+     * this method
      * @return a pooled connection, new, or recycled
      */
     private synchronized PooledConnection _getPooledConnection() {
