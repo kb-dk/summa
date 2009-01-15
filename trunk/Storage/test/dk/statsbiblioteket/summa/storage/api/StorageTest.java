@@ -4,7 +4,6 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
-import dk.statsbiblioteket.summa.storage.database.derby.DerbyStorage;
 import dk.statsbiblioteket.util.Files;
 
 import java.util.Arrays;
@@ -25,7 +24,8 @@ public class StorageTest extends TestCase {
 
     Storage storage;
 
-    static String testDBLocation = "test_db";
+    static String testDBRoot = "test_db";
+    static String dbPrefix = "db";
     static String testBase1 = "foobar";
     static String testId1 = "testId1";
     static String testId2 = "testId2";
@@ -41,7 +41,7 @@ public class StorageTest extends TestCase {
                 Storage.CONF_CLASS,
                 H2Storage.class,
                 DatabaseStorage.CONF_LOCATION,
-                testDBLocation + (storageCounter++),
+                testDBRoot + File.separator + dbPrefix + (storageCounter++),
                 DatabaseStorage.CONF_FORCENEW,
                 true
         );
@@ -50,12 +50,13 @@ public class StorageTest extends TestCase {
     }
 
     public void setUp () throws Exception {
-        if (new File(testDBLocation + storageCounter).exists() ||
-            new File(testDBLocation + storageCounter + ".data.db").exists()) {
-            Files.delete (testDBLocation + storageCounter);
-            Files.delete(testDBLocation + storageCounter + ".data.db");
-            Files.delete(testDBLocation + storageCounter + ".data.db");
+        File dbRoot = new File(testDBRoot);
+
+        if (dbRoot.exists()) {
+            Files.delete (dbRoot);
         }
+
+        dbRoot.mkdirs();
 
         storage = StorageFactory.createStorage(createConf());
 
