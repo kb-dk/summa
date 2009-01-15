@@ -1061,7 +1061,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
         try {
             stmt.setString(1, id);
-            stmt.execute();
+            stmt.executeQuery();
 
             ResultSet results = stmt.getResultSet();
             iter = new ResultIterator(stmt, results, null);
@@ -1137,7 +1137,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
         try {
             stmt.setString(1, id);
-            stmt.execute();
+            stmt.executeQuery();
 
             ResultSet results = stmt.getResultSet();
             iter = new ResultIterator(stmt, results, null);
@@ -1494,7 +1494,7 @@ public abstract class DatabaseStorage extends StorageBase {
         try {
             stmt.setTimestamp(1, new Timestamp(lastModified));
             stmt.setString(2, id);
-            stmt.execute();
+            stmt.executeUpdate();
         } catch (SQLException e) {
             throw new IOException("SQLException touching record '"
                                   + id + "'", e);

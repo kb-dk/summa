@@ -8,6 +8,7 @@ import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.summa.storage.database.derby.DerbyStorage;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
+import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.util.Profiler;
 
 import java.io.File;
@@ -19,7 +20,7 @@ import java.io.IOException;
 public class StorageStressTest {
 
     public static final Class<? extends Storage> DEFAULT_STORAGE =
-                                                             DerbyStorage.class;
+                                                             H2Storage.class;
 
     public static final String CONF_NUM_RECORDS =
                                                 "summa.storage.test.numrecords";
@@ -27,7 +28,7 @@ public class StorageStressTest {
     public static final long DEFAULT_NUM_RECORDS = 10000;
 
     public static final String DEFAULT_DB_LOCATION =
-                                               "/tmp/summa-storage-stress-test";
+                                            "/tmp/summa-storage-stress-test/db";
 
     public static void main (String[] args) throws Exception {
         Configuration conf = Configuration.getSystemConfiguration(true);
