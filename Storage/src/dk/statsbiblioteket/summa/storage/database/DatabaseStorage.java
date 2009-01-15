@@ -979,19 +979,17 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     protected void touchParents(String id, QueryOptions options)
                                                             throws IOException {
-        boolean doTrace = log.isTraceEnabled();
-
-        if (doTrace) {
-            log.trace ("Touching parents of '" + id + "'");
-        }
-
         List<Record> parents = getParents(id, options);
 
         if (parents == null || parents.isEmpty()) {
-            if (doTrace) {
+            if (log.isTraceEnabled()) {
                 log.trace("No parents to update for record " + id);
             }
             return;
+        }
+
+        if (log.isDebugEnabled()) {
+            log.debug ("Touching " + parents.size() + " parents of " + id);
         }
 
         PreparedStatement stmt = null;
@@ -1492,7 +1490,7 @@ public abstract class DatabaseStorage extends StorageBase {
     private void doTouchRecord(String id, long lastModified,
                                PreparedStatement stmt) throws IOException {
         if (log.isTraceEnabled()) {
-            log.trace("Touching '" + id + "'");
+            log.trace("Touching " + id);
         }
 
         try {
@@ -1502,6 +1500,10 @@ public abstract class DatabaseStorage extends StorageBase {
         } catch (SQLException e) {
             throw new IOException("SQLException touching record '"
                                   + id + "'", e);
+        }
+
+        if (log.isDebugEnabled()) {
+            log.debug("Touched " + id);
         }
     }
 
