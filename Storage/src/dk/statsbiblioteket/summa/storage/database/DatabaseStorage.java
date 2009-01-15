@@ -1003,6 +1003,15 @@ public abstract class DatabaseStorage extends StorageBase {
             stmt.setTimestamp (1, nowStamp);
             stmt.setString(2, id);
             stmt.executeUpdate();
+
+            // It would be a tempting optimization to drop the getParents() call
+            // at the top and simply return here if stmt.getUpdateCount() == 0.
+            // This would avoid the creation of a ResultSet in getParents().
+            // We can't do this because there might be a ref to a non-existing
+            // parent which in turn might have a parent that actually exist.
+            // If we returned on zero updates we wouldn't touch the topmost
+            // parent
+
         } catch (SQLException e) {
             log.error ("Failed to touch parents of '" + id + "': "
                        + e.getMessage(), e);
@@ -1406,8 +1415,6 @@ public abstract class DatabaseStorage extends StorageBase {
                                       + record.getId() + "'", e);
         }
 
-        /* We must create the relations before calling updateRelations() or else
-         * said method will recurse infinitely */
         try {
             createRelations(record);
         } catch (SQLException e) {
@@ -1415,9 +1422,6 @@ public abstract class DatabaseStorage extends StorageBase {
                                       + record.getId() + "': " + e.getMessage(),
                                       e);
         }
-
-        // FIXME: Is this call really not just an expensive no-op?
-        updateRelations(record);
      }
 
     private int deleteRecord(String id) throws IOException {
@@ -1992,8 +1996,7 @@ public abstract class DatabaseStorage extends StorageBase {
                     return;
                 }
 
-                // This also closes the result set
-                log.debug("Closing iterator " + this);
+                log.trace("Closing iterator " + this);
                 resultSet.close();
                 stmt.close();
             } catch (Exception e) {
