@@ -1946,6 +1946,14 @@ public abstract class DatabaseStorage extends StorageBase {
 
         public void close() {
             try {
+                if (stmt.isClosed()) {
+                    if (log.isTraceEnabled()) {
+                        log.trace("Ignoring close request on iterator "
+                                  + this + ". Already closed");
+                    }
+                    return;
+                }
+
                 // This also closes the result set
                 log.debug("Closing iterator " + this);
                 resultSet.close();
