@@ -230,6 +230,7 @@ public abstract class DatabaseStorage extends StorageBase {
                                          new HashMap<Long, ResultIterator>(10);
 
     private ResultIteratorReaper iteratorReaper;
+    private UniqueTimestampGenerator timestampGenerator;
 
     /**
      * Opaque datatype used to represent preparedStatements. Implementors
@@ -297,16 +298,14 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
-    public DatabaseStorage() throws IOException {
-        this(0);
-    }
+    public DatabaseStorage(Configuration conf) throws IOException {
+        super(updateConfiguration(conf));
 
-    public DatabaseStorage(int port) throws IOException {
-
-    }
-
-    public DatabaseStorage(Configuration configuration) throws IOException {
-        super(updateConfiguration(configuration));
+        timestampGenerator = new UniqueTimestampGenerator();
+        iteratorReaper =
+               new ResultIteratorReaper(iterators,
+                                        conf.getLong(CONF_ITERATOR_TIMEOUT,
+                                                     DEFAULT_ITERATOR_TIMEOUT));
     }
 
     private static Configuration updateConfiguration(Configuration
@@ -358,10 +357,6 @@ public abstract class DatabaseStorage extends StorageBase {
                                   + e.getMessage(), e);
         }
 
-        iteratorReaper =
-               new ResultIteratorReaper(iterators,
-                                        conf.getLong(CONF_ITERATOR_TIMEOUT,
-                                                     DEFAULT_ITERATOR_TIMEOUT));
         iteratorReaper.runInThread();
 
         log.debug("Initialization finished");
@@ -469,26 +464,26 @@ public abstract class DatabaseStorage extends StorageBase {
                                 + " OR " + RECORDS + "." + ID_COLUMN + "="
                                 + RELATIONS + "." + CHILD_ID_COLUMN;
 
+        // We can order by mtime only because the generated mtimes are unique
         String modifiedAfterQuery = "SELECT " + allCells
                                     + " FROM " + RECORDS
                                     + " LEFT JOIN " + RELATIONS
                                     + " ON " + relationsClause
                                     + " WHERE " + BASE_COLUMN + "=?"
                                     + " AND " + MTIME_COLUMN + ">?"
-                                    + " ORDER BY "
-                                    + MTIME_COLUMN + ", " + ID_COLUMN;
+                                    + " ORDER BY " + MTIME_COLUMN;
         log.debug("Preparing query getModifiedAfter with '"
                   + modifiedAfterQuery + "'");
         stmtGetModifiedAfter = prepareStatement(modifiedAfterQuery);
         log.debug("getModifiedAfter handle: " + stmtGetModifiedAfter);
 
+        // We can order by mtime only because the generated mtimes are unique
         String modifiedAfterAllQuery = "SELECT " + allCells
                                        + " FROM " + RECORDS
                                        + " LEFT JOIN " + RELATIONS
                                        + " ON " + relationsClause
                                        + " WHERE " + MTIME_COLUMN + ">?"
-                                       + " ORDER BY "
-                                       + MTIME_COLUMN + ", " + ID_COLUMN;
+                                       + " ORDER BY " + MTIME_COLUMN;
         log.debug("Preparing query getModifiedAfterAll with '"
                   + modifiedAfterAllQuery + "'");
         stmtGetModifiedAfterAll = prepareStatement(modifiedAfterAllQuery);
@@ -671,6 +666,8 @@ public abstract class DatabaseStorage extends StorageBase {
         log.debug("getRecordsModifiedAfter('" + time + "', " + base
                   + ") entered");
 
+        long timestamp = timestampGenerator.baseTimestamp(time);
+
         // Set the statement up for fetching of large result sets, see fx.
         // http://jdbc.postgresql.org/documentation/83/query.html#query-with-cursor
         // This prevents an OOM for backends like Postgres
@@ -691,7 +688,7 @@ public abstract class DatabaseStorage extends StorageBase {
         // Prepared stmt for all bases
         if (base == null) {
             try {
-                stmt.setTimestamp(1, new Timestamp(time));
+                stmt.setLong(1, timestamp);
             } catch (SQLException e) {
                 throw new IOException(String.format(
                         "Could not prepare stmtGetModifiedAfterAll with time"
@@ -705,7 +702,7 @@ public abstract class DatabaseStorage extends StorageBase {
         // Prepared stmt for a specfic base
         try {
             stmt.setString(1, base);
-            stmt.setTimestamp(2, new Timestamp(time));
+            stmt.setLong(2, timestamp);
         } catch (SQLException e) {
             throw new IOException("Could not prepare stmtGetModifiedAfter "
                                       + "with base '" + base + "' and time "
@@ -1294,16 +1291,15 @@ public abstract class DatabaseStorage extends StorageBase {
                       + record.toString(true));
         }
 
-        long now = System.currentTimeMillis();
-        Timestamp nowStamp = new Timestamp(now);
+        long nowStamp = timestampGenerator.next();
 
         try {
             stmt.setString(1, record.getId());
             stmt.setString(2, record.getBase());
             stmt.setInt(3, boolToInt(record.isDeleted()));
             stmt.setInt(4, boolToInt(record.isIndexable()));
-            stmt.setTimestamp(5, nowStamp);
-            stmt.setTimestamp(6, nowStamp);
+            stmt.setLong(5, nowStamp);
+            stmt.setLong(6, nowStamp);
             stmt.setBytes(7, Zips.gzipBuffer(record.getContent()));
             stmt.setBytes(8,record.hasMeta() ?
                                          record.getMeta().toFormalBytes() :
@@ -1370,14 +1366,13 @@ public abstract class DatabaseStorage extends StorageBase {
     private void doUpdateRecord(Record record, PreparedStatement stmt)
                                                             throws IOException {
         // FIXME: Add child records recursively (parents?)
-        long now = System.currentTimeMillis();
-        Timestamp nowStamp = new Timestamp(now);
+        long nowStamp = timestampGenerator.next();
 
         try {
             stmt.setString(1, record.getBase());
             stmt.setInt(2, boolToInt(record.isDeleted()));
             stmt.setInt(3, boolToInt(record.isIndexable()));
-            stmt.setTimestamp(4, nowStamp);
+            stmt.setLong(4, nowStamp);
             stmt.setBytes(5, Zips.gzipBuffer(record.getContent()));
             stmt.setBytes(6, record.hasMeta() ?
                                          record.getMeta().toFormalBytes() :
@@ -1448,7 +1443,7 @@ public abstract class DatabaseStorage extends StorageBase {
         // FIXME: Should we updateRelations()?
     }
 
-    protected void touchRecord (String id, long lastModified)
+    protected void touchRecord (String id)
                                                             throws IOException {
         PreparedStatement stmt;
 
@@ -1461,7 +1456,7 @@ public abstract class DatabaseStorage extends StorageBase {
         }
 
         try {
-            doTouchRecord(id, lastModified, stmt);
+            doTouchRecord(id, stmt);
         } finally {
             try {
                 stmt.close();
@@ -1471,14 +1466,14 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
-    private void doTouchRecord(String id, long lastModified,
-                               PreparedStatement stmt) throws IOException {
+    private void doTouchRecord(String id, PreparedStatement stmt)
+                                                            throws IOException {
         if (log.isTraceEnabled()) {
             log.trace("Touching " + id);
         }
 
         try {
-            stmt.setTimestamp(1, new Timestamp(lastModified));
+            stmt.setLong(1, timestampGenerator.next());
             stmt.setString(2, id);
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -1585,8 +1580,8 @@ public abstract class DatabaseStorage extends StorageBase {
                 + DELETED_COLUMN   + " INTEGER, "
                 + INDEXABLE_COLUMN + " INTEGER, "
                 + DATA_COLUMN      + " " + getDataColumnDataDeclaration() + ", "
-                + CTIME_COLUMN     + " TIMESTAMP, "
-                + MTIME_COLUMN     + " TIMESTAMP, "
+                + CTIME_COLUMN     + " BIGINT, " // BIGINT is 64 bit
+                + MTIME_COLUMN     + " BIGINT, "
                 + META_COLUMN      + " " + getMetaColumnDataDeclaration()
                 + ")";
         log.debug("Creating table "+RECORDS+" with query: '"
@@ -1605,8 +1600,11 @@ public abstract class DatabaseStorage extends StorageBase {
         stmt.execute(createRecordsIdIndexQuery);
         stmt.close();
 
+        // because we use a UniqueTimestampGenerator we can apply the UNIQUE
+        // to the 'm' index. This is paramount to getting paginated result sets
+        // for getRecordsModifiedAfter
         String createRecordsMTimeIndexQuery =
-                "CREATE INDEX m ON " + RECORDS + "("+MTIME_COLUMN+")";
+                "CREATE UNIQUE INDEX m ON " + RECORDS + "("+MTIME_COLUMN+")";
         log.debug("Creating index 'm' on table "+RECORDS+" with query: '"
                   + createRecordsMTimeIndexQuery + "'");
         stmt = conn.createStatement();
@@ -1669,7 +1667,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * @throws IOException  If the data (content) could not be uncompressed
      *                      with gunzip.
      */
-    protected static Record scanRecord(ResultSet resultSet, ResultIterator iter)
+    protected Record scanRecord(ResultSet resultSet, ResultIterator iter)
                                               throws SQLException, IOException {
 
         boolean hasNext;
@@ -1679,8 +1677,8 @@ public abstract class DatabaseStorage extends StorageBase {
         boolean deleted = intToBool(resultSet.getInt(DELETED_COLUMN));
         boolean indexable = intToBool(resultSet.getInt(INDEXABLE_COLUMN));
         byte[] gzippedContent = resultSet.getBytes(DATA_COLUMN);
-        long ctime = resultSet.getTimestamp(CTIME_COLUMN).getTime();
-        long mtime = resultSet.getTimestamp(MTIME_COLUMN).getTime();
+        long ctime = resultSet.getLong(CTIME_COLUMN);
+        long mtime = resultSet.getLong(MTIME_COLUMN);
         String parentIds = resultSet.getString(PARENT_ID_COLUMN);
         String childIds = resultSet.getString(CHILD_ID_COLUMN);
         byte[] meta = resultSet.getBytes(META_COLUMN);
@@ -1722,10 +1720,10 @@ public abstract class DatabaseStorage extends StorageBase {
                 } else if (!Arrays.equals(gzippedContent, resultSet.getBytes(DATA_COLUMN))) {
                     log.warn("Content mismatch for record: " + id);
                     return null;
-                }  else if (ctime != resultSet.getTimestamp(CTIME_COLUMN).getTime()) {
+                }  else if (ctime != resultSet.getLong(CTIME_COLUMN)) {
                     log.warn("CTime state mismatch for record: " + id);
                     return null;
-                } else if (mtime != resultSet.getTimestamp(MTIME_COLUMN).getTime()) {
+                } else if (mtime != resultSet.getLong(MTIME_COLUMN)) {
                     log.warn("MTime state mismatch for record: " + id);
                     return null;
                 }  else if (!Arrays.equals(meta,resultSet.getBytes(META_COLUMN))) {
@@ -1766,6 +1764,12 @@ public abstract class DatabaseStorage extends StorageBase {
         if (iter != null) {
             iter.setResultSetHasNext(hasNext);
         }
+
+        // We use salted unique timestamps generated by a
+        // UniqueTimestampGenerator so we have to extract the system time from
+        // the timestamp
+        ctime = timestampGenerator.systemTime(ctime);
+        mtime = timestampGenerator.systemTime(mtime);
 
         /* The result set cursor will now be on the start of the next record */
 
@@ -1985,7 +1989,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
             /* scanRecord() steps the resultSet to the next record.
              * It will update the state of the iterator appropriately */
-            Record r = DatabaseStorage.scanRecord(resultSet, this);
+            Record r = scanRecord(resultSet, this);
 
             // Allow all mode
             if (options == null) {
@@ -1993,7 +1997,7 @@ public abstract class DatabaseStorage extends StorageBase {
             }
 
             while (resultSetHasNext && !options.allowsRecord(r)) {
-                r = DatabaseStorage.scanRecord(resultSet, this);
+                r = scanRecord(resultSet, this);
             }
 
             if (options.allowsRecord(r)) {

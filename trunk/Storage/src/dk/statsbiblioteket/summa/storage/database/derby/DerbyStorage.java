@@ -32,7 +32,6 @@ import java.rmi.RemoteException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
-import java.sql.Timestamp;
 import java.util.List;
 
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
@@ -234,11 +233,9 @@ public class DerbyStorage extends DatabaseStorage implements Configurable {
             return;
         }
 
-        long now = System.currentTimeMillis();
-
         // Touch each parent and recurse upwards
         for (Record parent : parents) {
-            touchRecord(parent.getId(), now);
+            touchRecord(parent.getId());
             touchParents(parent.getId(), options);
         }
     }
