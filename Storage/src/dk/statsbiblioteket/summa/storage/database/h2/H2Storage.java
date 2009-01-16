@@ -264,11 +264,9 @@ public class H2Storage extends DatabaseStorage implements Configurable {
             return;
         }
 
-        long now = System.currentTimeMillis();
-
         // Touch each parent and recurse upwards
         for (Record parent : parents) {
-            touchRecord(parent.getId(), now);
+            touchRecord(parent.getId());
             touchParents(parent.getId(), options);
         }
     }
