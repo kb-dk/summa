@@ -94,8 +94,14 @@ public class Resolver {
             log.debug("Returning resolved File '" + resolved.getPath() + "'");
             return resolved;
         } catch (Exception e) {
-            log.error("Could not transmute File '" + file
-                      + "' to absolute File", e);
+            if (log.isDebugEnabled()) {
+                log.error("Could not resolve File '" + file
+                          + "' to absolute File", e);
+            } else {
+                log.info ("Could not resolve File '" + file
+                          + "' to absolute File");
+            }
+
             return file;
         }
     }
