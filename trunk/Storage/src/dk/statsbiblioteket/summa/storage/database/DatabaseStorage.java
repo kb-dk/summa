@@ -632,22 +632,6 @@ public abstract class DatabaseStorage extends StorageBase {
         stmtDeleteRelation = prepareStatement(
                                                      deleteRelation);*/
 
-        /* countParents */
-        /*String countParents = "SELECT count(*) FROM " + RELATIONS
-                                + " WHERE " + CHILD_ID_COLUMN + "=?";
-        log.debug("Preparing query countParents with '" +
-                                              countParents + "'");
-        stmtCountParents = prepareStatement(
-                                                     countParents);*/
-
-        /* countChildren */
-        /*String countChildren = "SELECT count(*) FROM " + RELATIONS
-                                + " WHERE " + PARENT_ID_COLUMN + "=?";
-        log.debug("Preparing query countChildren with '" +
-                                              countParents + "'");
-        stmtCountChildren = prepareStatement(
-                                                     countChildren);*/
-
         log.trace("Finished preparing SQL statements");
     }
 
@@ -1630,6 +1614,40 @@ public abstract class DatabaseStorage extends StorageBase {
         stmt.close();
     }
 
+    /**
+     * WARNING: <i>This will remove all data from the storage!</i>.
+     * Destroys and removes all table definitions from the underlying database.
+     * Caveat emptor.
+     * @throws SQLException if there are problems executing the required SQL
+     *                      statements
+     */
+    public void destroyDatabase() throws SQLException {
+        log.warn("Preparing to destroy database. All data will be lost");
+
+        Connection conn = getConnection();
+
+        try {
+            log.warn("Destroying all record data");
+            Statement stmt = conn.createStatement();
+            stmt.execute("DROP TABLE " + RECORDS);
+            stmt.close();
+
+            log.warn("Destroying all relations");
+            stmt = conn.createStatement();
+            stmt.execute("DROP TABLE " + RELATIONS);
+            stmt.close();
+        } finally {
+            try {
+                conn.close();
+            } catch (SQLException e) {
+                log.warn("Failed to close connection to database: "
+                         + e.getMessage(), e);
+            }
+        }
+
+        log.info("All Summa data wiped from database");
+    }       
+
     protected abstract String getMetaColumnDataDeclaration();
 
     protected abstract String getDataColumnDataDeclaration();
@@ -2092,82 +2110,6 @@ public abstract class DatabaseStorage extends StorageBase {
             log.debug("Scan complete");
         }
     }
-    
-    /*private int countParents(String id) {
-        ResultSet results = null;
-
-        try {
-            stmtCountParents.setString(0, id);
-            stmtCountParents.execute();
-            results = stmtCountParents.getResultSet();
-
-            if (!results.next()) {
-                log.warn("No parent count returned for '" + id + "'. "
-                         + "Returning -1");
-                return -1;
-            }
-
-            int count = results.getInt(0);
-
-            if (results.next()) {
-                log.warn("countParents query returned more than one row. " +
-                         "This should never happen");
-            }
-
-            return count;
-        } catch (SQLException e) {
-            log.warn("Failed to count parents of '" + id + "': "
-                     + e.getMessage() + ". Returning -1", e);
-            return -1;
-        } finally {
-            if (results != null) {
-                try {
-                    results.close();
-                } catch (SQLException e) {
-                    log.error("Failed to close result set for countParents " +
-                              "query", e);
-                }
-            }
-        }
-    }*/
-
-    /*private int countChildren(String id) {
-        ResultSet results = null;
-
-        try {
-            stmtCountChildren.setString(0, id);
-            stmtCountChildren.execute();
-            results = stmtCountChildren.getResultSet();
-
-            if (!results.next()) {
-                log.warn("No child count returned for '" + id + "'. "
-                         + "Returning -1");
-                return -1;
-            }
-
-            int count = results.getInt(0);
-
-            if (results.next()) {
-                log.warn("countChildren query returned more than one row. " +
-                         "This should never happen");
-            }
-
-            return count;
-        } catch (SQLException e) {
-            log.warn("Failed to count children of '" + id + "': "
-                     + e.getMessage() + ". Returning -1", e);
-            return -1;
-        } finally {
-            if (results != null) {
-                try {
-                    results.close();
-                } catch (SQLException e) {
-                    log.error("Failed to close result set for countChildren " +
-                              "query", e);
-                }
-            }
-        }
-    }*/
 }
 
 
