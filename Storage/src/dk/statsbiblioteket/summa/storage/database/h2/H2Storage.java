@@ -15,13 +15,13 @@ import java.util.List;
 
 import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
+import dk.statsbiblioteket.summa.storage.database.ManagedStatement;
 import dk.statsbiblioteket.summa.storage.StorageUtils;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.util.Files;
-import dk.statsbiblioteket.util.Strings;
 
 import javax.sql.ConnectionPoolDataSource;
 import javax.sql.PooledConnection;
@@ -46,13 +46,19 @@ public class H2Storage extends DatabaseStorage implements Configurable {
     private JdbcDataSource dataSource;
     private H2ConnectionPool pool;
 
+    /**
+     * We need to create a custom connection pool because H2 doesn't support
+     * StatementEventListeners
+     */
     private static class H2ConnectionPool extends MiniConnectionPoolManager {
 
-        public H2ConnectionPool(ConnectionPoolDataSource dataSource, int maxConnections) {
+        public H2ConnectionPool(ConnectionPoolDataSource dataSource,
+                                int maxConnections) {
             super(dataSource, maxConnections);
         }
 
-        public H2ConnectionPool(ConnectionPoolDataSource dataSource, int maxConnections, int timeout) {
+        public H2ConnectionPool(ConnectionPoolDataSource dataSource,
+                                int maxConnections, int timeout) {
             super(dataSource, maxConnections, timeout);
         }
 
@@ -75,7 +81,7 @@ public class H2Storage extends DatabaseStorage implements Configurable {
 
             // We wrap the statement in a special class that closes the
             // underlying connection when the statement is closed
-            return new H2PreparedStatement(stmt);
+            return new ManagedStatement(stmt);
         }
     }
 

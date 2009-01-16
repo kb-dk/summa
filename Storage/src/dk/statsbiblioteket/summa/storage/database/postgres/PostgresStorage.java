@@ -2,6 +2,7 @@ package dk.statsbiblioteket.summa.storage.database.postgres;
 
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager;
+import dk.statsbiblioteket.summa.storage.database.ManagedStatement;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 
@@ -9,14 +10,17 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
+import java.sql.SQLIntegrityConstraintViolationException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.postgresql.ds.PGConnectionPoolDataSource;
 
+import javax.sql.ConnectionPoolDataSource;
+import javax.sql.PooledConnection;
+
 /**
- * Created by IntelliJ IDEA. User: mke Date: Jan 9, 2009 Time: 2:05:57 PM To
- * change this template use File | Settings | File Templates.
+ * Summa Storage backend that is implemented on top of a PostgresQL database.
  */
 public class PostgresStorage extends DatabaseStorage implements Configurable {
     private static Log log = LogFactory.getLog(PostgresStorage.class);
@@ -34,6 +38,45 @@ public class PostgresStorage extends DatabaseStorage implements Configurable {
     private PGConnectionPoolDataSource dataSource;
     private MiniConnectionPoolManager pool;
 
+    /**
+     * We need to create a custom connection pool because H2 doesn't support
+     * StatementEventListeners
+     */
+    private static class PostgresConnectionPool extends MiniConnectionPoolManager {
+
+        public PostgresConnectionPool(ConnectionPoolDataSource dataSource,
+                                      int maxConnections) {
+            super(dataSource, maxConnections);
+        }
+
+        public PostgresConnectionPool(ConnectionPoolDataSource dataSource,
+                                      int maxConnections, int timeout) {
+            super(dataSource, maxConnections, timeout);
+        }
+
+        @Override
+        public PreparedStatement getStatement(PooledStatementHandle handle)
+                throws SQLException {
+
+            PooledConnection pconn = getPooledConnection();
+            Connection conn = pconn.getConnection();
+
+            if (log.isTraceEnabled()) {
+                log.trace("Getting statement for handle " + handle
+                          + " on connection " + pconn.hashCode());
+            }
+
+            // We prepare a new statement on each invocation.
+            // This might look insane but the JDBC _should_ be caching the
+            // statements for us
+            PreparedStatement stmt = conn.prepareStatement(handle.getSql());
+
+            // We wrap the statement in a special class that closes the
+            // underlying connection when the statement is closed
+            return new ManagedStatement(stmt);
+        }
+    }
+
     public PostgresStorage (Configuration conf) throws IOException {
         super(conf);
         log.trace("Constructing PostgresStorage");
@@ -46,9 +89,6 @@ public class PostgresStorage extends DatabaseStorage implements Configurable {
         maxConnections = conf.getInt(CONF_MAX_CONNECTIONS,
                                      DEFAULT_MAX_CONNECTIONS);
 
-        log.debug("PostgresStorage extracted properties username: " + username
-                  + ", password: "
-                  + (password == null ? "[undefined]" : "[defined]"));
         init(conf);
         log.trace("Construction completed");
     }
@@ -57,12 +97,12 @@ public class PostgresStorage extends DatabaseStorage implements Configurable {
     protected void connectToDatabase(Configuration configuration) throws
                                                                   IOException {
         //noinspection DuplicateStringLiteralInspection
-        log.info("Establishing connection to PostgresQL on '" + host + "'"
+        log.info("Establishing connection to PostgresQL base '" + database + "'"
+                 + " on host '" + host + "'"
                  + (port > 0 ? (" port " + port + ",") : "") + " with"
                  + " username '" + username
                  + "', password "
-                 + (password == null || "".equals(password) ?
-                    "[undefined]" : "[defined]"));
+                 + (password == null ? "[undefined]" : "[defined]"));
 
 
         dataSource = new PGConnectionPoolDataSource();
@@ -81,11 +121,11 @@ public class PostgresStorage extends DatabaseStorage implements Configurable {
             dataSource.setPassword(password);
         }
 
-        if (host != null) {
+        if (host != null && !"".equals(host)) {
             dataSource.setServerName(host);
         }
 
-        pool = new MiniConnectionPoolManager(dataSource, maxConnections);
+        pool = new PostgresConnectionPool(dataSource, maxConnections);
 
         log.info("Connected to database");
 
@@ -99,6 +139,33 @@ public class PostgresStorage extends DatabaseStorage implements Configurable {
                 log.info("Schemas NOT created: " + e.getMessage());
             }
         }
+    }
+
+    /**
+     * We override this method because Postgres only throws generic
+     * SQLExceptions, and not the proper exceptions according to the
+     * JDBC api
+     * @param e sql exception to inspect
+     * @return whether or not {@code e} represents an integrity constraint
+     *         violation
+     */
+    @Override
+    protected boolean isIntegrityConstraintViolation (SQLException e) {
+        // The PostgresQL error codes for integrity constraint violations are
+        // numbers between 23000 and 23999. Strangely PostgresQL doesn't use
+        // SQLException.getErrorCode() to store the error code in, but uses
+        // SQLState instead...
+        try {
+            int errorCode = Integer.parseInt(e.getSQLState());
+            return (e instanceof SQLIntegrityConstraintViolationException ||
+                (errorCode >= 23000 && errorCode < 24000));
+        } catch (NumberFormatException ex) {
+            // Looks like PostgresQL is inconsistent in the way it handles
+            // errors...
+            return false;
+        }
+
+
     }
 
     @Override
