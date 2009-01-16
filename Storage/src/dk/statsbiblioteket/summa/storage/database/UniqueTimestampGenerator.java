@@ -134,4 +134,17 @@ public class UniqueTimestampGenerator {
         return timestamp >>> TIME_BITS;
     }
 
+    /**
+     * Return a salted timestamp that corresponds to the first unique timestamp
+     * that would be created for {@code systemTime}. Use this method when you
+     * need to check a system time against a salted timestamp.
+     *
+     * @param systemTime system time to convert to a salted timestamp
+     *                   representing the first timestamp that would be
+     *                   generated for {@code systemTime}
+     * @return a timestamp useful for comparison against other timestamps
+     */
+    public long baseTimestamp (long systemTime) {
+        return systemTime << SALT_BITS;
+    }
 }
