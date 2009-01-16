@@ -1,5 +1,7 @@
 package dk.statsbiblioteket.summa.storage.database;
 
+import java.util.Date;
+
 /**
  * Utility class that generates unique timestamps. The resulting timestamps
  * can not be treated as dates directly since they are constructed from the
@@ -10,14 +12,25 @@ public class UniqueTimestampGenerator {
 
     public static final int TIME_BITS = 44;
     public static final int SALT_BITS = 64 - TIME_BITS;
-    public static final long SALT_MAX = ~0 >>> TIME_BITS;    // ~0 is all ones
+    public static final long MAX_SALT = ~0 >>> TIME_BITS; // ~0 is all ones
+    public static final long MAX_TIME = (~MAX_SALT) >>> SALT_BITS; //
 
     private long salt;
     private long last;
 
+    /**
+     * Create a new UniqueTimestampGenerator.
+     * @throws AssertionError if the system time is past {@link #MAX_TIME}
+     */
     public UniqueTimestampGenerator() {
         salt = 0;
-        last = 0;
+        last = -1;
+
+        if (System.currentTimeMillis () >= MAX_TIME) {
+            throw new AssertionError("System time past " + MAX_TIME
+                                     + ". UniqueTimestampGenerator can not" +
+                                     " function past " + new Date(MAX_TIME));
+        }
     }
 
     /**
@@ -35,7 +48,7 @@ public class UniqueTimestampGenerator {
 
         // If we reached the maximum salt value wait 1ms
         // (this will reset the salt)
-        if (salt > SALT_MAX) {
+        if (salt > MAX_SALT) {
             try {
                 Thread.sleep(1);
             } catch (InterruptedException e) {
@@ -56,7 +69,7 @@ public class UniqueTimestampGenerator {
     long next(long systemTime) {
         updateSalt(systemTime);
 
-        if (salt > SALT_MAX) {
+        if (salt > MAX_SALT) {
             // We are screwed since this method can not just sleep() to wait for
             // a new system time...
             throw new RuntimeException("Forced to create non-unique "
