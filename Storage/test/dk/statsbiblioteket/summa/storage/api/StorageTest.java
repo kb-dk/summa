@@ -462,13 +462,16 @@ public class StorageTest extends TestCase {
     public void testTimestampUpdates () throws Exception {
         Record r1 = new Record (testId1, testBase1, testContent1);
 
-        long startTime = System.currentTimeMillis();
-
+        long beforeFlushTime = System.currentTimeMillis();
         storage.flush(r1);
+        long afterFlushTime = System.currentTimeMillis();
+
         Record r2 = storage.getRecords(Arrays.asList(testId1), null).get(0);
 
-        assertTrue(startTime <= r2.getModificationTime());
-        assertTrue(startTime <= r2.getCreationTime());
+        assertTrue(beforeFlushTime <= r2.getModificationTime());
+        assertTrue(beforeFlushTime <= r2.getCreationTime());
+        assertTrue(afterFlushTime >= r2.getModificationTime());
+        assertTrue(afterFlushTime >= r2.getCreationTime());
 
         assertEquals(r1, r2);
         long ctime = r2.getCreationTime();
