@@ -12,8 +12,8 @@ import java.net.URL;
  * connection of the statement when the ManagedStatement is closed.
  * <p/>
  * This is used to get connection pooling working together with
- * PreparedStatements for databses like H2 that does not support
- * StatementEventListeners.
+ * PreparedStatements for databases like H2 and PostgresQL that does not support
+ * {@link javax.sql.StatementEventListener}s.
  */
 public class ManagedStatement implements PreparedStatement {
 
