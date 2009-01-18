@@ -7,12 +7,34 @@ import java.util.Date;
  * can not be treated as dates directly since they are constructed from the
  * system time by appending a salt. To retrieve the system time from the
  * generated timestamps use {@link #systemTime(long)}.
+ * <p/>
+ * The binary format of UniqueTimestampGenerator is part of its API and is
+ * guaranteed to be stable.
+ * <p/>
+ * All timestamps generated with {@link #next()} are guaranteed to come out
+ * in a sorted order. That is, they can be sorted as the standard Java
+ * {@code long} type.
  */
 public class UniqueTimestampGenerator {
 
+    /**
+     * Number of bits out of 64 used to store the system time.
+     */
     public static final int TIME_BITS = 44;
+
+    /**
+     * Number of bits out of 64 used to store the salt.
+     */
     public static final int SALT_BITS = 64 - TIME_BITS;
+
+    /**
+     * Maximum number of unique timestamps per millisecond.
+     */
     public static final long MAX_SALT = ~0 >>> TIME_BITS; // ~0 is all ones
+
+    /**
+     * The maximal system time at which this class will function correctly.
+     */
     public static final long MAX_TIME = (~MAX_SALT) >>> SALT_BITS; //
 
     private long salt;
@@ -38,8 +60,14 @@ public class UniqueTimestampGenerator {
      * timestamps generated from this UniqueTimestampGenerator instance.
      * <p/>
      * To get the system time from the returned timestamp use the
-     * {@link #systemTime(long)} method
-     * @return
+     * {@link #systemTime(long)} method.
+     * <p/>
+     * If more than {@link #MAX_SALT} timestamps has been generated within the
+     * same millisecond the genrator will sleep for 1 millisecond which will
+     * reset the salt and allow for another {@link #MAX_SALT} timestamps to be
+     * generated.
+     * @return a sorted timestamp that is unique within the scope of this
+     *         UniqueTimestampGenerator instance
      */
     public long next() {
         long sysTime = System.currentTimeMillis();
