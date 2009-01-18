@@ -495,9 +495,9 @@ public abstract class DatabaseStorage extends StorageBase {
                           + RECORDS + "." + DATA_COLUMN + ","
                           + RECORDS + "." + CTIME_COLUMN + ","
                           + RECORDS + "." + MTIME_COLUMN + ","
+                          + RECORDS + "." + META_COLUMN + ","
                           + RELATIONS + "." + PARENT_ID_COLUMN + ","
-                          + RELATIONS + "." + CHILD_ID_COLUMN + ","
-                          + RECORDS + "." + META_COLUMN;
+                          + RELATIONS + "." + CHILD_ID_COLUMN;
 
         String relationsClause = RECORDS + "." + ID_COLUMN + "="
                                 + RELATIONS + "." + PARENT_ID_COLUMN
@@ -1712,16 +1712,16 @@ public abstract class DatabaseStorage extends StorageBase {
 
         boolean hasNext;
 
-        String id = resultSet.getString(ID_COLUMN);
-        String base = resultSet.getString(BASE_COLUMN);
-        boolean deleted = intToBool(resultSet.getInt(DELETED_COLUMN));
-        boolean indexable = intToBool(resultSet.getInt(INDEXABLE_COLUMN));
-        byte[] gzippedContent = resultSet.getBytes(DATA_COLUMN);
-        long ctime = resultSet.getLong(CTIME_COLUMN);
-        long mtime = resultSet.getLong(MTIME_COLUMN);
-        String parentIds = resultSet.getString(PARENT_ID_COLUMN);
-        String childIds = resultSet.getString(CHILD_ID_COLUMN);
-        byte[] meta = resultSet.getBytes(META_COLUMN);
+        String id = resultSet.getString(1);
+        String base = resultSet.getString(2);
+        boolean deleted = intToBool(resultSet.getInt(3));
+        boolean indexable = intToBool(resultSet.getInt(4));
+        byte[] gzippedContent = resultSet.getBytes(5);
+        long ctime = resultSet.getLong(6);
+        long mtime = resultSet.getLong(7);
+        byte[] meta = resultSet.getBytes(8);
+        String parentIds = resultSet.getString(9);
+        String childIds = resultSet.getString(10);
 
         if (log.isTraceEnabled()) {
             log.trace ("Scanning record: " + id);
@@ -1741,40 +1741,41 @@ public abstract class DatabaseStorage extends StorageBase {
          * through all rows with the same id and collect the different parents
          * and children listed */
         while ((hasNext = resultSet.next()) &&
-               id.equals(resultSet.getString(ID_COLUMN))) {
+               id.equals(resultSet.getString(1))) {
 
             /* If we log on debug we do sanity checking of the result set.
             * Of course the parent and child columns should not be checked,
             * since they are the ones changing */
             if (log.isDebugEnabled()) {
                 log.trace("Sanity checking record block for: " + id);
-                if (!base.equals(resultSet.getString(BASE_COLUMN))) {
+                if (!base.equals(resultSet.getString(2))) {
                     log.warn("Base mismatch for record: " + id);
                     return null;
-                } else if (deleted != intToBool(resultSet.getInt(DELETED_COLUMN))) {
+                } else if (deleted != intToBool(resultSet.getInt(3))) {
                     log.warn("Deleted state mismatch for record: " + id);
                     return null;
-                } else if (indexable != intToBool(resultSet.getInt(INDEXABLE_COLUMN))) {
+                } else if (indexable != intToBool(resultSet.getInt(4))) {
                     log.warn("Indexable state mismatch for record: " + id);
                     return null;
-                } else if (!Arrays.equals(gzippedContent, resultSet.getBytes(DATA_COLUMN))) {
+                } else if (!Arrays.equals(gzippedContent,
+                                          resultSet.getBytes(5))) {
                     log.warn("Content mismatch for record: " + id);
                     return null;
-                }  else if (ctime != resultSet.getLong(CTIME_COLUMN)) {
+                }  else if (ctime != resultSet.getLong(6)) {
                     log.warn("CTime state mismatch for record: " + id);
                     return null;
-                } else if (mtime != resultSet.getLong(MTIME_COLUMN)) {
+                } else if (mtime != resultSet.getLong(7)) {
                     log.warn("MTime state mismatch for record: " + id);
                     return null;
-                }  else if (!Arrays.equals(meta,resultSet.getBytes(META_COLUMN))) {
+                }  else if (!Arrays.equals(meta,resultSet.getBytes(8))) {
                     log.warn("Meta tags mismatch for record: " + id);
                     return null;
                 }
             }
 
             /* Pick up parent and child ids */
-            String newParent = resultSet.getString (PARENT_ID_COLUMN);
-            String newChild = resultSet.getString (CHILD_ID_COLUMN);
+            String newParent = resultSet.getString (9);
+            String newChild = resultSet.getString (10);
 
             /* If the record is listed as parent or child of something this
              * will appear in the parent/child columns, so ignore these cases */
