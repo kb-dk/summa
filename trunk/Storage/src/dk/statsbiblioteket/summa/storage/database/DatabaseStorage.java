@@ -131,11 +131,13 @@ public abstract class DatabaseStorage extends StorageBase {
      * exists and forcenew is false, the existing database is reused.
      */
     public static String CONF_CREATENEW = "summa.storage.database.createnew";
+
     /**
      * The property-key for the boolean determining if a new database should
      * be created, no matter is a database already exists.
      */
     public static String CONF_FORCENEW = "summa.storage.database.forcenew";
+
     /**
      * The location of the database to use/create. If the location is not an
      * absolute path, it will be appended to the System property "
@@ -157,53 +159,91 @@ public abstract class DatabaseStorage extends StorageBase {
     public static final String RELATIONS = "summa_relations";
 
     /**
-     * id is the unique identifier for a given record in the database.
+     * The {@code id} column contains the unique identifier for a given record
+     * in the database. The value that is mapped directly to the {@code id}
+     * value of the constructed {@link Record} objects.
      */
     public static final String ID_COLUMN        = "id";
+
     /**
-     * The base dictates choise of xslt's et al for the record.
+     * The {@code base} column contains the value that is mapped directly to
+     * the {@code base} of the {@link Record} objects retrieved from this
+     * storage.
+     * <p/>
+     * Generally the record base is used to track provenance and decide which
+     * filters/XSLTs to apply to the contents and so forth.
      */
     public static final String BASE_COLUMN      = "base";
+
     /**
-     * deleted signifies that the record should be treated as non-existing.
-     * Implementations are free to clean up deleted records at will, but not
-     * required to.
+     * The {@code deleted} column signifies whether the record should be treated
+     * as non-existing. If deleted records should be retrieved or not can
+     *  be specified by setting the relevant flags in the {@link QueryOptions}
+     * passed to the storage
+     *
      */
     public static final String DELETED_COLUMN   = "deleted";
+
     /**
-     * indexable signifies that the record should be delivered to the indexer
-     * upon request.
+     * The {@code indexable} column signifies whether the indexer should index
+     * the given record. Whether or not to retrieve non-indexable records
+     * can be handled by setting the appropriate {@link QueryOptions} in
+     * {#getRecordsModifiedAfter}
      */
     public static final String INDEXABLE_COLUMN = "indexable";
+
+
     /**
-     * data contains the raw record-data as ingested.
+     * The {@code data} column contains the raw record-data as ingested.
      */
     public static final String DATA_COLUMN      = "data";
+
     /**
-     * ctime signifies the time of record creation in the database.
+     * The {@code ctime} column signifies the time of record creation in the
+     * database.
+     * <p/>
+     * The value stored here is a unique timestamp generated with a
+     * {@link UniqueTimestampGenerator} which means it does not map directly
+     * to the system time. On record construction time the timestamp is
+     * mapped back to a system time value and can be inspected via
+     * {@link Record#getCreationTime()} as usual.
      */
     public static final String CTIME_COLUMN     = "ctime";
+
     /**
-     * mtime signifies the time of record modification in the database.
-     * This timestamp is used when {@link #getRecordsModifiedAfter} is called.
+     * The {@code mtime} column signifies the time of record modification in the
+     * database. This timestamp is used when {@link #getRecordsModifiedAfter} is
+     * called.
+     * <p/>
+     * The value stored here is a unique timestamp generated with a
+     * {@link UniqueTimestampGenerator} which means it does not map directly
+     * to the system time. On record construction time the timestamp is
+     * mapped back to a system time value and can be inspected via
+     * {@link Record#getModificationTime()} as usual.
      */
     public static final String MTIME_COLUMN     = "mtime";
+
     /**
-     * parent optionally contains the id of a parent record. The parent does
-     * not need to be present in the database, but if it is, the field indexable
-     * should be false for the child.
-     */
-    public static final String PARENT_ID_COLUMN = "parentId";
-    /**
-     * children optionally contains a list of children. The children does not
-     * need to be present in the database.
-     */
-    public static final String CHILD_ID_COLUMN = "childId";
-    /**
-     * meta contains meta-data for the Record in the form of key-value pairs
-     * of Strings. See {@link StringMap#toFormal()} for format.
+     * The {@code meta} column contains meta-data for the Record in the form of
+     * key-value pairs of Strings. See {@link StringMap#toFormal()} for format.
+     * These values are mapped to the {@link Record} meta contents which can
+     * be handled with {@link Record#getMeta()} and friends.
      */
     public static final String META_COLUMN  = "meta";
+
+    /**
+     * First column in the {@link #RECORDS} table. Contains the record id of the
+     * parent in a parent/child relationship. The refered parent does
+     * not need to be present in the database.
+     */
+    public static final String PARENT_ID_COLUMN = "parentId";
+
+    /**
+     * Second row in the {@link #RELATIONS} table. Contains the record
+     * id of the child record. The refered child record does not need to
+     * exist in the database.
+     */
+    public static final String CHILD_ID_COLUMN = "childId";
 
     /* Constants for database-setup */
     public static final int ID_LIMIT =       255;
