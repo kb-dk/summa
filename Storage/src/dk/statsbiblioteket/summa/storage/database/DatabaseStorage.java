@@ -72,56 +72,56 @@ public abstract class DatabaseStorage extends StorageBase {
      * The property-key for the username for the underlying database, if needed.
      * The default value is {@link #DEFAULT_USERNAME}.
      */
-    public static String CONF_USERNAME = "summa.storage.database.username";
+    public static final String CONF_USERNAME = "summa.storage.database.username";
     /**
      * Default value for {@link #CONF_USERNAME}.
      */
-    public static String DEFAULT_USERNAME = "summa";
+    public static final String DEFAULT_USERNAME = "summa";
 
     /**
      * The property-key for the the password for the underlying database, if
      * needed.
      */
-    public static String CONF_PASSWORD = "summa.storage.database.password";
+    public static final String CONF_PASSWORD = "summa.storage.database.password";
 
     /**
      * The name of the database to connect to. Default value is
      * {@link #DEFAULT_DATABASE}.
      */
-    public static String CONF_DATABASE = "summa.storage.database.name";
+    public static final String CONF_DATABASE = "summa.storage.database.name";
 
     /**
      * Default value for {@link #CONF_DATABASE}.
      */
-    public static String DEFAULT_DATABASE = "summa";
+    public static final String DEFAULT_DATABASE = "summa";
 
     /**
      * Maximum number of concurrent connections to keep to the database.
      * Default value is {@link #DEFAULT_MAX_CONNECTIONS}.
      */
-    public static String CONF_MAX_CONNECTIONS =
+    public static final String CONF_MAX_CONNECTIONS =
                                         "summa.storage.database.maxconnections";
 
     /**
      * Default value for {@link #CONF_MAX_CONNECTIONS}.
      */
-    public static int DEFAULT_MAX_CONNECTIONS = 10;
+    public static final int DEFAULT_MAX_CONNECTIONS = 10;
 
     /**
      * The port to connect to the datatbase on.
      */
-    public static String CONF_PORT = "summa.storage.database.port";
+    public static final String CONF_PORT = "summa.storage.database.port";
 
     /**
      * The hostname to connect to the datatbase on. Default is
      * {@link #DEFAULT_HOST}.
      */
-    public static String CONF_HOST = "summa.storage.database.host";
+    public static final String CONF_HOST = "summa.storage.database.host";
 
     /**
      * Default value for {@link #CONF_HOST}.
      */
-    public static String DEFAULT_HOST = "localhost";
+    public static final String DEFAULT_HOST = "localhost";
 
     /**
      * The property-key for the boolean value determining if a new database
@@ -130,13 +130,13 @@ public abstract class DatabaseStorage extends StorageBase {
      * is deleted and a new one created. If createnew is true and a database
      * exists and forcenew is false, the existing database is reused.
      */
-    public static String CONF_CREATENEW = "summa.storage.database.createnew";
+    public static final String CONF_CREATENEW = "summa.storage.database.createnew";
 
     /**
      * The property-key for the boolean determining if a new database should
      * be created, no matter is a database already exists.
      */
-    public static String CONF_FORCENEW = "summa.storage.database.forcenew";
+    public static final String CONF_FORCENEW = "summa.storage.database.forcenew";
 
     /**
      * The location of the database to use/create. If the location is not an
@@ -144,7 +144,22 @@ public abstract class DatabaseStorage extends StorageBase {
      * summa.control.client.persistent.dir". If that system property does not
      * exist, the location will be relative to the current dir.
      */
-    public static String CONF_LOCATION = "summa.storage.database.location";
+    public static final String CONF_LOCATION = "summa.storage.database.location";
+
+    /**
+     * Number of hits to return per-page. This configuration option is only
+     * used if the actual storage implementation request that a paging model
+     * be used to scan large result sets.
+     * <p/>
+     * The default value for this property is {@link #DEFAULT_PAGE_SIZE}
+     */
+    public static final String CONF_PAGE_SIZE =
+                                             "summa.storage.databasse.pagesize";
+
+    /**
+     * Default value for the {@link #CONF_PAGE_SIZE} property
+     */
+    public static final int DEFAULT_PAGE_SIZE = 500;
 
     /**
      * The name of the main table in the database in which record metadata
@@ -266,11 +281,14 @@ public abstract class DatabaseStorage extends StorageBase {
     private StatementHandle stmtGetParents;
     private StatementHandle stmtCreateRelation;
 
-    private Map<Long, ResultIterator> iterators =
-                                         new HashMap<Long, ResultIterator>(10);
+    private Map<Long, DatabaseIterator> iterators =
+                                         new HashMap<Long,DatabaseIterator>(10);
 
     private ResultIteratorReaper iteratorReaper;
     private UniqueTimestampGenerator timestampGenerator;
+
+    private boolean usePagingModel;
+    private int pageSize;
 
     /**
      * Opaque datatype used to represent preparedStatements. Implementors
@@ -346,6 +364,17 @@ public abstract class DatabaseStorage extends StorageBase {
                new ResultIteratorReaper(iterators,
                                         conf.getLong(CONF_ITERATOR_TIMEOUT,
                                                      DEFAULT_ITERATOR_TIMEOUT));
+
+        usePagingModel = usePagingResultSets();
+
+        if (usePagingModel) {
+            pageSize = conf.getInt(CONF_PAGE_SIZE, DEFAULT_PAGE_SIZE);
+            log.debug("Using paging model for large result sets. Page size: "
+                      + pageSize);
+        } else {
+            log.debug("Using default model for large result sets");
+            pageSize = -1;
+        }
     }
 
     private static Configuration updateConfiguration(Configuration
@@ -482,6 +511,46 @@ public abstract class DatabaseStorage extends StorageBase {
     }
 
     /**
+     * Return whether the database must do manual paging over the result sets
+     * or the cursoring supplied by the database is sufficient. DatabaseStorage
+     * will invoke this method one once during its initialization and never
+     * again.
+     * <p/>
+     * If this method returns {@code true} the
+     * {@link #getPagingStatement(String)} will be called with the SQL
+     * statements the DatabaseStorage wants paging versions of.
+     * <p/>
+     * The default implementation of this method returns {@code false}
+     * @return whether or not to use a manual client side paging model for
+     *         retrieval of large result sets
+     */
+    protected boolean usePagingResultSets() {
+        return false;
+    }
+
+    /**
+     * Return an altered version of the input {@code sql} which adds one extra
+     * '?' parameter, <i>to the end of the SQL statement</i>, which can be used
+     * to limit the number of rows returned.
+     * <p/>
+     * For many databases a legal implementation of this method would simply
+     * return:<br/>
+     * <pre>
+     *   sql + " LIMIT ?"
+     * </pre>
+     * <p/>
+     * The default implementation of this method throws an
+     * {@link UnsupportedOperationException}.
+     * @param sql Input SQL statement on which to append another parameter that
+     *            limits the number of rows returned
+     * @return A modified version of {@code sql} that adds a new '?' parameter
+     *         to the statement that will limit the number of rows returned
+     */
+    protected String getPagingStatement(String sql) {
+        throw new UnsupportedOperationException("Non-paging data model");
+    }
+
+    /**
      * Prepare relevant SQL statements for later use.
      * @throws SQLException if the syntax of a statement was wrong or the
      *                      connection to the database was faulty.
@@ -512,6 +581,9 @@ public abstract class DatabaseStorage extends StorageBase {
                                     + " WHERE " + BASE_COLUMN + "=?"
                                     + " AND " + MTIME_COLUMN + ">?"
                                     + " ORDER BY " + MTIME_COLUMN;
+        if (usePagingModel) {
+            modifiedAfterQuery = getPagingStatement(modifiedAfterQuery);
+        }
         log.debug("Preparing query getModifiedAfter with '"
                   + modifiedAfterQuery + "'");
         stmtGetModifiedAfter = prepareStatement(modifiedAfterQuery);
@@ -524,6 +596,9 @@ public abstract class DatabaseStorage extends StorageBase {
                                        + " ON " + relationsClause
                                        + " WHERE " + MTIME_COLUMN + ">?"
                                        + " ORDER BY " + MTIME_COLUMN;
+        if (usePagingModel) {
+            modifiedAfterQuery = getPagingStatement(modifiedAfterQuery);
+        }
         log.debug("Preparing query getModifiedAfterAll with '"
                   + modifiedAfterAllQuery + "'");
         stmtGetModifiedAfterAll = prepareStatement(modifiedAfterAllQuery);
@@ -690,18 +765,33 @@ public abstract class DatabaseStorage extends StorageBase {
 
         // doGetRecordsModifiedAfter creates and iterator and 'stmt' will
         // be closed together with that iterator
-        return doGetRecordsModifiedAfter(time, base, options, stmt);
+        DatabaseIterator iter = doGetRecordsModifiedAfter(time, base,
+                                                          options, stmt);
+
+        if (iter == null) {
+            return EMPTY_ITERATOR_KEY;
+        }
+
+        if (usePagingModel) {
+            iter = new PagingResultIterator((ResultIterator)iter);
+        }
+
+        return registerRecordIterator(iter);
     }
 
-    /*
+    /**
      * This method is responsible for closing 'stmt'. This is handled implicitly
      * since 'stmt' is added to a ResultIterator and it will be closed when
      * the iterator is closed.
+     * @return {@code null} if there are no records updated in {@code base}
+     *         after {@code time}. Otherwise a ResultIterator ready for fetching
+     *         records
      */
-    private synchronized long doGetRecordsModifiedAfter(long time,
-                                                        String base,
-                                                        QueryOptions options,
-                                                        PreparedStatement stmt)
+    private synchronized ResultIterator
+                               doGetRecordsModifiedAfter(long time,
+                                                         String base,
+                                                         QueryOptions options,
+                                                         PreparedStatement stmt)
                                                             throws IOException {
         log.debug("getRecordsModifiedAfter('" + time + "', " + base
                   + ") entered");
@@ -722,13 +812,18 @@ public abstract class DatabaseStorage extends StorageBase {
         if (time > getModificationTime(base)) {
             log.debug ("Storage not flushed after " + time + ". Returning"
                        + " empty iterator");
-            return EMPTY_ITERATOR_KEY;
+            return null;
         }
 
         // Prepared stmt for all bases
         if (base == null) {
             try {
                 stmt.setLong(1, timestamp);
+
+                if (usePagingModel) {
+                    stmt.setInt(2, pageSize);
+                }
+
             } catch (SQLException e) {
                 throw new IOException(String.format(
                         "Could not prepare stmtGetModifiedAfterAll with time"
@@ -736,19 +831,25 @@ public abstract class DatabaseStorage extends StorageBase {
             }
 
             // stmt will be closed when the iterator is closed
-            return prepareIterator(stmt, options);
+            return startIterator(stmt, base, options);
         }
 
         // Prepared stmt for a specfic base
         try {
             stmt.setString(1, base);
             stmt.setLong(2, timestamp);
+
+            if (usePagingModel) {
+                stmt.setInt(3, pageSize);
+            }
+
         } catch (SQLException e) {
             throw new IOException("Could not prepare stmtGetModifiedAfter "
                                       + "with base '" + base + "' and time "
                                       + time, e);
         }
-        return prepareIterator(stmt, options);
+
+        return startIterator(stmt, base, options);
     }    
 
     @Override
@@ -893,35 +994,22 @@ public abstract class DatabaseStorage extends StorageBase {
 
     @Override
     public Record next(long iteratorKey) throws IOException {
-        boolean error = false;
-        ResultIterator iterator = iterators.get(iteratorKey);
+        DatabaseIterator iterator = iterators.get(iteratorKey);
 
         if (iterator == null) {
             throw new IllegalArgumentException("No result iterator with key "
                                       + iteratorKey);
         }
 
-        try {
-            if (!iterator.hasNext()) {
-                iterator.close();
-                iterators.remove(iterator.getKey());
-                throw new NoSuchElementException ("Iterator " + iteratorKey
-                                                  + " depleted");
-            }
-
-            Record r = iterator.getRecord();
-            return expandRelations(r, iterator.getQueryOptions());
-        } catch (SQLException e) {
-            error = true;
-            throw new IOException("SQLException: " + e.getMessage(), e);
-        } finally {
-            if (error) {
-                log.debug ("Error detected on iterator " + iteratorKey + "."
-                           + " Removing");
-                iterator.close();
-                iterators.remove(iterator.getKey());
-            }
+        if (!iterator.hasNext()) {
+            iterator.close();
+            iterators.remove(iterator.getKey());
+            throw new NoSuchElementException ("Iterator " + iteratorKey
+                                              + " depleted");
         }
+
+        Record r = iterator.next();
+        return expandRelations(r, iterator.getQueryOptions());
     }
 
     private Record expandRelations(Record r, QueryOptions options)
@@ -1085,30 +1173,24 @@ public abstract class DatabaseStorage extends StorageBase {
                                        PreparedStatement stmt)
                                                             throws IOException {
         List<Record> parents = new ArrayList<Record>(1);
-        ResultIterator iter = null;
+        DatabaseIterator iter = null;
 
         try {
             stmt.setString(1, id);
             stmt.executeQuery();
 
             ResultSet results = stmt.getResultSet();
-            iter = new ResultIterator(stmt, results, null);
+            iter = new ResultIterator(stmt, results);
 
             while (iter.hasNext()) {
-                try {
-                    Record r = iter.getRecord();
-                    if (options != null && options.allowsRecord(r)) {
-                        parents.add(r);
-                    } else if (options == null) {
-                        parents.add(r);
-                    } else if (log.isTraceEnabled()) {
-                        log.trace("Parent record '" + r.getId()
-                                  + "' not allowed by query options");
-                    }
-                } catch (IOException e) {
-                    throw new IOException("Error scanning parent records "
-                                              + "for '" + id + "': "
-                                              + e.getMessage(), e);
+                Record r = iter.next();
+                if (options != null && options.allowsRecord(r)) {
+                    parents.add(r);
+                } else if (options == null) {
+                    parents.add(r);
+                } else if (log.isTraceEnabled()) {
+                    log.trace("Parent record '" + r.getId()
+                              + "' not allowed by query options");
                 }
             }
 
@@ -1168,10 +1250,10 @@ public abstract class DatabaseStorage extends StorageBase {
             stmt.executeQuery();
 
             ResultSet results = stmt.getResultSet();
-            iter = new ResultIterator(stmt, results, null);
+            iter = new ResultIterator(stmt, results);
 
             while (iter.hasNext()) {
-                Record r = iter.getRecord();
+                Record r = iter.next();
                 if (options != null && options.allowsRecord(r)) {
                     children.add(r);
                 } else if (options == null) {
@@ -1839,53 +1921,55 @@ public abstract class DatabaseStorage extends StorageBase {
     }
 
     /**
-     * Given a query, execute this query and transform the resultset to a
-     * RecordIterator.
-     * @param statement the statement to execute.
+     * Given a query, execute this query and transform the {@link ResultSet}
+     * to a {@link ResultIterator}.
+     * @param stmt the statement to execute.
+     * @param base the base we are iterating over
      * @return a RecordIterator of the result.
      * @throws IOException - also on no getConnection() and SQLExceptions.
      */
-    private long prepareIterator(PreparedStatement statement,
-                                 QueryOptions options) throws
-                                                               IOException {
-        log.debug("Getting results for '" + statement + "'");
+    private ResultIterator startIterator (PreparedStatement stmt,
+                                          String base,
+                                          QueryOptions options)
+                                                            throws IOException {
+        log.debug("Getting results for '" + stmt + "'");
         ResultSet resultSet;
          try {
-             resultSet = statement.executeQuery();
-             log.debug("Got resultSet from '" + statement.toString() + "'");
+             resultSet = stmt.executeQuery();
+             log.debug("Got resultSet from '" + stmt.toString() + "'");
          } catch (SQLException e) {
-             log.error("SQLException in prepareIterator", e);
+             log.error("SQLException in startIterator", e);
              throw new IOException("SQLException", e);
          }
-         return createRecordIterator(statement, resultSet, options);
+
+        ResultIterator iter;
+        try {
+            iter = new ResultIterator(stmt, resultSet, base, options);
+        } catch (SQLException e) {
+            log.error("SQLException creating record iter", e);
+            throw new IOException("SQLException creating record iter",
+                                      e);
+        }
+
+        return iter;
     }
     
     
     /**
-     * Create and register a ResultIterator for a
-     * <code>(statement,resultset, queryOptions)</code> tuple.
-     * @param resultSet the results to wrap.
-     * @return an iterator over the resultset
+     * Register a ResultIterator and return the iterator key for it.
+     * Iterators registered with this call will automatically be reaped
+     * after periods of inactivity.
+     * @param iter the ResultIterator to register with the DatabaseStorage
+     * @return a key to access the iterator remotely
      * @throws IOException on SQLException
      */
-    private long createRecordIterator(PreparedStatement stmt,
-                                      ResultSet resultSet,
-                                      QueryOptions options)
-                                                       throws IOException {
-        log.trace("createRecordIterator entered with result set " + resultSet);
-        ResultIterator iterator;
-        try {
-            iterator = new ResultIterator(stmt, resultSet, options);
-            log.trace("createRecordIterator: Got iterator " + iterator.getKey()
-                      + " adding to iterator-list");
-            iterators.put(iterator.getKey(), iterator);
-        } catch (SQLException e) {
-            log.error("SQLException creating record iterator", e);
-            throw new IOException("SQLException creating record iterator",
-                                      e);
-        }
-        log.trace("returning new StorageIterator");
-        return iterator.getKey();
+    private long registerRecordIterator (DatabaseIterator iter)
+                                                            throws IOException {
+        log.trace("registerRecordIterator: Got iter " + iter.getKey()
+                  + " adding to iterator list");
+        iterators.put(iter.getKey(), iter);
+
+        return iter.getKey();
     }
 
     /* Our version of a boolean packed as integer is that 0 = false, everything
@@ -1936,22 +2020,44 @@ public abstract class DatabaseStorage extends StorageBase {
         log.info("Closed");
     }
 
-    protected class ResultIterator {
+    protected interface DatabaseIterator extends Iterator<Record> {
+        public void close();
+
+        public long getKey();
+
+        public long getLastAccess();
+
+        public QueryOptions getQueryOptions();
+
+        public String getBase();
+    }
+
+    protected class ResultIterator implements DatabaseIterator {
         private Log log = LogFactory.getLog(ResultIterator.class);
 
         private long key;        
         private long lastAccess;
         private PreparedStatement stmt;
+        protected String base;
         private ResultSet resultSet;
         private boolean resultSetHasNext;
         private Record nextRecord;
         private RecursionQueryOptions options;
+        private boolean autoPaging;
 
-        public ResultIterator(PreparedStatement stmt,
+        public ResultIterator (PreparedStatement stmt,
+                               ResultSet resultSet)
+                                               throws SQLException, IOException{
+            this(stmt, resultSet, null, null);
+        }
+
+        public ResultIterator(PreparedStatement stmt,                              
                               ResultSet resultSet,
+                              String base,
                               QueryOptions options)
                                               throws SQLException, IOException {
             this.stmt = stmt;
+            this.base = base;
             this.resultSet = resultSet;
             this.options = options == null ?
                                       null : new RecursionQueryOptions(options);
@@ -1963,10 +2069,14 @@ public abstract class DatabaseStorage extends StorageBase {
             nextRecord = nextValidRecord();
 
             log.trace("Constructed Record iterator with initial hasNext: "
-                      + resultSetHasNext);
-            
-            key = System.currentTimeMillis();
-            lastAccess = key;
+                      + resultSetHasNext + ", on base " + base);
+
+            // The generated timestamps a guranteed to be unique, so no
+            // iterator key clashes even within the same millisecond
+            key = timestampGenerator.next();
+
+            // Extract the system time from when we generated the iterator key
+            lastAccess = timestampGenerator.systemTime(key);
         }
 
         public long getLastAccess() {
@@ -1982,6 +2092,10 @@ public abstract class DatabaseStorage extends StorageBase {
             return key;
         }
 
+        public String getBase() {
+            return base;
+        }
+
         public boolean hasNext() {
             lastAccess = System.currentTimeMillis();
             return nextRecord != null;
@@ -1994,7 +2108,7 @@ public abstract class DatabaseStorage extends StorageBase {
          * @throws java.sql.SQLException if the record could not be requested.
          * @throws IOException if the Record data could not be gunzipped.
          */
-        public Record getRecord() throws SQLException, IOException {
+        public Record next () {
             lastAccess = System.currentTimeMillis();
 
             if (nextRecord == null) {
@@ -2004,21 +2118,34 @@ public abstract class DatabaseStorage extends StorageBase {
 
 
             Record record = nextRecord;
-            nextRecord = nextValidRecord();
+            try {
+                nextRecord = nextValidRecord();
+            } catch (SQLException e) {
+                log.warn("Error reading next record: " + e.getMessage(), e);
+                nextRecord = null;
+            } catch (IOException e) {
+                log.warn("Error reading next record: " + e.getMessage(), e);
+                nextRecord = null;
+            }
 
             if (log.isTraceEnabled()) {
-                log.trace("getRecord returning '" + record.getId() + "'");
+                log.trace("next returning '" + record.getId() + "'");
             }
 
             /* The naive solution to updating resultSetHasNext is to just do:
              *   resultSetHasNext = !resultSet.isAfterLast();
              * here, but the ResultSet type does not allow this unless it is
              * of a scrollable type, which we do not use for resource limitation
-             * purposes. Instead the resultSetHasNext state is updated ny scanRecord()
+             * purposes. Instead the resultSetHasNext state is updated in
+             * scanRecord()
              */            
 
             return record;
 //            rs.getStatement().close();//note: rs is closed when stmt is closed
+        }
+
+        public void remove () {
+            throw new UnsupportedOperationException();
         }
 
         private Record nextValidRecord () throws SQLException, IOException {
@@ -2080,18 +2207,137 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
+    private class PagingResultIterator implements DatabaseIterator {
+
+        private long key;
+        private long lastMtime;
+        private long lastAccess;
+        private ResultIterator page;
+        private Record nextRecord;
+
+        public PagingResultIterator (ResultIterator firstPage) {
+            page = firstPage;
+
+            // This will always be unique, so no key collision
+            key = timestampGenerator.next();
+            lastAccess = timestampGenerator.systemTime(key);
+
+            lastMtime = 0;
+
+            if (page.hasNext()) {
+                nextRecord = page.next();
+            } else {
+                nextRecord = null;
+            }
+
+        }
+
+        @Override
+        public String getBase() {
+            return page.getBase();
+        }
+
+        @Override
+        public long getLastAccess() {
+            return lastAccess;
+        }
+
+        @Override
+        public long getKey () {
+            return key;
+        }
+
+        @Override
+        public QueryOptions getQueryOptions() {
+            return page.getQueryOptions();
+        }
+
+        @Override
+        public boolean hasNext() {
+            lastAccess = System.currentTimeMillis();
+            return nextRecord != null;
+        }
+
+        @Override
+        public Record next () {
+            lastAccess = System.currentTimeMillis();
+
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+
+            Record rec = nextRecord;
+            nextRecord = nextValidRecord();
+
+            lastMtime = rec.getModificationTime();
+            //FIXME: We need the raw timestamp here! THis is a huge bug!
+            
+            return rec;
+        }
+
+        private Record nextValidRecord () {
+            if (page.hasNext()) {
+                return page.next();
+            }
+
+            // page is depleted
+            page.close();
+
+            try {
+                String base = getBase();
+                PreparedStatement stmt;
+                if (base == null) {
+                    stmt = getStatement(stmtGetModifiedAfterAll);
+                } else {
+                    stmt = getStatement(stmtGetModifiedAfter);
+                }
+
+                page = doGetRecordsModifiedAfter(lastMtime, getBase(),
+                                                 getQueryOptions(), stmt);
+
+            } catch (SQLException e) {
+                log.warn("Failed to prepare query for next page: "
+                         + e.getMessage(), e);
+                return null;
+            } catch (IOException e) {
+                log.warn("Failed to execute query for next page: "
+                         + e.getMessage(), e);
+                return null;
+            }
+
+            if (page.hasNext()) {
+                return page.next();
+            }
+
+            log.debug("All pages read");
+            page.close();
+            return null;
+        }
+
+        @Override
+        public void remove () {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void close() {
+            page.close();
+        }
+
+    }
+
     /**
      * Helper class to clean up unused iterators. It should be started
      * via the runInThread() method
      */
     private static class ResultIteratorReaper implements Runnable {
 
-        private Map<Long,ResultIterator> iterators;
+        private Map<Long,DatabaseIterator> iterators;
         private Thread t;
         private boolean mayRun;
         private long graceTimeMinutes;
         
-        public ResultIteratorReaper (Map<Long,ResultIterator> iterators,
+        public ResultIteratorReaper (Map<Long,DatabaseIterator> iterators,
                                      long graceTimeMinutes) {
             this.iterators = iterators;
             this.graceTimeMinutes = graceTimeMinutes;
@@ -2107,7 +2353,7 @@ public abstract class DatabaseStorage extends StorageBase {
         public void stop () {
             log.debug("Got stop request. Closing all iterators");
 
-            for (ResultIterator iter : iterators.values()) {
+            for (DatabaseIterator iter : iterators.values()) {
                 iter.close();
             }
 
@@ -2134,14 +2380,14 @@ public abstract class DatabaseStorage extends StorageBase {
             long now = System.currentTimeMillis();
             List<Long> deadIters = new ArrayList<Long>();
 
-            for (ResultIterator iter : iterators.values()) {
+            for (DatabaseIterator iter : iterators.values()) {
                 if (iter.getLastAccess() + graceTimeMinutes*60*1000 <= now) {
                     deadIters.add(iter.getKey());
                 }
             }
 
             for (Long key : deadIters) {
-                ResultIterator iter = iterators.remove(key);
+                DatabaseIterator iter = iterators.remove(key);
                 iter.close();
 
                 if (iter != null) {
