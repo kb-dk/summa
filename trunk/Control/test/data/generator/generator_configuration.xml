@@ -58,7 +58,7 @@
                                 </entry>
                                 <entry>
                                     <key>summa.ingest.generator.records</key>
-                                    <value class="int">10000</value>
+                                    <value class="int">1000</value>
                                 </entry>
                                 <entry>
                                     <key>summa.ingest.generator.base</key>
