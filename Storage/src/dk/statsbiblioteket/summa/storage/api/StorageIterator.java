@@ -48,6 +48,8 @@ import org.apache.commons.logging.LogFactory;
 public class StorageIterator implements Iterator<Record>, Serializable {
     // TODO: Consider making this adjustable
     public static int MAX_QUEUE_SIZE = 110;
+
+    private int maxQueueSize;
     private final ReadableStorage iteratorHolder;
     private final long key;
     private final Queue<Record> records;
@@ -81,6 +83,7 @@ public class StorageIterator implements Iterator<Record>, Serializable {
         this.key = key;
         this.next = true;
         records = new LinkedBlockingQueue<Record>(maxBufferSize);
+        maxQueueSize = maxBufferSize;
     }
 
     public boolean hasNext() {
@@ -119,9 +122,9 @@ public class StorageIterator implements Iterator<Record>, Serializable {
     private void checkRecords () throws IOException {
         if (records.size() == 0 && next) {
             try {
-                List<Record> recs = iteratorHolder.next(key, records.size());
+                List<Record> recs = iteratorHolder.next(key, maxQueueSize);
 
-                if (recs.size() < records.size()) {
+                if (recs.size() < maxQueueSize) {
                     next = false;
                 }
                 records.addAll(recs);
