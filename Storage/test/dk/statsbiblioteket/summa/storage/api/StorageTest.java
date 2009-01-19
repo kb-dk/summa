@@ -3,6 +3,7 @@ package dk.statsbiblioteket.summa.storage.api;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
+import dk.statsbiblioteket.summa.storage.database.postgres.PostgresStorage;
 import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.util.Files;
 
@@ -37,14 +38,31 @@ public class StorageTest extends TestCase {
 
     public static Configuration createConf () throws Exception {
 
+        // H2 Config
         Configuration conf = Configuration.newMemoryBased(
                 Storage.CONF_CLASS,
                 H2Storage.class,
                 DatabaseStorage.CONF_LOCATION,
+                testDBRoot + File.separator + dbPrefix + (storageCounter++)
+        );
+
+        // Postgres Config
+        /*Configuration conf = Configuration.newMemoryBased(
+                Storage.CONF_CLASS,
+                PostgresStorage.class,
+                DatabaseStorage.CONF_LOCATION,
                 testDBRoot + File.separator + dbPrefix + (storageCounter++),
                 DatabaseStorage.CONF_FORCENEW,
-                true
-        );
+                true,
+                DatabaseStorage.CONF_DATABASE,
+                "summa",
+                DatabaseStorage.CONF_USERNAME,
+                "${user.name}",
+                DatabaseStorage.CONF_PASSWORD,
+                "",
+                DatabaseStorage.CONF_HOST,
+                ""
+        );*/
 
         return conf;
     }
@@ -66,6 +84,10 @@ public class StorageTest extends TestCase {
     }
 
     public void tearDown () throws Exception {
+        if (storage instanceof DatabaseStorage) {
+            ((DatabaseStorage)storage).destroyDatabase();
+        }
+
         storage.close();
         /* We get spurious errors where the connection to the db isn't ready
          * when running the unit tests in batch mode */
