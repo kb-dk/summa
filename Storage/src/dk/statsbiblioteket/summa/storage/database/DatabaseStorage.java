@@ -158,7 +158,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * The default value for this property is {@link #DEFAULT_PAGE_SIZE}
      */
     public static final String CONF_PAGE_SIZE =
-                                             "summa.storage.databasse.pagesize";
+                                             "summa.storage.database.pagesize";
 
     /**
      * Default value for the {@link #CONF_PAGE_SIZE} property
