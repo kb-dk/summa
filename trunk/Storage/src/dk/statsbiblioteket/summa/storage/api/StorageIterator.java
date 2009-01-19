@@ -63,11 +63,24 @@ public class StorageIterator implements Iterator<Record>, Serializable {
      * @param key the iteration key as returned from the {@link ReadableStorage}
      */
     public StorageIterator(ReadableStorage iteratorHolder, long key) {
+        this(iteratorHolder, key, MAX_QUEUE_SIZE);
+    }
+
+    /**
+     * Create an iterator on a given storage and iteration key (as returned
+     * by one of the getters on the {@link ReadableStorage} interface)
+     *
+     * @param iteratorHolder the storage holding the iterator key {@code key}
+     * @param key the iteration key as returned from the {@link ReadableStorage}
+     * @param maxBufferSize maximum number of records to prefetch
+     */
+    public StorageIterator(ReadableStorage iteratorHolder, long key,
+                           int maxBufferSize) {
         log = LogFactory.getLog (this.getClass().getName());
         this.iteratorHolder = iteratorHolder;
         this.key = key;
         this.next = true;
-        records = new LinkedBlockingQueue<Record>(MAX_QUEUE_SIZE);
+        records = new LinkedBlockingQueue<Record>(maxBufferSize);
     }
 
     public boolean hasNext() {
@@ -106,9 +119,9 @@ public class StorageIterator implements Iterator<Record>, Serializable {
     private void checkRecords () throws IOException {
         if (records.size() == 0 && next) {
             try {
-                List<Record> recs = iteratorHolder.next(key, MAX_QUEUE_SIZE);
+                List<Record> recs = iteratorHolder.next(key, records.size());
 
-                if (recs.size() < MAX_QUEUE_SIZE) {
+                if (recs.size() < records.size()) {
                     next = false;
                 }
                 records.addAll(recs);

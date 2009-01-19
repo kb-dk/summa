@@ -117,10 +117,14 @@ public class StorageTool {
                                                              throws IOException{
 
         int numPeek;
+        String base;
 
         if (argv.length == 1) {
-            System.err.println("You must specify a base to peek on");
-            return;
+            System.err.println("Peeking on all bases");
+            base = null;
+        } else {
+            base = argv[1];
+            System.err.println ("Getting records from base '" + base + "'");
         }
 
         if (argv.length == 2) {
@@ -129,11 +133,11 @@ public class StorageTool {
             numPeek = Integer.parseInt(argv[2]);
         }
 
-        String base = argv[1];
 
-        System.err.println ("Getting records from base '" + base + "'");
+
         long iterKey = storage.getRecordsModifiedAfter(0, base, null);
-        Iterator<Record> records = new StorageIterator(storage, iterKey);
+        Iterator<Record> records = new StorageIterator(storage,
+                                                       iterKey, numPeek);
         Record rec;
 
         int count = 0;

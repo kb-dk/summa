@@ -558,6 +558,10 @@ public abstract class DatabaseStorage extends StorageBase {
         return timestampGenerator;
     }
 
+    public int getPageSize() {
+        return pageSize;
+    }
+
     /**
      * Prepare relevant SQL statements for later use.
      * @throws SQLException if the syntax of a statement was wrong or the
@@ -605,7 +609,7 @@ public abstract class DatabaseStorage extends StorageBase {
                                        + " WHERE " + MTIME_COLUMN + ">?"
                                        + " ORDER BY " + MTIME_COLUMN;
         if (usePagingModel) {
-            modifiedAfterQuery = getPagingStatement(modifiedAfterQuery);
+            modifiedAfterAllQuery = getPagingStatement(modifiedAfterAllQuery);
         }
         log.debug("Preparing query getModifiedAfterAll with '"
                   + modifiedAfterAllQuery + "'");
