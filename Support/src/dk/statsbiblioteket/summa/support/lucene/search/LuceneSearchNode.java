@@ -58,6 +58,7 @@ import org.apache.lucene.document.SetBasedFieldSelector;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.CorruptIndexException;
+import org.apache.lucene.index.IndexReader;
 
 /**
  * Lucene-specific search node.
@@ -132,8 +133,8 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                     "Could not resolve file from location '%s'", location));
         }
         try {
-            searcher = new IndexSearcher(
-                    FSDirectory.getDirectory(urlLocation.getFile()));
+            searcher = new IndexSearcher(IndexReader.open(
+                    FSDirectory.getDirectory(urlLocation.getFile()), true));
             log.debug("Opened Lucene searcher for " + urlLocation
                       + " with maxDoc " + searcher.maxDoc());
         } catch (CorruptIndexException e) {
@@ -154,10 +155,12 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
         }
     }
 
+    @Override
     public void managedClose() {
         log.trace("close called");
         if (searcher != null) {
             try {
+                searcher.getIndexReader().close();
                 searcher.close();
             } catch (IOException e) {
                 log.warn(String.format(
