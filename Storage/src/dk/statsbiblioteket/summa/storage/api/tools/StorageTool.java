@@ -177,6 +177,7 @@ public class StorageTool {
     private static void actionDump(String[] argv, StorageReaderClient storage)
                                                             throws IOException {
         String base;
+        long count = 0;
 
         if (argv.length == 1) {
             System.err.println("Dumping on all bases");
@@ -192,16 +193,18 @@ public class StorageTool {
         Record rec;
 
         while (records.hasNext()) {
+            count++;
             rec = records.next ();
             System.out.println(rec.getContentAsUTF8());
         }
 
         if (base != null) {
-            System.err.println("Base '" + base + "' dumped in "
+            System.err.println("Dumped " + count + " records from base '" + base
+                               + "' in "
                                + (System.currentTimeMillis() - startTime)
                                + " ms");
         } else {
-            System.err.println("All bases dumped in "
+            System.err.println("Dumped " + count + " records from all bases in "
                                + (System.currentTimeMillis() - startTime)
                                + " ms");
         }
