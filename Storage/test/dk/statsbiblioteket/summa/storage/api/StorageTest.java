@@ -510,7 +510,9 @@ public class StorageTest extends TestCase {
     }
 
     public void testGetMorerecords() throws Exception {
-        int WANTED_RECORDS = StorageIterator.MAX_QUEUE_SIZE + 5;
+        int WANTED_RECORDS = Math.max(DatabaseStorage.DEFAULT_PAGE_SIZE*3 + 5,
+                                      StorageIterator.MAX_QUEUE_SIZE + 5);
+
         for (int i = 0 ; i < WANTED_RECORDS ; i++) {
             storage.flush(new Record("Foo" + i, testBase1, testContent1));
         }

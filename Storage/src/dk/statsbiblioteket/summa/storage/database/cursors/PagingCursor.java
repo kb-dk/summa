@@ -18,6 +18,7 @@ public class PagingCursor implements Cursor {
 
     private static final Log log = LogFactory.getLog(PagingCursor.class);
 
+    private long pageRows;
     private long key;
     private long lastMtimeTimestamp;
     private long lastAccess;
@@ -35,6 +36,7 @@ public class PagingCursor implements Cursor {
         lastAccess = db.getTimestampGenerator().systemTime(key);
 
         lastMtimeTimestamp = 0;
+        pageRows = 0;
 
         if (page.hasNext()) {
             nextRecord = page.next();
@@ -83,8 +85,7 @@ public class PagingCursor implements Cursor {
         lastMtimeTimestamp = page.currentMtimeTimestamp();
 
         nextRecord = nextValidRecord();
-
-        //FIXME: We need the raw timestamp here! THis is a huge bug!
+        pageRows++;
 
         return rec;
     }
@@ -95,16 +96,21 @@ public class PagingCursor implements Cursor {
         }
 
         if (log.isTraceEnabled()) {
-            log.debug("Requesting new page for " + this);
+            log.trace("Page " + page + "depleted after " + pageRows
+                      + " records. Requesting new page for " + this);
         }
 
         // page is depleted
         page.close();
+        pageRows = 0;
 
         try {
             page = db.getRecordsModifiedAfterCursor(lastMtimeTimestamp,
                                                     getBase(),
                                                     getQueryOptions());
+            if (log.isTraceEnabled()) {
+                log.trace("Got new page for " + this + ": " + page);
+            }
         } catch (IOException e) {
             log.warn("Failed to execute query for next page: "
                      + e.getMessage(), e);
@@ -115,7 +121,7 @@ public class PagingCursor implements Cursor {
             return page.next();
         }
 
-        log.debug("All pages read");
+        log.debug("All pages read, cursor " + this + " depleted");
         page.close();
         return null;
     }
