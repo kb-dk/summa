@@ -21,6 +21,7 @@ package dk.statsbiblioteket.summa.releasetest;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Profiler;
+import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.ingest.source.RecordGenerator;
@@ -54,7 +55,10 @@ public class FagrefGeneratorTest extends NoExitTestCase {
     public void setUp() throws Exception {
         super.setUp();
         ReleaseTestCommon.setup();
-        SearchTest.INDEX_ROOT.mkdirs();
+        if (SearchTest.INDEX_ROOT.exists()) {
+            Files.delete(SearchTest.INDEX_ROOT);
+            SearchTest.INDEX_ROOT.mkdirs();
+        }
     }
 
     @Override
