@@ -848,6 +848,7 @@ public abstract class DatabaseStorage extends StorageBase {
         // This prevents an OOM for backends like Postgres
         try {
             stmt.getConnection().setAutoCommit(false);
+            stmt.getConnection().setReadOnly(true);
             if (usePagingModel) {
                 stmt.setFetchSize(pageSize);
             } else {
@@ -862,6 +863,11 @@ public abstract class DatabaseStorage extends StorageBase {
                                                     getModificationTime(base)) {
             log.debug ("Storage not flushed after " + mtimeTimestamp
                        + ". Returning empty iterator");
+            try {
+                stmt.close();
+            } catch (SQLException e) {
+                log.warn("Failed to close statement: " + e.getMessage(), e);
+            }
             return null;
         }
 
