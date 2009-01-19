@@ -60,7 +60,7 @@ public class FagrefGeneratorTest extends NoExitTestCase {
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
-        ReleaseTestCommon.tearDown();
+//        ReleaseTestCommon.tearDown();
     }
 
     public static Test suite() {

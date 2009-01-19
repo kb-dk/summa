@@ -83,6 +83,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
     public static final int DEFAULT_MAX_BOOLEAN_CLAUSES = 10000;
     private int maxBooleanClauses = DEFAULT_MAX_BOOLEAN_CLAUSES;
 
+    @SuppressWarnings({"FieldCanBeLocal"})
     private LuceneIndexDescriptor descriptor;
     private SummaQueryParser parser;
     private IndexSearcher searcher;
@@ -109,6 +110,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
         parser = new SummaQueryParser(descriptor);
     }
 
+    @Override
     public void managedOpen(String location) throws RemoteException {
         log.debug("Open called for location '" + location
                   + "'. Appending /" + LuceneIndexUtils.LUCENE_FOLDER);
@@ -173,6 +175,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
         }
     }
 
+    @Override
     public void managedWarmup(String query) {
         //noinspection OverlyBroadCatchBlock
         try {
@@ -312,6 +315,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
         }
     }
 
+    @Override
     protected DocIDCollector collectDocIDs(String query,
                                            String filter) throws IOException {
         //noinspection DuplicateStringLiteralInspection
