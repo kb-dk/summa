@@ -79,7 +79,10 @@ public class StorageTool {
         }
 
         System.err.println("Getting records " + Logs.expand(ids, 10) + "");
+        long startTime = System.currentTimeMillis();
         List<Record> recs = storage.getRecords (ids, null);
+        System.err.println(ids.size() + " records fetched in "
+                           + (System.currentTimeMillis() - startTime) + " ms");
 
         for (Record r : recs) {
             printRecord(r, true);
@@ -134,7 +137,7 @@ public class StorageTool {
         }
 
 
-
+        long startTime = System.currentTimeMillis();
         long iterKey = storage.getRecordsModifiedAfter(0, base, null);
         Iterator<Record> records = new StorageIterator(storage,
                                                        iterKey, numPeek);
@@ -154,6 +157,50 @@ public class StorageTool {
         if (count == 0) {
             System.err.println ("Base '" + base + "' is empty");
         }
+
+        if (base != null) {
+            System.err.println("Peek on base '" + base + "' completed in "
+                               + (System.currentTimeMillis() - startTime)
+                               + " ms");
+        } else {
+            System.err.println("Peek on all bases completed in "
+                               + (System.currentTimeMillis() - startTime)
+                               + " ms");
+        }
+    }
+
+    private static void actionDump(String[] argv, StorageReaderClient storage)
+                                                            throws IOException {
+        String base;
+
+        if (argv.length == 1) {
+            System.err.println("Dumping on all bases");
+            base = null;
+        } else {
+            base = argv[1];
+            System.err.println ("Dumping base '" + base + "'");
+        }
+
+        long startTime = System.currentTimeMillis();
+        long iterKey = storage.getRecordsModifiedAfter(0, base, null);
+        Iterator<Record> records = new StorageIterator(storage, iterKey);
+        Record rec;
+
+        while (records.hasNext()) {
+            rec = records.next ();
+            System.out.println(rec.getContentAsUTF8());
+        }
+
+        if (base != null) {
+            System.err.println("Base '" + base + "' dumped in "
+                               + (System.currentTimeMillis() - startTime)
+                               + " ms");
+        } else {
+            System.err.println("All bases dumped in "
+                               + (System.currentTimeMillis() - startTime)
+                               + " ms");
+        }
+
 
     }
 
@@ -231,9 +278,10 @@ public class StorageTool {
                             "storage-tool.sh <action> [arg]...");
         System.err.println ("Actions:\n"
                             + "\tget  <record_id>\n"
-                            + "\tpeek <base> [max_count=5]\n"
+                            + "\tpeek [base] [max_count=5]\n"
                             + "\ttouch <record_id> [record_id...]\n"
-                            + "\txslt <record_id> <xslt_url>\n");
+                            + "\txslt <record_id> <xslt_url>\n"
+                            + "\tdump [base]     (dump storage on stdout)\n");
     }
 
     public static void main (String[] args) throws Exception {
@@ -284,6 +332,8 @@ public class StorageTool {
             actionTouch(args, reader, writer);
         } else if ("xslt".equals(action)) {
             actionXslt(args, reader);
+        } else if ("dump".equals(action)){
+            actionDump(args, reader);
         } else {
             System.err.println ("Unknown action '" + action + "'");
             printUsage();
