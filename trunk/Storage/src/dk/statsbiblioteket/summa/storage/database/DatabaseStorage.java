@@ -1983,7 +1983,7 @@ public abstract class DatabaseStorage extends StorageBase {
 
     /**
      * Given a query, execute this query and transform the {@link ResultSet}
-     * to a {@link dk.statsbiblioteket.summa.storage.database.cursors.ResultSetCursor}.
+     * to a {@link ResultSetCursor}.
      * @param stmt the statement to execute.
      * @param base the base we are iterating over
      * @return a RecordIterator of the result.
