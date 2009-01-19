@@ -144,10 +144,13 @@ public class StorageTool {
 
         long startTime = System.currentTimeMillis();
         long iterKey = storage.getRecordsModifiedAfter(0, base, null);
+
+        System.err.println("Got iterator after "
+                           + (System.currentTimeMillis() - startTime) + " ms");
+
         Iterator<Record> records = new StorageIterator(storage,
                                                        iterKey, numPeek);
         Record rec;
-
         int count = 0;
         while (records.hasNext()) {
             rec = records.next ();
@@ -166,11 +169,11 @@ public class StorageTool {
         if (base != null) {
             System.err.println("Peek on base '" + base + "' completed in "
                                + (System.currentTimeMillis() - startTime)
-                               + " ms");
+                               + " ms (incl. iterator lookup time)");
         } else {
             System.err.println("Peek on all bases completed in "
                                + (System.currentTimeMillis() - startTime)
-                               + " ms");
+                               + " ms (incl. iterator lookup time)");
         }
     }
 
@@ -190,8 +193,11 @@ public class StorageTool {
         long startTime = System.currentTimeMillis();
         long iterKey = storage.getRecordsModifiedAfter(0, base, null);
         Iterator<Record> records = new StorageIterator(storage, iterKey);
-        Record rec;
 
+        System.err.println("Got iterator after "
+                           + (System.currentTimeMillis() - startTime) + " ms");
+
+        Record rec;
         while (records.hasNext()) {
             count++;
             rec = records.next ();
@@ -202,11 +208,11 @@ public class StorageTool {
             System.err.println("Dumped " + count + " records from base '" + base
                                + "' in "
                                + (System.currentTimeMillis() - startTime)
-                               + " ms");
+                               + " ms (including iterator lookup time)");
         } else {
             System.err.println("Dumped " + count + " records from all bases in "
                                + (System.currentTimeMillis() - startTime)
-                               + " ms");
+                               + " ms (including iterator lookup time)");
         }
 
 
