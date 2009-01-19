@@ -130,7 +130,7 @@ public class StorageTool {
             System.err.println ("Getting records from base '" + base + "'");
         }
 
-        if (argv.length == 2) {
+        if (argv.length <= 2) {
             numPeek = 5;
         } else {
             numPeek = Integer.parseInt(argv[2]);
