@@ -95,8 +95,8 @@ public class PagingCursor implements Cursor {
             return page.next();
         }
 
-        if (log.isTraceEnabled()) {
-            log.trace("Page " + page + "depleted after " + pageRows
+        if (log.isDebugEnabled()) {
+            log.debug("Page " + page + "depleted after " + pageRows
                       + " records. Requesting new page for " + this);
         }
 

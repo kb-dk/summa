@@ -7,10 +7,7 @@ import org.h2.jdbcx.JdbcDataSource;
 import java.io.File;
 import java.io.IOException;
 import java.rmi.RemoteException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
+import java.sql.*;
 import java.util.List;
 
 import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager;
@@ -36,6 +33,11 @@ public class H2Storage extends DatabaseStorage implements Configurable {
     private static final int BLOB_MAX_SIZE = 50*1024*1024; // MAX_VALUE instead?
     public static final int META_LIMIT =     50*1024*1024; // MAX_VALUE instead?
 
+    /**
+     * We optimize the index statistics after this many flushes
+     */
+    public static final int OPTIMIZE_INDEX_THRESHOLD = 100000;
+
     private String username;
     private String password;
     private File location;
@@ -45,6 +47,7 @@ public class H2Storage extends DatabaseStorage implements Configurable {
 
     private JdbcDataSource dataSource;
     private H2ConnectionPool pool;
+    private long numFlushes;
 
     /**
      * We need to create a custom connection pool because H2 doesn't support
@@ -88,6 +91,7 @@ public class H2Storage extends DatabaseStorage implements Configurable {
     public H2Storage(Configuration conf) throws IOException {
         super(conf);
         log.trace("Constructing H2Storage");
+        numFlushes = 0;
         username = conf.getString(CONF_USERNAME, "");
         password = conf.getString(CONF_PASSWORD, "");
         maxConnections = conf.getInt(CONF_MAX_CONNECTIONS,
@@ -189,6 +193,67 @@ public class H2Storage extends DatabaseStorage implements Configurable {
         if (createNew) {
             log.info("Creating new table for '" + location + "'");
             createSchema();
+        }
+
+        setMaxMemoryRows();
+        optimizeTables();
+    }
+
+    private void optimizeTables() {
+        Connection conn = getConnection();
+        try {
+            // Rebuild the table selectivity indexes used by the query optimizer
+            log.debug("Optimizing table selectivity");
+            Statement stmt = conn.createStatement();
+            stmt.execute("ANALYZE");
+        } catch (SQLException e) {
+            log.warn("Failed to optimize table selectivity");
+            return;
+        } finally {
+            try {
+                conn.close();
+            } catch (SQLException e) {
+                log.warn("Failed to close connection: " + e.getMessage(), e);
+            }
+        }
+    }
+
+    @Override
+    public void flush(Record rec) throws IOException {
+        numFlushes++;
+        numFlushes = numFlushes % OPTIMIZE_INDEX_THRESHOLD;
+
+        if (numFlushes == 0) {
+            optimizeTables();
+        }
+
+        super.flush(rec);
+    }
+
+    /**
+     * The purpose of this method is to make sure that H2's limit on the
+     * maximum number of memory buffered rows is bigger than the pageSize
+     * of the result sets
+     */
+    private void setMaxMemoryRows() {
+        Connection conn = getConnection();
+        try {
+            // There might be several rows per record if the records has
+            // relations. There will be one extra row per relation
+            int maxMemoryRows = getPageSize()*3;
+            log.debug("Setting MAX_MEMORY_ROWS to " + maxMemoryRows);
+            Statement stmt = conn.createStatement();
+            stmt.execute("SET MAX_MEMORY_ROWS " + maxMemoryRows);
+        } catch (SQLException e) {
+            log.warn("Failed to set MAX_MEMORY_ROWS this may affect performance"
+                      + " on large result sets");
+            return;
+        } finally {
+            try {
+                conn.close();
+            } catch (SQLException e) {
+                log.warn("Failed to close connection: " + e.getMessage(), e);
+            }
         }
     }
 
