@@ -98,7 +98,7 @@
                                 </entry>
                                 <entry>
                                     <key>summa.filter.sequence.filterclass</key>
-                                    <value class="string">dk.statsbiblioteket.summa.index.lucene.DocumentCreator</value>
+                                    <value class="string">dk.statsbiblioteket.summa.index.lucene.StreamingDocumentCreator</value>
                                 </entry>
                                 <entry>
                                     <key>summa.index.descriptorsetup</key>
