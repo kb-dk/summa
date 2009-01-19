@@ -291,6 +291,7 @@ public abstract class DatabaseStorage extends StorageBase {
     private CursorReaper iteratorReaper;
     private UniqueTimestampGenerator timestampGenerator;
 
+    private boolean useLazyRelations;
     private boolean usePagingModel;
     private int pageSize;
 
@@ -370,6 +371,7 @@ public abstract class DatabaseStorage extends StorageBase {
                                                      DEFAULT_ITERATOR_TIMEOUT));
 
         usePagingModel = usePagingResultSets();
+        useLazyRelations = useLazyRelationLookups();
 
         if (usePagingModel) {
             pageSize = conf.getInt(CONF_PAGE_SIZE, DEFAULT_PAGE_SIZE);
@@ -378,6 +380,12 @@ public abstract class DatabaseStorage extends StorageBase {
         } else {
             log.debug("Using default model for large result sets");
             pageSize = -1;
+        }
+
+        if (useLazyRelations) {
+            log.debug("Using lazy relation resolution");
+        } else {
+            log.debug("Using direct relation resolution");
         }
     }
 
@@ -533,6 +541,25 @@ public abstract class DatabaseStorage extends StorageBase {
     }
 
     /**
+     * Return whether or not Record relations should be resolved lazily
+     * (in other words "on-the-fly") or if they should be resolved "directly"
+     * using an SQL JOIN.
+     * <p/>
+     * Some databases perform badly when doing JOINs on tables with a lot of
+     * rows. This appear especially to be the case for Java embedded databases
+     * like Derby and H2.
+     * <p/>
+     * The default implementation of this method returns {@code false}, meaning
+     * that JOINs should be used.
+     * @return {@code false} if JOINs should be used to fetch records and their
+     *         relation in one go, or {@code true} if relations should be looked
+     *         up in a separate SQL call
+     */
+    protected boolean useLazyRelationLookups() {
+        return false;
+    }
+
+    /**
      * Return an altered version of the input {@code sql} which adds one extra
      * '?' parameter, <i>to the end of the SQL statement</i>, which can be used
      * to limit the number of rows returned.
@@ -569,6 +596,17 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     private void prepareStatements() throws SQLException {
         log.debug("Preparing SQL statements");
+
+        String allCellsRelationsCols;
+        if (useLazyRelations) {
+            // Always select empty cells for relations and look them up later
+            allCellsRelationsCols = "'', ''";
+        } else {
+            allCellsRelationsCols = RELATIONS + "." + PARENT_ID_COLUMN + ","
+                                  + RELATIONS + "." + CHILD_ID_COLUMN;
+        }
+
+
         String allCells = RECORDS + "." + ID_COLUMN + ","
                           + RECORDS + "." + BASE_COLUMN + ","
                           + RECORDS + "." + DELETED_COLUMN + ","
@@ -577,8 +615,7 @@ public abstract class DatabaseStorage extends StorageBase {
                           + RECORDS + "." + CTIME_COLUMN + ","
                           + RECORDS + "." + MTIME_COLUMN + ","
                           + RECORDS + "." + META_COLUMN + ","
-                          + RELATIONS + "." + PARENT_ID_COLUMN + ","
-                          + RELATIONS + "." + CHILD_ID_COLUMN;
+                          + allCellsRelationsCols;
 
         String relationsClause = RECORDS + "." + ID_COLUMN + "="
                                 + RELATIONS + "." + PARENT_ID_COLUMN
