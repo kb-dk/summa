@@ -849,6 +849,8 @@ public abstract class DatabaseStorage extends StorageBase {
         try {
             stmt.getConnection().setAutoCommit(false);
             stmt.getConnection().setReadOnly(true);
+            stmt.setFetchDirection(ResultSet.FETCH_FORWARD);
+            
             if (usePagingModel) {
                 stmt.setFetchSize(pageSize);
             } else {

@@ -57,6 +57,11 @@ public class StorageTool {
     public static void printRecord (Record rec, OutputStream out, boolean withContents) {
         PrintWriter output = new PrintWriter (out, true);
 
+        if (rec == null) {
+            output.println("Record is 'null'");
+            return;
+        }
+
         output.println (rec.toString(true));
 
         if (withContents) {
