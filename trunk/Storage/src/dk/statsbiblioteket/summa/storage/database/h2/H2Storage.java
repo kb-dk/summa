@@ -271,4 +271,16 @@ public class H2Storage extends DatabaseStorage implements Configurable {
         }
     }
 
+    @Override
+    public boolean usePagingResultSets() {
+        return true;
+    }
+
+    @Override
+    public String getPagingStatement(String sql) {
+        return sql + " LIMIT ?";
+    }
+
+
+
 }
