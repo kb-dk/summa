@@ -586,7 +586,11 @@ public abstract class DatabaseStorage extends StorageBase {
      *         to the statement that will limit the number of rows returned
      */
     protected String getPagingStatement(String sql) {
-        throw new UnsupportedOperationException("Non-paging data model");
+        throw new UnsupportedOperationException("Non-paging data model. You "
+                                                + "must override "
+                                                + "DatabaseStorage.getPagingStatement "
+                                                + "when using paging result "
+                                                + "sets");
     }
 
     public UniqueTimestampGenerator getTimestampGenerator() {
@@ -2164,11 +2168,13 @@ public abstract class DatabaseStorage extends StorageBase {
         }
 
         /* If the record is listed as parent or child of something this will
-         * appear in the parent/child columns, so ignore these cases */
-        if (id.equals(parentIds)) {
+         * appear in the parent/child columns, so ignore these cases.
+         * Also if the parent/child ids are empty strings they are injected
+         * because we do lazy relation lookups */
+        if (id.equals(parentIds) || "".equals(parentIds)) {
             parentIds = null;
         }
-        if (id.equals(childIds)) {
+        if (id.equals(childIds) || "".equals(childIds)) {
             childIds = null;
         }
 
@@ -2276,7 +2282,7 @@ public abstract class DatabaseStorage extends StorageBase {
          * resolve the relations in that case
          */
         if (useLazyRelations && hasRelations
-            && parentIds != null && childIds != null) {
+            && parentIds == null && childIds == null) {
             resolveRelatedIds(rec);
         }
 
