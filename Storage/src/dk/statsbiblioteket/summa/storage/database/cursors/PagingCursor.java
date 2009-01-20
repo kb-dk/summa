@@ -19,6 +19,7 @@ public class PagingCursor implements Cursor {
     private static final Log log = LogFactory.getLog(PagingCursor.class);
 
     private long pageRows;
+    private long totalRows;
     private long key;
     private long lastMtimeTimestamp;
     private long lastAccess;
@@ -37,6 +38,7 @@ public class PagingCursor implements Cursor {
 
         lastMtimeTimestamp = 0;
         pageRows = 0;
+        totalRows = 0;
 
         if (page.hasNext()) {
             nextRecord = page.next();
@@ -86,6 +88,7 @@ public class PagingCursor implements Cursor {
 
         nextRecord = nextValidRecord();
         pageRows++;
+        totalRows++;
 
         return rec;
     }
@@ -96,8 +99,9 @@ public class PagingCursor implements Cursor {
         }
 
         if (log.isDebugEnabled()) {
-            log.debug("Page " + page + "depleted after " + pageRows
-                      + " records. Requesting new page for " + this);
+            log.debug("Page " + page + " depleted after " + pageRows
+                      + " records. Total #records " + totalRows
+                      + ". Requesting new page for " + this);
         }
 
         // page is depleted
