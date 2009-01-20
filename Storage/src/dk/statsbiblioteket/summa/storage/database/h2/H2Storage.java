@@ -336,8 +336,15 @@ public class H2Storage extends DatabaseStorage implements Configurable {
         }
     }
 
+    // H2 is very bad at large result sets (_very_)
     @Override
     public boolean usePagingResultSets() {
+        return true;
+    }
+
+    // Genrally Java embedded DBs are bad at JOINs over tables with many rows
+    @Override
+    public boolean useLazyRelationLookups() {
         return true;
     }
 
