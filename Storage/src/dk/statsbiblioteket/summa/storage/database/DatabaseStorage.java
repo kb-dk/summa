@@ -283,6 +283,7 @@ public abstract class DatabaseStorage extends StorageBase {
     private StatementHandle stmtTouchParents;
     private StatementHandle stmtGetChildren;
     private StatementHandle stmtGetParents;
+    private StatementHandle stmtGetRelatedIds;
     private StatementHandle stmtCreateRelation;
 
     private Map<Long, Cursor> iterators =
@@ -623,13 +624,22 @@ public abstract class DatabaseStorage extends StorageBase {
                                 + RELATIONS + "." + CHILD_ID_COLUMN;
 
         // We can order by mtime only because the generated mtimes are unique
-        String modifiedAfterQuery = "SELECT " + allCells
-                                    + " FROM " + RECORDS
-                                    + " LEFT JOIN " + RELATIONS
-                                    + " ON " + relationsClause
-                                    + " WHERE " + BASE_COLUMN + "=?"
-                                    + " AND " + MTIME_COLUMN + ">?"
-                                    + " ORDER BY " + MTIME_COLUMN;
+        String modifiedAfterQuery;
+        if (useLazyRelations) {
+            modifiedAfterQuery = "SELECT " + allCells
+                                 + " FROM " + RECORDS
+                                 + " WHERE " + BASE_COLUMN + "=?"
+                                 + " AND " + MTIME_COLUMN + ">?"
+                                 + " ORDER BY " + MTIME_COLUMN;
+        } else {
+            modifiedAfterQuery = "SELECT " + allCells
+                                 + " FROM " + RECORDS
+                                 + " LEFT JOIN " + RELATIONS
+                                 + " ON " + relationsClause
+                                 + " WHERE " + BASE_COLUMN + "=?"
+                                 + " AND " + MTIME_COLUMN + ">?"
+                                 + " ORDER BY " + MTIME_COLUMN;
+        }
         if (usePagingModel) {
             modifiedAfterQuery = getPagingStatement(modifiedAfterQuery);
         }
@@ -639,12 +649,20 @@ public abstract class DatabaseStorage extends StorageBase {
         log.debug("getModifiedAfter handle: " + stmtGetModifiedAfter);
 
         // We can order by mtime only because the generated mtimes are unique
-        String modifiedAfterAllQuery = "SELECT " + allCells
-                                       + " FROM " + RECORDS
-                                       + " LEFT JOIN " + RELATIONS
-                                       + " ON " + relationsClause
-                                       + " WHERE " + MTIME_COLUMN + ">?"
-                                       + " ORDER BY " + MTIME_COLUMN;
+        String modifiedAfterAllQuery;
+        if (useLazyRelations){
+            modifiedAfterAllQuery = "SELECT " + allCells
+                                    + " FROM " + RECORDS
+                                    + " WHERE " + MTIME_COLUMN + ">?"
+                                    + " ORDER BY " + MTIME_COLUMN;
+        } else {
+            modifiedAfterAllQuery = "SELECT " + allCells
+                                    + " FROM " + RECORDS
+                                    + " LEFT JOIN " + RELATIONS
+                                    + " ON " + relationsClause
+                                    + " WHERE " + MTIME_COLUMN + ">?"
+                                    + " ORDER BY " + MTIME_COLUMN;
+        }
         if (usePagingModel) {
             modifiedAfterAllQuery = getPagingStatement(modifiedAfterAllQuery);
         }
@@ -653,6 +671,8 @@ public abstract class DatabaseStorage extends StorageBase {
         stmtGetModifiedAfterAll = prepareStatement(modifiedAfterAllQuery);
         log.debug("getModifiedAfterAll handle: " + stmtGetModifiedAfterAll);
 
+        // getRecordsQuery uses JOINs no matter if useLazyRelations is set.
+        // Fetching single records using a LEFT JOIN is generally not a problem 
         String getRecordQuery = "SELECT " + allCells
                                 + " FROM " + RECORDS
                                 + " LEFT JOIN " + RELATIONS
@@ -771,6 +791,16 @@ public abstract class DatabaseStorage extends StorageBase {
                   + "'");
         stmtGetParents = prepareStatement(getParentsQuery);
         log.debug("getParents handle: " + stmtGetParents);
+
+        /* getRelatedIds */
+        String getRelatedIdsQuery = "SELECT " + PARENT_ID_COLUMN
+                                    + ", " + CHILD_ID_COLUMN
+                                    + " FROM " + RELATIONS
+                                    + " WHERE " + PARENT_ID_COLUMN + "=?"
+                                    + " OR " + CHILD_ID_COLUMN + "=?";
+        log.debug("Preparing getRelatedIds with '" + getRelatedIdsQuery +"'");
+        stmtGetRelatedIds = prepareStatement(getRelatedIdsQuery);
+        log.debug("getRelatedIds handle: " + stmtGetRelatedIds);
 
         /* createRelation */
         String createRelation = "INSERT INTO " + RELATIONS
@@ -1379,6 +1409,87 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
+    /**
+     * Look up all parent/child relationships known for {@code rec} and update
+     * {@code rec} to reflect this.
+     * @param rec the record which parentd id list and child id list should be
+     *            updated
+     */
+    public void resolveRelatedIds (Record rec) {
+        PreparedStatement stmt;
+        List<String> parentIds = new LinkedList<String>();
+        List<String> childIds = new LinkedList<String>();
+
+        if (log.isTraceEnabled()) {
+            log.trace("Resolving relations for " + rec.getId());
+        }
+
+        try {
+            stmt = getStatement(stmtGetRelatedIds);
+        } catch (SQLException e) {
+            log.error("Failed to look up statement "
+                      + stmtGetRelatedIds + " Can not resolve related ids for "
+                      + rec.getId() + ": "
+                      + e.getMessage(), e);
+            return;
+        }
+
+        try {
+            stmt.executeQuery();
+            ResultSet results = stmt.getResultSet();
+
+            // Collect all relations from the result set. Note that each row
+            // will mention rec.getId() in one of the columns and we don't want
+            // to list rec as a parent or child of itself
+            while (results.next()) {
+                String parentId = results.getString(1);
+                String childId = results.getString(2);
+
+                if (parentId != null && !"".equals(parentId) &&
+                    !rec.getId().equals(parentId)) {
+                    parentIds.add(parentId);
+                }
+
+                if (childId != null && !"".equals(childId) &&
+                    !rec.getId().equals(childId)) {
+                    childIds.add(childId);
+                }
+            }
+        } catch (SQLException e) {
+            log.warn("Failed to resolve related ids for " + rec.getId() + ": "
+                     + e.getMessage(), e);
+        } finally {
+            try {
+                stmt.close();
+            } catch (SQLException e) {
+                log.warn("Failed to close statement: " + e.getMessage(), e);
+            }
+        }
+
+        if (log.isTraceEnabled()) {
+            if (parentIds.isEmpty() && childIds.isEmpty()) {
+                log.trace("No relations for " + rec.getId());
+            } else {
+                log.trace("Found relations for " + rec.getId()
+                          + ": Parents[" + Strings.join(parentIds, ",") + "] "
+                          + " Children[" + Strings.join(childIds, ",") + "]");
+            }
+        }
+
+        // Update the record
+        if (parentIds.isEmpty()) {
+            rec.setParentIds(null);
+        } else {
+            rec.setParentIds(parentIds);
+        }
+
+        if (childIds.isEmpty()) {
+            rec.setChildIds(null);
+        } else {
+            rec.setChildIds(childIds);
+        }
+    }
+
     @Override
     public void clearBase (String base) throws IOException {
         PreparedStatement stmt;
@@ -1965,12 +2076,14 @@ public abstract class DatabaseStorage extends StorageBase {
                 newChild = null;
             }
 
-            if (newParent != null) {
+            /* Treat empty strings as nulls because we inject empty strings in
+             * the result set when we are doing lazy relation lookups */
+            if (newParent != null && !"".equals(newParent)) {
                 parentIds = parentIds != null ?
                                 (parentIds + ";" + newParent) : newParent;
             }
 
-            if (newChild != null) {
+            if (newChild != null && !"".equals(newChild)) {
                 childIds = childIds != null ?
                                 (childIds + ";" + newChild) : newChild;
             }
