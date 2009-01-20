@@ -211,6 +211,12 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     public static final String INDEXABLE_COLUMN = "indexable";
 
+    /**
+     * The {@code hasRelations} column contains a flag that indicates whether
+     * the record is a part of any parent/child relationsship. This flag
+     * is used as an optimization in the lazy relation lookups strategy
+     */
+    public static final String HAS_RELATIONS_COLUMN = "hasRelations";
 
     /**
      * The {@code data} column contains the raw record-data as ingested.
@@ -284,6 +290,7 @@ public abstract class DatabaseStorage extends StorageBase {
     private StatementHandle stmtGetChildren;
     private StatementHandle stmtGetParents;
     private StatementHandle stmtGetRelatedIds;
+    private StatementHandle stmtMarkHasRelations;
     private StatementHandle stmtCreateRelation;
 
     private Map<Long, Cursor> iterators =
@@ -612,6 +619,7 @@ public abstract class DatabaseStorage extends StorageBase {
                           + RECORDS + "." + BASE_COLUMN + ","
                           + RECORDS + "." + DELETED_COLUMN + ","
                           + RECORDS + "." + INDEXABLE_COLUMN + ","
+                          + RECORDS + "." + HAS_RELATIONS_COLUMN + ", "
                           + RECORDS + "." + DATA_COLUMN + ","
                           + RECORDS + "." + CTIME_COLUMN + ","
                           + RECORDS + "." + MTIME_COLUMN + ","
@@ -623,6 +631,7 @@ public abstract class DatabaseStorage extends StorageBase {
                                 + " OR " + RECORDS + "." + ID_COLUMN + "="
                                 + RELATIONS + "." + CHILD_ID_COLUMN;
 
+        /* modifiedAfter */
         // We can order by mtime only because the generated mtimes are unique
         String modifiedAfterQuery;
         if (useLazyRelations) {
@@ -648,6 +657,7 @@ public abstract class DatabaseStorage extends StorageBase {
         stmtGetModifiedAfter = prepareStatement(modifiedAfterQuery);
         log.debug("getModifiedAfter handle: " + stmtGetModifiedAfter);
 
+        /* modifiedAfterAll */
         // We can order by mtime only because the generated mtimes are unique
         String modifiedAfterAllQuery;
         if (useLazyRelations){
@@ -671,6 +681,7 @@ public abstract class DatabaseStorage extends StorageBase {
         stmtGetModifiedAfterAll = prepareStatement(modifiedAfterAllQuery);
         log.debug("getModifiedAfterAll handle: " + stmtGetModifiedAfterAll);
 
+        /* getRecord */
         // getRecordsQuery uses JOINs no matter if useLazyRelations is set.
         // Fetching single records using a LEFT JOIN is generally not a problem 
         String getRecordQuery = "SELECT " + allCells
@@ -682,6 +693,7 @@ public abstract class DatabaseStorage extends StorageBase {
         stmtGetRecord = prepareStatement(getRecordQuery);
         log.debug("getRecord handle: " + stmtGetRecord);
 
+        /* clearBase */
         String clearBaseQuery = "UPDATE " + RECORDS
                                 + " SET " + DELETED_COLUMN + "=1"
                                 + " WHERE " + BASE_COLUMN + "=?";
@@ -703,6 +715,7 @@ public abstract class DatabaseStorage extends StorageBase {
         stmtGetRecords = prepareStatement(getRecordsQuery);
          */
 
+        /* deleteRecord */
         String deleteRecordQuery = "UPDATE " + RECORDS
                                    + " SET " + MTIME_COLUMN + "=?, "
                                    + DELETED_COLUMN + "=?"
@@ -718,11 +731,12 @@ public abstract class DatabaseStorage extends StorageBase {
                                        + BASE_COLUMN + ", "
                                        + DELETED_COLUMN + ", "
                                        + INDEXABLE_COLUMN + ", "
+                                       + HAS_RELATIONS_COLUMN + ", "
                                        + CTIME_COLUMN + ", "
                                        + MTIME_COLUMN + ", "
                                        + DATA_COLUMN + ", "
                                        + META_COLUMN
-                                       + ") VALUES (?,?,?,?,?,?,?,?)";
+                                       + ") VALUES (?,?,?,?,?,?,?,?,?)";
         log.debug("Preparing query createRecord with '" + createRecordQuery
                   + "'");
         stmtCreateRecord = prepareStatement(createRecordQuery);
@@ -733,6 +747,7 @@ public abstract class DatabaseStorage extends StorageBase {
                                    + BASE_COLUMN + "=?, "
                                    + DELETED_COLUMN + "=?, "
                                    + INDEXABLE_COLUMN + "=?, "
+                                   + HAS_RELATIONS_COLUMN + "=?, "
                                    + MTIME_COLUMN + "=?, "
                                    + DATA_COLUMN + "=?, "
                                    + META_COLUMN + "=? "
@@ -757,8 +772,6 @@ public abstract class DatabaseStorage extends StorageBase {
                                 + " SELECT " + PARENT_ID_COLUMN
                                 + " FROM " + RELATIONS
                                 + " WHERE " + CHILD_ID_COLUMN + "=? )";
-
-
         log.debug("Preparing query touchParents with '" + touchParentsQuery
                   + "'");
         stmtTouchParents = prepareStatement(touchParentsQuery);
@@ -802,6 +815,15 @@ public abstract class DatabaseStorage extends StorageBase {
         stmtGetRelatedIds = prepareStatement(getRelatedIdsQuery);
         log.debug("getRelatedIds handle: " + stmtGetRelatedIds);
 
+        /* markHasRelations */
+        String markHasRelationsQuery = "UPDATE " + RECORDS
+                                    + " SET " + HAS_RELATIONS_COLUMN + "=1 "
+                                    + " WHERE " + ID_COLUMN + "=?";
+        log.debug("Preparing markHasRelations with '"
+                  + markHasRelationsQuery + "'");
+        stmtMarkHasRelations = prepareStatement(markHasRelationsQuery);
+        log.debug("markHasRelations handle: " + stmtMarkHasRelations);
+
         /* createRelation */
         String createRelation = "INSERT INTO " + RELATIONS
                                 + " (" + PARENT_ID_COLUMN + ","
@@ -821,7 +843,7 @@ public abstract class DatabaseStorage extends StorageBase {
         stmtDeleteRelation = prepareStatement(
                                                      deleteRelation);*/
 
-        log.trace("Finished preparing SQL statements");
+        log.debug("Finished preparing SQL statements");
     }
 
     @Override
@@ -1426,6 +1448,8 @@ public abstract class DatabaseStorage extends StorageBase {
 
         try {
             stmt = getStatement(stmtGetRelatedIds);
+            stmt.setString(1, rec.getId());
+            stmt.setString(2, rec.getId());
         } catch (SQLException e) {
             log.error("Failed to look up statement "
                       + stmtGetRelatedIds + " Can not resolve related ids for "
@@ -1541,9 +1565,12 @@ public abstract class DatabaseStorage extends StorageBase {
     /* Create parent/child and child/parent relations for the given record */
     private void doCreateRelations (Record rec, PreparedStatement stmt)
                                                            throws SQLException {
+
         // FIXME: Some transactional safety here would be nice
-        if (rec.getChildIds() != null) {
-            for (String childId : rec.getChildIds()) {
+        if (rec.hasChildren()) {
+            List<String> childIds = rec.getChildIds();
+
+            for (String childId : childIds) {
                 if (log.isDebugEnabled()) {
                     log.debug ("Creating relation: " + rec.getId()
                                + " -> " + childId);
@@ -1565,10 +1592,15 @@ public abstract class DatabaseStorage extends StorageBase {
                     }
                 }
             }
+
+            // Make sure that all children are tagged as having relations
+            markHasRelations(childIds);
         }
 
-        if (rec.getParentIds() != null) {
-            for (String parentId : rec.getParentIds()) {
+        if (rec.hasParents()) {
+            List<String> parentIds = rec.getParentIds();
+
+            for (String parentId : parentIds) {
                 if (log.isDebugEnabled()) {
                     log.debug ("Creating relation: " + parentId
                                + " -> " + rec.getId());
@@ -1589,6 +1621,102 @@ public abstract class DatabaseStorage extends StorageBase {
                                                + " for " + rec.getId(), e);
                     }
                 }
+            }
+
+            // Make sure that all parents are tagged as having relations
+            markHasRelations(parentIds);
+        }
+    }
+
+    /**
+     * Set the {@code hasRelations} column to {@code true} on the listed
+     * childIds
+     * @param childIds
+     */
+    private void markHasRelations(List<String> childIds) {
+        // We can't use a PreparedStatement here because the parameter list
+        // to the IN clause is of varying length
+        String sql = "UPDATE " + RECORDS
+                     + " SET " + HAS_RELATIONS_COLUMN + "=" + boolToInt(true)
+                     + " WHERE id IN ('"
+                     + Strings.join(childIds, "','")
+                     + "')";
+
+        Connection conn = getConnection();
+        try {
+            Statement stmt = conn.createStatement();
+            stmt.executeUpdate(sql);
+        } catch (SQLException e) {
+            log.warn("Failed to mark " + Strings.join(childIds, ", ")
+                     + " as having relations: " + e.getMessage(), e);
+        } finally {
+            try {
+                conn.close();
+            } catch (SQLException e) {
+                log.warn("Failed to close connection: " + e.getMessage(), e);
+            }
+        }
+    }
+
+    private void checkHasRelations(String id) {
+        PreparedStatement stmt = null;
+        boolean hasRelations = false;
+
+        if (log.isTraceEnabled()) {
+            log.trace("Checking relations for " + id);
+        }
+
+        /* Detect if we have any relations for 'id' */
+        try {
+            stmt = getStatement(stmtGetRelatedIds);
+            stmt.setString(1, id);
+            stmt.setString(2, id);
+            stmt.executeQuery();
+            ResultSet results = stmt.getResultSet();
+
+            if (results.next()) {
+                hasRelations = true;
+            }
+
+            results.close();
+        } catch (SQLException e) {
+            log.warn("Failed to check relations for " + id + ": "
+                     + e.getMessage(), e);
+        } finally {
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+            } catch (SQLException e) {
+                log.warn("Failed to close statement: " + e.getMessage(), e);
+            }
+        }
+
+        /* Return if we don't have any relations */
+        if (hasRelations) {
+            log.trace("Marking " + id + " as having relations");
+        } else if (log.isTraceEnabled()) {
+            if (log.isTraceEnabled()) {
+                log.trace("No relations for record " + id);
+            }
+            return;
+        }
+
+        /* Set a check mark in the hasRelations column */
+        try {
+            stmt = getStatement(stmtMarkHasRelations);
+            stmt.setString(1, id);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            log.warn("Failed to mark " + id + " as having relations: "
+                     + e.getMessage(), e);
+        } finally {
+            try {
+                if (stmt != null) {
+                    stmt.close();
+                }
+            } catch (SQLException e) {
+                log.warn("Failed to close statement: " + e.getMessage(), e);
             }
         }
     }
@@ -1623,16 +1751,18 @@ public abstract class DatabaseStorage extends StorageBase {
         }
 
         long nowStamp = timestampGenerator.next();
+        boolean hasRelations = record.hasParents() || record.hasChildren();
 
         try {
             stmt.setString(1, record.getId());
             stmt.setString(2, record.getBase());
             stmt.setInt(3, boolToInt(record.isDeleted()));
             stmt.setInt(4, boolToInt(record.isIndexable()));
-            stmt.setLong(5, nowStamp);
+            stmt.setInt(5, boolToInt(hasRelations));
             stmt.setLong(6, nowStamp);
-            stmt.setBytes(7, Zips.gzipBuffer(record.getContent()));
-            stmt.setBytes(8,record.hasMeta() ?
+            stmt.setLong(7, nowStamp);
+            stmt.setBytes(8, Zips.gzipBuffer(record.getContent()));
+            stmt.setBytes(9,record.hasMeta() ?
                                          record.getMeta().toFormalBytes() :
                                          new byte[0]);
             stmt.executeUpdate();
@@ -1661,12 +1791,18 @@ public abstract class DatabaseStorage extends StorageBase {
 
         }
 
-        try {
-            createRelations(record);
-        } catch (SQLException e) {
-            throw new IOException("Error creating relations for "
+        if (hasRelations) {
+            try {
+                createRelations(record);
+            } catch (SQLException e) {
+                throw new IOException("Error creating relations for "
                                       + record + ": " + e.getMessage(),
                                       e);
+            }
+        } else {
+            // If the record does not have explicit relations we have to check
+            // if we know any relations for it already
+            checkHasRelations(record.getId());
         }
         
     }
@@ -1698,17 +1834,19 @@ public abstract class DatabaseStorage extends StorageBase {
                                                             throws IOException {
         // FIXME: Add child records recursively (parents?)
         long nowStamp = timestampGenerator.next();
+        boolean hasRelations = record.hasParents() || record.hasChildren();
 
         try {
             stmt.setString(1, record.getBase());
             stmt.setInt(2, boolToInt(record.isDeleted()));
             stmt.setInt(3, boolToInt(record.isIndexable()));
-            stmt.setLong(4, nowStamp);
-            stmt.setBytes(5, Zips.gzipBuffer(record.getContent()));
-            stmt.setBytes(6, record.hasMeta() ?
+            stmt.setInt(4, boolToInt(hasRelations));
+            stmt.setLong(5, nowStamp);
+            stmt.setBytes(6, Zips.gzipBuffer(record.getContent()));
+            stmt.setBytes(7, record.hasMeta() ?
                                          record.getMeta().toFormalBytes() :
                                          new byte[0]);
-            stmt.setString(7, record.getId());
+            stmt.setString(8, record.getId());
             stmt.executeUpdate();
 
             if (stmt.getUpdateCount() == 0) {
@@ -1723,12 +1861,18 @@ public abstract class DatabaseStorage extends StorageBase {
                                       + record.getId() + "'", e);
         }
 
-        try {
-            createRelations(record);
-        } catch (SQLException e) {
-            throw new IOException("Error creating relations for '"
+        if (hasRelations) {
+            try {
+                createRelations(record);
+            } catch (SQLException e) {
+                throw new IOException("Error creating relations for '"
                                       + record.getId() + "': " + e.getMessage(),
                                       e);
+            }
+        } else {
+            // If the record does not have explicit relations we have to check
+            // if we know any relations for it already
+            checkHasRelations(record.getId());
         }
      }
 
@@ -1909,6 +2053,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 + BASE_COLUMN      + " VARCHAR(" + BASE_LIMIT + "), "
                 + DELETED_COLUMN   + " INTEGER, "
                 + INDEXABLE_COLUMN + " INTEGER, "
+                + HAS_RELATIONS_COLUMN + " INTEGER, "
                 + DATA_COLUMN      + " " + getDataColumnDataDeclaration() + ", "
                 + CTIME_COLUMN     + " BIGINT, " // BIGINT is 64 bit
                 + MTIME_COLUMN     + " BIGINT, "
@@ -2006,12 +2151,13 @@ public abstract class DatabaseStorage extends StorageBase {
         String base = resultSet.getString(2);
         boolean deleted = intToBool(resultSet.getInt(3));
         boolean indexable = intToBool(resultSet.getInt(4));
-        byte[] gzippedContent = resultSet.getBytes(5);
-        long ctime = resultSet.getLong(6);
-        long mtime = resultSet.getLong(7);
-        byte[] meta = resultSet.getBytes(8);
-        String parentIds = resultSet.getString(9);
-        String childIds = resultSet.getString(10);
+        boolean hasRelations = intToBool(resultSet.getInt(5));
+        byte[] gzippedContent = resultSet.getBytes(6);
+        long ctime = resultSet.getLong(7);
+        long mtime = resultSet.getLong(8);
+        byte[] meta = resultSet.getBytes(9);
+        String parentIds = resultSet.getString(10);
+        String childIds = resultSet.getString(11);
 
         if (log.isTraceEnabled()) {
             log.trace ("Scanning record: " + id);
@@ -2047,25 +2193,28 @@ public abstract class DatabaseStorage extends StorageBase {
                 } else if (indexable != intToBool(resultSet.getInt(4))) {
                     log.warn("Indexable state mismatch for record: " + id);
                     return null;
-                } else if (!Arrays.equals(gzippedContent,
-                                          resultSet.getBytes(5))) {
+                } else if (hasRelations != intToBool(resultSet.getInt(5))) {
+                    log.warn("hasRelations state mismatch for record: " + id);
+                    return null;
+                }else if (!Arrays.equals(gzippedContent,
+                                          resultSet.getBytes(6))) {
                     log.warn("Content mismatch for record: " + id);
                     return null;
-                }  else if (ctime != resultSet.getLong(6)) {
+                }  else if (ctime != resultSet.getLong(7)) {
                     log.warn("CTime state mismatch for record: " + id);
                     return null;
-                } else if (mtime != resultSet.getLong(7)) {
+                } else if (mtime != resultSet.getLong(8)) {
                     log.warn("MTime state mismatch for record: " + id);
                     return null;
-                }  else if (!Arrays.equals(meta,resultSet.getBytes(8))) {
+                }  else if (!Arrays.equals(meta,resultSet.getBytes(9))) {
                     log.warn("Meta tags mismatch for record: " + id);
                     return null;
                 }
             }
 
             /* Pick up parent and child ids */
-            String newParent = resultSet.getString (9);
-            String newChild = resultSet.getString (10);
+            String newParent = resultSet.getString (10);
+            String newChild = resultSet.getString (11);
 
             /* If the record is listed as parent or child of something this
              * will appear in the parent/child columns, so ignore these cases */
@@ -2109,17 +2258,29 @@ public abstract class DatabaseStorage extends StorageBase {
 
         /* Create a record with gzipped content. The content will be unzipped
          * lazily by the Record class upon access */
-        return new Record(id,
-                          base,
-                          deleted,
-                          indexable,
-                          gzippedContent,
-                          ctime,
-                          mtime,
-                          Record.idStringToList(parentIds),
-                          Record.idStringToList(childIds),
-                          StringMap.fromFormal(meta),
-                          true);
+        Record rec = new Record(id,
+                                base,
+                                deleted,
+                                indexable,
+                                gzippedContent,
+                                ctime,
+                                mtime,
+                                Record.idStringToList(parentIds),
+                                Record.idStringToList(childIds),
+                                StringMap.fromFormal(meta),
+                                true);
+
+        /* Only resolve relations if we have to, that is, if
+         * "useRelations && hasRelations". Moreover some codepaths will have
+         * queried the relations even though useLazyRelations==true so don't
+         * resolve the relations in that case
+         */
+        if (useLazyRelations && hasRelations
+            && parentIds != null && childIds != null) {
+            resolveRelatedIds(rec);
+        }
+
+        return rec;
     }
 
     /**

@@ -537,6 +537,22 @@ public class Record implements Serializable, Comparable{
         return parents == null ? null : new ArrayList<Record>(parents);
     }
 
+    /**
+     * Return whether or not the record has any listed parents
+     * @return whether or not the record has any listed parents
+     */
+    public boolean hasParents() {
+        return parentIds != null;
+    }
+
+    /**
+     * Return whether or not the record has any listed children
+     * @return whether or not the record has any listed children
+     */
+    public boolean hasChildren() {
+        return childIds != null;
+    }
+
     public long getLastModified() {
         return getModificationTime();
     }
