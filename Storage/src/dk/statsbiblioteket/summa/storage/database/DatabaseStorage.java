@@ -810,11 +810,19 @@ public abstract class DatabaseStorage extends StorageBase {
         log.debug("getParents handle: " + stmtGetParents);
 
         /* getRelatedIds */
+        // The obvious thing to do here was to use an OR instead of the UNION,
+        // however some query optimizers have porblems using the right indexes
+        // when ORing (H2 for instance). Using a UNION is easier for the optimizer
         String getRelatedIdsQuery = "SELECT " + PARENT_ID_COLUMN
                                     + ", " + CHILD_ID_COLUMN
                                     + " FROM " + RELATIONS
                                     + " WHERE " + PARENT_ID_COLUMN + "=?"
-                                    + " OR " + CHILD_ID_COLUMN + "=?";
+                                    + " UNION "
+                                    + "SELECT " + PARENT_ID_COLUMN
+                                    + ", " + CHILD_ID_COLUMN
+                                    + " FROM " + RELATIONS
+                                    + " WHERE " + CHILD_ID_COLUMN + "=?";
+
         log.debug("Preparing getRelatedIds with '" + getRelatedIdsQuery +"'");
         stmtGetRelatedIds = prepareStatement(getRelatedIdsQuery);
         log.debug("getRelatedIds handle: " + stmtGetRelatedIds);
@@ -1447,13 +1455,11 @@ public abstract class DatabaseStorage extends StorageBase {
         List<String> childIds = new LinkedList<String>();
 
         if (log.isTraceEnabled()) {
-            log.trace("Resolving relations for " + rec.getId());
+            log.trace("Preparing to resolve relations for " + rec.getId());
         }
 
         try {
             stmt = getStatement(stmtGetRelatedIds);
-            stmt.setString(1, rec.getId());
-            stmt.setString(2, rec.getId());
         } catch (SQLException e) {
             log.error("Failed to look up statement "
                       + stmtGetRelatedIds + " Can not resolve related ids for "
@@ -1462,7 +1468,13 @@ public abstract class DatabaseStorage extends StorageBase {
             return;
         }
 
+        if (log.isTraceEnabled()) {
+            log.trace("Querying relations for " + rec.getId());
+        }
+
         try {
+            stmt.setString(1, rec.getId());
+            stmt.setString(2, rec.getId());
             stmt.executeQuery();
             ResultSet results = stmt.getResultSet();
 
