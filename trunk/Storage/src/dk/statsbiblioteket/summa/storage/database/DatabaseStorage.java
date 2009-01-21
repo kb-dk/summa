@@ -912,7 +912,8 @@ public abstract class DatabaseStorage extends StorageBase {
             }
         } catch (SQLException e) {
             throw new IOException("Failed to get prepared statement "
-                                  + stmtGetModifiedAfterAll);
+                                  + stmtGetModifiedAfterAll +": "
+                                  + e.getMessage(), e);
         }
 
         // doGetRecordsModifiedAfter creates and iterator and 'stmt' will
@@ -1020,7 +1021,7 @@ public abstract class DatabaseStorage extends StorageBase {
             stmt = getStatement(stmtGetRecord);
         } catch (SQLException e) {
             throw new IOException("Failed to get prepared statement "
-                                  + stmtGetModifiedAfterAll);
+                                  + stmtGetRecord + ": " + e.getMessage(), e);
         }
 
         try {
@@ -1044,7 +1045,8 @@ public abstract class DatabaseStorage extends StorageBase {
             stmt.setString(1, id);
         } catch (SQLException e) {
             throw new IOException("Could not prepare stmtGetRecord "
-                                      + "with id '" + id + "''", e);
+                                      + "with id " + id + ": "
+                                      + e.getMessage(), e);
         }
 
         Record record = null;
@@ -1088,7 +1090,8 @@ public abstract class DatabaseStorage extends StorageBase {
             }
 
         } catch (SQLException e) {
-            throw new IOException("SQLException", e);
+            throw new IOException("Error getting record " + id +": "
+                                  + e.getMessage(), e);
         }
         return record;
     }
