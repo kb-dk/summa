@@ -30,7 +30,7 @@ public class CursorReaper implements Runnable {
     }
 
     public void runInThread () {
-        t = new Thread(this, "IteratorReaper");
+        t = new Thread(this, "CursorReaper");
         t.setDaemon(true); // Allow JVM to exit when the reaper is running
         t.start();
     }
