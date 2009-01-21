@@ -290,18 +290,18 @@ public class MiniConnectionPoolManager {
 
         if (!recycledConnections.empty()) {
             // Recycle an old connection
-            if (log.isTraceEnabled()) {
-                log.trace("Getting pooled connection");
-            }
             pconn = recycledConnections.pop();
-        } else {
             if (log.isTraceEnabled()) {
-                log.trace("Requesting new pooled connection");
+                log.trace("Recycled connection " + pconn.hashCode());
             }
+        } else {
             try {
                 // Request new pooled connection from data source
                 // and register a connection context for prepared statements
                 pconn = dataSource.getPooledConnection();
+                if (log.isTraceEnabled()) {
+                    log.trace("Got new pooled connection " + pconn.hashCode());
+                }
             } catch (Exception e) {
                 throw new ConnectionException("Error creating new pooled "
                                               + "connection: " + e.getMessage(),
@@ -332,7 +332,7 @@ public class MiniConnectionPoolManager {
         assertInnerState();
 
         if (log.isTraceEnabled()) {
-            log.trace("Recycled connection " + pconn.hashCode()
+            log.trace("Connection " + pconn.hashCode() + " back in pool"
                       + ", now " + getActiveConnections()
                       + " active connections");
         }
