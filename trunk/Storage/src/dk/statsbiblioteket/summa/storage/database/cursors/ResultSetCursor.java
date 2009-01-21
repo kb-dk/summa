@@ -19,8 +19,11 @@ import java.util.NoSuchElementException;
 public class ResultSetCursor implements Cursor {
     private Log log = LogFactory.getLog(ResultSetCursor.class);
 
-    private long key;
+    private long firstAccess;
     private long lastAccess;
+    private long totalRecords;
+
+    private long key;
     private long nextMtimeTimestamp;
     private long currentMtimeTimestamp;
     private PreparedStatement stmt;
@@ -65,6 +68,8 @@ public class ResultSetCursor implements Cursor {
 
         // Extract the system time from when we generated the iterator key
         lastAccess = db.getTimestampGenerator().systemTime(key);
+        firstAccess = 0;
+        totalRecords = 0;
     }
 
     public long getLastAccess() {
@@ -104,6 +109,11 @@ public class ResultSetCursor implements Cursor {
                                              + " depleted");
         }
 
+        if (totalRecords == 0) {
+            firstAccess = lastAccess; // Set firstAccess to 'now'
+        }
+        totalRecords++;
+
 
         Record record = nextRecord;
         currentMtimeTimestamp = nextMtimeTimestamp;
@@ -141,6 +151,7 @@ public class ResultSetCursor implements Cursor {
         // This check should _not_ use the method resultSetHasNext() because
         // it is only the state of the resultSet that is important here
         if (!resultSetHasNext) {
+            logDepletedStats();
             return null;
         }
 
@@ -164,7 +175,13 @@ public class ResultSetCursor implements Cursor {
         // If we end here there are no more records and the one we have
         // is not OK by the options
         resultSetHasNext = false;
+        logDepletedStats();
         return null;
+    }
+
+    private void logDepletedStats () {
+        log.debug(this + " depleted. After " + totalRecords + " records and "
+                  + (lastAccess - firstAccess) + "ms");
     }
 
     public void close() {
