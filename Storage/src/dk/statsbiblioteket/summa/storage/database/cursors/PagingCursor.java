@@ -5,7 +5,6 @@ import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.common.Record;
 
 import java.util.NoSuchElementException;
-import java.sql.SQLException;
 import java.io.IOException;
 
 import org.apache.commons.logging.Log;
@@ -18,11 +17,13 @@ public class PagingCursor implements Cursor {
 
     private static final Log log = LogFactory.getLog(PagingCursor.class);
 
-    private long pageRows;
-    private long totalRows;
+    private long pageRecords;
+    private long totalRecords;
+    private long firstAccess;
+    private long lastAccess;
+    
     private long key;
     private long lastMtimeTimestamp;
-    private long lastAccess;
     private ResultSetCursor page;
     private Record nextRecord;
     private DatabaseStorage db;
@@ -35,10 +36,11 @@ public class PagingCursor implements Cursor {
         // This will always be unique, so no key collision
         key = db.getTimestampGenerator().next();
         lastAccess = db.getTimestampGenerator().systemTime(key);
+        firstAccess = 0;
 
         lastMtimeTimestamp = 0;
-        pageRows = 0;
-        totalRows = 0;
+        pageRecords = 0;
+        totalRecords = 0;
 
         if (page.hasNext()) {
             nextRecord = page.next();
@@ -83,30 +85,38 @@ public class PagingCursor implements Cursor {
             throw new NoSuchElementException();
         }
 
+        if (pageRecords == 0) {
+            firstAccess = lastAccess; // Set to 'now'
+        }
+
         Record rec = nextRecord;
         lastMtimeTimestamp = page.currentMtimeTimestamp();
 
         nextRecord = nextValidRecord();
-        pageRows++;
-        totalRows++;
+        pageRecords++;
+        totalRecords++;
 
         return rec;
     }
 
     private Record nextValidRecord () {
+        // Note that ths method does not need to care about filtering out
+        // records that do not match the query options. This is done by
+        // the 'page' (ResultSetCursor)
+
         if (page.hasNext()) {
             return page.next();
         }
 
         if (log.isDebugEnabled()) {
-            log.debug("Page " + page + " depleted after " + pageRows
-                      + " records. Total #records " + totalRows
+            log.debug("Page " + page + " depleted after " + pageRecords
+                      + " records. Total #records " + totalRecords
                       + ". Requesting new page for " + this);
         }
 
         // page is depleted
         page.close();
-        pageRows = 0;
+        pageRecords = 0;
 
         try {
             page = db.getRecordsModifiedAfterCursor(lastMtimeTimestamp,
@@ -118,6 +128,7 @@ public class PagingCursor implements Cursor {
         } catch (IOException e) {
             log.warn("Failed to execute query for next page: "
                      + e.getMessage(), e);
+            logDepletedStats();
             return null;
         }
 
@@ -125,9 +136,14 @@ public class PagingCursor implements Cursor {
             return page.next();
         }
 
-        log.debug("All pages read, cursor " + this + " depleted");
         page.close();
+        logDepletedStats();
         return null;
+    }
+
+    private void logDepletedStats () {
+        log.debug(this + " depleted after " + totalRecords + " records and "
+                  + (lastAccess - firstAccess) + "ms");
     }
 
     @Override

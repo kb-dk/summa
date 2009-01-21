@@ -2322,11 +2322,15 @@ public abstract class DatabaseStorage extends StorageBase {
                                           String base,
                                           QueryOptions options)
                                                             throws IOException {
-        log.debug("Getting results for '" + stmt + "'");
         ResultSet resultSet;
+
+        log.trace("Getting results for '" + stmt + "'");
+        long startQuery = System.currentTimeMillis();
+
          try {
              resultSet = stmt.executeQuery();
-             log.debug("Got resultSet from '" + stmt.toString() + "'");
+             log.debug("Got results from '" + stmt + "' in "
+                       + (System.currentTimeMillis() - startQuery) + "ms");
          } catch (SQLException e) {
              log.error("SQLException in startIterator", e);
              throw new IOException("SQLException", e);
