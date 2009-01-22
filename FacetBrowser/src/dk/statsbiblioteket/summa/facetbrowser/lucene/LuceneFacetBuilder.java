@@ -365,10 +365,11 @@ public class LuceneFacetBuilder extends BuilderImpl {
             return false;
         }
         if (deleteID != null) {
-            log.trace("Calling remove for " + deleteID);
+            log.debug("Deleting '" + deleteID + "'");
             facetMap.removeDocument(deleteID);
         }
         if (addID != null) {
+            log.debug("Adding '" + addID + "'");
             Object docObject = payload.getData(Payload.LUCENE_DOCUMENT);
             if (docObject == null) {
                 log.warn("No Document stored in " + payload);
