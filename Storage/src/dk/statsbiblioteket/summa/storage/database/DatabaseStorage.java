@@ -1345,7 +1345,7 @@ public abstract class DatabaseStorage extends StorageBase {
             stmt.executeQuery();
 
             ResultSet results = stmt.getResultSet();
-            iter = new ResultSetCursor(this, stmt, results);
+            iter = new ResultSetCursor(this, stmt, results, true); // Anon cursor
 
             while (iter.hasNext()) {
                 Record r = iter.next();
@@ -1415,7 +1415,7 @@ public abstract class DatabaseStorage extends StorageBase {
             stmt.executeQuery();
 
             ResultSet results = stmt.getResultSet();
-            iter = new ResultSetCursor(this, stmt, results);
+            iter = new ResultSetCursor(this, stmt, results, true);
 
             while (iter.hasNext()) {
                 Record r = iter.next();
@@ -2154,7 +2154,8 @@ public abstract class DatabaseStorage extends StorageBase {
      * @param resultSet     a SQL result set. The result set will be stepped
      *                      to the beginning of the following record
      * @param iter          a result iterator on which to update record
-     *                      availability via {@link dk.statsbiblioteket.summa.storage.database.cursors.ResultSetCursor#setResultSetHasNext}
+     *                      availability via
+     *                      {@link ResultSetCursor#setResultSetHasNext}
      * @return              a Record based on the result set.
      * @throws SQLException if there was a problem extracting values from the
      *                      SQL result set.
@@ -2305,7 +2306,7 @@ public abstract class DatabaseStorage extends StorageBase {
     }
 
     /**
-     * As {@link #scanRecord(ResultSet, dk.statsbiblioteket.summa.storage.database.cursors.ResultSetCursor)} with
+     * As {@link #scanRecord(ResultSet, ResultSetCursor)} with
      * {@code resultSet = null}.
      */
     public Record scanRecord (ResultSet resultSet)
