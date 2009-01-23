@@ -174,7 +174,7 @@ public class LuceneManipulator implements IndexManipulator {
                                          IndexWriter.MaxFieldLength.UNLIMITED);
             }
 
-            // This changes from memory-based check and disables auto flush
+            // TODO: Also set setRAMBufferSizeMB
             writer.setMaxBufferedDocs(Integer.MAX_VALUE); // Dangerous...
             // Old style merging to preserve order of documents
             writer.setMergeScheduler(new SerialMergeScheduler());

@@ -91,7 +91,7 @@ public class IndexControllerImpl extends StateThread implements
 
 
     /**
-     * The maximum amount of seconds before a commit is called. Setting this
+     * The maximum amount of ms before a commit is called. Setting this
      * to 0 means that a commit is called for every document update.
      * </p><p>
      * It is highly recommended to set either CONF_COMMIT_TIMEOUT,
@@ -120,7 +120,7 @@ public class IndexControllerImpl extends StateThread implements
     public static final int DEFAULT_COMMIT_MAX_DOCUMENTS = 1000;
 
     /**
-     * The maximum amount of seconds before a consolidate is called. Setting
+     * The maximum amount of ms before a consolidate is called. Setting
      * this to 0 means that a consolidate is called for every document update.
      * </p><p>
      * It is highly recommended to set either CONF_CONSOLIDATE_TIMEOUT,
@@ -249,9 +249,9 @@ public class IndexControllerImpl extends StateThread implements
                                                  DEFAULT_CREATE_NEW_INDEX);
         consolidateOnClose = conf.getBoolean(CONF_CONSOLIDATE_ON_CLOSE,
                                              DEFAULT_CONSOLIDATE_ON_CLOSE);
-        log.debug("Basic setup: commitTimeout: " + consolidateTimeout
-                  + " seconds, commitMaxDocuments: " + commitMaxDocuments
-                  + ", consolidateTimeout: " + consolidateTimeout + " seconds, "
+        log.debug("Basic setup: commitTimeout: " + commitTimeout
+                  + " ms, commitMaxDocuments: " + commitMaxDocuments
+                  + ", consolidateTimeout: " + consolidateTimeout + " ms, "
                   + ", consolidateMaxDocuments: " + consolidateMaxDocuments
                   + ", consolidateMaxCommits: " + consolidateMaxCommits
                   + ", consolidateOnClose: " + consolidateOnClose);
