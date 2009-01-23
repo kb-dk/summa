@@ -109,9 +109,9 @@ public class PagingCursor implements Cursor {
         }
 
         if (log.isDebugEnabled()) {
-            log.debug("Page " + page + " depleted after " + pageRecords
-                      + " records. Total #records " + totalRecords
-                      + ". Requesting new page for " + this);
+            log.debug(this + " depleted " + page + " after " + pageRecords
+                      + " records. Total " + totalRecords + " records in "
+                      + (System.currentTimeMillis() - firstAccess) + "ms");
         }
 
         // page is depleted
