@@ -164,6 +164,16 @@ public class IndexControllerImpl extends StateThread implements
     public static final int DEFAULT_CONSOLIDATE_MAX_COMMITS = 70;
 
     /**
+     * If true, consolidate is called upon close, if documents has been added
+     * since the last consolidate.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_CONSOLIDATE_ON_CLOSE =
+            "summa.index.consolidateonclose";
+    public static final boolean DEFAULT_CONSOLIDATE_ON_CLOSE = false;
+
+    /**
      * The fully qualified class-name for a manipulator. Used to create an
      * IndexManipulator through reflection. This property must be present in
      * all subconfigurations listed by {@link #CONF_MANIPULATORS}.
@@ -187,6 +197,7 @@ public class IndexControllerImpl extends StateThread implements
     private int consolidateTimeout =      DEFAULT_CONSOLIDATE_TIMEOUT;
     private int consolidateMaxDocuments = DEFAULT_CONSOLIDATE_MAX_DOCUMENTS;
     private int consolidateMaxCommits =   DEFAULT_CONSOLIDATE_MAX_COMMITS;
+    private boolean consolidateOnClose =  DEFAULT_CONSOLIDATE_ON_CLOSE;
 
     private long lastCommit =                  System.currentTimeMillis();
     private long updatesSinceLastCommit =      0;
@@ -246,11 +257,14 @@ public class IndexControllerImpl extends StateThread implements
                conf.getInt(CONF_CONSOLIDATE_MAX_COMMITS, consolidateMaxCommits);
         boolean createNewIndex = conf.getBoolean(CONF_CREATE_NEW_INDEX,
                                                  DEFAULT_CREATE_NEW_INDEX);
+        consolidateOnClose = conf.getBoolean(CONF_CONSOLIDATE_ON_CLOSE,
+                                             DEFAULT_CONSOLIDATE_ON_CLOSE);
         log.debug("Basic setup: commitTimeout: " + consolidateTimeout
                   + " seconds, commitMaxDocuments: " + commitMaxDocuments
                   + ", consolidateTimeout: " + consolidateTimeout + " seconds, "
                   + ", consolidateMaxDocuments: " + consolidateMaxDocuments
-                  + ", consolidateMaxCommits: " + consolidateMaxCommits);
+                  + ", consolidateMaxCommits: " + consolidateMaxCommits
+                  + ", consolidateOnClose: " + consolidateOnClose);
         //noinspection DuplicateStringLiteralInspection
         log.trace("Creating " + manipulatorConfs.size() + " manipulators");
         manipulators = new ArrayList<IndexManipulator>(manipulatorConfs.size());
@@ -607,12 +621,23 @@ public class IndexControllerImpl extends StateThread implements
     }
 
     public synchronized void close() throws IOException {
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("close() called");
         if (!indexIsOpen) {
             log.trace("close() called on already closed");
             return;
         }
         indexIsOpen = false;
-        consolidate(); // TODO: Always do this upon close?
+        if (consolidateOnClose && updatesSinceLastConsolidate > 0) {
+            log.debug("Calling consolidate because of close. "
+                      + updatesSinceLastConsolidate
+                      + " updates since last consolidate");
+            consolidate(); // TODO: Always do this upon close?
+        } else {
+            log.debug("Calling commit from close with " + updatesSinceLastCommit
+                      + " updates since last commit");
+            commit();
+        }
         log.debug("Closing down IndexControllerImpl");
         for (IndexManipulator manipulator: manipulators) {
             manipulator.close();
@@ -656,15 +681,15 @@ public class IndexControllerImpl extends StateThread implements
         //noinspection DuplicateStringLiteralInspection
         log.trace("close(" + success + ") called");
         if (source == null) {
-            log.error("No source defined, cannot close");
+            log.error("No source defined, cannot close source");
         }
         source.close(success);
         if (success) {
             try {
-                commit();
+                close();
             } catch (IOException e) {
-                log.warn("IOException while calling commit in close("
-                         + success + ")", e);
+                log.error("IOException while calling close() from close(true)",
+                          e);
             }
         }
     }
