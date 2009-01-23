@@ -160,18 +160,19 @@ public class LuceneManipulator implements IndexManipulator {
             if (IndexReader.indexExists(indexDirectory)) {
                 log.debug("checkWriter: Opening writer for existing index at '"
                           + indexDirectory.getFile() + "'");
-                writer = new IndexWriter(indexDirectory, false,
-                                         new StandardAnalyzer(), false);
+                writer = new IndexWriter(indexDirectory, new StandardAnalyzer(),
+                                         false,
+                                         IndexWriter.MaxFieldLength.UNLIMITED);
                 writer.setMergeFactor(80); // TODO: Verify this
                 // We want to avoid implicit merging of segments as is messes
                 // up document ordering
             } else {
                 log.debug("No existing index at '" + indexDirectory.getFile()
                           + "', creating new index");
-                writer = new IndexWriter(indexDirectory, false,
-                                         new StandardAnalyzer(), true);
+                writer = new IndexWriter(indexDirectory, new StandardAnalyzer(),
+                                         true, 
+                                         IndexWriter.MaxFieldLength.UNLIMITED);
             }
-            writer.setMaxFieldLength(Integer.MAX_VALUE-1);
 
             // This changes from memory-based check and disables auto flush
             writer.setMaxBufferedDocs(Integer.MAX_VALUE); // Dangerous...
@@ -287,10 +288,10 @@ public class LuceneManipulator implements IndexManipulator {
         writer.addDocument(document, descriptor.getIndexAnalyzer());
         // TODO: Verify that docCount is trustable with regard to deletes
         payload.getData().put(LuceneIndexUtils.META_ADD_DOCID,
-                              writer.docCount()-1);
+                              writer.maxDoc()-1);
         log.trace("Updating idMapper with id '" + id + "' and pos "
-                  + (writer.docCount()-1));
-        idMapper.put(id, writer.docCount()-1);
+                  + (writer.maxDoc()-1));
+        idMapper.put(id, writer.maxDoc()-1);
     }
 
     private void updateDeletion(String id, Payload payload) throws IOException {
@@ -300,14 +301,14 @@ public class LuceneManipulator implements IndexManipulator {
         if (idMapper.containsKey(id)) {
             payload.getData().put(LuceneIndexUtils.META_DELETE_DOCID,
                                   idMapper.get(id));
-            writer.flush();
+            writer.commit();
             writer.deleteDocuments(new Term(IndexUtils.RECORD_FIELD, id));
             // TODO: Consider if we can delay flush
             // The problem is add(a), delete(a), add(a). Without flushing we
             // don't know if a will be present in the index or not.
             // Another problem is add(a), delete(a), add(a), delete(a) as the
             // deltions are stored in a HashMap
-            writer.flush();
+            writer.commit();
         } else {
             log.info("Delete requested for " + payload + ", but it was not "
                      + "present in the index");
@@ -337,7 +338,7 @@ public class LuceneManipulator implements IndexManipulator {
             return;
         }
         log.debug("commit: Flushing index at '" + indexRoot + "' with docCount "
-                  + writer.docCount());
+                  + writer.maxDoc());
         closeWriter();
         log.trace("Commit finished for '" + indexRoot + "' in "
                   + (System.currentTimeMillis() - startTime) + " ms");
@@ -382,10 +383,10 @@ public class LuceneManipulator implements IndexManipulator {
                 closeWriter();
             } finally {
                 try {
-                    if (IndexReader.isLocked(indexDirectory)) {
+                    if (IndexWriter.isLocked(indexDirectory)) {
                         log.error("Lucene lock at '" + indexDirectory.getFile()
                                   + "' after close. Attempting removal");
-                        IndexReader.unlock(indexDirectory);
+                        IndexWriter.unlock(indexDirectory);
                     }
                 } catch (IOException e) {
                     log.error("Could not remove lock at '"
