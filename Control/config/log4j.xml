@@ -62,7 +62,7 @@
 
 
     <logger name="dk.statsbiblioteket.summa">
-        <level value="TRACE" />
+        <level value="debug" />
         <appender-ref ref="FILE" />
     </logger>
 

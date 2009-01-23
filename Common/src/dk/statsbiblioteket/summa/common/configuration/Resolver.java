@@ -149,6 +149,16 @@ public class Resolver {
     }
 
     /**
+     * Subset of the {@link #getURL} that only resolves Files.
+     * @param resource the resource to locate.
+     * @return the File for the resource if possible, else null.
+     */
+    public static File getFile(String resource) {
+        URL url = getURL(resource);
+        return url == null ? null : new File(url.getFile());
+    }
+
+    /**
      * Catch-all resource getter. Handles:<br />
      * HTTP-URLs: http://example.org/resource.xml<br />
      * File-URLs: file:///tmp/resource.txt<br />

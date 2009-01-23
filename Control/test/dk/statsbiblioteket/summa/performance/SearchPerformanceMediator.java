@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -23,6 +23,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import org.apache.commons.logging.LogFactory;
@@ -71,7 +72,7 @@ public class SearchPerformanceMediator {
     /**
      * This will be prepended to the filename of the generated log.
      * </p><p>
-     * Optional. Default is "".
+     * Optional. Default is "t" + #threads + (shared ? "" : "u").
      */
     public static final String CONF_FEEDBACK_PREFIX =
             "summa.performance.feedback.prefix";
@@ -127,6 +128,7 @@ public class SearchPerformanceMediator {
     private int maxQueries;
     private Profiler profiler;
     private int feedback;
+    private int logFeedback;
     private long startTime;
     private boolean shared;
     private int threads;
@@ -136,10 +138,13 @@ public class SearchPerformanceMediator {
                                      boolean sharedSearcher) throws IOException{
         log.trace("Creating mediator");
         queries = getQueries(conf);
-        feedback = Math.min(Math.max(10, queries.length / 100), 100);
+        maxQueries = conf.getInt(CONF_MAX_QUERIES, DEFAULT_MAX_QUERIES);
+        feedback = Math.min(Math.max(10, Math.min(maxQueries, queries.length)
+                                         / 100), 100);
+        logFeedback = Math.min(Math.max(10, Math.min(maxQueries, queries.length)
+                                            / 100), 10000);
         simulate = conf.getBoolean(CONF_SIMULATE, DEFAULT_SIMULATE);
         maxHits = conf.getInt(CONF_MAX_HITS, DEFAULT_MAX_HITS);
-        maxQueries = conf.getInt(CONF_MAX_QUERIES, DEFAULT_MAX_QUERIES);
         shared = sharedSearcher;
         this.threads = threads;
         fields = conf.getStrings(CONF_FIELDS, DEFAULT_FIELDS);
@@ -147,20 +152,31 @@ public class SearchPerformanceMediator {
         File outputFile = new File(
                 conf.getString(CONF_FEEDBACK_PREFIX,
                                DEFAULT_FEEDBACK_PREFIX)
-                + "t" + threads + (sharedSearcher ? "" : "u")
+                + getDefaultLogName()
                 + conf.getString(CONF_FEEDBACK_POSTFIX,
                                  DEFAULT_FEEDBACK_POSTFIX));
         log.debug("Logging performance data to " + outputFile);
         output = new BufferedWriter(new OutputStreamWriter(
                 new FileOutputStream(outputFile, false)));
         try {
+            File location = Resolver.getFile(conf.getString(
+                    CONF_INDEX_DESCRIPTOR, DEFAULT_INDEX_DESCRIPTOR));
+            if (location == null) {
+                throw new IllegalArgumentException(String.format(
+                        "Unable to resolve the location '%s' to a file",
+                        conf.getString(CONF_INDEX_DESCRIPTOR,
+                                       DEFAULT_INDEX_DESCRIPTOR)));
+            }
             parser = new SummaQueryParser(new LuceneIndexDescriptor(
-                    conf.getString(CONF_INDEX_DESCRIPTOR,
-                                   DEFAULT_INDEX_DESCRIPTOR)));
+                    Files.loadString(location)));
         } catch (ParseException e) {
             throw new IllegalArgumentException(
                     "Could not create SummaQueryParser", e);
         }
+    }
+
+    private String getDefaultLogName() {
+        return "t" + threads + (shared ? "" : "u");
     }
 
     /*
@@ -188,10 +204,13 @@ public class SearchPerformanceMediator {
                       + " total). ETA: " + profiler.getETAAsString(true));
             }
         }
+        if (count % logFeedback == 0) {
+            //noinspection DuplicateStringLiteralInspection
+            log.debug("Processed " + count / feedback + "%");
+        }
     }
 
     public void stop() throws IOException {
-        output.close();
         String end = String.format(
                 "Tested %d queries (%d hits). In %d seconds. Average "
                 + "queries/second: %.1f. Total time used: %s. Threads: %d. "
@@ -201,6 +220,7 @@ public class SearchPerformanceMediator {
                 profiler.getBps(false), profiler.getSpendTime(),
                 threads, !shared);
         write(end);
+        output.close();
         System.out.println(end);
     }
 
@@ -222,7 +242,7 @@ public class SearchPerformanceMediator {
      */
     public String getNextQuery() {
         int queryPos = queryCount.getAndAdd(1);
-        if (queryPos > queries.length || queryPos > maxQueries) {
+        if (queryPos >= queries.length || queryPos >= maxQueries) {
             log.debug("No more queries");
             return null;
         }
@@ -245,10 +265,13 @@ public class SearchPerformanceMediator {
                                          DEFAULT_QUERIES_FILE);
         log.trace("Loading queries from '" + location + "'");
         try {
-            queries = Files.loadString(new File(location)).split("\n");
+            queries = Files.loadString(Resolver.getFile(location)).split("\n");
         } catch (IOException e) {
-            throw new IOException("Unable to laod queries from '" + location
+            throw new IOException("Unable to load queries from '" + location
                                   + "'", e);
+        } catch (NullPointerException e) {
+            throw new IOException("Unable to resolve '" + location
+                                  + "' to a File", e);
         }
         log.debug(String.format("Got %d queries from '%s'",
                                 queries.length, location));

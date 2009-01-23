@@ -126,6 +126,8 @@
       <entry name="*.gen" />
       <entry name="*_4" />
       <entry name="*.data" />
+      <entry name="*.dat" />
+      <entry name="*" />
     </wildcardResourcePatterns>
   </component>
   <component name="CppTools.Loader" reportImplicitCastToBool="false" version="1" />
@@ -564,7 +566,46 @@
         <root url="jar://$PROJECT_DIR$/lib/apidocs/lucene-2.4.0-apidocs.zip!/" />
       </JAVADOC>
       <SOURCES>
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/benchmark/src/test" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/snowball/src/test" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/db/bdb-je/src/test" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/wikipedia/src/java" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/xml-query-parser/src/test" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/benchmark/src/java" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/miscellaneous/src/java" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/queries/src/test" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/regex/src/java" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/analyzers/src/test" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/swing/src/test" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/db/bdb/src/test" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/wikipedia/src/test" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/db/bdb-je/src/java" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/queries/src/java" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/lucli/src/java" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/swing/src/java" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/spellchecker/src/test" />
         <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/src/java" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/db/bdb/src/java" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/highlighter/src/test" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/surround/src/test" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/snowball/src/java" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/src/demo" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/memory/src/java" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/ant/src/java" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/src/test" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/highlighter/src/java" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/regex/src/test" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/analyzers/src/java" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/miscellaneous/src/test" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/memory/src/test" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/spellchecker/src/java" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/src/gcj" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/xml-query-parser/src/java" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/instantiated/src/test" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/ant/src/test" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/instantiated/src/java" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/surround/src/java" />
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-2.4.0-src.zip!/lucene-2.4.0/contrib/wordnet/src/java" />
       </SOURCES>
     </library>
     <library name="lucene-queries">
