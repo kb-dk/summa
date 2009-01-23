@@ -26,6 +26,7 @@ import java.rmi.RemoteException;
 import java.io.IOException;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.storage.database.derby.DerbyStorage;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.StorageBase;
@@ -63,18 +64,20 @@ public class StorageFactory {
      *        for the wanted {@link Storage}. If no storage is specified,
      *        the {@code StorageFactory} defaults to {@link #DEFAULT_STORAGE}.
      * @return an object implementing the {@link Storage} interface.
-     * @throws RemoteException if the controller could not be created.
+     * @throws IOException if the storage could not be created.
      */
     public static Storage createStorage(Configuration conf) throws IOException {
         log.trace("createStorage called");
 
         Class<? extends Storage> storageClass;
         try {
-            storageClass = conf.getClass(Storage.CONF_CLASS,
-                                         Storage.class,
-                                         DEFAULT_STORAGE);
+            storageClass = Configuration.getClass(Storage.CONF_CLASS,
+                                                  Storage.class,
+                                                  DEFAULT_STORAGE,
+                                                  conf);
         } catch (Exception e) {
-            throw new RemoteException("Could not get metadata storage control"
+            throw new Configurable.ConfigurationException(
+                                      "Could not get storage"
                                       + " class from property "
                                       + Storage.CONF_CLASS + ": "
                                       + e.getMessage(), e);

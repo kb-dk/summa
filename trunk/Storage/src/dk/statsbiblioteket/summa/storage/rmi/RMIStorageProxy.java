@@ -32,7 +32,7 @@ public class RMIStorageProxy extends UnicastRemoteObject
 
     /**
      * The class used for the storage backend. If this is set it will be
-     * written to {@link Storage#CONF_CLASS} before submitting
+     * written to {@link #CONF_CLASS} before submitting
      * the configuration to {@link StorageFactory#createStorage}.
      * <p/>
      * If this property is not set the proxy will fall back to
@@ -48,15 +48,28 @@ public class RMIStorageProxy extends UnicastRemoteObject
 
     /**
      * Configuration property specifying which port the registry used by
-     * the Storage can be found on. Default is 28000.
+     * the Storage can be found on. Default value is
+     * {@link #DEFAULT_REGISTRY_PORT}.
      */
-    public static final String CONF_REGISTRY_PORT = "summa.storage.rmi.registry.port";
+    public static final String CONF_REGISTRY_PORT =
+                                              "summa.storage.rmi.registry.port";
+
+    /**
+     * Default value for the {@link #CONF_REGISTRY_PORT} property.
+     */
+    public static final int DEFAULT_REGISTRY_PORT = 28000;
 
     /**
      * Configuration property specifying the service name of the Storage service.
-     * Default is {@code summa-storage}.
+     * Default is {@link #DEFAULT_SERVICE_NAME}.
      */
-    public static final String CONF_SERVICE_NAME = "summa.storage.rmi.service.name";
+    public static final String CONF_SERVICE_NAME =
+                                               "summa.storage.rmi.service.name";
+
+    /**
+     *
+     */
+    public static final String DEFAULT_SERVICE_NAME = "summa-storage";
 
     private static final Log log = LogFactory.getLog(RMIStorageProxy.class);
 
@@ -77,8 +90,8 @@ public class RMIStorageProxy extends UnicastRemoteObject
         if (conf.valueExists (CONF_BACKEND)) {
             backendConf.set (CONF_CLASS, conf.getString (CONF_BACKEND));
         } else {
-            log.info (CONF_BACKEND + " not set, using " + DEFAULT_BACKEND + " for "
-                      + "backend");
+            log.info (CONF_BACKEND + " not set, using " + DEFAULT_BACKEND
+                      + " for backend");
             backendConf.set (CONF_CLASS, DEFAULT_BACKEND);
         }
 
@@ -102,8 +115,8 @@ public class RMIStorageProxy extends UnicastRemoteObject
         backend = StorageFactory.createStorage (backendConf);
         log.trace ("Created storage: " + backend.getClass().getName());
 
-        serviceName = conf.getString (CONF_SERVICE_NAME, "summa-storage");
-        registryPort = conf.getInt(CONF_REGISTRY_PORT, 28000);
+        serviceName = conf.getString (CONF_SERVICE_NAME, DEFAULT_SERVICE_NAME);
+        registryPort = conf.getInt(CONF_REGISTRY_PORT, DEFAULT_REGISTRY_PORT);
 
         RemoteHelper.exportRemoteInterface (this, registryPort, serviceName);
 
