@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -60,6 +60,8 @@ public class SearchPerformanceThread extends Thread {
         } catch (Exception e) {
             String message = "Exception running performance thread";
             System.err.println(message);
+            //noinspection CallToPrintStackTrace
+            e.printStackTrace();
             log.fatal(message, e);
         }
     }
@@ -77,6 +79,9 @@ public class SearchPerformanceThread extends Thread {
     }
 
     public int test(String query) {
+        if (log.isTraceEnabled()) {
+            log.trace("Searching for '" + query + "'");
+        }
         if ("".equals(query)) {
             return 0;
         }
@@ -85,8 +90,7 @@ public class SearchPerformanceThread extends Thread {
             if (mediator.simulate) {
                 return 0;
             }
-            TopFieldDocs topDocs = searcher.search(
-                    parsedQuery, null, mediator.maxHits, null);
+            TopDocs topDocs = searcher.search(parsedQuery, mediator.maxHits);
             //noinspection DuplicateStringLiteralInspection
             FieldSelector selector = new SetBasedFieldSelector(
                     new HashSet<String>(Arrays.asList("shortformat")),
@@ -100,7 +104,8 @@ public class SearchPerformanceThread extends Thread {
                 for (String field: mediator.fields) {
                     Field iField = doc.getField(field);
                     if (log.isTraceEnabled()) {
-                        log.trace("Query(" + query + ") field '" + field
+                        log.trace("Query(" + query + ") hit(" + i
+                                  + ") field '" + field
                                   + "'(" + iField.stringValue() + ")");
                     }
                 }
@@ -119,8 +124,12 @@ public class SearchPerformanceThread extends Thread {
                                + e.getMessage());
             return 0;
         } catch (Exception e) {
-            System.err.println("Exception parsing '" + query + "': "
-                               + e.getMessage());
+            String message ="Exception parsing '" + query + "': "
+                            + e.getMessage();
+            System.err.println(message);
+            if (log.isDebugEnabled()) {
+                log.debug(message, e);
+            }
             return 0;
         }
     }

@@ -21,6 +21,7 @@ package dk.statsbiblioteket.summa.performance;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 import org.apache.lucene.search.IndexSearcher;
@@ -44,7 +45,8 @@ public class SearchPerformance {
     private static Log log = LogFactory.getLog(SearchPerformance.class);
 
     /**
-     * The location of the Lucene index.
+     * The location of the Lucene index, relative to the current path.
+     * A "segments.gen"-file must be present in the folder.
      * </p><p>
      * Optional. Default is "index".
      */
@@ -98,7 +100,7 @@ public class SearchPerformance {
      * The default setup-file, containing a {@link Configuration}-compatible
      * XML structure.
      */
-    public static final String DEFAULT_CONF_FILE = "SearchPerformance.cfg";
+    public static final String DEFAULT_CONF_FILE = "SearchPerformance.xml";
 
     private Configuration conf;
 
@@ -162,13 +164,30 @@ public class SearchPerformance {
         String dirType = conf.getString(CONF_DIR_TYPE, DEFAULT_DIR_TYPE);
         boolean readOnly = conf.getBoolean(CONF_DIR_READONLY,
                                            DEFAULT_DIR_READONLY);
-        File location = new File(conf.getString(CONF_INDEX_LOCATION,
-                                                DEFAULT_INDEX_LOCATION));
+        String locStr = conf.getString(CONF_INDEX_LOCATION,
+                                       DEFAULT_INDEX_LOCATION);
+        File location= Resolver.getFile(locStr // Lucene 2.4
+                                        + (locStr.endsWith("/") ? "" : "/")
+                                        + "segments.gen");
+        if (location == null) { // pre-2.4
+            location= Resolver.getFile(locStr
+                                       + (locStr.endsWith("/") ? "" : "/")
+                                       + "segments");
+        }
+        location = location == null ? null : location.getParentFile();
         log.debug("dirType = " + dirType + ", readOnly = " + readOnly
                   + ", location = " + location);
+        if (location == null) {
+            throw new IllegalArgumentException(String.format(
+                    "Unable to resolve '%s' to concrete index location",
+                    locStr));
+        }
         if (PARAM_DIR_FS.equals(dirType)) {
             log.debug("Creating FSDirectory(" + location + ")");
             try {
+                //noinspection DuplicateStringLiteralInspection
+                System.setProperty("org.apache.lucene.FSDirectory.class",
+                                   FSDirectory.class.getName());
                 FSDirectory dir = FSDirectory.getDirectory(location);
                 return new IndexSearcher(IndexReader.open(dir, readOnly));
             } catch (IOException e) {
@@ -189,6 +208,7 @@ public class SearchPerformance {
         if (PARAM_DIR_NIOFS.equals(dirType)) {
             log.debug("Creating NIODirectory(" + location + ")");
             try {
+                //noinspection DuplicateStringLiteralInspection
                 System.setProperty("org.apache.lucene.FSDirectory.class",
                                    NIOFSDirectory.class.getName());
                 FSDirectory dir = FSDirectory.getDirectory(location);

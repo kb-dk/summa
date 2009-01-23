@@ -953,6 +953,47 @@
 
     <target name="all" depends="release, .release.bundles, .release.bundleTool"/>
 
+    <target name="performance" depends=".jar, test.compile">
+        <property name="performance.dir" value="${basedir}/test/dk/statsbiblioteket/summa/performance"/>
+
+        <mkdir dir="${tmp.dir}"/>
+
+        <!-- Create jar file for test service -->
+        <jar basedir="${test.build.dir}" compress="true" jarfile="${tmp.dir}/summa-control-test-${summa.version}.jar"/>
+
+        <!-- Roll service bundle -->
+        <copy todir="${tmp.dir}">
+            <fileset file="${performance.dir}/bin/performance.sh"/>
+        </copy>
+
+        <replace file="${tmp.dir}/performance.sh"
+                 token="%control-test-jar%"
+                 value="summa-control-test-${summa.version}.jar"/>
+
+        <zip destfile="${dist.dir}/summa-search-performance-${summa.version}.zip">
+
+            <zipfileset prefix="lib" file="../${summa.ilib.common}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.storage.api}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.index}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.support}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.facetbrowser}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.facetbrowser.api}"/>
+            <zipfileset prefix="lib" file="${summa.lib.commons-logging}"/>
+            <zipfileset prefix="lib" file="${summa.lib.log4j}"/>
+            <zipfileset prefix="lib" file="${summa.lib.sbutil}"/>
+            <zipfileset prefix="lib" file="${summa.lib.lucene}"/>
+            <zipfileset prefix="lib" file="${release.jar}"/>
+
+            <zipfileset prefix="bin" file="${tmp.dir}/performance.sh" filemode="755"/>
+            <zipfileset prefix="config" file="${performance.dir}/config/log4j.xml"/>
+            <zipfileset file="${performance.dir}/config/SearchPerformance.xml"/>
+            <zipfileset file="${tmp.dir}/summa-control-test-${summa.version}.jar"/>
+
+        </zip>
+
+        <delete dir="${tmp.dir}"/>
+    </target>
+
 </project>
 
 

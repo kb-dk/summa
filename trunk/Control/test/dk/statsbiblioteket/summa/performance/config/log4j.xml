@@ -113,10 +113,10 @@
         <appender-ref ref="CONSOLE" />
     </logger>
         -->
-    <logger name="dk.statsbiblioteket.summa.ingest.split.SBMARCParser">
+<!--    <logger name="dk.statsbiblioteket.summa.ingest.split.SBMARCParser">
         <level value="debug" />
         <appender-ref ref="CONSOLE" />
-    </logger>
+    </logger>-->
     <logger name="dk.statsbiblioteket.summa.performance">
         <level value="debug" />
         <appender-ref ref="CONSOLE" />
