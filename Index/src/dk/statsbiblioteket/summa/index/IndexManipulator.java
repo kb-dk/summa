@@ -51,6 +51,19 @@ import dk.statsbiblioteket.summa.common.configuration.Configurable;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public interface IndexManipulator extends Configurable {
+
+    /**
+     * The fully qualified class-name for a manipulator. Used to create an
+     * IndexManipulator through reflection or via a {@link ManipulatorFactory}.
+     * <p/>
+     * This property must be present in all subconfigurations listed by
+     * {@link IndexControllerImpl#CONF_MANIPULATORS}.
+     * </p><p>
+     * This property is mandatory. No default.
+     */
+    public static final String CONF_MANIPULATOR_CLASS =
+            "summa.index.manipulatorclass";
+
     /**
      * If an index exists at the indexRoot, the manipulator should open it.
      * If not, the manipulator should create it. In either case, the manipulator

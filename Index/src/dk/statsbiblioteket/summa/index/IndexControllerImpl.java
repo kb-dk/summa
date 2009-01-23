@@ -173,16 +173,6 @@ public class IndexControllerImpl extends StateThread implements
             "summa.index.consolidateonclose";
     public static final boolean DEFAULT_CONSOLIDATE_ON_CLOSE = false;
 
-    /**
-     * The fully qualified class-name for a manipulator. Used to create an
-     * IndexManipulator through reflection. This property must be present in
-     * all subconfigurations listed by {@link #CONF_MANIPULATORS}.
-     * </p><p>
-     * This property is mandatory. No default.
-     */
-    public static final String CONF_MANIPULATOR_CLASS =
-            "summa.index.manipulatorclass";
-
     private static final int PROFILER_SPAN = 1000;
 
     /* The indexRoot is the main root. Indexes will always be in sub-folders */
@@ -265,23 +255,19 @@ public class IndexControllerImpl extends StateThread implements
                   + ", consolidateMaxDocuments: " + consolidateMaxDocuments
                   + ", consolidateMaxCommits: " + consolidateMaxCommits
                   + ", consolidateOnClose: " + consolidateOnClose);
+
         //noinspection DuplicateStringLiteralInspection
         log.trace("Creating " + manipulatorConfs.size() + " manipulators");
         manipulators = new ArrayList<IndexManipulator>(manipulatorConfs.size());
         for (Configuration manipulatorConf: manipulatorConfs) {
-            //noinspection OverlyBroadCatchBlock
-            try {
-                log.trace("Creating manipulator");
-                IndexManipulator manipulator =
-                        createManipulator(manipulatorConf);
-                log.trace("Manipulator created");
-                manipulators.add(manipulator);
-            } catch (Exception e) {
-                throw new ConfigurationException(
-                        "Could not create manipulator", e);
-            }
+            log.trace("Creating manipulator");
+            IndexManipulator manipulator =
+                    ManipulatorFactory.createManipulator(manipulatorConf);
+            log.trace("Manipulator created");
+            manipulators.add(manipulator);
         }
         log.debug("Manipulators created, opening index");
+
         profiler = new Profiler();
         profiler.setBpsSpan(PROFILER_SPAN);
         try {
@@ -294,23 +280,6 @@ public class IndexControllerImpl extends StateThread implements
         log.debug("Index opened, starting Watchdog");
         start();
         log.debug("Creation of IndexControllerImpl finished. Ready for Payloads");
-    }
-
-    private IndexManipulator createManipulator(Configuration conf) {
-        String manipulatorClassName;
-        try {
-            manipulatorClassName = conf.getString(CONF_MANIPULATOR_CLASS);
-        } catch (NullPointerException e) {
-            throw new NullPointerException("Could not locate key '"
-                                           + CONF_MANIPULATOR_CLASS + "'");
-        }
-        log.debug("Creating manipulator '" + manipulatorClassName + "'");
-        Class<? extends IndexManipulator> manipulatorClass =
-                Configuration.getClass(CONF_MANIPULATOR_CLASS,
-                                       IndexManipulator.class, conf);
-        log.debug("Got IndexManipulator class " + manipulatorClass
-                  + ". Creating...");
-        return Configuration.create(manipulatorClass, conf);
     }
 
     private synchronized void triggerCheck() throws IOException {
