@@ -23,7 +23,7 @@ public class ResultSetCursor implements Cursor {
     private long lastAccess;
     private long totalRecords;
 
-    private long key;
+    private long key;    // key is 0 for anonymous cursors
     private long nextMtimeTimestamp;
     private long currentMtimeTimestamp;
     private PreparedStatement stmt;
@@ -92,27 +92,29 @@ public class ResultSetCursor implements Cursor {
         this.resultSet = resultSet;
         this.options = options;
 
-        // The iterator start "outside" the result set, so step into it
+        // The cursor start "outside" the result set, so step into it
         resultSetHasNext = resultSet.next();
 
         // This also updates resultSetHasNext
         nextRecord = nextValidRecord();
 
-        log.trace("Constructed Record iterator with initial hasNext: "
-                  + resultSetHasNext + ", on base " + base);
-
         if (anonymous) {
             key = 0;
         } else {
             // The generated timestamps a guranteed to be unique, so no
-            // iterator key clashes even within the same millisecond
+            // cursor key clashes even within the same millisecond
             key = db.getTimestampGenerator().next();
         }
 
-        // Extract the system time from when we generated the iterator key
+        // Extract the system time from when we generated the cursor key
         lastAccess = db.getTimestampGenerator().systemTime(key);
         firstAccess = 0;
         totalRecords = 0;
+
+        if (!anonymous) {
+            log.trace("Constructed with initial hasNext: "
+                      + resultSetHasNext + ", on base " + base);
+        }
     }
 
     public long getLastAccess() {
@@ -123,6 +125,13 @@ public class ResultSetCursor implements Cursor {
         return options;
     }
 
+    /**
+     * Return the globally unique key for this cursor. If it was created
+     * with {@code anonymous=true} then the key will not be unique, but always
+     * be {@code 0}.
+     * @return {@code 0} if the cursor is anonymous. Otherwise the cursor's
+     *         globally unique key will be returned
+     */
     public long getKey() {
         lastAccess = System.currentTimeMillis();
         return key;
@@ -240,11 +249,14 @@ public class ResultSetCursor implements Cursor {
                 return;
             }
 
-            log.trace("Closing " + this);
+            if (key != 0) {
+                log.trace("Closing " + this);
+            }
+
             resultSet.close();
             stmt.close();
         } catch (Exception e) {
-            log.warn("Failed to close iterator statement " + stmt + ": "
+            log.warn("Failed to close cursor statement " + stmt + ": "
                      + e.getMessage(), e);
         }
     }
