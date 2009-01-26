@@ -40,7 +40,15 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "hal",
         comment = "Methods needs Javadoc, indentation needs work, but beware "
-                  + "bad IDEA text-handling for transliteration strings")
+                  + "bad IDEA text-handling for transliteration strings."
+
+                  + "As this is basically a map from char => char[], the "
+                  + "obvious optimization is to make the array char[][], where "
+                  + "the first dimension is the char and the second index is"
+                  + "the array. Lookups for 'b' would this be the code"
+                  + "return index[(int)'b'). To guard against out of bounds, "
+                  + "this should have an explicit check or be wrapped with "
+                  + "try-catch.")
 public class TransliteratorTokenizer extends Tokenizer {
 
 
