@@ -24,6 +24,8 @@ package dk.statsbiblioteket.summa.common.lucene.analysis;
 
 import org.apache.lucene.analysis.Token;
 import org.apache.lucene.analysis.Tokenizer;
+import org.apache.lucene.analysis.LowerCaseFilter;
+
 import java.util.Map;
 import java.io.IOException;
 import java.io.Reader;
@@ -100,12 +102,11 @@ public class TransliteratorTokenizer extends Tokenizer {
 
     private StringBuffer nextToken;
 
-    private Reader reader;
     private int position;
 
     /**
-     * Constructs a tailored TransliteratorTokenizer on the supplied reader. Rules needs to be
-     * supplied in accordance to the RuleParser syntax.
+     * Constructs a tailored TransliteratorTokenizer on the supplied reader.
+     * Rules needs to be supplied in accordance to the RuleParser syntax.
      * Default rules can be replaces by or appended to the given rules,
      * by specifying the boolean keepDefault
      *
@@ -114,7 +115,8 @@ public class TransliteratorTokenizer extends Tokenizer {
      * @param rules  A String containing a set of transliteration rules.
      * @param keepDefault if true, rules are appended to the default rules.
      */
-    public TransliteratorTokenizer(Reader reader, String rules, boolean keepDefault){
+    public TransliteratorTokenizer(Reader reader,
+                                   String rules, boolean keepDefault){
         super(reader);
         if (keepDefault) {
             if (rules == null || "".equals(rules)) {
@@ -126,21 +128,10 @@ public class TransliteratorTokenizer extends Tokenizer {
         } else {
             ruleMap = RuleParser.parse(rules);
         }
-        this.reader = reader;
         nextToken = new StringBuffer();
         position = 0;
 
     }
-
-
-    /**
-     * Constructs a TransliteratorTokenizer with the default set off rules on the reader.
-     *
-     * @param reader  The reader to be tokenized
-     */
-   public TransliteratorTokenizer(Reader reader){
-       new TransliteratorTokenizer(reader, "", true);
-   }
 
     /**
      *
@@ -172,7 +163,7 @@ public class TransliteratorTokenizer extends Tokenizer {
         int start = position;
         Token y = null;
         int c;
-        while ((c = reader.read()) != -1){
+        while ((c = input.read()) != -1){
            char[] res = getTransliteration((char)c);
            for (char t : res){
                if (nextToken.length() == 0) {

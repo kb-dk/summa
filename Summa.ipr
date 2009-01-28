@@ -633,6 +633,17 @@
       </JAVADOC>
       <SOURCES />
     </library>
+    <library name="lucene-backports">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/lib/lucene-backports-2.4.0.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$PROJECT_DIR$/lib/apidocs/lucene-backports-2.4.0-apidocs.zip!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$PROJECT_DIR$/lib/src/lucene-backports-2.4.0-src.zip!/lucene-backports-2.4/src" />
+      </SOURCES>
+    </library>
   </component>
 </project>
 
