@@ -66,7 +66,13 @@ public class SummaRepeatAnalyzer extends Analyzer {
      * @return
      */
     public TokenStream tokenStream(String fieldName, Reader reader){ 
-        return _underlyingAnalyzer.tokenStream(fieldName, reader);
+        try {
+            return _underlyingAnalyzer.reusableTokenStream(fieldName, reader);
+        } catch (IOException e) {
+            // Very sorry for dropping the exception, but logging at
+            // this level would be suicide
+            return _underlyingAnalyzer.tokenStream(fieldName, reader);
+        }
     }
 
     public int getPositionIncrementGap(String fieldName){

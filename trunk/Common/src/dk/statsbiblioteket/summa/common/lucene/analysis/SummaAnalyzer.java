@@ -24,9 +24,13 @@ package dk.statsbiblioteket.summa.common.lucene.analysis;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.LowerCaseFilter;
+import org.apache.lucene.analysis.Tokenizer;
+import org.apache.lucene.analysis.standard.StandardTokenizer;
 
 import java.io.Reader;
 import java.io.IOException;
+import java.util.Map;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -40,7 +44,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "hal",
+        author = "mke, hal",
         comment = "Methods needs Javadoc")
 public class SummaAnalyzer extends Analyzer {
 
@@ -50,6 +54,24 @@ public class SummaAnalyzer extends Analyzer {
     String maskingRules;
     boolean keepDefaultMasking;
     boolean ignoreCase;
+
+    /**
+     * Encapsulation of a TokenStream and it data source (a Tokenizer)
+     */
+    private static class TokenStreamContext {
+
+        /**
+         * The topmost tokenstream tokens should be read from.
+         */
+        public TokenStream tokenStream;
+
+        /**
+         * The tokenSource is the bottom most Tokenizer in the chain of
+         * tokenstreams. We need a handle to this to be able to reset the
+         * underlying Reader
+         */
+        public Tokenizer tokenSource;
+    }
 
     /**
      * Creates an analyzer on the basis of information in the configuration.
@@ -96,7 +118,7 @@ public class SummaAnalyzer extends Analyzer {
      * @param reader - containin the text
      * @return a TransliteratorTokenizer tokenStream filtered by a TokenMasker.
      */
-     public TokenStream tokenStream(String fieldName, Reader reader){
+     public TokenStream tokenStream(String fieldName, Reader reader) {
          try {
              return new TransliteratorTokenizer(
                      new TokenMasker(reader, maskingRules, keepDefaultMasking,
@@ -105,9 +127,40 @@ public class SummaAnalyzer extends Analyzer {
          } catch (IOException e) {
              return null;
          }
-     }
+    }
 
+    private TokenStreamContext prepareReusableTokenStream (String fieldName,
+                                                           Reader reader) {
+        TokenStreamContext ctx = new TokenStreamContext();
 
+        // We use the same tokenStream and tokenSource in the context.
+        // This is mostly because of the gross architecture in Summa at the
+        // point of writing this code.
+        // In the future we will use nested Lucene tokenstreams and the
+        // separation between the tokenSource and tokenStream will be important
+        ctx.tokenSource = (Tokenizer)tokenStream(fieldName, reader);
+        ctx.tokenStream = ctx.tokenSource;
+
+        return ctx;
+    }
+
+    @Override
+    public TokenStream reusableTokenStream(String fieldName, Reader reader)
+                                                            throws IOException {
+        // This method fetches a stored *thread local* TokenStreamContext
+        // this means that we have one unique token stream per thread
+
+        TokenStreamContext ctx = (TokenStreamContext)getPreviousTokenStream();
+        if (ctx == null) {
+            // Create a new tokenStream and add it to the thread local storage
+            ctx = prepareReusableTokenStream(fieldName, reader);
+            setPreviousTokenStream(ctx);
+        } else {
+            ctx.tokenSource.reset(reader);
+        }
+
+        return ctx.tokenStream;
+    }
 
 }
 
