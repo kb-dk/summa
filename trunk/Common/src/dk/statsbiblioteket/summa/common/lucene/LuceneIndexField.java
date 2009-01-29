@@ -30,8 +30,7 @@ import org.apache.lucene.document.Field;
 import org.w3c.dom.Node;
 import dk.statsbiblioteket.summa.common.index.IndexField;
 import dk.statsbiblioteket.summa.common.index.FieldProvider;
-import dk.statsbiblioteket.summa.common.lucene.analysis.SummaRepeatAnalyzer;
-import dk.statsbiblioteket.summa.common.lucene.analysis.SummaAnalyzer;
+import dk.statsbiblioteket.summa.common.lucene.analysis.SummaFieldSeparatingAnalyzer;
 import dk.statsbiblioteket.summa.common.lucene.analysis.SummaStandardAnalyzer;
 
 /**
@@ -72,7 +71,7 @@ public class LuceneIndexField extends
     public Analyzer getIndexAnalyzer() {
         if (isMultiValued()) {
             // TODO: Consider sanity-check for non-text analyzers
-            return new SummaRepeatAnalyzer(super.getIndexAnalyzer());
+            return new SummaFieldSeparatingAnalyzer(super.getIndexAnalyzer());
         }
         return super.getIndexAnalyzer();
     }
@@ -80,7 +79,7 @@ public class LuceneIndexField extends
     public Analyzer getQueryAnalyzer() {
         if (isMultiValued()) { // TODO: Does multi-value make sense here?
             // TODO: Consider sanity-check for non-text analyzers
-            return new SummaRepeatAnalyzer(super.getQueryAnalyzer());
+            return new SummaFieldSeparatingAnalyzer(super.getQueryAnalyzer());
         }
         return super.getQueryAnalyzer();
     }

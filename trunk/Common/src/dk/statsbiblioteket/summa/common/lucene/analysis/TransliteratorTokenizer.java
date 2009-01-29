@@ -158,11 +158,14 @@ public class TransliteratorTokenizer extends Tokenizer {
      * @return
      * @throws IOException
      */
-    public Token next() throws IOException {
+    public Token next(Token inToken) throws IOException {
 
         int start = position;
         Token y = null;
         int c;
+
+        inToken.clear();
+
         while ((c = input.read()) != -1){
            char[] res = getTransliteration((char)c);
            for (char t : res){
@@ -172,8 +175,11 @@ public class TransliteratorTokenizer extends Tokenizer {
                if (isTokenChar(t)){
                   nextToken.trimToSize();
                   if (nextToken.length() > 0){
-                    y = new Token(nextToken.toString().trim(), start, position);
-                    nextToken = new StringBuffer();
+                    y = inToken;
+                    y.setTermBuffer(nextToken.toString().trim());
+                    y.setStartOffset(start);
+                    y.setEndOffset(position);
+                    nextToken.setLength(0); // Reset nextToken
                   }
                } else {
                     nextToken.append(t);
@@ -185,8 +191,11 @@ public class TransliteratorTokenizer extends Tokenizer {
            }
         }
         if (nextToken.length()> 0){
-            y = new Token(nextToken.toString().trim(), start, position);
-            nextToken = new StringBuffer();
+            y = inToken;
+            y.setTermBuffer(nextToken.toString().trim());
+            y.setStartOffset(start);
+            y.setEndOffset(position);
+            nextToken.setLength(0); // Clear the nextToken buffer
             return y;
         }
         return null;

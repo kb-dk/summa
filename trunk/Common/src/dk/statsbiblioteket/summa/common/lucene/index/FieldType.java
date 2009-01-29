@@ -57,9 +57,9 @@ public enum FieldType {
     text("text", Field.Index.TOKENIZED, Field.Store.NO, Field.TermVector.WITH_POSITIONS_OFFSETS, new SummaStandardAnalyzer()),
     /**
      * sort is, TOKENIZED, NOT STORED, TERMVECTOR YES, uses SummaSortKeyAnalyzer
-     * @see dk.statsbiblioteket.summa.common.lucene.analysis.SummaSortKeyAnalyzer
+     * @see dk.statsbiblioteket.summa.common.lucene.analysis.SummaSymbolRemovingAnalyzer
      */
-    sort("sortkey", Field.Index.TOKENIZED, Field.Store.NO, Field.TermVector.YES, new SummaSortKeyAnalyzer()),
+    sort("sortkey", Field.Index.TOKENIZED, Field.Store.NO, Field.TermVector.YES, new SummaSymbolRemovingAnalyzer()),
     /**
      * stored is: INDEX NO, STORED COMPRESS, TERMVECTOR NO, uses SummaStandardAnalyzer.<br>
      * note: the analyzer is not acctually used as the type is not indexed!!!

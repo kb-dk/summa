@@ -29,11 +29,8 @@ import java.util.Map;
 
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.index.IndexField;
-import dk.statsbiblioteket.summa.common.lucene.analysis.SummaKeywordAnalyzer;
-import dk.statsbiblioteket.summa.common.lucene.analysis.SummaStandardAnalyzer;
-import dk.statsbiblioteket.summa.common.lucene.analysis.SummaSortKeyAnalyzer;
-import dk.statsbiblioteket.summa.common.lucene.analysis.SummaNumberAnalyzer;
-import dk.statsbiblioteket.summa.common.lucene.analysis.FreeTextAnalyzer;
+import dk.statsbiblioteket.summa.common.lucene.analysis.SummaSymbolRemovingAnalyzer;
+import dk.statsbiblioteket.summa.common.lucene.analysis.*;
 import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import org.apache.lucene.analysis.Analyzer;
@@ -112,7 +109,7 @@ public class LuceneIndexDescriptor
                            Field.Index.TOKENIZED,
                            Field.Store.NO,
                            Field.TermVector.YES,
-                           new SummaSortKeyAnalyzer()));
+                           new SummaSymbolRemovingAnalyzer()));
         addField(makeField("stored",
                            Field.Index.NO,
                            Field.Store.COMPRESS,
