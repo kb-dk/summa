@@ -1,4 +1,4 @@
-/* $Id: SummaNumberAnalyzer.java,v 1.3 2007/10/04 13:28:17 te Exp $
+/* $Id: SummaSymbolRemovingAnalyzer.java,v 1.3 2007/10/04 13:28:17 te Exp $
  * $Revision: 1.3 $
  * $Date: 2007/10/04 13:28:17 $
  * $Author: te $
@@ -23,9 +23,9 @@
 package dk.statsbiblioteket.summa.common.lucene.analysis;
 
 import org.apache.commons.logging.Log;       import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.analysis.SimpleAnalyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
 
 import java.io.Reader;
 import java.io.IOException;
@@ -35,83 +35,64 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.strings.CharSequenceReader;
 
 /**
- * This Analyzer wraps a StandardAnalyzer after stripping off typical seprator
- * chars used in many ID schemes.
- * The list of removed chars is:
- * {'-', '_',':', '/' , '\'}
+ * The SummaSymbolRemovingAnalyzer is used to generate uniform sortable fields.
+ * In effect all chars where Character.isLetter == false will be removed.
+ * This analyzer wraps a SimpleAnalyzer
  *
- * 
- * @see org.apache.lucene.analysis.standard.StandardAnalyzer
- * @author Hans Lund, State and University Library - Aarhus, Denmark
- * @version $Id: SummaNumberAnalyzer.java,v 1.3 2007/10/04 13:28:17 te Exp $
- *
+ * @see org.apache.lucene.analysis.SimpleAnalyzer
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "hal")
-public class SummaNumberAnalyzer extends Analyzer {
+        author = "hal",
+        comment="This functionality is not that of an Analyzer, " +
+                "but a TokenFilter")
+public class SummaSymbolRemovingAnalyzer extends Analyzer {
 
+    private static final Log log = LogFactory.getLog(SummaSymbolRemovingAnalyzer.class);
 
-    private static final Log log = LogFactory.getLog(SummaNumberAnalyzer.class);
-
-    private static final char[] removable = new char[]{'-', '_',':',
-                                                       '/' , '\\'};
-
-    // Thread local context used for the reusableTokenStream() method
     private static class TokenStreamContext {
+        public final SimpleAnalyzer simpleAnalyzer;
         public final StringBuffer buf;
-        public final StandardAnalyzer standardAnalyzer;
         public final CharSequenceReader seq;
 
         public TokenStreamContext() {
+            simpleAnalyzer = new SimpleAnalyzer();
             buf = new StringBuffer();
-            standardAnalyzer = new StandardAnalyzer();
             seq = new CharSequenceReader(buf);
         }
     }
 
     /**
-     * @see org.apache.lucene.analysis.Analyzer#tokenStream(String, java.io.Reader)
+     * The underlying char stream from the reader is filtered so that only
+     * letters survive before it is passed to a SimpleAnalyzer and the
+     * tokenStream from here is returned.
      *
-     * @param fieldName name of the Indexfield.
-     * @param reader  the reader containing the data.
-     * @return  A StandardAnalyser tokenStream.
+     * @see org.apache.lucene.analysis.SimpleAnalyzer#tokenStream(String, java.io.Reader)
+     * @see org.apache.lucene.analysis.Analyzer
+     * @param fieldName the name of the field
+     * @param reader the provided reader containing the text.
+     * @return a tokenStream with one token containin only lowercase letters.
      */
     @Override
     public TokenStream tokenStream(String fieldName, Reader reader){
         char c;
         int i;
-        StringBuffer b = new StringBuffer();
+        StringBuffer b = new StringBuffer(200);
         try {
             while ((i = reader.read()) != -1) {
                 c = (char)i;
-                boolean add = true;
-                for (char aRemovable : removable) {
-                   if (aRemovable == c){
-                       add = false;
-                       break;
-                   }
-                }
-                if (add) {
-                    b.append(c);
-                }
+                 if (Character.isLetter(c)){
+                     b.append(c);
+                 }
             }
         } catch (IOException e) {
             log.error("", e);
         }
-        return new StandardAnalyzer(
-                new String[]{}).tokenStream(fieldName,
-                                            new StringReader(b.toString()));
+        return new SimpleAnalyzer().tokenStream(fieldName,
+                                                new StringReader(b.toString()));
     }
 
-    /**
-     * A version of {@link #tokenStream(String, java.io.Reader)} that doesn't
-     * allocate any new objects
-     *
-     * @param fieldName
-     * @param reader
-     * @return a KeywordAnalyzer tokenStream
-     */
+    // Version of this.tokenSteam() that does not allocate any new objects
     @Override
     public TokenStream reusableTokenStream(String fieldName, Reader reader)
                                                             throws IOException {
@@ -131,24 +112,16 @@ public class SummaNumberAnalyzer extends Analyzer {
         try {
             while ((i = reader.read()) != -1) {
                 c = (char)i;
-                boolean add = true;
-                for (char aRemovable : removable) {
-                   if (aRemovable == c){
-                       add = false;
-                       break;
-                   }
-                }
-                if (add) {
-                    ctx.buf.append(c);
-                }
+                 if (Character.isLetter(c)){
+                     ctx.buf.append(c);
+                 }
             }
         } catch (IOException e) {
             log.error("", e);
         }
-        return ctx.standardAnalyzer.reusableTokenStream(fieldName,
-                                                        ctx.seq.reset(ctx.buf));
+        return ctx.simpleAnalyzer.reusableTokenStream(fieldName,
+                                                      ctx.seq.reset(ctx.buf));
     }
-
 }
 
 

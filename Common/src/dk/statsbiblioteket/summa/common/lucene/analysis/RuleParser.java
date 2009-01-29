@@ -29,21 +29,26 @@ import java.io.StringReader;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
- * This is a simple RuleParser, used for reading mapping rulles for the
- * TransliteratorTokenizer.
- *
+ * This is a simple RuleParser, used for reading mapping rules for the
+ * {@link TransliteratorTokenizer}.
+ * <p/>
  * The rules should follow this notation:
- *
- * rule = statement ">" statement ";";
- * statement = "'" char* "'";
+ * <pre>
+ * rule = statement > statement;
+ * statement = 'char';
  * char = ((character - specialChar) | (escape specialChar))*;
- * specialChar = "'" | ";" | ">" | "\";
- * escape = "\";
+ * specialChar = ' or ; or > or \;
+ * escape = \;
+ * </pre>
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "hal")
 public class RuleParser {
+
+    // Cache used to store parsed ruleMaps.
+    private static Map<String,Map<String,String>> ruleCache =
+                                       new HashMap<String,Map<String,String>>();
 
     /**
      * Parses a String containing rules, a rule is a mapping pair of Strings.
@@ -71,10 +76,19 @@ public class RuleParser {
      */
     public static Map<String,String> parse(String rules, int maxLen){
 
+        Map<String, String> ruleMap;
+
+        // Check if we have the ruleMap cached, and return it if so
+        ruleMap = getCachedRuleMap(rules, maxLen);
+        if (ruleMap != null) {
+            return ruleMap;
+        }
+
+        // Ok, we didn't have the ruleMap parsed yet. Go for it
+        ruleMap = new HashMap<String, String>();
         char[] keyByf = new char[maxLen];
         char[] valBuf = new char[maxLen];
 
-        HashMap<String, String> ruleMap = new HashMap<String, String>();
         char m = '\'';
         char r = '>';
         char l = ';';
@@ -144,7 +158,25 @@ public class RuleParser {
              throw new IllegalArgumentException("The rules could not be parsed",
                                                 e);
         }
+
+        cacheRuleMap(rules, maxLen, ruleMap);
+
         return ruleMap;
+    }
+
+    private static void cacheRuleMap(String rules,
+                                     int maxLen,
+                                     Map<String,String> ruleMap) {
+        ruleCache.put(getRuleMapKey(rules, maxLen), ruleMap);
+    }
+
+    private static Map<String,String> getCachedRuleMap(String rules,
+                                                       int maxLen) {
+        return ruleCache.get(getRuleMapKey(rules, maxLen));
+    }
+
+    private static String getRuleMapKey(String rules, int maxLen) {
+        return maxLen + "_" + rules;
     }
 
 

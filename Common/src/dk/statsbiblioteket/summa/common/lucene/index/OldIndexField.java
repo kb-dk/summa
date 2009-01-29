@@ -74,7 +74,7 @@ public class OldIndexField implements Comparable {
     /**
      * In old implementations repeating fields was subfixed.
      * Use the SummaRepeatAnalyzer instead.
-     * @see dk.statsbiblioteket.summa.common.lucene.analysis.SummaRepeatAnalyzer
+     * @see dk.statsbiblioteket.summa.common.lucene.analysis.SummaFieldSeparatingAnalyzer
      * @return the subfix
      * @deprecated
      */
