@@ -682,7 +682,15 @@ public class IndexControllerImpl extends StateThread implements
     }
 
     public Payload next() {
+        // Get the next payload
+        long start = System.nanoTime();
         Payload payload = source.next();
+        if (log.isDebugEnabled()) {
+            log.debug("Got payload from source in "
+                      + (System.nanoTime() - start)/1000f + "ms");
+        }
+
+        // Process the payload
         try {
             update(payload);
         } catch (IOException e) {
@@ -690,6 +698,7 @@ public class IndexControllerImpl extends StateThread implements
             throw new RuntimeException("IOException when calling next("
                                        + payload + ")", e);
         }
+
         return payload;
     }
 

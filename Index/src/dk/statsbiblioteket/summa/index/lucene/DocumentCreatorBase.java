@@ -37,7 +37,7 @@ import org.apache.lucene.document.Field;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public abstract class DocumentCreatorBase extends ObjectFilterImpl {
-    private static Log log = LogFactory.getLog(DocumentCreatorBase.class);
+    private static final Log log = LogFactory.getLog(DocumentCreatorBase.class);
 
     protected DocumentCreatorBase(Configuration conf) {
         super(conf);
