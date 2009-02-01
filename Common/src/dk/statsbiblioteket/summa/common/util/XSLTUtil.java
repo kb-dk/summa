@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -120,10 +120,11 @@ public class XSLTUtil {
         if (log.isTraceEnabled()) {
             try {
                 log.trace(String.format(
-                        "Performed transformation in %s ns.\n*** Input:\n%s\n\n"
-                        + "*** Output:\n%s", System.nanoTime() - startNano,
-                                             new String(content, "utf-8"),
-                                             new String(output, "utf-8")));
+                        "Performed transformation in %s ms.\n*** Input:\n%s\n\n"
+                        + "*** Output:\n%s",
+                        (System.nanoTime() - startNano)/1000000f,
+                        new String(content, "utf-8"),
+                        new String(output, "utf-8")));
             } catch (UnsupportedEncodingException e1) {
                 //noinspection DuplicateStringLiteralInspection
                 throw new TransformerException("utf-8 not supported");
@@ -132,7 +133,7 @@ public class XSLTUtil {
             //noinspection DuplicateStringLiteralInspection
             log.debug("Transformed " + content.length + " bytes to "
                       + output.length + " bytes in "
-                      + (System.nanoTime() - startNano) + " ns.");
+                      + (System.nanoTime() - startNano)/1000000f + "ms.");
         }
         return output;
     }

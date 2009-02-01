@@ -687,7 +687,7 @@ public class IndexControllerImpl extends StateThread implements
         Payload payload = source.next();
         if (log.isDebugEnabled()) {
             log.debug("Got payload from source in "
-                      + (System.nanoTime() - start)/1000f + "ms");
+                      + (System.nanoTime() - start)/1000000f + "ms");
         }
 
         // Process the payload
