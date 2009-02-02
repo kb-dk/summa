@@ -136,7 +136,7 @@ public class MUXFilter implements ObjectFilter, Runnable {
     }
 
     /**
-     * The run-method extractes Payloads from source and feeds them into
+     * The run-method extracts Payloads from source and feeds them into
      * the proper feeders until the source has no more Payloads.
      * </p><p>
      * The proper feeder is selected by priority:<br />
