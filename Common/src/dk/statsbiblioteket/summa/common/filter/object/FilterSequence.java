@@ -49,9 +49,8 @@ public class FilterSequence implements ObjectFilter {
     private static Log log = LogFactory.getLog(FilterSequence.class);
 
     /**
-     * A list with the names of the filters to create and put in sequence.
-     * For each name, a sub-configuration must exist.
-     * </p><p>
+     * A list of sub-configurations, one for each filter in the FilterSequence.
+     * <p/>
      * This property is mandatory.
      */
     public static final String CONF_FILTERS = "summa.filter.sequence.filters";
