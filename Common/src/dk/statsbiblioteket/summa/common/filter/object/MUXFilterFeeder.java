@@ -72,11 +72,11 @@ public class MUXFilterFeeder implements ObjectFilter, Runnable {
     /**
      * The length of the output queue.
      * </p><p>
-     * This property is optional. Default is 1.
+     * This property is optional. Default is 10.
      */
     public static final String CONF_QUEUE_OUT_LENGTH =
             "summa.muxfilter.feeder.queue.out.length";
-    public static final int DEFAULT_QUEUE_OUT_LENGTH = 1;
+    public static final int DEFAULT_QUEUE_OUT_LENGTH = 10;
 
     /**
      * The maximum size in bytes of the Payloads in the output queue.
@@ -103,7 +103,7 @@ public class MUXFilterFeeder implements ObjectFilter, Runnable {
      */
     public static final String CONF_FILTER_NAME =
             "summa.muxfilter.filter.name";
-    public static final String DEFAULT_FILTER_NAME = "Unnamed Filter";
+    public static final String DEFAULT_FILTER_NAME = "Unnamed MUXFilterFeeder";
     /**
      * If a Filter is marked as fallback, it should only be used if no other
      * filters accepts the Payload, regardless of the queue-sizes of the
@@ -160,7 +160,7 @@ public class MUXFilterFeeder implements ObjectFilter, Runnable {
             && !(baseList.size() == 1 && "*".equals(baseList.get(0)))) {
             bases = new HashSet<String>(baseList);
         }
-        new Thread(this).start();
+        new Thread(this, filterName+"-"+this.hashCode()).start();
     }
 
     private ObjectFilter createFilter(Configuration configuration) {
