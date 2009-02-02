@@ -50,14 +50,14 @@ public class ISBN {
     public static String isbnNorm(String in) {
         try {
             String out = in.trim();
-            out = out.replaceAll("-", "");
+            out = out.replace("-", "");
             if (out.trim().length() == 10) {
                 out = out.substring(0, 9);
                 out = "978" + out;
                 int sum = 0;
                 for (int i = 0; i < out.length(); i++) {
                     if ((i % 2 == 0)) {
-                        sum += 1 * Integer.parseInt(out.substring(i, i + 1));
+                        sum += Integer.parseInt(out.substring(i, i + 1));
                     } else {
                         sum += 3 * Integer.parseInt(out.substring(i, i + 1));
                     }
@@ -68,8 +68,7 @@ public class ISBN {
             }
 
         } catch (Exception e) {
-            log.warn("error in parsing isbn: " + e.getMessage());
-
+            log.warn("Error parsing isbn '"+in+"': " + e.getMessage());
             return in;
         }
         return in;

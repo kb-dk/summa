@@ -27,7 +27,8 @@ import java.net.URI;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
- * Escapes the metadata part of the open url (the query) according to the OpenUrl specification.<br>
+ * Escapes the metadata part of the open url (the query) according to the
+ * OpenUrl specification.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -45,8 +46,8 @@ public class OpenUrlEscape {
         URI i =URI.create(base + in);
         String asci = i.toASCIIString();
         asci = asci.substring(base.length());
-        asci = asci.replaceAll("/", "%2F");
-        asci = asci.replaceAll(":", "%3A");
+        asci = asci.replace("/", "%2F");
+        asci = asci.replace(":", "%3A");
         return asci;
     }
 
