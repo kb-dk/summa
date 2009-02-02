@@ -334,7 +334,7 @@ public class IndexControllerImpl extends StateThread implements
             if (sleepTime > 0) {
                 log.trace("Watchdog sleeping for " + sleepTime + " ms");
                 try {
-                    Thread.sleep(wakeupTime);
+                    Thread.sleep(sleepTime);
                 } catch (InterruptedException e) {
                     throw new RuntimeException("Interrupted while sleeping. "
                                                + "Stopping timer-based "
