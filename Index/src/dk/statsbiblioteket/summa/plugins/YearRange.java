@@ -39,6 +39,25 @@ public class YearRange {
 
     private static final Log log = LogFactory.getLog(YearRange.class);
 
+    /**
+     * A thread local StringBuffer that is reset on each get() request
+     */
+    private static final ThreadLocal<StringBuffer> threadLocalBuffer =
+                                               new ThreadLocal<StringBuffer>() {
+        @Override
+        protected StringBuffer initialValue() {
+            return new StringBuffer();
+        }
+
+        @Override
+        public StringBuffer get() {
+            StringBuffer buf = super.get();
+            buf.setLength(0); // clear/reset the buffer
+            return buf;
+        }
+
+    };
+
 
     /**
      * Convert a string to a range of years if possible.<br>
@@ -58,9 +77,11 @@ public class YearRange {
     }
 
     /**
-     * Make a range expansion between the two inputs.<br>
-     * <code>?<code> can be used a tailing wildcard (up to two) for both inputs.<br>
-     * The expanded range will expand between the lowest and highest number regardless of the inpyut order.<br>
+     * Make a range expansion between the two inputs. The <code>?<code>
+     * character can be used as a tailing wildcard (up to two) for both inputs.
+     * <p/>
+     * The expanded range will expand between the lowest and highest number
+     * regardless of the input order.
      *
      * @param in1 a bounderey for the range.
      * @param in2 a bounderey for the range.
@@ -70,7 +91,8 @@ public class YearRange {
         try{
         return doit(in1, in2);
         } catch (Exception e){
-            log.warn(e.getMessage());
+            log.debug("When making YearRange for ('" + in1 + "', '"
+                      + in2 + "'): " + e.getMessage());
             return in1 + "-" + in2;
         }
     }
@@ -79,10 +101,10 @@ public class YearRange {
     private static String doit(String in1, String in2)  {
 
         if (in1.length() > 4 || in2.length() >4 ){
-           throw new IllegalArgumentException();
+           throw new IllegalArgumentException("Input length greater than 4");
         }
 
-        StringWriter w = new StringWriter();
+        StringBuffer buf = threadLocalBuffer.get();
 
         if (in1.equals(in2) && (in1.contains("???") || in1.contains("????")) ){
             return in1;
@@ -92,34 +114,40 @@ public class YearRange {
         years[0] = in1; years[1] = in1;
         years[2] = in2; years[3] = in2;
         if (in1.contains("?")){
-            years[0] = in1.replaceAll("\\?", "0");
-            years[1] = in1.replaceAll("\\?", "9");
+            years[0] = in1.replace("?", "0");
+            years[1] = in1.replace("?", "9");
         }
 
         if (in2.contains("?")){
-            years[2] = in2.replaceAll("\\?", "0");
-            years[3] = in2.replaceAll("\\?", "9");
+            years[2] = in2.replace("?", "0");
+            years[3] = in2.replace("?", "9");
         }
 
-        String a = years[0];
-        String b = years[0];
+        String startYear = years[0];
+        String endYear = years[0];
         for (int i = 1; i<4;i++ ){
-            if (years[i].compareTo(a)< 0) a= years[i];
-            if (years[i].compareTo(b)> 0) b= years[i];
+            if (years[i].compareTo(startYear)< 0) startYear= years[i];
+            if (years[i].compareTo(endYear)> 0) endYear= years[i];
         }
 
-        int start = Integer.parseInt(a);
-        int end = Integer.parseInt(b);
+        int start = Integer.parseInt(startYear);
+        int end = Integer.parseInt(endYear);
 
         if (start == end){
             return Integer.toString(start);
         }
 
         for (int j=start; j<=end ;j++){
-           w.append(" ").append(Integer.toString(++j));
-
+           buf.append(" ").append(j);
         }
-        return w.toString().substring(1);
+
+        return buf.toString().substring(1);
+    }
+
+    public static void main (String[] args) {
+        System.out.println("'" + makeRange("199?") + "'");
+        System.out.println("'" + makeRange("199?","2001") + "'");
+        System.out.println("'" + makeRange("1969","1969") + "'");
     }
 }
 
