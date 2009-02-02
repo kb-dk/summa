@@ -178,7 +178,8 @@ public abstract class ServiceBase extends UnicastRemoteObject
      * @throws IOException on communication errors with the RPC mechanism (rmi)
      */
     protected void unexportRemoteInterfaces() throws IOException {
-        log.trace("unbindRemoteInterfaces called");
+        log.info("Retracting remote interfaces");
+
         RemoteHelper.unExportRemoteInterface(id, registryPort);
 
         try {
@@ -254,6 +255,9 @@ public abstract class ServiceBase extends UnicastRemoteObject
                 log.debug ("Service is already stopped or stopping. Commencing "
                            + "kill");
             }
+
+            unexportRemoteInterfaces();
+
         } catch (Throwable t) {
             log.warn ("Caught error when shutting down. Commencing shutdown: "
                       + t.getMessage(), t);
