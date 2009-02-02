@@ -75,8 +75,12 @@ public class MUXFilter implements ObjectFilter, Runnable {
     public static final String CONF_FILTERS = "summa.muxfilter.filters";
 
     /**
-     * The number of instances to create from a given sub-property.
+     * The number of instances to create from a given sub-configuration.
      * This provides an easy way to parallize filters.
+     * <p/>
+     * Please note that this property must be specified inside the
+     * sub-configuration for the muxed filter and not in the configuration
+     * for the MUXFilter itself.
      * </p><p>
      * Optional. Default is 1.
      */
