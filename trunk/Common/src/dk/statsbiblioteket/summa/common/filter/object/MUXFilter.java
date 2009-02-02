@@ -92,7 +92,7 @@ public class MUXFilter implements ObjectFilter, Runnable {
      * The number of ms to wait after trying to get a Payload from all feeders
      * before a retry is performed.
      */
-    public static final int POLL_INTERVAL = 200;
+    public static final int POLL_INTERVAL = 10;
 
     private ObjectFilter source = null;
 
@@ -243,7 +243,7 @@ public class MUXFilter implements ObjectFilter, Runnable {
         }
         this.source = (ObjectFilter)source;
         log.debug("Source specified. Starting mux-thread");
-        new Thread(this).start();
+        new Thread(this, "MUXFilter-"+this.hashCode()).start();
     }
 
     public boolean pump() throws IOException {
@@ -305,6 +305,10 @@ public class MUXFilter implements ObjectFilter, Runnable {
                 MUXFilterFeeder feeder = feeders.get(feederPos);
                 if (!feeder.isEofReached()) {
                     allSaysEOF = false;
+
+                    // We check the size to make sure that we don't block on
+                    // the call to the feeder. We want the data from the first
+                    // feeder with avail. data
                     if (feeder.getOutQueueSize() > 0) {
                         return feeder.getNextFilteredPayload();
                     }
@@ -322,7 +326,11 @@ public class MUXFilter implements ObjectFilter, Runnable {
                           + "Sleeping a bit and retrying");
                 hasSlept = true;
             }
-            // It's hard to do proper wait on multiple sources. Consider a flag
+
+            // All feeders has responded that they don't have any data, so
+            // wait a bit and try again
+            // FIXME: We should really use a shared queue+wait/notify
+            //        to do this properly
             try {
                 Thread.sleep(POLL_INTERVAL);
             } catch (InterruptedException e) {
