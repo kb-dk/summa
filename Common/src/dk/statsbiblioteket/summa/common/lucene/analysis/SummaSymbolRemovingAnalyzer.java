@@ -86,7 +86,8 @@ public class SummaSymbolRemovingAnalyzer extends Analyzer {
                  }
             }
         } catch (IOException e) {
-            log.error("", e);
+            log.error("Error reading data for token stream: " + e.getMessage(),
+                      e);
         }
         return new SimpleAnalyzer().tokenStream(fieldName,
                                                 new StringReader(b.toString()));
@@ -109,16 +110,13 @@ public class SummaSymbolRemovingAnalyzer extends Analyzer {
 
         char c;
         int i;
-        try {
-            while ((i = reader.read()) != -1) {
-                c = (char)i;
-                 if (Character.isLetter(c)){
-                     ctx.buf.append(c);
-                 }
+        while ((i = reader.read()) != -1) {
+            c = (char)i;
+            if (Character.isLetter(c)){
+                ctx.buf.append(c);
             }
-        } catch (IOException e) {
-            log.error("", e);
         }
+        
         return ctx.simpleAnalyzer.reusableTokenStream(fieldName,
                                                       ctx.seq.reset(ctx.buf));
     }
