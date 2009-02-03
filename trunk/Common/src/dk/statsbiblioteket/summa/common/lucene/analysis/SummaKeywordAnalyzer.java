@@ -89,7 +89,7 @@ public class SummaKeywordAnalyzer extends Analyzer {
             }
 
             // We have an extra whitespace at the end. Strip it
-            buf.setLength(buf.length() - 1);
+            buf.setLength(buf.length() == 0 ? 0 : buf.length() - 1);
         } catch (IOException e) {
             log.error("",e);
         }
@@ -124,7 +124,7 @@ public class SummaKeywordAnalyzer extends Analyzer {
             }
 
             // We have an extra whitespace at the end. Strip it
-            ctx.buf.setLength(ctx.buf.length() - 1);
+            ctx.buf.setLength(ctx.buf.length() == 0 ? 0 : ctx.buf.length() - 1);
         } catch (IOException e) {
             log.error("Error reading next token from TokenStream: "
                       + e.getMessage(), e);
@@ -132,6 +132,19 @@ public class SummaKeywordAnalyzer extends Analyzer {
 
         return ctx.keywordAnalyzer.reusableTokenStream(fieldName,
                                                        ctx.seq.reset(ctx.buf));
+    }
+
+    public static void main(String[] args) {
+        Analyzer a = new SummaKeywordAnalyzer();
+        
+        try {
+            a.reusableTokenStream("field", new StringReader("foobar"));
+            a.reusableTokenStream("field", new StringReader(""));
+        } catch (Throwable t) {
+            t.printStackTrace();
+            System.exit(1);
+        }
+
     }
 }
 
