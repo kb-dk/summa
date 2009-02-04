@@ -166,6 +166,6 @@ public class FacetManipulator implements IndexManipulator {
             }
             return false;
         }
-        return builder.update(payload);
+        return !builder.update(payload);
     }
 }
