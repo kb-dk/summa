@@ -109,6 +109,9 @@ public class FacetManipulator implements IndexManipulator {
         clearTagsOnConsolidate =
                 conf.getBoolean(CONF_CLEAR_TAGS_ON_CONSOLIDATE,
                                 DEFAULT_CLEAR_TAGS_ON_CONSOLIDATE);
+        skipFacetOnUpdate =
+                conf.getBoolean(CONF_SKIP_FACET_ON_UPDATE,
+                                DEFAULT_SKIP_FACET_ON_UPDATE);
         Structure structure = new Structure(conf);
         TagHandler tagHandler =
                 TagHandlerFactory.getTagHandler(conf, structure, false);
@@ -165,8 +168,4 @@ public class FacetManipulator implements IndexManipulator {
         }
         return builder.update(payload);
     }
-
 }
-
-
-
