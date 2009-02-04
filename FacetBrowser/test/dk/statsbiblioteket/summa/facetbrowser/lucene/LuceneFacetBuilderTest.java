@@ -36,6 +36,7 @@ import dk.statsbiblioteket.summa.facetbrowser.BaseObjects;
 import dk.statsbiblioteket.summa.facetbrowser.IndexBuilder;
 import dk.statsbiblioteket.summa.facetbrowser.core.FacetCore;
 import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.Profiler;
 import org.apache.lucene.document.Document;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -49,12 +50,20 @@ public class LuceneFacetBuilderTest extends TestCase {
     }
 
     BaseObjects bo;
+    @Override
     public void setUp() throws Exception {
         super.setUp();
         bo = new BaseObjects();
         IndexBuilder.checkIndex();
+        if (facetFolder.exists()) {
+            Files.delete(facetFolder);
+        }
     }
 
+    File facetFolder = new File(IndexBuilder.DATE_LOCATION,
+                          FacetCore.FACET_FOLDER);
+
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
         bo.close();
@@ -63,10 +72,8 @@ public class LuceneFacetBuilderTest extends TestCase {
             //noinspection AssignmentToNull
             builder = null;
         }
-        File facetFolder = new File(IndexBuilder.DATE_LOCATION,
-                              FacetCore.FACET_FOLDER);
         if (facetFolder.exists()) {
-            Files.delete(facetFolder);
+//            Files.delete(facetFolder);
         }
     }
 
@@ -85,6 +92,46 @@ public class LuceneFacetBuilderTest extends TestCase {
         return builder;
     }
 
+    public void testMultipleAdds10() throws Exception {
+        testMultipleAdds(10);
+    }
+
+    public void testMultipleAdds1000() throws Exception {
+        testMultipleAdds(1000);
+    }
+
+    public void testMultipleAdds1000000() throws Exception {
+        testMultipleAdds(1000000);
+    }
+
+    private void testMultipleAdds(int runs) throws Exception {
+        int feedback = Math.max(1, Math.min(1000, runs / 100));
+        Profiler profiler = new Profiler();
+        profiler.setExpectedTotal(runs);
+        profiler.setBpsSpan(5000);
+
+        LuceneFacetBuilder builder = getBuilder();
+
+        for (int i = 0 ; i < runs ; i++) {
+            builder.update(makePayload("foo" + i, i));
+            profiler.beat();
+            if (i % feedback == 0) {
+                log.debug("Added " + (i+1) + "/" + runs + " Payloads at "
+                          + profiler.getBps(true) + " Payloads/second. ETA: "
+                          + profiler.getETAAsString(true));
+            }
+        }
+        log.debug("Finished adding " + runs + " Payloads in "
+                  + profiler.getSpendTime() + " at a total speed of "
+                  + profiler.getBps(false) + " Payloads/second");
+        long startTime = System.currentTimeMillis();
+        builder.store();
+        log.debug("Finished closing in "
+                  + (System.currentTimeMillis() - startTime) + " ms");
+        builder.close();
+
+    }
+
     public void testAddPayload() throws Exception {
         LuceneFacetBuilder builder = getBuilder();
         int titleID = builder.getStructure().getFacets().
@@ -98,6 +145,7 @@ public class LuceneFacetBuilderTest extends TestCase {
         log.debug("Updated with payload, checking for change");
         assertEquals("The coreMap should contain tagIDs for the added document",
                      1, builder.getCoreMap().get(0, titleID).length);
+        builder.store();
         builder.close();
     }
 
