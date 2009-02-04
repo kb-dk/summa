@@ -35,12 +35,7 @@ import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.index.IndexManipulator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.CorruptIndexException;
-import org.apache.lucene.index.LogDocMergePolicy;
-import org.apache.lucene.index.SerialMergeScheduler;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.index.*;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.LockObtainFailedException;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -72,11 +67,22 @@ public class LuceneManipulator implements IndexManipulator {
      * The amount of Payloads to buffer before a flush is requested.
      * -1 means no flushes are requested.
      * </p><p>
-     * This property is optional. Default is -1.
+     * This property is optional. Default is -1 (disabled).
      */
     public static final String CONF_BUFFER_SIZE_PAYLOADS =
             "summa.index.lucene.buffersizepayloads";
     public static final int DEFAULT_BUFFER_SIZE_PAYLOADS = -1;
+
+    /**
+     * The amount of MB in the Lucene buffer before a flush is requested.
+     * </p><p>
+     * This property is optional. Default is
+     * {@link IndexWriter#DEFAULT_RAM_BUFFER_SIZE_MB} (16.0 MB).
+     */
+    public static final String CONF_BUFFER_SIZE_MB =
+            "summa.index.lucene.buffersizemb";
+    public static final double DEFAULT_BUFFER_SIZE_MB =
+            IndexWriter.DEFAULT_RAM_BUFFER_SIZE_MB;
 
     /**
      * The maximum number of segments after a consolidate. Setting this to 1
@@ -108,6 +114,7 @@ public class LuceneManipulator implements IndexManipulator {
     private IDMapper idMapper;
 
     private int bufferSizePayloads = DEFAULT_BUFFER_SIZE_PAYLOADS;
+    private double buffersizeMB = DEFAULT_BUFFER_SIZE_MB;
     private int maxMergeOnConsolidate = DEFAULT_MAX_SEGMENTS_ON_CONSOLIDATE;
 
     public LuceneManipulator(Configuration conf) {
@@ -174,8 +181,10 @@ public class LuceneManipulator implements IndexManipulator {
                                          IndexWriter.MaxFieldLength.UNLIMITED);
             }
 
-            // TODO: Also set setRAMBufferSizeMB
-            writer.setMaxBufferedDocs(Integer.MAX_VALUE); // Dangerous...
+            writer.setMaxBufferedDocs(bufferSizePayloads == -1 ?
+                                      IndexWriter.DISABLE_AUTO_FLUSH :
+                                      bufferSizePayloads); // Dangerous...
+            writer.setRAMBufferSizeMB(buffersizeMB);
             // Old style merging to preserve order of documents
             writer.setMergeScheduler(new SerialMergeScheduler());
             writer.setMergePolicy(new LogDocMergePolicy());
