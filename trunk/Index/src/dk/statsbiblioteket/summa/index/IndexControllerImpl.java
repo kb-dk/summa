@@ -113,7 +113,7 @@ public class IndexControllerImpl extends StateThread implements
      * CONF_COMMIT_MAX_DOCUMENTS or both of these to avoid excessive memory
      * allocations.
      * </p><p>
-     * This property is optional. Default is 1000.
+     * This property is optional. Default is 1000. -1 means disabled.
      */
     public static final String CONF_COMMIT_MAX_DOCUMENTS =
             "summa.index.commitmaxdocuments";
@@ -485,7 +485,7 @@ public class IndexControllerImpl extends StateThread implements
         for (IndexManipulator manipulator: manipulators) {
             //noinspection OverlyBroadCatchBlock
             try {
-                requestCommit = requestCommit | !manipulator.update(payload);
+                requestCommit = requestCommit | manipulator.update(payload);
             } catch (Exception e) {
                 if (manipulatorPosition == 0) {
                     failLog.warn(String.format(
