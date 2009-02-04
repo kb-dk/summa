@@ -30,8 +30,6 @@ import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMap;
 import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMapBitStuffed;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandlerImpl;
-import dk.statsbiblioteket.summa.facetbrowser.util.pool.SortedPoolImpl;
-import dk.statsbiblioteket.summa.facetbrowser.util.pool.MemoryPool;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Files;
 
@@ -54,7 +52,7 @@ import java.util.ArrayList;
         author = "te")
 public class BaseObjects {
     public String[] facetNames = new String[]{
-            IndexBuilder.AUTHOR, IndexBuilder.GENRE,
+            IndexBuilder.ID, IndexBuilder.AUTHOR, IndexBuilder.GENRE,
             IndexBuilder.TITLE, IndexBuilder.FREETEXT,
             IndexBuilder.VARIABLE};
 

@@ -33,13 +33,13 @@
     </appender>
 
 
-     <appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
+    <appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
         <param name="Target" value="System.out"/>
         <param name="Threshold" value="debug"/>
         <layout class="org.apache.log4j.PatternLayout">
-        <param name="ConversionPattern" value="%d{ABSOLUTE} %-5p [%c{1}] %m%n"/>
+            <param name="ConversionPattern" value="%d{ABSOLUTE} %-5p [%c{1}] %m%n"/>
         </layout>
-      </appender>
+    </appender>
 
     <!-- The full log appender uses a extremely slow pattern, on production systems use
     only this appender with a threshold of fatal -->
@@ -60,13 +60,13 @@
         <appender-ref ref="CONSOLE"/>
     </logger>
 
-<!--    <logger name="dk.statsbiblioteket.summa.facetbrowser">
-        <level value="ERROR"/>
-        <appender-ref ref="FILE"/>
-    </logger>-->
+    <logger name="dk.statsbiblioteket.summa.facetbrowser.lucene.LuceneFacetBuilderTest">
+        <level value="debug"/>
+        <appender-ref ref="CONSOLE"/>
+    </logger>
 
     <logger name="dk.statsbiblioteket.summa">
-        <level value="trace"/>
+        <level value="info"/>
         <appender-ref ref="CONSOLE"/>
     </logger>
 

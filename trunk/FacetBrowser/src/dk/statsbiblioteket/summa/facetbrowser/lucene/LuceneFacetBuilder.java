@@ -42,7 +42,6 @@ import org.apache.lucene.document.MapFieldSelector;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
-import org.apache.lucene.index.TermFreqVector;
 import org.apache.lucene.index.TermDocs;
 
 import java.io.File;
@@ -69,15 +68,21 @@ public class LuceneFacetBuilder extends BuilderImpl {
      * Whether or not to add tags by iterating over documents. This catches
      * terms that are stored but not indexed.
      * </p><p>
+     * Note: Non-indexed terms cannot be searched, so they can only be used
+     *       for display.
+     * </p><p>
      * Optional. Default is true.
      */
     public static final String CONF_BUILD_DOCS_TO_TERMS =
             "summa.facet.lucene.build.docstoterms";
-    public static final boolean DEFAULT_BUILD_DOCS_TO_TERMS = true;
+    public static final boolean DEFAULT_BUILD_DOCS_TO_TERMS = false;
 
     /**
      * Whether or not to add tags by iterating over terms. This catches terms
      * that are indexed but not stored.
+     * </p><p>
+     * Note: This should normally (read: always) be true, in order to re-build
+     *       the standard facet-structure.
      * </p><p>
      * Optional. Default is true.
      */
@@ -103,6 +108,7 @@ public class LuceneFacetBuilder extends BuilderImpl {
      * @param location     the root for the data.
      * @throws IOException if existing data was malformed.
      */
+    @Override
     public synchronized void open(File location) throws IOException {
         super.open(new File(location, FacetCore.FACET_FOLDER));
         setLuceneIndexPath(new File(location, LuceneIndexUtils.LUCENE_FOLDER));
@@ -365,10 +371,12 @@ public class LuceneFacetBuilder extends BuilderImpl {
             return false;
         }
         if (deleteID != null) {
+            //noinspection DuplicateStringLiteralInspection
             log.debug("Deleting '" + deleteID + "'");
             facetMap.removeDocument(deleteID);
         }
         if (addID != null) {
+            //noinspection DuplicateStringLiteralInspection
             log.debug("Adding '" + addID + "'");
             Object docObject = payload.getData(Payload.LUCENE_DOCUMENT);
             if (docObject == null) {

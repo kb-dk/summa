@@ -53,10 +53,6 @@ import java.util.BitSet;
  * The BitStuffed CoreMap packs pointers from document-id's to facet/tags in an
  * array of integers. This is a very compact representation, with the drawback
  * that it is limited to 31 facets of 134 million tags each.
- * </p><p>
- * It is expected that this structure might some day be memory-mapped.
- * To prepare for this, the following constraint has been introduced:<br />
- * Additions of mappings are always in the end. No in-array editing.<br />
  * @see {@link #add}.
  */
 // TODO: Handle emptyFacet translation int<->long for open and store
@@ -68,7 +64,7 @@ public class CoreMapBitStuffed extends CoreMapImpl {
 
     private static final int CONTENT_INITIAL_SIZE = 10000;
     private static final int MIN_GROWTH_SIZE = 1000;
-    private static final int MAX_GROWTH_SIZE = 1000 * 1000;
+//    private static final int MAX_GROWTH_SIZE = 1000 * 1000;
     private static final double CONTENT_GROWTHFACTOR = 1.5;
     /* If true, the order of the values for a given docID are sorted */
     private static final boolean SORT_VALUES = true;
@@ -243,6 +239,7 @@ public class CoreMapBitStuffed extends CoreMapImpl {
     }
 
     private void fitStructure(int docID, int[] tagIDs) {
+        //noinspection DuplicateStringLiteralInspection
         index = fitArray(index, docID + 2, "index");
         values = fitArray(values, valuePos + tagIDs.length + 2, "values");
 /*        if (docID > index.length - 2) {
@@ -336,8 +333,8 @@ public class CoreMapBitStuffed extends CoreMapImpl {
     }
     protected String exposeInternalState() {
         StringWriter sw = new StringWriter(500);
-        //noinspection DuplicateStringLiteralInspection
         // TODO: Make a better toString (make a List with array as backing)
+        //noinspection DuplicateStringLiteralInspection
         sw.append("Index: ").append(dump(index, Math.min(20, highestDocID+2)));
         sw.append(", Values: ");
         sw.append(dump(values, Math.min(20, valuePos)));
@@ -507,11 +504,13 @@ public class CoreMapBitStuffed extends CoreMapImpl {
         }
     }
 
+    @Override
     protected long getPersistentValue(int index) {
         return getPersistentValue(values[index] >>> FACETSHIFT,
                                   values[index] & TAG_MASK);
     }
 
+    @Override
     protected void putValue(int position, long value) {
         if (log.isTraceEnabled()) {
             log.trace("putValue(" + position + ", " + value + " has facetID " 
@@ -540,6 +539,7 @@ public class CoreMapBitStuffed extends CoreMapImpl {
         values = new int[CONTENT_INITIAL_SIZE];
     }
 
+    @Override
     public String toString() {
         return exposeInternalState();
     }
