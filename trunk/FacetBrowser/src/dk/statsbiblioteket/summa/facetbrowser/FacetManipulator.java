@@ -77,9 +77,24 @@ public class FacetManipulator implements IndexManipulator {
             "summa.facet.cleartagsonconsolidate";
     public static final boolean DEFAULT_CLEAR_TAGS_ON_CONSOLIDATE = false;
 
+    /**
+     * If true, the facet structure isn't updated when {@link #update} is
+     * called. A side-effect is that the facet structure is generated upon
+     * commit (and consolidate, but that is always the case).
+     * </p><p>
+     * As iterative updates of the facet structure is O(n*m) and re-build is
+     * O(n*log(m)), setting this to true is best for large batch-updates.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_SKIP_FACET_ON_UPDATE =
+            "summa.facet.skipfacetonupdate";
+    public static final boolean DEFAULT_SKIP_FACET_ON_UPDATE = false;
+
     protected boolean clearTagsOnClear = DEFAULT_CLEAR_TAGS_ON_CLEAR;
     protected boolean clearTagsOnConsolidate =
             DEFAULT_CLEAR_TAGS_ON_CONSOLIDATE;
+    protected boolean skipFacetOnUpdate = false;
 
     /**
      * The builder is responsible for all manipulations of the structure for
@@ -111,6 +126,11 @@ public class FacetManipulator implements IndexManipulator {
     }
 
     public void commit() throws IOException {
+        if (skipFacetOnUpdate) {
+            log.debug("Rebuilding facet structure as "
+                      + CONF_SKIP_FACET_ON_UPDATE + " is true");
+            builder.build(true);
+        }
         builder.store();
     }
 
@@ -135,6 +155,14 @@ public class FacetManipulator implements IndexManipulator {
     }
 
     public boolean update(Payload payload) throws IOException {
+        if (skipFacetOnUpdate) {
+            if (log.isTraceEnabled()) {
+                log.trace("Skipping facet update as "
+                          + CONF_SKIP_FACET_ON_UPDATE
+                          + " is true. Payload skipped is " + payload);
+            }
+            return false;
+        }
         return builder.update(payload);
     }
 
