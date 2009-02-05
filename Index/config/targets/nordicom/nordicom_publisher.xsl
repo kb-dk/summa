@@ -8,27 +8,27 @@
 
     <xsl:template name="publication_data">
         <xsl:choose>
-            <xsl:when test="mc:field[@type='001_00']/mc:subfield[@type='f']='new'">
+            <xsl:when test="mc:datafield[@tag='001']/mc:subfield[@code='f']='new'">
 
-                <xsl:for-each select="mc:field[@type='260_00']/mc:subfield[@type='b']">
+                <xsl:for-each select="mc:datafield[@tag='260']/mc:subfield[@code='b']">
                     <Index:field Index:repeat="true" Index:name="pu" Index:navn="fl" Index:type="token" Index:boostFactor="4">
                         <xsl:value-of select="."/>
                     </Index:field>
                 </xsl:for-each>
 
-                <xsl:for-each select="mc:field[@type='260_00']/mc:subfield[@type='c']">
+                <xsl:for-each select="mc:datafield[@tag='260']/mc:subfield[@code='c']">
                     <Index:field Index:repeat="true" Index:name="py" Index:navn="år" Index:type="token" Index:boostFactor="4">
                         <xsl:value-of select="."/>
                     </Index:field>
                 </xsl:for-each>
 
-                <xsl:for-each select="mc:field[@type='008_00']/mc:subfield[@type='a' or @type='z']">
+                <xsl:for-each select="mc:datafield[@tag='008']/mc:subfield[@code='a' or @code='z']">
                     <Index:field Index:repeat="true" Index:name="py" Index:navn="år" Index:type="token" Index:boostFactor="4">
                         <xsl:value-of select="."/>
                     </Index:field>
                 </xsl:for-each>
 
-                <xsl:for-each select="mc:field[@type='260_00']/mc:subfield[@type='a']">
+                <xsl:for-each select="mc:datafield[@tag='260']/mc:subfield[@code='a']">
                     <Index:field Index:repeat="true" Index:name="place" Index:navn="pu" Index:type="token">
                         <xsl:for-each select=".">
                             <xsl:value-of select="."/>
@@ -37,7 +37,7 @@
                     </Index:field>
                 </xsl:for-each>
 
-                <xsl:for-each select="mc:field[@type='558_00']/mc:subfield[@type='h']">
+                <xsl:for-each select="mc:datafield[@tag='558']/mc:subfield[@code='h']">
                     <Index:field Index:repeat="true" Index:name="place" Index:navn="pu" Index:type="token">
                         <xsl:value-of select="."/>
                     </Index:field>
@@ -47,13 +47,13 @@
             <!-- Det gamle format -->
 
             <xsl:otherwise>
-                <xsl:for-each select="mc:field[@type='160_00']/mc:subfield[@type='a']">
+                <xsl:for-each select="mc:datafield[@tag='160']/mc:subfield[@code='a']">
                     <Index:field Index:repeat="true" Index:name="pu" Index:navn="fl" Index:type="token" Index:boostFactor="4">
                         <xsl:value-of select="."/>
                     </Index:field>
                 </xsl:for-each>
 
-                <xsl:for-each select="mc:field[@type='090_00']/mc:subfield[@type='a']">
+                <xsl:for-each select="mc:datafield[@tag='090']/mc:subfield[@code='a']">
                     <Index:field Index:repeat="true" Index:name="py" Index:navn="år" Index:type="token" Index:boostFactor="4">
                         <xsl:value-of select="."/>
                     </Index:field>

@@ -9,9 +9,9 @@
 
     <xsl:template name="author">
         <xsl:choose>
-            <xsl:when test="mc:field[@type='001_00']/mc:subfield[@type='f']='new'">
+            <xsl:when test="mc:datafield[@tag='001']/mc:subfield[@code='f']='new'">
                 <Index:group Index:name="au" Index:navn="fo" >
-                    <xsl:for-each select="mc:field[@type='700_00']">
+                    <xsl:for-each select="mc:datafield[@tag='700']">
                         <Index:field Index:repeat="true" Index:name="author_person" Index:navn="pe" Index:type="token" Index:boostFactor="10">
                             <xsl:call-template name="person"/>
                         </Index:field>
@@ -20,7 +20,7 @@
                         </Index:field>
                     </xsl:for-each>
 
-                    <xsl:for-each select="mc:field[@type='710_00']">
+                    <xsl:for-each select="mc:datafield[@tag='710']">
                         <Index:field Index:repeat="true" Index:name="author_corporation" Index:navn="ko" Index:type="token" Index:boostFactor="10">
                             <xsl:call-template name="corp"/>
                         </Index:field>
@@ -30,19 +30,19 @@
                     </xsl:for-each>
                 </Index:group>
 
-                <xsl:for-each select="mc:field[@type='558_00']/mc:subfield[@type='e']">
+                <xsl:for-each select="mc:datafield[@tag='558']/mc:subfield[@code='e']">
                     <Index:field Index:name="author_descr" Index:navn="fb" Index:type="token" Index:repeat="true">
                         <xsl:value-of select="."/>
                     </Index:field>
                 </xsl:for-each>
 
-                <xsl:for-each select="mc:field[@type='700_00']">
+                <xsl:for-each select="mc:datafield[@tag='700']">
                     <Index:field Index:repeat="false" Index:name="author_normalised" Index:navn="lfo"  Index:type="keyword" Index:boostFactor="10">
                         <xsl:call-template name="person_inverted"/>
                     </Index:field>
                 </xsl:for-each>
 
-                <xsl:for-each select="mc:field[@type='710_00']">
+                <xsl:for-each select="mc:datafield[@tag='710']">
                     <Index:field Index:repeat="false" Index:name="author_normalised" Index:navn="lfo"  Index:type="keyword" Index:boostFactor="10">
                         <xsl:call-template name="corp"/>
                     </Index:field>
@@ -52,7 +52,7 @@
             <!-- Den gamle visning -->
 
             <xsl:otherwise>
-                <xsl:for-each select="mc:field[@type='100_00']/mc:subfield[@type='a']">
+                <xsl:for-each select="mc:datafield[@tag='100']/mc:subfield[@code='a']">
                     <Index:field Index:repeat="true" Index:name="author_person" Index:navn="pe" Index:type="token" Index:boostFactor="10">
                         <xsl:call-template name="author_reverse"/>
                     </Index:field>

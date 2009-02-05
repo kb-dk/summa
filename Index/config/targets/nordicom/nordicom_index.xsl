@@ -18,14 +18,14 @@
     <xsl:include href="nordicom_material.xsl" />
     <xsl:include href="nordicom_lma.xsl" />
 
-
     <xsl:output version="1.0" encoding="UTF-8" indent="yes" method="xml"/>
     <xsl:template match="/">
+
         <Index:document Index:defaultBoost="1" Index:defaultType="token" Index:defaultFreetext="true" Index:defaultSuggest="false"
                         Index:defaultGroup="false" Index:langAutogroup="true" Index:resolver="nordicom">
             <xsl:attribute name="Index:id">
                 <xsl:text>ncom_</xsl:text>
-                <xsl:value-of select="mc:record/mc:field[@type='001_00']/mc:subfield[@type='a']" />
+                <xsl:value-of select="mc:record/mc:datafield[@tag='001']/mc:subfield[@code='a']" />
             </xsl:attribute>
 
             <xsl:for-each select="mc:record">
@@ -42,75 +42,75 @@
                     <xsl:call-template name="lma" />
 
                     <xsl:choose>
-                        <xsl:when test="mc:field[@type='001_00']/mc:subfield[@type='f']='new'">
+                        <xsl:when test="mc:datafield[@tag='001']/mc:subfield[@code='f']='new'">
 
-                            <xsl:for-each select="mc:field[@type='008_00']/mc:subfield[@type='l']">
+                            <xsl:for-each select="mc:datafield[@tag='008']/mc:subfield[@code='l']">
                                 <Index:field Index:repeat="true" Index:name="lang" Index:navn="sp" Index:type="token">
                                     <xsl:value-of select="."/>
                                 </Index:field>
                             </xsl:for-each>
 
-                            <xsl:for-each select="mc:field[@type='041_00']/mc:subfield[@type='a' or @type='p' or @type='u' or @type='e' or @type='d']">
+                            <xsl:for-each select="mc:datafield[@tag='041']/mc:subfield[@code='a' or @code='p' or @code='u' or @code='e' or @code='d']">
                                 <Index:field Index:repeat="true" Index:name="lang" Index:navn="sp" Index:type="token">
                                     <xsl:value-of select="."/>
                                 </Index:field>
                             </xsl:for-each>
 
-                            <xsl:for-each select="mc:field[@type='041_00']/mc:subfield[@type='c']">
+                            <xsl:for-each select="mc:datafield[@tag='041']/mc:subfield[@code='c']">
                                 <Index:field Index:repeat="true" Index:name="original_language" Index:navn="ou" Index:type="token">
                                     <xsl:value-of select="."/>
                                 </Index:field>
                             </xsl:for-each>
 
-                            <xsl:for-each select="mc:field[@type='856_00']/mc:subfield[@type='u']">
+                            <xsl:for-each select="mc:datafield[@tag='856']/mc:subfield[@code='u']">
                                 <Index:field Index:repeat="true" Index:name="ww" Index:navn="ww" Index:type="token">
                                     <xsl:value-of select="."/>
                                 </Index:field>
                             </xsl:for-each>
 
-                            <xsl:for-each select="mc:field[@type='440_00']">
+                            <xsl:for-each select="mc:datafield[@tag='440']">
                                 <Index:field Index:repeat="false" Index:name="series_normalised" Index:navn="lse" Index:type="keyword" Index:boostFactor="10">
-                                    <xsl:for-each select="mc:subfield[@type='a']">
+                                    <xsl:for-each select="mc:subfield[@code='a']">
                                         <xsl:value-of select="."/>
                                     </xsl:for-each>
                                 </Index:field>
                             </xsl:for-each>
 
-                            <xsl:for-each select="mc:field[@type='008_00']/mc:subfield[@type='l']">
+                            <xsl:for-each select="mc:datafield[@tag='008']/mc:subfield[@code='l']">
                                 <Index:field Index:repeat="false" Index:name="llang" Index:navn="lsp" Index:type="keyword" Index:boostFactor="10">
                                     <xsl:value-of select="."/>
                                 </Index:field>
                             </xsl:for-each>
 
-                            <xsl:for-each select="mc:field[@type='041_00']/mc:subfield[@type='a']">
+                            <xsl:for-each select="mc:datafield[@tag='041']/mc:subfield[@code='a']">
                                 <Index:field Index:repeat="false" Index:name="llang" Index:navn="lsp" Index:type="keyword" Index:boostFactor="10">
                                     <xsl:value-of select="."/>
                                 </Index:field>
                             </xsl:for-each>
 
-                            <xsl:for-each select="mc:field[@type='008_00']">
+                            <xsl:for-each select="mc:datafield[@tag='008']">
                                 <xsl:choose>
-                                    <xsl:when test="contains(mc:subfield[@type='u'],'?')">
+                                    <xsl:when test="contains(mc:subfield[@code='u'],'?')">
                                         <Index:field Index:name="py" Index:navn="år" Index:type="token" Index:boostFactor="10">
-                                            <xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.YearRange.makeRange(mc:subfield[@type='a'], mc:subfield[@type='z'])"/>
+                                            <xsl:value-of select="java:dk.statsbiblioteket.sbandex.plugins.YearRange.makeRange(mc:subfield[@code='a'], mc:subfield[@code='z'])"/>
                                         </Index:field>
                                     </xsl:when>
-                                    <xsl:when test="contains(mc:subfield[@type='u'],'o')">
+                                    <xsl:when test="contains(mc:subfield[@code='u'],'o')">
                                         <Index:field Index:name="py" Index:navn="år" Index:type="token" Index:boostFactor="10">
-                                            <xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.YearRange.makeRange(mc:subfield[@type='a'],'2030')"/>
+                                            <xsl:value-of select="java:dk.statsbiblioteket.sbandex.plugins.YearRange.makeRange(mc:subfield[@code='a'],'2030')"/>
                                         </Index:field>
                                     </xsl:when>
-                                    <xsl:when test="contains(mc:subfield[@type='u'],'r')">
+                                    <xsl:when test="contains(mc:subfield[@code='u'],'r')">
                                         <Index:field Index:name="py" Index:navn="år" Index:type="token" Index:boostFactor="10">
-                                            <xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.YearRange.makeRange(mc:subfield[@type='a'],'2030')"/>
+                                            <xsl:value-of select="java:dk.statsbiblioteket.sbandex.plugins.YearRange.makeRange(mc:subfield[@code='a'],'2030')"/>
                                         </Index:field>
                                     </xsl:when>
                                     <xsl:otherwise>
-                                        <xsl:for-each select="mc:subfield[@type='a' or @type='z']">
+                                        <xsl:for-each select="mc:subfield[@code='a' or @code='z']">
                                             <xsl:choose>
                                                 <xsl:when test="contains(.,'?')">
                                                     <Index:field Index:name="py" Index:navn="år" Index:type="token" Index:boostFactor="10">
-                                                        <xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.YearRange.makeRange(.)"/>
+                                                        <xsl:value-of select="java:dk.statsbiblioteket.sbandex.plugins.YearRange.makeRange(.)"/>
                                                     </Index:field>
                                                 </xsl:when>
                                                 <xsl:otherwise>
@@ -124,8 +124,8 @@
                                 </xsl:choose>
                             </xsl:for-each>
 
-                            <xsl:for-each select="mc:field[@type='008_00']">
-                                <xsl:for-each select="mc:subfield[@type='a' or @type='z']">
+                            <xsl:for-each select="mc:datafield[@tag='008']">
+                                <xsl:for-each select="mc:subfield[@code='a' or @code='z']">
                                     <xsl:if test="substring(.,0)!='9999'">
                                         <Index:field Index:name="year" Index:navn="year" Index:type="number" Index:boostFactor="10">
                                             <xsl:value-of select="translate(.,'0123456789?','01234567890')"/>
@@ -134,59 +134,59 @@
                                 </xsl:for-each>
                             </xsl:for-each>
 
-                            <xsl:for-each select="mc:field[@type='008_00']/mc:subfield[@type='a' or @type='z']">
+                            <xsl:for-each select="mc:datafield[@tag='008']/mc:subfield[@code='a' or @code='z']">
                                 <xsl:choose>
-                                    <xsl:when test="@type='z'">
+                                    <xsl:when test="@code='z'">
                                         <Index:field Index:name="sort_year_desc" Index:navn="sort_år_desc" Index:type="keyword" Index:boostFactor="10">
                                             <xsl:value-of select="translate(.,'0123456789?','01234567890')"/>
                                         </Index:field>
                                     </xsl:when>
-                                    <xsl:when test="@type='a' and not(../mc:subfield[@type='z']) ">
+                                    <xsl:when test="@code='a' and not(../mc:subfield[@code='z']) ">
                                         <Index:field Index:name="sort_year_desc" Index:navn="sort_år_desc" Index:type="keyword" Index:boostFactor="10">
                                             <xsl:value-of select="translate(.,'0123456789?','01234567890')"/>
                                         </Index:field>
                                     </xsl:when>
                                 </xsl:choose>
                             </xsl:for-each>
-                            <xsl:if test="not(mc:field[@type='008_00']/mc:subfield[@type='a' or @type='z'])">
+                            <xsl:if test="not(mc:datafield[@tag='008']/mc:subfield[@code='a' or @code='z'])">
                                 <Index:field Index:name="sort_year_desc" Index:navn="sort_år_desc" Index:type="keyword" Index:boostFactor="10">
                                     <xsl:text>0</xsl:text>
                                 </Index:field>
                             </xsl:if>
-                            <xsl:for-each select="mc:field[@type='008_00']/mc:subfield[@type='a' or @type='z']">
+                            <xsl:for-each select="mc:datafield[@tag='008']/mc:subfield[@code='a' or @code='z']">
                                 <xsl:choose>
-                                    <xsl:when test="@type='z'">
+                                    <xsl:when test="@code='z'">
                                         <Index:field Index:name="sort_year_asc" Index:navn="sort_år_asc" Index:type="keyword" Index:boostFactor="10">
                                             <xsl:value-of select="translate(.,'0123456789?','01234567899')"/>
                                         </Index:field>
                                     </xsl:when>
-                                    <xsl:when test="@type='a' and not(../mc:subfield[@type='z']) ">
+                                    <xsl:when test="@code='a' and not(../mc:subfield[@code='z']) ">
                                         <Index:field Index:name="sort_year_asc" Index:navn="sort_år_asc" Index:type="keyword" Index:boostFactor="10">
                                             <xsl:value-of select="translate(.,'0123456789?','01234567899')"/>
                                         </Index:field>
                                     </xsl:when>
                                 </xsl:choose>
                             </xsl:for-each>
-                            <xsl:if test="not(mc:field[@type='008_00']/mc:subfield[@type='a' or @type='z'])">
+                            <xsl:if test="not(mc:datafield[@tag='008']/mc:subfield[@code='a' or @code='z'])">
                                 <Index:field Index:name="sort_year_asc" Index:navn="sort_år_asc" Index:type="keyword">
                                     <xsl:text>9999</xsl:text>
                                 </Index:field>
                             </xsl:if>
 
                             <Index:field Index:name="sort_title" Index:navn="sort_titel" Index:sortLocale="da" Index:type="keyword" Index:boostFactor="100">
-                                <xsl:for-each select="mc:field[@type='245_00']">
-                                    <xsl:for-each select="mc:subfield[@type='a' or @type='c']">
+                                <xsl:for-each select="mc:datafield[@tag='245']">
+                                    <xsl:for-each select="mc:subfield[@code='a' or @code='c']">
                                         <xsl:choose>
                                             <xsl:when test="position()=1">
                                                 <xsl:value-of select="."/>
                                             </xsl:when>
                                             <xsl:otherwise>
-                                                <xsl:if test="@type='a'">
-                                                    <xsl:if test="not(preceding-sibling::mc:subfield[@type='a'])">
+                                                <xsl:if test="@code='a'">
+                                                    <xsl:if test="not(preceding-sibling::mc:subfield[@code='a'])">
                                                         <xsl:text>&#32;:&#32;</xsl:text>
                                                         <xsl:value-of select="."/>
                                                     </xsl:if>
-                                                    <xsl:if test="(preceding-sibling::mc:subfield[@type='a'])">
+                                                    <xsl:if test="(preceding-sibling::mc:subfield[@code='a'])">
                                                         <xsl:text>;</xsl:text>
                                                         <xsl:value-of select="."/>
                                                     </xsl:if>
@@ -197,7 +197,7 @@
                                 </xsl:for-each>
                             </Index:field>
 
-                            <xsl:for-each select="mc:field[@type='001_00']/mc:subfield[@type='d']">
+                            <xsl:for-each select="mc:datafield[@tag='001']/mc:subfield[@code='d']">
                                 <Index:field Index:repeat="true" Index:name="op" Index:navn="op" Index:type="token" Index:boostFactor="2" Index:freetext="false">
                                     <xsl:value-of select="."/>
                                 </Index:field>
@@ -208,62 +208,62 @@
 
 
                         <xsl:otherwise>
-                            <xsl:for-each select="mc:field[@type='090_00']/mc:subfield[@type='b']">
+                            <xsl:for-each select="mc:datafield[@tag='090']/mc:subfield[@code='b']">
                                 <Index:field Index:repeat="true" Index:name="lang" Index:navn="sp" Index:type="token">
                                     <xsl:value-of select="."/>
                                 </Index:field>
                             </xsl:for-each>
-                            <xsl:for-each select="mc:field[@type='090_00']/mc:subfield[@type='b']">
+                            <xsl:for-each select="mc:datafield[@tag='090']/mc:subfield[@code='b']">
                                 <Index:field Index:repeat="false" Index:name="llang" Index:navn="lsp" Index:type="keyword" Index:boostFactor="10">
                                     <xsl:value-of select="."/>
                                 </Index:field>
                             </xsl:for-each>
-                            <xsl:for-each select="mc:field[@type='090_00']/mc:subfield[@type='a']">
+                            <xsl:for-each select="mc:datafield[@tag='090']/mc:subfield[@code='a']">
                                 <Index:field Index:name="py" Index:navn="år" Index:type="token" Index:boostFactor="10">
                                         <xsl:value-of select="."/>
                                 </Index:field>
                             </xsl:for-each>
-                            <xsl:for-each select="mc:field[@type='090_00']/mc:subfield[@type='a']">
+                            <xsl:for-each select="mc:datafield[@tag='090']/mc:subfield[@code='a']">
                                 <Index:field Index:name="year" Index:navn="year" Index:type="number" Index:boostFactor="10">
                                     <xsl:value-of select="."/>
                                 </Index:field>
                             </xsl:for-each>
 
-                            <xsl:for-each select="mc:field[@type='090_00']/mc:subfield[@type='a']">
+                            <xsl:for-each select="mc:datafield[@tag='090']/mc:subfield[@code='a']">
                                 <Index:field Index:name="sort_year_desc" Index:navn="sort_år_desc" Index:type="keyword" Index:boostFactor="10">
                                     <xsl:value-of select="."/>
                                 </Index:field>
                             </xsl:for-each>
-                            <xsl:if test="not(mc:field[@type='090_00']/mc:subfield[@type='a'])">
+                            <xsl:if test="not(mc:datafield[@tag='090']/mc:subfield[@code='a'])">
                                 <Index:field Index:name="sort_year_desc" Index:navn="sort_år_desc" Index:type="keyword" Index:boostFactor="10">
                                     <xsl:text>0</xsl:text>
                                 </Index:field>
                             </xsl:if>
 
-                            <xsl:for-each select="mc:field[@type='090_00']/mc:subfield[@type='a']">
+                            <xsl:for-each select="mc:datafield[@tag='090']/mc:subfield[@code='a']">
                                 <Index:field Index:name="sort_year_asc" Index:navn="sort_år_asc" Index:type="keyword" Index:boostFactor="10">
                                     <xsl:value-of select="translate(.,'0123456789?','01234567899')"/>
                                 </Index:field>
                             </xsl:for-each>
-                            <xsl:if test="not(mc:field[@type='090_00']/mc:subfield[@type='a'])">
+                            <xsl:if test="not(mc:datafield[@tag='090']/mc:subfield[@code='a'])">
                                 <Index:field Index:name="sort_year_asc" Index:navn="sort_år_asc" Index:type="keyword">
                                     <xsl:text>9999</xsl:text>
                                 </Index:field>
                             </xsl:if>
 
                             <Index:field Index:name="sort_title" Index:navn="sort_titel" Index:sortLocale="da" Index:type="keyword" Index:boostFactor="100">
-                                <xsl:for-each select="mc:field[@type='110_00']/mc:subfield[@type='a']">
+                                <xsl:for-each select="mc:datafield[@tag='110']/mc:subfield[@code='a']">
                                         <xsl:choose>
                                             <xsl:when test="position()=1">
                                                 <xsl:value-of select="."/>
                                             </xsl:when>
                                             <xsl:otherwise>
-                                                <xsl:if test="@type='a'">
-                                                    <xsl:if test="not(preceding-sibling::mc:subfield[@type='a'])">
+                                                <xsl:if test="@code='a'">
+                                                    <xsl:if test="not(preceding-sibling::mc:subfield[@code='a'])">
                                                         <xsl:text>&#32;:&#32;</xsl:text>
                                                         <xsl:value-of select="."/>
                                                     </xsl:if>
-                                                    <xsl:if test="(preceding-sibling::mc:subfield[@type='a'])">
+                                                    <xsl:if test="(preceding-sibling::mc:subfield[@code='a'])">
                                                         <xsl:text>;</xsl:text>
                                                         <xsl:value-of select="."/>
                                                     </xsl:if>

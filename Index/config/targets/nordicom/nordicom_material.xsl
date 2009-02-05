@@ -8,9 +8,9 @@
                 version="1.0">
     <xsl:template name="material">
         <xsl:choose>
-            <xsl:when test="mc:field[@type='001_00']/mc:subfield[@type='f']='new'">
+            <xsl:when test="mc:datafield[@tag='001']/mc:subfield[@code='f']='new'">
                 <Index:group Index:name="ma" Index:navn="ma" Index:freetext="false">
-                    <xsl:for-each select="mc:field[@type='009_00']/mc:subfield[@type='a']">
+                    <xsl:for-each select="mc:datafield[@tag='009']/mc:subfield[@code='a']">
                         <Index:field Index:repeat="true" Index:name="ma_short" Index:navn="ma_kort" Index:type="token" Index:boostFactor="4">
                             <xsl:if test="contains(.,'a')">
                                 <xsl:text>te</xsl:text>
@@ -24,7 +24,7 @@
                         </Index:field>
                     </xsl:for-each>
 
-                    <xsl:for-each select="mc:field[@type='009_00']/mc:subfield[@type='b']">
+                    <xsl:for-each select="mc:datafield[@tag='009']/mc:subfield[@code='b']">
                         <Index:field Index:repeat="true" Index:name="ma_short" Index:navn="ma_kort" Index:type="token" Index:boostFactor="2">
                             <xsl:if test="contains(.,'a')">
                                 <xsl:text>te</xsl:text>
@@ -38,19 +38,19 @@
                         </Index:field>
                     </xsl:for-each>
 
-                    <xsl:for-each select="mc:field[@type='009_00']/mc:subfield[@type='g']">
+                    <xsl:for-each select="mc:datafield[@tag='009']/mc:subfield[@code='g']">
                         <Index:field Index:repeat="true" Index:name="ma_short" Index:navn="ma_kort" Index:type="token" Index:boostFactor="4">
                             <xsl:value-of select="."/>
                         </Index:field>
                     </xsl:for-each>
 
-                    <xsl:for-each select="mc:field[@type='009_00']/mc:subfield[@type='h']">
+                    <xsl:for-each select="mc:datafield[@tag='009']/mc:subfield[@code='h']">
                         <Index:field Index:repeat="true" Index:name="ma_short" Index:navn="ma_kort" Index:type="token" Index:boostFactor="2">
                             <xsl:value-of select="."/>
                         </Index:field>
                     </xsl:for-each>
 
-                    <xsl:for-each select="mc:field[@type='008_00']/mc:subfield[@type='d']">
+                    <xsl:for-each select="mc:datafield[@tag='008']/mc:subfield[@code='d']">
                         <Index:field Index:repeat="true" Index:name="ma_short" Index:navn="ma_kort" Index:type="token" Index:boostFactor="4">
                             <xsl:if test="contains(.,'a')">
                                 <xsl:text>bl</xsl:text>
@@ -76,7 +76,7 @@
                         </Index:field>
                     </xsl:for-each>
 
-                    <xsl:for-each select="mc:field[@type='008_00']/mc:subfield[@type='f']">
+                    <xsl:for-each select="mc:datafield[@tag='008']/mc:subfield[@code='f']">
                         <Index:field Index:repeat="true" Index:name="ma_short" Index:navn="ma_kort" Index:type="token" Index:boostFactor="4">
                             <xsl:if test="contains(.,'1')">
                                 <xsl:text>kf</xsl:text>
@@ -84,13 +84,13 @@
                         </Index:field>
                     </xsl:for-each>
 
-                    <xsl:for-each select="mc:field[@type='008_00']/mc:subfield[@type='r']">
+                    <xsl:for-each select="mc:datafield[@tag='008']/mc:subfield[@code='r']">
                         <Index:field Index:repeat="true" Index:name="ma_short" Index:navn="ma_kort" Index:type="token" Index:boostFactor="4">
                             <xsl:value-of select="."/>
                         </Index:field>
                     </xsl:for-each>
 
-                    <xsl:for-each select="mc:field[@type='008_00']/mc:subfield[@type='t']">
+                    <xsl:for-each select="mc:datafield[@tag='008']/mc:subfield[@code='t']">
                         <Index:field Index:repeat="true" Index:name="ma_short" Index:navn="ma_kort" Index:type="token" Index:boostFactor="4">
                             <xsl:if test="contains(.,'m')">
                                 <xsl:text>mo</xsl:text>
@@ -105,11 +105,11 @@
                     </xsl:for-each>
                 </Index:group>
 
-                <xsl:for-each select="mc:field[@type='009_00']/mc:subfield[@type='a' or @type='b']">
+                <xsl:for-each select="mc:datafield[@tag='009']/mc:subfield[@code='a' or @code='b']">
                     <xsl:if test="contains(.,'a')">
                         <xsl:choose>
-                            <xsl:when test="contains(/mc:record/mc:field[@type='008_00']/mc:subfield[@type='t'],'m') or contains(/mc:record/mc:field[@type='008']/mc:subfield[@type='t'],'s')">
-                                <xsl:for-each select="/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g' or @type='h']">
+                            <xsl:when test="contains(/mc:record/mc:datafield[@tag='008']/mc:subfield[@code='t'],'m') or contains(/mc:record/mc:datafield[@tag='008']/mc:subfield[@code='t'],'s')">
+                                <xsl:for-each select="/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g' or @code='h']">
                                     <xsl:choose>
                                         <xsl:when test="contains(.,'xx')">
                                             <Index:field Index:repeat="true" Index:name="ma_long" Index:navn="ma_lang" Index:type="token">
@@ -131,10 +131,10 @@
                                 </xsl:for-each>
                             </xsl:when>
 
-                            <xsl:when test="contains(/mc:record/mc:field[@type='008_00']/mc:subfield[@type='t'],'a')">
+                            <xsl:when test="contains(/mc:record/mc:datafield[@tag='008']/mc:subfield[@code='t'],'a')">
 
                                 <xsl:choose>
-                                    <xsl:when test="/mc:record/mc:field[@type='557_00']">
+                                    <xsl:when test="/mc:record/mc:datafield[@tag='557']">
                                         <Index:field Index:repeat="true" Index:name="ma_long" Index:navn="ma_lang" Index:type="token">
                                             <xsl:text>artikel</xsl:text>
                                         </Index:field>
@@ -142,7 +142,7 @@
                                             <xsl:text>tss art</xsl:text>
                                         </Index:field>
                                     </xsl:when>
-                                    <xsl:when test="/mc:record/mc:field[@type='558_00']">
+                                    <xsl:when test="/mc:record/mc:datafield[@tag='558']">
                                         <Index:field Index:repeat="true" Index:name="ma_long" Index:navn="ma_lang" Index:type="token">
                                             <xsl:text>artikel</xsl:text>
                                         </Index:field>
@@ -150,7 +150,7 @@
                                             <xsl:text>bog art</xsl:text>
                                         </Index:field>
                                     </xsl:when>
-                                    <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g' or @type='h'],'xe')">
+                                    <xsl:when test="contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g' or @code='h'],'xe')">
                                         <Index:field Index:repeat="true" Index:name="ma_long" Index:navn="ma_lang" Index:type="token">
                                             <xsl:text>artikel</xsl:text>
                                         </Index:field>
@@ -193,7 +193,7 @@
             <xsl:otherwise>
                 <Index:group Index:name="ma" Index:navn="ma" Index:freetext="false">
                     <xsl:choose>
-                        <xsl:when test="/mc:record/mc:field[@type='140_00']/mc:subfield[@type='a'] or /mc:record/mc:field[@type='150_00']/mc:subfield[@type='a']">
+                        <xsl:when test="/mc:record/mc:datafield[@tag='140']/mc:subfield[@code='a'] or /mc:record/mc:datafield[@tag='150']/mc:subfield[@code='a']">
                             <Index:field Index:repeat="true" Index:name="ma_short" Index:navn="ma_kort" Index:type="token" Index:boostFactor="4">
                                 <xsl:text>an</xsl:text>
                             </Index:field>
@@ -210,7 +210,7 @@
                 </Index:group>
 
                 <xsl:choose>
-                    <xsl:when test="/mc:record/mc:field[@type='140_00']/mc:subfield[@type='a']">
+                    <xsl:when test="/mc:record/mc:datafield[@tag='140']/mc:subfield[@code='a']">
                         <Index:field Index:repeat="true" Index:name="ma_long" Index:navn="ma_lang" Index:type="token">
                             <xsl:text>artikel</xsl:text>
                         </Index:field>
@@ -218,7 +218,7 @@
                             <xsl:text>bog art</xsl:text>
                         </Index:field>
                     </xsl:when>
-                    <xsl:when test="/mc:record/mc:field[@type='150_00']/mc:subfield[@type='a']">
+                    <xsl:when test="/mc:record/mc:datafield[@tag='150']/mc:subfield[@code='a']">
                         <Index:field Index:repeat="true" Index:name="ma_long" Index:navn="ma_lang" Index:type="token">
                             <xsl:text>artikel</xsl:text>
                         </Index:field>
