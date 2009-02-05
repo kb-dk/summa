@@ -197,18 +197,6 @@ public interface CoreMap {
                                  int startPos, int endPos);
 
     /**
-     * Runs through all pointers to tags in facetID with a value >= position
-     * and increments them by delta. This method is normally used when a
-     * tag is added or removed from an associated tag handler.
-     * @param facetID  the ID for the facet with affected tags.
-     * @param position the lowest position for affected tags.
-     * @param delta    the amount that the position should be adjusted with.
-     * @see TagHandler#insertTag(int, String)
-     * @see TagHandler#removeTag(int, int)
-     */
-    public void adjustPositions(int facetID, int position, int delta);
-
-    /**
      * The emptyFacet is the position of the Facet responsible for counting tags
      * from deleted documents. When documents are deleted, their facets are all
      * set to this id and their tags are set to 0.
@@ -221,6 +209,18 @@ public interface CoreMap {
      * @see {@link TagCounterArray#emptyFacet}.
      */
     public int getEmptyFacet();
+
+    /**
+     * Runs through all pointers to tags in facetID with a value >= position
+     * and increments them by delta. This method is normally used when a
+     * tag is added or removed from an associated tag handler.
+     * @param facetID  the ID for the facet with affected tags.
+     * @param position the lowest position for affected tags.
+     * @param delta    the amount that the position should be adjusted with.
+     * @see dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler#insertTag(int, String)
+     * @see dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler#removeTag(int, int)
+     */
+    public void adjustPositions(int facetID, int position, int delta);
 }
 
 

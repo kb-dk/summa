@@ -37,6 +37,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.browse.TagCounter;
 import dk.statsbiblioteket.summa.search.document.DocIDCollector;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -57,7 +58,10 @@ import java.util.BitSet;
  */
 // TODO: Handle emptyFacet translation int<->long for open and store
 // TODO: Experiment with OpenBitSet from the SOLR project for speed
-public class CoreMapBitStuffed extends CoreMapImpl {
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.QA_NEEDED,
+        author = "te")
+public class CoreMapBitStuffed extends CoreMap32 {
     private static Logger log = Logger.getLogger(CoreMapBitStuffed.class);
 
 //    private static final int VERSION = 10000;
@@ -66,16 +70,6 @@ public class CoreMapBitStuffed extends CoreMapImpl {
     private static final int MIN_GROWTH_SIZE = 1000;
 //    private static final int MAX_GROWTH_SIZE = 1000 * 1000;
     private static final double CONTENT_GROWTHFACTOR = 1.5;
-    /* If true, the order of the values for a given docID are sorted */
-    private static final boolean SORT_VALUES = true;
-
-    private static final int FACETBITS =  5;
-    private static final int FACETSHIFT = 32 - FACETBITS;
-    private static final int TAG_MASK = 0xFFFFFFFF << FACETBITS >>> FACETBITS;
-    /**
-     * The -1 in the calculation is to make room for the emptyFacet.
-     */
-    private static final int FACET_LIMIT = (int) StrictMath.pow(2, FACETBITS)-1;
 
     private boolean shift = DEFAULT_SHIFT_ON_REMOVE;
 
@@ -173,6 +167,7 @@ public class CoreMapBitStuffed extends CoreMapImpl {
         }
 
 
+        // TODO: Avoid all the Set-arithmetic and optimize for lower heap usage
         /* Get the existing values for the docID and add the new values */
         Set<Integer> newValues = new HashSet<Integer>(getValues(docID));
         for (int tagID: tagIDs) {
@@ -204,15 +199,7 @@ public class CoreMapBitStuffed extends CoreMapImpl {
                         docID, newValues.size(), values.length, index[docID],
                         valueDelta));
             }
-            /* Make room (or shrink) the values to fit newValues */
-            System.arraycopy(values, index[docID+1], values,
-                             index[docID+1] + valueDelta,
-                             valuePos - index[docID+1]);
-            valuePos += valueDelta;
-            /* Update the indexes to reflect the change */
-            for (int i = docID+1 ; i <= highestDocID+1 ; i++) {
-                index[i] += valueDelta;
-            }
+            prepareIndexAndValues(docID, valueDelta);
         }
 
         /* Insert values */
@@ -226,16 +213,22 @@ public class CoreMapBitStuffed extends CoreMapImpl {
         return valueDelta;
     }
 
-    private int calculateValue(int facetID, int tagID) {
-        if (facetID < 0) {
-            throw new IllegalArgumentException(String.format(
-                    "The facetID must be >= 0. It was %d", facetID));
+    /**
+     * Helper for assignValues that makes room in the values-array and adjusts
+     * the positions in the index.
+     * @param docID      the position from where to make room.
+     * @param valueDelta The delta for values to adjust.
+     */
+    private void prepareIndexAndValues(int docID, int valueDelta) {
+        /* Make room (or shrink) the values to fit newValues */
+        System.arraycopy(values, index[docID+1], values,
+                         index[docID+1] + valueDelta,
+                         valuePos - index[docID+1]);
+        valuePos += valueDelta;
+        /* Update the indexes to reflect the change */
+        for (int i = docID+1 ; i <= highestDocID+1 ; i++) {
+            index[i] += valueDelta;
         }
-        if (tagID < 0) {
-            throw new IllegalArgumentException(String.format(
-                    "The tagID must be >= 0. It was %d", tagID));
-        }
-        return facetID << FACETSHIFT | tagID & TAG_MASK;
     }
 
     private void fitStructure(int docID, int[] tagIDs) {

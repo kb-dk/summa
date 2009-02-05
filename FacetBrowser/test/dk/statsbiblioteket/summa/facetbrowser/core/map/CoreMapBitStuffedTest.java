@@ -31,6 +31,7 @@ import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.facetbrowser.BaseObjects;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.Profiler;
 import org.apache.log4j.Logger;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -45,11 +46,13 @@ public class CoreMapBitStuffedTest extends TestCase {
 
     BaseObjects bo;
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
         bo = new BaseObjects();
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
         bo.close();
@@ -279,16 +282,30 @@ public class CoreMapBitStuffedTest extends TestCase {
     }
 
     public void testMonkey() throws Exception {
-        CoreMap map = bo.getCoreMap();
+        int[] RUNS = {1000, 10000, 100000, 1000000};
+        for (int runs: RUNS) {
+            testMonkey(runs);
+        }
+    }
+
+    public void testMonkey(int runs) throws Exception {
+        testMonkey(runs, bo.getStructure().getFacets().size(), bo.getCoreMap());
+    }
+
+    public static void testMonkey(int runs, int maxFacet, CoreMap map)
+            throws Exception {
+        map.clear();
         Random random = new Random();
-        int RUNS = 10000;
         int MAX_DOC = 5000;
         int MAX_TAG_ID = 10000;
         int MAX_TAG_ADDITIONS = 10;
-        int maxFacet = bo.getStructure().getFacets().size();
-        int feedback = Math.max(1, RUNS / 100);
+        int feedback = Math.max(1, runs / 100);
         double removeChance = 0.01;
-        for (int i = 0 ; i< RUNS ; i++) {
+
+        Profiler profiler = new Profiler();
+        profiler.setExpectedTotal(runs);
+
+        for (int i = 0 ; i< runs ; i++) {
             if (random.nextDouble() < removeChance && map.getDocCount() > 0) {
                 map.remove(random.nextInt(map.getDocCount()));
             } else {
@@ -299,15 +316,20 @@ public class CoreMapBitStuffedTest extends TestCase {
                 map.add(random.nextInt(MAX_DOC), random.nextInt(maxFacet),
                         tagIDs);
             }
+            profiler.beat();
             if (i % feedback == 0) {
                 log.debug(i / feedback + "% " + map.getDocCount() + " docs");
             }
         }
-        log.info("Finished monkey-test without crashing");
+        //noinspection DuplicateStringLiteralInspection
+        log.info("Finished monkey-test with " + runs
+                 + " updates without crashing in "
+                 + profiler.getSpendTime() + " at " + profiler.getBps(false)
+                 + " updates/second");
     }
 
     public void testAdjustPositions() throws Exception {
-        CoreMap map = bo.getCoreMap();
+        CoreMapBitStuffed map = (CoreMapBitStuffed)bo.getCoreMap();
         map.add(0, 0, new int[]{23, 34});
         map.add(1, 0, new int[]{1});
         map.add(2, 0, new int[]{2});
