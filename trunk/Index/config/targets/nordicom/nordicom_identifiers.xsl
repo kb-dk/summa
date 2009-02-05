@@ -9,81 +9,81 @@
 
     <xsl:template name="identifiers">
         <xsl:choose>
-            <xsl:when test="mc:field[@type='001_00']/mc:subfield[@type='f']='new'">
+            <xsl:when test="mc:datafield[@tag='001']/mc:subfield[@code='f']='new'">
                 <Index:group Index:name="numbers" Index:navn="nr">
-                    <xsl:for-each select="mc:field[@type='021_00']/mc:subfield[@type='a']">
+                    <xsl:for-each select="mc:datafield[@tag='021']/mc:subfield[@code='a']">
                         <Index:field Index:name="isbn" Index:navn="ib" Index:type="number" Index:boostFactor="10">
                             <xsl:value-of select="translate(.,'- ','')"/>
                         </Index:field>
                     </xsl:for-each>
 
-                    <xsl:for-each select="mc:field[@type='021_00']/mc:subfield[@type='a']">
+                    <xsl:for-each select="mc:datafield[@tag='021']/mc:subfield[@code='a']">
                         <Index:field Index:name="standard_number" Index:navn="is" Index:type="number" Index:boostFactor="10">
                             <xsl:value-of select="translate(.,'- ','')"/>
                         </Index:field>
                     </xsl:for-each>
 
-                    <xsl:for-each select="mc:field[@type='558_00']/mc:subfield[@type='z']">
+                    <xsl:for-each select="mc:datafield[@tag='558']/mc:subfield[@code='z']">
                         <Index:field Index:name="standard_number" Index:navn="is" Index:type="number" Index:boostFactor="6">
                             <xsl:value-of select="translate(.,'- ','')"/>
                         </Index:field>
                     </xsl:for-each>
-                    <xsl:for-each select="mc:field[@type='021_00']/mc:subfield[@type='x']">
+                    <xsl:for-each select="mc:datafield[@tag='021']/mc:subfield[@code='x']">
                         <Index:field Index:name="isbn" Index:navn="ib" Index:type="number" Index:boostFactor="6">
                             <xsl:value-of select="translate(.,'- ','')"/>
                         </Index:field>
                     </xsl:for-each>
-                    <xsl:for-each select="mc:field[@type='021_00']/mc:subfield[@type='x']">
+                    <xsl:for-each select="mc:datafield[@tag='021']/mc:subfield[@code='x']">
                         <Index:field Index:name="standard_number" Index:navn="is" Index:type="number" Index:boostFactor="6">
                             <xsl:value-of select="translate(.,'- ','')"/>
                         </Index:field>
                     </xsl:for-each>
 
-                    <xsl:for-each select="mc:field[@type='440_00']/mc:subfield[@type='z']">
+                    <xsl:for-each select="mc:datafield[@tag='440']/mc:subfield[@code='z']">
                         <Index:field Index:name="issn" Index:navn="in" Index:type="number" Index:boostFactor="10">
                             <xsl:value-of select="."/>
                         </Index:field>
                     </xsl:for-each>
 
-                    <xsl:for-each select="mc:field[@type='440_00']/mc:subfield[@type='z']">
+                    <xsl:for-each select="mc:datafield[@tag='440']/mc:subfield[@code='z']">
                         <Index:field Index:name="standard_number" Index:navn="is" Index:type="number" Index:boostFactor="10">
                             <xsl:value-of select="."/>
                         </Index:field>
                     </xsl:for-each>
 
-                    <xsl:for-each select="mc:field[@type='557_00']/mc:subfield[@type='z']">
+                    <xsl:for-each select="mc:datafield[@tag='557']/mc:subfield[@code='z']">
                         <Index:field Index:name="standard_number" Index:navn="is" Index:type="number" Index:boostFactor="6">
                             <xsl:value-of select="."/>
                         </Index:field>
                     </xsl:for-each>
 
-                    <xsl:for-each select="mc:field[@type='021_00']/mc:subfield[@type='a']">
+                    <xsl:for-each select="mc:datafield[@tag='021']/mc:subfield[@code='a']">
                         <Index:field Index:name="isbn" Index:navn="ib" Index:type="number" Index:boostFactor="10">
-                            <xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.ISBN.isbnNorm(.)"/>
+                            <xsl:value-of select="java:dk.statsbiblioteket.sbandex.plugins.ISBN.isbnNorm(.)"/>
                         </Index:field>
                     </xsl:for-each>
 
-                    <xsl:for-each select="mc:field[@type='558_00']/mc:subfield[@type='z']">
+                    <xsl:for-each select="mc:datafield[@tag='558']/mc:subfield[@code='z']">
                         <Index:field Index:name="standard_number" Index:navn="is" Index:type="number" Index:boostFactor="6">
-                            <xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.Normalize.normalize(.)"/>
+                            <xsl:value-of select="java:dk.statsbiblioteket.sbandex.plugins.Normalize.normalize(.)"/>
                         </Index:field>
                     </xsl:for-each>
 
-                    <xsl:for-each select="mc:field[@type='021_00']/mc:subfield[@type='x']">
+                    <xsl:for-each select="mc:datafield[@tag='021']/mc:subfield[@code='x']">
                         <Index:field Index:name="standard_number" Index:navn="is" Index:type="number" Index:boostFactor="6">
-                            <xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.Normalize.normalize(.)"/>
+                            <xsl:value-of select="java:dk.statsbiblioteket.sbandex.plugins.Normalize.normalize(.)"/>
                         </Index:field>
                     </xsl:for-each>
 
-                    <xsl:for-each select="mc:field[@type='440_00']/mc:subfield[@type='z']">
+                    <xsl:for-each select="mc:datafield[@tag='440']/mc:subfield[@code='z']">
                         <Index:field Index:name="issn" Index:navn="in" Index:type="number" Index:boostFactor="10">
-                            <xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.Normalize.normalize(.)"/>
+                            <xsl:value-of select="java:dk.statsbiblioteket.sbandex.plugins.Normalize.normalize(.)"/>
                         </Index:field>
                     </xsl:for-each>
 
-                    <xsl:for-each select="mc:field[@type='557_00']/mc:subfield[@type='z']">
+                    <xsl:for-each select="mc:datafield[@tag='557']/mc:subfield[@code='z']">
                         <Index:field Index:name="standard_number" Index:navn="is" Index:type="number" Index:boostFactor="6">
-                            <xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.Normalize.normalize(.)"/>
+                            <xsl:value-of select="java:dk.statsbiblioteket.sbandex.plugins.Normalize.normalize(.)"/>
                         </Index:field>
                     </xsl:for-each>
 
@@ -94,8 +94,8 @@
 
             <xsl:otherwise>
 
-                <xsl:if test="contains(mc:record/mc:field[@type='150_00']/mc:subfield[@type='a'],ISSN)">
-                    <xsl:variable name="issn" select="normalize-space(substring-after(mc:field[@type='150_00']/mc:subfield[@type='a'],'ISSN'))"/>
+                <xsl:if test="contains(mc:record/mc:datafield[@tag='150']/mc:subfield[@code='a'],ISSN)">
+                    <xsl:variable name="issn" select="normalize-space(substring-after(mc:datafield[@tag='150']/mc:subfield[@code='a'],'ISSN'))"/>
                     <Index:field Index:name="issn" Index:navn="in" Index:type="number" Index:boostFactor="10">
                         <xsl:value-of select="substring($issn,1,9)"/>
                     </Index:field>

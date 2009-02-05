@@ -11,7 +11,7 @@
 
     <xsl:template name="shortformat">
         <xsl:choose>
-            <xsl:when test="mc:field[@type='001_00']/mc:subfield[@type='f']='new'">
+            <xsl:when test="mc:datafield[@tag='001']/mc:subfield[@code='f']='new'">
                 <Index:field Index:name="shortformat" Index:type="stored" Index:freetext="false">
                     <xsl:text disable-output-escaping="yes">&lt;![CDATA[</xsl:text>
                     <shortrecord>
@@ -19,25 +19,25 @@
                                  xmlns:dc="http://purl.org/dc/elements/1.1/">
                             <rdf:Description>
                                 <dc:title>
-                                    <xsl:for-each select="mc:field[@type='245_00']">
-                                        <xsl:for-each select="mc:subfield[@type='a' or @type='c']">
+                                    <xsl:for-each select="mc:datafield[@tag='245']">
+                                        <xsl:for-each select="mc:subfield[@code='a' or @code='c']">
                                             <xsl:choose>
                                                 <xsl:when test="position()=1">
                                                     <xsl:value-of select="."/>
                                                 </xsl:when>
                                                 <xsl:otherwise>
-                                                    <xsl:if test="@type='a'">
-                                                        <xsl:if test="not(preceding-sibling::mc:subfield[@type='a'])">
+                                                    <xsl:if test="@code='a'">
+                                                        <xsl:if test="not(preceding-sibling::mc:subfield[@code='a'])">
                                                             <xsl:text>&#32;:&#32;</xsl:text>
                                                             <xsl:value-of select="."/>
                                                         </xsl:if>
-                                                        <xsl:if test="(preceding-sibling::mc:subfield[@type='a'])">
+                                                        <xsl:if test="(preceding-sibling::mc:subfield[@code='a'])">
                                                             <xsl:text>&#32;;&#32;</xsl:text>
                                                             <xsl:value-of select="."/>
                                                         </xsl:if>
                                                     </xsl:if>
-                                                    <xsl:if test="@type='c'">
-                                                        <xsl:if test="not(preceding-sibling::mc:subfield[@type='c'])">
+                                                    <xsl:if test="@code='c'">
+                                                        <xsl:if test="not(preceding-sibling::mc:subfield[@code='c'])">
                                                             <xsl:text>&#32;:&#32;</xsl:text>
                                                             <xsl:value-of select="."/>
                                                         </xsl:if>
@@ -48,42 +48,42 @@
                                     </xsl:for-each>
                                 </dc:title>
 
-                                <xsl:for-each select="mc:field[@type='700_00']">
+                                <xsl:for-each select="mc:datafield[@tag='700']">
                                     <dc:creator>
-                                        <xsl:value-of select="mc:subfield[@type='h']//text()"/>
+                                        <xsl:value-of select="mc:subfield[@code='h']//text()"/>
                                         <xsl:text>&#32;</xsl:text>
-                                        <xsl:value-of select="mc:subfield[@type='a']//text()"/>
+                                        <xsl:value-of select="mc:subfield[@code='a']//text()"/>
                                     </dc:creator>
                                 </xsl:for-each>
 
-                                <xsl:for-each select="mc:field[@type='710_00']">
+                                <xsl:for-each select="mc:datafield[@tag='710']">
                                     <dc:creator>
-                                        <xsl:if test="mc:subfield[@type='a'or @type='c' or @type='i' or @type='k' or @type='j']">
-                                            <xsl:for-each select="mc:subfield[@type='a' or @type='c' or @type='i' or @type='k' or @type='j']">
+                                        <xsl:if test="mc:subfield[@code='a'or @code='c' or @code='i' or @code='k' or @code='j']">
+                                            <xsl:for-each select="mc:subfield[@code='a' or @code='c' or @code='i' or @code='k' or @code='j']">
                                                 <xsl:choose>
                                                     <xsl:when test="position()=1">
                                                         <xsl:value-of select="."/>
                                                     </xsl:when>
                                                     <xsl:otherwise>
                                                         <xsl:choose>
-                                                            <xsl:when test="@type='a'">
+                                                            <xsl:when test="@code='a'">
                                                                 <xsl:value-of select="."/>
                                                             </xsl:when>
-                                                            <xsl:when test="@type='c'">
+                                                            <xsl:when test="@code='c'">
                                                                 <xsl:if test="position()&gt;1">
                                                                     <xsl:text>.&#32;</xsl:text>
                                                                 </xsl:if>
                                                                 <xsl:value-of select="."/>
                                                             </xsl:when>
-                                                            <xsl:when test="@type='i'">
+                                                            <xsl:when test="@code='i'">
                                                                 <xsl:text>;&#32;</xsl:text>
                                                                 <xsl:value-of select="."/>
                                                             </xsl:when>
-                                                            <xsl:when test="@type='k'">
+                                                            <xsl:when test="@code='k'">
                                                                 <xsl:text>,&#32;</xsl:text>
                                                                 <xsl:value-of select="."/>
                                                             </xsl:when>
-                                                            <xsl:when test="@type='j'">
+                                                            <xsl:when test="@code='j'">
                                                                 <xsl:text>,&#32;</xsl:text>
                                                                 <xsl:value-of select="."/>
                                                             </xsl:when>
@@ -98,15 +98,15 @@
                                 <dc:type xml:lang="da">
                                     <xsl:for-each select=".">
                                         <xsl:choose>
-                                            <xsl:when test="contains(/mc:record/mc:field[@type='008_00']/mc:subfield[@type='t'],'a')">
+                                            <xsl:when test="contains(/mc:record/mc:datafield[@tag='008']/mc:subfield[@code='t'],'a')">
                                                 <xsl:choose>
-                                                    <xsl:when test="/mc:record/mc:field[@type='557_00']">
+                                                    <xsl:when test="/mc:record/mc:datafield[@tag='557']">
                                                         <xsl:text>tidsskriftartikel</xsl:text>
                                                     </xsl:when>
-                                                    <xsl:when test="/mc:record/mc:field[@type='558_00']">
+                                                    <xsl:when test="/mc:record/mc:datafield[@tag='558']">
                                                         <xsl:text>artikel i bog</xsl:text>
                                                     </xsl:when>
-                                                    <xsl:when test="contains(/mc:record/mc:field[@type='009']/mc:subfield[@type='g'],'xe')">
+                                                    <xsl:when test="contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'],'xe')">
                                                         <xsl:text>e-artikel</xsl:text>
                                                     </xsl:when>
                                                     <xsl:otherwise>
@@ -116,14 +116,14 @@
                                             </xsl:when>
                                             <xsl:otherwise>
                                                 <xsl:choose>
-                                                    <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='a'],'a')">
+                                                    <xsl:when test="contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='a'],'a')">
                                                         <xsl:choose>
-                                                            <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'],'xx')">
+                                                            <xsl:when test="contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'],'xx')">
                                                                 <xsl:choose>
-                                                                    <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'][position() >1],'xe')">
+                                                                    <xsl:when test="contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position() >1],'xe')">
                                                                         <xsl:text>bog og e-bog</xsl:text>
                                                                     </xsl:when>
-                                                                    <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'][position() >1],'tb')">
+                                                                    <xsl:when test="contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position() >1],'tb')">
                                                                         <xsl:text>bog og cd-rom</xsl:text>
                                                                     </xsl:when>
                                                                     <xsl:otherwise>
@@ -131,9 +131,9 @@
                                                                     </xsl:otherwise>
                                                                 </xsl:choose>
                                                             </xsl:when>
-                                                            <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'],'xe')">
+                                                            <xsl:when test="contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'],'xe')">
                                                                 <xsl:choose>
-                                                                    <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'][position() >1],'xx')">
+                                                                    <xsl:when test="contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position() >1],'xx')">
                                                                         <xsl:text>bog og e-bog</xsl:text>
                                                                     </xsl:when>
                                                                     <xsl:otherwise>
@@ -146,10 +146,10 @@
                                                             </xsl:otherwise>
                                                         </xsl:choose>
                                                     </xsl:when>
-                                                    <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='a'],'m')">
+                                                    <xsl:when test="contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='a'],'m')">
                                                         <xsl:text>film</xsl:text>
                                                     </xsl:when>
-                                                    <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='a'],'r')">
+                                                    <xsl:when test="contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='a'],'r')">
                                                         <xsl:text>musik og lyd</xsl:text>
                                                     </xsl:when>
                                                     <xsl:otherwise>
@@ -164,15 +164,15 @@
                                 <dc:type xml:lang="en">
                                     <xsl:for-each select=".">
                                         <xsl:choose>
-                                            <xsl:when test="contains(/mc:record/mc:field[@type='008_00']/mc:subfield[@type='t'],'a')">
+                                            <xsl:when test="contains(/mc:record/mc:datafield[@tag='008']/mc:subfield[@code='t'],'a')">
                                                 <xsl:choose>
-                                                    <xsl:when test="/mc:record/mc:field[@type='557_00']">
+                                                    <xsl:when test="/mc:record/mc:datafield[@tag='557']">
                                                         <xsl:text>journal article</xsl:text>
                                                     </xsl:when>
-                                                    <xsl:when test="/mc:record/mc:field[@type='558_00']">
+                                                    <xsl:when test="/mc:record/mc:datafield[@tag='558']">
                                                         <xsl:text>book article</xsl:text>
                                                     </xsl:when>
-                                                    <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'],'xe')">
+                                                    <xsl:when test="contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'],'xe')">
                                                         <xsl:text>e-article</xsl:text>
                                                     </xsl:when>
                                                     <xsl:otherwise>
@@ -182,14 +182,14 @@
                                             </xsl:when>
                                             <xsl:otherwise>
                                                 <xsl:choose>
-                                                    <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='a'],'a')">
+                                                    <xsl:when test="contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='a'],'a')">
                                                         <xsl:choose>
-                                                            <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'],'xx')">
+                                                            <xsl:when test="contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'],'xx')">
                                                                 <xsl:choose>
-                                                                    <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'][position() >1],'xe')">
+                                                                    <xsl:when test="contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position() >1],'xe')">
                                                                         <xsl:text>book and e-book</xsl:text>
                                                                     </xsl:when>
-                                                                    <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'][position() >1],'tb')">
+                                                                    <xsl:when test="contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position() >1],'tb')">
                                                                         <xsl:text>book and cd-rom</xsl:text>
                                                                     </xsl:when>
                                                                     <xsl:otherwise>
@@ -197,9 +197,9 @@
                                                                     </xsl:otherwise>
                                                                 </xsl:choose>
                                                             </xsl:when>
-                                                            <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'],'xe')">
+                                                            <xsl:when test="contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'],'xe')">
                                                                 <xsl:choose>
-                                                                    <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'][position() >1],'xx')">
+                                                                    <xsl:when test="contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position() >1],'xx')">
                                                                         <xsl:text>book and e-book</xsl:text>
                                                                     </xsl:when>
                                                                     <xsl:otherwise>
@@ -212,10 +212,10 @@
                                                             </xsl:otherwise>
                                                         </xsl:choose>
                                                     </xsl:when>
-                                                    <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='a'],'m')">
+                                                    <xsl:when test="contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='a'],'m')">
                                                         <xsl:text>film</xsl:text>
                                                     </xsl:when>
-                                                    <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='a'],'r')">
+                                                    <xsl:when test="contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='a'],'r')">
                                                         <xsl:text>music and sound</xsl:text>
                                                     </xsl:when>
                                                     <xsl:otherwise>
@@ -227,7 +227,7 @@
                                     </xsl:for-each>
                                 </dc:type>
 
-                                <xsl:for-each select="mc:field[@type='260_00']/mc:subfield[@type='c']">
+                                <xsl:for-each select="mc:datafield[@tag='260']/mc:subfield[@code='c']">
                                     <dc:date>
                                         <xsl:choose>
                                             <xsl:when test="contains(.,'@UD8')">
@@ -253,7 +253,7 @@
                                     </dc:date>
                                 </xsl:for-each>
 
-                                <xsl:for-each select="mc:field[@type='021_00']/mc:subfield[@type='a']">
+                                <xsl:for-each select="mc:datafield[@tag='021']/mc:subfield[@code='a']">
                                     <xsl:choose>
                                         <xsl:when test="position()=1">
                                             <dc:identifier>
@@ -263,8 +263,8 @@
                                         </xsl:when>
                                     </xsl:choose>
                                 </xsl:for-each>
-                                <xsl:for-each select="mc:field[@type='856_00']">
-                                    <xsl:if test="contains(../mc:field[@type='009']/mc:subfield[@type='g'],'xe')">
+                                <xsl:for-each select="mc:datafield[@tag='856']">
+                                    <xsl:if test="contains(../mc:datafield[@tag='009']/mc:subfield[@code='g'],'xe')">
                                         <dc:identifier>
                                             <xsl:value-of select="."/>
                                         </dc:identifier>
@@ -274,10 +274,10 @@
                                 <dc:format>
                                     <xsl:for-each select=".">
                                         <xsl:choose>
-                                            <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'][position()=1],'xe')">
+                                            <xsl:when test="contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position()=1],'xe')">
                                                 <xsl:choose>
-                                                    <xsl:when test="contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'][position() >1],'xx')
-                                                        or contains(/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g'][position() >1],'tb')">
+                                                    <xsl:when test="contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position() >1],'xx')
+                                                        or contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position() >1],'tb')">
                                                         <xsl:text>mono</xsl:text>
                                                     </xsl:when>
                                                     <xsl:otherwise>
@@ -311,12 +311,12 @@
                                  xmlns:dc="http://purl.org/dc/elements/1.1/">
                             <rdf:Description>
                                 <dc:title>
-                                    <xsl:for-each select="mc:field[@type='110_00']/mc:subfield[@type='a']">
+                                    <xsl:for-each select="mc:datafield[@tag='110']/mc:subfield[@code='a']">
                                         <xsl:value-of select="."/>
                                     </xsl:for-each>
                                 </dc:title>
 
-                                <xsl:for-each select="mc:field[@type='100_00']/mc:subfield[@type='a']">
+                                <xsl:for-each select="mc:datafield[@tag='100']/mc:subfield[@code='a']">
                                     <dc:creator>
                                         <xsl:call-template name="author_forward"/>    <!-- Author template ligger i nordicom_author.xsl-->
                                     </dc:creator>
@@ -325,10 +325,10 @@
                                 <dc:type xml:lang="da">
                                     <xsl:for-each select=".">
                                         <xsl:choose>
-                                            <xsl:when test="/mc:record/mc:field[@type='150_00']">
+                                            <xsl:when test="/mc:record/mc:datafield[@tag='150']">
                                                 <xsl:text>tidsskriftartikel</xsl:text>
                                             </xsl:when>
-                                            <xsl:when test="/mc:record/mc:field[@type='140_00']">
+                                            <xsl:when test="/mc:record/mc:datafield[@tag='140']">
                                                 <xsl:text>artikel i bog</xsl:text>
                                             </xsl:when>
                                             <xsl:otherwise>
@@ -341,10 +341,10 @@
                                 <dc:type xml:lang="en">
                                     <xsl:for-each select=".">
                                         <xsl:choose>
-                                            <xsl:when test="/mc:record/mc:field[@type='150_00']">
+                                            <xsl:when test="/mc:record/mc:datafield[@tag='150']">
                                                 <xsl:text>journal article</xsl:text>
                                             </xsl:when>
-                                            <xsl:when test="/mc:record/mc:field[@type='140_00']">
+                                            <xsl:when test="/mc:record/mc:datafield[@tag='140']">
                                                 <xsl:text>book article</xsl:text>
                                             </xsl:when>
                                             <xsl:otherwise>
@@ -354,7 +354,7 @@
                                     </xsl:for-each>
                                 </dc:type>
 
-                                <xsl:for-each select="mc:field[@type='090_00']/mc:subfield[@type='a']">
+                                <xsl:for-each select="mc:datafield[@tag='090']/mc:subfield[@code='a']">
                                     <dc:date>
                                         <xsl:value-of select="."/>
                                     </dc:date>

@@ -9,21 +9,21 @@
 
     <xsl:template name="notes">
         <xsl:choose>
-            <xsl:when test="mc:field[@type='001_00']/mc:subfield[@type='f']='new'">
+            <xsl:when test="mc:datafield[@tag='001']/mc:subfield[@code='f']='new'">
 
-                <xsl:for-each select="mc:field[@type='504_00']/mc:subfield[@type='a']">
+                <xsl:for-each select="mc:datafield[@tag='504']/mc:subfield[@code='a']">
                     <Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token" Index:boostFactor="2">
                         <xsl:value-of select="."/>
                     </Index:field>
                 </xsl:for-each>
 
-                <xsl:for-each select="mc:field[@type='506_00']/mc:subfield[@type='a']">
+                <xsl:for-each select="mc:datafield[@tag='506']/mc:subfield[@code='a']">
                     <Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token" Index:boostFactor="2">
                         <xsl:value-of select="."/>
                     </Index:field>
                 </xsl:for-each>
 
-                <xsl:for-each select="mc:field[@type='512_00']">
+                <xsl:for-each select="mc:datafield[@tag='512']">
                     <Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token" Index:boostFactor="2">
                         <xsl:for-each select="mc:subfield">
                             <xsl:choose>
@@ -31,7 +31,7 @@
                                     <xsl:value-of select="."/>
                                 </xsl:when>
                                 <xsl:otherwise>
-                                    <xsl:if test="@type='t'">
+                                    <xsl:if test="@code='t'">
                                         <xsl:choose>
                                             <xsl:when test="position()='1'">
                                                 <xsl:value-of select="."/>
@@ -48,20 +48,20 @@
                     </Index:field>
                 </xsl:for-each>
 
-                <xsl:for-each select="mc:field[@type='523_00']">
+                <xsl:for-each select="mc:datafield[@tag='523']">
                     <Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token" Index:boostFactor="2">
-                        <xsl:for-each select="mc:subfield[@type='a']">
+                        <xsl:for-each select="mc:subfield[@code='a']">
                             <xsl:value-of select="."/>
                         </xsl:for-each>
                     </Index:field>
                     <Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token" Index:boostFactor="2">
-                        <xsl:for-each select="mc:subfield[@type='u']">
+                        <xsl:for-each select="mc:subfield[@code='u']">
                             <xsl:value-of select="."/>
                         </xsl:for-each>
                     </Index:field>
                 </xsl:for-each>
 
-                <xsl:for-each select="mc:field[@type='530_00']">
+                <xsl:for-each select="mc:datafield[@tag='530']">
                     <Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token" Index:boostFactor="2">
                         <xsl:for-each select="mc:subfield">
                             <xsl:choose>
@@ -69,7 +69,7 @@
                                     <xsl:value-of select="."/>
                                 </xsl:when>
                                 <xsl:otherwise>
-                                    <xsl:if test="@type='a'">
+                                    <xsl:if test="@code='a'">
                                         <xsl:value-of select="."/>
                                     </xsl:if>
                                 </xsl:otherwise>
@@ -78,35 +78,35 @@
                     </Index:field>
                 </xsl:for-each>
 
-                <xsl:for-each select="mc:field[@type='532_00']">
+                <xsl:for-each select="mc:datafield[@tag='532']">
                     <Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token" Index:boostFactor="2">
-                        <xsl:for-each select="mc:subfield[@type='a']">
+                        <xsl:for-each select="mc:subfield[@code='a']">
                             <xsl:value-of select="."/>
                         </xsl:for-each>
                     </Index:field>
                 </xsl:for-each>
 
-                <xsl:for-each select="mc:field[@type='557_00']">
+                <xsl:for-each select="mc:datafield[@tag='557']">
                     <Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token" Index:boostFactor="2">
                         <xsl:text>Artikel i:&#32;</xsl:text>
                         <xsl:for-each select="mc:subfield">
                             <xsl:choose>
-                                <xsl:when test="@type='a'">
+                                <xsl:when test="@code='a'">
                                     <xsl:value-of select="."/>
                                 </xsl:when>
-                                <xsl:when test="@type='j'">
+                                <xsl:when test="@code='j'">
                                     <xsl:text>,&#32;</xsl:text>
                                     <xsl:value-of select="."/>
                                 </xsl:when>
-                                <xsl:when test="@type='l'">
+                                <xsl:when test="@code='l'">
                                     <xsl:text>. -&#32;</xsl:text>
                                     <xsl:value-of select="."/>
                                 </xsl:when>
-                                <xsl:when test="@type='v'">
+                                <xsl:when test="@code='v'">
                                     <xsl:text>&#32;;&#32;</xsl:text>
                                     <xsl:value-of select="."/>
                                 </xsl:when>
-                                <xsl:when test="@type='k'">
+                                <xsl:when test="@code='k'">
                                     <xsl:text>,&#32;</xsl:text>
                                     <xsl:value-of select="."/>
                                 </xsl:when>
@@ -115,7 +115,7 @@
                     </Index:field>
                 </xsl:for-each>
 
-                <xsl:for-each select="mc:field[@type='558_00']">
+                <xsl:for-each select="mc:datafield[@tag='558']">
                     <Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token" Index:boostFactor="2">
                         <xsl:choose>
                             <xsl:when test="position()='1'">
@@ -123,39 +123,39 @@
                                 <xsl:value-of select="."/>
                             </xsl:when>
                             <xsl:otherwise>
-                                <xsl:if test="@type='a'">
+                                <xsl:if test="@code='a'">
                                     <xsl:text>&#32;</xsl:text>
                                     <xsl:value-of select="."/>
                                 </xsl:if>
-                                <xsl:if test="@type='e'">
+                                <xsl:if test="@code='e'">
                                     <xsl:text>&#32;/&#32;</xsl:text>
                                     <xsl:value-of select="."/>
                                 </xsl:if>
-                                <xsl:if test="@type='g'">
+                                <xsl:if test="@code='g'">
                                     <xsl:text>,&#32;</xsl:text>
                                     <xsl:value-of select="."/>
                                 </xsl:if>
-                                <xsl:if test="@type='w'">
+                                <xsl:if test="@code='w'">
                                     <xsl:text>. -&#32;</xsl:text>
                                     <xsl:value-of select="."/>
                                 </xsl:if>
-                                <xsl:if test="@type='h'">
+                                <xsl:if test="@code='h'">
                                     <xsl:text>. -&#32;</xsl:text>
                                     <xsl:value-of select="."/>
                                 </xsl:if>
-                                <xsl:if test="@type='i'">
+                                <xsl:if test="@code='i'">
                                     <xsl:text>&#32;:&#32;</xsl:text>
                                     <xsl:value-of select="."/>
                                 </xsl:if>
-                                <xsl:if test="@type='j'">
+                                <xsl:if test="@code='j'">
                                     <xsl:text>,&#32;</xsl:text>
                                     <xsl:value-of select="."/>
                                 </xsl:if>
-                                <xsl:if test="@type='s'">
+                                <xsl:if test="@code='s'">
                                     <xsl:text>. -&#32;</xsl:text>
                                     <xsl:value-of select="."/>
                                 </xsl:if>
-                                <xsl:if test="@type='v'">
+                                <xsl:if test="@code='v'">
                                     <xsl:text>&#32;;&#32; </xsl:text>
                                     <xsl:value-of select="."/>
                                 </xsl:if>
@@ -164,9 +164,9 @@
                     </Index:field>
                 </xsl:for-each>
 
-                <xsl:for-each select="mc:field[@type='559_00']">
+                <xsl:for-each select="mc:datafield[@tag='559']">
                     <Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token" Index:boostFactor="2">
-                        <xsl:for-each select="mc:subfield[@type='a']">
+                        <xsl:for-each select="mc:subfield[@code='a']">
                             <xsl:value-of select="."/>
                         </xsl:for-each>
                     </Index:field>
@@ -176,24 +176,24 @@
             <!-- Det gamle format -->
 
             <xsl:otherwise>
-                <xsl:for-each select="mc:field[@type='140_00']/mc:subfield[@type='a']">
+                <xsl:for-each select="mc:datafield[@tag='140']/mc:subfield[@code='a']">
                     <Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token" Index:boostFactor="2">
                         <xsl:text>Artikel i bog:&#32;</xsl:text>
                         <xsl:value-of select="."/>
                     </Index:field>
                 </xsl:for-each>
-                <xsl:for-each select="mc:field[@type='150_00']/mc:subfield[@type='a']">
+                <xsl:for-each select="mc:datafield[@tag='150']/mc:subfield[@code='a']">
                     <Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token" Index:boostFactor="2">
                         <xsl:text>Artikel i:&#32; </xsl:text>
                         <xsl:value-of select="."/>
                     </Index:field>
                 </xsl:for-each>
-                 <xsl:for-each select="mc:field[@type='170_00']/mc:subfield[@type='a']">
+                 <xsl:for-each select="mc:datafield[@tag='170']/mc:subfield[@code='a']">
                     <Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token" Index:boostFactor="2">
                         <xsl:value-of select="."/>
                     </Index:field>
                 </xsl:for-each>
-                <xsl:for-each select="mc:field[@type='180_00']/mc:subfield[@type='a']">
+                <xsl:for-each select="mc:datafield[@tag='180']/mc:subfield[@code='a']">
                     <Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token" Index:boostFactor="2">
                         <xsl:value-of select="."/>
                     </Index:field>
