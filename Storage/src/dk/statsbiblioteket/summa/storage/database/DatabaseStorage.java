@@ -2143,12 +2143,14 @@ public abstract class DatabaseStorage extends StorageBase {
         stmt.execute(createRecordsIdIndexQuery);
         stmt.close();
 
-        // because we use a UniqueTimestampGenerator we can apply the UNIQUE
-        // to the 'm' index. This is paramount to getting paginated result sets
-        // for getRecordsModifiedAfter
+        // Because we use a UniqueTimestampGenerator we can apply the UNIQUE
+        // to the 'mtime' column. This is paramount to getting paginated result
+        // sets for getRecordsModifiedAfter. To make selects by mtime and base
+        // faster we use a covering index on (mtime,base)
         String createRecordsMTimeIndexQuery =
-                "CREATE UNIQUE INDEX m ON " + RECORDS + "("+MTIME_COLUMN+")";
-        log.debug("Creating index 'm' on table "+RECORDS+" with query: '"
+                "CREATE UNIQUE INDEX mb ON "
+                               + RECORDS + "("+MTIME_COLUMN+","+BASE_COLUMN+")";
+        log.debug("Creating index 'mb' on table "+RECORDS+" with query: '"
                   + createRecordsMTimeIndexQuery + "'");
         stmt = conn.createStatement();
         stmt.execute(createRecordsMTimeIndexQuery);
