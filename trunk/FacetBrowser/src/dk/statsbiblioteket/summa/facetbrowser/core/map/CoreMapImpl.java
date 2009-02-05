@@ -33,9 +33,9 @@ import java.io.*;
 
 /**
  * Generic implementation of some methods for CoreMap. The generic methods
- * expects the implementation to mimic the persistens structures internally.
+ * expects the implementation to mimic the persistent structures internally.
  * If this is not the case, implementations are better of by overriding the
- * default sotre-related methods.
+ * default store-related methods.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -375,6 +375,3 @@ public abstract class CoreMapImpl implements CoreMap {
         }
     }
 }
-
-
-
