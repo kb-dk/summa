@@ -169,14 +169,14 @@ public class FileReader implements ObjectFilter {
         try {
             if (start.isDirectory()) {
                 File files[] = start.listFiles(dataFilter);
-                log.debug("fillTodo: Got " + files.length + " data files from '"
-                          + start + "'");
+                log.debug("Queueing " + files.length + " data files from '"
+                          + start + "'. Queue size now: " + todo.size());
                 Arrays.sort(files);
                 for (File file: files) {
                     addToTodo(file);
                 }
                 File folders[] = start.listFiles(folderFilter);
-                log.debug("fillTodo: Found " + folders.length
+                log.debug("Scanning " + folders.length
                           + " subfolders in '" + start + "'");
                 Arrays.sort(folders);
                 for (File folder: folders) {
@@ -184,14 +184,16 @@ public class FileReader implements ObjectFilter {
                 }
             } else {
                 if (filePattern.matcher(start.getName()).matches()) {
-                    log.debug("updateToDo: Adding '" + start + "' to todo");
+                    log.debug("Queueing data file '" + start
+                              + "'. Queue size now: " + todo.size());
                     addToTodo(start);
                 } else {
-                    log.trace("updateToDo: Skipping '" + start + "'");
+                    log.trace("Skipping data file '" + start + "'");
                 }
             }
         } catch (Exception e) {
-            log.warn("updateToDo: Could not process '" + start + ". Skipping", e);
+            log.warn("Could not process '" + start + ". Skipping: "
+                     + e.getMessage(), e);
         }
     }
 
@@ -231,8 +233,8 @@ public class FileReader implements ObjectFilter {
         updateToDo(root);
         delivered = new ArrayList<Payload>(Math.max(1, todo.size()));
         started = true;
-        log.debug(String.format(
-                 "Located %d files matching pattern '%s' from root %s",
+        log.info(String.format(
+                 "Queued %d files matching pattern '%s' from root %s",
                  todo.size(), filePattern.pattern(), root.getPath()));
     }
 
@@ -366,12 +368,13 @@ public class FileReader implements ObjectFilter {
      */
     public void close(boolean success) {
         //noinspection DuplicateStringLiteralInspection
-        log.debug("close(" + success + ") called");
+        log.debug("Closing");
         checkInit();
         //noinspection DuplicateStringLiteralInspection
         closeDelivered(success);
         if (todo.size() > 0) {
-            log.debug("close: Discarding " + todo + " files from todo");
+            log.debug("When closing, " + todo.size()
+                      + " files remained in queue");
             todo.clear();
         }
         // Note: if success, some streams might still be open.
@@ -380,17 +383,18 @@ public class FileReader implements ObjectFilter {
     protected void closeDelivered(boolean success) {
         for (Payload payload: delivered) {
             if (payload.getStream() == null) {
-                log.warn("close: Encountered payload without stream");
+                log.warn("Can not close payload " + payload.getId()
+                         + ": Payload has no stream");
                 continue;
             }
             if (!(payload.getStream() instanceof RenamingFileStream)) {
-                log.warn("close: Encountered payload with stream that was not "
-                         + "RenamingFileStream. The stream was a "
+                log.warn("Unexpected stream type when closing payload "
+                         + payload.getId() + ": "
                          + payload.getStream().getClass().getName());
                 continue;
             }
             RenamingFileStream stream = (RenamingFileStream)payload.getStream();
-            log.debug("Closing stream " + stream.file + " with success "
+            log.debug("Closing stream " + stream.file + " with success: "
                       + success);
             stream.setSuccess(success);
             payload.close(); // TODO: Do we want close always?
