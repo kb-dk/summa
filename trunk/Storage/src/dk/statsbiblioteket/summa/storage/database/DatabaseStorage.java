@@ -1685,8 +1685,9 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
+    // Return false if the record should be excepted from relations tracking
     private boolean shouldTrackRelations (Record rec) {
-        return disabledRelationsTracking.contains(rec.getBase());
+        return !disabledRelationsTracking.contains(rec.getBase());
     }
 
     /**
