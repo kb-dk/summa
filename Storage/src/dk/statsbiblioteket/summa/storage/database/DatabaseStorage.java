@@ -128,6 +128,24 @@ public abstract class DatabaseStorage extends StorageBase {
     public static final String DEFAULT_HOST = "localhost";
 
     /**
+     * A list of strings with base names that explicitly should have relations
+     * tracking disabled. That is, records from a base listed here will not have
+     * their parent/child relations tracked.
+     * <p/>
+     * Excepting big bases which are known a-priori to not use relations from
+     * relations tracking may be a big optimization on certain Storage
+     * implementations.
+     * <p/>
+     * Even though relation ship tracking is disabled records may still have
+     * relationships, the storage just wont make sure they are consistent.
+     * <p/>
+     * The default value for this property is the empty list, meaning that
+     * all bases will have relationship tracking enabled.
+     */
+    public static final String CONF_DISABLE_REALTIONS_TRACKING =
+                              "summa.storage.database.disablerelationstracking";
+
+    /**
      * The property-key for the boolean value determining if a new database
      * should be created is there is no existing database. If createnew is
      * true and a database exists and forcenew is true, the existing database
@@ -299,6 +317,9 @@ public abstract class DatabaseStorage extends StorageBase {
     private CursorReaper iteratorReaper;
     private UniqueTimestampGenerator timestampGenerator;
 
+    // List of base namesfor which we don't track relations
+    private Set<String> disabledRelationsTracking;
+
     private boolean useLazyRelations;
     private boolean usePagingModel;
     private int pageSize;
@@ -394,6 +415,17 @@ public abstract class DatabaseStorage extends StorageBase {
             log.debug("Using lazy relation resolution");
         } else {
             log.debug("Using direct relation resolution");
+        }
+
+        disabledRelationsTracking = new TreeSet<String>();
+        disabledRelationsTracking.addAll(
+                                conf.getStrings(CONF_DISABLE_REALTIONS_TRACKING,
+                                                new ArrayList<String>()));
+        if (disabledRelationsTracking.size() == 0) {
+            log.debug("Tracking relations on all bases");
+        } else {
+            log.info("Disabling relationships tracking on: "
+                     + Strings.join(disabledRelationsTracking, ", "));
         }
     }
 
@@ -1612,8 +1644,11 @@ public abstract class DatabaseStorage extends StorageBase {
                 }
             }
 
-            // Make sure that all children are tagged as having relations
-            markHasRelations(childIds);
+            // Make sure that all children are tagged as having relations,
+            // unless the record is excepted from relations tracking
+            if (shouldTrackRelations(rec)) {
+                markHasRelations(childIds);
+            }
         }
 
         if (rec.hasParents()) {
@@ -1643,8 +1678,15 @@ public abstract class DatabaseStorage extends StorageBase {
             }
 
             // Make sure that all parents are tagged as having relations
-            markHasRelations(parentIds);
+            // unless the record is excepted from relations tracking
+            if (shouldTrackRelations(rec)) {
+                markHasRelations(parentIds);
+            }
         }
+    }
+
+    private boolean shouldTrackRelations (Record rec) {
+        return disabledRelationsTracking.contains(rec.getBase());
     }
 
     /**
@@ -1820,8 +1862,11 @@ public abstract class DatabaseStorage extends StorageBase {
             }
         } else {
             // If the record does not have explicit relations we have to check
-            // if we know any relations for it already
-            checkHasRelations(record.getId());
+            // if we know any relations for it already, unless the record
+            // is excepted from relations tracking of course
+            if (shouldTrackRelations(record)) {
+                checkHasRelations(record.getId());
+            }
         }
         
     }
@@ -1890,8 +1935,11 @@ public abstract class DatabaseStorage extends StorageBase {
             }
         } else {
             // If the record does not have explicit relations we have to check
-            // if we know any relations for it already
-            checkHasRelations(record.getId());
+            // if we know any relations for it already, unless the record
+            // is excepted from relations tracking of course
+            if (shouldTrackRelations(record)) {
+                checkHasRelations(record.getId());
+            }
         }
      }
 
