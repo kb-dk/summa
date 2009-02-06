@@ -24,13 +24,8 @@ import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.facetbrowser.BaseObjects;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.util.Logs;
-import dk.statsbiblioteket.util.Strings;
-import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader;
 
 import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.Collections;
 
 public class CoreMapBuilderTest extends TestCase {
     public CoreMapBuilderTest(String name) {
