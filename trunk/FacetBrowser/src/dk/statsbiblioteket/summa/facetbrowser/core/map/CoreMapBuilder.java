@@ -30,7 +30,6 @@ import org.apache.commons.logging.Log;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 
 /**
  * A build-oriented map, meant for batch-oriented build from scratch. The map
