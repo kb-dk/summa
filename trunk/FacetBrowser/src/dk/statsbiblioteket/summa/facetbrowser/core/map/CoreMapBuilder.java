@@ -95,6 +95,9 @@ public class CoreMapBuilder extends CoreMap32 {
     }
 
     public void add(int docID, int facetID, int[] tagIDs) {
+        if (tagIDs.length == 0) {
+            return;
+        }
         ensureSpace(docID);
         if (map[docID] == null) {
             map[docID] = ArrayUtil.mergeArrays( // Removes doublets
@@ -117,6 +120,22 @@ public class CoreMapBuilder extends CoreMap32 {
         int[][] newMap = new int[newSize][];
         System.arraycopy(map, 0, newMap, 0, mapSize);
         map = newMap;
+    }
+
+    @Override
+    public boolean hasTags(int docID) {
+        return docID < getDocCount()
+               && map[docID] != null && map[docID].length != 0;
+    }
+
+    @Override
+    public void setValues(int docID, int[] values) {
+        map[docID] = values;
+    }
+
+    @Override
+    public int[] getValues(int docID) {
+        return docID >= mapSize || map[docID] == null ? EMPTY : map[docID]; 
     }
 
     /* Unsupported methods */

@@ -282,7 +282,7 @@ public class CoreMapBitStuffedTest extends TestCase {
     }
 
     public void testMonkey() throws Exception {
-        int[] RUNS = {1000, 10000, 100000, 1000000};
+        int[] RUNS = {1000, 10000, 100000};
         for (int runs: RUNS) {
             testMonkey(runs);
         }

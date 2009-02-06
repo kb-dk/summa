@@ -34,6 +34,7 @@
 package dk.statsbiblioteket.summa.facetbrowser.core.map;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.util.ArrayUtil;
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.browse.TagCounter;
 import dk.statsbiblioteket.summa.search.document.DocIDCollector;
@@ -43,11 +44,6 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Arrays;
 import java.util.BitSet;
 
 /**
@@ -141,25 +137,6 @@ public class CoreMapBitStuffed extends CoreMap32 {
                     docID, facetID, tagIDs.length));
         }
 
-        /* Ensure that both index and values has room for the data */
-        fitStructure(docID, tagIDs);
-
-        if (docID > highestDocID) {
-            log.trace("Expanding active index to docID " + docID);
-            /* The docID is larger than any previously encountered, so we
-               extend the active index by setting the new index-entries
-                to the end of the value-list. */
-            for (int i = highestDocID + 2 ; i <= docID + 1 ; i++) {
-                index[i] = valuePos;
-            }
-            highestDocID = docID;
-        }
-
-        /* We now know that there is room in index and values and that the
-           entries in each are consistent. Time to find out what values to
-           update for the document.
-         */
-
         if (tagIDs.length == 0) { // No new tags, so we just exit
             log.trace("No tags specified for doc #" + docID
                       + " and facet #" + facetID);
@@ -167,50 +144,57 @@ public class CoreMapBitStuffed extends CoreMap32 {
         }
 
 
-        // TODO: Avoid all the Set-arithmetic and optimize for lower heap usage
         /* Get the existing values for the docID and add the new values */
-        Set<Integer> newValues = new HashSet<Integer>(getValues(docID));
-        for (int tagID: tagIDs) {
-            newValues.add(calculateValue(facetID, tagID));
-        }
+        int[] newValues = ArrayUtil.mergeArrays(
+                getValues(docID), calculateValues(facetID, tagIDs),
+                true, SORT_VALUES);
 
         /* Make room in values for the new data and change the index to reflect
            the new gap-size */
         assignValues(docID, newValues);
     }
 
+
+
     /**
      * Assign the given values to the docID. This will replace all existing
-     * values for the docID. This method does not check if there is room
-     * enough, so {@link #fitStructure} should be called beforehand.
+     * values for the docID.
      * @param docID     the document to update.
      * @param newValues the values (FacetID/TagID-pairs encoded to an int) to
      *                  assign to the document.
      * @return the number of positions that the values were shiftet.
      */
-    private int assignValues(int docID, Set<Integer> newValues) {
-
-        int valueDelta = newValues.size() - (index[docID+1] - index[docID]);
+    private int assignValues(int docID, int[] newValues) {
+        fitStructure(docID, newValues);
+        int valueDelta = newValues.length - (index[docID+1] - index[docID]);
         if (valueDelta != 0) {
             if (log.isTraceEnabled()) {
                 log.trace(String.format(
                         "assignValues(%d, %d Integer): Adjusting %d values from"
                         + " position %d with delta %d",
-                        docID, newValues.size(), values.length, index[docID],
+                        docID, newValues.length, values.length, index[docID],
                         valueDelta));
             }
             prepareIndexAndValues(docID, valueDelta);
         }
 
         /* Insert values */
-        int position = 0;
+        System.arraycopy(newValues, 0, values, index[docID], newValues.length);
+/*        int position = 0;
         for (Integer value: newValues) {
             values[index[docID] + position++] = value;
-        }
-        if (SORT_VALUES) {
-            Arrays.sort(values, index[docID], index[docID+1]);
-        }
+        }*/
         return valueDelta;
+    }
+
+    @Override
+    public void setValues(int docID, int[] values) {
+        assignValues(docID, values);
+    }
+
+    @Override
+    public boolean hasTags(int docID) {
+        return docID < getDocCount() && index[docID] != index[docID + 1];
     }
 
     /**
@@ -235,6 +219,17 @@ public class CoreMapBitStuffed extends CoreMap32 {
         //noinspection DuplicateStringLiteralInspection
         index = fitArray(index, docID + 2, "index");
         values = fitArray(values, valuePos + tagIDs.length + 2, "values");
+
+        if (docID > highestDocID) {
+            log.trace("Expanding active index to docID " + docID);
+            /* The docID is larger than any previously encountered, so we
+               extend the active index by setting the new index-entries
+                to the end of the value-list. */
+            for (int i = highestDocID + 2 ; i <= docID + 1 ; i++) {
+                index[i] = valuePos;
+            }
+            highestDocID = docID;
+        }
 /*        if (docID > index.length - 2) {
             int newSize = Math.min(
                     index.length + MAX_GROWTH_SIZE, Math.max(
@@ -293,14 +288,13 @@ public class CoreMapBitStuffed extends CoreMap32 {
     }
 
 //    private int EMPTY_VALUE = calculateValue(getEmptyFacet(), 0);
-    private Set<Integer> EMPTY_SET = new HashSet<Integer>(0);
     public void remove(int docID) {
         if (docID > highestDocID) {
             throw new IllegalArgumentException(String.format(
                     "Cannot remove non-existing docID %d from map with size %d",
                     docID, getDocCount()));
         }
-        assignValues(docID, EMPTY_SET);
+        assignValues(docID, EMPTY);
         if (!shift) {
             return;
         }
@@ -361,19 +355,23 @@ public class CoreMapBitStuffed extends CoreMap32 {
         return reducedResult;
     }
 
-    private List<Integer> getValues(int docID) {
+    private static final int[] EMPTY = new int[0];
+    @Override
+    public int[] getValues(int docID) {
         if (docID > highestDocID) {
             //noinspection DuplicateStringLiteralInspection
-            throw new ArrayIndexOutOfBoundsException(String.format(
-                    "Requested %d out of %d documents", docID, getDocCount()));
+/*            log.warn(String.format("Requested %d out of %d documents",
+                                   docID, getDocCount()));*/
+            return EMPTY;
         }
         //noinspection DuplicateStringLiteralInspection
         log.trace("getValues(" + docID + ") called");
         int to = index[docID + 1];
-        List<Integer> result = new ArrayList<Integer>((to-index[docID]) * 2);
-        for (int i = index[docID] ; i < to ; i++) {
-            result.add(values[i]);
+        if (index[docID] == to) {
+            return EMPTY;
         }
+        int[] result = new int[to-index[docID]];
+        System.arraycopy(values, index[docID], result, 0, to - index[docID]);
         return result;
     }
 
