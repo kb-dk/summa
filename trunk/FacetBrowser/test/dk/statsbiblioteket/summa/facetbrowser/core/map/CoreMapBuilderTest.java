@@ -24,6 +24,13 @@ import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.facetbrowser.BaseObjects;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.util.Strings;
+import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader;
+
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
 
 public class CoreMapBuilderTest extends TestCase {
     public CoreMapBuilderTest(String name) {
@@ -31,11 +38,13 @@ public class CoreMapBuilderTest extends TestCase {
     }
 
     BaseObjects bo;
-
+    CoreMapBuilder builder;
     @Override
     public void setUp() throws Exception {
         super.setUp();
         bo = new BaseObjects();
+        builder = new CoreMapBuilder(
+                Configuration.newMemoryBased(), bo.getStructure());
     }
 
     @Override
@@ -48,8 +57,17 @@ public class CoreMapBuilderTest extends TestCase {
         return new TestSuite(CoreMapBuilderTest.class);
     }
 
+    public void testAddition() throws Exception {
+        CoreMapBitStuffedTest.testAddition(builder);
+
+    }
+
+    public void testAddition2() throws Exception {
+        CoreMapBitStuffedTest.testAddition2(builder);
+    }
+
     public void testMonkey() throws Exception {
-        int[] RUNS = {1000, 10000, 100000, 1000000};
+        int[] RUNS = {1000, 10000, 100000, 1000000, 10000000};
         CoreMap map = new CoreMapBuilder(
                 Configuration.newMemoryBased(), bo.getStructure());
         for (int runs: RUNS) {
@@ -60,5 +78,41 @@ public class CoreMapBuilderTest extends TestCase {
     public void testMonkey(int runs, CoreMap map) throws Exception {
         CoreMapBitStuffedTest.testMonkey(
                 runs, bo.getStructure().getFacets().size(), map);
+    }
+
+    public void testMonkeyValid() throws Exception {
+        testMonkeyValid(10);
+    }
+
+    public void testMonkeyValid1000() throws Exception {
+        testMonkeyValid(1000);
+    }
+
+    public void testMonkeyValid50000() throws Exception {
+        testMonkeyValid(50000);
+    }
+    /*
+     * Performs a monkey-test for a CoreMapBuilder and a CoreMapBitStuffed and
+     * compares the results.
+     */
+    public void testMonkeyValid(int runs) throws Exception {
+        CoreMapBuilder builderMap = new CoreMapBuilder(
+                Configuration.newMemoryBased(), bo.getStructure());
+        testMonkey(runs, builderMap);
+        CoreMap bitMap = bo.getCoreMap();
+        testMonkey(runs, bitMap);
+
+        assertEquals("The highest document ID in the maps should match",
+                     builderMap.getDocCount(), bitMap.getDocCount());
+        for (int docID = 0 ; docID < builderMap.getDocCount() ; docID++) {
+            for (String facet: bo.getStructure().getFacetNames()) {
+                int facetID = bo.getStructure().getFacetID(facet);
+                //noinspection DuplicateStringLiteralInspection
+                assertEquals("The tags for doc " + docID + " and facet '"
+                             + facet + "' should match",
+                             Arrays.toString(bitMap.get(docID, facetID)),
+                             Arrays.toString(builderMap.get(docID, facetID)));
+            }
+        }
     }
 }

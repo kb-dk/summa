@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -50,6 +50,7 @@ public class ArrayUtil {
             result = primary;
         } else {
             result = new int[primary.length + additions.length];
+            System.arraycopy(primary, 0, result, 0, primary.length);
             if (!removeDuplicates) {
                 System.arraycopy(additions, 0, result, primary.length,
                                  additions.length);
