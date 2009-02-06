@@ -23,6 +23,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
 
+import org.apache.log4j.Logger;
+
 /**
  * Defines the bit-patterns for the storing of FacetID/TagID-pairs in 32 bit.
  * Also provides convenience-methods that depends on the patterns.
@@ -31,6 +33,8 @@ import dk.statsbiblioteket.summa.facetbrowser.Structure;
         state = QAInfo.State.QA_NEEDED,
         author = "te")
 public abstract class CoreMap32 extends CoreMapImpl {
+    private static Logger log = Logger.getLogger(CoreMap32.class);
+
     public static final int FACETBITS =  5;
     public static final int FACETSHIFT = 32 - FACETBITS;
     public static final int TAG_MASK = 0xFFFFFFFF << FACETBITS >>> FACETBITS;
@@ -79,4 +83,52 @@ public abstract class CoreMap32 extends CoreMapImpl {
         return result;
     }
 
+    /**
+     * This override has speed-optimization for CoreMap32.
+     * @param otherCore the map to assign to.
+     */
+    @Override
+    public void copyTo(CoreMap otherCore) {
+        if (!(otherCore instanceof CoreMap32)) {
+            super.copyTo(otherCore);
+            return;
+        }
+        CoreMap32 other = (CoreMap32)otherCore;
+        log.trace("Performing CoreMap32-optimized copyTo from type "
+                  + this.getClass().getName()
+                  + " to " + other.getClass().getName());
+        
+        long starttime = System.currentTimeMillis();
+        other.clear();
+        for (int docID = 0 ; docID < getDocCount() ; docID++) {
+            if (hasTags(docID)) {
+                other.setValues(docID, getValues(docID));
+            }
+        }
+        log.debug("Finished CoreMap32-optimized copyTo from type "
+                  + this.getClass().getName()
+                  + " to " + other.getClass().getName() + " in "
+                  + (System.currentTimeMillis() - starttime) + " ms");
+    }
+
+    /**
+     * @param docID a document ID.
+     * @return true if there is at least one tag for the given document ID.
+     */
+    public abstract boolean hasTags(int docID);
+
+    /**
+     * Assigns the given values to the docID, overwriting any existing values.
+     * No sanity-checks are done to the values.
+     * @param docID  a document ID.
+     * @param values the values to assign to the ID.
+     */
+    public abstract void setValues(int docID, int[] values);
+
+    /**
+     * Gets the values for the given document ID.
+     * @param docID the document ID to get the values from.
+     * @return the values from the docID or the empty list if no values exist.
+     */
+    public abstract int[] getValues(int docID);
 }

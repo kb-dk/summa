@@ -30,6 +30,9 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
 
 import java.io.*;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
 
 /**
  * Generic implementation of some methods for CoreMap. The generic methods
@@ -373,5 +376,34 @@ public abstract class CoreMapImpl implements CoreMap {
                         "Unable to delete %s file '%s'", description, file));
             }
         }
+    }
+
+    /**
+     * Clears the given map and assigns copies all mappings to the new map.
+     * This has optimization for CoreMapBitStuffed, but works for all CoreMaps.
+     * @param other the map to assign to.
+     */
+    public void copyTo(CoreMap other) {
+        log.trace("Performing copyTo from type " + this.getClass().getName()
+                  + " to " + other.getClass().getName());
+        long starttime = System.currentTimeMillis();
+        List<Integer> facetIDs = new ArrayList<Integer>(
+                structure.getFacetNames().size());
+        for (Map.Entry<String, Integer> facet:
+                structure.getFacetIDs().entrySet()) {
+            facetIDs.add(facet.getValue());
+        }
+        other.clear();
+        for (int docID = 0 ; docID < getDocCount() ; docID++) {
+            for (Integer facetID: facetIDs) {
+                int[] tagIDs = get(docID, facetID);
+                if (tagIDs.length != 0) {
+                    other.add(docID, facetID, tagIDs);
+                }
+            }
+        }
+        log.debug("Finished copyTo from type " + this.getClass().getName()
+                  + " to " + other.getClass().getName() + " in "
+                  + (System.currentTimeMillis() - starttime) + " ms");
     }
 }
