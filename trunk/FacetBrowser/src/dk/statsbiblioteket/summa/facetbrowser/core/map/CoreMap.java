@@ -221,6 +221,12 @@ public interface CoreMap {
      * @see dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler#removeTag(int, int)
      */
     public void adjustPositions(int facetID, int position, int delta);
+
+    /**
+     * Clears the given map and assigns copies all mappings to the new map.
+     * @param other the map to assign to.
+     */
+    public void copyTo(CoreMap other);
 }
 
 

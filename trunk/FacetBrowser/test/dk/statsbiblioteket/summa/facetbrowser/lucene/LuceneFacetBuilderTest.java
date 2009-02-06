@@ -100,8 +100,8 @@ public class LuceneFacetBuilderTest extends TestCase {
         testMultipleAdds(1000);
     }
 
-    public void testMultipleAdds1000000() throws Exception {
-        testMultipleAdds(1000000);
+    public void testMultipleAdds10000() throws Exception {
+        testMultipleAdds(10000);
     }
 
     private void testMultipleAdds(int runs) throws Exception {
@@ -189,6 +189,3 @@ public class LuceneFacetBuilderTest extends TestCase {
         return new TestSuite(LuceneFacetBuilderTest.class);
     }
 }
-
-
-

@@ -255,6 +255,10 @@ public class FacetMap {
     public CoreMap getCoreMap() {
         return coreMap;
     }
+
+    public void setCoreMap(CoreMap coreMap) {
+        this.coreMap = coreMap;
+    }
 }
 
 
