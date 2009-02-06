@@ -22,18 +22,18 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.core.map;
 
-import java.util.Arrays;
 import java.util.Random;
-import java.io.StringWriter;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.facetbrowser.BaseObjects;
+import dk.statsbiblioteket.summa.common.unittest.ExtraAsserts;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Profiler;
 import org.apache.log4j.Logger;
 
+@SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
@@ -60,6 +60,10 @@ public class CoreMapBitStuffedTest extends TestCase {
 
     public void testExpansion() throws Exception {
         CoreMap map = bo.getCoreMap();
+        testExpansion(map);
+    }
+
+    public static void testExpansion(CoreMap map) {
         assertEquals("The map should contain no elements to start with",
                      0, map.getDocCount());
         map.add(0, 0, new int[]{12, 23, 34});
@@ -75,6 +79,10 @@ public class CoreMapBitStuffedTest extends TestCase {
 
     public void testExpansionWithZeros() throws Exception {
         CoreMap map = bo.getCoreMap();
+        testExpansionWithZeroes(map);
+    }
+
+    public static void testExpansionWithZeroes(CoreMap map) {
         map.add(0, 0, new int[]{12, 23, 34});
         map.add(1, 1, new int[]{12, 34});
         map.add(3, 0, new int[]{23, 34});
@@ -82,58 +90,41 @@ public class CoreMapBitStuffedTest extends TestCase {
                      4, map.getDocCount());
     }
 
-    protected String dump(int[] ints) {
-        StringWriter sw = new StringWriter(ints.length * 4);
-        sw.append("[");
-        for (int i = 0 ; i < ints.length ; i++) {
-            sw.append(Integer.toString(ints[i]));
-            if (i < ints.length - 1) {
-                sw.append(", ");
-            }
-        }
-        sw.append("]");
-        return sw.toString();
-    }
-
-    protected void assertArrayEquals(String message, int[] expected,
-                                     int[] actual) {
-        Arrays.sort(expected);
-        if (!Arrays.equals(expected, actual)) {
-            fail(message + ". Expected " + dump(expected)
-                 + " got " + dump(actual));
-        }
-    }
-
     public void testAddition() throws Exception {
         CoreMap map = bo.getCoreMap();
+        testAddition(map);
+    }
+
+    public static void testAddition(CoreMap map) {
         map.add(0, 0, new int[]{23, 34});
-        assertArrayEquals("Initial array should be correct",
+        ExtraAsserts.assertEquals("Initial array should be correct",
                           new int[]{23, 34}, map.get(0, 0));
         log.debug("After initial array: " + map);
         map.add(0, 1, new int[]{87});
-        assertArrayEquals("Initial array should still be correct",
-                          new int[]{23, 34}, map.get(0, 0));
-        assertArrayEquals("Second array should be correct",
+        ExtraAsserts.assertEquals(
+                "Initial array should be correct after second add",
+                new int[]{23, 34}, map.get(0, 0));
+        ExtraAsserts.assertEquals("Second array should be correct",
                           new int[]{87}, map.get(0, 1));
         log.debug("After extra addition: " + map);
         map.add(0, 0, new int[]{45, 56, 67});
-        assertArrayEquals("Array should be expanded",
+        ExtraAsserts.assertEquals("Array should be expanded",
                           new int[]{23, 34, 45, 56, 67}, map.get(0, 0));
         log.debug("After expansion: " + map);
         map.add(0, 1, new int[]{12, 89});
-        assertArrayEquals("Array for facet 1 should be merged",
+        ExtraAsserts.assertEquals("Array for facet 1 should be merged",
                           new int[]{12, 87, 89}, map.get(0, 1));
         log.debug("After merging: " + map);
         map.add(1, 0, new int[]{1});
         map.add(2, 0, new int[]{2});
         map.add(0, 1, new int[]{78, 56});
-        assertArrayEquals("Array for facet 1 should be expanded again",
+        ExtraAsserts.assertEquals("Array for facet 1 should be expanded again",
                           new int[]{12, 87, 89, 78, 56}, map.get(0, 1));
-        assertArrayEquals("Array for doc 1 should be unchanged",
+        ExtraAsserts.assertEquals("Array for doc 1 should be unchanged",
                           new int[]{1}, map.get(1, 0));
         assertEquals("The map should have 3 documents",
                      3, map.getDocCount());
-        assertArrayEquals("The last tags should be [2]",
+        ExtraAsserts.assertEquals("The last tags should be [2]",
                           new int[]{2}, map.get(2, 0));
     }
 
@@ -150,11 +141,11 @@ public class CoreMapBitStuffedTest extends TestCase {
     }
 
     public void testPersistenceHelper(CoreMap map) throws Exception {
-        assertArrayEquals("Doc 0, Facet 0 should be correct",
+        ExtraAsserts.assertEquals("Doc 0, Facet 0 should be correct",
                           new int[]{23, 34, 4, 5}, map.get(0, 0));
-        assertArrayEquals("Doc 0, Facet 1 should be correct",
+        ExtraAsserts.assertEquals("Doc 0, Facet 1 should be correct",
                           new int[]{1}, map.get(0, 1));
-        assertArrayEquals("Doc 2, Facet 0 should be correct",
+        ExtraAsserts.assertEquals("Doc 2, Facet 0 should be correct",
                           new int[]{87}, map.get(2, 0));
         assertEquals("There should be the correct number of documents",
                      3, map.getDocCount());
@@ -162,6 +153,10 @@ public class CoreMapBitStuffedTest extends TestCase {
 
     public void testClear() throws Exception {
         CoreMap map = bo.getCoreMap();
+        testClear(map);
+    }
+
+    public static void testClear(CoreMap map) {
         map.add(0, 0, new int[]{1, 2});
         map.add(0, 0, new int[]{3, 4});
         assertEquals("There should only be a single document",
@@ -173,6 +168,10 @@ public class CoreMapBitStuffedTest extends TestCase {
 
     public void testAddition2() throws Exception {
         CoreMap map = bo.getCoreMap();
+        testAddition2(map);
+    }
+
+    public static void testAddition2(CoreMap map) {
         map.add(0, 0, new int[]{1, 2});
         map.add(0, 0, new int[]{3, 4});
         log.debug("After initial additions: " + map);
@@ -213,9 +212,9 @@ public class CoreMapBitStuffedTest extends TestCase {
         // 1, 1: 3, 7
         // 2, 0: 2
         log.debug("After initial adds: " + map);
-        assertArrayEquals("Array for 0, 0 should be expanded",
+        ExtraAsserts.assertEquals("Array for 0, 0 should be expanded",
                           new int[]{23, 34, 6, 7}, map.get(0, 0));
-        assertArrayEquals("Array for doc 1 should be as expected",
+        ExtraAsserts.assertEquals("Array for doc 1 should be as expected",
                           new int[]{1}, map.get(1, 0));
 
         map.remove(1);
@@ -224,21 +223,22 @@ public class CoreMapBitStuffedTest extends TestCase {
         log.debug("After remove(1): " + map);
         assertEquals("The number of documents should be reduced",
                      2, map.getDocCount());
-        assertArrayEquals("Array 2 should have shifted down to position 1",
-                          new int[]{2}, map.get(1, 0));
+        ExtraAsserts.assertEquals(
+                "Array 2 should have shifted down to position 1",
+                new int[]{2}, map.get(1, 0));
 
         map.remove(1);
         log.debug("After second remove(1): " + map);
         assertEquals("The number of documents should be reduced again",
                      1, map.getDocCount());
-        assertArrayEquals("The array left should be the first",
+        ExtraAsserts.assertEquals("The array left should be the first",
                           new int[]{23, 34, 6, 7}, map.get(0, 0));
 
         map.add(1, 0, new int[]{12, 23});
         log.debug("After additional add: " + map);
         map.remove(0);
         log.debug("After third remove (remove(0)): " + map);
-        assertArrayEquals("The original first array should be replaced",
+        ExtraAsserts.assertEquals("The original first array should be replaced",
                           new int[]{12, 23}, map.get(0, 0));
         try {
             map.get(2, 0);
@@ -292,10 +292,14 @@ public class CoreMapBitStuffedTest extends TestCase {
         testMonkey(runs, bo.getStructure().getFacets().size(), bo.getCoreMap());
     }
 
+    /*
+    Note: This uses a seeded randomizer, so the finished map structure is
+    deterministic.
+     */
     public static void testMonkey(int runs, int maxFacet, CoreMap map)
             throws Exception {
         map.clear();
-        Random random = new Random();
+        Random random = new Random(87);
         int MAX_DOC = 5000;
         int MAX_TAG_ID = 10000;
         int MAX_TAG_ADDITIONS = 10;
@@ -330,20 +334,24 @@ public class CoreMapBitStuffedTest extends TestCase {
 
     public void testAdjustPositions() throws Exception {
         CoreMapBitStuffed map = (CoreMapBitStuffed)bo.getCoreMap();
+        testAdjustPositions(map);
+    }
+
+    private void testAdjustPositions(CoreMapBitStuffed map) {
         map.add(0, 0, new int[]{23, 34});
         map.add(1, 0, new int[]{1});
         map.add(2, 0, new int[]{2});
         map.add(1, 1, new int[]{3, 7});
         map.add(0, 1, new int[]{6, 7});
-        assertArrayEquals("0/0 should be unchanged",
+        ExtraAsserts.assertEquals("0/0 should be unchanged",
                           new int[]{23, 34}, map.get(0, 0));
         map.adjustPositions(0, 34, 1);
-        assertArrayEquals("0/0 should be slightly adjusted",
+        ExtraAsserts.assertEquals("0/0 should be slightly adjusted",
                           new int[]{23, 35}, map.get(0, 0));
         map.adjustPositions(1, 5, 2);
-        assertArrayEquals("0/1 should be adjusted",
+        ExtraAsserts.assertEquals("0/1 should be adjusted",
                           new int[]{8, 9}, map.get(0, 1));
-        assertArrayEquals("1/1 should be slightly adjusted",
+        ExtraAsserts.assertEquals("1/1 should be slightly adjusted",
                           new int[]{3, 9}, map.get(1, 1));
     }
 
@@ -375,6 +383,3 @@ public class CoreMapBitStuffedTest extends TestCase {
         return new TestSuite(CoreMapBitStuffedTest.class);
     }
 }
-
-
-

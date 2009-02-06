@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -30,6 +30,7 @@ import org.apache.commons.logging.Log;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * A build-oriented map, meant for batch-oriented build from scratch. The map
@@ -78,7 +79,7 @@ public class CoreMapBuilder extends CoreMap32 {
 
     private final int[] EMPTY = new int[0];
     public synchronized int[] get(int docID, int facetID) {
-        if (docID < mapSize || map[docID] == null || map[docID].length == 0) {
+        if (docID >= mapSize || map[docID] == null || map[docID].length == 0) {
             return EMPTY;
         }
         int[] values = map[docID];
@@ -97,18 +98,19 @@ public class CoreMapBuilder extends CoreMap32 {
     public void add(int docID, int facetID, int[] tagIDs) {
         ensureSpace(docID);
         if (map[docID] == null) {
-            map[docID] = calculateValues(facetID, tagIDs);
+            map[docID] = ArrayUtil.mergeArrays( // Removes doublets
+                    new int[0], calculateValues(facetID, tagIDs), true,
+                    SORT_VALUES);
         } else {
             map[docID] = ArrayUtil.mergeArrays(
                     map[docID], calculateValues(facetID, tagIDs), true, 
                     SORT_VALUES);
         }
-        mapSize = docID + 1;
+        mapSize = Math.max(docID+1, mapSize);
     }
 
     private synchronized void ensureSpace(int docID) {
         if (docID < map.length) {
-            mapSize = Math.max(docID+1, mapSize);
             return;
         }
         log.trace("Extending to contain " + docID);
