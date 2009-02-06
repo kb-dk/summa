@@ -29,6 +29,7 @@ import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.build.BuilderImpl;
 import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMap;
+import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMapBuilder;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.Facet;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
 import dk.statsbiblioteket.summa.facetbrowser.core.FacetCore;
@@ -151,26 +152,44 @@ public class LuceneFacetBuilder extends BuilderImpl {
                     "Could not open IndexReader for location '%s'",
                     luceneIndex), e);
         }
-        log.trace("IndexReader opened");
-        if (!keepTags) {
-            buildTagsFromIndex(ir);
-        }
         log.trace("build: Clearing existing core map");
         coreMap.clear();
-        if (docsToTerms) {
-            buildDocsToTerms(ir);
-        }
-        if (termsToDocs) {
-            buildTermsToDocs(ir);
+        log.trace("build: IndexReader opened");
+        buildTagsFromIndex(ir, keepTags, !keepTags);
+        log.debug("build: Temporarily switching to CoreMapBuilder"); // Hack!
+        try {
+            CoreMap oldMap = coreMap;
+            coreMap = new CoreMapBuilder(Configuration.newMemoryBased(),
+                                         structure);
+            facetMap.setCoreMap(coreMap);
+            if (docsToTerms) {
+                buildDocsToTerms(ir);
+            }
+            if (termsToDocs) {
+                buildTermsToDocs(ir);
+            }
+            log.debug("Using copyTo to fill the standard CoreMapBitStuffed");
+            coreMap.copyTo(oldMap);
+            coreMap = oldMap;
+        } catch (IOException e) {
+            throw new IOException("Failed building new facet index", e);
+        } catch (Exception e) {
+            throw new IOException("Unexpected exception building new facet"
+                                  + " index", e);
         }
         log.debug("Filled tag handler from index");
     }
 
     // Note: This only catches indexable. Stored-only are added in core build
-    private void buildTagsFromIndex(IndexReader ir) throws IOException {
-        log.debug("buildtagsFromIndex called");
-        log.trace("Clearing tags");
-        tagHandler.clearTags();
+    private void buildTagsFromIndex(IndexReader ir, boolean keepTags,
+                                    boolean dirtyAdd) throws IOException {
+        //noinspection DuplicateStringLiteralInspection
+        log.debug("buildtagsFromIndex(..., keepTags: " + keepTags
+                  + ", dirtyAdd: " + dirtyAdd + ") called");
+        if (!keepTags) {
+            log.trace("Clearing tags");
+            tagHandler.clearTags();
+        }
         Profiler profiler = new Profiler();
         long termCount = 0;
         int counter = 0;
@@ -196,7 +215,11 @@ public class LuceneFacetBuilder extends BuilderImpl {
                                   + "' from field '" + fieldName
                                   + "' to facet '" + facetName + "'");
                     }
-                    tagHandler.dirtyAddTag(counter-1, shortTerm);
+                    if (dirtyAdd) {
+                        tagHandler.dirtyAddTag(counter-1, shortTerm);
+                    } else {
+                        tagHandler.insertTag(counter-1, shortTerm);
+                    }
                     termCount++;
                     if (!terms.next()) {
                         break;
@@ -206,8 +229,10 @@ public class LuceneFacetBuilder extends BuilderImpl {
             log.debug("Facet \"" + facetName + "\" filled with " +
                       tagHandler.getTagCount(facetName) + " tags");
         }
-        log.trace("Cleaning up tag handler");
-        tagHandler.cleanup();
+        if (dirtyAdd) {
+            log.trace("Cleaning up tag handler");
+            tagHandler.cleanup();
+        }
         log.info(String.format(
                 "Finished filling tag handler with %d tags in %d facets from "
                 + "the index with %d documents in %s",
@@ -343,8 +368,8 @@ public class LuceneFacetBuilder extends BuilderImpl {
                         break;
                     }
                     while(termDocs.next()) {
-                        facetMap.add(
-                                termDocs.doc(), facet.getName(), term.text());
+                        facetMap.add(termDocs.doc(), facet.getName(),
+                                     term.text());
                     }
                 } while (terms.next());
             }

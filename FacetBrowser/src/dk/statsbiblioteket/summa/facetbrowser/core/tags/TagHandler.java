@@ -27,6 +27,7 @@
 package dk.statsbiblioteket.summa.facetbrowser.core.tags;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMap;
 
 import java.util.List;
 import java.io.File;
@@ -45,7 +46,7 @@ import java.io.IOException;
  * Structure structure,boolean readOnly) as arguments.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_NEEDED,
         author = "te")
 public interface TagHandler {
     /**
@@ -215,8 +216,4 @@ public interface TagHandler {
      * Clear all tags from the facet. Normally used before a complete rebuild.
      */
     public void clearTags();
-
 }
-
-
-
