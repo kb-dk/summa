@@ -171,6 +171,7 @@ public class LuceneFacetBuilder extends BuilderImpl {
             log.debug("Using copyTo to fill the standard CoreMapBitStuffed");
             coreMap.copyTo(oldMap);
             coreMap = oldMap;
+            facetMap.setCoreMap(coreMap);
         } catch (IOException e) {
             throw new IOException("Failed building new facet index", e);
         } catch (Exception e) {
