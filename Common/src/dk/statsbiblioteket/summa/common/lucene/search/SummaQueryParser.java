@@ -201,11 +201,11 @@ public class SummaQueryParser {
                 log.error("Exception handling query-time boost", e);
             }
         }
-        String qstr = expandQueryString(queryString);
-        log.debug("expanded query: " + qstr);
+        //String qstr = expandQueryString(queryString);
+        //log.debug("expanded query: " + qstr);
         Query a = parser.parse(queryString);
 //        Query a = parser.parse(qstr);
-        log.debug("query: " + a.toString());
+        log.debug("Parsed query (" + a.getClass() + "): " + a.toString());
         if (supportQueryTimeBoosts) {
             try {
                 booster.applyBoost(a, boosts);
@@ -215,15 +215,16 @@ public class SummaQueryParser {
         }
         if (log.isDebugEnabled()) {
             try {
-                log.debug("Parsed query: " + LuceneIndexUtils.queryToString(a));
+                log.debug("Boosted query: "
+                          + LuceneIndexUtils.queryToString(a));
             } catch (Exception e) {
-                log.error("Could not dump parsed query to String", e);
+                log.error("Could not dump boosted query to String", e);
             }
         }
         return a;
     }
 
-    protected String expandQueryString(String query) throws ParseException {
+    /*protected String expandQueryString(String query) throws ParseException {
 
         QueryParserTokenManager TokenManager = new QueryParserTokenManager(
                 new FastCharStream(new StringReader(query)));
@@ -314,7 +315,7 @@ public class SummaQueryParser {
         //Will never reach this point
         log.error("expandQueryString: Unexpected while-loop exit");
         return null;
-    }
+    }*/
 
     private static String expgrp(String[] fields, String val) {
         String r = "";
