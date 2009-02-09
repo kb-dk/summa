@@ -140,7 +140,7 @@ public class MUXFilter implements ObjectFilter, Runnable {
      * the proper feeders until the source has no more Payloads.
      * </p><p>
      * The proper feeder is selected by priority:<br />
-     * If non-fallback feeders which will accept the Payload exists, the onw
+     * If non-fallback feeders which will accept the Payload exists, the one
      * with the fewest elements in the input-queue will be selected.
      * If no non-fallback feeders that will accept the Payload exists,
      * a repeat of the prioritization described above is done for default
