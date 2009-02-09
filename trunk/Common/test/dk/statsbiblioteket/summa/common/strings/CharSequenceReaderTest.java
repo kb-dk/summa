@@ -22,14 +22,9 @@ public class CharSequenceReaderTest extends TestCase {
         assertEquals("foobar", readFullySingleChar(seq));
     }
 
-    public void testReadSingleSingleChar() throws Exception {
-        seq = new CharSequenceReader(buf.append("f"));
-        assertEquals("f", readFullySingleChar(seq));
-    }
-
-    public void testReadEmptySingleChar() throws Exception {
-        seq = new CharSequenceReader(buf.append(""));
-        assertEquals("", readFullySingleChar(seq));
+    public void testReadManySmallArray() throws Exception {
+        seq = new CharSequenceReader(buf.append("foobar"));
+        assertEquals("foobar", readFullySmallArray(seq));
     }
 
     public void testReadManyBigArray() throws Exception {
@@ -37,9 +32,44 @@ public class CharSequenceReaderTest extends TestCase {
         assertEquals("foobar", readFullyBigArray(seq));
     }
 
+    public void testReadMoreSingleChar() throws Exception {
+        seq = new CharSequenceReader(buf.append("autobiografia"));
+        assertEquals("autobiografia", readFullySingleChar(seq));
+    }
+
+    public void testReadMoreSmallArray() throws Exception {
+        seq = new CharSequenceReader(buf.append("autobiografia"));
+        assertEquals("autobiografia", readFullySmallArray(seq));
+    }
+
+    public void testReadMoreBigArray() throws Exception {
+        seq = new CharSequenceReader(buf.append("autobiografia"));
+        assertEquals("autobiografia", readFullyBigArray(seq));
+    }
+
+    public void testReadSingleSingleChar() throws Exception {
+        seq = new CharSequenceReader(buf.append("f"));
+        assertEquals("f", readFullySingleChar(seq));
+    }
+
+    public void testReadSingleSmallArray() throws Exception {
+        seq = new CharSequenceReader(buf.append("f"));
+        assertEquals("f", readFullyBigArray(seq));
+    }
+
     public void testReadSingleBigArray() throws Exception {
         seq = new CharSequenceReader(buf.append("f"));
         assertEquals("f", readFullyBigArray(seq));
+    }
+
+    public void testReadEmptySingleChar() throws Exception {
+        seq = new CharSequenceReader(buf.append(""));
+        assertEquals("", readFullySingleChar(seq));
+    }
+
+    public void testReadEmptySmallArray() throws Exception {
+        seq = new CharSequenceReader(buf.append(""));
+        assertEquals("", readFullyBigArray(seq));
     }
 
     public void testReadEmptyBigArray() throws Exception {
@@ -47,6 +77,17 @@ public class CharSequenceReaderTest extends TestCase {
         assertEquals("", readFullyBigArray(seq));
     }
 
+    public static String readFullySmallArray(Reader r) throws IOException {
+        int len;
+        char[] a = new char[5];
+        StringBuffer tmp = new StringBuffer();
+
+        while ((len = r.read(a)) != -1) {
+            tmp.append(a, 0, len);
+        }
+
+        return tmp.toString();
+    }
 
     public static String readFullySingleChar(Reader r) throws IOException {
         int val;
