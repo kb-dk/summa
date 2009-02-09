@@ -53,8 +53,11 @@ public class CharSequenceReader extends Reader {
         int len = seq.length();
         int start = cursor;
 
-        while(cursor < len && cursor+offset < count) {
-            chars[cursor+offset] = seq.charAt(cursor);
+        while(cursor < len
+              && cursor-start < count
+              && cursor-start+offset < chars.length) {
+
+            chars[cursor-start+offset] = seq.charAt(cursor);
             cursor++;
         }
 
