@@ -78,5 +78,29 @@ public class ArrayUtil {
         return result;
     }
 
+    /**
+     * Reverses the order of the elements in the array in-place.
+     * @param array the array to reverse.
+     */
+    public static void reverse(int[] array) {
+        for (int i = 0 ; i < array.length / 2 ; i++) {
+            int temp = array[i];
+            array[i] = array[array.length - 1 - i];
+            array[array.length - 1 - i] = temp;
+        }
+    }
+
+    /**
+     * Reverses the order of the elements in the array in-place.
+     * @param array the array to reverse.
+     */
+    public static void reverse(Object[] array) {
+        for (int i = 0 ; i < array.length / 2 ; i++) {
+            Object temp = array[i];
+            array[i] = array[array.length - 1 - i];
+            array[array.length - 1 - i] = temp;
+        }
+    }
+
 
 }

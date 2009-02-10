@@ -37,6 +37,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
+import dk.statsbiblioteket.summa.common.util.ArrayUtil;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -52,10 +53,11 @@ import org.apache.commons.logging.LogFactory;
  * If close(false) is called, no files are marked with the postfix and any open
  * files are closed immediately.
  * </p><p>
- * Meta-info for delivered payloads will contain {@link Payload#ORIGIN} which states
- * the originating file for the stream.
+ * Meta-info for delivered payloads will contain {@link Payload#ORIGIN} which
+ * states the originating file for the stream.
  * </p><p>
- * The files are processed breadth-first in unicode-sorted order.
+ * The files are processed breadth-first in unicode-sorted order, unless
+ * {@link #CONF_REVERSE_SORT} is true.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -77,6 +79,8 @@ public class FileReader implements ObjectFilter {
      */
     public static final String CONF_RECURSIVE =
             "summa.ingest.filereader.recursive";
+    public static final boolean DEFAULT_RECURSIVE = true;
+
     /**
      * The file pattern to match.
      * </p><p>
@@ -96,8 +100,18 @@ public class FileReader implements ObjectFilter {
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public static final String DEFAULT_COMPLETED_POSTFIX = ".completed";
 
+    /**
+     * If true, scans are performed in reverse unicode order.
+     * </p><p>
+     * This property is optional. Default is false.
+     */
+    public static final String CONF_REVERSE_SORT =
+            "summa.ingest.filereader.sort.reverse";
+    public static final boolean DEFAULT_REVERSE_SORT = false;
+
     protected File root;
     private boolean recursive = true;
+    private boolean reverse_sort = DEFAULT_REVERSE_SORT;
     private Pattern filePattern;
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     private String postfix = DEFAULT_COMPLETED_POSTFIX;
@@ -136,6 +150,8 @@ public class FileReader implements ObjectFilter {
                                              + CONF_ROOT_FOLDER);
         }
         recursive = configuration.getBoolean(CONF_RECURSIVE, recursive);
+        reverse_sort = configuration.getBoolean(CONF_REVERSE_SORT,
+                                                reverse_sort);
         filePattern = Pattern.compile(configuration.
                 getString(CONF_FILE_PATTERN, DEFAULT_FILE_PATTERN));
         postfix = configuration.getString(CONF_COMPLETED_POSTFIX, postfix);
@@ -169,9 +185,13 @@ public class FileReader implements ObjectFilter {
         try {
             if (start.isDirectory()) {
                 File files[] = start.listFiles(dataFilter);
+                //noinspection DuplicateStringLiteralInspection
                 log.debug("Queueing " + files.length + " data files from '"
                           + start + "'. Queue size now: " + todo.size());
                 Arrays.sort(files);
+                if (reverse_sort) {
+                    ArrayUtil.reverse(files);
+                }
                 for (File file: files) {
                     addToTodo(file);
                 }
@@ -179,11 +199,15 @@ public class FileReader implements ObjectFilter {
                 log.debug("Scanning " + folders.length
                           + " subfolders in '" + start + "'");
                 Arrays.sort(folders);
+                if (reverse_sort) {
+                    ArrayUtil.reverse(folders);
+                }
                 for (File folder: folders) {
                     updateToDo(folder);
                 }
             } else {
                 if (filePattern.matcher(start.getName()).matches()) {
+                    //noinspection DuplicateStringLiteralInspection
                     log.debug("Queueing data file '" + start
                               + "'. Queue size now: " + todo.size());
                     addToTodo(start);
@@ -268,6 +292,7 @@ public class FileReader implements ObjectFilter {
             this.success = success;
             rename();
         }
+        @Override
         public void close() throws IOException {
             log.trace("Closing stream to file '" + file + "'");
             super.close();
@@ -296,6 +321,7 @@ public class FileReader implements ObjectFilter {
             }
         }
 
+        @Override
         public String toString() {
             return "RenamingFileStream(" + file + ")";
         }
