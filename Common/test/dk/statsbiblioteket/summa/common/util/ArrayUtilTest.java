@@ -23,6 +23,9 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.unittest.ExtraAsserts;
+import dk.statsbiblioteket.util.Strings;
+
+import java.util.Arrays;
 
 /**
  * ArrayUtil Tester.
@@ -72,7 +75,22 @@ public class ArrayUtilTest extends TestCase {
 
     }
 
-
+    public void testReverse() {
+        int[][][] tests = new int[][][] {
+                {{}, {}},
+                {{1}, {1}},
+                {{1, 2}, {2, 1}},
+                {{1, 2, 3}, {3, 2, 1}},
+                {{1, 2, 3, 4}, {4, 3, 2, 1}}
+        };
+        for (int[][] test: tests) {
+            ArrayUtil.reverse(test[0]);
+            //noinspection DuplicateStringLiteralInspection
+            assertTrue("Reversal to " + ExtraAsserts.dump(test[1]) 
+                       + " should work",
+                       Arrays.equals(test[1], test[0]));
+        }
+    }
 
     public static Test suite() {
         return new TestSuite(ArrayUtilTest.class);

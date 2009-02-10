@@ -92,11 +92,51 @@ public class FileWatcherTest extends TestCase {
         log.debug("Test ending");
     }
 
+    public void testReverse() throws Exception {
+        Configuration conf = Configuration.newMemoryBased();
+        conf.set(FileReader.CONF_ROOT_FOLDER, FileReaderTest.root.toString());
+        conf.set(FileReader.CONF_RECURSIVE, true);
+        conf.set(FileReader.CONF_FILE_PATTERN, ".*\\.xml");
+        conf.set(FileReader.CONF_COMPLETED_POSTFIX, ".fin");
+        conf.set(FileWatcher.CONF_POLL_INTERVAL, 500);
+        new File(FileReaderTest.root, "fooA.xml").createNewFile();
+        new File(FileReaderTest.root, "fooB.xml").createNewFile();
+        FileWatcher reader = new FileWatcher(conf);
+        new Poller(reader).start();
+
+        Thread.sleep(100);
+        reader.close(true);
+
+        assertEquals("There should be 2 files received", 2, received.size());
+        assertEquals("The first file should be as expected",
+                     "fooA.xml", getOriginFile(0).getName());
+
+        received.clear();
+
+        conf.set(FileReader.CONF_REVERSE_SORT, true);
+        new File(FileReaderTest.root, "zooA.xml").createNewFile();
+        new File(FileReaderTest.root, "zooB.xml").createNewFile();
+                                   reader = new FileWatcher(conf);
+        new Poller(reader).start();
+
+        Thread.sleep(100);
+        reader.close(true);
+        assertEquals("Again there should be 2 files received",
+                     2, received.size());
+        assertEquals("The first file should be as expected (reverse order)",
+                     "zooB.xml", getOriginFile(0).getName());
+
+    }
+
     private boolean exists(int index, String prefix) {
-        File file = ((FileReader.RenamingFileStream)received.get(index).
-                getStream()).getFile();
+        File file = getOriginFile(index);
         return prefix == null ? file.exists() :
                new File(file.toString() +  prefix).exists();
+    }
+
+    private File getOriginFile(int index) {
+        return ((FileReader.RenamingFileStream)received.get(index).
+                getStream()).getFile();
     }
 
     private List<Payload> received = new ArrayList<Payload>(10);
@@ -107,6 +147,7 @@ public class FileWatcherTest extends TestCase {
             this.reader = reader;
             doRun = true;
         }
+        @Override
         public void run() {
             while (doRun) {
                 if (reader.hasNext()) {
