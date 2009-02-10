@@ -49,22 +49,30 @@
                 </xsl:for-each>
             </xsl:when>
 
-            <!-- Den gamle visning -->
-
+            <!-- Det gamle nordicom format -->
             <xsl:otherwise>
+                <Index:group Index:name="au" Index:navn="fo" >
+                    <xsl:for-each select="mc:datafield[@tag='100']/mc:subfield[@code='a']">
+                        <Index:field Index:repeat="true" Index:name="author_person" Index:navn="pe" Index:type="token" Index:boostFactor="10">
+                            <xsl:call-template name="author_reverse"/>
+                        </Index:field>
+                        <Index:field Index:repeat="true" Index:name="author_person" Index:navn="pe" Index:type="token" Index:boostFactor="10">
+                            <xsl:call-template name="author_forward"/>
+                        </Index:field>
+                    </xsl:for-each>
+                </Index:group>
+
                 <xsl:for-each select="mc:datafield[@tag='100']/mc:subfield[@code='a']">
-                    <Index:field Index:repeat="true" Index:name="author_person" Index:navn="pe" Index:type="token" Index:boostFactor="10">
+                    <Index:field Index:repeat="false" Index:name="author_normalised" Index:navn="lfo"  Index:type="keyword" Index:boostFactor="10">
                         <xsl:call-template name="author_reverse"/>
                     </Index:field>
-                    <Index:field Index:repeat="true" Index:name="author_person" Index:navn="pe" Index:type="token" Index:boostFactor="10">
-                        <xsl:call-template name="author_forward"/>
-                    </Index:field>
                 </xsl:for-each>
+
             </xsl:otherwise>
         </xsl:choose>
     </xsl:template>
 
-    <!-- Personnavn templates -->
+    <!-- Personnavn templates for det gamle format. Templates for det nye format ligger i nordicom_subject-->
 
     <!-- En masse flam for at fjerne punktummer efter fornavnet. Hvis 2.sidste bogstav foran et evt sidste punktum
          er et mellemrum, punktum eller ingenting antages det at punktummet er efter en forkortelse af navnet. -->

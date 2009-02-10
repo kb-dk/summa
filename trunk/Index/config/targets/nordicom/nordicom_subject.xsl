@@ -12,22 +12,22 @@
             <xsl:when test="mc:datafield[@tag='001']/mc:subfield[@code='f']='new'">
                 <Index:group Index:name="su" Index:navn="em" Index:suggest="true">
                     <xsl:for-each select="mc:datafield[@tag='600']">
-                        <Index:field Index:repeat="true" Index:name="subject_controlled" Index:navn="ke" Index:type="token" Index:boostFactor="10">
+                        <Index:field Index:repeat="true" Index:name="subject_other" Index:navn="ke" Index:type="token" Index:boostFactor="10">
                             <xsl:call-template name="person"/>
                         </Index:field>
-                        <Index:field Index:repeat="true" Index:name="subject_controlled" Index:navn="ke" Index:type="token" Index:boostFactor="10">
+                        <Index:field Index:repeat="true" Index:name="subject_other" Index:navn="ke" Index:type="token" Index:boostFactor="10">
                             <xsl:call-template name="person_inverted"/>
                         </Index:field>
                     </xsl:for-each>
 
                     <xsl:for-each select="mc:datafield[@tag='610']">
-                        <Index:field Index:repeat="true" Index:name="subject_controlled" Index:navn="ke" Index:type="token" Index:boostFactor="6">
+                        <Index:field Index:repeat="true" Index:name="subject_other" Index:navn="ke" Index:type="token" Index:boostFactor="6">
                             <xsl:call-template name="corp"/>
                         </Index:field>
                     </xsl:for-each>
 
                     <xsl:for-each select="mc:datafield[@tag='630']/mc:subfield[@code='a']">
-                        <Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="6">
+                        <Index:field Index:repeat="true" Index:name="subject_controlled" Index:navn="uk" Index:type="token" Index:boostFactor="6">
                             <xsl:value-of select="."/>
                         </Index:field>
                     </xsl:for-each>
@@ -235,7 +235,7 @@
                 </Index:group>
             </xsl:when>
 
-        <!-- Det gamle format -->   
+            <!-- Det gamle format -->
 
             <xsl:otherwise>
                 <Index:group Index:name="su" Index:navn="em" Index:suggest="true">
@@ -244,11 +244,21 @@
                             <xsl:value-of select="." />
                         </Index:field>
                     </xsl:for-each>
+                    <xsl:for-each select="mc:datafield[@tag='200']/mc:subfield[@code='a']">
+                        <Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="10">
+                            <xsl:value-of select="." />
+                        </Index:field>
+                    </xsl:for-each>
                 </Index:group>
                 <Index:group Index:suggest="true" Index:navn="lem" Index:name="lsubj">
+                    <xsl:for-each select="mc:datafield[@tag='190']/mc:subfield[@code='a']">
+                        <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="10">
+                            <xsl:value-of select="." />
+                        </Index:field>
+                    </xsl:for-each>
                     <xsl:for-each select="mc:datafield[@tag='200']/mc:subfield[@code='a']">
-                        <Index:field Index:repeat="false" Index:name="su_pe" Index:navn="lep" Index:type="keyword" Index:boostFactor="10">
-                             <xsl:value-of select="." />
+                        <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="10">
+                            <xsl:value-of select="." />
                         </Index:field>
                     </xsl:for-each>
                 </Index:group>
