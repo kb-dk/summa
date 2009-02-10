@@ -85,13 +85,20 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
             return;
         }
         Record record = payload.getRecord();
-        if (record.getChildren() == null || record.getChildren().size() == 0) {
-            log.debug("No children for " + payload);
+
+        if (!record.hasChildren()) {
+            log.debug("No children for " + record.getId());
             return;
+        } else if (record.getChildren() == null) {
+            log.debug("Can not expand unresolved children of "
+                      + record.toString(true));
+            return;
+        } else {
+            log.debug("Processing " + record.getChildren().size()
+                      + " children of " + record.getId());
         }
+
         //noinspection DuplicateStringLiteralInspection
-        log.trace("Processing " + record.getChildren().size() + " level 1"
-                  + " children");
         StringWriter output = new StringWriter(5000);
         try {
             addProcessedContent(output, record, 0);
@@ -119,6 +126,8 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
      */
     private void addProcessedContent(StringWriter output, Record record,
                                      int level) throws TransformerException {
+        log.debug("Processing "+record.getId()+"  at level " + level);
+
         String content = record.getContentAsUTF8();
         int endPos = content.lastIndexOf("</record>");
         if (endPos == -1) {
