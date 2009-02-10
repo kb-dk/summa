@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -21,12 +21,8 @@ package dk.statsbiblioteket.summa.common.filter.object;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
 
-import java.io.IOException;
 import java.util.Set;
 import java.util.HashSet;
 
@@ -44,74 +40,23 @@ import java.util.HashSet;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class DiscardUpdatesFilter implements ObjectFilter {
-    private static Log log = LogFactory.getLog(DiscardUpdatesFilter.class);
+public class DiscardUpdatesFilter extends AbstractDiscardFilter {
+//    private static Log log = LogFactory.getLog(DiscardUpdatesFilter.class);
 
-    private ObjectFilter source;
-    private Payload payload;
     private Set<String> encountered = new HashSet<String>(10000);
 
     @SuppressWarnings({"UnusedDeclaration"})
     public DiscardUpdatesFilter(Configuration conf) {
+        super(conf);
         // No configuration for this filter
     }
 
-    public void setSource(Filter filter) {
-        if (filter == null) {
-            //noinspection DuplicateStringLiteralInspection
-            throw new IllegalArgumentException("Source filter was null");
-        }
-        if (!(filter instanceof ObjectFilter)) {
-            throw new IllegalArgumentException(
-                    "Only ObjectFilters accepted as source. The filter "
-                    + "provided was of class " + filter.getClass());
-        }
-        source = (ObjectFilter)filter;
-    }
-
-    public boolean pump() throws IOException {
-        if (!hasNext()) {
+    @Override
+    protected boolean checkDiscard(Payload payload) {
+        if (!encountered.contains(payload.getId())) {
+            encountered.add(payload.getId());
             return false;
         }
-        Payload payload = next();
-        if (payload != null) {
-            payload.close();
-        }
-        return hasNext();
-    }
-
-    public void close(boolean success) {
-        log.trace("Closing DiscardUpdatesFilter");
-        source.close(success);
-    }
-
-    public boolean hasNext() {
-        checkPayload();
-        return payload != null;
-    }
-
-    public Payload next() {
-        checkPayload();
-        try {
-            return payload;
-        } finally {
-            payload = null;
-        }
-    }
-
-    private void checkPayload() {
-        while (payload == null && source.hasNext()) {
-            Payload potential = source.next();
-            if (potential != null) {
-                if (!encountered.contains(potential.getId())) {
-                    encountered.add(potential.getId());
-                    payload = potential;
-                }
-            }
-        }
-    }
-
-    public void remove() {
-        log.warn("Removal not supported for DiscardUpdatesFilter");
+        return true;
     }
 }

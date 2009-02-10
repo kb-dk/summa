@@ -26,17 +26,14 @@ import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.IOException;
 import java.util.*;
 
-/**
- * DiscardUpdatesFilter Tester.
- *
- * @author <Authors name>
- * @since <pre>02/10/2009</pre>
- * @version 1.0
- */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.IN_DEVELOPMENT,
+        author = "te")
 public class DiscardUpdatesFilterTest extends TestCase implements ObjectFilter {
 
     public DiscardUpdatesFilterTest(String name) {
@@ -46,6 +43,7 @@ public class DiscardUpdatesFilterTest extends TestCase implements ObjectFilter {
     @Override
     public void setUp() throws Exception {
         super.setUp();
+        ids.clear();
     }
 
     @Override
