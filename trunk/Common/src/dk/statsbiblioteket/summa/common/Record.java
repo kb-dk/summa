@@ -421,6 +421,9 @@ public class Record implements Serializable, Comparable{
      * list after this method is called.
      * </p><p>
      * Note: Duplicates are removed as part of the copy.
+     * </p><p>
+     * Note 2: Object-references to parents are cleared as part of this to
+     *         ensure consistence.
      * @param parentIds the IDs to assign to the Record.
      */
     public void setParentIds(List<String> parentIds) {
@@ -437,6 +440,8 @@ public class Record implements Serializable, Comparable{
         } else {
             this.parentIds = new LinkedHashSet<String>(parentIds);
         }
+
+        parents = null;
     }
 
     public List<String> getChildIds() {
@@ -448,6 +453,8 @@ public class Record implements Serializable, Comparable{
      * any children registered with {@link #setChildren(List)}. Note that this
      * method copies the content of the given list, so callers are free to
      * clear the list after calling.
+     * Note 2: Object-references to children are cleared as part of this to
+     *         ensure consistence.
      * @param childIds list of record ids for the record's children
      */
     public void setChildIds(List<String> childIds) {
