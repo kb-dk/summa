@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://statsbiblioteket.dk/summa/2009/Record"
+            elementFormDefault="qualified"
+            xmlns:summa="http://statsbiblioteket.dk/summa/2009/Record">
+    <xsd:annotation>
+        <xsd:documentation xml:lang="en">
+            XML Schema for Summa Records.
+        </xsd:documentation>
+    </xsd:annotation>
+
+    <xsd:element name="record" type="summa:record"/>
+
+    <xsd:complexType name="recordCollection">
+        <xsd:sequence>
+            <xsd:element name="record" type="summa:record" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="record">
+        <xsd:all>
+            <xsd:element name="content"  type="xsd:string"             minOccurs="1" maxOccurs="1"/>
+            <xsd:element name="parents"  type="summa:recordCollection" minOccurs="0" maxOccurs="1"/>
+            <xsd:element name="children" type="summa:recordCollection" minOccurs="0" maxOccurs="1"/>
+            <xsd:element name="meta"     type="summa:meta"             minOccurs="0" maxOccurs="1"/>
+        </xsd:all>
+
+        <xsd:attribute name="id"        type="xsd:string"   use="required"/>
+        <xsd:attribute name="base"      type="xsd:string"   use="required"/>
+        <xsd:attribute name="deleted"   type="xsd:boolean"  use="required"/>
+        <xsd:attribute name="indexable" type="xsd:boolean"  use="required"/>
+        <xsd:attribute name="ctime"     type="xsd:dateTime" use="required"/>
+        <xsd:attribute name="mtime"     type="xsd:dateTime" use="required"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="meta">
+        <xsd:annotation>
+            <xsd:documentation xml:lang="en">
+                This is a map of key-value pairs of Strings, containing
+                arbitrary meta information for the Record.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="element" type="summa:element" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="element">
+        <xsd:simpleContent>
+            <xsd:extension base="xsd:string">
+                <xsd:attribute name="key" type="xsd:string" use="required"/>
+            </xsd:extension>
+        </xsd:simpleContent>
+    </xsd:complexType>
+
+</xsd:schema>
