@@ -25,8 +25,6 @@ package dk.statsbiblioteket.summa.control.api;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.control.api.feedback.Feedback;
-import dk.statsbiblioteket.summa.control.api.ClientConnection;
-import dk.statsbiblioteket.summa.control.api.ControlConnection;
 import dk.statsbiblioteket.summa.control.bundle.BundleStub;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
@@ -53,7 +51,7 @@ public interface ClientDeployer extends Configurable {
      * @see ClientConnection#CONF_CLIENT_ID 
      */
     public static final String CONF_INSTANCE_ID =
-                                                     ClientConnection.CONF_CLIENT_ID;
+            ClientConnection.CONF_CLIENT_ID;
 
     /**
      * <p>Configuration property defining a path relative to the system
@@ -65,7 +63,7 @@ public interface ClientDeployer extends Configurable {
      * @see ClientConnection#CONF_CLIENT_BASEPATH
      */
     public static final String CONF_BASEPATH =
-                                               ClientConnection.CONF_CLIENT_BASEPATH;
+            ClientConnection.CONF_CLIENT_BASEPATH;
 
     /**
      * <p>Configuration property defining the class name of the
@@ -75,7 +73,7 @@ public interface ClientDeployer extends Configurable {
      * <p>This property <i>must</i> be provided by the configuration.</p>
      */
     public static final String CONF_DEPLOYER_CLASS =
-                                                  "summa.control.deployer.class";
+            "summa.control.deployer.class";
 
     /**
      * <p>Configuration property containing a freeform string describing the
@@ -83,12 +81,12 @@ public interface ClientDeployer extends Configurable {
      *
      * <p>For example the
      * {@link dk.statsbiblioteket.summa.control.server.deploy.SSHDeployer} this
-     * should be {@code user@hostname}.</p>
+     * should be {@code [user@]hostname[:port]}.</p>
      *
      * <p>This property <i>must</i> be provided by the configuration.</p>
      */
     public static final String CONF_DEPLOYER_TARGET =
-                                                  "summa.control.deployer.target";
+            "summa.control.deployer.target";
 
     /**
      * <p>Configuration property defining the system property where the client is
@@ -102,7 +100,7 @@ public interface ClientDeployer extends Configurable {
      * {@link Configuration#getSystemConfiguration()}. 
      */
     public static final String CONF_CLIENT_CONF =
-                                      Configuration.CONF_CONFIGURATION_PROPERTY;
+            Configuration.CONF_CONFIGURATION_PROPERTY;
 
     /**
      * <p>Configuration property defining the bundle to deploy. The
