@@ -20,8 +20,6 @@
 package dk.statsbiblioteket.summa.common.unittest;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.ErrorHandler;
@@ -39,14 +37,11 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.DocumentBuilder;
 
-/**
- *
- */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class ExtraAsserts extends TestCase implements ErrorHandler {
-    private static Log log = LogFactory.getLog(ExtraAsserts.class);
+//    private static Log log = LogFactory.getLog(ExtraAsserts.class);
 
     /**
      * Compares the two arrays and gives a detailed fail if not equal.
