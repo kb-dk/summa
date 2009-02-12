@@ -150,6 +150,7 @@ public class MUXFilter implements ObjectFilter, Runnable {
     public void run() {
         //noinspection DuplicateStringLiteralInspection
         log.trace("Starting run");
+        profiler.unpause();
         while (source.hasNext()) {
             Payload nextPayload = null;
             while (nextPayload == null && source.hasNext()) {
@@ -169,6 +170,7 @@ public class MUXFilter implements ObjectFilter, Runnable {
                 log.warn("source.next() gave a null-pointer");
                 break;
             }
+            profiler.beat();
             MUXFilterFeeder feeder;
             try {
                 if (log.isTraceEnabled()) {
