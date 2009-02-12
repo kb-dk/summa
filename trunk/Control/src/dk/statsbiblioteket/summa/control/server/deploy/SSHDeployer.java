@@ -62,22 +62,47 @@ public class SSHDeployer implements ClientDeployer {
     private static final int START_TIMEOUT = 7000;
 
     private String login;
+    private String feedbackLogin; // Just for feedback, includes port
     private String destination;
     private String source;
     private String clientId;
     private String confLocation;
+    private int port = 22;
 
     protected Configuration configuration;
 
     public SSHDeployer(Configuration conf) {
         login = conf.getString(CONF_DEPLOYER_TARGET);
         destination = conf.getString(CONF_BASEPATH, "summa-control");
+        removePortFromLogin();
         source = conf.getString(CONF_DEPLOYER_BUNDLE_FILE);
-        clientId = conf.getString (CONF_INSTANCE_ID);
-        confLocation = conf.getString (CONF_CLIENT_CONF,
-                                       "configuration.xml");
+        clientId = conf.getString(CONF_INSTANCE_ID);
+        confLocation = conf.getString(CONF_CLIENT_CONF, "configuration.xml");
 
         destination += File.separator + clientId;
+    }
+
+    /**
+     * If a port is present in the login in the form of [user@]hostname[:port],
+     * it will be removed from the login and assigned to {@link #port}.
+     */
+    private void removePortFromLogin() {
+        String[] tokens = login.split(":");
+        if (tokens.length == 1) {
+            feedbackLogin = login + ":" + port;
+            return;
+        }
+        try {
+            port = Integer.parseInt(tokens[1]);
+        } catch (NumberFormatException e) {
+            log.warn(String.format(
+                    "Unable to parse '%s' as a port. Treating '%s' as the full "
+                    + "login", tokens[1], login));
+        }
+        login = tokens[0];
+        log.debug("removePortFromLogin got login '" + login
+                  + "' and port " + port);
+        feedbackLogin = login + ":" + port;
     }
 
     public void deploy(Feedback feedback) throws Exception {
@@ -89,12 +114,13 @@ public class SSHDeployer implements ClientDeployer {
         }
 
         /* Make sure target dir exists */
-        makeDestination(login, destination);
+        makeDestination(login, port, destination);
 
         /* Copy package to destination */
         log.debug("Deploying from " + source + " to " + destination);
-        ProcessRunner runner = new ProcessRunner (Arrays.asList("scp", source,
-                                                  login + ":"  + destination));
+        ProcessRunner runner = new ProcessRunner(
+                Arrays.asList("scp", "-P", Integer.toString(port), source,
+                              login + ":"  + destination));
         try {
             runner.run();
         } catch(Exception e) {
@@ -123,24 +149,24 @@ public class SSHDeployer implements ClientDeployer {
         String archivePath = destination + File.separator + archive;
 
         /* Unpack */
-        log.debug("Unpacking '" + archivePath + "' with login '" + login + "'");
-        runner = new ProcessRunner(Arrays.asList("ssh", login,
-                                                 "cd", destination,
-                                                 ";", "unzip", "-o",
-                                                 archive));
+        log.debug("Unpacking '" + archivePath
+                  + "' with login '" + feedbackLogin + "'");
+        runner = new ProcessRunner(Arrays.asList(
+                "ssh", "-p" + port, login, "cd", destination, ";",
+                "unzip", "-o", archive));
         String error = null;
         try {
             runner.run();
             if (runner.getReturnCode() != 0) {
                 error = "Could not unpack '" + archivePath + "' with login '"
-                        + login + "'. Got return value "
+                        + feedbackLogin + "'. Got return value "
                         + runner.getReturnCode() + " and message:\n\t"
                         + runner.getProcessErrorAsString();
             }
         } catch(Exception e) {
-            error = "Could not unpack archive '" + archivePath + "' with login '"
-                    + login + "': " + e.getMessage() + "\n\n\t"
-                    + runner.getProcessErrorAsString();
+            error = "Could not unpack archive '" + archivePath
+                    + "' with login '" + feedbackLogin + "': " + e.getMessage()
+                    + "\n\n\t" + runner.getProcessErrorAsString();
             log.error(error, e);
         }
         if (error != null) {
@@ -149,27 +175,26 @@ public class SSHDeployer implements ClientDeployer {
             throw new ClientDeploymentException(error);
         }
         log.debug("Unpacked " + archive + " at " + destination
-                  + " with login " + login);
+                  + " with login " + feedbackLogin);
 
         /* Clean up */
         log.debug("Deleting " + archivePath + " at " + destination
-                  + " with login " + login);
-        runner = new ProcessRunner (Arrays.asList ("ssh", login,
-                                                   "cd", destination,
-                                                   ";", "rm", "-f",
-                                                   archive));
+                  + " with login " + feedbackLogin);
+        runner = new ProcessRunner(Arrays.asList(
+                "ssh", "-p" + port, login, "cd", destination, ";",
+                "rm", "-f", archive));
         error = null;
         try {
             runner.run();
             if (runner.getReturnCode() != 0) {
                 error = "Could not delete '" + archivePath + "' with login '"
-                        + login + "'. Got return value "
+                        + feedbackLogin + "'. Got return value "
                         + runner.getReturnCode() + " and message:\n\t"
                         + runner.getProcessErrorAsString();
             }
         } catch(Exception e) {
             error = "Could not delete '" + archivePath + "' with login '"
-                    + login + "': " + e.getMessage() + "\n\n\t"
+                    + feedbackLogin + "': " + e.getMessage() + "\n\n\t"
                     + runner.getProcessErrorAsString();
             log.error(error, e);
         }
@@ -178,7 +203,7 @@ public class SSHDeployer implements ClientDeployer {
             feedback.putMessage(new Message(Message.MESSAGE_ALERT, error));
             throw new ClientDeploymentException(error);
         }
-        log.debug("Deleted '" + archivePath + "' with login " + login);
+        log.debug("Deleted '" + archivePath + "' with login " + feedbackLogin);
 
 
         ensurePermissions(feedback);
@@ -191,16 +216,17 @@ public class SSHDeployer implements ClientDeployer {
      * Check to see whether the destination folde rexists. If it doesn't, try
      * to create it.
      * @param login       the login for the destination machine.
+     * @param port        the port for the destination machine (normally 22).
      * @param destination the folder that should be created.
      * @throws Exception if the folder could not be created.
      */
-    private void makeDestination(String login, String destination)
+    private void makeDestination(String login, int port, String destination)
             throws Exception {
         log.trace("Verifying the existence of " + destination
                   + " with login " + login);
         ProcessRunner runner =
-                new ProcessRunner(Arrays.asList("ssh", login,
-                                                "cd", destination));
+                new ProcessRunner(Arrays.asList(
+                        "ssh", "-p" + port, login, "cd", destination));
         runner.run();
         if (runner.getReturnCode() == 0 &&
             "".equals(runner.getProcessErrorAsString())) {
@@ -209,8 +235,8 @@ public class SSHDeployer implements ClientDeployer {
         }
         log.debug("The destination " + destination + " with login " + login
                   + " does not exist. Attempting creation");
-        runner = new ProcessRunner (Arrays.asList("ssh", login,
-                                                  "mkdir", "-p", destination));
+        runner = new ProcessRunner(Arrays.asList(
+                "ssh", "-p" + port, login, "mkdir", "-p", destination));
         runner.run();
         if (runner.getReturnCode() == 0) {
             log.debug("The destination " + destination + " was created");
@@ -226,27 +252,24 @@ public class SSHDeployer implements ClientDeployer {
     /**
      * Set file permissions as described in the ClientDeployer interface
      */
-    private void ensurePermissions (Feedback feedback) throws IOException {
+    private void ensurePermissions(Feedback feedback) throws IOException {
         log.debug("Setting file permissions for '" + destination + "'");
 
         /* The 'cd destination part' needs to be added a single arg */
-        List<String> command = Arrays.asList("ssh", login,
-                                             "cd", destination,
-                                             ";",
-                                             "chmod", "a=,u=r",
-                                             BundleStub.POLICY_FILE,
-                                             BundleStub.JMX_ACCESS_FILE,
-                                             BundleStub.JMX_PASSWORD_FILE);
-        ProcessRunner runner =
-                new ProcessRunner(command);
-        log.trace ("Command to ensure permissions:\n"
-                   + Strings.join (command, " "));
+        List<String> command = Arrays.asList(
+                "ssh", "-p" + port, login, "cd", destination, ";",
+                "chmod", "a=,u=r", BundleStub.POLICY_FILE,
+                BundleStub.JMX_ACCESS_FILE, BundleStub.JMX_PASSWORD_FILE);
+        ProcessRunner runner = new ProcessRunner(command);
+        log.trace("Command to ensure permissions:\n"
+                  + Strings.join(command, " "));
         String error = null;
         try {
             runner.run();
             if (runner.getReturnCode() != 0) {
                 error = "Failed to set file permissions on '" + destination
-                        + "'. Got " + runner.getReturnCode() + " and message:\n\t"
+                        + "'. Got " + runner.getReturnCode()
+                        + " and message:\n\t"
                         + runner.getProcessErrorAsString();
             }
         } catch(Exception e) {
@@ -259,16 +282,16 @@ public class SSHDeployer implements ClientDeployer {
         if (error != null) {
             log.error(error);
             feedback.putMessage(new Message(Message.MESSAGE_ALERT, error));
-            throw new ClientDeploymentException (error);
+            throw new ClientDeploymentException(error);
         }
-        log.trace ("File permissions fixed for client '" + clientId + "'");
+        log.trace("File permissions fixed for client '" + clientId + "'");
     }
 
     public void start(Feedback feedback) throws Exception {
         log.info("Starting service");
 
         /* Read the bundle spec */
-        File bdlFile = new File (source);
+        File bdlFile = new File(source);
         log.trace("Creating InputStream for bdlFile '" + bdlFile
                   + "', client.xml");
         InputStream clientSpec;
@@ -280,7 +303,7 @@ public class SSHDeployer implements ClientDeployer {
                                   + bdlFile + "', client.xml", e);
         }
         log.trace("Opening clientSpec with BundleSpecBuilder");
-        BundleSpecBuilder builder = BundleSpecBuilder.open (clientSpec);
+        BundleSpecBuilder builder = BundleSpecBuilder.open(clientSpec);
         log.trace("Getting BundleStub from BundleSpecBuilder");
         BundleStub stub = builder.getStub();
 
@@ -292,11 +315,12 @@ public class SSHDeployer implements ClientDeployer {
                                clientId);
 
         log.debug("Building command line for " + clientId + " with login "
-                  + login + " and configuration server " + confLocation);
+                  + feedbackLogin + " and configuration server "
+                  + confLocation);
 
         /* Build the command line with and ssh prefix */
         List<String> commandLine = new ArrayList<String>();
-        commandLine.addAll (Arrays.asList("ssh", login));
+        commandLine.addAll(Arrays.asList("ssh", "-p" + port, login));
 
         /* We need to escape all elements of the remote command line
          * since it must be passed as a single arg to ssh */
@@ -308,7 +332,7 @@ public class SSHDeployer implements ClientDeployer {
         }
         commandLine.add(remoteArg);
 
-        log.debug ("Command line for '" + clientId + "':\n"
+        log.debug("Command line for '" + clientId + "':\n"
                    + Logs.expand(commandLine, 100));
 
         /* Exec the command line */
@@ -316,8 +340,8 @@ public class SSHDeployer implements ClientDeployer {
 
         String error = null;
         try {
-            Thread processThread = new Thread (runner);
-            processThread.setDaemon (true); // Allow JVM to exit
+            Thread processThread = new Thread(runner);
+            processThread.setDaemon(true); // Allow JVM to exit
             processThread.start();
 
             /* Wait until the deployment is done or times out */
@@ -325,26 +349,27 @@ public class SSHDeployer implements ClientDeployer {
 
             if (runner.isTimedOut()) {
                 String errorMsg = runner.getProcessErrorAsString();
-                error = "Start request for client '" + clientId + "' with login "
-                        + login + " and configuration server "
+                error = "Start request for client '" + clientId
+                        + "' with login " + feedbackLogin
+                        + " and configuration server "
                         + confLocation + ". Timed out"
                         + (errorMsg != null ? ":\n" + errorMsg : "");
             } else if (processThread.isAlive()) {
                 /* The process is still running. This is probably a good sign,
                  * but we have no way to be sure */
-                log.debug ("Process thread for '" + clientSpec + "' still "
-                           + "running. Let's hope it is doing good");
+                log.debug("Process thread for '" + clientSpec + "' still "
+                          + "running. Let's hope it is doing good");
             } else if (runner.getReturnCode() != 0) {
                 error = "Could not run client '" + clientId + "' with login "
-                        + login + " and configuration server "
+                        + feedbackLogin + " and configuration server "
                         + confLocation + ". Got return value "
                         + runner.getReturnCode() + " and message "
                         + runner.getProcessErrorAsString();
             }
         } catch(Exception e) {
             error = "Could not start client '" + clientId + "' with login "
-                    + login + " and configuration server " + confLocation
-                    + ": " + runner.getProcessErrorAsString();
+                    + feedbackLogin + " and configuration server "
+                    + confLocation + ": " + runner.getProcessErrorAsString();
             log.error("Exception in start: " + e.getMessage(), e);
         }
         if (error != null) {
@@ -354,8 +379,9 @@ public class SSHDeployer implements ClientDeployer {
 
         }
         log.info("Finished start of '" + clientId + "' with login "
-                           + login + " and configuration server " + confLocation
-                           + ": " + runner.getProcessErrorAsString());
+                           + feedbackLogin + " and configuration server "
+                           + confLocation + ": "
+                           + runner.getProcessErrorAsString());
         /**
          ssh bar@zoo java -Dsumma.control.configuration=//example.com/myConfServer -jar /path/to/somewhere/runClient.jar
          */
@@ -384,7 +410,7 @@ public class SSHDeployer implements ClientDeployer {
         return value;
     }
 
-    private String probeJVMPath () {
+    private String probeJVMPath() {
         final String[] rootProspects = new String[] {"/usr/java/",
                                              "/usr/lib/jvm/"};
 
@@ -397,15 +423,14 @@ public class SSHDeployer implements ClientDeployer {
                                            "jdk1.6",
                                            "jre1.6"};
 
-        log.debug ("Probing for JVM path on " + login);
+        log.debug("Probing for JVM path on " + feedbackLogin);
 
         for (String jre : jrePropsects) {
             for (String root : rootProspects) {
                 String probePath = root + jre + "/bin/java";
                 log.trace("Probing for JRE " +probePath);
-                ProcessRunner probe = new ProcessRunner ("ssh", login,
-                                                         probePath
-                                                         + " -version");
+                ProcessRunner probe = new ProcessRunner(
+                        "ssh", "-p" + port, login, probePath + " -version");
                 probe.run();
                 if (probe.getReturnCode() == 0) {
                     log.debug("Found JVM on " + login + ": " + probePath);
@@ -415,19 +440,16 @@ public class SSHDeployer implements ClientDeployer {
         }
 
         String probePath = "/usr/bin/java";
-        log.trace ("Probing for JRE " + probePath);
-        ProcessRunner probe = new ProcessRunner ("ssh", login,
-                                                 probePath
-                                                 + " -version");
+        log.trace("Probing for JRE " + probePath);
+        ProcessRunner probe = new ProcessRunner(
+                "ssh", "-p" + port, login, probePath + " -version");
         probe.run();
         if (probe.getReturnCode() == 0) {
             log.debug("Found JVM on " + login + ": " + probePath);
             return probePath;
         }
 
-        throw new ClientDeploymentException("Unable to detect JRE on " + login);
+        throw new ClientDeploymentException("Unable to detect JRE on "
+                                            + feedbackLogin);
     }
 }
-
-
-
