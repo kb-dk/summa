@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -24,8 +24,8 @@ import dk.statsbiblioteket.summa.common.Record;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
-import javax.xml.stream.*;
 import javax.xml.stream.events.XMLEvent;
+import javax.xml.stream.*;
 import java.io.*;
 import java.util.Map;
 import java.util.Date;
@@ -109,7 +109,7 @@ public class RecordUtil {
     // http://www.w3.org/TR/xmlschema-2/#dateTime
     // 2002-10-10T17:00:00
     private static SimpleDateFormat schemaTimestampFormatter =
-            new SimpleDateFormat("yyyy-MM-dd'T'HH-mm-ss.S");
+            new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.S");
     // synchronized due to schemaTimestampFormatter
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     private synchronized static void toXML(XMLStreamWriter out, int level,
@@ -148,6 +148,7 @@ public class RecordUtil {
             for (Record parent: record.getParents()) {
                 toXML(out, level+1, parent);
             }
+            out.writeCharacters("\n");
             out.writeEndElement();
         }
 
@@ -157,17 +158,20 @@ public class RecordUtil {
             for (Record child: record.getChildren()) {
                 toXML(out, level+1, child);
             }
+            out.writeCharacters("\n");
             out.writeEndElement();
         }
-
+             
         if (record.hasMeta()) {
             out.writeCharacters("\n");
             out.writeStartElement(META);
             for (Map.Entry<String, String> entry: record.getMeta().entrySet()) {
+                out.writeCharacters("\n");
                 out.writeStartElement(ELEMENT);
                 out.writeAttribute(KEY, entry.getKey());
                 out.writeCharacters(entry.getValue());
             }
+            out.writeCharacters("\n");
             out.writeEndElement();
         }
 
