@@ -160,7 +160,8 @@ public class MUXFilterFeeder implements ObjectFilter, Runnable {
             && !(baseList.size() == 1 && "*".equals(baseList.get(0)))) {
             bases = new HashSet<String>(baseList);
         }
-        new Thread(this, filterName+"-"+this.hashCode()).start();
+        new Thread(this, filterName + "-" + this.hashCode()).start();
+        log.debug("Constructed and activated " + this);
     }
 
     private ObjectFilter createFilter(Configuration configuration) {
@@ -177,12 +178,12 @@ public class MUXFilterFeeder implements ObjectFilter, Runnable {
      */
     public void queuePayload(Payload payload) {
         if (log.isTraceEnabled()) {
-            log.trace("Queueing " + payload);
+            //noinspection DuplicateStringLiteralInspection
+            log.trace("Queueing " + payload + " in " + this);
         }
         if (!accepts(payload)) {
             throw new IllegalArgumentException(String.format(
-                    "The MUXFilterFeeder '%s' does not accept %s",
-                    filterName, payload));
+                    "%s does not accept %s", this, payload));
         }
         uninterruptableOffer(payload, inQueue);
     }
@@ -201,7 +202,7 @@ public class MUXFilterFeeder implements ObjectFilter, Runnable {
                 log.trace("Polling for next filtered payload");
                 next = outQueue.poll(500, TimeUnit.MILLISECONDS);
                 if (log.isTraceEnabled()) {
-                    log.trace("Got " + next);
+                    log.trace("getNextFilteredPayload() got " + next);
                 }
             } catch (InterruptedException e) {
                 //noinspection DuplicateStringLiteralInspection
@@ -210,6 +211,8 @@ public class MUXFilterFeeder implements ObjectFilter, Runnable {
             }
         }
         if (next == STOP) {
+            log.debug("Got STOP-Record from outQueue in " + this 
+                      + ". Setting eofReached to true");
             eofReached = true;
         }
         return eofReached ? null : next;
@@ -226,7 +229,7 @@ public class MUXFilterFeeder implements ObjectFilter, Runnable {
         }
         if (payload.getRecord() == null) {
             log.warn("A Payload without base was received in accepts("
-                     + payload + ") in filter '" + filterName + "'");
+                     + payload + ") in " + this);
             return false;
         }
         return bases.contains(payload.getRecord().getBase());
@@ -238,9 +241,9 @@ public class MUXFilterFeeder implements ObjectFilter, Runnable {
      * previous queued Payloads are extracted.
      */
     public void signalEOF() {
-        log.debug("signalEOF() entered");
+        log.debug("signalEOF() entered for " + this);
         uninterruptableOffer(STOP, inQueue);
-        log.trace("signalEOF() completed");
+        log.trace("signalEOF() completed for " + this);
     }
 
     private void uninterruptableOffer(Payload payload, PayloadQueue queue) {
@@ -275,7 +278,13 @@ public class MUXFilterFeeder implements ObjectFilter, Runnable {
     }
 
     public boolean isEofReached() {
-        return eofReached || outQueue.peek() == STOP;
+        if (eofReached || outQueue.peek() == STOP) {
+            log.debug("isEofReached(): " + this + " has eofReached="
+                      + eofReached + " and (outQueue.peek() == STOP)="
+                      + (outQueue.peek() == STOP));
+            return true;
+        }
+        return false;
     }
 
     @Override
@@ -290,19 +299,21 @@ public class MUXFilterFeeder implements ObjectFilter, Runnable {
                     log.trace("Polling filter for next processes Payload");
                     Payload next = filter.next();
                     if (log.isTraceEnabled()) {
-                        log.trace("Got " + next);
+                        log.trace("run() got " + next);
                     }
                     if (next != null) {
                         while (!eofReached) {
                             try {
-                                log.trace("Offering payload to outQueue");
+                                log.trace("Offering payload to outQueue in"
+                                          + this);
                                 outQueue.offer(next, Integer.MAX_VALUE,
                                                TimeUnit.MILLISECONDS);
                                 log.trace("outQueue accepted Payload");
                                 break;
                             } catch (InterruptedException e) {
                                 log.warn("Interrupted while trying to add "
-                                         + next + " to outQueue. Retrying");
+                                         + next + " to outQueue in " + this
+                                         + ". Retrying");
                             }
                         }
                         if (next == STOP) {
@@ -312,12 +323,13 @@ public class MUXFilterFeeder implements ObjectFilter, Runnable {
                 } catch (Exception e) {
                     log.warn(String.format(
                             "Exception while calling next on filter '%s' in"
-                            + " MUXFilterFeeder '%s'. Sleeping a bit, then"
-                            + " retrying", filter, filterName), e);
+                            + " %s. Sleeping a bit, then retrying",
+                            filter, this), e);
                     try {
                         Thread.sleep(500);
                     } catch (InterruptedException ex) {
-                        log.warn("Interrupted while sleeping before next poll",
+                        log.warn("Interrupted while sleeping before next "
+                                 + "poll in " + this,
                                  ex);
                     }
                 }
@@ -325,13 +337,15 @@ public class MUXFilterFeeder implements ObjectFilter, Runnable {
         } catch (Exception e) {
             log.error(String.format(
                     "Got unexpected exception in run-method for '%s'",
-                    filterName), e);
+                    this), e);
         }
     }
 
 /* ObjectFilter implementation */
 
     public boolean hasNext() {
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("hasNext() called");
         while (true) {
             if (eofReached) {
                 return false;
@@ -340,10 +354,11 @@ public class MUXFilterFeeder implements ObjectFilter, Runnable {
                 return true;
             }
             try {
-                polledByHasNext =
-                        inQueue.poll(Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
+                polledByHasNext = inQueue.poll(Integer.MAX_VALUE,
+                                               TimeUnit.MILLISECONDS);
                 if (polledByHasNext == STOP) {
-                    log.debug("STOP received in inQueue, adding to outQueue");
+                    log.debug("STOP received in inQueue, adding to outQueue"
+                              + " for " + this);
                     uninterruptableOffer(STOP, outQueue);
                     return false;
                 }
@@ -362,12 +377,12 @@ public class MUXFilterFeeder implements ObjectFilter, Runnable {
     }
 
     public boolean pump() throws IOException {
-        if (!hasNext()) {
+        if (isEofReached()) {
             return false;
         }
-        Payload next = next();
+        Payload next = getNextFilteredPayload();
         next.close();
-        return hasNext();
+        return isEofReached();
     }
 
     private boolean closed = false; // To avoid endless recursion
@@ -385,6 +400,8 @@ public class MUXFilterFeeder implements ObjectFilter, Runnable {
      * @return the next payload to filter through {@link #filter}.
      */
     public Payload next() {
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("next() called");
         if (eofReached || !hasNext()) {
             throw new IllegalStateException("EOF reached. There is no next");
         }
