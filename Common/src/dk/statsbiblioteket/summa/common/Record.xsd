@@ -5,7 +5,9 @@
             xmlns:summa="http://statsbiblioteket.dk/summa/2009/Record">
     <xsd:annotation>
         <xsd:documentation xml:lang="en">
-            XML Schema for Summa Records.
+            XML Schema for Summa Records. A Record XML representation following
+            this schema only represents resolved parents and children, not the
+            IDs of parents and children.
         </xsd:documentation>
     </xsd:annotation>
 
