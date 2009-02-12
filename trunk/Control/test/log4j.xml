@@ -67,7 +67,7 @@
     </logger>
     -->
     <logger name="dk.statsbiblioteket.summa.releasetest">
-        <level value="debug" />
+        <level value="trace" />
         <appender-ref ref="CONSOLE" />
     </logger>
 
