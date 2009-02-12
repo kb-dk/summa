@@ -41,7 +41,7 @@ public class MUXFilterTest extends TestCase implements ObjectFilter {
         super(name);
     }
 
-    private static final int PAYLOADS = 5;
+    private static final int PAYLOADS = 10;
     @Override
     public void setUp() throws Exception {
         super.setUp();
@@ -71,16 +71,21 @@ public class MUXFilterTest extends TestCase implements ObjectFilter {
         delays.get(0).set(MUXFilterFeeder.CONF_FILTER_CLASS,
                           DelayFilter.class.getCanonicalName());
         delays.get(0).set(DelayFilter.CONF_FIXED_DELAY_PREREQUEST,
-                          200 * 1000000);
+                          100 * 1000000);
+        delays.get(0).set(DelayFilter.CONF_FIXED_DELAY_POSTREQUEST,
+                          100 * 1000000);
         delays.get(0).set(MUXFilter.CONF_INSTANCES, 2);
+//        delays.get(0).set(MUXFilterFeeder.CONF_QUEUE_OUT_LENGTH, 1);
         log.debug("Creating MUXFilter");
         MUXFilter muxer = new MUXFilter(conf);
+        muxer.setSource(this);
         muxer.setSource(this);
         int counter = 0;
         log.debug("Emptying MUXFilter");
         while (muxer.hasNext()) {
-            muxer.next();
+            Thread.sleep(100);
             counter++;
+            muxer.next();
         }
         assertEquals("The number of processed Payloads should be correct",
                      PAYLOADS, counter);
