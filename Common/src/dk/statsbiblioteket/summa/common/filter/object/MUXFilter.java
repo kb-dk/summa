@@ -165,12 +165,14 @@ public class MUXFilter implements ObjectFilter, Runnable {
                         log.warn("run(): Interrupted while sleeping", e1);
                     }
                 }
+                if (nextPayload != null) {
+                    profiler.beat();
+                }
             }
             if (nextPayload == null) {
                 log.warn("source.next() gave a null-pointer");
                 break;
             }
-            profiler.beat();
             MUXFilterFeeder feeder;
             try {
                 if (log.isTraceEnabled()) {
@@ -312,6 +314,7 @@ public class MUXFilter implements ObjectFilter, Runnable {
                     // the call to the feeder. We want the data from the first
                     // feeder with avail. data
                     if (feeder.getOutQueueSize() > 0) {
+                        lastPolledPosition = feederPos;
                         return feeder.getNextFilteredPayload();
                     }
                 } else if (log.isTraceEnabled()) {
