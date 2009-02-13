@@ -73,8 +73,8 @@ public class SSHDeployer implements ClientDeployer {
 
     public SSHDeployer(Configuration conf) {
         login = conf.getString(CONF_DEPLOYER_TARGET);
-        destination = conf.getString(CONF_BASEPATH, "summa-control");
         removePortFromLogin();
+        destination = conf.getString(CONF_BASEPATH, "summa-control");
         source = conf.getString(CONF_DEPLOYER_BUNDLE_FILE);
         clientId = conf.getString(CONF_INSTANCE_ID);
         confLocation = conf.getString(CONF_CLIENT_CONF, "configuration.xml");
@@ -451,5 +451,13 @@ public class SSHDeployer implements ClientDeployer {
 
         throw new ClientDeploymentException("Unable to detect JRE on "
                                             + feedbackLogin);
+    }
+
+    public String getLogin() {
+        return login;
+    }
+
+    public int getPort() {
+        return port;
     }
 }
