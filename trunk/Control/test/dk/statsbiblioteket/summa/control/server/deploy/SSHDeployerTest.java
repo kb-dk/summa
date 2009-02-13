@@ -145,6 +145,22 @@ public class SSHDeployerTest extends TestCase {
                    new File(output).exists());
     }
 
+    public void testPort() throws Exception {
+        Configuration conf = makeConfiguration();
+        conf.set(SSHDeployer.CONF_DEPLOYER_BUNDLE_FILE, "Somefile");
+        conf.set(SSHDeployer.CONF_DEPLOYER_TARGET, "host");
+        assertEquals("Host only should work",
+                     "host", new SSHDeployer(conf).getLogin());
+        conf.set(SSHDeployer.CONF_DEPLOYER_TARGET, "user@host");
+        assertEquals("User + host should work",
+                     "user@host", new SSHDeployer(conf).getLogin());
+        conf.set(SSHDeployer.CONF_DEPLOYER_TARGET, "user@host:222");
+        assertEquals("User + host + port should work for login",
+                     "user@host", new SSHDeployer(conf).getLogin());
+        assertEquals("User + host + port should work for port", 
+                     222, new SSHDeployer(conf).getPort());
+    }
+
     public void testGetHostname () throws Exception {
         Configuration conf = makeConfiguration();
 
