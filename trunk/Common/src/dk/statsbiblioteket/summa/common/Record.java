@@ -29,7 +29,6 @@ import java.util.*;
 
 import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.util.Logs;
-import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.Zips;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -139,6 +138,7 @@ public class Record implements Serializable, Comparable{
      * If it is a call to {@link #getContent} should uncompress it before
      * returning the data and set this value to {@code false}.
      */
+    // TODO: Add a getter and update MarcMultiVolumeMerger to use it for set
     private boolean contentCompressed;
 
     /**
@@ -641,6 +641,7 @@ public class Record implements Serializable, Comparable{
      * Returns a hash code value for the record.
      * @return a hash code value
      */
+    @Override
     @QAInfo(level = QAInfo.Level.FINE,
         state = QAInfo.State.QA_NEEDED,
         comment="Hans made the hash-function, so no present persons know how it "
@@ -665,6 +666,7 @@ public class Record implements Serializable, Comparable{
         return getId().compareTo(((Record) o).getId());
     }
 
+    @Override
     @SuppressWarnings({"UnnecessaryParentheses"})
     @QAInfo(level = QAInfo.Level.PEDANTIC,
             state = QAInfo.State.IN_DEVELOPMENT,
@@ -701,6 +703,7 @@ public class Record implements Serializable, Comparable{
     /**
      * @return a human-readable single line version of Record.
      */
+    @Override
     public String toString() {
         return toString(false);
     }
@@ -822,13 +825,6 @@ public class Record implements Serializable, Comparable{
             }
         }
 
-        if (ib.hasNext()) {
-            return false;
-        }
-
-        return true;
+        return !ib.hasNext();
     }
 }
-
-
-
