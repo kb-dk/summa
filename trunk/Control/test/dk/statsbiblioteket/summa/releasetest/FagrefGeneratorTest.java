@@ -24,15 +24,23 @@ import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.filter.FilterControl;
+import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
 import dk.statsbiblioteket.summa.ingest.source.RecordGenerator;
 import dk.statsbiblioteket.summa.control.service.StorageService;
 import dk.statsbiblioteket.summa.control.service.FilterService;
 import dk.statsbiblioteket.summa.control.api.Status;
+import dk.statsbiblioteket.summa.index.IndexControllerImpl;
+import dk.statsbiblioteket.summa.facetbrowser.Structure;
+import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.io.StringWriter;
+import java.io.IOException;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -113,12 +121,24 @@ public class FagrefGeneratorTest extends NoExitTestCase {
     }
 
     public void testIngest() throws Exception {
+        final int RECORDS = 5000;
+        // Quick test on pc286 (desktop 7200 RPM hard disk)
+        //   5000: 141/s
+        //  10000: 127/s
+        //  25000:  88/s
+        //  50000:  65/s
+        //  75000:  36/s (while programming in the background)
+        // 100000:  32/s
+
         Profiler storageProfiler = new Profiler();
         StorageService storage = OAITest.getStorageService();
         log.info("Finished starting Storage in "
                  + storageProfiler.getSpendTime());
         Configuration conf = Configuration.load(
                 "data/generator/generator_configuration.xml");
+        conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
+                getSubConfigurations(FilterSequence.CONF_FILTERS).get(0).
+                set(RecordGenerator.CONF_RECORDS, RECORDS);
         FilterService ingestService = new FilterService(conf);
         try {
             ingestService.start();
@@ -132,11 +152,55 @@ public class FagrefGeneratorTest extends NoExitTestCase {
         ingestService.stop();
         log.debug("Finished ingesting, doing index");
 
-        Profiler indexProfiler = new Profiler();
-        FacetTest.updateIndex();
-        log.info("Finished indexing in "
-                 + indexProfiler.getSpendTime());
+        Profiler indexProfiler = new Profiler() {
+            @Override
+            public String toString() {
+                StringWriter sw = new StringWriter(500);
+                sw.append("Beats: ").append(Long.toString(getBeats()));
+                sw.append(", time: ").append(getSpendTime());
+                sw.append(", average: ").
+                        append(Double.toString(getBps(false)));
+                sw.append(" beats/second, ETA: ").
+                        append(getETAAsString(false));
+                return sw.toString();
+            }
+
+        };
+        indexProfiler.setExpectedTotal(RECORDS);
+        Configuration indexConf = Configuration.load(
+                "data/search/FacetTest_IndexConfiguration.xml");
+        Configuration facetConf =
+                indexConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
+                getSubConfigurations(FilterSequence.CONF_FILTERS).get(4).
+                getSubConfigurations(IndexControllerImpl.CONF_MANIPULATORS).
+                get(1);
+        extendFacets(facetConf, "subject", Arrays.asList("lsu_oai"));
+        IndexTest.updateIndex(indexConf);
+        indexProfiler.setBeats(RECORDS);
+        log.info("Finished requesting and indexing " + RECORDS + " Records. "
+                 + indexProfiler);
 
         storage.stop();
+    }
+
+    private void extendFacets(Configuration facetConf, String name,
+                              List<String> fields) throws IOException {
+        List<Configuration> facets =
+                facetConf.getSubConfigurations(Structure.CONF_FACETS);
+        List<Configuration> newFacets =
+                facetConf.createSubConfigurations(
+                        Structure.CONF_FACETS, facets.size() + 1);
+        for (int i = 0 ; i < facets.size() ; i++) {
+            newFacets.get(i).set(
+                    FacetStructure.CONF_FACET_NAME,
+                    facets.get(i).get(FacetStructure.CONF_FACET_NAME));
+            newFacets.get(i).set(
+                    FacetStructure.CONF_FACET_FIELDS,
+                    facets.get(i).get(FacetStructure.CONF_FACET_FIELDS));
+        }
+        newFacets.get(newFacets.size() - 1).set(
+                FacetStructure.CONF_FACET_NAME, name);
+        newFacets.get(newFacets.size() - 1).setStrings(
+                FacetStructure.CONF_FACET_FIELDS , fields);
     }
 }
