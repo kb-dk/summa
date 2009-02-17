@@ -85,15 +85,39 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
             return;
         }
         Record record = payload.getRecord();
+        String mergedContent = getMergedOrNull(record);
+        if (mergedContent != null) {
+            try {
+                record.setContent(mergedContent.getBytes("utf-8"), false);
+            } catch (UnsupportedEncodingException e) {
+                //noinspection DuplicateStringLiteralInspection
+                throw new IllegalArgumentException("utf-8 not supported");
+            }
+        }
+    }
 
+    /**
+     *
+     * @param record the Record whose content to transform to legacy merged
+     *               format.
+     * @return the content of the Record and its children, represented as
+     *         merged MARC.
+     */
+    public String getLegacyMergedXML(Record record) {
+        String result = getMergedOrNull(record);
+        return result == null ? record.getContentAsUTF8() : result;
+    }
+
+    private String getMergedOrNull(Record record) {
         if (!record.hasChildren()) {
             log.debug("No children for " + record.getId());
-            return;
+            return null;
         } else if (record.getChildren() == null) {
             log.debug("Can not expand unresolved children of "
                       + record.toString(true));
-            return;
+            return null;
         } else {
+            //noinspection DuplicateStringLiteralInspection
             log.debug("Processing " + record.getChildren().size()
                       + " children of " + record.getId());
         }
@@ -102,12 +126,13 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
         StringWriter output = new StringWriter(5000);
         try {
             addProcessedContent(output, record, 0);
-            log.trace("Finished processing content for " + payload);
-            record.setRawContent(output.toString().getBytes("utf-8"));
+            log.trace("Finished processing content for " + record);
         } catch (Exception e) {
-            log.warn("Exception transforming " + payload
+            log.warn("Exception transforming " + record
                      + ". The content will not be updated", e);
+            return null;
         }
+        return output.toString();
     }
 
     /**
