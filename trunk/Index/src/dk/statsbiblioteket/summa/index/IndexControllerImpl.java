@@ -681,12 +681,16 @@ public class IndexControllerImpl extends StateThread implements
         return hasNext;
     }
 
+    private int feedbackEvery = 1000;
     public Payload next() {
         // Get the next payload
         long start = System.nanoTime();
         Payload payload = source.next();
-        if (log.isDebugEnabled()) {
-            log.debug("Got payload from source in "
+        if (log.isTraceEnabled()
+            || (log.isDebugEnabled()
+                && (profiler.getBeats()+1) % feedbackEvery == 0)) {
+            log.trace("Got payload #" + (profiler.getBeats()+1)
+                      + " from source in "
                       + (System.nanoTime() - start)/1000000f + "ms");
         }
 
