@@ -151,6 +151,7 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
      */
     private void addProcessedContent(StringWriter output, Record record,
                                      int level) throws TransformerException {
+        //noinspection DuplicateStringLiteralInspection
         log.debug("Processing "+record.getId()+"  at level " + level);
 
         String content = record.getContentAsUTF8();
