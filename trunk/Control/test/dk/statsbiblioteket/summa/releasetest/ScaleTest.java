@@ -72,7 +72,7 @@ public class ScaleTest extends NoExitTestCase {
     }
 
     public void testBuild1000() throws Exception {
-        testBuild(50000);
+        testBuild(1000);
     }
     public void testBuild(int records) throws Exception {
         Profiler profiler = new Profiler();
@@ -105,11 +105,14 @@ public class ScaleTest extends NoExitTestCase {
                                    getAbsolutePath());
 
         // Fagref-XSLT
-        String xsltLocation = Resolver.getURL("data/fagref/fagref_index.xsl").
-                getFile();
+        String xsltLocation =
+                Resolver.getURL("data/scale/xslt/fagref_index.xsl").getFile();
         filters.get(1).set(XMLTransformer.CONF_XSLT, xsltLocation);
 
         // OldToNew
+        String legacyLocation =
+                Resolver.getURL("LegacyToSummaDocumentXML.xslt").getFile();
+        filters.get(2).set(XMLTransformer.CONF_XSLT, legacyLocation);
 
         // Document creator
         String descriptorLocation = Resolver.getURL(
