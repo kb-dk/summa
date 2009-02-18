@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+    <service name="summasimplesearch" type="soap">
+        <wsdl>http://localhost:8080/summa-web-search/services/SearchWS?wsdl</wsdl>
+        <servicename>SearchWS</servicename>
+        <operationname>simpleSearch</operationname>
+        <parameters>
+            <parameter name="query" type="xsd:string" />
+            <parameter name="numberOfRecords" type="xsd:int" />
+            <parameter name="startIndex" type="xsd:int" />
+        </parameters>
+        <return type="xsd:string" />
+    </service>
+    <service name="summasimplesearchsorted" type="soap">
+        <wsdl>http://localhost:8080/summa-web-search/services/SearchWS?wsdl</wsdl>
+        <servicename>SearchWS</servicename>
+        <operationname>simpleSearchSorted</operationname>
+        <parameters>
+            <parameter name="query" type="xsd:string" />
+            <parameter name="numberOfRecords" type="xsd:int" />
+            <parameter name="startIndex" type="xsd:int" />
+            <parameter name="sortKey" type="xsd:string" />
+            <parameter name="reverse" type="xsd:boolean" />
+        </parameters>
+        <return type="xsd:string" />
+    </service>
+    <service name="summasimplefacet" type="soap">
+        <wsdl>http://localhost:8080/summa-web-search/services/SearchWS?wsdl</wsdl>
+        <servicename>SearchWS</servicename>
+        <operationname>simpleFacet</operationname>
+        <parameters>
+            <parameter name="query" type="xsd:string" />
+        </parameters>
+        <return type="xsd:string" />
+    </service>
+    <service name="summagetrecord" type="soap">
+        <wsdl>http://localhost:8080/summa-web-storage/services/StorageWS?wsdl</wsdl>
+        <servicename>StorageWS</servicename>
+        <operationname>getRecord</operationname>
+        <parameters>
+            <parameter name="recordID" type="xsd:string" />
+        </parameters>
+        <return type="xsd:string" />
+    </service>
+</properties>
+

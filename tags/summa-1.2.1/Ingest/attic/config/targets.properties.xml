@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+
+    <entry key="targets">llba,oai,horizon,aleph,fagref</entry>
+
+    <entry key="io_storage">//atria:8400/summa_io_postgres</entry>
+     <entry key="mergeFlerbind">true</entry>
+
+    <entry key="oai">/home/summa/data/oai</entry>
+    <entry key="oai_run">true</entry>
+    <entry key="oai_DigesterClass">dk.statsbiblioteket.summa.ingest.OAI.OAIHarvestDirectoryDigester</entry>
+    <entry key="oai_filter_chain">dk.statsbiblioteket.summa.preingest.Rename,xml&gt;ingest</entry>
+    <entry key="oai_full_ingest">false</entry>
+    <entry key="oai_encoding">UTF-8</entry>
+    <entry key="oai_prefix"></entry>
+    <entry key="oai_check_output">true</entry>
+    <entry key="oai_base_name">OpenArchive</entry>
+
+    <!-- <entry key="llba">/home/summa/data/csa/llba</entry> -->
+    <entry key="llba">/home/hal/csa/llba</entry>
+    <entry key="llba_run">true</entry>
+    <entry key="llba_DigesterClass">dk.statsbiblioteket.summa.ingest.CSA.CSAXMLDirectoryDigester</entry>
+    <entry key="llba_filter_chain">dk.statsbiblioteket.summa.preingest.Rename,xml&gt;ingest</entry>
+    <entry key="llba_full_ingest">false</entry>
+    <entry key="llba_encoding">UTF-8</entry>
+    <entry key="llba_prefix"></entry>
+    <entry key="llba_check_output">true</entry>
+    <entry key="llba_base_name">llba</entry>
+
+   <entry key="horizon">/home/summa/data/horizon</entry>
+   <entry key="horizon_run">true</entry>
+   <entry key="horizon_DigesterClass">dk.statsbiblioteket.summa.ingest.MARCXML.MARCXMLDirectoryDigester</entry>
+   <entry key="horizon_filter_chain">dk.statsbiblioteket.summa.preingest.SBToMARC,xml&gt;ingest</entry>
+   <entry key="horizon_full_ingest">false</entry>
+   <entry key="horizon_flerbind_xslt">flerbind.xslt</entry>
+   <entry key="horizon_encoding">UTF-8</entry>
+   <entry key="horizon_idkey">994</entry>
+   <entry key="horizon_id_subfields_priority">a,1;z,2</entry>
+   <entry key="horizon_prefix">horizon_</entry>
+   <entry key="horizon_check_output">true</entry>
+   <entry key="horizon_base_name">horizon</entry>
+
+   <entry key="aleph">/home/summa/data/nat</entry>
+   <entry key="aleph_run">false</entry>
+   <entry key="aleph_DigesterClass">dk.statsbiblioteket.summa.ingest.MARCXML.MARCXMLDirectoryDigester</entry>
+   <entry key="aleph_filter_chain">dk.statsbiblioteket.summa.preingest.Aleph2XML,data&gt;ingest</entry>
+   <entry key="aleph_full_ingest">true</entry>
+   <entry key="aleph_encoding">UTF-8</entry>
+   <entry key="aleph_idkey">001</entry>
+   <entry key="aleph_id_subfields_priority">a,1</entry>
+   <entry key="aleph_prefix">nat_</entry>
+   <entry key="aleph_check_output">true</entry>
+   <entry key="aleph_base_name">nat</entry>
+
+   <entry key="fagref">/home/summa/data/fagref</entry>
+   <entry key="fagref_run">false</entry>
+   <entry key="fagref_DigesterClass">dk.statsbiblioteket.summa.ingest.SimpleXML.SimpleDirectoryDigester</entry>
+   <entry key="fagref_filter_chain">dk.statsbiblioteket.summa.preingest.Rename,xml&gt;ingest</entry>
+   <entry key="fagref_full_ingest">false</entry>
+   <entry key="fagref_encoding">UTF-8</entry>
+   <entry key="fagref_prefix"></entry>
+   <entry key="fagref_check_output">true</entry>
+   <entry key="fagref_id_element">email</entry>
+   <entry key="fagref_record_element">fagref</entry>
+   <entry key="fagref_base_name">fagref</entry>
+
+   <entry key="reklamefilm">/home/summa/data/danskReklameFilm</entry>
+   <entry key="reklamefilm_run">true</entry>
+   <entry key="reklamefilm_DigesterClass">dk.statsbiblioteket.summa.ingest.SimpleXML.SimpleDirectoryDigester</entry>
+   <entry key="reklamefilm_full_ingest">false</entry>
+   <entry key="reklamefilm_encoding">UTF-8</entry>
+   <entry key="reklamefilm_prefix"></entry>
+   <entry key="reklamefilm_check_output">true</entry>
+   <entry key="reklamefilm_id_element">id</entry>
+   <entry key="reklamefilm_record_element">mdcs</entry>
+   <entry key="reklamefilm_base_name">reklamefilm</entry>
+
+   <entry key="csa">/home/summa/data/csa</entry>
+   <entry key="csa_run">true</entry>
+   <entry key="csa_DigesterClass">dk.statsbiblioteket.summa.ingest.CSA.CSAXMLDirectoryDigester</entry>
+   <entry key="csa_full_ingest">false</entry>
+   <entry key="csa_encoding">UTF-8</entry>
+   <entry key="csa_prefix">csa_</entry>
+   <entry key="csa_check_output">true</entry>
+   <entry key="csa_base_name">csa</entry>
+
+</properties>
+
