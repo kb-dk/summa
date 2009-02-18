@@ -121,7 +121,7 @@ public class FagrefGeneratorTest extends NoExitTestCase {
     }
 
     public void testIngest() throws Exception {
-        final int RECORDS = 5000;
+        final int RECORDS = 10000;
         // Quick test on pc286 (desktop 7200 RPM hard disk)
         //   5000: 141/s
         //  10000: 127/s
