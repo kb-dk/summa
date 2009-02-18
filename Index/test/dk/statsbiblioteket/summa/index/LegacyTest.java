@@ -85,7 +85,7 @@ public class LegacyTest  extends TestCase {
         String expected = Streams.getUTF8Resource(EXPECTED_LOC);
         // TODO: We need a proper XML comparator
         assertEquals("The new style document should be as expected",
-                     expected, transformed);
+                     expected.trim(), transformed.trim());
     }
 }
 
