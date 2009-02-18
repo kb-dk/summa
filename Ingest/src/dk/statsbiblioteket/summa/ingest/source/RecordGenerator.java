@@ -553,7 +553,8 @@ public class RecordGenerator implements ObjectFilter {
                       + maxRecords + "), average speed is "
                       + profiler.getBps(true) + " Records/sec");
         } else if ((log.isDebugEnabled() &&
-                    generatedRecords % (profiler.getBpsSpan() / 10) == 0)
+                    // +1 to avoud division by zero
+                    generatedRecords % (profiler.getBpsSpan() / 10 + 1) == 0)
                    ||
                    (log.isInfoEnabled() &&
                     generatedRecords % profiler.getBpsSpan() == 0)) {
