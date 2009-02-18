@@ -162,8 +162,7 @@
                debug="${compiler.debug}">
             <classpath refid="lib.path"/>
             <classpath refid="lib.internal"/>
-        </javac>
-        <copy file="${basedir}/data/LegacyToSummaDocumentXML.xslt" tofile="${build.dir}/LegacyToSummaDocumentXML.xslt"/>
+        </javac>        
     </target>
 
 

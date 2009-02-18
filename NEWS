@@ -1,4 +1,43 @@
 =======================
+2009-02-18: Summa 1.2.1
+=======================
+
+ * Add options to RecordReader for deciding whether or not to request
+   parent/child expansion when receiving records
+
+ * You can now specify the port used by the SSHDeployer. This means that you can
+   now do stuff like 'deploy foo-client-1 c1 localhost:220' in the control-shell
+   if your sshd run on port 220 instead opf 22
+
+ * Add a new class RecordUtil in the Common module that can serialize
+   Record objects to and from XML efficiently. There's also an XML schema for
+   this XML format. Record contents will be XML escaped and any parent/child
+   records will be embedded in the XML
+
+ * Add a DelayFilter to facilitate throttling of filter chains (fx. if the
+   index process eats up to much cpu)
+
+ * Added a DiscardUpdatesFilter that discards records with ids that has
+   already passed it. That is it prevents any updates being done on an index
+   or storage consuming the filter chain
+
+ * Added a DiscardRelativesFilter that discards records based on their
+   relatives. This can fx. be used to discard all records that has any parents
+   from the filter chain
+
+ * Added a reverse-sort option to FileReader, making it possible to iterate over
+   found files in reverse unicode order
+   
+ * Bugfix: Assigning the same source multiple times to MUXFilter resulted in
+   the last Payloads of a stream of Payloads being skipped under certain
+   race-conditions
+
+ * Bugfix: The round-robin used by the MUXFilter always selected the first
+   available filter
+
+ * Bugfix: Record did not clear the list of parents when setParentID was set   
+
+=======================
 2009-01-09: Summa 1.2.0
 =======================
  
