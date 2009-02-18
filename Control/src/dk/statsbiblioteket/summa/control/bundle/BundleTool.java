@@ -53,7 +53,7 @@ public class BundleTool {
         options.addOption("d", "dry-run", false, "Don't roll the bundle. Only do validation");
         options.addOption("s", "sloppy", false, "Don't do validation of bundle contents");
         options.addOption("o", "output", true, "Directory to place the resulting bundle in");
-        options.addOption("x", "expand-properties", false, "Expand @-enclosed system properties in the spec file");
+        options.addOption("x", "expand-properties", false, "Expand ${} enclosed, Ant-style, system properties in the spec file");
         options.addOption("a", "auto-start", true, "Override whether or not to enable auto start of the bundle");
         options.addOption("f", "files", true,
                           "Path to collect files for the bundle from. "
