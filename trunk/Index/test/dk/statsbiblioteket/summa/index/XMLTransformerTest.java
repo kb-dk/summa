@@ -29,6 +29,7 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.util.Streams;
@@ -47,8 +48,7 @@ public class XMLTransformerTest extends TestCase {
     public static final URL xsltFagrefEntryURL = getURL(FAGREF_XSLT_ENTRY);
 
     public static URL getURL(String resource) {
-        ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        URL url = loader.getResource(resource);
+        URL url = Resolver.getURL(resource);
         assertNotNull("The resource " + resource + " must be present",
                       url);
         return url;

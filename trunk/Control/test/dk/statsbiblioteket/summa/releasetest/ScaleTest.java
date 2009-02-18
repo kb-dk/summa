@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -20,7 +20,6 @@
 package dk.statsbiblioteket.summa.releasetest;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -73,7 +72,7 @@ public class ScaleTest extends NoExitTestCase {
     }
 
     public void testBuild1000() throws Exception {
-        testBuild(100000);
+        testBuild(50000);
     }
     public void testBuild(int records) throws Exception {
         Profiler profiler = new Profiler();
