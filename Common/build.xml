@@ -118,6 +118,7 @@
                debug="${compiler.debug}">
             <classpath refid="lib.path"/>
         </javac>
+        <copy file="${basedir}/data/LegacyToSummaDocumentXML.xslt" tofile="${build.dir}/LegacyToSummaDocumentXML.xslt"/>
     </target>
 
 
