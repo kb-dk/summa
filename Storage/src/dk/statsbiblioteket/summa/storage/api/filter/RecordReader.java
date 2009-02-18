@@ -32,6 +32,7 @@ import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
 import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
+import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.api.watch.StorageWatcher;
 import dk.statsbiblioteket.summa.storage.api.watch.StorageChangeListener;
 import org.apache.commons.logging.Log;
@@ -172,6 +173,22 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             "summa.storage.recordreader.stayalive";
     public static final boolean DEFAULT_STAY_ALIVE = false;
 
+    /**
+     * A boolean switch deciding whether or not to request expansion of
+     * child records. The default value is {@code false}.
+     */
+    public static final String CONF_EXPAND_CHILDREN =
+            "summa.storage.recordreader.expandchildren";
+    public static final boolean DEFAULT_EXPAND_CHILDREN = false;
+
+    /**
+     * A boolean switch deciding whether or not to request expansion of
+     * parent records. The default value is {@code false}.
+     */
+    public static final String CONF_EXPAND_PARENTS =
+            "summa.storage.recordreader.expandparents";
+    public static final boolean DEFAULT_EXPAND_PARENTS = false;
+
 
 
     @SuppressWarnings({"FieldCanBeLocal"})
@@ -181,6 +198,8 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
     private ProgressTracker progressTracker;
     private boolean usePersistence = DEFAULT_USE_PERSISTENCE;
     private boolean startFromScratch = DEFAULT_START_FROM_SCRATCH;
+    private boolean expandChildren = DEFAULT_EXPAND_CHILDREN;
+    private boolean expandParents = DEFAULT_EXPAND_PARENTS;
     private int maxReadRecords = DEFAULT_MAX_READ_RECORDS;
     private int maxReadSeconds = DEFAULT_MAX_READ_SECONDS;
 
@@ -236,6 +255,10 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
                                          DEFAULT_USE_PERSISTENCE);
         startFromScratch = conf.getBoolean(CONF_START_FROM_SCRATCH,
                                            DEFAULT_START_FROM_SCRATCH);
+        expandChildren = conf.getBoolean(CONF_EXPAND_CHILDREN,
+                                           DEFAULT_EXPAND_CHILDREN);
+        expandParents = conf.getBoolean(CONF_EXPAND_PARENTS,
+                                           DEFAULT_EXPAND_PARENTS);
         maxReadRecords = conf.getInt(CONF_MAX_READ_RECORDS,
                                      DEFAULT_MAX_READ_RECORDS);
         maxReadSeconds = conf.getInt(CONF_MAX_READ_SECONDS,
@@ -313,8 +336,22 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
                     "Creating initial record iterator for Records modified "
                     + "after " + ProgressTracker.ISO_TIME,
                     lastRecordTimestamp));
-            long iterKey = storage.getRecordsModifiedAfter(
-                    lastRecordTimestamp, base, null);
+
+            // Detect if we need special query options and perform the query as
+            // we are configured
+            long iterKey;
+            QueryOptions opts;
+            if (!expandChildren && !expandParents) {
+                opts = null; // No special treatment
+            } else {
+                 opts = new QueryOptions(null, null,
+                                         expandChildren ? -1 : 0,
+                                         expandParents ? -1 : 0,
+                                         null);
+
+            }
+            iterKey = storage.getRecordsModifiedAfter(
+                                               lastRecordTimestamp, base, opts);
 
             lastIteratorUpdate = System.currentTimeMillis();
             recordIterator = new StorageIterator(storage, iterKey);
