@@ -48,7 +48,7 @@ public class BundleTool {
         CommandLineParser cliParser = new GnuParser();
         Options options = new Options();
         options.addOption("h", "help", false, "Print help message and exit");
-        options.addOption("v", "verbose", false, "Enable verbose ourput");
+        options.addOption("v", "verbose", false, "Enable verbose output");
         options.addOption("n", "name", true, "Override bundle name");
         options.addOption("d", "dry-run", false, "Don't roll the bundle. Only do validation");
         options.addOption("s", "sloppy", false, "Don't do validation of bundle contents");
