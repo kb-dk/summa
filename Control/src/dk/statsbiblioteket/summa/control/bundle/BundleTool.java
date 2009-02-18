@@ -66,7 +66,7 @@ public class BundleTool {
             cli = cliParser.parse(options, args);
             String[] specFiles = cli.getArgs();
             if (specFiles.length == 0) {
-                throw new ParseException("Not enough arguments,"
+                throw new ParseException("Not enough arguments, "
                                          + "you must specify a bundle spec");
             } else if (specFiles.length > 1) {
                 throw new ParseException("Too many arguments. Only one bundle "
