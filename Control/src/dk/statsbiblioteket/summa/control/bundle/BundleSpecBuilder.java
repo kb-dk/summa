@@ -355,7 +355,7 @@ public class BundleSpecBuilder {
                 }
                 setProperty(name, value);
             } else {
-                log.debug("Unknown node '" + node.getNodeName()
+                log.trace("Unknown node '" + node.getNodeName()
                           + "' with content '" + node.getTextContent() + "'");
             }
         }

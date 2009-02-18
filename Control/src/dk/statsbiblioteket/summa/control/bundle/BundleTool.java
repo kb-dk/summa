@@ -48,12 +48,12 @@ public class BundleTool {
         CommandLineParser cliParser = new GnuParser();
         Options options = new Options();
         options.addOption("h", "help", false, "Print help message and exit");
-        options.addOption("v", "verbose", false, "Enable verbose ourput");
+        options.addOption("v", "verbose", false, "Enable verbose output");
         options.addOption("n", "name", true, "Override bundle name");
         options.addOption("d", "dry-run", false, "Don't roll the bundle. Only do validation");
         options.addOption("s", "sloppy", false, "Don't do validation of bundle contents");
         options.addOption("o", "output", true, "Directory to place the resulting bundle in");
-        options.addOption("x", "expand-properties", false, "Expand @-enclosed system properties in the spec file");
+        options.addOption("x", "expand-properties", false, "Expand ${} enclosed, Ant-style, system properties in the spec file");
         options.addOption("a", "auto-start", true, "Override whether or not to enable auto start of the bundle");
         options.addOption("f", "files", true,
                           "Path to collect files for the bundle from. "
@@ -66,7 +66,7 @@ public class BundleTool {
             cli = cliParser.parse(options, args);
             String[] specFiles = cli.getArgs();
             if (specFiles.length == 0) {
-                throw new ParseException("Not enough arguments,"
+                throw new ParseException("Not enough arguments, "
                                          + "you must specify a bundle spec");
             } else if (specFiles.length > 1) {
                 throw new ParseException("Too many arguments. Only one bundle "

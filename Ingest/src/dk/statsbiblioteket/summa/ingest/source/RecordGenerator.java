@@ -107,6 +107,16 @@ public class RecordGenerator implements ObjectFilter {
             "dummy_$TIMESTAMP[ms]_$INCREMENTAL_NUMBER[id]";
 
     /**
+     * If true, the pseudo-random Records generated will occur with
+     * deterministic content (e.g. two runs will yield the same Records).
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_DETERMINISTIC_RANDOM =
+            "summa.ingest.generator.random.deterministic";
+    public static final boolean DEFAULT_DETERMINISTIC_RANDOM = true;
+
+    /**
      * All occurences of "$INCREMENTAL_NUMBER[key]" will be replaced by an
      * integer starting at 0 and incremented by 1 for each use. The integer is
      * referenced by key, making it possible to use distinct counters.
@@ -189,11 +199,12 @@ public class RecordGenerator implements ObjectFilter {
     private List<RecordToken> idTokens;
     private List<RecordToken> baseTokens;
     private List<RecordToken> contentTokens;
+    private boolean deterministic = DEFAULT_DETERMINISTIC_RANDOM;
 
     private int generatedRecords = 0;
     private long lastGeneration = 0;
     private Profiler profiler;
-    private Random random = new Random(87);
+    private Random random;
 
     /**
      * Extracts templates for id, base and content and parses them into tokens.
@@ -224,10 +235,13 @@ public class RecordGenerator implements ObjectFilter {
         idTokens = parseTemplate(idTemplate);
         baseTokens = parseTemplate(baseTemplate);
         contentTokens = parseTemplate(contentTemplate);
+        deterministic = conf.getBoolean(CONF_DETERMINISTIC_RANDOM,
+                                        deterministic);
 
         profiler = new Profiler();
         profiler.setExpectedTotal(maxRecords);
         profiler.setBpsSpan(Math.max(3, Math.min(1000, maxRecords / 100)));
+        random = deterministic ? new Random(87) : new Random();
     }
 
     private Pattern PATTERN_GENERIC =

@@ -101,23 +101,25 @@
             <!-- Det gamle format -->
 
             <xsl:otherwise>
-                <xsl:for-each select="mc:datafield[@tag='110']/mc:subfield[@code='a']">
-                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="10"  Index:suggest="true">
-                        <xsl:value-of select="."/>
-                    </Index:field>
-                </xsl:for-each>
-                <xsl:for-each select="mc:datafield[@tag='120']/mc:subfield[@code='a']">
-                    <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="10"  Index:suggest="true">
-                        <xsl:value-of select="."/>
-                    </Index:field>
-                </xsl:for-each>
-                <xsl:for-each select="mc:datafield[@tag='110']/mc:subfield[@code='a']">
-                    <Index:field Index:repeat="true" Index:name="main_titel" Index:navn="ht" Index:type="token" Index:boostFactor="10"  Index:suggest="true">
-                        <xsl:for-each select=".">
+                <Index:group Index:name="ti" Index:navn="ti" >
+                    <xsl:for-each select="mc:datafield[@tag='110']/mc:subfield[@code='a']">
+                        <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="10"  Index:suggest="true">
                             <xsl:value-of select="."/>
-                        </xsl:for-each>
-                    </Index:field>
-                </xsl:for-each>
+                        </Index:field>
+                    </xsl:for-each>
+                    <xsl:for-each select="mc:datafield[@tag='120']/mc:subfield[@code='a']">
+                        <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="10"  Index:suggest="true">
+                            <xsl:value-of select="."/>
+                        </Index:field>
+                    </xsl:for-each>
+                    <xsl:for-each select="mc:datafield[@tag='110']/mc:subfield[@code='a']">
+                        <Index:field Index:repeat="true" Index:name="main_titel" Index:navn="ht" Index:type="token" Index:boostFactor="10"  Index:suggest="true">
+                            <xsl:for-each select=".">
+                                <xsl:value-of select="."/>
+                            </xsl:for-each>
+                        </Index:field>
+                    </xsl:for-each>
+                </Index:group>
             </xsl:otherwise>
 
         </xsl:choose>
