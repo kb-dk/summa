@@ -27,6 +27,7 @@ import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.MarcAnnotations;
+import dk.statsbiblioteket.summa.common.legacy.MarcMultiVolumeMerger;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 

@@ -29,7 +29,6 @@ import java.util.*;
 
 import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.util.Logs;
-import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.Zips;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -139,6 +138,7 @@ public class Record implements Serializable, Comparable{
      * If it is a call to {@link #getContent} should uncompress it before
      * returning the data and set this value to {@code false}.
      */
+    // TODO: Add a getter and update MarcMultiVolumeMerger to use it for set
     private boolean contentCompressed;
 
     /**
@@ -421,6 +421,9 @@ public class Record implements Serializable, Comparable{
      * list after this method is called.
      * </p><p>
      * Note: Duplicates are removed as part of the copy.
+     * </p><p>
+     * Note 2: Object-references to parents are cleared as part of this to
+     *         ensure consistence.
      * @param parentIds the IDs to assign to the Record.
      */
     public void setParentIds(List<String> parentIds) {
@@ -437,6 +440,8 @@ public class Record implements Serializable, Comparable{
         } else {
             this.parentIds = new LinkedHashSet<String>(parentIds);
         }
+
+        parents = null;
     }
 
     public List<String> getChildIds() {
@@ -448,6 +453,8 @@ public class Record implements Serializable, Comparable{
      * any children registered with {@link #setChildren(List)}. Note that this
      * method copies the content of the given list, so callers are free to
      * clear the list after calling.
+     * Note 2: Object-references to children are cleared as part of this to
+     *         ensure consistence.
      * @param childIds list of record ids for the record's children
      */
     public void setChildIds(List<String> childIds) {
@@ -634,6 +641,7 @@ public class Record implements Serializable, Comparable{
      * Returns a hash code value for the record.
      * @return a hash code value
      */
+    @Override
     @QAInfo(level = QAInfo.Level.FINE,
         state = QAInfo.State.QA_NEEDED,
         comment="Hans made the hash-function, so no present persons know how it "
@@ -658,6 +666,7 @@ public class Record implements Serializable, Comparable{
         return getId().compareTo(((Record) o).getId());
     }
 
+    @Override
     @SuppressWarnings({"UnnecessaryParentheses"})
     @QAInfo(level = QAInfo.Level.PEDANTIC,
             state = QAInfo.State.IN_DEVELOPMENT,
@@ -694,6 +703,7 @@ public class Record implements Serializable, Comparable{
     /**
      * @return a human-readable single line version of Record.
      */
+    @Override
     public String toString() {
         return toString(false);
     }
@@ -815,13 +825,6 @@ public class Record implements Serializable, Comparable{
             }
         }
 
-        if (ib.hasNext()) {
-            return false;
-        }
-
-        return true;
+        return !ib.hasNext();
     }
 }
-
-
-

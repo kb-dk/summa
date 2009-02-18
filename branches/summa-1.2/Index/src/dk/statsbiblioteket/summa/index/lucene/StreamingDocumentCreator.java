@@ -287,6 +287,8 @@ public class StreamingDocumentCreator extends DocumentCreatorBase {
                           e);
             }
 
+
+
             // TODO: Verify how we handle embedded HTML
             String content = reader.getElementText();
             if (content != null) {

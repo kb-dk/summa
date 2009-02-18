@@ -118,6 +118,10 @@ public class FacetManipulator implements IndexManipulator {
         CoreMap coreMap = CoreMapFactory.getCoreMap(conf, structure);
         builder =
                 BuilderFactory.getBuilder(conf, structure, coreMap, tagHandler);
+        log.info(String.format(
+                "FacetManipulator(clearTagsOnClear=%b, clearTagsOnConsolidate=%"
+                + "b, skipFacetOnUpdate=%b) created",
+                clearTagsOnClear, clearTagsOnConsolidate, skipFacetOnUpdate));
     }
 
     public void clear() throws IOException {
@@ -165,6 +169,10 @@ public class FacetManipulator implements IndexManipulator {
                           + " is true. Payload skipped is " + payload);
             }
             return false;
+        }
+        if (log.isTraceEnabled()) {
+            //noinspection DuplicateStringLiteralInspection
+            log.trace("Adding " + payload + " to Facet structure");
         }
         return !builder.update(payload);
     }

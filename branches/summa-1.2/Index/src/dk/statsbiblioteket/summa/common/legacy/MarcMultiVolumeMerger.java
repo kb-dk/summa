@@ -17,7 +17,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.summa.index.filter;
+package dk.statsbiblioteket.summa.common.legacy;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
@@ -85,22 +85,54 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
             return;
         }
         Record record = payload.getRecord();
-        if (record.getChildren() == null || record.getChildren().size() == 0) {
-            log.debug("No children for " + payload);
-            return;
+        String mergedContent = getMergedOrNull(record);
+        if (mergedContent != null) {
+            try {
+                record.setContent(mergedContent.getBytes("utf-8"), false);
+            } catch (UnsupportedEncodingException e) {
+                //noinspection DuplicateStringLiteralInspection
+                throw new IllegalArgumentException("utf-8 not supported");
+            }
         }
+    }
+
+    /**
+     *
+     * @param record the Record whose content to transform to legacy merged
+     *               format.
+     * @return the content of the Record and its children, represented as
+     *         merged MARC.
+     */
+    public String getLegacyMergedXML(Record record) {
+        String result = getMergedOrNull(record);
+        return result == null ? record.getContentAsUTF8() : result;
+    }
+
+    private String getMergedOrNull(Record record) {
+        if (!record.hasChildren()) {
+            log.debug("No children for " + record.getId());
+            return null;
+        } else if (record.getChildren() == null) {
+            log.debug("Can not expand unresolved children of "
+                      + record.toString(true));
+            return null;
+        } else {
+            //noinspection DuplicateStringLiteralInspection
+            log.debug("Processing " + record.getChildren().size()
+                      + " children of " + record.getId());
+        }
+
         //noinspection DuplicateStringLiteralInspection
-        log.trace("Processing " + record.getChildren().size() + " level 1"
-                  + " children");
         StringWriter output = new StringWriter(5000);
         try {
             addProcessedContent(output, record, 0);
-            log.trace("Finished processing content for " + payload);
-            record.setRawContent(output.toString().getBytes("utf-8"));
+            log.trace("Finished processing content for " + record);
         } catch (Exception e) {
-            log.warn("Exception transforming " + payload
+            log.warn("Exception transforming " + record
                      + ". The content will not be updated", e);
+            return null;
         }
+        return output.toString();
     }
 
     /**
@@ -119,6 +151,9 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
      */
     private void addProcessedContent(StringWriter output, Record record,
                                      int level) throws TransformerException {
+        //noinspection DuplicateStringLiteralInspection
+        log.debug("Processing "+record.getId()+"  at level " + level);
+
         String content = record.getContentAsUTF8();
         int endPos = content.lastIndexOf("</record>");
         if (endPos == -1) {

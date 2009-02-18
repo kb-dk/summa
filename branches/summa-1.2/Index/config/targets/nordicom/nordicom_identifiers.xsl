@@ -93,13 +93,14 @@
             <!-- Det gamle format -->
 
             <xsl:otherwise>
-
-                <xsl:if test="contains(mc:record/mc:datafield[@tag='150']/mc:subfield[@code='a'],ISSN)">
-                    <xsl:variable name="issn" select="normalize-space(substring-after(mc:datafield[@tag='150']/mc:subfield[@code='a'],'ISSN'))"/>
-                    <Index:field Index:name="issn" Index:navn="in" Index:type="number" Index:boostFactor="10">
-                        <xsl:value-of select="substring($issn,1,9)"/>
-                    </Index:field>
-                </xsl:if>
+                <Index:group Index:name="numbers" Index:navn="nr">
+                    <xsl:if test="contains(mc:record/mc:datafield[@tag='150']/mc:subfield[@code='a'],ISSN)">
+                        <xsl:variable name="issn" select="normalize-space(substring-after(mc:datafield[@tag='150']/mc:subfield[@code='a'],'ISSN'))"/>
+                        <Index:field Index:name="issn" Index:navn="in" Index:type="number" Index:boostFactor="10">
+                            <xsl:value-of select="substring($issn,1,9)"/>
+                        </Index:field>
+                    </xsl:if>
+                </Index:group>
 
             </xsl:otherwise>
         </xsl:choose>
