@@ -86,6 +86,7 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
                           Comparator comparator) {
         super(valueConverter, comparator);
         sorter = new ListSorter() {
+            @Override
             protected <T> void swap(List<T> list, int pos1, int pos2) {
                 long temp = indexes[pos1];
                 indexes[pos1] = indexes[pos2];
@@ -166,6 +167,8 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
                                 tmpIndex, getIndexFile()));
         remove(getIndexFile(), "old index");
         tmpIndex.renameTo(getIndexFile());
+        log.trace("Flushing values");
+        values.flush();
         log.debug("Finished storing pool '" + poolName + "' to location '"
                   + location + "'");
     }
@@ -176,7 +179,7 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
     }
 
     public void close() {
-        log.trace("Close called");
+        log.debug("Close called");
         if (values != null) {
             try {
                 log.trace("Calling values.close()");
@@ -196,6 +199,7 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
         sorter.sort(this, this);
     }
 
+    @Override
     public E set(int index, E element) {
         if (index < 0 || index >= size()) {
             throw new ArrayIndexOutOfBoundsException(String.format(
@@ -224,6 +228,7 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
         return getIndexEntry(pos, setBytes.length);
     }
 
+    @Override
     public void add(int insertPos, E value) {
         //noinspection DuplicateStringLiteralInspection
         log.trace("Adding '" + value + "' to the pool at index " + insertPos);
@@ -254,6 +259,7 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
         }
     }
 
+    @Override
     public E remove(int position) {
         log.trace("Removing value at position " + position);
         E e = get(position);
@@ -271,6 +277,7 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
         return e;
      }
 
+    @Override
     public E get(int position) {
         if (position < 0 || position >= size()) {
             throw new ArrayIndexOutOfBoundsException(String.format(
@@ -288,10 +295,12 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
         }
     }
 
+    @Override
     public int size() {
         return valueCount;
     }
 
+    @Override
     public void clear() {
         log.debug(String.format("Clear called for pool '%s' at '%s'",
                                 poolName, location));
