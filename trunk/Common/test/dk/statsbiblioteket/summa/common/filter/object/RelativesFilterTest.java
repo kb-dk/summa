@@ -87,25 +87,25 @@ public class RelativesFilterTest extends TestCase implements ObjectFilter {
         reset();
         assertTrue("Discard parents should discard properly",
                    gotThrough(Configuration.newMemoryBased(
-                           RelativesFilter.CONF_DISCARD_HASPARENT, true),
+                           DiscardRelativesFilter.CONF_DISCARD_HASPARENT, true),
                               Arrays.asList("Alone1", "Alone2",
                                             "HasChildren")));
         reset();
         assertTrue("Discard children should discard properly",
                    gotThrough(Configuration.newMemoryBased(
-                           RelativesFilter.CONF_DISCARD_HASCHILDREN, true),
+                           DiscardRelativesFilter.CONF_DISCARD_HASCHILDREN, true),
                               Arrays.asList("Alone1", "Alone2", "HasParent")));
         reset();
         assertTrue("Discard parent & children should discard properly",
                    gotThrough(Configuration.newMemoryBased(
-                           RelativesFilter.CONF_DISCARD_HASPARENT, true,
-                           RelativesFilter.CONF_DISCARD_HASCHILDREN, true),
+                           DiscardRelativesFilter.CONF_DISCARD_HASPARENT, true,
+                           DiscardRelativesFilter.CONF_DISCARD_HASCHILDREN, true),
                               Arrays.asList("Alone1", "Alone2")));
     }
 
     private boolean gotThrough(Configuration conf, List<String> testIDs) {
         List<String> processed = new ArrayList<String>(testIDs.size());
-        RelativesFilter discarder = new RelativesFilter(conf);
+        DiscardRelativesFilter discarder = new DiscardRelativesFilter(conf);
         discarder.setSource(this);
         while (discarder.hasNext()) {
             processed.add(discarder.next().getId());
