@@ -35,6 +35,8 @@ import dk.statsbiblioteket.summa.control.api.ClientDeploymentException;
 import dk.statsbiblioteket.summa.control.server.ControlUtils;
 import dk.statsbiblioteket.summa.control.api.feedback.Feedback;
 import dk.statsbiblioteket.summa.control.api.feedback.Message;
+import dk.statsbiblioteket.summa.control.api.feedback.ConsoleFeedback;
+import dk.statsbiblioteket.summa.control.api.feedback.VoidFeedback;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.api.BadConfigurationException;
 import dk.statsbiblioteket.summa.control.bundle.BundleSpecBuilder;
@@ -357,7 +359,7 @@ public class SSHDeployer implements ClientDeployer {
             } else if (processThread.isAlive()) {
                 /* The process is still running. This is probably a good sign,
                  * but we have no way to be sure */
-                log.debug("Process thread for '" + clientSpec + "' still "
+                log.debug("Process thread for '" + clientId + "' still "
                           + "running. Let's hope it is doing good");
             } else if (runner.getReturnCode() != 0) {
                 error = "Could not run client '" + clientId + "' with login "
@@ -435,6 +437,10 @@ public class SSHDeployer implements ClientDeployer {
                 if (probe.getReturnCode() == 0) {
                     log.debug("Found JVM on " + login + ": " + probePath);
                     return probePath;
+                } else {
+                    log.trace("No JRE on "+probePath+":\n"
+                              + probe.getProcessOutputAsString() + "\n"
+                              + probe.getProcessErrorAsString());
                 }
             }
         }
@@ -459,5 +465,14 @@ public class SSHDeployer implements ClientDeployer {
 
     public int getPort() {
         return port;
+    }
+
+    public static void main (String[] args) throws Exception {
+        ClientDeployer d = new SSHDeployer(
+                Configuration.newMemoryBased("summa.control.deployer.target", "localhost:222",
+                                             "summa.control.deployer.bundle.file", "/home/mke/summa-control/repository/test-client-1.bundle",
+                                             "summa.control.client.id", "t3"));
+        d.start(new VoidFeedback());
+
     }
 }
