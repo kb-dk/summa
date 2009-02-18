@@ -38,7 +38,7 @@
  * Bugfix: Record did not clear the list of parents when setParentID was set   
 
 =======================
-2009-01-09: Summa 1.2.0
+2009-02-09: Summa 1.2.0
 =======================
  
  * Add a new mode to the FacetManipulator doing blazingly fast batch updates.
