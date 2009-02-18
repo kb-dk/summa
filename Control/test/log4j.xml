@@ -82,15 +82,17 @@
         <appender-ref ref="CONSOLE" />
     </logger>
     -->
-    <logger name="dk.statsbiblioteket.summa.index">
+    <logger name="dk.statsbiblioteket.summa.index.IndexController">
         <level value="debug" />
         <appender-ref ref="CONSOLE" />
     </logger>
 
+<!--
     <logger name="dk.statsbiblioteket.summa.facetbrowser">
         <level value="debug" />
         <appender-ref ref="CONSOLE" />
     </logger>
+    -->
         <!--
     <logger name="dk.statsbiblioteket.summa.storage.api.filter.RecordReader">
         <level value="trace" />
