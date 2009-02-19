@@ -39,6 +39,7 @@ import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.browse.TagCounter;
 import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.XProperties;
 import org.apache.log4j.Logger;
 
 import java.io.File;
@@ -62,6 +63,7 @@ public class CoreMapBitStuffed extends CoreMap32 {
 
 //    private static final int VERSION = 10000;
 
+    private static final Object META_REFERENCE_COUNT = "references";
     private static final int CONTENT_INITIAL_SIZE = 10000;
     private static final int MIN_GROWTH_SIZE = 1000;
 //    private static final int MAX_GROWTH_SIZE = 1000 * 1000;
@@ -381,6 +383,10 @@ public class CoreMapBitStuffed extends CoreMap32 {
         storeIndex(index, getDocCount() + 1);
         storeValues(valuePos);
         log.debug("Finished storing integer-based map");
+    }
+    @Override
+    protected void enrichMetaBeforeStore(XProperties meta) {
+        meta.put(META_REFERENCE_COUNT, valuePos);
     }
 
     public boolean open(File location, boolean forceNew) throws IOException {
