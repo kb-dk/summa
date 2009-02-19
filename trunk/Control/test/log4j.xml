@@ -124,8 +124,8 @@
         <level value="debug" />
         <appender-ref ref="CONSOLE" />
     </logger>
-    <logger name="dk.statsbiblioteket.summa.performance">
-        <level value="debug" />
+    <logger name="dk.statsbiblioteket.summa.facetbrowser.lucene.LuceneFacetBuilder">
+        <level value="trace" />
         <appender-ref ref="CONSOLE" />
     </logger>
     <!--

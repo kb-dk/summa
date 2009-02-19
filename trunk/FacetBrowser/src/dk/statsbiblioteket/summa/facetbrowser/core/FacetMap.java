@@ -165,9 +165,9 @@ public class FacetMap {
         } else {
             tagID = (tagID * -1) - 1;
         }
-        int[] tagIDs = new int[]{tagID}
-        for (int docID: docIDs) {
-            coreMap.add(docID, facetID, tagIDs);
+        int[] tagIDs = new int[]{tagID};
+        for (int i = 0 ; i < docCount ; i++) {
+            coreMap.add(docIDs[i], facetID, tagIDs);
         }
     }
 

@@ -71,8 +71,11 @@ public class ScaleTest extends NoExitTestCase {
         return new TestSuite(ScaleTest.class);
     }
 
+    public void testBuild50() throws Exception {
+        testBuild(50);
+    }
     public void testBuild1000() throws Exception {
-        testBuild(1000);
+        testBuild(100);
     }
     public void testBuild(int records) throws Exception {
         Profiler profiler = new Profiler();
