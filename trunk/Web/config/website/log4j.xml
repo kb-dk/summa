@@ -33,7 +33,7 @@
 
     <appender name="FILE" class="org.apache.log4j.RollingFileAppender">
         <param name="Threshold" value="TRACE"/><!-- or DEBUG or INFO -->
-        <param name="File" value="log/logfile.log"/>
+        <param name="File" value="${catalina.home}/logs/logfile.log"/>
         <param name="Append" value="true"/>
         <param name="MaxFileSize" value="500MB"/>
         <param name="MaxBackupIndex" value="5"/>
@@ -46,7 +46,7 @@
     <!-- The full log appender uses a extremely slow pattern, on production systems use only this appender with a threshold of fatal -->
     <appender name="FULL_LOG" class="org.apache.log4j.RollingFileAppender">
         <param name="Threshold" value="FATAL"/>
-        <param name="File" value="log/fatal.log"/>
+        <param name="File" value="${catalina.home}/logs/fatal.log"/>
         <param name="Append" value="true"/>
         <param name="MaxFileSize" value="1MB"/>
         <param name="MaxBackupIndex" value="1"/>
