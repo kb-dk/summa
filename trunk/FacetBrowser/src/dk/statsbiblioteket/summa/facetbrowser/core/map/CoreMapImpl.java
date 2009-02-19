@@ -70,6 +70,7 @@ public abstract class CoreMapImpl implements CoreMap {
         xp.put(META_VERSION, PERSISTENCE_VERSION);
         xp.put(META_DOCUMENTS, getDocCount());
         xp.put(META_FACETS, Strings.join(structure.getFacetNames(), ", "));
+        enrichMetaBeforeStore(xp);
         File metaFile = getPersistenceFile(META_FILE);
         if (!metaFile.getParentFile().exists()) {
             //noinspection DuplicateStringLiteralInspection
@@ -83,6 +84,10 @@ public abstract class CoreMapImpl implements CoreMap {
         }
         remove(metaFile, "meta-file");
         xp.store(new FileOutputStream(metaFile), null);
+    }
+
+    protected void enrichMetaBeforeStore(XProperties meta) {
+
     }
 
     /**
