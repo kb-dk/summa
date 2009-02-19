@@ -199,6 +199,8 @@ public class LuceneFacetBuilder extends BuilderImpl {
             log.debug("Filling " + facetName
                       + " (" + ++counter + "/"
                       + tagHandler.getFacetNames().size() + ")");
+            String lastTerm = null;
+            boolean duplicateDetected = false;
             for (String fieldName: facet.getFields()) {
                 Term searchTerm = new Term(fieldName, "");
                 TermEnum terms = ir.terms(searchTerm);
@@ -207,10 +209,24 @@ public class LuceneFacetBuilder extends BuilderImpl {
                     if (term == null) {
                         break;
                     }
+                    if (term.text().equals(lastTerm)) {
+                        if (!duplicateDetected) {
+                            log.debug("Found the term duplicate " + term.field()
+                                      + ":" + term.text()
+                                      + ". Ignoring further duplicates from "
+                                      + "this field");
+                            duplicateDetected = true;
+                        }
+                        if (!terms.next()) {
+                            break;
+                        }
+                        continue;
+                    }
                     if (!term.field().equals(fieldName)) {
                         break;
                     }
                     String shortTerm = term.text();
+                    lastTerm = shortTerm;
                     if (log.isTraceEnabled()) {
                         log.trace("Adding tag '" + shortTerm
                                   + "' from field '" + fieldName
@@ -347,8 +363,12 @@ public class LuceneFacetBuilder extends BuilderImpl {
         facetMap.addToDocument(docID, facetTags);
     }
 
+    private int BUFFER_SIZE = 1000;
+    private int[] docBuffer = new int[BUFFER_SIZE];
+    private int[] freqBuffer = new int[BUFFER_SIZE];
     // TODO: Only fill fields that has not previously been filled
-    private void buildTermsToDocs(IndexReader ir) throws IOException {
+    private synchronized void buildTermsToDocs(IndexReader ir) throws
+                                                                   IOException {
         log.debug("buildTermsToDocs() started");
         long startTime = System.currentTimeMillis();
         for (Map.Entry<String, FacetStructure> entry:
@@ -368,10 +388,22 @@ public class LuceneFacetBuilder extends BuilderImpl {
                     if (termDocs == null) {
                         break;
                     }
+                    int docCount;
+                    while ((docCount = termDocs.read(docBuffer, freqBuffer))
+                           > 0) {
+                        if (log.isTraceEnabled()) {
+                            //noinspection DuplicateStringLiteralInspection
+                            log.trace("Adding " + docCount + " references to "
+                                      + facet.getName() + ":" + term.text());
+                        }
+                        facetMap.add(docBuffer, docCount, facet.getName(), 
+                                     term.text());
+                    }
+                    /* Mind-numbingly slow due to repeated term lookups
                     while(termDocs.next()) {
                         facetMap.add(termDocs.doc(), facet.getName(),
                                      term.text());
-                    }
+                    }*/
                 } while (terms.next());
             }
         }

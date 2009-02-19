@@ -157,6 +157,19 @@ public class FacetMap {
         coreMap.add(docID, facetID, new int[]{tagID});
     }
 
+    public void add(int[] docIDs, int docCount, String facet, String tag) {
+        int facetID = structure.getFacetID(facet);
+        int tagID = tagHandler.insertTag(facetID, tag);
+        if (tagID >= 0) {
+            coreMap.adjustPositions(facetID, tagID, 1);
+        } else {
+            tagID = (tagID * -1) - 1;
+        }
+        for (int docID: docIDs) {
+            coreMap.add(docID, facetID, new int[]{tagID});
+        }
+    }
+
     /**
      * Assigns facetTags to the given document. If the document already exists
      * in the map, the facetTags are merged with existing facetTags.<br />
@@ -259,6 +272,7 @@ public class FacetMap {
     public void setCoreMap(CoreMap coreMap) {
         this.coreMap = coreMap;
     }
+
 }
 
 
