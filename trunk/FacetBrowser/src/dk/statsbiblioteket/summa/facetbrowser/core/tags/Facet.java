@@ -98,8 +98,10 @@ public class Facet implements CollatorSortedPool {
 
     private static final String META_FILE_POSTFIX = ".facet";
     private final static String META_NAME = "name";
+    @SuppressWarnings({"DuplicateStringLiteralInspection"})
     private final static String META_FIELDS = "fields";
     private final static String META_LOCALE = "locale";
+    private static final Object META_FACET_COUNT = "facetCount";
 
     private FacetStructure structure;
     private CollatorSortedPool pool;
@@ -161,8 +163,8 @@ public class Facet implements CollatorSortedPool {
      */
     public boolean open(File location) throws IOException {
         boolean forceNew = true;
-        File metaFile = getPoolPersistenceFile(location, structure.getName(),
-                                               META_FILE_POSTFIX);
+        File metaFile = getPoolPersistenceFile(
+                location, structure.getName(), META_FILE_POSTFIX);
         try {
             //noinspection MismatchedQueryAndUpdateOfCollection
             XProperties xp = new XProperties(metaFile.toString());
@@ -250,6 +252,7 @@ public class Facet implements CollatorSortedPool {
         xp.put(META_FIELDS, f);
         String l = structure.getLocale() == null ? "":structure.getLocale();
         xp.put(META_LOCALE, l);
+        xp.put(META_FACET_COUNT, size());
         log.trace(String.format("Storing meta file '%s' for Facet '%s'",
                                 metaFile, structure.getName()));
         //System.out.println(metaFile.getParentFile());
