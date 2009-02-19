@@ -1,0 +1,429 @@
+<xproperties>
+    <xproperties>
+        <!--
+           This index-configuration is a stub. It should be populated with
+           transformers for the relevant bases. See MultipleSourcesTest for
+           details.
+        -->
+        <entry>
+            <key>summa.control.service.port</key>
+            <value class="int">2784</value>
+        </entry>
+        <entry>
+            <key>summa.control.service.registry.port</key>
+            <value class="int">27000</value>
+        </entry>
+
+        <!-- The class implementing the Service interface -->
+        <entry>
+            <key>control.launcher.service.class</key>
+            <value class="string">dk.statsbiblioteket.summa.control.service.FilterService</value>
+        </entry>
+
+        <entry>
+            <key>filter.name</key>
+            <value class="string">Simple faceted indexer</value>
+        </entry>
+        <entry>
+            <key>filtercontrol.sequential</key>
+            <value class="boolean">true</value>
+        </entry>
+        <entry>
+            <key>filtercontrol.chains</key>
+            <value class="list">
+                <xproperties>
+                    <entry>
+                        <key>filter.name</key>
+                        <value class="string">SingleChain</value>
+                    </entry>
+                    <entry>
+                        <key>summa.filter.sequence.filters</key>
+                        <value class="list">
+
+                            <xproperties>
+                                <entry>
+                                    <key>filter.name</key>
+                                    <value class="string">StorageReader</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.filter.sequence.filterclass</key>
+                                    <value class="string">dk.statsbiblioteket.summa.storage.api.filter.RecordReader</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.storage.recordreader.startfromscratch</key>
+                                    <value class="boolean">false</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.storage.recordreader.maxread.records</key>
+                                    <value class="int">-1</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.storage.recordreader.base</key>
+                                    <value class="string">*</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.rpc.vendor</key>
+                                    <value class="string">//localhost:28000/summa-storage</value>
+                                </entry>
+                            </xproperties>
+
+                            <xproperties>
+                                <entry>
+                                    <key>filter.name</key>
+                                    <value class="string">Muxer</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.filter.sequence.filterclass</key>
+                                    <value class="string">dk.statsbiblioteket.summa.common.filter.object.MUXFilter</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.muxfilter.filters</key>
+                                    <value class="list">
+
+                                        <xproperties>
+                                            <entry>
+                                                <key>filter.name</key>
+                                                <value class="string">csa</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.muxfilter.filter.class</key>
+                                                <value class="string">dk.statsbiblioteket.summa.index.XMLTransformer</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.muxfilter.filter.name</key>
+                                                <value class="string">CSA Transformer</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.muxfilter.filter.bases</key>
+                                                <value class="string">csa</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.xmltransformer.xslt</key>
+                                                <value class="string">targets/csa/csa_index.xsl</value>
+                                            </entry>
+                                        </xproperties>
+
+                                        <xproperties>
+                                            <entry>
+                                                <key>filter.name</key>
+                                                <value class="string">fagref</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.muxfilter.filter.class</key>
+                                                <value class="string">dk.statsbiblioteket.summa.index.XMLTransformer</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.muxfilter.filter.name</key>
+                                                <value class="string">Fagref Transformer</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.muxfilter.filter.bases</key>
+                                                <value class="string">fagref</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.xmltransformer.xslt</key>
+                                                <value class="string">targets/fagreferent/fagref_index.xsl</value>
+                                            </entry>
+                                        </xproperties>
+
+                                        <xproperties>
+                                            <entry>
+                                                <key>filter.name</key>
+                                                <value class="string">horizon</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.muxfilter.filter.class</key>
+                                                <value class="string">dk.statsbiblioteket.summa.index.XMLTransformer</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.muxfilter.filter.name</key>
+                                                <value class="string">Horizon Transformer</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.muxfilter.filter.bases</key>
+                                                <value class="string">horizon</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.xmltransformer.xslt</key>
+                                                <value class="string">targets/horizon/horizon_index.xsl</value>
+                                            </entry>
+                                        </xproperties>
+
+                                        <xproperties>
+                                            <entry>
+                                                <key>filter.name</key>
+                                                <value class="string">oai</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.muxfilter.filter.class</key>
+                                                <value class="string">dk.statsbiblioteket.summa.index.XMLTransformer</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.muxfilter.filter.name</key>
+                                                <value class="string">OAI Transformer</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.muxfilter.filter.bases</key>
+                                                <value class="string">oai</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.xmltransformer.xslt</key>
+                                                <value class="string">targets/oai/oai_index.xsl</value>
+                                            </entry>
+                                        </xproperties>
+
+                                        <xproperties>
+                                            <entry>
+                                                <key>filter.name</key>
+                                                <value class="string">nat</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.muxfilter.filter.class</key>
+                                                <value class="string">dk.statsbiblioteket.summa.index.XMLTransformer</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.muxfilter.filter.name</key>
+                                                <value class="string">Nat Transformer</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.muxfilter.filter.bases</key>
+                                                <value class="string">nat</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.xmltransformer.xslt</key>
+                                                <value class="string">targets/aleph/aleph_index.xsl</value>
+                                            </entry>
+                                        </xproperties>
+
+                                        <xproperties>
+                                            <entry>
+                                                <key>filter.name</key>
+                                                <value class="string">doms</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.muxfilter.filter.class</key>
+                                                <value class="string">dk.statsbiblioteket.summa.index.XMLTransformer</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.muxfilter.filter.name</key>
+                                                <value class="string">DOMS Transformer</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.muxfilter.filter.bases</key>
+                                                <value class="string">doms</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.xmltransformer.xslt</key>
+                                                <value class="string">targets/doms/doms_index.xsl</value>
+                                            </entry>
+                                        </xproperties>
+
+                                        <xproperties>
+                                            <entry>
+                                                <key>filter.name</key>
+                                                <value class="string">etss</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.muxfilter.filter.class</key>
+                                                <value class="string">dk.statsbiblioteket.summa.index.XMLTransformer</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.muxfilter.filter.name</key>
+                                                <value class="string">ETSS Transformer</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.muxfilter.filter.bases</key>
+                                                <value class="string">etss</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.xmltransformer.xslt</key>
+                                                <value class="string">targets/etss/etss_index.xsl</value>
+                                            </entry>
+                                        </xproperties>
+
+                                        <xproperties>
+                                            <entry>
+                                                <key>filter.name</key>
+                                                <value class="string">reklamefilm</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.muxfilter.filter.class</key>
+                                                <value class="string">dk.statsbiblioteket.summa.index.XMLTransformer</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.muxfilter.filter.name</key>
+                                                <value class="string">Reklamefilm Transformer</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.muxfilter.filter.bases</key>
+                                                <value class="string">reklamefilm</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.xmltransformer.xslt</key>
+                                                <value class="string">targets/DanskReklameFilm/reklamefilm_index.xsl</value>
+                                            </entry>
+                                        </xproperties>
+
+                                        <xproperties>
+                                            <entry>
+                                                <key>filter.name</key>
+                                                <value class="string">tusculanum</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.muxfilter.filter.class</key>
+                                                <value class="string">dk.statsbiblioteket.summa.index.XMLTransformer</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.muxfilter.filter.name</key>
+                                                <value class="string">Tusculanum Transformer</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.muxfilter.filter.bases</key>
+                                                <value class="string">tusculanum</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.xmltransformer.xslt</key>
+                                                <value class="string">targets/MuseumTusculanum/mustusc_index.xsl</value>
+                                            </entry>
+                                        </xproperties>
+                                    </value>
+                                </entry>
+                            </xproperties>
+
+                            <xproperties>
+                                <entry>
+                                    <key>filter.name</key>
+                                    <value class="string">OldToNewTransformer</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.filter.sequence.filterclass</key>
+                                    <value class="string">dk.statsbiblioteket.summa.index.XMLTransformer</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.xmltransformer.xslt</key>
+                                    <value class="string">LegacyToSummaDocumentXML.xslt</value>
+                                </entry>
+                            </xproperties>
+
+                            <xproperties>
+                                <entry>
+                                    <key>filter.name</key>
+                                    <value class="string">DocumentCreator</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.filter.sequence.filterclass</key>
+                                    <value class="string">dk.statsbiblioteket.summa.index.lucene.StreamingDocumentCreator</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.index.descriptorsetup</key>
+                                    <value class="xproperties">
+                                        <entry>
+                                            <key>summa.common.indexdescriptor.absolutelocation</key>
+                                            <value class="string">/tmp/summatest/data/oai/oai_IndexDescriptor.xml</value>
+                                        </entry>
+                                    </value>
+                                </entry>
+                            </xproperties>
+
+                            <xproperties>
+                                <entry>
+                                    <key>filter.name</key>
+                                    <value class="string">IndexUpdate</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.filter.sequence.filterclass</key>
+                                    <value class="string">dk.statsbiblioteket.summa.index.IndexControllerImpl</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.index.createnewindex</key>
+                                    <value class="boolean">false</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.index.indexrootlocation</key>
+                                    <value class="string">index</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.index.consolidatetimeout</key>
+                                    <value class="int">-1</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.index.committimeout</key>
+                                    <value class="int">5000</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.index.manipulators</key>
+                                    <value class="list">
+
+                                        <xproperties>
+                                            <entry>
+                                                <key>summa.index.manipulatorclass</key>
+                                                <value class="string">dk.statsbiblioteket.summa.index.lucene.LuceneManipulator</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.index.descriptorsetup</key>
+                                                <value class="xproperties">
+                                                    <entry>
+                                                        <key>summa.common.indexdescriptor.absolutelocation</key>
+                                                        <value class="string">[indexdescriptor]</value>
+                                                    </entry>
+                                                </value>
+                                            </entry>
+                                        </xproperties>
+
+                                        <xproperties>
+                                            <entry>
+                                                <key>summa.index.manipulatorclass</key>
+                                                <value class="string">dk.statsbiblioteket.summa.facetbrowser.FacetManipulator</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.facet.facets</key>
+                                                <value class="list">
+                                                    <xproperties>
+                                                        <entry>
+                                                            <key>summa.facet.name</key>
+                                                            <value class="string">author</value>
+                                                        </entry>
+                                                        <entry>
+                                                            <key>summa.facet.fields</key>
+                                                            <value class="list">
+                                                                <item class="string">author_normalised</item>
+                                                            </value>
+                                                        </entry>
+                                                    </xproperties>
+                                                    <xproperties>
+                                                        <entry>
+                                                            <key>summa.facet.name</key>
+                                                            <value class="string">title</value>
+                                                        </entry>
+                                                        <entry>
+                                                            <key>summa.facet.fields</key>
+                                                            <value class="list">
+                                                                <item class="string">main_titel</item>
+                                                            </value>
+                                                        </entry>
+                                                    </xproperties>
+                                                    <xproperties>
+                                                        <entry>
+                                                            <key>summa.facet.name</key>
+                                                            <value class="string">subject</value>
+                                                        </entry>
+                                                        <entry>
+                                                            <key>summa.facet.fields</key>
+                                                            <value class="list">
+                                                                <item class="string">lsubject</item>
+                                                            </value>
+                                                        </entry>
+                                                    </xproperties>
+                                                </value>
+                                            </entry>
+                                        </xproperties>
+                                    </value>
+                                </entry>
+                            </xproperties>
+                        </value>
+                    </entry>
+                </xproperties>
+            </value>
+        </entry>
+    </xproperties>
+</xproperties>

@@ -1,0 +1,8 @@
+When moving or restarting the storage server, remember to update
+controllucene.properties (directory_name and create_new_index).
+
+On restart also remember to check (in /tmp/) if there is an old write
+lock and delete it.
+
+If you want to use IDEA for testing, remember to add the config
+directory to the module libraries in project settings.
