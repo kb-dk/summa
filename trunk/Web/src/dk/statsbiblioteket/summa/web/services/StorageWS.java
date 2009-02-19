@@ -23,8 +23,11 @@
 package dk.statsbiblioteket.summa.web.services;
 
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.legacy.MarcMultiVolumeMerger;
+import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
+import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.IOException;
@@ -33,6 +36,8 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import javax.xml.stream.XMLStreamException;
 
 /**
  * A class containing methods meant to be exposed as a web service
@@ -56,35 +61,79 @@ public class StorageWS {
      */
     private synchronized StorageReaderClient getStorageClient() {
         if (storage == null) {
-            if (conf == null) {
-                conf = Configuration.getSystemConfiguration(true);
-            }
-            storage = new StorageReaderClient(conf);
+            storage = new StorageReaderClient(getConfiguration());
         }
         return storage;
     }
 
     /**
-     * Get the contents of a record from storage.
+     * Get the System Configuration
+     * @return The System Configuration object
+     */
+    private Configuration getConfiguration() {
+        if (conf == null) {
+            conf = Configuration.getSystemConfiguration(true);
+        }
+
+        return conf;
+    }
+
+    /**
+     * Get the contents of a record (including all parent/child relations) from storage.
      * @param id the record id.
-     * @return A String with the contents of the record or null if unable to retrieve record.
+     * @return A String with the contents of the record (and the parent/child relations)
+     * or null if unable to retrieve record.
      */
     public String getRecord(String id) {
-        String retXML;
+        return realGetRecord(id, true, false);
+    }
 
+    /**
+     * Get the contents of a record (including all parent/child relations) from storage.
+     * It will be returned in a format compatible with old Summa versions.
+     * @param id the record id.
+     * @return A String with the contents of the record (and the parent/child relations)
+     * or null if unable to retrieve record.
+     */
+    public String getLegacyRecord(String id) {
+        return realGetRecord(id, true, true);
+    }
+
+    /**
+     * Get the contents of a record from storage.
+     * @param id the record id.
+     * @param expand whether or not to include all parent/child relations when getting the record
+     * @param legacyMerge whether or not to return to record in a merged format sutiable for legacy use
+     * @return A String with the contents of the record or null if unable to retrieve record.
+     */
+    private String realGetRecord(String id, boolean expand, boolean legacyMerge) {
+        String retXML;
         Record record;
+        QueryOptions q = null;
 
         try {
-            List<Record> recs = getStorageClient().getRecords(Arrays.asList(id), null);
+            if (expand) {
+                q = new QueryOptions(null, null, -1, -1);
+            }
+            record = getStorageClient().getRecord(id, q);
 
-            if (recs.size() == 0) {
+            if (record == null) {
                 retXML = null;
             } else {
-               retXML = recs.get(0).getContentAsUTF8();
+                if (legacyMerge) {
+                    MarcMultiVolumeMerger merger = new MarcMultiVolumeMerger(getConfiguration());
+                    retXML = merger.getLegacyMergedXML(record);
+                } else {
+                    retXML = RecordUtil.toXML(record);
+                }
             }
         } catch (IOException e) {
             log.error("Error while getting record with id: " + id + ". Error was: ", e);
             // an error occured while retrieving the record. We simply return null to indicate the record was not found.
+            retXML = null;
+        } catch (XMLStreamException e) {
+            log.error("Error while converting record to XML: " + id + ". Error was: ", e);
+            // an error occured while converting the record. We simply return null to indicate the error.
             retXML = null;
         }
 

@@ -41,7 +41,7 @@
         <documentation>Storage web service for the Summa system</documentation>
         <parameter name="className" value="dk.statsbiblioteket.summa.web.services.StorageWS"/>
 
-        <parameter name="allowedMethods" value="getRecord"/>
+        <parameter name="allowedMethods" value="getRecord getLegacyRecord"/>
         <namespace>http://statsbiblioteket.dk/summa/storage</namespace>
 
         <operation name="getRecord">
@@ -53,6 +53,16 @@
             <parameter name="id" type="tns:string" />
         </operation>
 
+        <operation name="getLegacyRecord">
+            <documentation>
+                This method returns the record with the given id or null in case it is unable to fetch the record.
+                The record is returned in a format suitable for legacy applications, and should only be used by
+                legacy applications. New applications must use getRecord instead.
+
+                id: The id of the record to fetch.
+            </documentation>
+            <parameter name="id" type="tns:string" />
+        </operation>
     </service>
     <transport name="http">
         <requestFlow>
