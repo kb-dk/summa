@@ -101,6 +101,8 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
             comment = "Verify that valueCount is correct after load")
     public boolean open(File location, String poolName, boolean readOnly,
                         boolean forceNew) throws IOException {
+        log.debug(String.format("open(%s, %s, %b, %b) called",
+                                location, poolName, readOnly, forceNew));
         if (values != null) {
             log.warn(String.format(
                     "Opening new pool without previous close of '%s'. "
@@ -195,6 +197,7 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
         valueCount = 0;
     }
 
+    @Override
     protected void sort() {
         sorter.sort(this, this);
     }
@@ -214,6 +217,10 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
     private long storeValue(E element) {
         byte[] setBytes = getValueConverter().valueToBytes(element);
         long pos = values.length();
+        if (log.isTraceEnabled()) {
+            //noinspection DuplicateStringLiteralInspection
+            log.trace("Storing " + element + " at file position " + pos);
+        }
         if (setBytes.length > 0) {
             try {
                 values.seek(pos);

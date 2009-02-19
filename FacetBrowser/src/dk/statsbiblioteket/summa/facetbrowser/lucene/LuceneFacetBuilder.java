@@ -178,7 +178,7 @@ public class LuceneFacetBuilder extends BuilderImpl {
             throw new IOException("Unexpected exception building new facet"
                                   + " index", e);
         }
-        log.debug("Filled tag handler from index");
+        log.debug("Filled tag handler and core map from index");
     }
 
     // Note: This only catches indexable. Stored-only are added in core build
