@@ -72,7 +72,7 @@
                                                 <xsl:text>artikel</xsl:text>
                                             </Index:field>
                                             <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
-                                                <xsl:text>bog_art</xsl:text>
+                                                <xsl:text>artikel_i_bog</xsl:text>
                                             </Index:field>
                                         </xsl:when>
 
@@ -133,7 +133,7 @@
                                 <xsl:text>artikel</xsl:text>
                             </Index:field>
                             <Index:field Index:repeat="false" Index:name="lma_long" Index:navn="lma_lang" Index:type="keyword">
-                                <xsl:text>bog_art</xsl:text>
+                                <xsl:text>artikel_i_bog</xsl:text>
                             </Index:field>
                         </xsl:when>
                         <xsl:when test="/mc:record/mc:datafield[@tag='150']/mc:subfield[@code='a']">
