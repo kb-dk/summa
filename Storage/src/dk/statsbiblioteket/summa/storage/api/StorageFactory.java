@@ -53,25 +53,42 @@ public class StorageFactory {
             RMIStorageProxy.class;
 
     /**
-     * <p>Construct a storage instance based on the given properties.
-     * The properties are also passed to the constructor for the storage.</p>
-     *
-     * <p>Most interestingly is probably the property {@link Storage#CONF_CLASS}
-     * used to specify the class of the storage implementation to use.</p>
+     * Construct a storage instance based on the given properties. the
+     * Java class of the storage instance is read from the property
+     * {@link Storage#CONF_CLASS}. The properties are also passed to the
+     * constructor for the storage.
      *
      * @param conf setup for the wanted storage along with the
-     *        property {@link Storage#CONF_CLASS} which should hold the class-name
-     *        for the wanted {@link Storage}. If no storage is specified,
+     *        property {@link Storage#CONF_CLASS} which should hold the class
+     *        name for the wanted {@link Storage}. If no storage is specified,
      *        the {@code StorageFactory} defaults to {@link #DEFAULT_STORAGE}.
      * @return an object implementing the {@link Storage} interface.
      * @throws IOException if the storage could not be created.
      */
     public static Storage createStorage(Configuration conf) throws IOException {
+        return createStorage(conf, Storage.CONF_CLASS);
+    }
+
+    /**
+     * Construct a storage instance based on the given properties, extracting
+     * which storage class to use from the property {@code storageClassProp}.
+     * The configuration is also passed to the constructor for the storage.
+     *
+     * @param conf setup for the wanted storage along with the
+     *        property {@code storageClassProp} which should hold the class
+     *        name for the wanted {@link Storage}. If no storage is specified,
+     *        the {@code StorageFactory} defaults to {@link #DEFAULT_STORAGE}.
+     * @return an object implementing the {@link Storage} interface.
+     * @throws IOException if the storage could not be created.
+     */
+    public static Storage createStorage(Configuration conf,
+                                        String storageClassProp)
+                                                            throws IOException {
         log.trace("createStorage called");
 
         Class<? extends Storage> storageClass;
         try {
-            storageClass = Configuration.getClass(Storage.CONF_CLASS,
+            storageClass = Configuration.getClass(storageClassProp,
                                                   Storage.class,
                                                   DEFAULT_STORAGE,
                                                   conf);
@@ -86,8 +103,8 @@ public class StorageFactory {
         log.debug("Instantiating storage class " + storageClass);
 
         try {
-            // FIXME: This forces a RMI call when packing as a service. Not good 
-            return Configuration.create(storageClass, conf);        
+            // FIXME: This forces a RMI call when packing as a service. Not good
+            return Configuration.create(storageClass, conf);
         } catch (Exception e) {
             throw new IOException("Failed to instantiate storage class "
                                   + storageClass + ": " + e.getMessage(), e);
