@@ -71,6 +71,9 @@ public class ScaleTest extends NoExitTestCase {
         return new TestSuite(ScaleTest.class);
     }
 
+    public void testBuild1() throws Exception {
+        testBuild(1);
+    }
     public void testBuild50() throws Exception {
         testBuild(50);
     }

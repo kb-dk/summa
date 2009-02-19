@@ -120,11 +120,11 @@
         <appender-ref ref="CONSOLE" />
     </logger>
         -->
-    <logger name="dk.statsbiblioteket.summa.ingest.split.SBMARCParser">
+<!--    <logger name="dk.statsbiblioteket.summa">
         <level value="debug" />
         <appender-ref ref="CONSOLE" />
-    </logger>
-    <logger name="dk.statsbiblioteket.summa.facetbrowser.lucene.LuceneFacetBuilder">
+    </logger>-->
+    <logger name="dk.statsbiblioteket.summa.facetbrowser.util.pool.DiskPool">
         <level value="trace" />
         <appender-ref ref="CONSOLE" />
     </logger>
