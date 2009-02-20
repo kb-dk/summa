@@ -213,7 +213,7 @@ public class TagHandlerImpl implements TagHandler {
     }
 
     public void dirtyAddTag(int facetID, String tagName) {
-        facets[facetID].add(tagName);
+        facets[facetID].dirtyAdd(tagName);
     }
 
     public void dirtyAddTag(String facetName, String tagName) {
