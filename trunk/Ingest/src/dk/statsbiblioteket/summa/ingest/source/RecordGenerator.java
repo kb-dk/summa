@@ -297,7 +297,7 @@ public class RecordGenerator implements ObjectFilter {
         private String key;
         public IncrementalNumberToken() { }
         public IncrementalNumberToken(String key) {
-            log.debug("Creating IncrementalNumberToken(" + key + ")");
+            log.trace("Creating IncrementalNumberToken(" + key + ")");
             this.key = key;
             if (!incrementalNumbers.containsKey(key)) {
                 incrementalNumbers.put(key, 0);
@@ -323,7 +323,7 @@ public class RecordGenerator implements ObjectFilter {
 
         public TimestampToken() { }
         public TimestampToken(String unit) {
-            log.debug("Creating TimestampToken(" + unit + ")");
+            log.trace("Creating TimestampToken(" + unit + ")");
             this.unit = unit;
         }
         public String getContent() {
@@ -352,7 +352,7 @@ public class RecordGenerator implements ObjectFilter {
         private int max;
         public RandomIntToken() { }
         public RandomIntToken(int min, int max) {
-            log.debug("Creating RandomIntToken(" + min + ", " + max + ")");
+            log.trace("Creating RandomIntToken(" + min + ", " + max + ")");
             this.min = min;
             this.max = max;
         }
@@ -377,7 +377,7 @@ public class RecordGenerator implements ObjectFilter {
         private boolean onlyLetters;
         public RandomCharsToken() { }
         public RandomCharsToken(int min, int max, boolean onlyLetters) {
-            log.debug("Creating RandomCharsToken(" + min + ", " + max + ", "
+            log.trace("Creating RandomCharsToken(" + min + ", " + max + ", "
                       + onlyLetters + ")");
             this.min = min;
             this.max = max;
@@ -408,7 +408,7 @@ public class RecordGenerator implements ObjectFilter {
         public RandomWordsToken() { }
         public RandomWordsToken(int min, int max, int minLength, int maxLength,
                                 boolean onlyLetters) {
-            log.debug("Creating RandomWordsToken(" + min + ", " + max + ", "
+            log.trace("Creating RandomWordsToken(" + min + ", " + max + ", "
                       + minLength + ", " + maxLength + ", " + onlyLetters
                       + ")");
             this.min = min;
@@ -451,7 +451,7 @@ public class RecordGenerator implements ObjectFilter {
         private List<String> words;
         public WordListToken() { }
         public WordListToken(int min, int max, String listName) {
-            log.debug("Creating WordListToken(" + min + ", " + max + ", "
+            log.trace("Creating WordListToken(" + min + ", " + max + ", "
                       + listName + ")");
             this.min = min;
             this.max = max;
@@ -485,7 +485,7 @@ public class RecordGenerator implements ObjectFilter {
         private String literal;
         public LiteralToken() { }
         public LiteralToken(String literal) {
-            log.debug("Creating LiteralToken(" + literal + ")");
+            log.trace("Creating LiteralToken(" + literal + ")");
             this.literal = literal;
         }
         public String getContent() {
