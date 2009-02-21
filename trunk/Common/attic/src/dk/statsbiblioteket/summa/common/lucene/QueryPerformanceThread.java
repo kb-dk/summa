@@ -201,7 +201,7 @@ public class QueryPerformanceThread extends Thread {
             int counter = 0;
             while (counter++ < maxHits && iterator.hasNext()) {
                 Hit hit = (Hit)iterator.next();
-                hit.get("shortformat");
+                hit.g   et("shortformat");
 
             }
             return hits.length();

@@ -303,13 +303,21 @@ public abstract class StringPoolSuperTest extends TestCase {
 
     public static void createSample(SortedPool<String> pool, int samples)
             throws Exception {
-        Random random = new Random();
+        createSample(pool, samples, false);
+    }
+    public static Profiler createSample(SortedPool<String> pool, int samples,
+                                    boolean dirty) throws Exception {
+        Random random = new Random(samples);
         Profiler profiler = new Profiler();
         profiler.setBpsSpan(1000);
         profiler.setExpectedTotal(samples);
         int feedback = Math.max(1, samples / 100);
         for (int i = 0 ; i < samples ; i++) {
-            pool.insert(Integer.toString(random.nextInt()));
+            if (dirty) {
+                pool.dirtyAdd(Integer.toString(random.nextInt()));
+            } else {
+                pool.insert(Integer.toString(random.nextInt()));
+            }
             profiler.beat();
             if (i % feedback == 0) {
                 System.out.println("Added " + i + "/" + samples
@@ -319,11 +327,20 @@ public abstract class StringPoolSuperTest extends TestCase {
                                    + profiler.getETAAsString(true));
             }
         }
-        System.out.println("\nConstruction took "+ profiler.getSpendTime());
+        if (dirty) {
+            System.out.println("Dirty adding took "+ profiler.getSpendTime());
+            pool.cleanup();
+            System.out.println("After cleanup the total time was "
+                               + profiler.getSpendTime());
+        }
 
-        profiler = new Profiler();
+        System.out.println("Construction took "+ profiler.getSpendTime());
+
+        Profiler store = new Profiler();
         pool.store();
-        System.out.println("Storing took "+ profiler.getSpendTime());
+        System.out.println("Storing took "+ store.getSpendTime());
+        profiler.pause();
+        return profiler;
     }
 
     public void dumpDirty() throws Exception {
@@ -574,6 +591,3 @@ public abstract class StringPoolSuperTest extends TestCase {
         }
     }
 }
-
-
-

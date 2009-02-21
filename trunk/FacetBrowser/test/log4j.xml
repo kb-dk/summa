@@ -22,7 +22,7 @@
 
     <!-- A time/date based rolling appender -->
     <appender name="FILE" class="org.apache.log4j.RollingFileAppender">
-        <param name="Threshold" value="info"/><!-- or DEBUG or INFO -->
+        <param name="Threshold" value="debug"/><!-- or DEBUG or INFO -->
         <param name="File" value="log/logfile.log"/>
         <param name="Append" value="true"/>
         <param name="MaxFileSize" value="100MB"/>
@@ -56,7 +56,7 @@
     </appender>
 
     <logger name="dk.statsbiblioteket.summa.facetbrowser.util.pool.DiskPool">
-        <level value="FATAL"/>
+        <level value="debug"/>
         <appender-ref ref="CONSOLE"/>
     </logger>
 
