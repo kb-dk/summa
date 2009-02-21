@@ -134,7 +134,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
                         sw.write(Integer.toString(tag.getValue()));
                         sw.write("\">\n");
                         //noinspection DuplicateStringLiteralInspection
-                        sw.write("<query>"
+                        sw.write("    <query>"
                                  + getQueryString(facet.getKey(), tag.getKey())
                                  + "</query>\n");
         /*                for (T object: tag.getObjects()) {
