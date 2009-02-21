@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Collections;
 import java.util.Comparator;
-import java.text.Collator;
 import java.io.StringWriter;
 import java.io.Serializable;
 
@@ -221,7 +220,7 @@ public class DocumentResponse implements Response, DocumentKeys {
         }
         DocumentResponse docResponse = (DocumentResponse)other;
         // TODO: Check for differences in basic attributes and warn if needed
-        Collator collator = null;
+        //Collator collator = null;
 /*     * @param collator determines the order of Records, based on their
      *                 sortValue. If no collator is given or sortKey equals
      *                 {@link #SORT_ON_SCORE} or sortKey equals
@@ -233,8 +232,7 @@ public class DocumentResponse implements Response, DocumentKeys {
 */
 
         records.addAll(docResponse.getRecords());
-        if (collator == null || sortKey == null
-            || SORT_ON_SCORE.equals(sortKey)) {
+        if (sortKey == null || SORT_ON_SCORE.equals(sortKey)) {
             Collections.sort(records, scoreComparator);
         } else {
             Comparator<Record> collatorComparator = new Comparator<Record>() {
@@ -261,6 +259,9 @@ public class DocumentResponse implements Response, DocumentKeys {
             };
             Collections.sort(records, collatorComparator);
         }
+
+        hitCount += docResponse.getHitCount();
+        searchTime += docResponse.getSearchTime();
     }
     private Comparator<Record> scoreComparator = new ScoreComparator();
 
@@ -345,6 +346,14 @@ public class DocumentResponse implements Response, DocumentKeys {
      */
     public int size() {
         return records.size();
+    }
+
+    public long getSearchTime() {
+        return searchTime;
+    }
+
+    public long getHitCount() {
+        return hitCount;
     }
 }
 
