@@ -27,16 +27,14 @@
 package dk.statsbiblioteket.summa.facetbrowser.util.pool;
 
 import dk.statsbiblioteket.summa.common.util.ListSorter;
+import dk.statsbiblioteket.summa.common.util.IndirectLongSorter;
 import dk.statsbiblioteket.util.LineReader;
-import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.*;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Arrays;
+import java.util.*;
 
 /**
  * The DiskPool uses the local filesystem for the storage of values. An index
@@ -58,6 +56,9 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
     private static final int MAX_INCREMENT = 1000000;
 
     private ListSorter sorter;
+    private IndirectLongSorter<E> mergeSorter;
+    // If false, ListSorter is used
+    private boolean USE_MERGE_SORT = true;
 
     /**
      * The index for the DiskPool. This is kept as an array in order to minimize
@@ -80,7 +81,15 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
      * The buffer for LineReader. This should be aproximately the length (bytes)
      * of the largest value.
      */
-    private static final int VALUE_BUFFER_SIZE = 100;
+    private static final int VALUE_BUFFER_SIZE = 500;
+
+    /**
+     * The cache facilitates faster look ups. It caches the mapping from
+     * {@link #indexes} to external values.
+     */
+    private final WeakHashMap<Long, E> cache = new WeakHashMap<Long, E>();
+    private long cacheHits = 0;
+    private long cacheMisses = 0;
 
     public DiskPool(ValueConverter<E> valueConverter,
                           Comparator comparator) {
@@ -91,6 +100,11 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
                 long temp = indexes[pos1];
                 indexes[pos1] = indexes[pos2];
                 indexes[pos2] = temp;
+            }
+        };
+        mergeSorter = new IndirectLongSorter<E>() {
+            protected E getValue(long reference) {
+                return DiskPool.this.getValue(reference);
             }
         };
     }
@@ -130,6 +144,7 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
         if (forceNew) {
             log.debug(String.format("creating new pool '%s' at '%s'",
                                     poolName, location));
+            //noinspection DuplicateStringLiteralInspection
             remove(getValueFile(), "existing values");
             getValueFile().createNewFile();
             indexes = new long[DEFAULT_SIZE];
@@ -145,6 +160,7 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
     }
 
     public void store() throws IOException {
+        //noinspection DuplicateStringLiteralInspection
         log.debug(String.format("Storing pool '%s' to location '%s'",
                                 poolName, location));
         File tmpIndex = new File(getIndexFile().toString() + ".tmp");
@@ -160,31 +176,66 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
         for (int i = 0 ; i < size() ; i++) {
             index.writeLong(indexes[i]);
         }
-        log.trace("Stored all indexes for '" + poolName + "', closing streams");
+        log.trace(String.format("Stored all indexes for '%s', closing streams",
+                                poolName));
         index.flush();
         index.close();
         indexBuf.close();
         indexOut.close();
+        //noinspection DuplicateStringLiteralInspection
         log.trace(String.format("store: Renaming index '%s' to '%s'",
                                 tmpIndex, getIndexFile()));
+        //noinspection DuplicateStringLiteralInspection
         remove(getIndexFile(), "old index");
         tmpIndex.renameTo(getIndexFile());
-        log.trace("Flushing values");
-        values.flush();
-        log.debug("Finished storing pool '" + poolName + "' to location '"
-                  + location + "'");
+        log.debug(String.format("Finished storing pool '%s' with %d values to "
+                                + "location '%s'",
+                                poolName, size(), location));
+//        log.debug("Values file: " + values.getFile() + ": " + values.getFile().length() + " bytes"); // TODO: Remove
+        logStats();
+    }
+
+    private void logStats() {
+        log.debug("Cache hits: " + cacheHits
+                  + ", cache misses: " + cacheMisses);
     }
 
     private void connectToValues() throws IOException {
+        log.trace(String.format("connecToValues(%s) called", getValueFile()));
+        if (values != null) {
+            log.debug(String.format("connecToValues(%s) observed that "
+                      + "values are already assigned", getValueFile()));
+        }
         values = new LineReader(getValueFile(), readOnly ? "r" : "rw");
         values.setBufferSize(VALUE_BUFFER_SIZE);
     }
 
     public void close() {
-        log.debug("Close called");
+        log.debug("Close called on " + getName() + " for file "
+                  + (values == null ? "N/A" : values.getFile()));
         if (values != null) {
+            //noinspection DuplicateStringLiteralInspection
+            log.debug("Before close: " + values.getFile() + ": "
+                      + values.getFile().length() + " bytes");
             try {
-                log.trace("Calling values.close()");
+/*                if (values.length() > 4) { // TODO: Remove this
+                    values.seek(values.length() / 2);
+                    log.debug("Reading int from position "
+                              + values.getPosition() + ": "
+                              + values.readInt());
+                    log.debug("Reading line 1 from position "
+                              + values.getPosition() + ": "
+                              + values.readLine());
+                    log.debug("Reading line 2 from position "
+                              + values.getPosition() + ": "
+                              + values.readLine());
+                }
+  */
+                log.trace("Calling values.close() on " + getName());
+//                values.seek(values.length()-1); // TODO: Remove this
+//                values.read();
+//                values.seek(values.length()); // TODO: Remove this
+  //              values.write(87); // Hack to ensure writer is at EOF
                 values.close();
             } catch (IOException e) {
                 log.warn(String.format(
@@ -193,13 +244,28 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
                         poolName, location), e);
             }
         }
+/*        File f = values.getFile();
+        log.debug("After close: " + f + ": " + f.length() + " bytes");
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();  //TODO: Implement this
+        }
+        log.debug("After close and sleep: " + f + ": " + f.length() + " bytes");
+  */
         values = null;
         valueCount = 0;
+        cache.clear();
+        logStats();
     }
 
     @Override
     protected void sort() {
-        sorter.sort(this, this);
+        if (!USE_MERGE_SORT) {
+            sorter.sort(this, this);
+        } else {
+            mergeSorter.sort(indexes, 0, size(), this);
+        }
     }
 
     @Override
@@ -211,6 +277,7 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
         }
         E e = get(index);
         indexes[index] = storeValue(element);
+        cache.put(indexes[index], element);
         return e;
     }
 
@@ -221,6 +288,17 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
             //noinspection DuplicateStringLiteralInspection
             log.trace("Storing " + element + " at file position " + pos);
         }
+/*
+        // Temporary debug start
+        try {
+            values.flush();
+        } catch (IOException e) {
+            log.error("Could not flush values!");
+        }
+        log.debug(values.getFile() + ": " + values.getFile().length()
+                  + " bytes");
+        // Temporary debug end
+        */
         if (setBytes.length > 0) {
             try {
                 values.seek(pos);
@@ -244,15 +322,18 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
         expandIfNeeded();
         /* Make room */
         if (insertPos < size()) {
+            log.trace("Shuffling part of the index array to make room for add");
             System.arraycopy(indexes, insertPos, indexes, insertPos + 1,
                              size() - insertPos);
         }
         indexes[insertPos] = storeValue(value);
+        cache.put(indexes[insertPos], value);
 /*        System.out.println("Insertpos " + insertPos
                            + " valuelength " + getValueLength(indexes[insertPos])
                            + " valueposition " + getValuePosition(indexes[insertPos]));
                            */
         valueCount++;
+//        log.debug("After add: " + values.getFile() + ": " + values.getFile().length() + " bytes"); // TODO: Remove
     }
 
     protected void expandIfNeeded() {
@@ -270,6 +351,7 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
     public E remove(int position) {
         log.trace("Removing value at position " + position);
         E e = get(position);
+        cache.put(indexes[position], null);
         try {
             System.arraycopy(indexes, position + 1, indexes, position,
                              size() - position + 1);
@@ -291,14 +373,26 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
                     "The position %d was not between 0 and %d",
                     position, size()));
         }
+        return getValue(indexes[position]);
+    }
+
+    private E getValue(long reference) {
         try {
-            return readValue(values, indexes[position]);
+            E value = cache.get(reference);
+            if (value != null) {
+                cacheHits++;
+                return value;
+            }
+            cacheMisses++;
+            value = readValue(values, reference);
+            cache.put(reference, value);
+            return value;
         } catch (IOException e) {
             throw new IllegalStateException(String.format(
                     "No value present at position %d with length %d in file "
                     + "'%s' for pool '%s'",
-                    getValuePosition(indexes[position]),
-                    getValueLength(indexes[position]), location, poolName), e);
+                    getValuePosition(reference),
+                    getValueLength(reference), location, poolName), e);
         }
     }
 
@@ -313,6 +407,7 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
                                 poolName, location));
         valueCount = 0;
         indexes = new long[DEFAULT_SIZE];
+        cache.clear();
         if (values != null) {
             log.debug("Closing old value reader");
             try {
@@ -324,6 +419,7 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
             }
         }
         try {
+            //noinspection DuplicateStringLiteralInspection
             remove(getValueFile(), "existing values");
         } catch (IOException e) {
             log.warn(String.format("As '%s' could not be removed, the clearing "
@@ -345,6 +441,9 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
                     getValueFile(), poolName), e);
         }
     }
+
+
+
 
     /*
      * A indirect binary searcher which recognizes valueCount and performs
@@ -371,7 +470,5 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
         return low;
     }
   */
+
 }
-
-
-

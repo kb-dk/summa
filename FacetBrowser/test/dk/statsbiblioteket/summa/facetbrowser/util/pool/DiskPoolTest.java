@@ -27,6 +27,7 @@ import java.io.File;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.Profiler;
 
 /**
  * DiskPool Tester.
@@ -55,11 +56,38 @@ public class DiskPoolTest extends StringPoolSuperTest {
     public SortedPool<String> getPool(File location,
                                       String name) throws Exception {
         DiskStringPool pool = new DiskStringPool(defaultCollator);
+//        DiskStringPool pool = new DiskStringPool(null);
         pool.open(location, name, false, true);
         return pool;
     }
 
+    public void testSpeed100() throws Exception {
+        testSpeed(100);
+    }
 
+    public void testSpeed10K() throws Exception {
+        testSpeed(10000);
+    }
+
+    public void atestSpeed100K() throws Exception {
+        testSpeed(100000);
+    }
+
+    public void atestSpeed1M() throws Exception {
+        testSpeed(1000000);
+    }
+
+    public void atestDirty1M() throws Exception {
+        System.out.println("Dirty: " + createSample(getPool(), 1000000, true).
+                getSpendTime());
+    }
+
+    public void testSpeed(int count) throws Exception {
+        String plain = createSample(getPool(), count, false).getSpendTime();
+        String dirty = createSample(getPool(), count, true).getSpendTime();
+        System.out.println("Plain: " + plain);
+        System.out.println("Dirty: " + dirty);
+    }
 }
 
 

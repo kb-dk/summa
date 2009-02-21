@@ -63,6 +63,25 @@ public class ExtraAsserts extends TestCase implements ErrorHandler {
     }
 
     /**
+     * Compares the two arrays and gives a detailed fail if not completely
+     * equal in content as well as order.
+     * </p><p>
+     * Note: Don't use this for humongous arrays as they are converted to
+     *       Strings for output.
+     * @param message  what to fail with if the arreys are not equal.
+     * @param expected the expected result.
+     * @param actual   the actuak result.
+     */
+    public static void assertEquals(String message, long[] expected,
+                                    long[] actual) {
+        if (!Arrays.equals(expected, actual)) {
+            //noinspection DuplicateStringLiteralInspection
+            fail(message + ". Expected " + dump(expected)
+                 + " got " + dump(actual));
+        }
+    }
+
+    /**
      * Converts the given ints to a comma-separated String.
      * @param ints the integers to dump.
      * @return the integers as a String.
@@ -73,6 +92,24 @@ public class ExtraAsserts extends TestCase implements ErrorHandler {
         for (int i = 0 ; i < ints.length ; i++) {
             sw.append(Integer.toString(ints[i]));
             if (i < ints.length - 1) {
+                sw.append(", ");
+            }
+        }
+        sw.append("]");
+        return sw.toString();
+    }
+
+    /**
+     * Converts the given values to a comma-separated String.
+     * @param values the values to dump.
+     * @return the values as a String.
+     */
+    public static String dump(long[] values) {
+        StringWriter sw = new StringWriter(values.length * 4);
+        sw.append("[");
+        for (int i = 0 ; i < values.length ; i++) {
+            sw.append(Long.toString(values[i]));
+            if (i < values.length - 1) {
                 sw.append(", ");
             }
         }
