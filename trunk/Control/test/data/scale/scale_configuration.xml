@@ -217,6 +217,10 @@
                                                 <value class="string">dk.statsbiblioteket.summa.facetbrowser.FacetManipulator</value>
                                             </entry>
                                             <entry>
+                                                <key>summa.facet.cleartagsonconsolidate</key>
+                                                <value class="boolean">true</value>
+                                            </entry>
+                                            <entry>
                                                 <key>summa.facet.skipfacetonupdate</key>
                                                 <value class="boolean">true</value>
                                             </entry>
