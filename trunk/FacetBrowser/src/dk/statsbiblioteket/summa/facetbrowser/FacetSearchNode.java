@@ -87,7 +87,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         log.info("Constructing FacetSearchNode");
         structure = new Structure(conf);
         TagHandler tagHandler =
-                TagHandlerFactory.getTagHandler(conf, structure, false);
+                TagHandlerFactory.getTagHandler(conf, structure, true);
         CoreMap coreMap = CoreMapFactory.getCoreMap(conf, structure);
         facetMap = new FacetMap(structure, coreMap, tagHandler, true);
         browsers = new ArrayBlockingQueue<BrowserThread>(
