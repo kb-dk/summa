@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -35,7 +35,7 @@ import java.io.IOException;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public abstract class AbstractDiscardFilter {
+public abstract class AbstractDiscardFilter implements ObjectFilter {
     private static Log log = LogFactory.getLog(AbstractDiscardFilter.class);
 
     private ObjectFilter source;
