@@ -225,6 +225,10 @@
                                                 <value class="boolean">true</value>
                                             </entry>
                                             <entry>
+                                                <key>summa.facet.cleartagsonconsolidate</key>
+                                                <value class="boolean">false</value>
+                                            </entry>
+                                            <entry>
                                                 <key>summa.facet.facets</key>
                                                 <value class="list">
                                                     <xproperties>

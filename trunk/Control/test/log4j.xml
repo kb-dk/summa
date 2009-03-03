@@ -66,11 +66,11 @@
         <appender-ref ref="CONSOLE" />
     </logger>
     -->
-    <logger name="dk.statsbiblioteket.summa.releasetest">
-        <level value="trace" />
+    <!--<logger name="dk.statsbiblioteket.summa.releasetest">
+        <level value="debug" />
         <appender-ref ref="CONSOLE" />
     </logger>
-
+        -->
 <!--        <logger name="dk.statsbiblioteket.summa.ingest.stream.FileReader">
         <level value="trace" />
         <appender-ref ref="CONSOLE" />
@@ -82,11 +82,12 @@
         <appender-ref ref="CONSOLE" />
     </logger>
     -->
+    <!--
     <logger name="dk.statsbiblioteket.summa.index.IndexController">
         <level value="debug" />
         <appender-ref ref="CONSOLE" />
     </logger>
-
+        -->
 <!--
     <logger name="dk.statsbiblioteket.summa.facetbrowser">
         <level value="debug" />
@@ -120,14 +121,21 @@
         <appender-ref ref="CONSOLE" />
     </logger>
         -->
-<!--    <logger name="dk.statsbiblioteket.summa">
+    <logger name="dk.statsbiblioteket.summa.facetbrowser">
         <level value="debug" />
         <appender-ref ref="CONSOLE" />
-    </logger>-->
-    <logger name="dk.statsbiblioteket.summa.facetbrowser.util.pool.DiskPool">
+    </logger>
+<!--    <logger name="dk.statsbiblioteket.summa.facetbrowser.util.pool.DiskPool">
         <level value="trace" />
         <appender-ref ref="CONSOLE" />
     </logger>
+    -->
+<!--    <logger name="dk.statsbiblioteket.util.LineReader">
+        <level value="trace" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
+    -->
+
     <!--
     <logger name="dk.statsbiblioteket.summa.common.filter.object.MUXFilterFeeder">
         <level value="trace" />
