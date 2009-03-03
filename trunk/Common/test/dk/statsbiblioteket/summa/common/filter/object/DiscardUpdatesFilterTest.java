@@ -66,7 +66,7 @@ public class DiscardUpdatesFilterTest extends TestCase implements ObjectFilter {
         this.ids.clear();
         this.ids.addAll(testIDs);
         List<String> processed = new ArrayList<String>(testIDs.size());
-        DiscardUpdatesFilter discarder =
+        ObjectFilter discarder =
                 new DiscardUpdatesFilter(Configuration.newMemoryBased());
         discarder.setSource(this);
         while (discarder.hasNext()) {
