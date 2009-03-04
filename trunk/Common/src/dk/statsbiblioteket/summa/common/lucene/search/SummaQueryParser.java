@@ -22,7 +22,7 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.search;
 
-import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.*;
 
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
@@ -34,10 +34,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.apache.lucene.queryParser.FastCharStream;
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParserConstants;
-import org.apache.lucene.queryParser.QueryParserTokenManager;
 import org.apache.lucene.queryParser.Token;
 import org.apache.lucene.search.*;
 
@@ -57,8 +55,8 @@ public class SummaQueryParser {
     public static final boolean DEFAULT_QUERY_TIME_FIELD_BOOSTS = false;
     private boolean supportQueryTimeBoosts = DEFAULT_QUERY_TIME_FIELD_BOOSTS;
 
-    private static final String START_GROUP = "(";
-    private static final String END_GROUP = ")";
+//    private static final String START_GROUP = "(";
+//    private static final String END_GROUP = ")";
 
     private DisjunctionQueryParser parser;
     private LuceneBooster booster;
@@ -321,7 +319,7 @@ public class SummaQueryParser {
         return null;
     }*/
 
-    private static String expgrp(String[] fields, String val) {
+/*    private static String expgrp(String[] fields, String val) {
         String r = "";
         val = val.substring(val.indexOf(":"));
         for (int i = 0; i < fields.length; i++) {
@@ -335,7 +333,7 @@ public class SummaQueryParser {
         }
         return r;
     }
-
+  */
     /**
      * @see {@link LuceneBooster#splitQuery(String)}.
      * @return true if query-time field-level boosts is supported.
@@ -351,6 +349,71 @@ public class SummaQueryParser {
      */
     public void setSupportQueryTimeBoosts(boolean supportQueryTimeBoosts) {
         this.supportQueryTimeBoosts = supportQueryTimeBoosts;
+    }
+
+
+    /**
+     * Parses a Query-tree and returns it as a human-readable String. This
+     * dumper writes custom boosts. Not suitable to feed back into a parser!
+     * @param query the query to dump as a String.
+     * @return the query as a human-redable String.
+     */
+    // TODO: Make this dumper more solid - let it handle all known Queries
+    public static String queryToString(Query query) {
+        StringWriter sw = new StringWriter(100);
+        if (query instanceof BooleanQuery) {
+            sw.append("(");
+            boolean first = true;
+            for (BooleanClause clause: ((BooleanQuery)query).getClauses()) {
+                if (!first) {
+                    sw.append(" ");
+                }
+                sw.append(clause.getOccur().toString());
+                sw.append(queryToString(clause.getQuery()));
+                first = false;
+            }
+            sw.append(")");
+        } else if (query instanceof TermQuery) {
+            TermQuery termQuery = (TermQuery)query;
+            sw.append(termQuery.toString()).append("[");
+            sw.append(Float.toString(query.getBoost())).append("]");
+        } else if (query instanceof RangeQuery) {
+            sw.append(query.toString()).append("[");
+            sw.append(Float.toString(query.getBoost())).append("]");
+        } else if (query instanceof WildcardQuery) {
+            sw.append(query.toString()).append("[");
+            sw.append(Float.toString(query.getBoost())).append("]");
+        } else if (query instanceof FuzzyQuery) {
+            sw.append(query.toString()).append("[");
+            sw.append(Float.toString(query.getBoost())).append("]");
+        } else if (query instanceof PrefixQuery) {
+            sw.append(query.toString()).append("[");
+            sw.append(Float.toString(query.getBoost())).append("]");
+        } else if (query instanceof PhraseQuery) {
+            sw.append(query.toString()).append("[");
+            sw.append(Float.toString(query.getBoost())).append("]");
+        } else if (query instanceof DisjunctionMaxQuery) {
+            Iterator iterator = ((DisjunctionMaxQuery)query).iterator();
+            sw.append("<");
+            boolean first = true;
+            while (iterator.hasNext()) {
+                if (!first) {
+                    sw.append(" ");
+                }
+                sw.append(queryToString((Query)iterator.next()));
+                first = false;
+            }
+            sw.append(">");
+        } else {
+            sw.append(query.getClass().toString());
+            sw.append(query.toString()).append("[");
+            sw.append(Float.toString(query.getBoost())).append("]");
+        }
+        return sw.toString();
+    }
+
+    public LuceneIndexDescriptor getDescriptor() {
+        return descriptor;
     }
 }
 
