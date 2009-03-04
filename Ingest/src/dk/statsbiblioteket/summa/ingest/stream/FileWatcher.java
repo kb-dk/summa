@@ -36,6 +36,8 @@ import java.util.NoSuchElementException;
  * The FileWatcher is a persistent wrapper for the FileReader.
  * When there are no more files to read, the next() and the hasNext() methods
  * blocks until new files are discovered or until close is called.
+ * </p><p>
+ * Note: This filter is not synchronized.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -75,7 +77,7 @@ public class FileWatcher extends FileReader implements Runnable {
     }
 
     @Override
-    public synchronized boolean hasNext() {
+    public boolean hasNext() {
         log.trace("hasNext() entered");
         if (toDeliver != null) {
             //noinspection ObjectEquality
@@ -94,8 +96,8 @@ public class FileWatcher extends FileReader implements Runnable {
     /**
      * Waits until the FileWatcher is stopped or there is something in the to do
      * list.
-     * @return {@link #END_PAYLOAD} to mark thet the FileWatcher has stopped or the
-     *         next file.
+     * @return {@link #END_PAYLOAD} to mark thet the FileWatcher has stopped or
+     *         the next file.
      */
     private Payload getNextBlocking() {
         // TODO: Change this to a blocking call instead of busy wait
@@ -106,20 +108,22 @@ public class FileWatcher extends FileReader implements Runnable {
                 log.warn("Interrupted while waiting in getNextBlocking",
                          e);
             }
-            if (hasNext()) {
+            if (super.hasNext()) {
                 return super.next();
             }
 
         }
+        log.debug("getNextBlocking() exited due to doRun being false");
         return END_PAYLOAD;
     }
 
     @Override
-    public synchronized Payload next() {
+    public Payload next() {
         //noinspection DuplicateStringLiteralInspection
         log.trace("next() called");
         if (!hasNext()) {
-            throw new NoSuchElementException("No more streams in FileWatcher");
+            throw new NoSuchElementException(
+                    "No more streams in FileWatcher");
         }
         log.trace("next(): toDeliver set to '" + toDeliver + "'");
         Payload payload = toDeliver;
@@ -128,7 +132,7 @@ public class FileWatcher extends FileReader implements Runnable {
     }
 
     @Override
-    public synchronized boolean pump() throws IOException {
+    public boolean pump() throws IOException {
         if (hasNext()) {
             next().close();
             return true;
@@ -138,6 +142,7 @@ public class FileWatcher extends FileReader implements Runnable {
 
     @Override
     public void close(boolean success) {
+        log.debug(String.format("close(%b) called", success));
         doRun = false;
         super.close(success);
         toDeliver = END_PAYLOAD;
@@ -149,9 +154,11 @@ public class FileWatcher extends FileReader implements Runnable {
                 try {
                     Thread.sleep(pollInterval);
                     if (doRun) {
-                        if (isTodoEmpty()) {
-                            log.trace("run(): Updating toDo");
-                            updateToDo(root);
+                        if (!super.hasNext()) {
+                            if (doRun) {
+                                log.trace("run(): Updating toDo");
+                                updateToDo(root);
+                            }
                         }
                     }
                 } catch (InterruptedException e) {
@@ -162,7 +169,6 @@ public class FileWatcher extends FileReader implements Runnable {
         } catch (Exception e) {
             log.error("Unrecoverable exception in run(). Exiting", e);
         }
+        log.debug("run() finished, FileWatcher is stopping");
     }
-
-
 }
