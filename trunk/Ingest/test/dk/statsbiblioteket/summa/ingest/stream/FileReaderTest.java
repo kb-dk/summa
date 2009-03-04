@@ -34,6 +34,7 @@ public class FileReaderTest extends TestCase {
     File rootFile20;
     File rootFileFoo20;
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
         if (root.exists()) {
@@ -63,6 +64,7 @@ public class FileReaderTest extends TestCase {
         return file;
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
         if (root.exists()) {

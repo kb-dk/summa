@@ -30,7 +30,7 @@ import java.io.FileFilter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Arrays;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.LinkedList;
 import java.util.regex.Pattern;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -56,7 +56,7 @@ import org.apache.commons.logging.LogFactory;
  * Meta-info for delivered payloads will contain {@link Payload#ORIGIN} which
  * states the originating file for the stream.
  * </p><p>
- * The files are processed breadth-first in unicode-sorted order, unless
+ * The files are processed depth-first in unicode-sorted order, unless
  * {@link #CONF_REVERSE_SORT} is true.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -116,11 +116,20 @@ public class FileReader implements ObjectFilter {
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     private String postfix = DEFAULT_COMPLETED_POSTFIX;
 
-    protected boolean started = false;
-    protected LinkedBlockingQueue<File> todo;
-    // TODO: Avoid the ever-growing lists
+    /**
+     * The list of files and folders to process: Files are send onwards directly
+     * while folders are expanded when encountered.
+     */
+    private List<File> todo = new LinkedList<File>();
+    /**
+     * Keeps track of already encountered files. This guards against endless
+     * recursions due to linking.
+     */
     protected List<File> encountered = new ArrayList<File>(100);
-    private List<Payload> delivered;
+    /**
+     * Keeps track of all delivered files.
+     */
+    private List<Payload> delivered = new ArrayList<Payload>(100);
 
     /**
      * Sets up the properties for the FileReader. Scanning for files are
@@ -145,13 +154,14 @@ public class FileReader implements ObjectFilter {
                     log.warn("Root '" + root + "' does not exist");
                 }
             }
+            todo.add(root);
         } catch (Exception e) {
-            throw new ConfigurationException("No root specified for key "
-                                             + CONF_ROOT_FOLDER);
+            throw new ConfigurationException(
+                    "No root specified for key " + CONF_ROOT_FOLDER);
         }
         recursive = configuration.getBoolean(CONF_RECURSIVE, recursive);
-        reverse_sort = configuration.getBoolean(CONF_REVERSE_SORT,
-                                                reverse_sort);
+        reverse_sort = configuration.getBoolean(
+                CONF_REVERSE_SORT, reverse_sort);
         filePattern = Pattern.compile(configuration.
                 getString(CONF_FILE_PATTERN, DEFAULT_FILE_PATTERN));
         postfix = configuration.getString(CONF_COMPLETED_POSTFIX, postfix);
@@ -167,70 +177,65 @@ public class FileReader implements ObjectFilter {
                 getClass().getName()));
     }
 
-    private FileFilter folderFilter = new FileFilter() {
+    private FileFilter dataAndFolderFilter = new FileFilter() {
         public boolean accept(File pathname) {
-            return pathname.isDirectory();
-        }
-    };
-    private FileFilter dataFilter = new FileFilter() {
-        public boolean accept(File pathname) {
-            return !pathname.isDirectory()
-                   && pathname.canRead()
-                   && filePattern.matcher(pathname.getName()).matches();
+            return pathname.canRead()
+                   && (pathname.isDirectory()
+                       ||  filePattern.matcher(pathname.getName()).matches());
         }
     };
 
-    /* Recursive file adder */
-    protected void updateToDo(File start) {
+    /** If the first File in the to do list is a file or the to do list is
+     * empty, do nothing. Else expand the first File (which is logically a
+     * folder since it is not a file), add the expansion to the start of the
+     * to do list and call updateTodo again.
+     * </p><p>
+     * This behaviour ensures a lazy depth-first traversal in unicode
+     * (optionally reverse unicode) order. It is safe to call this method
+     * multiple times.
+     * </p><p>
+     * When the call exits, the to do list will either be empty or contain a
+     * file as the first entry.
+     **/
+    protected synchronized void updateToDo() {
+        File start = null;
         try {
-            if (start.isDirectory()) {
-                File files[] = start.listFiles(dataFilter);
-                //noinspection DuplicateStringLiteralInspection
-                log.debug("Queueing " + files.length + " data files from '"
-                          + start + "'. Queue size now: " + todo.size());
-                Arrays.sort(files);
-                if (reverse_sort) {
-                    ArrayUtil.reverse(files);
-                }
-                for (File file: files) {
-                    addToTodo(file);
-                }
-                File folders[] = start.listFiles(folderFilter);
-                log.debug("Scanning " + folders.length
-                          + " subfolders in '" + start + "'");
-                Arrays.sort(folders);
-                if (reverse_sort) {
-                    ArrayUtil.reverse(folders);
-                }
-                for (File folder: folders) {
-                    updateToDo(folder);
-                }
-            } else {
-                if (filePattern.matcher(start.getName()).matches()) {
-                    //noinspection DuplicateStringLiteralInspection
-                    log.debug("Queueing data file '" + start
-                              + "'. Queue size now: " + todo.size());
-                    addToTodo(start);
-                } else {
-                    log.trace("Skipping data file '" + start + "'");
-                }
+            if (todo.size() == 0 || todo.get(0).isFile()) {
+                return;
             }
+            // The first File is a folder
+            start = todo.remove(0);
+            if (!recursive) { // No expansion, just skip it
+                log.debug("Skipping folder '" + start
+                          + "' as recursion is not enabled");
+                updateToDo();
+                return;
+            }
+            File files[] = start.listFiles(dataAndFolderFilter);
+            //noinspection DuplicateStringLiteralInspection
+            log.debug("Queueing " + files.length + " data files from '"
+                      + start + "'. Queue size before: " + todo.size());
+            Arrays.sort(files);
+            if (reverse_sort) {
+                ArrayUtil.reverse(files);
+            }
+            todo.addAll(0, Arrays.asList(files));
         } catch (Exception e) {
             log.warn("Could not process '" + start + ". Skipping: "
                      + e.getMessage(), e);
         }
+        updateToDo(); // Further descending if the first File is a folder
     }
 
-    private void addToTodo(File file) {
-        if (!alreadyHandled(file)) {
-            try {
-                todo.put(file);
-            } catch (InterruptedException e) {
-                log.warn(String.format(
-                        "Interrupted while trying to add '%s' to todo", file),
-                         e);
-            }
-        }
+    /**
+     * Adds the root to to do list and updates it.
+     * @param root the starting point for the to do.
+     */
+    protected synchronized void updateToDo(File root) {
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("updateToDo(" + root + ") called");
+        todo.add(0, root);
+        updateToDo();
     }
 
     /**
@@ -239,27 +244,12 @@ public class FileReader implements ObjectFilter {
      * @param file a file to check.
      * @return true if the file has been encountered before.
      */
-    protected boolean alreadyHandled(File file) {
+    protected synchronized boolean alreadyHandled(File file) {
         if (encountered.contains(file)) {
             return true;
         }
         encountered.add(file);
         return false;
-    }
-
-    /* One-time setup */
-    protected void checkInit() {
-        if (started) {
-            return;
-        }
-        log.trace("checkInit: Filling todo");
-        todo = new LinkedBlockingQueue<File>();
-        updateToDo(root);
-        delivered = new ArrayList<Payload>(Math.max(1, todo.size()));
-        started = true;
-        log.info(String.format(
-                 "Queued %d files matching pattern '%s' from root %s",
-                 todo.size(), filePattern.pattern(), root.getPath()));
     }
 
     /**
@@ -374,12 +364,12 @@ public class FileReader implements ObjectFilter {
     public synchronized Payload next() {
         //noinspection DuplicateStringLiteralInspection
         log.trace("next() called");
-        checkInit();
+        updateToDo();
         if (todo.size() == 0) {
             log.info("next: No more files available");
             return null;
         }
-        return deliverFile(getNextFromTodo());
+        return deliverFile(todo.remove(0));
     }
 
     /**
@@ -406,23 +396,6 @@ public class FileReader implements ObjectFilter {
         }
     }
 
-    protected File getNextFromTodo() {
-        int retry = 10;
-        while (retry-- != 0) {
-            try {
-                return todo.take();
-            } catch (InterruptedException e) {
-                log.warn(String.format(
-                        "hasNext(): Got InterruptedException while waiting for "
-                        + "element from todo. Retrying %d more times"
-                        + retry--), e);
-            }
-        }
-        throw new IllegalStateException(
-                "Interupted too many times while attempting to take a File "
-                + "from todo");
-    }
-
     /**
      * Graceful shutdown of opened files.
      * @param success if false, all opened files are closed immediately. If
@@ -433,7 +406,6 @@ public class FileReader implements ObjectFilter {
     public void close(boolean success) {
         //noinspection DuplicateStringLiteralInspection
         log.debug("Closing");
-        checkInit();
         //noinspection DuplicateStringLiteralInspection
         closeDelivered(success);
         if (todo.size() > 0) {
@@ -474,11 +446,12 @@ public class FileReader implements ObjectFilter {
     /**
      * Pump iterates through all {@link #delivered} payloads and empties the
      * embedded streams. When all streams are emptied, a new payload is created.
+     * </p><p>
+     * This is a heavy process if there are a lot of files.
      * @return true if pumping should continue, in order to process all data.
      * @throws IOException in case of read errors.
      */
     public synchronized boolean pump() throws IOException {
-        checkInit();
         for (Payload payload: delivered) {
             if (payload.pump()) {
                 return true;
@@ -490,11 +463,15 @@ public class FileReader implements ObjectFilter {
     /* Interface implementations */
 
     public boolean hasNext() {
-        checkInit();
+        updateToDo();
         return todo.size() > 0;
     }
 
     public void remove() {
         log.warn("Remove not implemented for " + getClass().getName());
+    }
+
+    protected synchronized boolean isTodoEmpty() {
+        return todo.size() == 0;
     }
 }
