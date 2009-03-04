@@ -46,14 +46,14 @@ public class FileWatcherTest extends TestCase {
     }
 
     public void testDiscovery() throws Exception {
-        int ST = 1500;
+        int ST = 500;
 
         Configuration conf = Configuration.newMemoryBased();
         conf.set(FileReader.CONF_ROOT_FOLDER, FileReaderTest.root.toString());
         conf.set(FileReader.CONF_RECURSIVE, true);
         conf.set(FileReader.CONF_FILE_PATTERN, ".*\\.xml");
         conf.set(FileReader.CONF_COMPLETED_POSTFIX, ".fin");
-        conf.set(FileWatcher.CONF_POLL_INTERVAL, 500);
+        conf.set(FileWatcher.CONF_POLL_INTERVAL, 100);
         FileWatcher reader = new FileWatcher(conf);
         new Poller(reader).start();
 
@@ -61,11 +61,13 @@ public class FileWatcherTest extends TestCase {
         assertEquals("There should be no files to start with",
                      0, received.size());
 
+        log.debug("Creating test file foo.bar");
         new File(FileReaderTest.root, "foo.bar").createNewFile();
         Thread.sleep(ST);
         assertEquals("There should be no valid files",
                      0, received.size());
 
+        log.debug("Creating test file foo.xml");
         new File(FileReaderTest.root, "foo.xml").createNewFile();
         Thread.sleep(ST);
         assertEquals("There should be a valid file",
@@ -98,7 +100,7 @@ public class FileWatcherTest extends TestCase {
         conf.set(FileReader.CONF_RECURSIVE, true);
         conf.set(FileReader.CONF_FILE_PATTERN, ".*\\.xml");
         conf.set(FileReader.CONF_COMPLETED_POSTFIX, ".fin");
-        conf.set(FileWatcher.CONF_POLL_INTERVAL, 500);
+        conf.set(FileWatcher.CONF_POLL_INTERVAL, 100);
         new File(FileReaderTest.root, "fooA.xml").createNewFile();
         new File(FileReaderTest.root, "fooB.xml").createNewFile();
         FileWatcher reader = new FileWatcher(conf);
@@ -116,12 +118,12 @@ public class FileWatcherTest extends TestCase {
         conf.set(FileReader.CONF_REVERSE_SORT, true);
         new File(FileReaderTest.root, "zooA.xml").createNewFile();
         new File(FileReaderTest.root, "zooB.xml").createNewFile();
-                                   reader = new FileWatcher(conf);
+        reader = new FileWatcher(conf);
         new Poller(reader).start();
 
-        Thread.sleep(100);
+        Thread.sleep(500);
         reader.close(true);
-        assertEquals("Again there should be 2 files received",
+        assertEquals("There should be 2 new files received",
                      2, received.size());
         assertEquals("The first file should be as expected (reverse order)",
                      "zooB.xml", getOriginFile(0).getName());
@@ -149,11 +151,10 @@ public class FileWatcherTest extends TestCase {
         }
         @Override
         public void run() {
-            while (doRun) {
-                if (reader.hasNext()) {
-                    received.add(reader.next());
-                }
+            while (doRun && reader.hasNext()) {
+                received.add(reader.next());
             }
+            doRun = false;
         }
     }
 }

@@ -6,10 +6,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
-import java.util.Random;
+import java.util.*;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.unittest.ExtraAsserts;
 import dk.statsbiblioteket.util.Files;
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -34,6 +36,10 @@ public class FileReaderTest extends TestCase {
     File rootFile20;
     File rootFileFoo20;
 
+    public static final File rootDeep =
+            new File(new File(System.getProperty("java.io.tmpdir")),
+                     "rootDeep");
+
     @Override
     public void setUp() throws Exception {
         super.setUp();
@@ -51,6 +57,11 @@ public class FileReaderTest extends TestCase {
         File sub1File1000 = makeFile(sub1, "file1000.xml", 1000);
         assertEquals("The file size for '" + sub1File1000 + "' should match",
                      1000, sub1File1000.length());
+        if (rootDeep.exists()) {
+            Files.delete(rootDeep);
+        }
+        Files.copy(Resolver.getFile(
+                "data/filereader/dummyA.xml").getParentFile(), rootDeep, false);
     }
 
     Random random = new Random();
@@ -69,6 +80,9 @@ public class FileReaderTest extends TestCase {
         super.tearDown();
         if (root.exists()) {
             Files.delete(root);
+        }
+        if (rootDeep.exists()) {
+            Files.delete(rootDeep);
         }
     }
 
@@ -148,7 +162,26 @@ public class FileReaderTest extends TestCase {
         assertTrue("Renaming should take place with close(true)",
                    new File(rootFile10.getPath() + ".fin").exists());
     }
+
+    private static final List<String> expectedOrder = Arrays.asList(
+            "dummyA.xml", "dummyF.xml", "dummyE.xml", "dummyD.xml",
+            "dummyC.xml");
+    public void testDeep() throws Exception {
+        Configuration conf = Configuration.newMemoryBased();
+        conf.set(FileReader.CONF_ROOT_FOLDER, rootDeep.toString());
+        conf.set(FileReader.CONF_RECURSIVE, true);
+        conf.set(FileReader.CONF_FILE_PATTERN, ".*\\.xml");
+        conf.set(FileReader.CONF_COMPLETED_POSTFIX, ".finito");
+        FileReader reader = new FileReader(conf);
+
+        ArrayList<String> actual = new ArrayList<String>(expectedOrder.size());
+        while (reader.hasNext()) {
+            Payload payload = reader.next();
+            actual.add(new File((String)
+                    payload.getData(Payload.ORIGIN)).getName());
+            payload.close();
+        }
+        ExtraAsserts.assertEquals("The resulting files should be as expected",
+                                  expectedOrder, actual);
+    }
 }
-
-
-
