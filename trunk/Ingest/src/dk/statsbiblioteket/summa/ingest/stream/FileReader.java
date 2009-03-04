@@ -264,6 +264,8 @@ public class FileReader implements ObjectFilter {
 
     /**
      * FileInputStream that is capable of renaming the file upon close.
+     * The Stream is auto-closing, meaning that the file handle is automatically
+     * freed when EOF is reached.
      */
     class RenamingFileStream extends FileInputStream {
         private Log log = LogFactory.getLog(RenamingFileStream.class);
@@ -294,6 +296,9 @@ public class FileReader implements ObjectFilter {
         }
         @Override
         public void close() throws IOException {
+            if (closed) {
+                return;
+            }
             log.trace("Closing stream to file '" + file + "'");
             super.close();
             closed = true;
@@ -302,6 +307,39 @@ public class FileReader implements ObjectFilter {
 
         public File getFile() {
             return file;
+        }
+
+        @Override
+        public int read() throws IOException {
+            int result = super.read();
+            if (result == -1) {
+                close();
+            }
+            return result;
+        }
+
+        @Override
+        public int read(byte b[]) throws IOException {
+            int result = super.read(b);
+            if (result == -1) {
+                close();
+            }
+            return result;
+        }
+
+        @Override
+        public int read(byte b[], int off, int len) throws IOException {
+            int result = super.read(b, off, len);
+            if (result == -1) {
+                close();
+            }
+            return result;
+        }
+
+        @Override
+        public boolean markSupported() {
+            // The Stream is auto-closing, so we cannot support marking
+            return false;
         }
 
         private void rename() {
@@ -460,6 +498,3 @@ public class FileReader implements ObjectFilter {
         log.warn("Remove not implemented for " + getClass().getName());
     }
 }
-
-
-
