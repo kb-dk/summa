@@ -248,9 +248,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
                                   + absoluteLocation + "'",
                                   listener.getLastException());
         }
-        if (checkInterval >= 0) {
-            listener.setActive(true);
-        }
+        listener.setActive(checkInterval > 0);
     }
 
     private static URL resolveAbsoluteLocation(String locationRoot) throws
