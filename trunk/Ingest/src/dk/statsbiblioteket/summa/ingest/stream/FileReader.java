@@ -27,10 +27,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.FileFilter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Arrays;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -180,11 +177,17 @@ public class FileReader implements ObjectFilter {
     private FileFilter dataAndFolderFilter = new FileFilter() {
         public boolean accept(File pathname) {
             return pathname.canRead()
+                   && !alreadyHandled(pathname)
                    && (pathname.isDirectory()
                        ||  filePattern.matcher(pathname.getName()).matches());
         }
     };
 
+    private Comparator<File> fileComparator = new Comparator<File>() {
+        public int compare(File o1, File o2) {
+            return o1.getName().compareTo(o2.getName());
+        }
+    };
     /** If the first File in the to do list is a file or the to do list is
      * empty, do nothing. Else expand the first File (which is logically a
      * folder since it is not a file), add the expansion to the start of the
@@ -212,10 +215,14 @@ public class FileReader implements ObjectFilter {
                 return;
             }
             File files[] = start.listFiles(dataAndFolderFilter);
+            if (files.length == 0) {
+                log.trace("No files in '" + start + "'");
+                return;
+            }
             //noinspection DuplicateStringLiteralInspection
             log.debug("Queueing " + files.length + " data files from '"
                       + start + "'. Queue size before: " + todo.size());
-            Arrays.sort(files);
+            Arrays.sort(files, fileComparator);
             if (reverse_sort) {
                 ArrayUtil.reverse(files);
             }
@@ -224,6 +231,7 @@ public class FileReader implements ObjectFilter {
             log.warn("Could not process '" + start + ". Skipping: "
                      + e.getMessage(), e);
         }
+        log.trace("Recursively calling updateToDo");
         updateToDo(); // Further descending if the first File is a folder
     }
 
@@ -462,7 +470,7 @@ public class FileReader implements ObjectFilter {
 
     /* Interface implementations */
 
-    public boolean hasNext() {
+    public synchronized boolean hasNext() {
         updateToDo();
         return todo.size() > 0;
     }

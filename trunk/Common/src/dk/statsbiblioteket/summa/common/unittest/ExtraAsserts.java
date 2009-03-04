@@ -26,9 +26,7 @@ import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXParseException;
 
 import java.io.*;
-import java.util.Arrays;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
 import java.net.URL;
 
 import junit.framework.TestCase;
@@ -48,6 +46,8 @@ public class ExtraAsserts extends TestCase implements ErrorHandler {
      * </p><p>
      * Note: Don't use this for humongous arrays as they are converted to
      *       Strings for output.
+     * Note: The arrays are sorted before comparison, so the order of the
+     *       elements does not matter.
      * @param message  what to fail with if the arreys are not equal.
      * @param expected the expected result.
      * @param actual   the actuak result.
@@ -68,9 +68,9 @@ public class ExtraAsserts extends TestCase implements ErrorHandler {
      * </p><p>
      * Note: Don't use this for humongous arrays as they are converted to
      *       Strings for output.
-     * @param message  what to fail with if the arreys are not equal.
+     * @param message  what to fail with if the arrays are not equal.
      * @param expected the expected result.
-     * @param actual   the actuak result.
+     * @param actual   the actual result.
      */
     public static void assertEquals(String message, long[] expected,
                                     long[] actual) {
@@ -78,6 +78,34 @@ public class ExtraAsserts extends TestCase implements ErrorHandler {
             //noinspection DuplicateStringLiteralInspection
             fail(message + ". Expected " + dump(expected)
                  + " got " + dump(actual));
+        }
+    }
+
+    /**
+     * Compares the given Collections for size, order and content using
+     * {@link Object#equals(Object)}.
+     * @param message  the message to fail wit if the Collections are not equal.
+     * @param expected the expected content.
+     * @param actual   the actual content.
+     */
+    public static void assertEquals(String message,
+                                    Collection expected, Collection actual) {
+        if (expected.size() != actual.size()) {
+            fail(message + ". Expected size " + expected.size()
+                 + " but got " + actual.size());
+        }
+        Iterator expectedI = expected.iterator();
+        Iterator actualI = actual.iterator();
+        int counter = 0;
+        while (expectedI.hasNext()) {
+            Object expectedO = expectedI.next();
+            Object actualO = actualI.next();
+            if (!expectedO.equals(actualO)) {
+                fail(message + ". The objects at position " + counter
+                     + " were not equal. Expected '" + expectedO
+                     + "', got '" + actualO + "'");
+            }
+            counter++;
         }
     }
 
