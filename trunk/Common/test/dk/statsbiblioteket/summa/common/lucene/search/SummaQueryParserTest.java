@@ -67,10 +67,37 @@ public class SummaQueryParserTest extends TestCase {
                      "id:foo boost(id^3)");
     }
 
+    public void testWildcards() throws Exception {
+        SummaQueryParser qp = getQueryParser();
+        assertEquals("Wildcards on default fields should work", qp,
+  "(freetext:hello*[1.0] <title:hello*[1.0] titel:hello*[1.0]> id:hello*[1.0])",
+  "Hello*");
+        assertEquals("Wildcards on a specific field should work", qp,
+                     "foo:bar*[1.0]", "foo:bar*");
+    }
+
+    public void testRangeExpansion() throws Exception {
+        SummaQueryParser qp = getQueryParser();
+        assertEquals("Range query on specific field should work", qp,
+                     "foo:[a TO c][1.0]", "foo:[a TO c]");
+        assertEquals("Range query on default fields should work", qp,
+                     "(freetext:[a TO c][1.0] <title:[a TO c][1.0] "
+                     + "titel:[a TO c][1.0]> id:[a TO c][1.0])",
+                     "[a TO c]");
+    }
+
+    public void testRangeAndBoost() throws Exception {
+        SummaQueryParser qp = getQueryParser();
+        assertEquals("Boosting on range queries should have no effect", qp,
+                     "(freetext:[a TO c][1.0] <title:[a TO c][1.0] "
+                     + "titel:[a TO c][1.0]> id:[a TO c][1.0])",
+                     "[a TO c] boost(freetext^2)");
+    }
+
     public void testDefaultExpansionSpeed() throws Exception {
         SummaQueryParser qp = getQueryParser();
         Random random = new Random(87);
-        int RUNS = 1000000;
+        int RUNS = 10000;
         Profiler profiler = new Profiler();
         profiler.setExpectedTotal(RUNS);
         for (int i = 0 ; i < RUNS ; i++) {
