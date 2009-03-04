@@ -40,7 +40,6 @@ import java.text.ParseException;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Files;
-import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -238,6 +237,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         listener =
                 new ResourceListener(absoluteLocation, checkInterval, false) {
 
+                    @Override
                     public void resourceChanged(String newContent) throws
                                                                    Exception {
                         parse(newContent);
