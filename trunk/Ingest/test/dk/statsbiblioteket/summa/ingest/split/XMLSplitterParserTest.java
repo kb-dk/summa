@@ -6,22 +6,13 @@ import java.io.ByteArrayInputStream;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.ingest.split.XMLSplitterFilter;
-import dk.statsbiblioteket.summa.ingest.split.XMLSplitterParser;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-/**
- * XMLSplitterParser Tester.
- *
- * @author <Authors name>
- * @since <pre>04/02/2008</pre>
- * @version 1.0
- */
-@SuppressWarnings({"ALL"})
+@SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class XMLSplitterParserTest extends TestCase {
     private static Log log = LogFactory.getLog(XMLSplitterParser.class);
 
@@ -157,10 +148,12 @@ public class XMLSplitterParserTest extends TestCase {
         super(name);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
     }
@@ -255,4 +248,6 @@ public class XMLSplitterParserTest extends TestCase {
     }
 
     // Parseexception
+
+
 }
