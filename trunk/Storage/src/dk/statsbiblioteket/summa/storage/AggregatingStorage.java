@@ -79,28 +79,173 @@ public class AggregatingStorage extends StorageBase {
 
     private Log log;
 
-    private static class IteratorContext {
-        private long lastAccess;
-        private long iterKey;
-        private String base;
-        private StorageReaderClient reader;
+    private class MergingContext extends IteratorContext {
 
-        public IteratorContext (StorageReaderClient reader, String base,
-                                long iterKey, long lastAccess) {
+        private ReadableStorage[] readerList;
+        private Record[] recBuffer;
+        private long[] iterKeys;
+        long iterKey;
+
+        public MergingContext(long mtime, QueryOptions opts,
+                              long lastAccess) throws IOException {
+            super(null, null, mtime, opts, lastAccess);
+
+            log.debug("Creating merging iterator over all sub storages");
+
+            /* The iterKey for the merging iterator is constructed as
+             * the sum of all sub iter keys. This is *almost* guaranteed
+             * to be unique since we assume that all iterkeys
+             * constructed from the sub storages are strictly increasing */
+            iterKey = 0;
+
+            readerList = new ReadableStorage[readers.size()];
+            iterKeys = new long[readers.size()];
+
+            int counter = 0;
+            for (Map.Entry<String,StorageReaderClient> entry :
+                                                           readers.entrySet()) {
+                ReadableStorage reader = entry.getValue();
+                String readerBase = entry.getKey();
+                IteratorContext subIter = new IteratorContext(reader,
+                                                              readerBase, mtime,
+                                                              opts, lastAccess);
+                long subKey = subIter.getKey();
+
+                // FIXME: Better collision handling
+                if (iterators.containsKey(subKey)) {
+                    throw new RuntimeException("Internal error. Iterator key "
+                                               + "collision '" + subKey +"'");
+                }
+
+                // Calc the merger's iterKey as the sum the children's
+                iterKey += subKey;
+
+                // We need to store the readers to guarantee the correct order
+                readerList[counter] = reader;
+
+                iterKeys[counter] = subKey;
+                iterators.put(subKey, subIter);
+
+                counter++;
+            }
+
+            log.trace("Merging iterator ready");
+        }
+
+
+        @Override
+        public Record next() throws IOException {
+            if (recBuffer == null) {
+                initRecBuffer();
+            }
+
+            Record newest = null;
+            int newestOffset = -1;
+            for (int i = 0; i < recBuffer.length; i++) {
+                if (recBuffer[i] == null) {
+                    // This sub storage iter is depleted
+                    continue;
+                }
+
+                if (newest == null) {
+                    newest = recBuffer[i];
+                    newestOffset = i;
+                    continue;
+                }
+
+                if (newest.getModificationTime() <
+                    recBuffer[i].getModificationTime()) {
+                    newest = recBuffer[i];
+                    newestOffset = i;
+                }
+            }
+
+            if (newest == null) {
+                throw new NoSuchElementException();
+            }
+
+            try {
+                recBuffer[newestOffset] = nextFromSub(newestOffset);
+            } catch (NoSuchElementException e) {
+                recBuffer[newestOffset] = null;
+            }
+            
+            return newest;
+        }
+
+        @Override
+        public List<Record> next(int maxRecords) throws IOException {
+            List<Record> result = new ArrayList<Record>(maxRecords);
+
+            try {
+                for (int i = 0; i < maxRecords; i++) {
+                    result.add(next());
+                }
+            } catch (NoSuchElementException e) {
+                // Iter is done
+                if (result.size() == 0) {
+                    throw new NoSuchElementException();
+                }
+            }
+
+            return result;
+        }
+
+        private Record nextFromSub(int readerOffset) throws IOException {
+            return readerList[readerOffset].next(iterKeys[readerOffset]);
+        }
+
+        private void initRecBuffer() throws IOException {
+            if (recBuffer != null) {
+                log.error("Internal error. Double initialization of "
+                          + "recBuffer for MergingContext");
+                return;
+            }
+
+            log.debug("Filling record buffer for merging iterator");
+
+            recBuffer = new Record[readers.size()];
+
+            // Fill in recBuffer with the first record from each sub storage
+            for (int i = 0; i < readerList.length; i++) {
+                try {
+                    recBuffer[i] = nextFromSub(i);
+                } catch (NoSuchElementException e) {
+                    recBuffer[i] = null;
+                }
+            }
+        }
+    }
+
+    private static class IteratorContext {
+        protected ReadableStorage reader;
+        protected String base;
+        protected long mtime;
+        protected QueryOptions opts;
+        protected long lastAccess;
+        protected long iterKey;
+
+        public IteratorContext (ReadableStorage reader, String base,
+                                long mtime, QueryOptions opts,
+                                long lastAccess) throws IOException {
             this.reader = reader;
             this.base = base;
-            this.iterKey = iterKey;
+            this.mtime = mtime;
+            this.opts = opts;
             this.lastAccess = lastAccess;
+
+            if (reader != null) {
+                this.iterKey = reader.getRecordsModifiedAfter(mtime,
+                                                              base, opts);
+            }
         }
 
-        public IteratorContext (StorageReaderClient reader, String base,
-                                long iterKey) {
-            this(reader, base, iterKey, System.currentTimeMillis());
+        public Record next() throws IOException {
+            return reader.next(iterKey);
         }
 
-        public StorageReaderClient getReader () {
-            accessed();
-            return reader;
+        public List<Record> next(int maxRecords) throws IOException {
+            return reader.next(iterKey, maxRecords);
         }
 
         public String getBase () {
@@ -124,7 +269,6 @@ public class AggregatingStorage extends StorageBase {
         public boolean isTimedOut (long now) {
             return (now - lastAccess > ITERATOR_TIMEOUT);
         }
-
     }
 
     private static class IteratorContextReaper implements Runnable {
@@ -279,15 +423,35 @@ public class AggregatingStorage extends StorageBase {
             log.trace ("getRecordsModifiedAfter("+time+", '"+base+"')");
         }
 
-        StorageReaderClient reader = getSubStorageReader(base);
+        IteratorContext ctx;
+        long now = System.currentTimeMillis();
 
-        if (reader == null) {
-            log.warn("No sub storage configured for base '" + base + "'");
-            return UNKNOWN_BASE_KEY;
+
+        if (base == null) {
+            /* If the base is undefined the iterator must be merged based on all
+             * sub storages */
+            ctx = new MergingContext(time, options, now);
+        } else {
+            /* If the base is indeed defined then simply return the iterkey from
+             * the relevant sub storage */
+            StorageReaderClient reader = getSubStorageReader(base);
+            if (reader == null) {
+                log.warn("No sub storage configured for base '" + base + "'");
+                return UNKNOWN_BASE_KEY;
+            }
+
+            ctx = new IteratorContext(reader, base, time, options, now);
         }
 
-        long iterKey = reader.getRecordsModifiedAfter(time, base, options);
-        iterators.put(iterKey, new IteratorContext(reader, base, iterKey));
+        long iterKey = ctx.getKey();
+
+        // FIXME: Handle iterKey collisions in a sane way!
+        if (iterators.containsKey(iterKey)) {
+            throw new RuntimeException("Internal error. Iterator key "
+                                       + "collision '" + iterKey + "'");
+        }
+
+        iterators.put(iterKey, ctx);
         return iterKey;
     }
 
@@ -297,6 +461,21 @@ public class AggregatingStorage extends StorageBase {
             log.trace ("getModificationTime("+base+")");
         }
 
+        /* If the base is undefined return the maximal mtime from all
+         * sub storages */
+        if (base == null) {
+            long mtime = 0;
+            for (Map.Entry<String,StorageReaderClient> entry :
+                                                           readers.entrySet()) {
+                StorageReaderClient reader = entry.getValue();
+                String readerBase = entry.getKey();
+                mtime = Math.max(mtime, reader.getModificationTime(readerBase));
+            }
+            return mtime;
+        }
+
+        /* If the base is defined then simply return the mtime from the
+         * corresponding sub storage */
         StorageReaderClient reader = getSubStorageReader(base);
 
         if (reader == null) {
@@ -357,7 +536,13 @@ public class AggregatingStorage extends StorageBase {
                                                + iteratorKey);
         }
 
-        return iter.getReader().next(iteratorKey);
+        Record r = iter.next();
+        if (r == null) {
+            log.debug("Iterator " + iteratorKey + " depleted");
+            iterators.remove(iteratorKey);
+        }
+
+        return r;
     }
 
     @Override
@@ -374,7 +559,13 @@ public class AggregatingStorage extends StorageBase {
                                                + iteratorKey);
         }
 
-        return iter.getReader().next(iteratorKey, maxRecords);
+        List<Record> recs = iter.next(maxRecords);
+        if (recs == null || recs.isEmpty()) {
+            log.debug("Iterator " + iteratorKey + " depleted");
+            iterators.remove(iteratorKey);
+        }
+
+        return recs;
     }
 
     @Override
