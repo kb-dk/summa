@@ -128,8 +128,41 @@ public class AggregatingStorageTest extends TestCase {
         assertBaseCount(base1, 2);
     }
 
+    public void testIterationAllBases() throws Exception {
+        storage.clearBase (base1);
+        storage.clearBase (base2);
+        storage.clearBase (base3);
+        
+        assertBaseCount(base1, 0);
+        assertBaseCount(base2, 0);
+        assertBaseCount(base3, 0);
+
+        storage.flush(new Record(testId1, base1, testContent1));
+        storage.flush(new Record(testId2, base2, testContent1));
+        storage.flush(new Record(testId3, base3, testContent1));
+        
+        assertBaseCount(base1, 1);
+        assertBaseCount(base2, 1);
+        assertBaseCount(base3, 1);
+        assertBaseCount(null, 3);
+    }
+
     public void testNonExistingBaseIteration() throws Exception {
         assertBaseCount("nonexistingbase", 0);
+    }
+
+    public void testMtime() throws Exception {
+        testIterationAllBases();
+
+        long mtime1 = storage.getModificationTime(base1);
+        long mtime2 = storage.getModificationTime(base2);
+        long mtime3 = storage.getModificationTime(base3);
+
+        assertTrue(mtime1 < mtime2);
+        assertTrue(mtime2 < mtime3);
+
+        long globalMtime = storage.getModificationTime(null);
+        assertEquals(globalMtime, mtime3);
     }
 
     public void assertBaseCount (String base, long expected) throws Exception {
