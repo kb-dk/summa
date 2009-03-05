@@ -9,6 +9,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 /**
  * A helper class utilizing a stateless connection to a storage service exposing
@@ -115,6 +116,9 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
 
         try {
             return storage.next(iteratorKey);
+        } catch (NoSuchElementException e) {
+            // iterator depleted
+            throw new NoSuchElementException();
         } catch (Throwable t) {
             connectionError(t);
             throw new IOException("next("+iteratorKey+") failed: "
@@ -131,6 +135,9 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
 
         try {
             return storage.next(iteratorKey, maxRecords);
+        } catch (NoSuchElementException e) {
+            // iterator depleted
+            throw new NoSuchElementException();
         } catch (Throwable t) {
             connectionError(t);
             throw new IOException("next("+iteratorKey+", "+maxRecords
