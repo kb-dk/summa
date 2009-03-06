@@ -116,12 +116,18 @@ public class FileWatcherTest extends TestCase {
         received.clear();
 
         conf.set(FileReader.CONF_REVERSE_SORT, true);
+        // The test has a problem here as the Poller might get zooA first
         new File(FileReaderTest.root, "zooA.xml").createNewFile();
         new File(FileReaderTest.root, "zooB.xml").createNewFile();
+        assertTrue("The file zooA.xml should exist",
+                   new File(FileReaderTest.root, "zooA.xml").exists());
+        assertTrue("The file zooB.xml should exist",
+                   new File(FileReaderTest.root, "zooB.xml").exists());
         reader = new FileWatcher(conf);
         new Poller(reader).start();
 
         Thread.sleep(500);
+        log.debug("");
         reader.close(true);
         assertEquals("There should be 2 new files received",
                      2, received.size());
@@ -152,7 +158,9 @@ public class FileWatcherTest extends TestCase {
         @Override
         public void run() {
             while (doRun && reader.hasNext()) {
-                received.add(reader.next());
+                Payload next = reader.next();
+                log.debug("Poller got " + next);
+                received.add(next);
             }
             doRun = false;
         }
