@@ -101,6 +101,7 @@ public class FileWatcher extends FileReader implements Runnable {
      */
     private Payload getNextBlocking() {
         // TODO: Change this to a blocking call instead of busy wait
+        log.trace("getNextBlocking() entered with doRun==" + doRun);
         while (doRun) {
             try {
                 Thread.sleep(20);
@@ -113,7 +114,7 @@ public class FileWatcher extends FileReader implements Runnable {
             }
 
         }
-        log.debug("getNextBlocking() exited due to doRun being false");
+        log.debug("getNextBlocking() exited with doRun==" + doRun);
         return END_PAYLOAD;
     }
 
@@ -149,6 +150,7 @@ public class FileWatcher extends FileReader implements Runnable {
     }
 
     public void run() {
+        log.trace("Entering run() with doRun==" + doRun);
         try {
             while (doRun) {
                 try {
@@ -158,8 +160,19 @@ public class FileWatcher extends FileReader implements Runnable {
                             if (doRun) {
                                 log.trace("run(): Updating toDo");
                                 updateToDo(root);
+                                if (log.isTraceEnabled()) {
+                                    log.trace("todo is "+  (isTodoEmpty() ? 
+                                                            "empty" :
+                                                            "not empty"));
+                                }
                             }
+                        } else {
+                            log.trace("run(): Exited after super.hasNext() "
+                                      + "with doRun==" + doRun);
                         }
+                    } else {
+                        log.trace("run(): Exited after sleep with doRun=="
+                                  + doRun);
                     }
                 } catch (InterruptedException e) {
                     log.error("Interrupted while sleeping for " + pollInterval
@@ -169,6 +182,7 @@ public class FileWatcher extends FileReader implements Runnable {
         } catch (Exception e) {
             log.error("Unrecoverable exception in run(). Exiting", e);
         }
-        log.debug("run() finished, FileWatcher is stopping");
+        log.debug("run() finished, FileWatcher is stopping with doRun=="
+                  + doRun);
     }
 }
