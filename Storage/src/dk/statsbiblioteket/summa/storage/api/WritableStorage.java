@@ -47,12 +47,14 @@ public interface WritableStorage extends Configurable {
 
     /**
      * A batch optimized version of {@link #flush}. Use this method
-     * to optimize IPC overhead.
+     * to optimize IPC overhead. If two Record objects in {@code records} has
+     * the same id only the last record in the list is stored.
      * <p/>
      * Just like {@link #flush} any child records added with
      * {@link Record#setChildren} will be added recursively to the storage. 
      *
-     * @param records a list of records to store or update
+     * @param records a list of records to store or update. On duplicate ids
+     *                only the last of the duplicated records are stored
      * @throws IOException on communication errors
      */
     void flushAll(List<Record> records) throws IOException;

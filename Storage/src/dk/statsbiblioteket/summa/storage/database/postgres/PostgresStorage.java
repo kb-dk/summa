@@ -2,6 +2,7 @@ package dk.statsbiblioteket.summa.storage.database.postgres;
 
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager;
+import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager.StatementHandle;
 import dk.statsbiblioteket.summa.storage.database.ManagedStatement;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -55,7 +56,7 @@ public class PostgresStorage extends DatabaseStorage implements Configurable {
         }
 
         @Override
-        public PreparedStatement getStatement(PooledStatementHandle handle)
+        public PreparedStatement getStatement(StatementHandle handle)
                 throws SQLException {
 
             PooledConnection pconn = getPooledConnection();
@@ -181,8 +182,7 @@ public class PostgresStorage extends DatabaseStorage implements Configurable {
     @Override
     protected PreparedStatement getStatement(StatementHandle handle)
                                                             throws SQLException{
-        return pool.getStatement(
-                       (MiniConnectionPoolManager.PooledStatementHandle)handle);
+        return pool.getStatement(handle);
     }
 
     @Override
