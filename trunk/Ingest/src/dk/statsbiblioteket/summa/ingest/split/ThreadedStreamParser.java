@@ -55,7 +55,7 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
      */
     public static final String CONF_QUEUE_SIZE =
             "summa.ingest.stream.threadedstreamparser.queue.size";
-    public static final int DEFAULT_QUEUE_SIZE = 10;
+    public static final int DEFAULT_QUEUE_SIZE = 100;
 
     /**
      * The maximum number of milliseconds to wait for data when hasNext(),
@@ -67,7 +67,7 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
             "summa.ingest.stream.threadedstreamparser.queue.timeout";
     public static final int DEFAULT_QUEUE_TIMEOUT = Integer.MAX_VALUE;
 
-    private static final long HASNEXT_SLEEP = 100; // Sleep-ms between polls
+    private static final long HASNEXT_SLEEP = 50; // Sleep-ms between polls
     private static final Record interruptor =
             new Record("dummyID", "dummyBase", new byte[0]);
 
