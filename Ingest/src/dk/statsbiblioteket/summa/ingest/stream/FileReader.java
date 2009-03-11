@@ -36,6 +36,7 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.util.ArrayUtil;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.Logs;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -122,11 +123,11 @@ public class FileReader implements ObjectFilter {
      * Keeps track of already encountered files. This guards against endless
      * recursions due to linking.
      */
-    protected List<File> encountered = new ArrayList<File>(100);
+    protected final List<File> encountered = new ArrayList<File>(100);
     /**
      * Keeps track of all delivered files.
      */
-    private List<Payload> delivered = new ArrayList<Payload>(100);
+    private final List<Payload> delivered = new ArrayList<Payload>(100);
 
     /**
      * Sets up the properties for the FileReader. Scanning for files are
@@ -177,9 +178,9 @@ public class FileReader implements ObjectFilter {
     private FileFilter dataAndFolderFilter = new FileFilter() {
         public boolean accept(File pathname) {
             return pathname.canRead()
-                   && !alreadyHandled(pathname)
                    && (pathname.isDirectory()
-                       ||  filePattern.matcher(pathname.getName()).matches());
+                       ||  filePattern.matcher(pathname.getName()).matches())
+                   && !alreadyHandled(pathname);
         }
     };
 
@@ -202,6 +203,10 @@ public class FileReader implements ObjectFilter {
      **/
     protected synchronized void updateToDo() {
         File start = null;
+        if (log.isTraceEnabled()) {
+            log.trace("updateTodo() called with first todo-element: "
+                      + (todo.size() > 0 ? todo.get(0) : "NA"));
+        }
         try {
             if (todo.size() == 0 || todo.get(0).isFile()) {
                 return;
@@ -219,12 +224,15 @@ public class FileReader implements ObjectFilter {
                 log.trace("No files in '" + start + "'");
                 return;
             }
-            //noinspection DuplicateStringLiteralInspection
-            log.debug("Queueing " + files.length + " data files from '"
-                      + start + "'. Queue size before: " + todo.size());
             Arrays.sort(files, fileComparator);
             if (reverse_sort) {
                 ArrayUtil.reverse(files);
+            }
+            //noinspection DuplicateStringLiteralInspection
+            log.debug("Queueing " + files.length + " data files from '"
+                      + start + "'. Queue size before: " + todo.size());
+            if (log.isTraceEnabled()) {
+                Logs.log(log, Logs.Level.TRACE, "Queueing Files: ", files);
             }
             todo.addAll(0, Arrays.asList(files));
         } catch (Exception e) {
@@ -252,12 +260,18 @@ public class FileReader implements ObjectFilter {
      * @param file a file to check.
      * @return true if the file has been encountered before.
      */
-    protected synchronized boolean alreadyHandled(File file) {
-        if (encountered.contains(file)) {
-            return true;
+    protected boolean alreadyHandled(File file) {
+        synchronized (encountered) {
+            if (encountered.contains(file)) {
+                return true;
+            }
+            if (log.isTraceEnabled()) {
+                //noinspection DuplicateStringLiteralInspection
+                log.trace("Adding '" + file + "' to encountered");
+            }
+            encountered.add(file);
+            return false;
         }
-        encountered.add(file);
-        return false;
     }
 
     /**
@@ -288,12 +302,18 @@ public class FileReader implements ObjectFilter {
                       + "' with potential postfix '" + postfix + "'");
             this.file = file;
         }
-        public void setSuccess(boolean success) {
+        public synchronized void setSuccess(boolean success) {
             this.success = success;
+            try {
+                close();
+            } catch (IOException e) {
+                log.warn("setSuccess(" + success + "): Unable to close file '"
+                         + file + "'. Attempting rename()");
+            }
             rename();
         }
         @Override
-        public void close() throws IOException {
+        public synchronized void close() throws IOException {
             if (closed) {
                 return;
             }
@@ -342,18 +362,23 @@ public class FileReader implements ObjectFilter {
 
         private void rename() {
             if (renamed) {
-                log.trace("File '" + file + "' already closed");
+                log.trace("File '" + file + "' already renamed");
                 return;
             }
             if (closed && success && postfix != null && !"".equals(postfix)) {
                 File newName = new File(file.getPath() + postfix);
                 try {
+                    log.trace("Renaming '" + file + "' to '" + newName + "'");
                     file.renameTo(newName);
                     renamed = true;
                 } catch(Exception e) {
                     log.error("Could not rename '" + file
                               + "' to '" + newName + "'", e);
                 }
+            } else if (log.isTraceEnabled()) {
+                log.trace("No renaming of '" + file + "'. closed=" + closed
+                          + ", success=" + success + ", postfix='" 
+                          + postfix + "'");
             }
         }
 
@@ -394,7 +419,9 @@ public class FileReader implements ObjectFilter {
             payload.getData().put(Payload.ORIGIN, current.getPath());
             log.debug("File '" + current + "' opened successfully");
 //            System.out.println(delivered + " " + payload);
-            delivered.add(payload);
+            synchronized (delivered) {
+                delivered.add(payload);
+            }
             return payload;
         } catch (FileNotFoundException e) {
             //noinspection DuplicateStringLiteralInspection
@@ -425,30 +452,37 @@ public class FileReader implements ObjectFilter {
     }
 
     protected void closeDelivered(boolean success) {
-        for (Payload payload: delivered) {
-            if (payload.getStream() == null) {
-                log.warn("Can not close payload " + payload.getId()
-                         + ": Payload has no stream");
-                continue;
+        synchronized (delivered) {
+            for (Payload payload: delivered) {
+                if (log.isTraceEnabled()) {
+                    log.trace("closedelivered(): Calling close(" + success
+                              + ") on " + payload);
+                }
+                if (payload.getStream() == null) {
+                    log.warn("Can not close payload " + payload.getId()
+                             + ": Payload has no stream");
+                    continue;
+                }
+                if (!(payload.getStream() instanceof RenamingFileStream)) {
+                    log.warn("Unexpected stream type when closing payload "
+                             + payload.getId() + ": "
+                             + payload.getStream().getClass().getName());
+                    continue;
+                }
+                RenamingFileStream stream = 
+                        (RenamingFileStream)payload.getStream();
+                log.debug("Closing stream " + stream.file + " with success: "
+                          + success);
+                stream.setSuccess(success);
+                payload.close(); // TODO: Do we want close always?
+                if (!success) {  // Or only on failure?
+                    // Force close
+                    log.debug("Forcing close on payload " + payload);
+                    payload.close();
+                }
             }
-            if (!(payload.getStream() instanceof RenamingFileStream)) {
-                log.warn("Unexpected stream type when closing payload "
-                         + payload.getId() + ": "
-                         + payload.getStream().getClass().getName());
-                continue;
-            }
-            RenamingFileStream stream = (RenamingFileStream)payload.getStream();
-            log.debug("Closing stream " + stream.file + " with success: "
-                      + success);
-            stream.setSuccess(success);
-            payload.close(); // TODO: Do we want close always?
-            if (!success) {  // Or only on failure?
-                // Force close
-                log.debug("Forcing close on payload " + payload);
-                payload.close();
-            }
+            delivered.clear();
         }
-        delivered.clear();
     }
 
     /**
@@ -480,6 +514,7 @@ public class FileReader implements ObjectFilter {
     }
 
     protected synchronized boolean isTodoEmpty() {
+        log.trace("idTodoEmpty(): todo-size: " + todo.size());
         return todo.size() == 0;
     }
 }

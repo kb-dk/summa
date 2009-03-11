@@ -29,6 +29,7 @@ public class FileWatcherTest extends TestCase {
         super(name);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
         if (FileReaderTest.root.exists()) {
@@ -37,6 +38,7 @@ public class FileWatcherTest extends TestCase {
         FileReaderTest.root.mkdirs();
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
     }
@@ -104,10 +106,14 @@ public class FileWatcherTest extends TestCase {
         new File(FileReaderTest.root, "fooA.xml").createNewFile();
         new File(FileReaderTest.root, "fooB.xml").createNewFile();
         FileWatcher reader = new FileWatcher(conf);
-        new Poller(reader).start();
+        Poller poller = new Poller(reader);
+        poller.start();
 
+        log.debug("Sleeping 100 ms");
         Thread.sleep(100);
+        log.debug("Closing for the first time");
         reader.close(true);
+        poller.waitForFinish();
 
         assertEquals("There should be 2 files received", 2, received.size());
         assertEquals("The first file should be as expected",
@@ -123,12 +129,15 @@ public class FileWatcherTest extends TestCase {
                    new File(FileReaderTest.root, "zooA.xml").exists());
         assertTrue("The file zooB.xml should exist",
                    new File(FileReaderTest.root, "zooB.xml").exists());
+        log.debug("zooA & zooB created, opening new watcher");
         reader = new FileWatcher(conf);
-        new Poller(reader).start();
-
+        poller = new Poller(reader);
+        poller.start();
+        log.debug("Sleeping ½ a second");
         Thread.sleep(500);
-        log.debug("");
+        log.debug("Closing watcher the second time");
         reader.close(true);
+        poller.waitForFinish();
         assertEquals("There should be 2 new files received",
                      2, received.size());
         assertEquals("The first file should be as expected (reverse order)",
@@ -157,12 +166,29 @@ public class FileWatcherTest extends TestCase {
         }
         @Override
         public void run() {
-            while (doRun && reader.hasNext()) {
-                Payload next = reader.next();
-                log.debug("Poller got " + next);
-                received.add(next);
+            try {
+                while (doRun && reader.hasNext()) {
+                    Payload next = reader.next();
+                    log.debug("Poller got " + next);
+                    received.add(next);
+                }
+                log.debug("Poller finished with received-count "
+                          + received.size());
+            } catch (Exception e) {
+                log.error("Got an exception in run()", e);
             }
             doRun = false;
+        }
+
+        public void waitForFinish() {
+            while (doRun) {
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    log.warn("waitForFinish(): Interrupted while sleeping 10ms." 
+                             + " Retrying");
+                }
+            }
         }
     }
 }
