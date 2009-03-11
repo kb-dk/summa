@@ -32,6 +32,7 @@ public class JdbcTranstactionsTest {
     }
 
     private static void createTables (Connection conn) throws Exception {
+        System.out.println("TL: " + conn.getTransactionIsolation());
         Statement stmt = conn.createStatement();
         stmt.execute("CREATE TABLE records (id VARCHAR(255) PRIMARY KEY,\n" +
                                             "base VARCHAR(31))");

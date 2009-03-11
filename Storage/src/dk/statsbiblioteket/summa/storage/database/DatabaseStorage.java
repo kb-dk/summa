@@ -494,13 +494,32 @@ public abstract class DatabaseStorage extends StorageBase {
      * <code>finally</code> clause.
      * <p/>
      * Unclosed connections will lead to connection leaking which can end up
-     * locking up the entire storage
+     * locking up the entire storage.
      *
      * @return a connection to a SQL-compatible database. The returned
      *         connection <i>must</i> be closed by the caller to avoid
      *         connection leaking
      */
     protected abstract Connection getConnection();
+
+    /**
+     * Get a new pooled connection via {@link #getConnection()} and optimize it
+     * for transactional mode, meaning that auto commit is off and the
+     * transaction isolation level is set to the fastet one making sense.
+     * @return
+     */
+    private Connection getTransactionalConnection() {
+        Connection conn = getConnection();
+        try {
+            conn.setAutoCommit(false);
+            conn.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
+        } catch (SQLException e) {
+            // This is non fatal so simply log a warning
+            log.warn("Failed to optimize new connection for transaction mode: "
+                     + e.getMessage(), e);
+        }
+        return conn;
+    }
 
     /**
      * Set up a prepared statement and return an opaque handle to it.
@@ -1013,6 +1032,8 @@ public abstract class DatabaseStorage extends StorageBase {
         // This prevents an OOM for backends like Postgres
         try {
             stmt.getConnection().setAutoCommit(false);
+            stmt.getConnection().setTransactionIsolation(
+                                       Connection.TRANSACTION_READ_UNCOMMITTED);
             stmt.getConnection().setReadOnly(true);
             stmt.setFetchDirection(ResultSet.FETCH_FORWARD);
             
@@ -1105,6 +1126,12 @@ public abstract class DatabaseStorage extends StorageBase {
         log.trace("getRecord('" + id + "', " + options + ")");
 
         try {
+            // Optimize conn for read-only
+            stmt.getConnection().setAutoCommit(false);
+            stmt.getConnection().setTransactionIsolation(
+                                       Connection.TRANSACTION_READ_UNCOMMITTED);
+            stmt.getConnection().setReadOnly(true);
+
             stmt.setString(1, id);
         } catch (SQLException e) {
             throw new IOException("Could not prepare stmtGetRecord "
@@ -1263,17 +1290,14 @@ public abstract class DatabaseStorage extends StorageBase {
         return r;
     }
 
+    /*
+     * Note: the 'synchronized' part of this method decl is paramount to
+     * allowing us to set our transaction level to
+     * Connection.TRANSACTION_READ_UNCOMMITTED
+     */
     @Override
-    public void flush(Record record) throws IOException {
-        Connection conn = getConnection();
-
-        // Set the connection up for transaction mode
-        try{
-            conn.setAutoCommit(false);
-        } catch (SQLException e) {
-            throw new IOException("Failed to prepare connection for "
-                                  + "flushing of " + record.getId());
-        }
+    public synchronized void flush(Record record) throws IOException {
+        Connection conn = getTransactionalConnection();
 
         // Brace yourself for the try-catch-finally hell, but we really don't
         // want to leak them pooled connections!
@@ -1310,22 +1334,20 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
+    /*
+     * Note: the 'synchronized' part of this method decl is paramount to
+     * allowing us to set our transaction level to
+     * Connection.TRANSACTION_READ_UNCOMMITTED
+     */
     @Override
-    public void flushAll(List<Record> recs) throws IOException {
-        Connection conn = getConnection();
-
-        // Set the connection up for transaction mode
-        try{
-            conn.setAutoCommit(false);
-        } catch (SQLException e) {
-            throw new IOException("Failed to prepare connection for "
-                                  + "flushing of " + recs.size() + " records");
-        }
+    public synchronized void flushAll(List<Record> recs) throws IOException {
+        Connection conn = getTransactionalConnection();
 
         // Brace yourself for the try-catch-finally hell, but we really don't
         // want to leak them pooled connections!
         String error = null;
         Record lastRecord = null;
+        long start = System.nanoTime();
         boolean isDebug = log.isDebugEnabled();
         try {
             for (Record r : recs) {
@@ -1335,6 +1357,8 @@ public abstract class DatabaseStorage extends StorageBase {
                 lastRecord = r;
                 flushWithConnection(r, conn);
             }
+            log.info("Flushed " + recs.size() + " in "
+                      + ((System.nanoTime() - start)/1000000D) + "ms");
         } catch (SQLException e) {
             error = e.getMessage();
             throw new IOException("Failed to flush " + lastRecord.getId() + ": "
@@ -1343,7 +1367,13 @@ public abstract class DatabaseStorage extends StorageBase {
             try {
                 if(error == null) {
                     // All is OK, write to the DB
+                    log.debug("Commiting transaction of "
+                              + recs.size() + " records");
+                    start = System.nanoTime();
                     conn.commit();
+                    log.info("Transaction of " + recs.size()
+                             + " records completed in " +
+                             + ((System.nanoTime() - start)/1000000D) + "ms");
                     if (isDebug) {
                         for (Record r : recs) {
                             // It may seem dull to iterate over all records *again*,
@@ -1984,12 +2014,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 }
             }
         } finally {
-            try {
-                conn.close();
-            } catch (SQLException e) {
-                log.warn("Failed to close connection to database: "
-                         + e.getMessage(), e);
-            }
+            closeConnection(conn);
         }
     }
 
@@ -2094,12 +2119,7 @@ public abstract class DatabaseStorage extends StorageBase {
             stmt.execute("DROP TABLE " + RELATIONS);
             stmt.close();
         } finally {
-            try {
-                conn.close();
-            } catch (SQLException e) {
-                log.warn("Failed to close connection to database: "
-                         + e.getMessage(), e);
-            }
+            closeConnection(conn);
         }
 
         log.info("All Summa data wiped from database");

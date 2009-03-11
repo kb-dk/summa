@@ -44,12 +44,16 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class RecordWriterTest extends TestCase {
+
+    Log log = LogFactory.getLog(RecordWriterTest.class);
 
     private static final File storageLocation =
             new File(System.getProperty("java.io.tmpdir"), "kabloey");
@@ -111,12 +115,13 @@ public class RecordWriterTest extends TestCase {
     }
 
     public void testBatchOvershoot() throws Exception {
-        writer.setSource(new ObjectProvider(207));
+        writer.setSource(new ObjectProvider(100007));
         while (writer.pump()) {
             // Wait
         }
         writer.close(true);
-        assertBaseCount("fooBase", 207);
+        log.info("Flushed record. Checking count");
+        assertBaseCount("fooBase", 100007);
     }
 
     /* ObjectFilter test-implementation */

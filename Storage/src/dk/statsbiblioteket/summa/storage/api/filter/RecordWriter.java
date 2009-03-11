@@ -118,23 +118,26 @@ public class RecordWriter extends ObjectFilterImpl {
             watcher.start();
         }
 
-        public void add(Record r) {
+        public synchronized void add(Record r) {
             while (records.size() >= batchSize) {
                 try {
                     log.debug("Waiting for batch queue to flush");
-                    synchronized (this) {
-                        wait(batchTimeout);
-                    }
+                    wait(batchTimeout);
                 } catch (InterruptedException e) {
                     // Check our capacity again
                 }
             }
 
+            if (log.isTraceEnabled()) {
+                //noinspection DuplicateStringLiteralInspection
+                log.debug("Batching: " + r.toString(true));
+            } else {
+                log.debug("Batching: " + r);
+            }
+
             lastUpdate = System.currentTimeMillis();
             records.add(r);
-            synchronized (this) {
-                this.notifyAll();
-            }
+            notifyAll();
         }
 
         public void clear() {
@@ -148,7 +151,7 @@ public class RecordWriter extends ObjectFilterImpl {
                     !mayRun); // Force commit if closing
         }
 
-        public boolean checkCommit() {
+        private boolean checkCommit() {
             if (!shouldCommit()) {
                 if (log.isTraceEnabled()) {
                     log.trace("Batch not ready for commit yet. Current size: "
@@ -157,6 +160,11 @@ public class RecordWriter extends ObjectFilterImpl {
                 return false;
             }
 
+            forceCommit();
+            return true;
+        }
+
+        private synchronized void forceCommit() {
             if (log.isDebugEnabled()) {
                 for (Record r : records) {
                     log.debug("Committing: " + r.getId());
@@ -164,8 +172,10 @@ public class RecordWriter extends ObjectFilterImpl {
             }
 
             try {
+                long start = System.nanoTime();
                 storage.flushAll(records);
-                log.debug("Committed " + records.size() + " records");
+                log.info("Committed " + records.size() + " records in "
+                          + ((System.nanoTime() - start)/1000000D) + "ms");
             } catch (Exception e) {
                 log.error("Dropped " + records.size() + " records in commit: "
                           + e.getMessage(), e);
@@ -177,13 +187,11 @@ public class RecordWriter extends ObjectFilterImpl {
                 // but the records that are broken
             }
 
-            // Awake anyone waiting for us
-            synchronized (this) {
-                notifyAll();
-            }
-
+            // Clear the batch queue and awake anyone waiting for us
             records.clear();
-            return true;
+            log.trace("Batch queue cleared");
+            notifyAll();
+            log.trace("Notified");
         }
 
         public void stop() {
@@ -192,14 +200,16 @@ public class RecordWriter extends ObjectFilterImpl {
             synchronized (this) {
                 notifyAll();
             }
-            //watcher.interrupt();
         }
 
         public void run () {
             log.debug("Batch job watcher is running");
-            while (mayRun) {
-                synchronized (this) {
+            synchronized (this) {
+                while (mayRun) {
                     try {
+                        if (log.isTraceEnabled()) {
+                            log.trace("Waiting for records");
+                        }
                         wait(batchTimeout);
                     } catch (InterruptedException e) {
                         // We have been awoken!
@@ -260,12 +270,6 @@ public class RecordWriter extends ObjectFilterImpl {
         if (record == null) {
             throw new IllegalStateException("null received in Payload in next()"
                                             + ". This should not happen");
-        }
-        if (log.isTraceEnabled()) {
-            //noinspection DuplicateStringLiteralInspection
-            log.debug("Batching: " + record.toString(true));
-        } else {
-            log.debug("Batching: " + record);
         }
 
         batcher.add(record);
