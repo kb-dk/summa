@@ -96,6 +96,7 @@ public class RecordWriter extends ObjectFilterImpl {
         private static final Log log = LogFactory.getLog(RecordWriter.class);
 
         private boolean mayRun;
+        long lastCommit;
         private long lastUpdate;
         private int batchSize;
         private int batchTimeout;
@@ -110,6 +111,7 @@ public class RecordWriter extends ObjectFilterImpl {
             this.batchSize = batchSize;
             this.batchTimeout = batchTimeout;
             lastUpdate = System.currentTimeMillis();
+            lastCommit = System.nanoTime();
             this.storage = storage;
 
             log.debug("Starting batch job watcher");
@@ -172,10 +174,14 @@ public class RecordWriter extends ObjectFilterImpl {
             }
 
             try {
+                log.info("Committing " + records.size()
+                         + "records. Time since last commit: "
+                         + ((System.nanoTime() - lastCommit)/1000000D) + "ms");
                 long start = System.nanoTime();
                 storage.flushAll(records);
                 log.info("Committed " + records.size() + " records in "
                           + ((System.nanoTime() - start)/1000000D) + "ms");
+                lastCommit = System.nanoTime();
             } catch (Exception e) {
                 log.error("Dropped " + records.size() + " records in commit: "
                           + e.getMessage(), e);
