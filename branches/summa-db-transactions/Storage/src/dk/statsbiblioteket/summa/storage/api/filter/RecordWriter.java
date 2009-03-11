@@ -23,6 +23,8 @@
 package dk.statsbiblioteket.summa.storage.api.filter;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.ArrayList;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
@@ -30,6 +32,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.storage.api.StorageWriterClient;
+import dk.statsbiblioteket.summa.storage.api.WritableStorage;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Profiler;
 import org.apache.commons.logging.Log;
@@ -37,7 +40,7 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * Connects to a Storage and ingests received Records into the storage.
- * The Storage is accessed via RMI at the address specified by
+ * The Storage is accessed on the address specified by
  * {@link ConnectionConsumer#CONF_RPC_TARGET}.
  * </p><p>
  * Note: This ObjectFilter can only be chained after another ObjectFilter.
@@ -58,7 +61,160 @@ public class RecordWriter extends ObjectFilterImpl {
     private static final String DEPRECATED_CONF_STORAGE =
             "summa.storage.recordwriter.storage";
 
-    private StorageWriterClient storage;
+    /**
+     * The writer will try to group records into chunks of at least this size
+     * and commit them to the storage via {@link WritableStorage#flushAll}.
+     * If no records has been received during {@link #CONF_BATCH_TIMEOUT}
+     * milliseconds the currently batched records will be committed.
+     * <p/>
+     * The default value for this property is 100.
+     */
+    public static final String CONF_BATCH_SIZE =
+                                         "summa.storage.recordwriter.batchsize";
+
+    /**
+     * Default value for the {@link #CONF_BATCH_SIZE} property
+     */
+    public static final int DEFAULT_BATCH_SIZE = 100;
+
+    /**
+     * The number of milliseconds to wait without receiving any records before
+     * committing the currently batched records to storage. The default value
+     * is 1000ms (that would be 1s)
+     * @see #CONF_BATCH_SIZE
+     */
+    public static final String CONF_BATCH_TIMEOUT =
+                                      "summa.storage.recordwriter.batchtimeout";
+
+    /**
+     * Default value for the {@link #CONF_BATCH_TIMEOUT} property
+     */
+    public static final int DEFAULT_BATCH_TIMEOUT = 1000;
+
+    private static class Batcher implements Runnable {
+        /* CAVEAT: We log under the name of the RecordWriter !! */
+        private static final Log log = LogFactory.getLog(RecordWriter.class);
+
+        private boolean mayRun;
+        private long lastUpdate;
+        private int batchSize;
+        private int batchTimeout;
+        private List<Record> records;
+        private Thread watcher;
+        private WritableStorage storage;
+
+        public Batcher (int batchSize, int batchTimeout,
+                        WritableStorage storage) {
+            mayRun = true;
+            records = new ArrayList<Record>(batchSize);
+            this.batchSize = batchSize;
+            this.batchTimeout = batchTimeout;
+            lastUpdate = System.currentTimeMillis();
+            this.storage = storage;
+
+            log.debug("Starting batch job watcher");
+            watcher = new Thread(this, "RecordBatcher");
+            watcher.setDaemon(true); // Allow the JVM to exit
+            watcher.start();
+        }
+
+        public void add(Record r) {
+            while (records.size() >= batchSize) {
+                try {
+                    log.debug("Waiting for batch queue to flush");
+                    synchronized (this) {
+                        wait(batchTimeout);
+                    }
+                } catch (InterruptedException e) {
+                    // Check our capacity again
+                }
+            }
+
+            lastUpdate = System.currentTimeMillis();
+            records.add(r);
+            synchronized (this) {
+                this.notifyAll();
+            }
+        }
+
+        public void clear() {
+            records.clear();
+        }
+
+
+        public boolean shouldCommit () {
+            return (records.size() >= batchSize ||
+                    System.currentTimeMillis() - lastUpdate >= batchTimeout ||
+                    !mayRun); // Force commit if closing
+        }
+
+        public boolean checkCommit() {
+            if (!shouldCommit()) {
+                if (log.isTraceEnabled()) {
+                    log.trace("Batch not ready for commit yet. Current size: "
+                              + records.size());
+                }
+                return false;
+            }
+
+            if (log.isDebugEnabled()) {
+                for (Record r : records) {
+                    log.debug("Committing: " + r.getId());
+                }
+            }
+
+            try {
+                storage.flushAll(records);
+                log.debug("Committed " + records.size() + " records");
+            } catch (Exception e) {
+                log.error("Dropped " + records.size() + " records in commit: "
+                          + e.getMessage(), e);
+                for (Record r: records) {
+                    log.warn("Dropped: " + r.getId());
+                }
+                // Fall through so that we clear the records list - this must
+                // be done because it might not be the connection that is bad,
+                // but the records that are broken
+            }
+
+            // Awake anyone waiting for us
+            synchronized (this) {
+                notifyAll();
+            }
+
+            records.clear();
+            return true;
+        }
+
+        public void stop() {
+            log.debug("Stopping Batcher thread");
+            mayRun = false;
+            synchronized (this) {
+                notifyAll();
+            }
+            //watcher.interrupt();
+        }
+
+        public void run () {
+            log.debug("Batch job watcher is running");
+            while (mayRun) {
+                synchronized (this) {
+                    try {
+                        wait(batchTimeout);
+                    } catch (InterruptedException e) {
+                        // We have been awoken!
+                        log.trace("Interrupted");
+                    }
+                    checkCommit();
+                }
+            }
+        }
+    }
+
+    private WritableStorage storage;
+    private int batchSize;
+    private int batchTimeout;
+    private Batcher batcher;
     private Profiler profiler = new Profiler();
 
     /**
@@ -76,9 +232,22 @@ public class RecordWriter extends ObjectFilterImpl {
                                    DEPRECATED_CONF_STORAGE,
                                    ConnectionConsumer.CONF_RPC_TARGET));
         }
+
         storage = new StorageWriterClient(conf);
+        batchSize = conf.getInt(CONF_BATCH_SIZE, DEFAULT_BATCH_SIZE);
+        batchTimeout = conf.getInt(CONF_BATCH_TIMEOUT, DEFAULT_BATCH_TIMEOUT);
+        batcher = new Batcher(batchSize, batchTimeout, storage);
 
         // TODO: Perform a check to see if the Storage is alive
+    }
+
+    public RecordWriter (WritableStorage storage,
+                         int batchSize, int batchTimeout) {
+        super (Configuration.newMemoryBased());
+        this.storage = storage;
+        this.batchSize = batchSize;
+        this.batchTimeout = batchTimeout;
+        batcher = new Batcher(batchSize, batchTimeout, storage);
     }
 
     /**
@@ -92,36 +261,27 @@ public class RecordWriter extends ObjectFilterImpl {
             throw new IllegalStateException("null received in Payload in next()"
                                             + ". This should not happen");
         }
-        try {
-            if (log.isTraceEnabled()) {
-                //noinspection DuplicateStringLiteralInspection
-                log.trace("Flushing " + record.toString(true));
-            } else {
-                log.debug("Flushing record " + record);
-            }
-            long startTime = System.nanoTime();
-            storage.flush(record);
-            if (log.isTraceEnabled()) {
-                log.trace(String.format(
-                        "Flushed record to Storage in %.5f ms: %s",
-                        (System.nanoTime() - startTime) / 1000000.0,
-                        record));
-            }
-            profiler.beat();
-        } catch (IOException e) {
-            log.error("Exception flushing " + record, e);
-            // TODO: Consider checking for fatal errors (the connection is down)
+        if (log.isTraceEnabled()) {
+            //noinspection DuplicateStringLiteralInspection
+            log.debug("Batching: " + record.toString(true));
+        } else {
+            log.debug("Batching: " + record);
         }
+
+        batcher.add(record);
+        profiler.beat();
     }
 
     @Override
     public synchronized void close(boolean success) {
         super.close(success);
+        log.info("Waiting for batch jobs to be committed");
+        batcher.stop();
         log.info("Closing down RecordWriter. " + getProcessStats()
                  + ". Total time: " + profiler.getSpendTime());
     }
 
-    // TODO: Close connection on EOF
+    
 }
 
 

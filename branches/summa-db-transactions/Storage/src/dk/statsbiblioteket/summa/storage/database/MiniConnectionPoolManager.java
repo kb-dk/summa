@@ -80,14 +80,13 @@ public class MiniConnectionPoolManager {
     /**
      * Opaque handle type used for representing pooled prepared statements
      */
-    public static class PooledStatementHandle
-                                    implements DatabaseStorage.StatementHandle {
+    public static class StatementHandle {
 
         private static int handleCount = 0;
         private int handle;
         private String sql;
 
-        PooledStatementHandle(String sql) {
+        StatementHandle (String sql) {
             synchronized (this.getClass()) {
                 handle = handleCount;
                 handleCount++;
@@ -182,11 +181,11 @@ public class MiniConnectionPoolManager {
         }
     }
 
-    public PooledStatementHandle prepareStatement(String sql) {
-        return new PooledStatementHandle(sql);
+    public StatementHandle prepareStatement(String sql) {
+        return new StatementHandle(sql);
     }
 
-    public PreparedStatement getStatement(PooledStatementHandle handle)
+    public PreparedStatement getStatement(StatementHandle handle)
                                                             throws SQLException{
         PooledConnection pconn = getPooledConnection();
         Connection conn = pconn.getConnection();
