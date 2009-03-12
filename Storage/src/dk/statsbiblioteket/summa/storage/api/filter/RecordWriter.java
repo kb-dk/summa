@@ -42,7 +42,12 @@ import org.apache.commons.logging.LogFactory;
  * Connects to a Storage and ingests received Records into the storage.
  * The Storage is accessed on the address specified by
  * {@link ConnectionConsumer#CONF_RPC_TARGET}.
- * </p><p>
+ * <p/>
+ * Internally the RecordWriter will collect records into batches and submit
+ * them to storage with {@link WritableStorage#flushAll}.
+ * The policy on when to commit the batches is determined by the two
+ * properties {@link #CONF_BATCH_SIZE} and {@link #CONF_BATCH_TIMEOUT}. 
+ * <p/>
  * Note: This ObjectFilter can only be chained after another ObjectFilter.
  * </p><p>
  * Note: Only Record is stored. All other data in Payload is ignored.
