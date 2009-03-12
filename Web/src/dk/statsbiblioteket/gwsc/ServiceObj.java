@@ -286,7 +286,7 @@ public class ServiceObj {
             }
         }
 
-        public Object invoke(Object[] objects) throws RemoteException {
+        public synchronized Object invoke(Object[] objects) throws RemoteException {
             if (soap()) {
                 return this.soapcall.invoke(objects);
             } else if (rest()) {
