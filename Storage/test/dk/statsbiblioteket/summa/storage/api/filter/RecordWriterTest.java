@@ -77,8 +77,7 @@ public class RecordWriterTest extends TestCase {
         Files.delete(storageLocation);
         conf.set(Storage.CONF_CLASS,
                  "dk.statsbiblioteket.summa.storage.database.h2.H2Storage");
-        conf.set(DatabaseStorage.CONF_LOCATION, storageLocation.toString()
-                                                + File.separator + "foo");
+        conf.set(DatabaseStorage.CONF_LOCATION, storageLocation.toString());
         storage = StorageFactory.createStorage(conf);
         assertNotNull("A storage should be available now", storage);
 
@@ -120,7 +119,7 @@ public class RecordWriterTest extends TestCase {
             // Wait
         }
         writer.close(true);
-        log.info("Flushed record. Checking count");
+        log.info("Flushed records. Checking count");
         assertBaseCount("fooBase", 100007);
     }
 
