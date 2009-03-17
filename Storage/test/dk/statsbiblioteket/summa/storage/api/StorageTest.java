@@ -28,6 +28,7 @@ public class StorageTest extends TestCase {
     static String testDBRoot = "test_db";
     static String dbPrefix = "db";
     static String testBase1 = "foobar";
+    static String testBase2 = "frobnibar";
     static String testId1 = "testId1";
     static String testId2 = "testId2";
     static String testId3 = "testId3";
@@ -604,4 +605,28 @@ public class StorageTest extends TestCase {
         assertBaseCount(testBase1, 1);
     }
 
+    public void testFlushAllIdCollisions() throws Exception {
+        List<Record> recs = new ArrayList<Record>();
+
+        recs.add(new Record (testId1, testBase1, testContent1));
+        recs.add(new Record (testId1, testBase2, testContent1));
+
+        storage.flushAll(recs);
+
+        assertBaseCount(testBase1, 0);
+        assertBaseCount(testBase2, 1);
+    }
+
+    public void testFlushAllWithNestedChildren() throws Exception {
+        List<Record> recs = new ArrayList<Record>();
+
+        recs.add(new Record (testId1, testBase1, testContent1));
+        recs.add(new Record (testId2, testBase1, testContent1));
+        recs.get(1).setChildren(Arrays.asList(new Record(testId3, testBase1,
+                                                         testContent1)));
+
+        storage.flushAll(recs);
+
+        assertBaseCount(testBase1, 3);
+    }
 }

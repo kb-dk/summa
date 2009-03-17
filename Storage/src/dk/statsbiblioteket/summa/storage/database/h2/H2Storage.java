@@ -11,6 +11,7 @@ import java.sql.*;
 import java.util.List;
 
 import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager;
+import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager.StatementHandle;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.database.ManagedStatement;
 import dk.statsbiblioteket.summa.storage.StorageUtils;
@@ -66,7 +67,7 @@ public class H2Storage extends DatabaseStorage implements Configurable {
         }
 
         @Override
-        public PreparedStatement getStatement(PooledStatementHandle handle)
+        public PreparedStatement getStatement(StatementHandle handle)
                 throws SQLException {
 
             PooledConnection pconn = getPooledConnection();
@@ -279,25 +280,24 @@ public class H2Storage extends DatabaseStorage implements Configurable {
     }
 
     @Override
-    protected DatabaseStorage.StatementHandle prepareStatement(String sql) {
+    protected StatementHandle prepareStatement(String sql) {
         return pool.prepareStatement(sql);
     }
 
     @Override
-    protected PreparedStatement getStatement(DatabaseStorage.StatementHandle handle)
-                                                            throws SQLException {
-        return pool.getStatement(
-                       (MiniConnectionPoolManager.PooledStatementHandle)handle);
+    protected PreparedStatement getStatement(StatementHandle handle)
+                                                           throws SQLException {
+        return pool.getStatement(handle);
     }
 
     @Override
     protected String getMetaColumnDataDeclaration() {
-        return " BLOB(" + META_LIMIT + ")";
+        return " BYTEA";
     }
 
     @Override
     protected String getDataColumnDataDeclaration() {
-        return " BLOB(" + BLOB_MAX_SIZE + ")";
+        return " BYTEA";
     }
 
     /**
@@ -314,13 +314,14 @@ public class H2Storage extends DatabaseStorage implements Configurable {
      * @throws IOException in case of communication errors with the database
      */
     @Override
-    protected void touchParents(String id, QueryOptions options)
-                                                            throws IOException {
+    protected void touchParents(String id,
+                                QueryOptions options, Connection conn)
+                                              throws IOException, SQLException {
         if (log.isTraceEnabled()) {
             log.trace("Preparing to touch parents of " + id);
         }
 
-        List<Record> parents = getParents(id, options);
+        List<Record> parents = getParents(id, options, conn);
 
         if (parents == null || parents.isEmpty()) {
             if (log.isTraceEnabled()) {
@@ -331,8 +332,8 @@ public class H2Storage extends DatabaseStorage implements Configurable {
 
         // Touch each parent and recurse upwards
         for (Record parent : parents) {
-            touchRecord(parent.getId());
-            touchParents(parent.getId(), options);
+            touchRecord(parent.getId(), conn);
+            touchParents(parent.getId(), options, conn);
         }
     }
 

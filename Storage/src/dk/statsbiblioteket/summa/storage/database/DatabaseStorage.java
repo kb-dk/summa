@@ -40,6 +40,7 @@ import dk.statsbiblioteket.summa.storage.database.cursors.Cursor;
 import dk.statsbiblioteket.summa.storage.database.cursors.PagingCursor;
 import dk.statsbiblioteket.summa.storage.database.cursors.ResultSetCursor;
 import dk.statsbiblioteket.summa.storage.database.cursors.CursorReaper;
+import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager.StatementHandle;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Zips;
@@ -325,14 +326,6 @@ public abstract class DatabaseStorage extends StorageBase {
     private int pageSize;
 
     /**
-     * Opaque datatype used to represent preparedStatements. Implementors
-     * of the {@link DatabaseStorage} class should provide custom
-     * implementations of this datatype and return it from
-     * {@code #prepareStatement()}
-     */
-    public interface StatementHandle {}
-
-    /**
      * A variation of {@link QueryOptions} used to keep track
      * of recursion depths for expanding children and parents
      */
@@ -501,13 +494,32 @@ public abstract class DatabaseStorage extends StorageBase {
      * <code>finally</code> clause.
      * <p/>
      * Unclosed connections will lead to connection leaking which can end up
-     * locking up the entire storage
+     * locking up the entire storage.
      *
      * @return a connection to a SQL-compatible database. The returned
      *         connection <i>must</i> be closed by the caller to avoid
      *         connection leaking
      */
     protected abstract Connection getConnection();
+
+    /**
+     * Get a new pooled connection via {@link #getConnection()} and optimize it
+     * for transactional mode, meaning that auto commit is off and the
+     * transaction isolation level is set to the fastet one making sense.
+     * @return
+     */
+    private Connection getTransactionalConnection() {
+        Connection conn = getConnection();
+        try {
+            conn.setAutoCommit(false);
+            conn.setTransactionIsolation(Connection.TRANSACTION_READ_UNCOMMITTED);
+        } catch (SQLException e) {
+            // This is non fatal so simply log a warning
+            log.warn("Failed to optimize new connection for transaction mode: "
+                     + e.getMessage(), e);
+        }
+        return conn;
+    }
 
     /**
      * Set up a prepared statement and return an opaque handle to it.
@@ -890,6 +902,44 @@ public abstract class DatabaseStorage extends StorageBase {
         log.debug("Finished preparing SQL statements");
     }
 
+    /**
+     * Close a statement and log any errors in the process. If this method
+     * is passed {@code null} it will return silently.
+     *
+     * @param stmt the statement to close
+     */
+    private void closeStatement (Statement stmt) {
+        if (stmt == null) {
+            return;
+        }
+
+        try {
+            stmt.close();
+        } catch (SQLException e) {
+            log.warn("Failed to close statement " + stmt + ": "
+                     + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Close a connection and log any errors in the process. If this method
+     * is passed {@code null} it will return silently.
+     *
+     * @param conn the connection to close
+     */
+    private void closeConnection (Connection conn) {
+        if (conn == null) {
+            return;
+        }
+
+        try {
+            conn.close();
+        } catch (SQLException e) {
+            log.warn("Failed to close connection " + conn + ": "
+                     + e.getMessage(), e);
+        }
+    }
+
     @Override
     public synchronized long getRecordsModifiedAfter(long time,
                                                      String base,
@@ -982,6 +1032,8 @@ public abstract class DatabaseStorage extends StorageBase {
         // This prevents an OOM for backends like Postgres
         try {
             stmt.getConnection().setAutoCommit(false);
+            stmt.getConnection().setTransactionIsolation(
+                                       Connection.TRANSACTION_READ_UNCOMMITTED);
             stmt.getConnection().setReadOnly(true);
             stmt.setFetchDirection(ResultSet.FETCH_FORWARD);
             
@@ -1074,6 +1126,12 @@ public abstract class DatabaseStorage extends StorageBase {
         log.trace("getRecord('" + id + "', " + options + ")");
 
         try {
+            // Optimize conn for read-only
+            stmt.getConnection().setAutoCommit(false);
+            stmt.getConnection().setTransactionIsolation(
+                                       Connection.TRANSACTION_READ_UNCOMMITTED);
+            stmt.getConnection().setReadOnly(true);
+
             stmt.setString(1, id);
         } catch (SQLException e) {
             throw new IOException("Could not prepare stmtGetRecord "
@@ -1232,61 +1290,176 @@ public abstract class DatabaseStorage extends StorageBase {
         return r;
     }
 
+    /*
+     * Note: the 'synchronized' part of this method decl is paramount to
+     * allowing us to set our transaction level to
+     * Connection.TRANSACTION_READ_UNCOMMITTED
+     */
     @Override
-    public void flush(Record record) throws IOException {
+    public synchronized void flush(Record record) throws IOException {
+        Connection conn = getTransactionalConnection();
+
+        // Brace yourself for the try-catch-finally hell, but we really don't
+        // want to leak them pooled connections!
+        String error = null;
+        try {
+            flushWithConnection(record, conn);
+        } catch (SQLException e) {
+            error = e.getMessage();
+            throw new IOException("Failed to flush " + record.getId() + ": "
+                                  + e.getMessage(), e);
+        } finally {
+            try {
+                if(error == null) {
+                    // All is OK, write to the DB
+                    conn.commit();
+                    log.debug("Committed " + record.getId());
+                } else {
+                    log.warn("Not committing " + record.getId()
+                             + " because of error: " + error);
+                }
+            } catch (SQLException e) {
+                error = "Failed to commit " + record.getId() + ": "
+                                                               + e.getMessage();
+                log.warn(error, e);
+                throw new IOException(error, e);
+            } finally {
+                try {
+                    conn.close();
+                } catch(SQLException e) {
+                    log.warn("Error closing connection after committing "
+                             + record.getId() + ": " + e.getMessage(), e);
+                }
+            }
+        }
+    }
+
+    /*
+     * Note: the 'synchronized' part of this method decl is paramount to
+     * allowing us to set our transaction level to
+     * Connection.TRANSACTION_READ_UNCOMMITTED
+     */
+    @Override
+    public synchronized void flushAll(List<Record> recs) throws IOException {
+        Connection conn = getTransactionalConnection();
+
+        // Brace yourself for the try-catch-finally hell, but we really don't
+        // want to leak them pooled connections!
+        String error = null;
+        Record lastRecord = null;
+        long start = System.nanoTime();
+        boolean isDebug = log.isDebugEnabled();
+        try {
+            for (Record r : recs) {
+                if (isDebug) {
+                    log.debug("Flushing: " + r.getId());
+                }
+                lastRecord = r;
+                flushWithConnection(r, conn);
+            }
+            log.info("Flushed " + recs.size() + " in "
+                      + ((System.nanoTime() - start)/1000000D) + "ms");
+        } catch (SQLException e) {
+            error = e.getMessage();
+            throw new IOException("Failed to flush " + lastRecord.getId() + ": "
+                                  + e.getMessage(), e);
+        } finally {
+            try {
+                if(error == null) {
+                    // All is OK, write to the DB
+                    log.debug("Commiting transaction of "
+                              + recs.size() + " records");
+                    start = System.nanoTime();
+                    conn.commit();
+                    log.info("Transaction of " + recs.size()
+                             + " records completed in " +
+                             + ((System.nanoTime() - start)/1000000D) + "ms");
+                    if (isDebug) {
+                        for (Record r : recs) {
+                            // It may seem dull to iterate over all records *again*,
+                            // but time has taught us that this info is really nice
+                            // to have in the log...
+                            log.debug("Committed: " + r.getId());
+                        }
+                    }
+                } else {
+                    log.warn("Not committing the last " + recs.size()
+                             + " records because of error: " + error);
+                }
+            } catch (SQLException e) {
+                error = "Failed to commit the last " + recs.size()
+                        + " records: " + e.getMessage();
+                log.warn(error, e);
+                throw new IOException(error, e);
+            } finally {
+                closeConnection(conn);
+            }
+        }
+    }
+
+    protected void flushWithConnection(Record r, Connection conn)
+                                              throws IOException, SQLException {
         if (log.isTraceEnabled()) {
-            log.trace("Flushing " + record.toString(true));
+            log.trace("Flushing: " + r.toString(true));
         } else if (log.isDebugEnabled()) {
-            log.trace("Flushing " + record.toString(false));
+            log.debug("Flushing: " + r.toString(false));
         }
 
         /* Update the timestamp we check agaist in getRecordsModifiedAfter */
-        updateModificationTime (record.getBase());
+        updateModificationTime (r.getBase());
 
-        if (record.isDeleted()){
-            log.debug("Deleting record '" + record.getId() + "' from base '"
-                      + record.getBase() + "'");
-            deleteRecord(record.getId());
-        } else {
-            createNewRecord(record);
+        try{
+            createNewRecordWithConnection(r, conn);
+        } catch (SQLException e) {
+            if (isIntegrityConstraintViolation(e)) {
+                // We already had the record stored, so fire an update instead
+                // Note that this will also handle deleted records
+                updateRecordWithConnection(r, conn);
+            } else {
+                throw new IOException("Internal error in DatabaseStorage, "
+                                      + "failed to flush " + r.getId() + ": "
+                                      + e.getMessage(), e);
+            }
         }
 
         /* Recursively add child records */
-        if (record.getChildren() != null) {
-            log.debug ("Flushing " + record.getChildren().size()
-                       + " nested child records of '" + record.getId() + "'");
-            for (Record child : record.getChildren()) {
-                flush(child);
+        List<Record> children = r.getChildren();
+        if (children != null) {
+            log.debug ("Flushing " + children.size()
+                       + " nested child records of '" + r.getId() + "'");
+            for (Record child : children) {
+                flushWithConnection(child, conn);
             }
         }
 
         /* Touch parents recursively upwards
          * FIXME: The call to touchParents() might be pretty expensive... */
         try {
-            touchParents(record.getId(), null);
+            touchParents(r.getId(), null, conn);
         } catch (IOException e) {
             // Consider this non-fatal
-            log.error("Failed to touch parents of '" + record.getId() + "': "
+            log.error("Failed to touch parents of '" + r.getId() + "': "
                       + e.getMessage(), e);
         }
 
         /* Again - update the timestamp we check agaist in
          * getRecordsModifiedAfter. This is also done in the end of the flush()
          * because the operation is non-instantaneous  */
-        updateModificationTime (record.getBase());
-
+        updateModificationTime (r.getBase());
     }
 
     /**
-     *  Touch (that is, set the 'mtime' to now) the parents
+     * Touch (that is, set the 'mtime' to now) the parents
      * of <code>id</code> recursively upwards
      * @param id the id of the records which parents to touch
      * @param options any query options that may affect how the touching is
      *                handled
      */
-    protected void touchParents(String id, QueryOptions options)
-                                                            throws IOException {
-        List<Record> parents = getParents(id, options);
+    protected void touchParents (String id,
+                                              QueryOptions options,
+                                              Connection conn)
+                                              throws IOException, SQLException {
+        List<Record> parents = getParents(id, options, conn);
 
         if (parents == null || parents.isEmpty()) {
             if (log.isTraceEnabled()) {
@@ -1299,10 +1472,9 @@ public abstract class DatabaseStorage extends StorageBase {
             log.debug ("Touching " + parents.size() + " parents of " + id);
         }
 
-        PreparedStatement stmt = null;
+        PreparedStatement stmt =
+                               conn.prepareStatement(stmtTouchParents.getSql());
         try {
-            stmt = getStatement(stmtTouchParents);
-
             long nowStamp = timestampGenerator.next();
             stmt.setLong (1, nowStamp);
             stmt.setString(2, id);
@@ -1322,53 +1494,21 @@ public abstract class DatabaseStorage extends StorageBase {
             // Consider this non-fatal
             return;
         } finally {
-            if (stmt != null) {
-                try {
-                    stmt.close();
-                } catch (SQLException e) {
-                    log.warn("Failed to close statement: " + e.getMessage(), e);
-                }
-            }
+            closeStatement(stmt);
         }
 
         // Recurse upwards
         for (Record parent : parents) {
-            touchParents(parent.getId(), options);
+            touchParents(parent.getId(), options, conn);
         }
     }
 
-    /**
-     * Get all immediate parent records of the record with the given id.
-     * @param id the id of the record to look up parents for
-     * @param options query options to match. Only records returning true
-     *                on {@link QueryOptions#allowsRecord(Record)} are returned.
-     *                If this argument is {@code null} all records are allowed
-     * @return A list of parent records. This list will be empty if there are no
-     *         parents
-     * @throws IOException on communication errors with the db
-     */
-    protected List<Record> getParents (String id, QueryOptions options)
-                                                            throws IOException {
-        PreparedStatement stmt;
+    protected List<Record> getParents (String id,
+                                                   QueryOptions options,
+                                                   Connection conn)
+                                              throws IOException, SQLException {
+        PreparedStatement stmt = conn.prepareStatement(stmtGetParents.getSql());
 
-        try {
-            stmt = getStatement(stmtGetParents);
-        } catch (SQLException e) {
-            throw new IOException("Failed to look up statement "
-                                  + stmtGetParents + ": " + e.getMessage(), e);
-        }
-
-        // doGetParents() will close stmt
-        return doGetParents(id, options, stmt);
-
-    }
-
-    /*
-     * This method is responsible for closing stmt itself
-     */
-    private List<Record> doGetParents (String id, QueryOptions options,
-                                       PreparedStatement stmt)
-                                                            throws IOException {
         List<Record> parents = new ArrayList<Record>(1);
         Cursor iter = null;
 
@@ -1404,41 +1544,19 @@ public abstract class DatabaseStorage extends StorageBase {
         } finally {
             if (iter != null) {
                 iter.close();
+            } else {
+                closeStatement(stmt);
             }
         }
     }
 
-    /**
-     * Get all immediate child records of the record with the given id.
-     * @param id the id of the record to look up children for
-     * @param options query options to match. Only records returning true
-     *                on {@link QueryOptions#allowsRecord(Record)} are returned.
-     *                If this argument is {@code null} all records are allowed
-     * @return A list of child records. This list will be empty if there are no
-     *         parents
-     * @throws IOException on communication errors with the db
-     */
-    protected List<Record> getChildren (String id, QueryOptions options)
-                                                            throws IOException {
-        PreparedStatement stmt;
+    private List<Record> getChildren (String id,
+                                                    QueryOptions options,
+                                                    Connection conn)
+                                              throws IOException, SQLException {
+        PreparedStatement stmt =
+                                conn.prepareStatement(stmtGetChildren.getSql());
 
-        try {
-            stmt = getStatement(stmtGetChildren);
-        } catch (SQLException e) {
-            throw new IOException("Failed to look up statement "
-                                  + stmtGetChildren + ": " + e.getMessage(), e);
-        }
-
-        // doGetChildren() will close stmt
-        return doGetChildren(id, options, stmt);
-    }
-
-    /*
-     * This method is responsible for closing stmt itself
-     */
-    private List<Record> doGetChildren (String id, QueryOptions options,
-                                        PreparedStatement stmt)
-                                                            throws IOException {
         List<Record> children = new ArrayList<Record>(3);
         ResultSetCursor iter = null;
 
@@ -1474,34 +1592,22 @@ public abstract class DatabaseStorage extends StorageBase {
         } finally {
             if (iter != null) {
                 iter.close();
+            } else {
+                stmt.close();
             }
         }
     }
 
-    /**
-     * Look up all parent/child relationships known for {@code rec} and update
-     * {@code rec} to reflect this.
-     * @param rec the record which parentd id list and child id list should be
-     *            updated
-     */
-    public void resolveRelatedIds (Record rec) {
-        PreparedStatement stmt;
-        List<String> parentIds = new LinkedList<String>();
-        List<String> childIds = new LinkedList<String>();
-
+    protected void resolveRelatedIds (Record rec, Connection conn)
+                                                           throws SQLException {
         if (log.isTraceEnabled()) {
             log.trace("Preparing to resolve relations for " + rec.getId());
         }
 
-        try {
-            stmt = getStatement(stmtGetRelatedIds);
-        } catch (SQLException e) {
-            log.error("Failed to look up statement "
-                      + stmtGetRelatedIds + " Can not resolve related ids for "
-                      + rec.getId() + ": "
-                      + e.getMessage(), e);
-            return;
-        }
+        PreparedStatement stmt =
+                              conn.prepareStatement(stmtGetRelatedIds.getSql());
+        List<String> parentIds = new LinkedList<String>();
+        List<String> childIds = new LinkedList<String>();
 
         if (log.isTraceEnabled()) {
             log.trace("Querying relations for " + rec.getId());
@@ -1534,11 +1640,7 @@ public abstract class DatabaseStorage extends StorageBase {
             log.warn("Failed to resolve related ids for " + rec.getId() + ": "
                      + e.getMessage(), e);
         } finally {
-            try {
-                stmt.close();
-            } catch (SQLException e) {
-                log.warn("Failed to close statement: " + e.getMessage(), e);
-            }
+            closeStatement(stmt);
         }
 
         if (log.isTraceEnabled()) {
@@ -1567,57 +1669,41 @@ public abstract class DatabaseStorage extends StorageBase {
 
     @Override
     public void clearBase (String base) throws IOException {
-        PreparedStatement stmt;
+        Connection conn = getConnection();
 
         try {
-            stmt = getStatement(stmtClearBase);
+            clearBaseWithConnection(base, conn);
         } catch (SQLException e) {
-            throw new IOException("Failed to look up statement "
-                                  + stmtClearBase + ": " + e.getMessage(), e);
-        }
-
-        try {
-            doClearBase(base, stmt);
+            String msg = "Error clearing base '" + base + "': "
+                         + e.getMessage();
+            log.error(msg, e);
+            throw new IOException(msg, e);
         } finally {
-            try {
-                stmt.close();
-            } catch (SQLException e) {
-                log.warn("Failed to close statement: " + e.getMessage(), e);
-            }
+            closeConnection(conn);
         }
     }
 
-    private void doClearBase (String base, PreparedStatement stmt)
-                                                            throws IOException {
+    private void clearBaseWithConnection (String base, Connection conn)
+                                              throws IOException, SQLException {
         log.info ("Clearing base '" + base + "'");
+
+        PreparedStatement stmt = conn.prepareStatement(stmtClearBase.getSql());
 
         try {
             stmt.setString(1, base);
             stmt.executeUpdate();
             updateModificationTime(base);
-        } catch (SQLException e) {
-            throw new IOException("SQLException clearing base '"
-                                      + base + "': " + e.getMessage(), e);
-        }
-    }
-
-    private void createRelations (Record rec) throws SQLException {
-        PreparedStatement stmt;
-
-        stmt = getStatement(stmtCreateRelation);
-
-        try {
-            doCreateRelations(rec, stmt);
         } finally {
-            stmt.close();
+            closeStatement(stmt);
         }
     }
 
     /* Create parent/child and child/parent relations for the given record */
-    private void doCreateRelations (Record rec, PreparedStatement stmt)
+    private void createRelations (Record rec, Connection conn)
                                                            throws SQLException {
+        PreparedStatement stmt =
+                             conn.prepareStatement(stmtCreateRelation.getSql());
 
-        // FIXME: Some transactional safety here would be nice
         if (rec.hasChildren()) {
             List<String> childIds = rec.getChildIds();
 
@@ -1638,6 +1724,7 @@ public abstract class DatabaseStorage extends StorageBase {
                                        + childId + ", already known");
                         }
                     } else {
+                        closeStatement(stmt);
                         throw new SQLException("Error creating child relations"
                                                + " for " + rec.getId (), e);
                     }
@@ -1647,7 +1734,7 @@ public abstract class DatabaseStorage extends StorageBase {
             // Make sure that all children are tagged as having relations,
             // unless the record is excepted from relations tracking
             if (shouldTrackRelations(rec)) {
-                markHasRelations(childIds);
+                markHasRelations(childIds, conn);
             }
         }
 
@@ -1671,6 +1758,7 @@ public abstract class DatabaseStorage extends StorageBase {
                                        + rec.getId() + ", already known");
                         }
                     } else {
+                        closeStatement(stmt);
                         throw new SQLException("Error creating parent relations"
                                                + " for " + rec.getId(), e);
                     }
@@ -1680,9 +1768,11 @@ public abstract class DatabaseStorage extends StorageBase {
             // Make sure that all parents are tagged as having relations
             // unless the record is excepted from relations tracking
             if (shouldTrackRelations(rec)) {
-                markHasRelations(parentIds);
+                markHasRelations(parentIds, conn);
             }
         }
+
+        closeStatement(stmt);
     }
 
     // Return false if the record should be excepted from relations tracking
@@ -1695,7 +1785,8 @@ public abstract class DatabaseStorage extends StorageBase {
      * childIds
      * @param childIds
      */
-    private void markHasRelations(List<String> childIds) {
+    private void markHasRelations(List<String> childIds,
+                                                Connection conn) {
         // We can't use a PreparedStatement here because the parameter list
         // to the IN clause is of varying length
         String sql = "UPDATE " + RECORDS
@@ -1704,33 +1795,29 @@ public abstract class DatabaseStorage extends StorageBase {
                      + Strings.join(childIds, "','")
                      + "')";
 
-        Connection conn = getConnection();
+        Statement stmt = null;
         try {
-            Statement stmt = conn.createStatement();
+            stmt = conn.createStatement();
             stmt.executeUpdate(sql);
         } catch (SQLException e) {
             log.warn("Failed to mark " + Strings.join(childIds, ", ")
                      + " as having relations: " + e.getMessage(), e);
         } finally {
-            try {
-                conn.close();
-            } catch (SQLException e) {
-                log.warn("Failed to close connection: " + e.getMessage(), e);
-            }
+            closeStatement(stmt);
         }
     }
 
-    private void checkHasRelations(String id) {
-        PreparedStatement stmt = null;
+    private void checkHasRelations(String id, Connection conn)
+                                                           throws SQLException {;
+        PreparedStatement stmt =
+                              conn.prepareStatement(stmtGetRelatedIds.getSql());
+
         boolean hasRelations = false;
 
-        if (log.isTraceEnabled()) {
-            log.trace("Checking relations for " + id);
-        }
+        log.debug("Checking relations for: " + id);
 
         /* Detect if we have any relations for 'id' */
         try {
-            stmt = getStatement(stmtGetRelatedIds);
             stmt.setString(1, id);
             stmt.setString(2, id);
             stmt.executeQuery();
@@ -1745,19 +1832,11 @@ public abstract class DatabaseStorage extends StorageBase {
             log.warn("Failed to check relations for " + id + ": "
                      + e.getMessage(), e);
         } finally {
-            try {
-                if (stmt != null) {
-                    stmt.close();
-                }
-            } catch (SQLException e) {
-                log.warn("Failed to close statement: " + e.getMessage(), e);
-            }
+            closeStatement(stmt);
         }
 
         /* Return if we don't have any relations */
-        if (hasRelations) {
-            log.trace("Marking " + id + " as having relations");
-        } else if (log.isTraceEnabled()) {
+        if (!hasRelations) {
             if (log.isTraceEnabled()) {
                 log.trace("No relations for record " + id);
             }
@@ -1765,6 +1844,7 @@ public abstract class DatabaseStorage extends StorageBase {
         }
 
         /* Set a check mark in the hasRelations column */
+        log.debug("Marking " + id + " as having relations");
         try {
             stmt = getStatement(stmtMarkHasRelations);
             stmt.setString(1, id);
@@ -1783,39 +1863,20 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
-    private void createNewRecord(Record record) throws IOException {
-        PreparedStatement stmt;
-
-        try {
-            stmt = getStatement(stmtCreateRecord);
-        } catch (SQLException e) {
-            throw new IOException("Failed to look up prepared statement "
-                                  + stmtCreateRecord + ": " + e.getMessage(),
-                                  e);
-        }
-
-        try {
-            doCreateNewRecord(record, stmt);
-        } finally {
-            try {
-                stmt.close();
-            } catch (SQLException e) {
-                log.warn("Failed to close statement: " + e.getMessage(), e);
-            }
-        }
-    }
-
-    private void doCreateNewRecord(Record record, PreparedStatement stmt)
-                                                            throws IOException {
+    private void createNewRecordWithConnection(Record record,
+                                               Connection conn)
+                                              throws IOException, SQLException {
         if (log.isTraceEnabled()) {
-            log.trace("Preparing to create or update record: "
-                      + record.toString(true));
+            log.debug("Creating: " + record.getId());
         }
+
+        PreparedStatement stmt =
+                               conn.prepareStatement(stmtCreateRecord.getSql());
 
         long nowStamp = timestampGenerator.next();
         boolean hasRelations = record.hasParents() || record.hasChildren();
 
-        try {
+        try{
             stmt.setString(1, record.getId());
             stmt.setString(2, record.getBase());
             stmt.setInt(3, boolToInt(record.isDeleted()));
@@ -1828,78 +1889,33 @@ public abstract class DatabaseStorage extends StorageBase {
                                          record.getMeta().toFormalBytes() :
                                          new byte[0]);
             stmt.executeUpdate();
-            if (log.isDebugEnabled()) {
-                log.debug("Created new record: " + record);
-            }
-        } catch (SQLException e) {
-            if (isIntegrityConstraintViolation(e)) {
-                // The constraint violation is because we already have the
-                // record, so update the record instead...
-
-                if (log.isTraceEnabled()) {
-                    log.trace ("Record '" + record.getId() + "' already stored. "
-                               + "Updating instead");
-                }
-                updateRecord(record);
-                if (log.isDebugEnabled()) {
-                    log.debug("Updated record: " + record);
-                }
-
-                return;
-            } else {
-                throw new IOException("Error creating new record " + record
-                                      + ": " + e.getMessage(), e);
-            }
-
+        } finally {
+            closeStatement(stmt);
         }
 
         if (hasRelations) {
-            try {
-                createRelations(record);
-            } catch (SQLException e) {
-                throw new IOException("Error creating relations for "
-                                      + record + ": " + e.getMessage(),
-                                      e);
-            }
+            createRelations(record, conn);
         } else {
             // If the record does not have explicit relations we have to check
             // if we know any relations for it already, unless the record
             // is excepted from relations tracking of course
             if (shouldTrackRelations(record)) {
-                checkHasRelations(record.getId());
+                checkHasRelations(record.getId(), conn);
             }
         }
         
     }
 
-    private void updateRecord(Record record) throws IOException {
-        PreparedStatement stmt;
-
-        try {
-            stmt = getStatement(stmtUpdateRecord);
-        } catch (SQLException e) {
-            throw new IOException("Failed to look up prepared statement "
-                                  + stmtUpdateRecord + ": " + e.getMessage(),
-                                  e);
-        }
-
-        try {
-            doUpdateRecord(record, stmt);
-        } finally {
-            try {
-                stmt.close();
-            } catch (SQLException e) {
-                log.warn("Failed to close statement: " + e.getMessage(), e);
-            }
-        }
-    }
-
     /* Note that creationTime isn't touched */
-    private void doUpdateRecord(Record record, PreparedStatement stmt)
-                                                            throws IOException {
-        // FIXME: Add child records recursively (parents?)
+    private void updateRecordWithConnection(Record record, Connection conn)
+                                              throws IOException, SQLException {
+        log.debug("Updating: " + record.getId());
+
         long nowStamp = timestampGenerator.next();
         boolean hasRelations = record.hasParents() || record.hasChildren();
+
+        PreparedStatement stmt =
+                               conn.prepareStatement(stmtUpdateRecord.getSql());
 
         try {
             stmt.setString(1, record.getBase());
@@ -1915,116 +1931,44 @@ public abstract class DatabaseStorage extends StorageBase {
             stmt.executeUpdate();
 
             if (stmt.getUpdateCount() == 0) {
-                log.warn("The record with id '" + record.getId()
-                         + "' was marked as modified, but did not exist in the"
-                         + " database. The record will be added as new");
-                createNewRecord(record);
-                return;
+                String msg = "The record with id '" + record.getId()
+                             + "' was marked as modified, but did not exist in"
+                             + " the database";
+                log.warn(msg);
+                throw new IOException(msg);
             }
-        } catch (SQLException e) {
-            throw new IOException("SQLException updating record '"
-                                      + record.getId() + "'", e);
+        } finally {
+            closeStatement(stmt);
         }
 
         if (hasRelations) {
-            try {
-                createRelations(record);
-            } catch (SQLException e) {
-                throw new IOException("Error creating relations for '"
-                                      + record.getId() + "': " + e.getMessage(),
-                                      e);
-            }
+            createRelations(record, conn);
         } else {
             // If the record does not have explicit relations we have to check
             // if we know any relations for it already, unless the record
             // is excepted from relations tracking of course
             if (shouldTrackRelations(record)) {
-                checkHasRelations(record.getId());
+                checkHasRelations(record.getId(), conn);
             }
         }
      }
 
-    private int deleteRecord(String id) throws IOException {
-        PreparedStatement stmt;
-
-        try {
-            stmt = getStatement(stmtDeleteRecord);
-        } catch (SQLException e) {
-            throw new IOException("Failed to look up prepared statement "
-                                  + stmtDeleteRecord + ": " + e.getMessage(),
-                                  e);
-        }
-
-        try {
-            return doDeleteRecord(id, stmt);
-        } finally {
-            try {
-                stmt.close();
-            } catch (SQLException e) {
-                log.warn("Failed to close statement: " + e.getMessage(), e);
-            }
-        }
-    }
-
-    private int doDeleteRecord(String id, PreparedStatement stmt)
-                                                            throws IOException {
-        long nowStamp = timestampGenerator.next();
-
-        try {
-            stmt.setLong(1, nowStamp);
-            stmt.setBoolean(2, true);
-            stmt.setString(3, id);
-            // TODO: Consider stmt.close();
-            return stmt.executeUpdate();
-        } catch (SQLException e) {
-            log.error("SQLException deleting record '" + id + "'", e);
-            throw new IOException("SQLException deleting record '"
-                                      + id + "'", e);
-        }
-
-        // FIXME: Should we updateRelations()?
-    }
-
-    protected void touchRecord (String id)
-                                                            throws IOException {
-        PreparedStatement stmt;
-
-        try {
-            stmt = getStatement(stmtTouchRecord);
-        } catch (SQLException e) {
-            throw new IOException("Failed to look up prepared statement "
-                                  + stmtTouchRecord + ": " + e.getMessage(),
-                                  e);
-        }
-
-        try {
-            doTouchRecord(id, stmt);
-        } finally {
-            try {
-                stmt.close();
-            } catch (SQLException e) {
-                log.warn("Failed to close statement: " + e.getMessage(), e);
-            }
-        }
-    }
-
-    private void doTouchRecord(String id, PreparedStatement stmt)
-                                                            throws IOException {
-        if (log.isTraceEnabled()) {
-            log.trace("Touching " + id);
-        }
+    protected void touchRecord (String id, Connection conn)
+                                              throws IOException, SQLException {
+        PreparedStatement stmt =
+                                conn.prepareStatement(stmtTouchRecord.getSql());
+        log.debug("Touching: " + id);
 
         try {
             stmt.setLong(1, timestampGenerator.next());
             stmt.setString(2, id);
             stmt.executeUpdate();
-        } catch (SQLException e) {
-            throw new IOException("SQLException touching record '"
-                                  + id + "'", e);
+        } finally {
+            closeStatement(stmt);
         }
 
-        if (log.isDebugEnabled()) {
-            log.debug("Touched " + id);
+        if (log.isTraceEnabled()) {
+            log.trace("Touched: " + id);
         }
     }
 
@@ -2070,12 +2014,7 @@ public abstract class DatabaseStorage extends StorageBase {
                 }
             }
         } finally {
-            try {
-                conn.close();
-            } catch (SQLException e) {
-                log.warn("Failed to close connection to database: "
-                         + e.getMessage(), e);
-            }
+            closeConnection(conn);
         }
     }
 
@@ -2180,12 +2119,7 @@ public abstract class DatabaseStorage extends StorageBase {
             stmt.execute("DROP TABLE " + RELATIONS);
             stmt.close();
         } finally {
-            try {
-                conn.close();
-            } catch (SQLException e) {
-                log.warn("Failed to close connection to database: "
-                         + e.getMessage(), e);
-            }
+            closeConnection(conn);
         }
 
         log.info("All Summa data wiped from database");
@@ -2350,7 +2284,8 @@ public abstract class DatabaseStorage extends StorageBase {
          */
         if (useLazyRelations && hasRelations
             && parentIds == null && childIds == null) {
-            resolveRelatedIds(rec);
+            resolveRelatedIds(
+                                  rec,resultSet.getStatement().getConnection());
         }
 
         return rec;
