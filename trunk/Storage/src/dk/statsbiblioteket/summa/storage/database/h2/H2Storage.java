@@ -30,8 +30,7 @@ import javax.sql.PooledConnection;
 public class H2Storage extends DatabaseStorage implements Configurable {
 
     private static Log log = LogFactory.getLog(H2Storage.class);
-
-    private static final int BLOB_MAX_SIZE = 50*1024*1024; // MAX_VALUE instead?
+    private static final String DB_FILE = "summa_h2storage";
     public static final int META_LIMIT =     50*1024*1024; // MAX_VALUE instead?
 
     /**
@@ -105,7 +104,7 @@ public class H2Storage extends DatabaseStorage implements Configurable {
             location = new File(conf.getString(CONF_LOCATION));
         } else {
             location = new File (StorageUtils.getGlobalPersistentDir(conf),
-                                 "storage" + File.separator + "derby");
+                                 "storage" + File.separator + "h2");
             log.debug("Using default location '" + location + "'");
         }
 
@@ -116,8 +115,9 @@ public class H2Storage extends DatabaseStorage implements Configurable {
             location = location.getAbsoluteFile();
         }
 
-        if (!location.getParentFile().exists()) {
-            location.getParentFile().mkdirs ();
+        if (location.isFile()) {
+            throw new ConfigurationException("Database path contains a regular"
+                                             + " file");
         }
 
         // Create new DB?
@@ -142,7 +142,7 @@ public class H2Storage extends DatabaseStorage implements Configurable {
     @Override
     protected void connectToDatabase(Configuration configuration) throws
                                                                IOException {
-        log.info("Establishing connection to Derby with  username '" + username
+        log.info("Establishing connection to H2 with  username '" + username
                  + "', password " + (password == null || "".equals(password) ?
                                             "[undefined]" : "[defined]")
                  + ", location '" + location + "', createNew " + createNew
@@ -165,8 +165,7 @@ public class H2Storage extends DatabaseStorage implements Configurable {
         } else {
             log.debug("No database at '" + location + "'");
             if (createNew) {
-                log.debug("A new database will be created at '" + location
-                          + "'");
+                log.info("Creating new database at '" + location + "'");
             } else {
                 throw new IOException("No database exists at '" + location
                                           + " and createNew is false. The "
@@ -175,9 +174,16 @@ public class H2Storage extends DatabaseStorage implements Configurable {
             }
         }
 
+        location.mkdirs();
+        if (!location.isDirectory()) {
+            throw new IOException("Database location '" + location
+                                  + "' not a directory");
+        }
+
         dataSource = new JdbcDataSource();
 
-        dataSource.setURL("jdbc:h2:"+location.getAbsolutePath());
+        dataSource.setURL("jdbc:h2:"+location.getAbsolutePath()
+                          + File.separator + DB_FILE);
 
         if (username != null) {
             dataSource.setUser(username);
