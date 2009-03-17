@@ -56,7 +56,10 @@ import org.apache.commons.logging.LogFactory;
  * </p><p>
  * The files are processed depth-first in unicode-sorted order, unless
  * {@link #CONF_REVERSE_SORT} is true.
+ * </p><p>
+ * Warning: The FileReader does not check for cyclic folders structures.
  */
+// TODO: Make the FileReader handle cyclic folder structures
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
@@ -257,10 +260,14 @@ public class FileReader implements ObjectFilter {
     /**
      * Checks whether the file has been encountered before and remembers it
      * for subsequent checks if it hasn't.
+     * If the File is a directory is is always considered not handled.
      * @param file a file to check.
      * @return true if the file has been encountered before.
      */
     protected boolean alreadyHandled(File file) {
+        if (file.isDirectory()) {
+            return false;
+        }
         synchronized (encountered) {
             if (encountered.contains(file)) {
                 return true;
