@@ -39,6 +39,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager;
+import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager.StatementHandle;
 import dk.statsbiblioteket.summa.storage.StorageUtils;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.util.Files;
@@ -187,8 +188,7 @@ public class DerbyStorage extends DatabaseStorage implements Configurable {
     @Override
     protected PreparedStatement getStatement(StatementHandle handle)
                                                             throws SQLException{
-        return pool.getStatement(
-                       (MiniConnectionPoolManager.PooledStatementHandle)handle);
+        return pool.getStatement(handle);
     }
 
     @Override
@@ -216,15 +216,16 @@ public class DerbyStorage extends DatabaseStorage implements Configurable {
      * @throws IOException in case of communication errors with the database
      */
     @Override
-    protected void touchParents(String id, QueryOptions options)
-                                                            throws IOException {
+    protected void touchParents(String id,
+                                QueryOptions options, Connection conn)
+                                              throws IOException, SQLException {
         boolean doTrace = log.isTraceEnabled();
 
         if (doTrace) {
             log.trace ("Touching parents of '" + id + "'");
         }
 
-        List<Record> parents = getParents(id, options);
+        List<Record> parents = getParents(id, options, conn);
 
         if (parents == null || parents.isEmpty()) {
             if (doTrace) {
@@ -235,8 +236,8 @@ public class DerbyStorage extends DatabaseStorage implements Configurable {
 
         // Touch each parent and recurse upwards
         for (Record parent : parents) {
-            touchRecord(parent.getId());
-            touchParents(parent.getId(), options);
+            touchRecord(parent.getId(), conn);
+            touchParents(parent.getId(), options, conn);
         }
     }
 }

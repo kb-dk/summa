@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Iterator;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -36,17 +37,30 @@ import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.api.WritableStorage;
+import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class RecordWriterTest extends TestCase {
+
+    Log log = LogFactory.getLog(RecordWriterTest.class);
+
+    private static final File storageLocation =
+            new File(System.getProperty("java.io.tmpdir"), "kabloey");
+
+    Storage storage;
+    RecordWriter writer;
+
     public RecordWriterTest(String name) {
         super(name);
     }
@@ -58,6 +72,20 @@ public class RecordWriterTest extends TestCase {
         }
         assertTrue("Storage location '" + storageLocation
                    + "' should be created", storageLocation.mkdirs());
+
+        Configuration conf = Configuration.newMemoryBased();
+        Files.delete(storageLocation);
+        conf.set(Storage.CONF_CLASS,
+                 "dk.statsbiblioteket.summa.storage.database.h2.H2Storage");
+        conf.set(DatabaseStorage.CONF_LOCATION, storageLocation.toString()
+                                                + File.separator + "foo");
+        storage = StorageFactory.createStorage(conf);
+        assertNotNull("A storage should be available now", storage);
+
+        writer = new RecordWriter(storage, 100, 1000);
+
+        // We need to not emit interrupt() on the DB thread before it is ready
+        Thread.sleep(200);
     }
 
     public void tearDown() throws Exception {
@@ -68,15 +96,32 @@ public class RecordWriterTest extends TestCase {
         return new TestSuite(RecordWriterTest.class);
     }
 
-    private static final File storageLocation =
-            new File(System.getProperty("java.io.tmpdir"), "kabloey");
+    public void testFewRecords() throws Exception {
+        writer.setSource(new ObjectProvider(5));
+        while (writer.pump()) {
+            // Wait
+        }
+        writer.close(true);
+        assertBaseCount("fooBase", 5);
+    }
 
-    public void testWrite() throws Exception {
-        Configuration conf = Configuration.newMemoryBased();
-        Files.delete(storageLocation);
-        conf.set(DatabaseStorage.CONF_LOCATION, storageLocation.toString());
-        Storage storage = StorageFactory.createStorage(conf);
-        assertNotNull("A controller should be available now", storage);
+    public void testBatchSize() throws Exception {
+        writer.setSource(new ObjectProvider(100));
+        while (writer.pump()) {
+            // Wait
+        }
+        writer.close(true);
+        assertBaseCount("fooBase", 100);
+    }
+
+    public void testBatchOvershoot() throws Exception {
+        writer.setSource(new ObjectProvider(100007));
+        while (writer.pump()) {
+            // Wait
+        }
+        writer.close(true);
+        log.info("Flushed record. Checking count");
+        assertBaseCount("fooBase", 100007);
     }
 
     /* ObjectFilter test-implementation */
@@ -129,6 +174,21 @@ public class RecordWriterTest extends TestCase {
 
         public void close(boolean success) {
             records.clear();
+        }
+    }
+
+    public void assertBaseCount (String base, long expected) throws Exception {
+        long iterKey = storage.getRecordsModifiedAfter(0, base, null);
+        Iterator<Record> iter = new StorageIterator(storage, iterKey);
+        long actual = 0;
+        while (iter.hasNext()) {
+            iter.next();
+            actual++;
+        }
+
+        if (actual != expected) {
+            fail("Base '" + base + "' should contain " + expected
+                 + " records, but found " + actual);
         }
     }
 }
