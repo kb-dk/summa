@@ -24,13 +24,17 @@ package dk.statsbiblioteket.summa.common.lucene.analysis;
 
 import org.apache.lucene.analysis.Token;
 import org.apache.lucene.analysis.Tokenizer;
-import org.apache.lucene.analysis.LowerCaseFilter;
 
 import java.util.Map;
+import java.util.HashMap;
 import java.io.IOException;
 import java.io.Reader;
+import java.io.CharArrayWriter;
+import java.io.FilterReader;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.reader.ReplaceFactory;
+import dk.statsbiblioteket.util.reader.ReplaceReader;
 
 /**
  * The TransliteratorTokenizer tokenizes a Reader on white spaces AFTER the
@@ -53,6 +57,44 @@ import dk.statsbiblioteket.util.qa.QAInfo;
                   + "try-catch.")
 public class TransliteratorTokenizer extends Tokenizer {
 
+    /**
+     * A small hack to allow zero-allocation access to the internal buffer
+     * of a StringBuilder like thingie
+     */
+    private static class PeekableCharArrayWriter extends CharArrayWriter {
+        public char[] peekInternalArray() {
+            return buf;
+        }
+
+        public int peekCharCount() {
+            return count;
+        }
+    }
+
+    /**
+     * A Reader impl. that converts characters to lower case on the fly
+     */
+    private static class LowerCasingReader extends FilterReader
+
+    {
+        protected LowerCasingReader(Reader in) {
+            super(in);
+        }
+
+        @Override
+        public int read() throws IOException {
+            return Character.toLowerCase(in.read());
+        }
+    }
+
+    private static final ThreadLocal<Map<String,ReplaceReader>>
+            localReplacerCache = new ThreadLocal<Map<String,ReplaceReader>>() {
+
+        @Override
+        protected Map<String,ReplaceReader> initialValue() {
+            return new HashMap<String,ReplaceReader>();
+        }
+    };
 
     /**
      *  The DEFAULT_TRANSLITERATIONS is a String 
@@ -95,14 +137,13 @@ public class TransliteratorTokenizer extends Tokenizer {
             "'‐' > ' ';'∫' > ' ';'∗' > ' ';'↓' > ' ';'－' > ' ';'≥' > ' ';'―' > ' ';'━' > ' ';'≤' > ' ';" +
             "' ' > ' ';'∷' > ' ';'⁷' > ' 7';'⊂' > ' ';'∙' > ' ';'‖' > ' ';'‧' > ' ';'‴' > ' ';'ℂ' > ' ';";
 
+    private static final String defaultRules =
+                                    DEFAULT_TRANSLITERATIONS + isNull + isBlank;
 
-    private Map<String, String> ruleMap;
-    private static final Map<String, String> defaultRuleMap =
-            RuleParser.parse(DEFAULT_TRANSLITERATIONS + isNull + isBlank);
-
-    private StringBuffer nextToken;
+    private PeekableCharArrayWriter nextToken;
 
     private int position;
+    private int tokenStart;
 
     /**
      * Constructs a tailored TransliteratorTokenizer on the supplied reader.
@@ -114,91 +155,119 @@ public class TransliteratorTokenizer extends Tokenizer {
      * @param reader The reader to be tokenized
      * @param rules  A String containing a set of transliteration rules.
      * @param keepDefault if true, rules are appended to the default rules.
+     *                    In case {@code rules} is {@code null} the default
+     *                    rules will be applied no matter the value of
+     *                    {@code keepDefault}
      */
     public TransliteratorTokenizer(Reader reader,
                                    String rules, boolean keepDefault){
+        // This guarantees that our input stream is always in lower case
         super(reader);
         if (keepDefault) {
             if (rules == null || "".equals(rules)) {
-                ruleMap = defaultRuleMap;
+                rules = defaultRules;
             } else {
-                rules += DEFAULT_TRANSLITERATIONS + isNull + isBlank;
-                ruleMap = RuleParser.parse(rules);
+                rules += defaultRules;
             }
-        } else {
-            ruleMap = RuleParser.parse(rules);
+        } else if (rules == null) {
+            rules = defaultRules; 
         }
-        nextToken = new StringBuffer();
+
+
+        nextToken = new PeekableCharArrayWriter();
+        tokenStart = 0;
         position = 0;
 
+        // Fold the internal reader to do transliteration
+        input = getLocalReplaceReader(new LowerCasingReader(input), rules);
+
     }
 
     /**
+     * Look up a thread local ReplaceReader and set its source to
+     * {@code source}.
      *
-     * @param in
-     * @return
+     * @param source the data source for the replace reader
+     * @param rules used as a lookup key into the replace reader cache
+     * @return a cached, thred local, replace reader
      */
-    private char[] getTransliteration(char in) {
-        in = Character.toLowerCase(in);
-        String ret = ruleMap.get(""+in);
-        return ret == null ? new char[]{in} : ret.toCharArray();
+    private static Reader getLocalReplaceReader(Reader source,
+                                                String rules) {
+        Map<String, ReplaceReader> replacerCache = localReplacerCache.get();
+
+        ReplaceReader replacer = replacerCache.get(rules);
+        if (replacer != null) {
+            return replacer.setSource(source);
+        }
+
+        replacer = ReplaceFactory.getReplacer(new LowerCasingReader(source),
+                                              RuleParser.parse(rules));
+        replacerCache.put(rules, replacer);
+        return replacer;
     }
 
     /**
-     *
-     * @param in
-     * @return
+     * Return true if {@code codePoint} is a token delimiter
+     * @param codePoint the character to check
+     * @return true of {@code codePoint} is a token delimiter
      */
-    boolean isTokenChar(char in){
-        return Character.isWhitespace(in);
+    private static boolean isDelimiter(int codePoint){
+        // We use code points here instead of chars as a minor optimization
+        // since Character.isWhitespace() uses code points natively
+        return Character.isWhitespace(codePoint);
     }
 
     /**
-     * Gets the next Token from the Reader. 
-     * @return
+     * Gets the next Token
+     * @return always reuses {@code inToken} or return {@code null} if the end
+     *         of the stream has been reached
      * @throws IOException
      */
     public Token next(Token inToken) throws IOException {
 
-        int start = position;
-        Token y = null;
-        int c;
+        tokenStart = position;
+        int codePoint;
 
         inToken.clear();
 
-        while ((c = input.read()) != -1){
-           char[] res = getTransliteration((char)c);
-           for (char t : res){
-               if (nextToken.length() == 0) {
-                   start = position;
-               }
-               if (isTokenChar(t)){
-                  nextToken.trimToSize();
-                  if (nextToken.length() > 0){
-                    y = inToken;
-                    y.setTermBuffer(nextToken.toString().trim());
-                    y.setStartOffset(start);
-                    y.setEndOffset(position);
-                    nextToken.setLength(0); // Reset nextToken
-                  }
-               } else {
-                    nextToken.append(t);
-               }
-               position++;
-           }
-           if (y != null) {
-               return y;
-           }
+        while ((codePoint = input.read()) != -1){
+            if (nextToken.peekCharCount() == 0) {
+                tokenStart = position;
+            }
+
+            if (isDelimiter(codePoint)){
+                if (nextToken.peekCharCount() > 0){
+                    inToken = emitToken(inToken);
+                    position++; // Position must be incresead _after_ emitToken
+                    return inToken;
+                }
+            } else {
+                nextToken.append((char)codePoint);
+                position++;
+            }
         }
-        if (nextToken.length()> 0){
-            y = inToken;
-            y.setTermBuffer(nextToken.toString().trim());
-            y.setStartOffset(start);
-            y.setEndOffset(position);
-            nextToken.setLength(0); // Clear the nextToken buffer
-            return y;
+
+        if (nextToken.peekCharCount() > 0){
+            return emitToken(inToken);
         }
+
         return null;
+    }
+
+    /**
+     * Prepare a token representing the current state. The internal nextToken
+     * character buffer will be cleared.
+     *
+     * @param inToken the token to prepare
+     * @return always returns {@code inToken}
+     */
+    private Token emitToken(Token inToken) {
+        inToken.setTermBuffer(nextToken.peekInternalArray(),
+                              0, nextToken.peekCharCount());
+        inToken.setStartOffset(tokenStart);
+        inToken.setEndOffset(position);
+        nextToken.reset(); // Clear the nextToken buffer
+        return inToken;
     }
 }
 
