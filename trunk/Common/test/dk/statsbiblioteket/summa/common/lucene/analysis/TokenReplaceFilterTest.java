@@ -57,4 +57,9 @@ public class TokenReplaceFilterTest extends TestCase {
         assertTokens(filter, "cplusplus");
     }
 
+    public void testTwoTokenTricksReplace() throws Exception {
+        filter = new TokenReplaceFilter(getStream("c+ c++"));
+        assertTokens(filter, "c+", "cplusplus");
+    }
+
 }
