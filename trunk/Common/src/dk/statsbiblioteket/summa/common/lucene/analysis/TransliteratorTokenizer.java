@@ -55,6 +55,7 @@ import dk.statsbiblioteket.util.reader.ReplaceReader;
                   + "return index[(int)'b'). To guard against out of bounds, "
                   + "this should have an explicit check or be wrapped with "
                   + "try-catch.")
+@Deprecated
 public class TransliteratorTokenizer extends Tokenizer {
 
     /**

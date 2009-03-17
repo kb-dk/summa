@@ -5,12 +5,14 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Token;
 
 import java.util.Map;
-import java.util.HashMap;
 import java.io.IOException;
 
 /**
  *  A {@code TokenFilter} replacing only entire tokens, not substrings
  * inside tokens.
+ * <p/>
+ * One point of doing this could be to enforce string representations of
+ * characters that might otherwise not be searchable.
  */
 public class TokenReplaceFilter extends TokenFilter {
 
@@ -36,11 +38,28 @@ public class TokenReplaceFilter extends TokenFilter {
      * @param input the token stream to read tokens from
      */
     public TokenReplaceFilter(TokenStream input) {
-        this(input, DEFAULT_REPLACE_RULES);
+        this(input, DEFAULT_REPLACE_RULES, false);
     }
 
     public TokenReplaceFilter(TokenStream input, String rules) {
-        this(input, RuleParser.parse(rules));
+        this(input, rules, false);
+    }
+
+    public TokenReplaceFilter(TokenStream input,
+                              String rules, boolean keepDefaultRules) {
+        super(input);
+
+        if (keepDefaultRules) {
+            if (rules == null || "".equals(rules)) {
+                rules = DEFAULT_REPLACE_RULES;
+            } else {
+                rules = rules + DEFAULT_REPLACE_RULES;
+            }
+        } else if (rules == null) {
+            rules = DEFAULT_REPLACE_RULES;
+        }
+
+        this.tokenMap = RuleParser.parse(rules);
     }
 
     @Override
