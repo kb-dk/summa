@@ -148,7 +148,8 @@ public class H2Storage extends DatabaseStorage implements Configurable {
                  + ", location '" + location + "', createNew " + createNew
                  + " and forceNew " + forceNew);
 
-        if (location.exists()) { /* Database location exists*/
+        if (new File(location, DB_FILE+".data.db").isFile()) {
+            /* Database location exists*/
             log.debug("Old database found at '" + location + "'");
             if (forceNew) {
                 log.info("Deleting existing database at '" + location + "'");
