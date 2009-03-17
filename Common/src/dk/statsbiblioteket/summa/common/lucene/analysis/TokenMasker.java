@@ -43,6 +43,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "hal",
         comment = "Methods needs Javadoc")
+@Deprecated
 public class TokenMasker extends Reader {
 
     private final boolean ignoreCase;
@@ -50,15 +51,15 @@ public class TokenMasker extends Reader {
     private Reader _reader;
     private Reader _org;
 
-    private static final String defaultMask =
+    private static final String defaultMaskRules =
             "'c++' > 'cplusplus';"
             + "'c#' > 'csharp';"
             + " 'c* algebra' > 'cstaralgebra';"
             + " 'c*-algebra > 'cstaralgebra'";
 
     private Map<String, String> maskToken;
-    private static final Map<String, String> defaultMaskToken =
-            RuleParser.parse(defaultMask);
+    private static final Map<String, String> defaultRuleMap =
+                                            RuleParser.parse(defaultMaskRules);
 
     //TODO: shoud this throw IOException??
     /**
@@ -76,9 +77,9 @@ public class TokenMasker extends Reader {
                        boolean ignoreCase) throws IOException {
         if (keepDefault) {
             if (rules == null || "".equals(rules)) {
-                maskToken = defaultMaskToken;
+                maskToken = defaultRuleMap;
             } else {
-                maskToken = RuleParser.parse(rules + defaultMask);
+                maskToken = RuleParser.parse(rules + defaultMaskRules);
             }
         } else {
             maskToken = RuleParser.parse(rules);
@@ -127,7 +128,7 @@ public class TokenMasker extends Reader {
      */
     public TokenMasker(TokenStream tokenStream, boolean ignoreCase) {
         super(tokenStream);
-        maskToken = RuleParser.parse(defaultMask);
+        maskToken = RuleParser.parse(defaultMaskRules);
         this.ignoreCase = ignoreCase;
     }
 

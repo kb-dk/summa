@@ -22,17 +22,11 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.analysis;
 
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.LowerCaseFilter;
-import org.apache.lucene.analysis.Tokenizer;
-import org.apache.lucene.analysis.standard.StandardTokenizer;
+import org.apache.lucene.analysis.*;
 
 import java.io.Reader;
 import java.io.IOException;
-import java.util.Map;
 
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
@@ -51,8 +45,8 @@ public class SummaAnalyzer extends Analyzer {
     String transliterationRules;
     boolean keepDefaultTransliterations;
 
-    String maskingRules;
-    boolean keepDefaultMasking;
+    String tokenRules;
+    boolean keepDefaultTokenRules;
     boolean ignoreCase;
 
     /**
@@ -74,14 +68,6 @@ public class SummaAnalyzer extends Analyzer {
     }
 
     /**
-     * Creates an analyzer on the basis of information in the configuration.
-     * @param configuration contains all rules for the analyzer.
-     */
-    public SummaAnalyzer(Configuration configuration) {
-
-    }
-
-    /**
      * Makes a SummaAnalyzer.
      *
      * @param transliterationRules       the transliteration rules are parsed to
@@ -89,23 +75,23 @@ public class SummaAnalyzer extends Analyzer {
      * @param keepDefaultTransliterations if true the transliterationRules are
      *                                   added to the existing rules defined in
      *                                   the TransliteratorTokenizer.
-     * @param maskingRules               the maskingRules are parsed to the
+     * @param tokenRules               the maskingRules are parsed to the
      *                                   TokenMasker
-     * @param keepDefaultMasking         if true the maskingRules are added to
+     * @param keepDefaultTokenRules         if true the maskingRules are added to
      *                                   the default rules defined in the
      *                                   TokenMasker
      * @param ignoreCase                 if true masking will ignore case.
      */
     public SummaAnalyzer(String transliterationRules,
                          boolean keepDefaultTransliterations,
-                         String maskingRules,
-                         boolean keepDefaultMasking,
+                         String tokenRules,
+                         boolean keepDefaultTokenRules,
                          boolean ignoreCase){
          super();
          this.transliterationRules = transliterationRules;
          this.keepDefaultTransliterations = keepDefaultTransliterations;
-         this.maskingRules = maskingRules;
-         this.keepDefaultMasking = keepDefaultMasking;
+         this.tokenRules = tokenRules;
+         this.keepDefaultTokenRules = keepDefaultTokenRules;
          this.ignoreCase = ignoreCase;
      }
 
@@ -119,27 +105,40 @@ public class SummaAnalyzer extends Analyzer {
      * @return a TransliteratorTokenizer tokenStream filtered by a TokenMasker.
      */
      public TokenStream tokenStream(String fieldName, Reader reader) {
-         try {
-             return new TransliteratorTokenizer(
-                     new TokenMasker(reader, maskingRules, keepDefaultMasking,
-                                     ignoreCase), transliterationRules,
-                                     keepDefaultTransliterations);
-         } catch (IOException e) {
-             return null;
-         }
+
+        TokenStreamContext ctx = prepareReusableTokenStream(fieldName,
+                                                            reader);
+        return ctx.tokenStream;
+
+        /*return new TransliteratorTokenizer(
+                    new TokenMasker(reader, tokenRules, keepDefaultTokenRules,
+                                    ignoreCase), transliterationRules,
+                                    keepDefaultTransliterations);*/
+
     }
 
     private TokenStreamContext prepareReusableTokenStream (String fieldName,
                                                            Reader reader) {
         TokenStreamContext ctx = new TokenStreamContext();
 
-        // We use the same tokenStream and tokenSource in the context.
-        // This is mostly because of the gross architecture in Summa at the
-        // point of writing this code.
-        // In the future we will use nested Lucene tokenstreams and the
-        // separation between the tokenSource and tokenStream will be important
-        ctx.tokenSource = (Tokenizer)tokenStream(fieldName, reader);
-        ctx.tokenStream = ctx.tokenSource;
+        ctx.tokenSource = new WhitespaceTokenizer(reader);
+
+        if (ignoreCase) {
+            ctx.tokenStream =
+                new TransliterationFilter(
+                        new TokenReplaceFilter(
+                                           new LowerCaseFilter(ctx.tokenSource),
+                                           tokenRules,
+                                           keepDefaultTokenRules),
+                        transliterationRules, keepDefaultTransliterations);
+        } else {
+            ctx.tokenStream =
+                    new TransliterationFilter(
+                            new TokenReplaceFilter(ctx.tokenSource,
+                                                   tokenRules,
+                                                   keepDefaultTokenRules),
+                            transliterationRules, keepDefaultTransliterations);
+        }
 
         return ctx;
     }
