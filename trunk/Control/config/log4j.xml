@@ -42,6 +42,16 @@
         </layout>
     </appender>
 
+    <appender name="FAILED_RECORDS" class="org.apache.log4j.RollingFileAppender">
+        <param name="Threshold" value="TRACE"/><!-- or DEBUG or INFO -->
+        <param name="File" value="log/failed-records.log"/>
+        <param name="Append" value="true"/>
+        <param name="MaxFileSize" value="500MB"/>
+        <param name="MaxBackupIndex" value="5"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
+        </layout>
+    </appender>
 
     <!-- The full log appender uses a extremely slow pattern, on production systems use only this appender with a threshold of fatal -->
     <appender name="FULL_LOG" class="org.apache.log4j.RollingFileAppender">
@@ -64,6 +74,12 @@
     <logger name="dk.statsbiblioteket.summa">
         <level value="debug" />
         <appender-ref ref="FILE" />
+    </logger>
+
+    <!-- Records dropped from the index workflow go here -->
+    <logger name="index.failed">
+        <level value="debug" />
+        <appender-ref ref="FAILED_RECORDS" />
     </logger>
 
     <!-- all loggeres inherit the root logger - so don't include the root appenders in the other loggers (will duplicate log entries in the log file) -->

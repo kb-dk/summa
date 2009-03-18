@@ -127,6 +127,22 @@
                                     <value class="string">index</value>
                                 </entry>
                                 <entry>
+                                    <key>summa.index.consolidatetimeout</key>
+                                    <value class="int">-1</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.index.consolidatemaxdocuments</key>
+                                    <value class="int">-1</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.index.consolidatemaxcommits</key>
+                                    <value class="int">-1</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.index.consolidateonclose</key>
+                                    <value class="boolean">true</value>
+                                </entry>
+                                <entry>
                                     <key>summa.index.manipulators</key>
                                     <value class="list">
 

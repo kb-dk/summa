@@ -138,8 +138,16 @@
                                     <value class="int">-1</value>
                                 </entry>
                                 <entry>
-                                    <key>summa.index.committimeout</key>
-                                    <value class="int">5000</value>
+                                    <key>summa.index.consolidatemaxdocuments</key>
+                                    <value class="int">-1</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.index.consolidatemaxcommits</key>
+                                    <value class="int">-1</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.index.consolidateonclose</key>
+                                    <value class="boolean">true</value>
                                 </entry>
                                 <entry>
                                     <key>summa.index.manipulators</key>
@@ -165,6 +173,12 @@
                                             <entry>
                                                 <key>summa.index.manipulatorclass</key>
                                                 <value class="string">dk.statsbiblioteket.summa.facetbrowser.FacetManipulator</value>
+                                            </entry>
+                                            <entry>
+                                                <!-- Set this property to false to enable iterative updates,
+                                                     true for best performance on full index builds -->
+                                                <key>summa.facet.skipfacetonupdate</key>
+                                                <value class="string">true</value>
                                             </entry>
                                             <entry>
                                                 <key>summa.facet.facets</key>
