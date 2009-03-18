@@ -63,7 +63,22 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
             "summa.ingest.marcmultivolume.xslt";
     public static final String DEFAULT_MERGE_XSLT = "sb-multivolume.xslt";
 
+    /**
+     * If true, all namespaces in the XML is stripped prior to transformation.
+     * This is not recommended, but i The Real World, there are a lot of XML
+     * and XSLT's with garbled namespace matching.
+     * </p><p>
+     * Note: Setting this to true might have a noticeable impact on processor-
+     * load and temporary object allocation.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_STRIP_XML_NAMESPACES =
+            "summa.ingest.marcmultivolume.ignorexmlnamespaces";
+    public static final boolean DEFAULT_STRIP_XML_NAMESPACES = false;
+
     private URL xsltLocation;
+    private boolean stripXMLNamespaces = DEFAULT_STRIP_XML_NAMESPACES;
 
     public MarcMultiVolumeMerger(Configuration conf) {
         super(conf);
@@ -75,6 +90,12 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
                     CONF_MERGE_XSLT,
                     conf.getString(CONF_MERGE_XSLT, DEFAULT_MERGE_XSLT)));
         }
+        stripXMLNamespaces = conf.getBoolean(CONF_STRIP_XML_NAMESPACES,
+                                             stripXMLNamespaces);
+        log.info("MarcMultiVolumeMerger for '" + xsltLocation
+                 + "' ready for use.  Namespaces will "
+                 + (stripXMLNamespaces ? "" : "not ")
+                 + "be stripped from input before merging");
     }
 
     @Override
@@ -165,7 +186,8 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
             output.append(content.subSequence(0, endPos));
         } else {
             byte[] transformed = XSLT.transform(
-            xsltLocation, record.getContent(), null).toByteArray();
+            xsltLocation, record.getContent(), null, stripXMLNamespaces).
+                    toByteArray();
             BufferedReader read;
             try {
                 read = new BufferedReader(new InputStreamReader(
