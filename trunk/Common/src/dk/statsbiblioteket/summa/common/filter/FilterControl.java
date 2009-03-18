@@ -45,7 +45,7 @@ import org.apache.commons.logging.LogFactory;
         author = "te")
 public class FilterControl extends StateThread implements Configurable,
                                                           FilterChainHandler {
-    private final Log log = LogFactory.getLog(FilterControl.class);
+    private static final Log log = LogFactory.getLog(FilterControl.class);
 
     private List<FilterPump> pumps;
 
@@ -81,7 +81,7 @@ public class FilterControl extends StateThread implements Configurable,
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public FilterControl(Configuration configuration) throws
                                                       ConfigurationException {
-        log.trace("Creating FilterControl");
+        log.debug("Constructing");
         List<Configuration> chainConfs;
         try {
             chainConfs = configuration.getSubConfigurations(CONF_CHAINS);
@@ -109,6 +109,7 @@ public class FilterControl extends StateThread implements Configurable,
             log.info(CONF_SEQUENTIAL + " not specified. Defaulting to "
                      + sequential);
         }
+        log.info("Constructed and ready");
     }
 
     @Override
@@ -187,5 +188,47 @@ public class FilterControl extends StateThread implements Configurable,
     // TODO: Consider if this should not be accessible
     public List<FilterPump> getPumps() {
         return pumps;
+    }
+
+    /**
+     * Run a FilterControl instance detected its configuration
+     * via {@link Configuration#getSystemConfiguration(boolean true)}.
+     * <p/>
+     * The arguments to this method will be ignored.
+     *
+     * @param args ignored
+     */
+    public static void main(String[] args) {
+        Configuration conf = Configuration.getSystemConfiguration(true);
+
+
+        FilterControl filterControl = new FilterControl(conf) {
+                    protected void finishedCallback() {
+                        switch (getStatus()) {
+                            case error:
+                                log.fatal("Crashed");
+                                break;
+                            case ready:
+                            case stopping:
+                            case stopped:
+                                log.info("Stopped with status "
+                                         + getStatus());
+                                break;
+                            default:
+                                log.warn("Stopped with unknown state "
+                                         + getStatus());
+                        }
+                    }
+                };
+
+        try {
+            filterControl.start();
+            filterControl.waitForFinish();
+            log.info("Filter chain completed");
+        } catch (Throwable t) {
+            log.fatal("Caught toplevel exception: " + t.getMessage(), t);
+            t.printStackTrace();
+        }
+
     }
 }
