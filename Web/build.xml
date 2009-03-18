@@ -124,11 +124,11 @@
         <echo message="Checking for 3rd party libs"/>
         <condition property="newTask" value=".phony" else=".getLibs">
             <and>
-                <available file="${summa.lib.lucene}"/>
-                <available file="${summa.lib.lucene.queries}"/>
+<!--                <available file="${summa.lib.lucene}"/>
+                <available file="${summa.lib.lucene.queries}"/>-->
                 <available file="${summa.lib.junit}"/>
                 <available file="${summa.lib.log4j}"/>
-                <available file="${summa.lib.sbutil}"/>
+<!--                <available file="${summa.lib.sbutil}"/>-->
                 <available file="${summa.lib.commons-logging}"/>
                 <available file="${summa.lib.axis.axis}"/>
             </and>
@@ -173,10 +173,10 @@
         <delete dir="${lib.dir}"/>
         <mkdir dir="${lib.dir}"/>
 
-        <copy file="../${summa.lib.lucene}" tofile="${summa.lib.lucene}"/>
-        <copy file="../${summa.lib.lucene.queries}" tofile="${summa.lib.lucene.queries}"/>
+<!--        <copy file="../${summa.lib.lucene}" tofile="${summa.lib.lucene}"/>
+        <copy file="../${summa.lib.lucene.queries}" tofile="${summa.lib.lucene.queries}"/>-->
         <copy file="../${summa.lib.junit}" tofile="${summa.lib.junit}"/>
-        <copy file="../${summa.lib.sbutil}" tofile="${summa.lib.sbutil}"/>
+        <!--<copy file="../${summa.lib.sbutil}" tofile="${summa.lib.sbutil}"/>-->
 
         <copy todir="${lib.dir}" flatten="true">
             <fileset dir="${basedir}/.." includes="${summa.lib.axis.all}"/>
@@ -198,7 +198,7 @@
         <mkdir dir="${build.dir}"/>
         <javac srcdir="${src.dir}" destdir="${build.dir}" encoding="UTF-8"
                compiler="${compiler}" optimize="${compiler.optimize}"
-               debug="${compiler.debug}">
+               debug="${compiler.debug}" target="1.5">
             <classpath refid="lib.path"/>
             <classpath refid="lib.internal"/>
         </javac>
@@ -207,7 +207,7 @@
     <target name="test.compile">
         <javac srcdir="${test.src.dir}" destdir="${test.build.dir}" encoding="UTF-8"
                compiler="${compiler}" optimize="on"
-               debug="on">
+               debug="on" target="1.5">
             <classpath refid="test.lib.path"/>
         </javac>
     </target>

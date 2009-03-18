@@ -37,6 +37,8 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * convenience methods for parsing using XPath.
+ * @deprecated use {@link dk.statsbiblioteket.util.xml.DOM} and
+ * {@link dk.statsbiblioteket.util.xml.XMLUtil} instead.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -163,42 +165,42 @@ public class ParseUtil {
          return sw.toString();
      }
 
-    /**
-     * Performs a simple entity-encoding of input, maing it safe to include in
-     * XML.
-     * @param input the text to encode.
-     * @return the text with &, ", < and > encoded.
-     */
-    public static String encode(String input) {
-        input = input.replaceAll("&", "&amp;");
-        input = input.replaceAll("\"", "&quot;");
-        input = input.replaceAll("<", "&lt;");
-        return input.replaceAll(">", "&gt;");
-    }
-
-    /**
-     * Converts an XMLEvent-id to String. Used for primarily debugging and error
-     * messages.
-     * @param eventType the XMLEvent-id.
-     * @return the event as human redable String.
-     */
-    public static String eventID2String(int eventType) {
-        switch (eventType) {
-            case XMLEvent.START_ELEMENT:  return "START_ELEMENT";
-            case XMLEvent.END_ELEMENT:    return "END_ELEMENT";
-            case XMLEvent.PROCESSING_INSTRUCTION:
-                return "PROCESSING_INSTRUCTION";
-            case XMLEvent.CHARACTERS: return "CHARACTERS";
-            case XMLEvent.COMMENT: return "COMMENT";
-            case XMLEvent.START_DOCUMENT: return "START_DOCUMENT";
-            case XMLEvent.END_DOCUMENT: return "END_DOCUMENT";
-            case XMLEvent.ENTITY_REFERENCE: return "ENTITY_REFERENCE";
-            case XMLEvent.ATTRIBUTE: return "ATTRIBUTE";
-            case XMLEvent.DTD: return "DTD";
-            case XMLEvent.CDATA: return "CDATA";
-            case XMLEvent.SPACE: return "SPACE";
-            default: return "UNKNOWN_EVENT_TYPE " + "," + eventType;
+        /**
+         * Performs a simple entity-encoding of input, maing it safe to include in
+         * XML.
+         * @param input the text to encode.
+         * @return the text with &, ", < and > encoded.
+         */
+        public static String encode(String input) {
+            input = input.replace("&", "&amp;");
+            input = input.replace("\"", "&quot;");
+            input = input.replace("<", "&lt;");
+            return input.replace(">", "&gt;");
         }
-    }
+
+        /**
+         * Converts an XMLEvent-id to String. Used for primarily debugging and error
+         * messages.
+         * @param eventType the XMLEvent-id.
+         * @return the event as human redable String.
+         */
+        public static String eventID2String(int eventType) {
+            switch (eventType) {
+                case XMLEvent.START_ELEMENT:  return "START_ELEMENT";
+                case XMLEvent.END_ELEMENT:    return "END_ELEMENT";
+                case XMLEvent.PROCESSING_INSTRUCTION:
+                    return "PROCESSING_INSTRUCTION";
+                case XMLEvent.CHARACTERS: return "CHARACTERS";
+                case XMLEvent.COMMENT: return "COMMENT";
+                case XMLEvent.START_DOCUMENT: return "START_DOCUMENT";
+                case XMLEvent.END_DOCUMENT: return "END_DOCUMENT";
+                case XMLEvent.ENTITY_REFERENCE: return "ENTITY_REFERENCE";
+                case XMLEvent.ATTRIBUTE: return "ATTRIBUTE";
+                case XMLEvent.DTD: return "DTD";
+                case XMLEvent.CDATA: return "CDATA";
+                case XMLEvent.SPACE: return "SPACE";
+                default: return "UNKNOWN_EVENT_TYPE " + "," + eventType;
+            }
+        }
 
 }

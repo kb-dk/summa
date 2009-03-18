@@ -34,6 +34,7 @@ import java.net.MalformedURLException;
 
 /**
  * Convenience methods for XSLT-handling.
+ * @deprecated use {@link dk.statsbiblioteket.util.xml.XSLT} instead.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
