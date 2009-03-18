@@ -491,6 +491,8 @@ public class IndexControllerImpl extends StateThread implements
                     failLog.warn(String.format(
                             "IOException for the first manipulator (%s) while "
                             + "indexing %s", manipulator, payload), e);
+                    log.debug("Failed to index " + payload + ". See the "
+                              + LOG_FAILED + " log for details");
                     updatesSinceLastCommit--;
                     updatesSinceLastConsolidate--;
                 } else {
