@@ -1,0 +1,66 @@
+package dk.statsbiblioteket.summa.common.lucene.analysis;
+
+import junit.framework.TestCase;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.Token;
+import org.apache.lucene.analysis.LowerCaseFilter;
+import org.apache.lucene.analysis.WhitespaceTokenizer;
+
+import java.io.StringReader;
+
+/**
+ * Unit tests for {@link SummaAnalyzer}
+ */
+public class SummaAnalyzerTest extends TestCase {
+
+    SummaAnalyzer a;
+
+    static void assertTokens(TokenStream tokenizer, String... tokens)
+                                                               throws Exception{
+        Token tok = new Token();
+        int count = 0;
+
+        while ((tok = tokenizer.next(tok)) != null) {
+            if (count >= tokens.length) {
+                fail("Too many tokens from tokenizer, found " + (count+1)
+                     + ". Expected " + tokens.length + ".");
+            }
+
+            assertEquals("Mismatch in token number " + (count + 1) + ":",
+                         tokens[count], tok.term());
+            count++;
+        }
+
+        assertEquals("To few tokens from tokenizer, found " + count
+                     + ". Expected " + tokens.length + ".",
+                     tokens.length, count);
+    }
+
+    static TokenStream getStream(String text) {
+        return new LowerCaseFilter(
+                new WhitespaceTokenizer(
+                        new StringReader(text)));
+    }
+
+    public void testFooCaseFold() throws Exception {
+        a = new SummaAnalyzer(null, true, null, true, true);
+        TokenStream t = a.reusableTokenStream("", new StringReader("Foo"));
+
+        assertTokens(t, "foo");
+    }
+
+    public void testFooBarCaseFold() throws Exception {
+        a = new SummaAnalyzer(null, true, null, true, true);
+        TokenStream t = a.reusableTokenStream("", new StringReader("Foo baR"));
+
+        assertTokens(t, "foo", "bar");
+    }
+
+    public void testFooBarNoCaseFold() throws Exception {
+        a = new SummaAnalyzer(null, true, null, true, false);
+        TokenStream t = a.reusableTokenStream("", new StringReader("Foo baR"));
+
+        assertTokens(t, "Foo", "baR");
+    }
+
+}
