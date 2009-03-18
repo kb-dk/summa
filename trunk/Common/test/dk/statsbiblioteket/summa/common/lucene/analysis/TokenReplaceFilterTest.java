@@ -47,6 +47,11 @@ public class TokenReplaceFilterTest extends TestCase {
         assertTokens(stream, "foo");
     }
 
+    public void testEmptyTokenNoReplace() throws Exception {
+        filter = new TokenReplaceFilter(getStream(""));
+        assertTokens(filter);
+    }
+
     public void testSingleTokenNoReplace() throws Exception {
         filter = new TokenReplaceFilter(getStream("foo"));
         assertTokens(filter, "foo");

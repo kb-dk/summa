@@ -51,6 +51,12 @@ public class TransliterationFilterTest extends TestCase {
                         new StringReader(text)));
     }
 
+    public void testZeroTokensWithDefaultRules() throws Exception {
+        t = new TransliterationFilter(getStream(""),
+                                        null, false);
+        assertTokens(t);
+    }
+
     public void testOneTokenWithDefaultRules() throws Exception {
         t = new TransliterationFilter(getStream("foo"),
                                         null, false);
