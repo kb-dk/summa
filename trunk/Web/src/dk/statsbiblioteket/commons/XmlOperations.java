@@ -44,6 +44,10 @@ import java.util.Map;
 
 // TODO: these methods probably belong in sbutil or someplace similar
 
+/**
+ * @deprecated use sbutil.xml instead as the new methods are much faster and
+ * easier on the Garbage Collector..
+ */
 public class XmlOperations {
     /**
      * Given a File handle for an XML document and a File handle for an XSLT, transform the XML document with the XSLT and return the results in a String.
@@ -52,6 +56,8 @@ public class XmlOperations {
      * @param xslt the xslt file handle
      * @return a string with the transformed document
      * @throws TransformerException if there is an error transforming
+     * @deprecated use {@link dk.statsbiblioteket.util.xml.XSLT#transform}
+     *             instead: {@code XSLT.transform(xslt.toURI().toURL(), xml)}. 
      */
     public static String xsltTransform(File xml, File xslt) throws TransformerException {
         String retval = xsltTransform(xml, xslt, null);
@@ -64,11 +70,15 @@ public class XmlOperations {
      *
      * @param xml  the xml file handle
      * @param xslt the xslt file handle
-     * @param map  a map from parameter names to parameter values to be passed to the xslt
+     * @param map  a map from parameter names to parameter values to be passed
+     *             to the xslt
      * @return a string with the transformed document
      * @throws TransformerException if there is an error transforming
+     * @deprecated use {@link dk.statsbiblioteket.util.xml.XSLT#transform}
+     *          instead: {@code XSLT.transform(xslt.toURI().toURL(), xml, map)}.
      */
-    public static String xsltTransform(File xml, File xslt, Map map) throws TransformerException {
+    public static String xsltTransform(File xml, File xslt, Map map) throws
+                                                          TransformerException {
         String retval;
 
         ByteArrayOutputStream ba = new ByteArrayOutputStream();
@@ -102,6 +112,8 @@ public class XmlOperations {
      * @param xslt the xslt file handle
      * @return a string with the transformed document
      * @throws TransformerException if there is an error transforming
+     * @deprecated use {@link dk.statsbiblioteket.util.xml.XSLT#transform}
+     *         instead: {@code XSLT.transform(xslt.toURI().toURL(), dom, null)}.
      */
     public static String xsltTransform(Document dom, File xslt) throws TransformerException {
         String retval = xsltTransform(dom, xslt, null);
@@ -117,6 +129,8 @@ public class XmlOperations {
      * @param map  a map from parameter names to parameter values to be passed to the xslt
      * @return a string with the transformed document
      * @throws TransformerException if there is an error transforming
+     * @deprecated use {@link dk.statsbiblioteket.util.xml.XSLT#transform}
+     *          instead: {@code XSLT.transform(xslt.toURI().toURL(), dom, map)}.
      */
     public static String xsltTransform(Document dom, File xslt, Map map) throws TransformerException {
         String retval;

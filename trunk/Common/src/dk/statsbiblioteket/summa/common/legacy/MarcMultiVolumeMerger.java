@@ -20,18 +20,19 @@
 package dk.statsbiblioteket.summa.common.legacy;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.xml.XSLT;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.MarcAnnotations;
-import dk.statsbiblioteket.summa.common.util.XSLTUtil;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
-import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import java.io.*;
+import java.net.URL;
 
 /**
  * Legacy multi volume handling of Marc2-like records (the DanMarc2 subset used
@@ -62,17 +63,17 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
             "summa.ingest.marcmultivolume.xslt";
     public static final String DEFAULT_MERGE_XSLT = "sb-multivolume.xslt";
 
-    private Transformer transformer;
+    private URL xsltLocation;
 
     public MarcMultiVolumeMerger(Configuration conf) {
         super(conf);
-        String xsltLocation = conf.getString(CONF_MERGE_XSLT,
-                                             DEFAULT_MERGE_XSLT);
-        try {
-            transformer = XSLTUtil.createTransformer(xsltLocation);
-        } catch (TransformerException e) {
-            throw new ConfigurationException(
-                    "Unable to create Transformer for '" + xsltLocation + "'");
+        xsltLocation = Resolver.getURL(conf.getString(
+                CONF_MERGE_XSLT, DEFAULT_MERGE_XSLT));
+        if (xsltLocation == null) {
+            throw new ConfigurationException(String.format(
+                    "Unable to get URL for property %s with content '%s",
+                    CONF_MERGE_XSLT,
+                    conf.getString(CONF_MERGE_XSLT, DEFAULT_MERGE_XSLT)));
         }
     }
 
@@ -163,8 +164,8 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
         if (level == 0) {
             output.append(content.subSequence(0, endPos));
         } else {
-            byte[] transformed = XSLTUtil.transformContent(
-                    transformer, record.getContent());
+            byte[] transformed = XSLT.transform(
+            xsltLocation, record.getContent(), null).toByteArray();
             BufferedReader read;
             try {
                 read = new BufferedReader(new InputStreamReader(

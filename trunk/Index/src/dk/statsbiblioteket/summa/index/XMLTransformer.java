@@ -22,16 +22,18 @@
  */
 package dk.statsbiblioteket.summa.index;
 
-import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.xml.XSLT;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.util.XSLTUtil;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.net.URL;
 
 /**
  * Transform arbitrary XML in Payload.Record.content using XSLT. This is
@@ -52,8 +54,7 @@ public class XMLTransformer extends ObjectFilterImpl {
      */
     public static final String CONF_XSLT = "summa.xmltransformer.xslt";
 
-    private String xsltLocation;
-    private Transformer transformer;
+    private URL xsltLocation;
 
     /**
      * Sets up the transformer stated in the configuration.
@@ -62,38 +63,31 @@ public class XMLTransformer extends ObjectFilterImpl {
      */
     public XMLTransformer(Configuration conf) {
         super(conf);
-        try {
-            xsltLocation = conf.getString(CONF_XSLT);
-            // Extract XSLT
-        } catch (Exception e) {
-            //noinspection DuplicateStringLiteralInspection
-            throw new ConfigurationException("Could not extract property "
-                                             + CONF_XSLT
-                                             + " from configuration", e);
-        }
-        if (xsltLocation == null || "".equals(xsltLocation)) {
-            throw new ConfigurationException("Property " + CONF_XSLT
-                                             + " is not defined");
+        String xsltLocationString = conf.getString(CONF_XSLT, null);
+        if (xsltLocationString == null || "".equals(xsltLocationString)) {
+            throw new ConfigurationException(String.format(
+                    "The property %s must be defined", CONF_XSLT));
         }
         //noinspection DuplicateStringLiteralInspection
-        log.debug("Extracted XSLT location '" + xsltLocation
+        log.debug("Extracted XSLT location '" + xsltLocationString
                   + "' from properties");
-        try {
-            transformer = XSLTUtil.createTransformer(xsltLocation);
-        } catch (TransformerException e) {
-            throw new ConfigurationException("Unable to create transformer", e);
+        xsltLocation = Resolver.getURL(xsltLocationString);
+        if (xsltLocation == null) {
+            throw new ConfigurationException(String.format(
+                    "The xsltLocation '%s' could not be resolved to a URL",
+                    xsltLocation));
         }
-        log.info("Transformer for '" + xsltLocation + "' ready for use");
+        log.info("XMLTransformer for '" + xsltLocation + "' ready for use");
     }
 
 
     /**
      * Transform the content of Record from one XML-block to another, using the
-     * transformer from {@link dk.statsbiblioteket.summa.common.util.XSLTUtil#createTransformer(String)}.
+     * [@link #xsltLocation}.
      * @param payload the wrapper containing the Record with the content.
      */
     @Override
-    protected synchronized void processPayload(Payload payload) {
+    protected void processPayload(Payload payload) {
         //noinspection DuplicateStringLiteralInspection
         log.trace("processPayload(" + payload + ") called");
         if (payload.getRecord() == null) {
@@ -101,8 +95,9 @@ public class XMLTransformer extends ObjectFilterImpl {
             return;
         }
         try {
-            payload.getRecord().setRawContent(XSLTUtil.transformContent(
-                    transformer, payload.getRecord().getContent()));
+            payload.getRecord().setRawContent(XSLT.transform(
+                    xsltLocation, payload.getRecord().getContent(), null).
+                    toByteArray());
         } catch (TransformerException e) {
             log.warn("Transformer problems. Discarding payload " + payload, e);
             if (log.isTraceEnabled()) {
