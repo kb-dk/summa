@@ -591,7 +591,12 @@ public class IndexControllerImpl extends StateThread implements
 
     public synchronized void close() throws IOException {
         //noinspection DuplicateStringLiteralInspection
-        log.trace("close() called");
+        log.debug(String.format(
+                "close() called with consolidateOnClose %b, "
+                + "updatesSinceLastconsolidate %d, updatesSinceLastCommit %d "
+                + "and received Payloads %d",
+                consolidateOnClose, updatesSinceLastConsolidate,
+                updatesSinceLastCommit, profiler.getBeats()));
         if (!indexIsOpen) {
             log.trace("close() called on already closed");
             return;
