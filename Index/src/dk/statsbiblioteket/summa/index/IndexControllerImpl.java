@@ -522,7 +522,10 @@ public class IndexControllerImpl extends StateThread implements
             log.debug("update(" + payload + ") finished - update count for the "
                       + "current location is " + profiler.getBeats()
                       + " at current rate " + profiler.getBps(true)
-                      + " records/sec");
+                      + " records/sec. updatesSinceLastCommit = "
+                      + updatesSinceLastCommit
+                      + ", updatesSinceLastConsolidate = "
+                      + updatesSinceLastConsolidate);
         }
         return requestCommit;
     }
