@@ -15,20 +15,34 @@ import org.apache.commons.logging.LogFactory;
         author = "mke")
 public class StorageRunner {
 
-    public static void main (String[] args) throws Exception {
+    /**
+     * Create a new storage instance as defined by the configuration
+     * obtained via {@link Configuration#getSystemConfiguration(boolean true)}.
+     * <p/>
+     * Any paramters to this method are ignored.
+     *
+     * @param args ignored
+     */
+    public static void main (String[] args) {
         Log log = LogFactory.getLog(StorageRunner.class);
         Configuration conf = Configuration.getSystemConfiguration(true);        
 
         log.info("Creating storage instance");
-        Storage storage = StorageFactory.createStorage(conf);
+        try {
+            Storage storage = StorageFactory.createStorage(conf);
 
-        log.info("Storage is running");
 
-        // Block indefinitely (non-busy)
-        while(true) {
-            synchronized (conf) {
-                conf.wait();
+            log.info("Storage is running");
+
+            // Block indefinitely (non-busy)
+            while(true) {
+                synchronized (conf) {
+                    conf.wait();
+                }
             }
+        } catch (Throwable t) {
+            log.fatal("Caught toplevel exception: " + t.getMessage(), t);
+            t.printStackTrace();
         }
     }
 
