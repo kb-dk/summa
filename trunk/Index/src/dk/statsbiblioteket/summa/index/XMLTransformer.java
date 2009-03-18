@@ -54,7 +54,22 @@ public class XMLTransformer extends ObjectFilterImpl {
      */
     public static final String CONF_XSLT = "summa.xmltransformer.xslt";
 
+    /**
+     * If true, all namespaces in the XML is stripped prior to transformation.
+     * This is not recommended, but i The Real World, there are a lot of XML
+     * and XSLT's with garbled namespace matching.
+     * </p><p>
+     * Note: Setting this to true might have a noticeable impact on processor-
+     * load and temporary object allocation.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_STRIP_XML_NAMESPACES =
+            "summa.xmltransformer.ignorexmlnamespaces";
+    public static final boolean DEFAULT_STRIP_XML_NAMESPACES = false;
+
     private URL xsltLocation;
+    private boolean stripXMLNamespaces = DEFAULT_STRIP_XML_NAMESPACES;
 
     /**
      * Sets up the transformer stated in the configuration.
@@ -77,7 +92,11 @@ public class XMLTransformer extends ObjectFilterImpl {
                     "The xsltLocation '%s' could not be resolved to a URL",
                     xsltLocation));
         }
-        log.info("XMLTransformer for '" + xsltLocation + "' ready for use");
+        stripXMLNamespaces = conf.getBoolean(CONF_STRIP_XML_NAMESPACES,
+                                             stripXMLNamespaces);
+        log.info("XMLTransformer for '" + xsltLocation + "' ready for use. "
+                 + "Namespaces will " + (stripXMLNamespaces ? "" : "not ") 
+                 + "be stripped from input before transformation");
     }
 
 
@@ -96,7 +115,8 @@ public class XMLTransformer extends ObjectFilterImpl {
         }
         try {
             payload.getRecord().setRawContent(XSLT.transform(
-                    xsltLocation, payload.getRecord().getContent(), null).
+                    xsltLocation, payload.getRecord().getContent(), null,
+                    stripXMLNamespaces).
                     toByteArray());
         } catch (TransformerException e) {
             log.warn("Transformer problems. Discarding payload " + payload, e);
