@@ -549,13 +549,13 @@
     </library>
     <library name="sbutil">
       <CLASSES>
-        <root url="jar://$PROJECT_DIR$/lib/sbutil-0.4.2.jar!/" />
+        <root url="jar://$PROJECT_DIR$/lib/sbutil-0.4.3.jar!/" />
       </CLASSES>
       <JAVADOC>
-        <root url="jar://$PROJECT_DIR$/lib/apidocs/sbutil-0.4.2-apidocs.zip!/" />
+        <root url="jar://$PROJECT_DIR$/lib/apidocs/sbutil-0.4.3-apidocs.zip!/" />
       </JAVADOC>
       <SOURCES>
-        <root url="jar://$PROJECT_DIR$/lib/src/sbutil-0.4.2-src.zip!/sbutil-0.4.2/src" />
+        <root url="jar://$PROJECT_DIR$/lib/src/sbutil-0.4.3-src.zip!/sbutil-0.4.3/src" />
       </SOURCES>
     </library>
     <library name="lucene-core">
