@@ -136,6 +136,8 @@ public class TransliterationFilter extends TokenFilter {
             }
         } else if (rules == null) {
             this.rules = ALL_TRANSLITERATIONS;
+        } else {
+            this.rules = rules;
         }
     }
 }
