@@ -629,10 +629,9 @@ public class IndexControllerImpl extends StateThread implements
             log.debug("Assigning source filter" + filter);
             source = (ObjectFilter)filter;
         } else {
-            throw new IllegalArgumentException("Only ObjectFilters can be used "
-                                               + "as source. The provided "
-                                               + "filter was a "
-                                               + filter.getClass());
+            throw new IllegalArgumentException(
+                    "Only ObjectFilters can be used as source. The provided "
+                    + "filter was a " + filter.getClass());
         }
     }
 
@@ -699,7 +698,10 @@ public class IndexControllerImpl extends StateThread implements
                 && (profiler.getBeats()+1) % feedbackEvery == 0)) {
             log.trace("Got payload #" + (profiler.getBeats()+1)
                       + " from source in "
-                      + (System.nanoTime() - start)/1000000f + "ms");
+                      + (System.nanoTime() - start)/1000000f + "ms"
+                      + ". UpdatesSinceLastCommit=" + updatesSinceLastCommit
+                      + ", updatesSinceLastconsolidate="
+                      + updatesSinceLastConsolidate);
         }
 
         // Process the payload
