@@ -87,6 +87,13 @@ public class TransliterationFilterTest extends TestCase {
         assertTokens(t, "aakjær");
     }
 
+    public void testOneDanishTokensWithDefaultRulesAlt1() throws Exception {
+        // Test an alternative constructor
+        t = new TransliterationFilter(getStream("Åkjær"),
+                                        "", false);
+        assertTokens(t, "åkjær");
+    }
+
     /*public void testFoo() throws Exception {
         Map<String,String> rules = new HashMap<String,String>();
         rules.put("Å", "aa");

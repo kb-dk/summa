@@ -62,4 +62,10 @@ public class TokenReplaceFilterTest extends TestCase {
         assertTokens(filter, "c+", "cplusplus");
     }
 
+    public void testOneDanishTokenWithDefaultRulesAlt1() throws Exception {
+        // Test an alternative constructor
+        filter = new TokenReplaceFilter(getStream("Åkjær"), "", false);
+        assertTokens(filter, "Åkjær");
+    }
+
 }
