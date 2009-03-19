@@ -58,7 +58,7 @@ public class MUXFilterFeeder implements ObjectFilter, Runnable {
      */
     public static final String CONF_QUEUE_IN_LENGTH =
             "summa.muxfilter.feeder.queue.in.length";
-    public static final int DEFAULT_QUEUE_IN_LENGTH = 1;
+    public static final int DEFAULT_QUEUE_IN_LENGTH = 100;
 
     /**
      * The maximum size in bytes of the Payloads in the input queue.
@@ -76,7 +76,7 @@ public class MUXFilterFeeder implements ObjectFilter, Runnable {
      */
     public static final String CONF_QUEUE_OUT_LENGTH =
             "summa.muxfilter.feeder.queue.out.length";
-    public static final int DEFAULT_QUEUE_OUT_LENGTH = 10;
+    public static final int DEFAULT_QUEUE_OUT_LENGTH = 100;
 
     /**
      * The maximum size in bytes of the Payloads in the output queue.
@@ -85,7 +85,7 @@ public class MUXFilterFeeder implements ObjectFilter, Runnable {
      */
     public static final String CONF_QUEUE_OUT_MAXBYTES =
             "summa.muxfilter.feeder.queue.out.maxbytes";
-    public static final int DEFAULT_QUEUE_OUT_MAXBYTES = 100 * 1024;
+    public static final int DEFAULT_QUEUE_OUT_MAXBYTES = 1024 * 1024;
 
     /**
      * The Class name for a filter specified in {@link MUXFilter#CONF_FILTERS}.
