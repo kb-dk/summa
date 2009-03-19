@@ -128,19 +128,20 @@ public class TransliterationFilter extends TokenFilter {
                 new CharArrayReader(tok.termBuffer(),0,tok.termLength()));
 
         char[] termBuf = tok.termBuffer();
-        int count = 0;
-        int codePoint;
-        while ((codePoint = replacer.read()) != -1) {
-            if (count >= termBuf.length) {
+        int totalRead = 0;
+        int numRead = 0;
+        while ((numRead =
+                replacer.read(termBuf, totalRead, termBuf.length - totalRead))
+               != -1) {
+            totalRead += numRead;
+            if (totalRead >= termBuf.length) {
                 tok.resizeTermBuffer(2*termBuf.length);
                 termBuf = tok.termBuffer();
             }
 
-            termBuf[count] = (char)codePoint;
-            count++;
         }
 
-        tok.setTermLength(count);
+        tok.setTermLength(totalRead);
 
         return tok;
     }

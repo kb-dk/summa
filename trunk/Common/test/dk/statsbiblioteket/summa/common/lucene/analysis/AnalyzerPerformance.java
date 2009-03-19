@@ -1,26 +1,30 @@
 package dk.statsbiblioteket.summa.common.lucene.analysis;
 
 import static dk.statsbiblioteket.summa.common.lucene.analysis.SampleDataLoader.*;
+import dk.statsbiblioteket.util.Strings;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Token;
+import org.apache.lucene.analysis.WhitespaceAnalyzer;
 
 import java.io.Writer;
 import java.io.CharArrayWriter;
+import java.io.StringReader;
 
 /**
  * Performance tests for the analyzers
  */
 public class AnalyzerPerformance {
 
-    final int NUM_TESTS = 1000;
+    final int NUM_TESTS = 2000;
 
     Analyzer a;
     TokenStream t;
 
     public AnalyzerPerformance() throws Exception {
-        //a = new SummaStandardAnalyzer();
-        a = new SummaAnalyzer(null, true, null, true, true);
+        a = new SummaStandardAnalyzer();
+        //a = new SummaAnalyzer("", true, "", true, true);
+        //a = new WhitespaceAnalyzer();
 
         System.out.println("Running " + NUM_TESTS + " tests on "
                            + a.getClass().getSimpleName());
@@ -54,7 +58,7 @@ public class AnalyzerPerformance {
         Token tok = new Token();
 
         while ((tok = t.next(tok)) != null) {
-            out.append("TOKEN:"+tok.term());
+            out.append(tok.term());
             out.append('\n');
         }
     }
