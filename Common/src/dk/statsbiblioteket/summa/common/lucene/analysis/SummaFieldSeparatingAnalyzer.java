@@ -57,7 +57,7 @@ public class SummaFieldSeparatingAnalyzer extends Analyzer {
     Analyzer _underlyingAnalyzer;
 
     /**
-     * Makes an RepeatAnalyzer that wraps another analyzer
+     * Makes an SummaFieldSeparatingAnalyzer that wraps another analyzer
      *
      * @param analyzer this analyzer will be wrapped
      */

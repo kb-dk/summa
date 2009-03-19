@@ -36,20 +36,12 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 public class SummaStandardAnalyzer extends SummaAnalyzer {
 
     /**
-     * additional translitteration rules to the TransliteratorTokenizer.
-     * @see TransliteratorTokenizer
+     * @see SummaAnalyzer
      */
-    public static final String isBlank = "'-' > ' ';'.' > ' ';',' > ' ';"
-                                         + "'/' > ' ';" +
-                                         "'\\\'' > ' ';" +
-                                         " ';' > ' ';" +
-                                         "'+' > ' ';'=' > ' ';'\\\\' > ' ';";
-
-    /**
-     * @see dk.statsbiblioteket.summa.common.lucene.analysis.SummaAnalyzer
-     */
-   public SummaStandardAnalyzer(){
-       super(TransliteratorTokenizer.isNull + isBlank, false, "", true, true);
+   public SummaStandardAnalyzer() {
+       super(TransliterationFilter.VOID_TRANSLITERATIONS
+             + TransliterationFilter.BLANK_TRANSLITERATIONS,
+             false, "", true, true);
    }
 
 }

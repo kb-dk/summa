@@ -71,16 +71,17 @@ public class SummaAnalyzer extends Analyzer {
      * Makes a SummaAnalyzer.
      *
      * @param transliterationRules       the transliteration rules are parsed to
-     *                                   the TransliteratorTokenizer.
+     *                                   a {@link TransliterationFilter}.
      * @param keepDefaultTransliterations if true the transliterationRules are
-     *                                   added to the existing rules defined in
-     *                                   the TransliteratorTokenizer.
-     * @param tokenRules               the maskingRules are parsed to the
-     *                                   TokenMasker
-     * @param keepDefaultTokenRules         if true the maskingRules are added to
-     *                                   the default rules defined in the
-     *                                   TokenMasker
-     * @param ignoreCase                 if true masking will ignore case.
+     *                                   added to the defined in
+     *                                   {@link TransliterationFilter#ALL_TRANSLITERATIONS}
+     * @param tokenRules                 transliteration rules passed to a
+     *                                   {@link TokenReplaceFilter}
+     * @param keepDefaultTokenRules      if true the tokenRules are added to
+     *                                   the default rules defined in
+     *                                   {@link TokenReplaceFilter#DEFAULT_REPLACE_RULES}
+     * @param ignoreCase                 if true everything will be converted to
+     *                                   lower case
      */
     public SummaAnalyzer(String transliterationRules,
                          boolean keepDefaultTransliterations,

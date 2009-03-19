@@ -134,7 +134,7 @@ public class SummaKeywordAnalyzer extends Analyzer {
                                                        ctx.seq.reset(ctx.buf));
     }
 
-    public static void main(String[] args) {
+    /*public static void main(String[] args) {
         Analyzer a = new SummaKeywordAnalyzer();
         
         try {
@@ -145,7 +145,7 @@ public class SummaKeywordAnalyzer extends Analyzer {
             System.exit(1);
         }
 
-    }
+    }*/
 }
 
 

@@ -1,9 +1,1040 @@
-2009-02-09 13:30  mke
+2009-03-19 11:18  mke
 
-	* [r992]
-	  NEWS,
-	  ChangeLog
-	  build.properties:
+	* [r1117]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/RecordWriter.java,
+	  Web/build.xml:
+	  
+	  Micro logging tweak in RecordWriter
+	  
+	  Fix build of Web module (missing dep. on sbutil)
+
+2009-03-18 14:23  toke
+
+	* [r1116]
+	  Common/src/dk/statsbiblioteket/summa/common/legacy/MarcMultiVolumeMerger.java,
+	  Index/src/dk/statsbiblioteket/summa/index/XMLTransformer.java,
+	  Index/test/data/transformCallback,
+	  Index/test/data/transformCallback/callback_input.xml,
+	  Index/test/data/transformCallback/callback_input_nonamespace.xml,
+	  Index/test/data/transformCallback/getLikes.xsl,
+	  Index/test/dk/statsbiblioteket/summa/index/TransformCallbackTest.java,
+	  Index/test/dk/statsbiblioteket/summa/index/XMLTransformerTest.java,
+	  Web/Web.iml, Web/test/CallbackTest.java, Web/test/data,
+	  Web/test/data/transformCallback,
+	  Web/test/data/transformCallback/callback_input.xml,
+	  Web/test/data/transformCallback/getLikes.xsl:
+	  
+	  Enhancement: Updates MARCMultiVolumeMerger and Transformer to
+	  optionally remove namespaces in XML
+	  Unit-test: Test for general call-back using XSLT's with SBUtil's
+	  XSLT
+
+2009-03-18 14:19  mke
+
+	* [r1115] Summa.ipr, build.properties,
+	  lib/apidocs/sbutil-0.4.2-apidocs.zip[DEL],
+	  lib/apidocs/sbutil-0.4.3-apidocs.zip, lib/sbutil-0.4.2.jar[DEL],
+	  lib/sbutil-0.4.3.jar, lib/src/sbutil-0.4.2-src.zip[DEL],
+	  lib/src/sbutil-0.4.3-src.zip:
+	  
+	  Bump sbutil to 0.4.3
+
+2009-03-18 13:44  mke
+
+	* [r1114]
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/TokenReplaceFilterTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/TransliterationFilterTest.java:
+	  
+	  Add unit tests on empty input strings, meaning zero tokens
+
+2009-03-18 13:42  mke
+
+	* [r1113] Control/config/log4j.xml,
+	  Control/test/test-facet-index-1/config/configuration.xml,
+	  Control/test/test-index-oai/config/configuration.xml:
+	  
+	  Less aggresive consolidation in the sample indexer bundles
+	  
+	  Make test-facet-index-1 only build facets on consolidate (which
+	  will be done on close)
+	  
+	  Add a failed-records.log catching records failing to index in the
+	  log4j.xml shipped with the sample bundles
+
+2009-03-18 12:10  mke
+
+	* [r1112]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/TransliterationFilter.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/TokenReplaceFilterTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/TransliterationFilterTest.java:
+	  
+	  Fix a NPE in TransliteratingFilter.<init> and add unit tests to
+	  catch it
+
+2009-03-18 12:01  mke
+
+	* [r1111]
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/SummaAnalyzerTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/TransliteratorTokenizerTest.java[DEL]:
+	  
+	  Add beginnings of unit tests for SummaAnalyzer
+
+2009-03-18 11:55  toke
+
+	* [r1110]
+	  Index/src/dk/statsbiblioteket/summa/index/IndexControllerImpl.java:
+	  
+	  Debug: Even more feedback for IndexControllerImpl
+
+2009-03-18 11:49  toke
+
+	* [r1109]
+	  Index/src/dk/statsbiblioteket/summa/index/IndexControllerImpl.java:
+	  
+	  Debug: Even more feedback for IndexControllerImpl
+
+2009-03-18 11:46  toke
+
+	* [r1108]
+	  Index/src/dk/statsbiblioteket/summa/index/IndexControllerImpl.java:
+	  
+	  Debug: Even more feedback for IndexControllerImpl
+
+2009-03-18 11:22  toke
+
+	* [r1107]
+	  Index/src/dk/statsbiblioteket/summa/index/IndexControllerImpl.java:
+	  
+	  Debug: Better feedback for IndexControllerImpl
+
+2009-03-18 10:02  mke
+
+	* [r1106] Search/src/dk/statsbiblioteket/summa/search/tools,
+	  Search/src/dk/statsbiblioteket/summa/search/tools/SummaSearcherRunner.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/tools/StorageRunner.java:
+	  
+	  Add SummaSearcherRunner - a helper class to launch a search
+	  engine from the command line
+	  
+	  Tweak exception handling in StorageRunner
+
+2009-03-18 09:56  mke
+
+	* [r1105]
+	  Storage/src/dk/statsbiblioteket/summa/storage/tools/StorageRunner.java:
+	  
+	  Make StorageRunner.main() block forever after constructing the
+	  storage. Also use commons-logging instead of stdout.
+
+2009-03-18 09:49  mke
+
+	* [r1104]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/FilterControl.java:
+	  
+	  Add a main() method to FilterControl so that we can run it as a
+	  stand alone app
+
+2009-03-18 08:41  toke
+
+	* [r1103]
+	  Common/src/dk/statsbiblioteket/summa/common/legacy/MarcMultiVolumeMerger.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/ParseUtil.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/XSLTUtil.java,
+	  Index/src/dk/statsbiblioteket/summa/index/XMLTransformer.java,
+	  Web/Web.iml, Web/build.xml,
+	  Web/src/dk/statsbiblioteket/commons/XmlOperations.java:
+	  
+	  Refactoring: Changed from XMLUtil to SBUtils XSLT
+
+2009-03-17 21:08  mke
+
+	* [r1102]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/h2/H2Storage.java:
+	  
+	  Properly detect if we have a database already
+
+2009-03-17 20:32  mke
+
+	* [r1101] Control/build.xml:
+	  
+	  Roll Postgres and H2 jar files into the sample storage bundle
+
+2009-03-17 20:28  mke
+
+	* [r1100] Control/test/test-storage-1/config/configuration.xml:
+	  
+	  Use H2Storage as the backend in the sample bundles
+
+2009-03-17 19:54  mke
+
+	* [r1099]
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/TokenReplaceFilterTest.java,
+	  Summa.ipr, build.properties,
+	  lib/apidocs/sbutil-0.4.1-apidocs.zip[DEL],
+	  lib/apidocs/sbutil-0.4.2-apidocs.zip, lib/sbutil-0.4.1.jar[DEL],
+	  lib/sbutil-0.4.2.jar, lib/src/sbutil-0.4.1-src.zip[DEL],
+	  lib/src/sbutil-0.4.2-src.zip:
+	  
+	  Bump SBUtil to 0.4.2. This fixes all unit tests for for the
+	  Lucene token/analyzer framework in Common
+
+2009-03-17 15:09  mke
+
+	* [r1098]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/SummaAnalyzer.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/TokenMasker.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/TokenReplaceFilter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/TransliterationFilter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/TransliteratorTokenizer.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/TransliterationFilterTest.java[CPY]:
+	  
+	  Rebase the analyser framework on top of SBUtils new
+	  ReplaceReaders. The unit tests will fail until we get SBUtil
+	  0.4.2 into trunk.
+	  
+	  This commit marks the deprecation of TransliteratorTokenizer and
+	  TokenMasker which should make the world a better place for
+	  everybody :-)
+
+2009-03-17 13:52  mke
+
+	* [r1097]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/TokenReplaceFilter.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/TokenReplaceFilterTest.java:
+	  
+	  Implement a TokenReplaceFilter with unit tests. This is going to
+	  deprecate TokenMasker sooner or later
+
+2009-03-17 13:06  mke
+
+	* [r1096] Summa.ipr, build.properties,
+	  lib/apidocs/sbutil-0.4.0-apidocs.zip[DEL],
+	  lib/apidocs/sbutil-0.4.1-apidocs.zip, lib/sbutil-0.4.0.jar[DEL],
+	  lib/sbutil-0.4.1.jar, lib/src/sbutil-0.4.0-src.zip[DEL],
+	  lib/src/sbutil-0.4.1-src.zip:
+	  
+	  Update to sbutil 0.4.1
+
+2009-03-17 12:24  mke
+
+	* [r1095]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/TransliteratorTokenizer.java:
+	  
+	  Almost complete rewrite of TransliteratorTokenizer to use the new
+	  features of SB Util 0.4.0
+	  
+	  Add unit tests for TransliteratorTokenizer. Two of them are
+	  failing. Toke is investigating
+
+2009-03-17 12:24  mke
+
+	* [r1094]
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/TransliteratorTokenizerTest.java:
+	  
+	  Almost complete rewrite of TransliteratorTokenizer to use the new
+	  features of SB Util 0.4.0
+	  
+	  Add unit tests for TransliteratorTokenizer. Two of them are
+	  failing. Toke is investigating
+
+2009-03-17 10:01  mke
+
+	* [r1093] Summa.ipr, build.properties,
+	  lib/apidocs/sbutil-0.3.4-apidocs.zip[DEL],
+	  lib/apidocs/sbutil-0.4.0-apidocs.zip, lib/sbutil-0.3.4.jar[DEL],
+	  lib/sbutil-0.4.0.jar, lib/src/sbutil-0.3.4-src.zip[DEL],
+	  lib/src/sbutil-0.4.0-src.zip:
+	  
+	  Bump sbutil version to 0.4.0. This paves the way for a lot of
+	  performance and memory usage improvements
+
+2009-03-17 09:52  mke
+
+	* [r1092] Summa.ipr, build.properties, lib/h2-1.0.79.jar[DEL],
+	  lib/h2-1.1.109.jar:
+	  
+	  Bump version number to 1.3.0 (not released yet)
+	  
+	  Bump H2 dependency to 1.1.109. This is sadly not a "blessed
+	  stable release" of H2, but it has proven very stable in our
+	  tests. The new H2 fixes a performance degradation when scaling
+	  storages past 2M records.
+
+2009-03-17 09:49  mke
+
+	* [r1091]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/h2/H2Storage.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/filter/RecordWriterTest.java:
+	  
+	  Make H2Storage take a directory in which to place db files, and
+	  not a direcoty+file_prefix. This makes it compatible with the way
+	  the DerbyStorage does this. The relevant property is
+	  'summa.storage.database.location'.
+	  
+	  Update tests to reflect this.
+
+2009-03-17 09:11  mke
+
+	* [r1090] ClusterExtractor/ClusterExtractor.iml,
+	  FacetBrowser/FacetBrowser.iml, Ingest/Ingest.iml,
+	  Storage/src/dk/statsbiblioteket/summa/storage/VoidStorage.java[CPY],
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/WritableStorage.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/RecordWriter.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/MiniConnectionPoolManager.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/derby/DerbyStorage.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/h2/H2Storage.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/postgres/PostgresStorage.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/StorageTest.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/filter/RecordWriterTest.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/toys/JdbcTranstactionsTest.java,
+	  Storage/test/log4j.xml:
+	  
+	  Merge summa-db-transactions branch. This converts the
+	  DatabaseStorage base class to use SQL transactions around its
+	  flush() and flushAll() methods which drastically improves
+	  performance of INSERT operations. On top of the
+	  improved performance it also fixes a bug where only a subset of a
+	  record's relations could bve committed if one of the relations
+	  failed to commit.
+	  
+	  The branch merge also pulls in a new Storage impl, namely
+	  VoidStorage.
+
+2009-03-17 09:05  toke
+
+	* [r1089]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/FileReader.java:
+	  
+	  Bugfix: FileReader no longer marks folders as aldredy handled
+	  (this might present problems with cyclic folder structures)
+
+2009-03-12 13:10  toke
+
+	* [r1088] Web/src/dk/statsbiblioteket/gwsc/ServiceObj.java:
+	  
+	  Critical bugfix: The ServiceObj (responsible for handling
+	  SOAP-requests) failed randomly on multi-threading
+
+2009-03-12 07:06  mke
+
+	* [r1087]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/ThreadedStreamParser.java:
+	  
+	  Log a warning if ThreadedStreamParser is forced to call
+	  Thread.sleep()
+
+2009-03-11 15:47  toke
+
+	* [r1085]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/distribution,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/distribution/TermStatExtractor.java:
+	  
+	  First version of the TermStaExtractor, not complete and no
+	  unit-tests yet
+
+2009-03-11 14:05  toke
+
+	* [r1084]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/ThreadedStreamParser.java:
+	  
+	  Performance: Changed the default queue-size and sleep-time for
+	  ThreadedStreamParser as the old defaults resulted in poor
+	  performance
+
+2009-03-11 13:21  toke
+
+	* [r1082]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/FileReader.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/FileWatcher.java,
+	  Ingest/test/dk/statsbiblioteket/summa/ingest/stream/FileWatcherTest.java:
+	  
+	  Bugfix: The FileReader had a race-condition for closing and
+	  renaming files that was triggered by the FileWatchers
+	  multi-threaded usage of FileReader
+
+2009-03-10 20:29  mke
+
+	* [r1078] Storage/test/dk/statsbiblioteket/summa/storage/toys,
+	  Storage/test/dk/statsbiblioteket/summa/storage/toys/JdbcTranstactionsTest.java:
+	  
+	  Import a very simple to to play around with JDBC and transactions
+
+2009-03-06 16:02  toke
+
+	* [r1077]
+	  Ingest/test/dk/statsbiblioteket/summa/ingest/stream/FileWatcherTest.java:
+	  
+	  Minor tweaks to FilewatcherTest
+
+2009-03-05 13:52  mke
+
+	* [r1076]
+	  Storage/src/dk/statsbiblioteket/summa/storage/AggregatingStorage.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/AggregatingStorageTest.java:
+	  
+	  Bugfix: AggregatingStorage did not support base=null in
+	  getModificationTime() and getRecordsModifiedAfter(). Implement
+	  this together with relevant unit tests.
+
+2009-03-05 13:47  mke
+
+	* [r1075]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/StorageReaderClient.java:
+	  
+	  Bugfix: Fix compliance to ReadableStorage contract - to throw a
+	  NoSuchElementException when the iter is depleted in next(iterKey)
+	  and next(iterKey, maxRecords).
+
+2009-03-04 22:42  toke
+
+	* [r1074] Ingest/test/data/filereader,
+	  Ingest/test/data/filereader/dummyA.xml,
+	  Ingest/test/data/filereader/dummyB_folder,
+	  Ingest/test/data/filereader/dummyB_folder/dummyA_folder,
+	  Ingest/test/data/filereader/dummyB_folder/dummyA_folder/dummyF.xml,
+	  Ingest/test/data/filereader/dummyB_folder/dummyA_folder/dummyG_folder,
+	  Ingest/test/data/filereader/dummyB_folder/dummyA_folder/dummyG_folder/dummyE.xml,
+	  Ingest/test/data/filereader/dummyB_folder/dummyD.xml,
+	  Ingest/test/data/filereader/dummyC.xml,
+	  Ingest/test/data/filereader/dummyR_folder,
+	  Ingest/test/data/filereader/readme.txt,
+	  Ingest/test/dk/statsbiblioteket/summa/ingest/stream/FileReaderTest.java,
+	  Ingest/test/dk/statsbiblioteket/summa/ingest/stream/FileWatcherTest.java,
+	  Ingest/test/log4j.xml:
+	  
+	  Unit-tests and files for FileReader and FileWatcher now properly
+	  committet
+
+2009-03-04 22:32  toke
+
+	* [r1073]
+	  Common/src/dk/statsbiblioteket/summa/common/unittest/ExtraAsserts.java,
+	  Ingest/Ingest.iml,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/FileReader.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/FileWatcher.java:
+	  
+	  Enhancement: FileReader and FileWatcher are low lazy with regard
+	  to folder-traversal.
+	  Unit-tests has been updated and passes.
+
+2009-03-04 16:18  toke
+
+	* [r1072]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/FileReader.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/FileWatcher.java,
+	  Ingest/test/dk/statsbiblioteket/summa/ingest/stream/FileReaderTest.java:
+	  
+	  Enhancement: Changed FileReader to resolve files lazily.
+	  Warning: The FileWatcher is currently broken because of this. I'm
+	  working on a fix for this
+
+2009-03-04 13:21  toke
+
+	* [r1071]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/search/SummaQueryParser.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/search/SummaQueryParserTest.java:
+	  
+	  Unit-test: Added some extra test cases for wildcards and ranges
+	  to the summaQueryParserTest.
+	  Debugging: Added a more readable output for
+	  ConstantScoreRangeQueries to the queryToString method
+
+2009-03-04 12:35  toke
+
+	* [r1070]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/search/SummaQueryParser.java,
+	  Common/test/data, Common/test/data/queryparser,
+	  Common/test/data/queryparser/IndexDescriptor.xml,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/search/SummaQueryParserTest.java:
+	  
+	  Unit-test: Tests group-expansion and query time field boosting
+	  for the SummaQueryParser. No bugs found.
+	  Debugging: Copied a queryToString method to SummaQueryParser from
+	  Stable Summa
+
+2009-03-04 12:18  toke
+
+	* [r1069]
+	  Common/src/dk/statsbiblioteket/summa/common/index/IndexDescriptor.java:
+	  
+	  Cosmetics: Proper @Override-annotation and removal of non-used
+	  import
+
+2009-03-04 12:17  toke
+
+	* [r1068]
+	  Common/src/dk/statsbiblioteket/summa/common/index/IndexDescriptor.java:
+	  
+	  Bugfix: The IndexDescriptor class checked for changed descriptors
+	  all the time when the check-interval was 0. The correct behaviour
+	  is not to check when the interval is 0. Fixed.
+
+2009-03-04 10:03  toke
+
+	* [r1067]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/FileReader.java:
+	  
+	  Made the FileReader auto-close delivered Streams when they reach
+	  EOF. This guards against file handle starvation
+
+2009-03-04 10:03  toke
+
+	* [r1066]
+	  Ingest/test/dk/statsbiblioteket/summa/ingest/split/XMLSplitterFilterTest.java,
+	  Ingest/test/dk/statsbiblioteket/summa/ingest/split/XMLSplitterParserTest.java:
+	  
+	  Added test to XMLSplitterFilter to see is it calls close on
+	  processed Payloads (it does)
+
+2009-03-03 15:21  toke
+
+	* [r1065] Control/test/data/scale/scale_configuration.xml,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/ScaleTest.java,
+	  Control/test/log4j.xml:
+	  
+	  Minor tweaks of the ScaleTest
+
+2009-03-03 14:14  toke
+
+	* [r1064]
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/DiscardUpdatesFilterTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/RelativesFilterTest.java:
+	  
+	  Unit-test: Changed the tests for discard filters to use them af
+	  the more general ObjectFilters
+
+2009-03-03 14:11  toke
+
+	* [r1063]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/AbstractDiscardFilter.java:
+	  
+	  Bugfix: The AbstractDiscardFilter (and its subclasses) wasn't
+	  actually ObjectFilters, they just had all the methods
+
+2009-03-03 10:18  mke
+
+	* [r1062] Common/scripts/template.sh,
+	  Control/scripts/search-tool.sh, Control/scripts/storage-tool.sh:
+	  
+	  Bugfix: Fix handling of quoted arguments. This makes it possible
+	  to do phrase searches with the search-tool.
+
+2009-02-21 22:48  toke
+
+	* [r1061] ClusterExtractor/ClusterExtractor.iml,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/FacetSearchNode.java:
+	  
+	  Bugfix: The FacetSearchNode did not open the TagHandlers in
+	  read-only mode
+
+2009-02-21 22:37  toke
+
+	* [r1060]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/api/FacetResultImpl.java:
+	  
+	  Cosmetics: Better looking XML from FacetResult
+
+2009-02-21 22:28  toke
+
+	* [r1059]
+	  Search/src/dk/statsbiblioteket/summa/search/api/document/DocumentResponse.java:
+	  
+	  Bugfix: Merging of DocumentResponses did not update the total
+	  number of hits
+
+2009-02-21 01:47  toke
+
+	* [r1058] Control/test/data/scale/scale_configuration.xml:
+	  
+	  Changed the release test scale to clear tags on consolidate,
+	  thereby enforcing the dirty add + cleanup method in DiskPool
+
+2009-02-21 01:13  toke
+
+	* [r1057]
+	  Common/attic/src/dk/statsbiblioteket/summa/common/lucene/QueryPerformanceThread.java,
+	  Common/src/dk/statsbiblioteket/summa/common/unittest/ExtraAsserts.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/IndirectLongSorter.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/IndirectLongSorterTest.java,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/ScaleTest.java,
+	  FacetBrowser/FacetBrowser.iml,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/util/pool/DiskPool.java,
+	  FacetBrowser/test/dk/statsbiblioteket/summa/facetbrowser/util/pool/DiskPoolTest.java,
+	  FacetBrowser/test/dk/statsbiblioteket/summa/facetbrowser/util/pool/StringPoolSuperTest.java,
+	  FacetBrowser/test/log4j.xml:
+	  
+	  Changed the sorting strategy for DiskPool to use merge-sort
+	  instead of head-sort. Coupled with a cache for persistent values,
+	  this speeds up the sort after dirty adds tremendously
+
+2009-02-20 11:41  toke
+
+	* [r1056]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/tags/TagHandlerImpl.java:
+	  
+	  Bugfix: The TagHandler didn't perform dirty adds when asked to do
+	  so
+
+2009-02-20 11:06  toke
+
+	* [r1055]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/source/RecordGenerator.java:
+	  
+	  Changed log-level for RecordGenerator to trace for simple token
+	  assignment
+
+2009-02-19 14:42  toke
+
+	* [r1054]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/lucene/LuceneFacetBuilder.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/util/pool/DiskPool.java:
+	  
+	  Slightly better debug info
+
+2009-02-19 13:44  nig
+
+	* [r1051] Index/config/targets/horizon/horizon_lma.xsl,
+	  Index/config/targets/nordicom/nordicom_lma.xsl:
+	  
+	  Rettet lma_long type fra bog_art til artikel_i_bog i horizon og
+	  nordicom
+
+2009-02-19 11:29  toke
+
+	* [r1049]
+	  Control/test/dk/statsbiblioteket/summa/releasetest/ScaleTest.java,
+	  Control/test/log4j.xml:
+	  
+	  Minor: Small change to ScaleTest
+
+2009-02-19 11:05  toke
+
+	* [r1048]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/map/CoreMapBitStuffed.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/map/CoreMapImpl.java:
+	  
+	  Minor: Added reference-count to the meta information for the
+	  Facet core map
+
+2009-02-19 10:52  toke
+
+	* [r1047]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/tags/Facet.java:
+	  
+	  Minor: Added tag-count to the meta-information for persistent
+	  facets
+
+2009-02-19 10:42  toke
+
+	* [r1046]
+	  Control/test/dk/statsbiblioteket/summa/releasetest/ScaleTest.java,
+	  Control/test/log4j.xml,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/FacetMap.java:
+	  
+	  Bugfix: The performance enhancement introduced an error with
+	  extra tagIDs. Fixed.
+
+2009-02-19 10:40  toke
+
+	* [r1045]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/FacetMap.java:
+	  
+	  Performance: Moven array creation outside of a loop, whick should
+	  lessen GC overhead
+
+2009-02-19 10:33  toke
+
+	* [r1044]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/FacetMap.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/lucene/LuceneFacetBuilder.java:
+	  
+	  Performance: The batch building of the Fact structure repeated
+	  the exact same Tag look-up for each document that points to the
+	  same Tag
+
+2009-02-19 10:26  mads
+
+	* [r1043] Web/config/storage/server-config.wsdd,
+	  Web/src/dk/statsbiblioteket/summa/web/services/StorageWS.java:
+	  
+	  Added expansion of records when calling getRecord.
+	  
+	  Added getLegacyRecord to the public webservice. This method is
+	  only meant to be used by legacy applications. New applications
+	  must use getRecord.
+
+2009-02-19 10:14  mads
+
+	* [r1042] Web/config/search/log4j.xml,
+	  Web/config/storage/log4j.xml, Web/config/website/log4j.xml:
+	  
+	  Use a more sensible logging path relative to the tomcat
+	  installation
+
+2009-02-19 09:55  toke
+
+	* [r1041]
+	  Common/src/dk/statsbiblioteket/summa/common/legacy/MarcMultiVolumeMerger.java[CPY],
+	  Index/src/dk/statsbiblioteket/summa/common/legacy/MarcMultiVolumeMerger.java[DEL]:
+	  
+	  Bugfix: The refactoring of the MarcMultiVolumeMerger didn't move
+	  it to the proper module (Common)
+
+2009-02-18 22:18  mke
+
+	* [r1040] Common/build.xml, Index/build.xml:
+	  
+	  Build fix after moving the legacy xslt to Common
+
+2009-02-18 15:24  toke
+
+	* [r1039]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/util/pool/DiskPool.java:
+	  
+	  Added explicit flush on store in DiskPool
+
+2009-02-18 15:24  toke
+
+	* [r1038]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/source/RecordGenerator.java:
+	  
+	  Bugfix: The RecordGenerator didn't like to generate a small
+	  number of Records
+
+2009-02-18 14:14  mke
+
+	* [r1037] NEWS:
+	  
+	  Fix wrong release date noted for summa 1.2.0 in the NEWS file
+
+2009-02-18 14:06  mke
+
+	* [r1034] NEWS:
+	  
+	  Update news with the 1.2.1 release notes
+
+2009-02-18 13:54  toke
+
+	* [r1032] Control/test/data/scale/xslt,
+	  Control/test/data/scale/xslt/fagref_author.xsl[CPY],
+	  Control/test/data/scale/xslt/fagref_index.xsl[CPY],
+	  Control/test/data/scale/xslt/fagref_notes.xsl[CPY],
+	  Control/test/data/scale/xslt/fagref_short_format.xsl[CPY],
+	  Control/test/data/scale/xslt/fagref_subject.xsl[CPY],
+	  Control/test/data/scale/xslt/fagref_title.xsl[CPY],
+	  Control/test/dk/statsbiblioteket/summa/releasetest/ScaleTest.java,
+	  Control/test/log4j.xml:
+	  
+	  Made the ScaleTest independent on the XSLTs from the FacetTest
+
+2009-02-18 13:21  mke
+
+	* [r1029] Control/test/data/scale/scale_configuration.xml,
+	  Control/test/data/scale/service.xml:
+	  
+	  Update config for scalability index test and add a bundle spec.
+	  The actual bundle is build outside the Summa source tree though.
+
+2009-02-18 12:48  toke
+
+	* [r1028] Common/Common.iml, Common/data,
+	  Common/data/LegacyMultiVolumeConverter.xslt[CPY],
+	  Common/data/LegacyToSummaDocumentXML.xslt[CPY],
+	  Common/data/sb-multivolume.xslt[CPY],
+	  Common/src/dk/statsbiblioteket/summa/common/legacy,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/ScaleTest.java,
+	  Index/data/LegacyMultiVolumeConverter.xslt[DEL],
+	  Index/data/LegacyToSummaDocumentXML.xslt[DEL],
+	  Index/data/sb-multivolume.xslt[DEL],
+	  Index/src/dk/statsbiblioteket/summa/common,
+	  Index/src/dk/statsbiblioteket/summa/common/legacy,
+	  Index/src/dk/statsbiblioteket/summa/common/legacy/MarcMultiVolumeMerger.java[CPY],
+	  Index/src/dk/statsbiblioteket/summa/index/filter/MarcMultiVolumeMerger.java[DEL],
+	  Index/test/dk/statsbiblioteket/summa/index/LegacyTest.java,
+	  Index/test/dk/statsbiblioteket/summa/index/XMLTransformerTest.java,
+	  Index/test/dk/statsbiblioteket/summa/index/filter/MarcMultiVolumeMergerTest.java:
+	  
+	  Moved legacy-handling from the Index-module to the Common module.
+	  This shouldn't break anything (*cough*)
+
+2009-02-18 12:34  mke
+
+	* [r1027]
+	  Control/src/dk/statsbiblioteket/summa/control/bundle/BundleTool.java:
+	  
+	  Fix documentation of the -x parameter to summa-bundletool
+
+2009-02-18 12:21  mke
+
+	* [r1026]
+	  Control/src/dk/statsbiblioteket/summa/control/bundle/BundleTool.java:
+	  
+	  Typo
+
+2009-02-18 12:20  mke
+
+	* [r1025]
+	  Control/src/dk/statsbiblioteket/summa/control/bundle/BundleTool.java:
+	  
+	  Fix missing whitespace in error msg
+
+2009-02-18 12:09  mke
+
+	* [r1024]
+	  Control/src/dk/statsbiblioteket/summa/control/server/deploy/SSHDeployer.java:
+	  
+	  Logging improvements when probing for the remote JRE
+
+2009-02-18 11:59  mke
+
+	* [r1023]
+	  Control/src/dk/statsbiblioteket/summa/control/bundle/BundleSpecBuilder.java:
+	  
+	  Less verbose logging on unknown content in bundle spec
+
+2009-02-18 11:43  toke
+
+	* [r1022]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/RelativesFilter.java[DEL],
+	  Control/test/data/scale,
+	  Control/test/data/scale/fagref_template.xml[CPY],
+	  Control/test/data/scale/scale_configuration.xml,
+	  Control/test/data/scale/scale_index_descriptor.xml[CPY],
+	  Control/test/dk/statsbiblioteket/summa/releasetest/FagrefGeneratorTest.java,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/ScaleTest.java,
+	  Control/test/log4j.xml,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/FacetManipulator.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/source/RecordGenerator.java:
+	  
+	  Added scalability test for the facet system
+
+2009-02-18 10:11  mke
+
+	* [r1021]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/RecordReader.java:
+	  
+	  Add options to RecordReader for deciding whether or not to
+	  request parent/child expansion when receiving records. This is
+	  untested, but the changes are fairly simple and I am pretty
+	  confident that they are good.
+	  
+	  This fixes bug 1552: "Add an option to RecordReader to fetch
+	  record parents/children"
+
+2009-02-18 09:24  toke
+
+	* [r1020]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/DiscardRelativesFilter.java[CPY],
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/RelativesFilterTest.java:
+	  
+	  Renamed RelativesFilter to DiscardRelativesFilter
+
+2009-02-17 08:08  toke
+
+	* [r1019] Common/src/dk/statsbiblioteket/summa/common/Record.java:
+	  
+	  Cosmetics and comments in Record
+
+2009-02-17 08:06  toke
+
+	* [r1018]
+	  Index/src/dk/statsbiblioteket/summa/index/IndexControllerImpl.java:
+	  
+	  Added slightly better feedback to IndexControllerImpl
+
+2009-02-17 08:06  toke
+
+	* [r1017]
+	  Control/test/dk/statsbiblioteket/summa/releasetest/FagrefGeneratorTest.java:
+	  
+	  Added some comments to the FagrefGenerator unit test
+
+2009-02-17 08:05  toke
+
+	* [r1016]
+	  Index/src/dk/statsbiblioteket/summa/index/filter/MarcMultiVolumeMerger.java:
+	  
+	  Cosmetics
+
+2009-02-17 08:03  toke
+
+	* [r1015]
+	  Index/src/dk/statsbiblioteket/summa/index/filter/MarcMultiVolumeMerger.java:
+	  
+	  Added a convenience method for transforming Record-content to
+	  legacy merged MARC in MarcMultiVolumeMerger
+
+2009-02-13 11:55  toke
+
+	* [r1014]
+	  Control/src/dk/statsbiblioteket/summa/control/server/deploy/SSHDeployer.java,
+	  Control/test/dk/statsbiblioteket/summa/control/server/deploy/SSHDeployerTest.java:
+	  
+	  Unit-test for custom port-specification for the SSHDeployer
+
+2009-02-12 22:45  toke
+
+	* [r1013]
+	  Control/src/dk/statsbiblioteket/summa/control/api/ClientDeployer.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/deploy/SSHDeployer.java:
+	  
+	  Updated SSHDeployer to support a custom port for SSH. Not
+	  properly tested yet (need a Linux-machine for that)
+
+2009-02-12 15:08  toke
+
+	* [r1012]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/MUXFilter.java,
+	  Control/test/log4j.xml:
+	  
+	  Bugfix: Assigning the same source multiple times to MUXFilter
+	  resulted in the last Payloads of a stream of Payloads being
+	  skipped under certain race-conditions
+
+2009-02-12 14:52  toke
+
+	* [r1011]
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/MUXFilterTest.java:
+	  
+	  Unit-test: A test demonstrating a bug in MuxFilter when setSource
+	  is called multiple times
+
+2009-02-12 14:51  toke
+
+	* [r1010]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/MUXFilterFeeder.java:
+	  
+	  Added finer grained debugging information to MUXFilterFeeder
+
+2009-02-12 14:06  toke
+
+	* [r1009]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/MUXFilter.java:
+	  
+	  Bugfix: The round-robin used by the MUXFilter always selected the
+	  first available finter
+
+2009-02-12 12:25  toke
+
+	* [r1008]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/MUXFilter.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/MUXFilterTest.java:
+	  
+	  Added unit-test to the muxer
+
+2009-02-12 10:58  toke
+
+	* [r1007]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/DelayFilter.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/DelayFilterTest.java:
+	  
+	  Created DelayFilter to throttle processing (and help with
+	  testing)
+
+2009-02-12 09:05  toke
+
+	* [r1006] Common/src/dk/statsbiblioteket/summa/common/Record.xsd,
+	  Common/src/dk/statsbiblioteket/summa/common/unittest/ExtraAsserts.java:
+	  
+	  Cosmetics
+
+2009-02-12 08:59  toke
+
+	* [r1005]
+	  Common/src/dk/statsbiblioteket/summa/common/unittest/ExtraAsserts.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/RecordUtil.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/RecordUtilTest.java:
+	  
+	  Better unit tests for the toXML/fromXML methods in RecordUtil.
+	  Now with schema-validation of the output
+
+2009-02-11 16:21  toke
+
+	* [r1004] Common/src/dk/statsbiblioteket/summa/common/Record.xsd,
+	  Common/src/dk/statsbiblioteket/summa/common/util/RecordUtil.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/RecordUtilTest.java,
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/StreamingDocumentCreator.java:
+	  
+	  Created toXML and fromXML for Record in RecordUtil. Needs more
+	  unit-testing
+
+2009-02-10 22:23  mke
+
+	* [r1003] Storage/test/dk/statsbiblioteket/summa/storage/http,
+	  Storage/test/dk/statsbiblioteket/summa/storage/http/HttpExperiment.java:
+	  
+	  Add a very rudimentary experiment with the HttpServer class
+	  present in Java 1.6. This might serve as a base to create an
+	  in-process REST API for Summa... TIme will tell...
+
+2009-02-10 15:14  mke
+
+	* [r1002]
+	  Index/src/dk/statsbiblioteket/summa/index/filter/MarcMultiVolumeMerger.java:
+	  
+	  Logging tweaks involving a small amount of fiddling with the
+	  logic for detecting the children
+
+2009-02-10 14:57  toke
+
+	* [r1001]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/AbstractDiscardFilter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/DiscardUpdatesFilter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/RelativesFilter.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/DiscardUpdatesFilterTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/RelativesFilterTest.java:
+	  
+	  Added a RelativesFilter that discards records based on their
+	  relatives.
+	  As part of this the DiscardUpdatesfilter was refactored
+
+2009-02-10 14:56  toke
+
+	* [r1000] Common/src/dk/statsbiblioteket/summa/common/Record.java:
+	  
+	  Bugfix: Record did not clear the list of parents when setParentID
+	  was set
+
+2009-02-10 14:32  nig
+
+	* [r999] Index/config/targets/nordicom/nordicom_author.xsl,
+	  Index/config/targets/nordicom/nordicom_identifiers.xsl,
+	  Index/config/targets/nordicom/nordicom_subject.xsl,
+	  Index/config/targets/nordicom/nordicom_title.xsl:
+	  
+	  Smaa justeringer i nordicom xslt'er
+
+2009-02-10 13:47  toke
+
+	* [r998]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/DiscardUpdatesFilter.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/DiscardUpdatesFilterTest.java:
+	  
+	  Added DiscardUpdatesfilter that ... discards updates ... based on
+	  the ids of encountered Records
+
+2009-02-10 13:18  toke
+
+	* [r997]
+	  Common/src/dk/statsbiblioteket/summa/common/util/ArrayUtil.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/ArrayUtilTest.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/FileReader.java,
+	  Ingest/test/dk/statsbiblioteket/summa/ingest/stream/FileWatcherTest.java:
+	  
+	  Added a reverse-sort option to FileReader, making it possible to
+	  iterate over found files in reverse unicode order
+
+2009-02-10 05:43  mke
+
+	* [r995] build.properties:
+	  
+	  Post release version bump to 1.3-alpha0
+
+2009-02-09 13:45  mke
+
+	* [r992] ChangeLog, NEWS, build.properties:
 	  
 	  Release Summa 1.2.0
 
