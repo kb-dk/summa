@@ -40,6 +40,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.util.Strings;
 
 import javax.xml.transform.*;
 import javax.xml.transform.stream.StreamSource;
@@ -83,10 +84,10 @@ public class StorageTool {
             ids.add(argv[i]);
         }
 
-        System.err.println("Getting records " + Logs.expand(ids, 10) + "");
+        System.err.println("Getting record(s): " + Strings.join(ids, ", "));
         long startTime = System.currentTimeMillis();
         List<Record> recs = storage.getRecords (ids, null);
-        System.err.println(ids.size() + " records fetched in "
+        System.err.println("Got " + recs.size() + " records in "
                            + (System.currentTimeMillis() - startTime) + " ms");
 
         for (Record r : recs) {
