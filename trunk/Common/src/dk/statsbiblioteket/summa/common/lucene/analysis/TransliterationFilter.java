@@ -2,11 +2,9 @@ package dk.statsbiblioteket.summa.common.lucene.analysis;
 
 import org.apache.lucene.analysis.TokenFilter;
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.ASCIIFoldingFilter;
 import org.apache.lucene.analysis.Token;
 
 import java.io.IOException;
-import java.io.Reader;
 import java.io.CharArrayReader;
 import java.util.Map;
 import java.util.HashMap;
@@ -15,11 +13,19 @@ import dk.statsbiblioteket.util.reader.ReplaceReader;
 import dk.statsbiblioteket.util.reader.ReplaceFactory;
 
 /**
- *
+ * Generic {@link TokenFilter} implementation which can replace substrings
+ * inside the tokens based on a set of rules.
+ * <p/>
+ * Internally it will select the optimal replacement strategy based on the
+ * rules it has been given.
  */
 public class TransliterationFilter extends TokenFilter {
 
-    public static final String DEFAULT_TRANSLITERATIONS = "i > i;£ > £;¦ > |;ª > a;µ > m;º > o;ß > ss;à > a;á > a;" +
+    /**
+     * Transliteration rules for converting common non-ascii characters found
+     * in bibliographic records to ascii.
+     */
+    public static final String CHARACTER_TRANSLITERATIONS = "i > i;£ > £;¦ > |;ª > a;µ > m;º > o;ß > ss;à > a;á > a;" +
                 "â > a;ã > a;ä > æ;å > aa;æ > æ;ç > c;è > e;é > e;ê > e;ë > e;ì > i;í > i;î > i;" +
                 "ï > i;ð > d;ñ > n;ò > o;ó > o;ô > o;õ > o;ö > ø;ø > ø;ù > u;ú > u;û > u;ü > y;ý > y;þ > th;" +
                 "ÿ > y;ā > a;ă > a;ą > a;ć > c;ĉ > c;ċ > c;č > c;ď > d;đ > d;ē > e;ĕ > e;ė > e;ę > e;ě > e;" +
@@ -32,34 +38,53 @@ public class TransliterationFilter extends TokenFilter {
                 "⁰ > 0;₀ > 0;₁ > 1;₂ > 2;₃ > 3;₄ > 4;₅ > 5;₆ > 6;₇ > 7;₈ > 8;₉ > 9;™ > tm;ⅰ > 1;∂ > d;♭ > b;" +
                 "ｃ > c;ｅ > e;ｉ > i;ｌ > l;ｍ > m;ｓ > s;";
 
-        public static final String VOID_TRANSLITERATIONS =
-                "'_' > '';':' > '';'(' > '';')' > '';\" > '';'[' > '';']' > '';'?' > '';'ʹ' > '';'!' > '';'<' > '';" +
-                "'̣' > '';'̈' > '';'ʻ' > '';'̲' > '';'}' > '';'{' > '';'́' > '';'̄' > '';" +
-                "'̌' > '';'̇' > '';'̨' > '';'ˇ' > '';'ʾ' > '';'̀' > '';'̊' > '';'̆' > '';" +
-                "'’' > '';'ʺ' > '';'»' > '';'«' > '';'′' > '';'̃' > '';\u0096 > '';'”' > '';'©' > '';'¿' > '';'̂' > '';" +
-                "'`' > '';'̦' > '';'̧' > '';'⃞' > '';'“' > '';'︠' > '';'︡' > '';'˘' > '';'´' > '';'¡' > '';\u0093 > '';" +
-                "'®' > '';'̕' > '';'̜' > '';'̋' > '';\u009C > '';'̤' > '';'¸' > '';'̳' > '';'¨' > '';\u0091 > '';'˙' > '';" +
-                "'̮' > '';'̉' > '';\u0084 > '';\u0080 > '';'˚' > '';\u0092 > '';'¯' > '';\u007F > '';'（' > '';" +
-                "'）' > '';'《' > '';'》' > '';'˛' > '';'¶' > '';'ь' > '';\u0097 > '';'‘' > '';'ʿ' > '';'̥' > '';\u009A > '';" +
-                "\u0085 > '';\u0082 > '';'ъ' > '';'、' > '';'，' > '';'̅' > '';\u009D > '';\u0086 > '';'̐' > '';\u0099 > '';" +
-                "'' > '';\u008A > '';'' > '';\u009E > '';'ˆ' > '';\u008C > '';'̓' > '';'？' > '';\u008E > '';\u0087 > '';" +
-                "'ǹ' > '';'；' > '';'＂' > '';\u0088 > '';'' > '';';' > '';\u009F > '';'：' > '';\u0089 > '';'˝' > '';'「' > '';" +
-                "\u0083 > '';\u0081 > '';'' > '';'„' > '';'' > '';\u0098 > '';'�' > '';'〉' > '';'」' > '';\u008D > '';";
+    /**
+     * Rules that translates any non-letter characters that
+     * "you can safely ignore" (at your own peril) to empty strings
+     */
+    public static final String VOID_TRANSLITERATIONS =
+            "'_' > '';':' > '';'(' > '';')' > '';\" > '';'[' > '';']' > '';'?' > '';'ʹ' > '';'!' > '';'<' > '';" +
+            "'̣' > '';'̈' > '';'ʻ' > '';'̲' > '';'}' > '';'{' > '';'́' > '';'̄' > '';" +
+            "'̌' > '';'̇' > '';'̨' > '';'ˇ' > '';'ʾ' > '';'̀' > '';'̊' > '';'̆' > '';" +
+            "'’' > '';'ʺ' > '';'»' > '';'«' > '';'′' > '';'̃' > '';\u0096 > '';'”' > '';'©' > '';'¿' > '';'̂' > '';" +
+            "'`' > '';'̦' > '';'̧' > '';'⃞' > '';'“' > '';'︠' > '';'︡' > '';'˘' > '';'´' > '';'¡' > '';\u0093 > '';" +
+            "'®' > '';'̕' > '';'̜' > '';'̋' > '';\u009C > '';'̤' > '';'¸' > '';'̳' > '';'¨' > '';\u0091 > '';'˙' > '';" +
+            "'̮' > '';'̉' > '';\u0084 > '';\u0080 > '';'˚' > '';\u0092 > '';'¯' > '';\u007F > '';'（' > '';" +
+            "'）' > '';'《' > '';'》' > '';'˛' > '';'¶' > '';'ь' > '';\u0097 > '';'‘' > '';'ʿ' > '';'̥' > '';\u009A > '';" +
+            "\u0085 > '';\u0082 > '';'ъ' > '';'、' > '';'，' > '';'̅' > '';\u009D > '';\u0086 > '';'̐' > '';\u0099 > '';" +
+            "'' > '';\u008A > '';'' > '';\u009E > '';'ˆ' > '';\u008C > '';'̓' > '';'？' > '';\u008E > '';\u0087 > '';" +
+            "'ǹ' > '';'；' > '';'＂' > '';\u0088 > '';'' > '';';' > '';\u009F > '';'：' > '';\u0089 > '';'˝' > '';'「' > '';" +
+            "\u0083 > '';\u0081 > '';'' > '';'„' > '';'' > '';\u0098 > '';'�' > '';'〉' > '';'」' > '';\u008D > '';";
 
-        public static final String BLANK_TRANSLITERATIONS =
-                "'-' > ' ';'.' > ' ';',' > ' ';'/' > ' ';'\\\'' > ' ';';' > ' ';" +
-                "'+' > ' ';'=' > ' ';' ' > ' ';' ' > ' ';'–' > ' ';'*' > ' ';" +
-                "'†' > ' ';'³' > ' 3';'—' > ' ';'­' > ' ';'×' > ' ';'·' > ' ';" +
-                "'→' > ' ';'−' > ' ';'±' > ' ';'²' > ' 2';'。' > ' ';'¼' > '1 4';'¹' > ' 1';'•' > ' ';" +
-                "'…' > ' ';'⋅' > ' ';'⁹' > ' 9';'⁴' > ' 4';'⁻' > ' ';'¬' > ' ';'₋' > ' ';'⁶' > ' 6';'½' > '1 2';" +
-                "'‡' > ' ';'　' > ' ';'₊' > ' ';'·' > ' ';'↔' > ' ';'⁸' > ' 8';'≈' > ' ';'⁵' > ' 5';'″' > ' ';" +
-                "'‐' > ' ';'∫' > ' ';'∗' > ' ';'↓' > ' ';'－' > ' ';'≥' > ' ';'―' > ' ';'━' > ' ';'≤' > ' ';" +
-                "' ' > ' ';'∷' > ' ';'⁷' > ' 7';'⊂' > ' ';'∙' > ' ';'‖' > ' ';'‧' > ' ';'‴' > ' ';'ℂ' > ' ';";
+    /**
+     * Rules for converting characters that can be interpreted as white space
+     * into the ascii white space character
+     */
+    public static final String BLANK_TRANSLITERATIONS =
+            "'-' > ' ';'.' > ' ';',' > ' ';'/' > ' ';'\\\'' > ' ';';' > ' ';" +
+            "'+' > ' ';'=' > ' ';' ' > ' ';' ' > ' ';'–' > ' ';'*' > ' ';" +
+            "'†' > ' ';'³' > ' 3';'—' > ' ';'­' > ' ';'×' > ' ';'·' > ' ';" +
+            "'→' > ' ';'−' > ' ';'±' > ' ';'²' > ' 2';'。' > ' ';'¼' > '1 4';'¹' > ' 1';'•' > ' ';" +
+            "'…' > ' ';'⋅' > ' ';'⁹' > ' 9';'⁴' > ' 4';'⁻' > ' ';'¬' > ' ';'₋' > ' ';'⁶' > ' 6';'½' > '1 2';" +
+            "'‡' > ' ';'　' > ' ';'₊' > ' ';'·' > ' ';'↔' > ' ';'⁸' > ' 8';'≈' > ' ';'⁵' > ' 5';'″' > ' ';" +
+            "'‐' > ' ';'∫' > ' ';'∗' > ' ';'↓' > ' ';'－' > ' ';'≥' > ' ';'―' > ' ';'━' > ' ';'≤' > ' ';" +
+            "' ' > ' ';'∷' > ' ';'⁷' > ' 7';'⊂' > ' ';'∙' > ' ';'‖' > ' ';'‧' > ' ';'‴' > ' ';'ℂ' > ' ';";
 
-        static final String ALL_TRANSLITERATIONS =
-                DEFAULT_TRANSLITERATIONS + VOID_TRANSLITERATIONS + BLANK_TRANSLITERATIONS;
+    /**
+     * Collation of the rules defined in
+     * {@link #CHARACTER_TRANSLITERATIONS}, {@link #VOID_TRANSLITERATIONS}, and
+     * {@link #BLANK_TRANSLITERATIONS}
+     */
+    public static final String ALL_TRANSLITERATIONS =
+            CHARACTER_TRANSLITERATIONS + VOID_TRANSLITERATIONS + BLANK_TRANSLITERATIONS;
 
 
+    /**
+     * Thread local cache shared by all transliterators.
+     * The replace readers might have a non-trivial
+     * initialization time, so we keep them around. We use the transliteration
+     * rule string as key for each replace reader.
+     */
     private static final ThreadLocal<Map<String,ReplaceReader>>
             localReplacerCache = new ThreadLocal<Map<String,ReplaceReader>>() {
 
@@ -90,6 +115,7 @@ public class TransliterationFilter extends TokenFilter {
         return replacer;
     }
 
+    @Override
     public Token next(Token tok) throws IOException {
         tok = input.next(tok);
 
@@ -121,9 +147,12 @@ public class TransliterationFilter extends TokenFilter {
 
     /**
      * Construct a token stream filtering the given input.
-     * @param input
-     * @param rules
-     * @param keepDefaults
+     *
+     * @param input the token stream to perform transliteration on
+     * @param rules the transliteration rules to apply
+     * @param keepDefaults whether or not to apply the rules defined
+     *                     in {@link #ALL_TRANSLITERATIONS} in addition to
+     *                     the rules defined in {@code rules}
      */
     public TransliterationFilter(TokenStream input, String rules,
                                  boolean keepDefaults) {
