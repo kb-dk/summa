@@ -128,7 +128,7 @@ public class RecordWriter extends ObjectFilterImpl {
         public synchronized void add(Record r) {
             while (records.size() >= batchSize) {
                 try {
-                    log.debug("Waiting for batch queue to flush");
+                    log.debug("Waiting for batch queue to fluscoh");
                     wait(batchTimeout);
                 } catch (InterruptedException e) {
                     // Check our capacity again
@@ -180,7 +180,7 @@ public class RecordWriter extends ObjectFilterImpl {
 
             try {
                 log.info("Committing " + records.size()
-                         + "records. Time since last commit: "
+                         + " records. Time since last commit: "
                          + ((System.nanoTime() - lastCommit)/1000000D) + "ms");
                 long start = System.nanoTime();
                 storage.flushAll(records);
