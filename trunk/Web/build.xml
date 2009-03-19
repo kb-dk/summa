@@ -126,6 +126,7 @@
             <and>
 <!--                <available file="${summa.lib.lucene}"/>
                 <available file="${summa.lib.lucene.queries}"/>-->
+                <available file="${summa.lib.sbutil}"/>
                 <available file="${summa.lib.junit}"/>
                 <available file="${summa.lib.log4j}"/>
 <!--                <available file="${summa.lib.sbutil}"/>-->
@@ -175,8 +176,10 @@
 
 <!--        <copy file="../${summa.lib.lucene}" tofile="${summa.lib.lucene}"/>
         <copy file="../${summa.lib.lucene.queries}" tofile="${summa.lib.lucene.queries}"/>-->
+        <copy file="../${summa.lib.sbutil}" tofile="${summa.lib.sbutil}"/>
         <copy file="../${summa.lib.junit}" tofile="${summa.lib.junit}"/>
-        <!--<copy file="../${summa.lib.sbutil}" tofile="${summa.lib.sbutil}"/>-->
+        <copy file="../${summa.lib.log4j}" tofile="${summa.lib.log4j}"/>
+        <copy file="../${summa.lib.commons-logging}" tofile="${summa.lib.commons-logging}"/>
 
         <copy todir="${lib.dir}" flatten="true">
             <fileset dir="${basedir}/.." includes="${summa.lib.axis.all}"/>
