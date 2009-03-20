@@ -20,11 +20,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.summa.facetbrowser.util.pool;
+package dk.statsbiblioteket.summa.common.pool;
 
 import java.io.StringWriter;
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,6 +37,7 @@ import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.CachedCollator;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.common.pool.SortedPool;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -576,6 +576,7 @@ public abstract class StringPoolSuperTest extends TestCase {
 
         pool = getPool(88);
         pool.add("Duksedreng");
+        pool.store();
         datFile = new File(poolDir, pool.getName() + ".dat");
         assertTrue("An data-file should be created", datFile.exists());
         try {

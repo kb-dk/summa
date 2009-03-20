@@ -20,14 +20,15 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.summa.facetbrowser.util.pool;
+package dk.statsbiblioteket.summa.common.pool;
 
 import java.io.File;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Profiler;
+import dk.statsbiblioteket.summa.common.pool.DiskStringPool;
+import dk.statsbiblioteket.summa.common.pool.SortedPool;
 
 /**
  * DiskPool Tester.

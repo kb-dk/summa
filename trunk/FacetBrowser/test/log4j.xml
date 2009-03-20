@@ -55,7 +55,7 @@
         </layout>
     </appender>
 
-    <logger name="dk.statsbiblioteket.summa.facetbrowser.util.pool.DiskPool">
+    <logger name="dk.statsbiblioteket.summa.common.pool.DiskPool">
         <level value="debug"/>
         <appender-ref ref="CONSOLE"/>
     </logger>

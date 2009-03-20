@@ -24,7 +24,7 @@
  * The State and University Library of Denmark
  * CVS:  $Id: SortedPoolImpl.java,v 1.2 2007/10/04 13:28:21 te Exp $
  */
-package dk.statsbiblioteket.summa.facetbrowser.util.pool;
+package dk.statsbiblioteket.summa.common.pool;
 
 import java.io.File;
 import java.io.IOException;

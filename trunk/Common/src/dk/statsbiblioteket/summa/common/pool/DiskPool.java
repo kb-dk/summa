@@ -24,10 +24,12 @@
  * The State and University Library of Denmark
  * CVS:  $Id: DiskPool.java,v 1.5 2007/10/04 13:28:21 te Exp $
  */
-package dk.statsbiblioteket.summa.facetbrowser.util.pool;
+package dk.statsbiblioteket.summa.common.pool;
 
 import dk.statsbiblioteket.summa.common.util.ListSorter;
 import dk.statsbiblioteket.summa.common.util.IndirectLongSorter;
+import dk.statsbiblioteket.summa.common.pool.SortedPoolImpl;
+import dk.statsbiblioteket.summa.common.pool.ValueConverter;
 import dk.statsbiblioteket.util.LineReader;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
