@@ -20,20 +20,15 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.summa.facetbrowser.util.pool;
+package dk.statsbiblioteket.summa.common.pool;
 
-import dk.statsbiblioteket.summa.facetbrowser.BaseObjects;
-import dk.statsbiblioteket.util.CachedCollator;
+import dk.statsbiblioteket.summa.common.pool.MemoryStringPool;
+import dk.statsbiblioteket.summa.common.pool.SortedPool;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
-import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import java.io.File;
-import java.io.IOException;
-import java.text.Collator;
-import java.util.Arrays;
-import java.util.Locale;
 
 /**
  * MemoryStringPool Tester.

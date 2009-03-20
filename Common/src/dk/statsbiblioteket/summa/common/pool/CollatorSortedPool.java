@@ -20,37 +20,26 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.summa.facetbrowser.util.pool;
+package dk.statsbiblioteket.summa.common.pool;
 
-import java.io.IOException;
+import java.text.Collator;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.LineReader;
+import dk.statsbiblioteket.summa.common.pool.SortedPool;
 
 /**
- * Handles value-specific conversions. To be used together with the pool
- * framework.
+ * A sortedPool that uses a Collator for sorting. This implies that the pool
+ * contains Strings.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_NEEDED,
         author = "te")
-public interface ValueConverter<E extends Comparable> {
-    /**
-     * Converts the given value to an array of bytes, suitable for storage.
-     * The conversion should mirror {@link #bytesToValue}.
-     * @param value the value to converto to bytes.
-     * @return bytes based on values.
-     */
-    abstract byte[] valueToBytes(E value);
+public interface CollatorSortedPool extends SortedPool<String> {
 
-    /**
-     * Converts the given bytes to a value. The conversion should mirror
-     * {@link #valueToBytes}.
-     * @param buffer the bytes to convert.
-     * @param length the number of bytes to convert.
-     * @return a value constructed from the given bytes.
-     */
-    abstract E bytesToValue(byte[] buffer, int length);
+    /* Mutators */
+
+    public Collator getCollator();
+    public void setCollator(Collator collator);
 }
 
 

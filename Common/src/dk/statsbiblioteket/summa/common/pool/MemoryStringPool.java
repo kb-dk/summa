@@ -24,16 +24,12 @@
  * The State and University Library of Denmark
  * CVS:  $Id: MemoryStringPool.java,v 1.3 2007/10/04 13:28:21 te Exp $
  */
-package dk.statsbiblioteket.summa.facetbrowser.util.pool;
+package dk.statsbiblioteket.summa.common.pool;
 
 import java.text.Collator;
-import java.util.Arrays;
-import java.io.File;
-import java.io.IOException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.common.pool.StringConverter;
 
 /**
  * Simple implementation of Strings with MemoryPool.

@@ -24,7 +24,7 @@
  * The State and University Library of Denmark
  * CVS:  $Id: StringConverter.java,v 1.3 2007/10/04 13:28:21 te Exp $
  */
-package dk.statsbiblioteket.summa.facetbrowser.util.pool;
+package dk.statsbiblioteket.summa.common.pool;
 
 import java.io.UnsupportedEncodingException;
 import java.io.IOException;

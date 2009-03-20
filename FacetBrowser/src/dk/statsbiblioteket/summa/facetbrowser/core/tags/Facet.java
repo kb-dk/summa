@@ -23,9 +23,9 @@
 package dk.statsbiblioteket.summa.facetbrowser.core.tags;
 
 import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
-import dk.statsbiblioteket.summa.facetbrowser.util.pool.CollatorSortedPool;
-import dk.statsbiblioteket.summa.facetbrowser.util.pool.DiskStringPool;
-import dk.statsbiblioteket.summa.facetbrowser.util.pool.MemoryStringPool;
+import dk.statsbiblioteket.summa.common.pool.CollatorSortedPool;
+import dk.statsbiblioteket.summa.common.pool.DiskStringPool;
+import dk.statsbiblioteket.summa.common.pool.MemoryStringPool;
 import dk.statsbiblioteket.util.CachedCollator;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.XProperties;
