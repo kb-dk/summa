@@ -371,7 +371,13 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
         }
         return collector;
     }
+
+    /**
+     * @return the docCount for the currently opened index or -1 if no index is
+     * opened.
+     * @throws java.io.IOException if the index query failed.
+     */
+    public int getDocCount() throws IOException {
+        return searcher == null ? -1 : searcher.maxDoc();
+    }
 }
-
-
-

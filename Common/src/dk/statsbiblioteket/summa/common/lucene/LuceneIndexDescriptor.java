@@ -203,8 +203,10 @@ public class LuceneIndexDescriptor
                 new PerFieldAnalyzerWrapper(defaultField.getQueryAnalyzer());
         for (Map.Entry<String, LuceneIndexField> entry:
                 getFields().entrySet()) {
-            indexWrapper.addAnalyzer(entry.getKey(),
-                                     entry.getValue().getIndexAnalyzer());
+            log.debug("Adding field " + entry.getKey() + " index-analyzer "
+                      + entry.getValue().getIndexAnalyzer()
+                      + " and query-analyzer "
+                      + entry.getValue().getQueryAnalyzer());
             queryWrapper.addAnalyzer(entry.getKey(),
                                      entry.getValue().getQueryAnalyzer());
         }

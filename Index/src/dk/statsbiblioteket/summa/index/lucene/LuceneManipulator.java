@@ -164,6 +164,8 @@ public class LuceneManipulator implements IndexManipulator {
             return;
         }
         try {
+            log.debug("Checking for index existence at '" + indexDirectory
+                      + "'");
             if (IndexReader.indexExists(indexDirectory)) {
                 log.debug("checkWriter: Opening writer for existing index at '"
                           + indexDirectory.getFile() + "'");
