@@ -629,4 +629,43 @@ public class StorageTest extends TestCase {
 
         assertBaseCount(testBase1, 3);
     }
+
+    /*
+     * Flush several batches of parent/children pairs. This, among other things,
+     * will test for connection leaks.
+     */
+    public void testManyParentChild() throws Exception {
+        int batchCount = 20;
+        int batchSize = 30;
+        List<List<Record>> batches =
+                                  new ArrayList<List<Record>>(batchCount);
+        List<String> parentIds = new ArrayList<String>(batchSize);
+
+        for (int j = 0; j < batchCount; j++) {
+            List<Record> batch = new ArrayList<Record>(batchSize);
+            batches.add(batch);
+        for (int i = 0; i < batchSize; i++) {
+            batch.add(new Record ("parent_"+j+"_"+i, testBase1, testContent1));
+            parentIds.add("parent_"+j+"_"+i);
+            batch.get(i).setChildren(Arrays.asList(new Record ("child_"+j+"_"+i,
+                                                              testBase1,
+                                                              testContent1)));
+        }
+        }
+
+        for(int k = 0; k < batches.size(); k++) {
+            storage.flushAll(batches.get(k));
+        }
+
+        assertBaseCount(testBase1, batchSize*batchCount*2);
+
+        List<Record> result = storage.getRecords(parentIds,
+                                                 new QueryOptions(null, null,
+                                                                  -1 , -1));
+        assertEquals(batchCount*batchSize, result.size());
+        for (int l = 0; l < result.size(); l++) {
+            assertEquals(1, result.get(l).getChildren().size());
+            assertEquals("child_", result.get(l).getId().substring(0,6));
+        }
+    }
 }
