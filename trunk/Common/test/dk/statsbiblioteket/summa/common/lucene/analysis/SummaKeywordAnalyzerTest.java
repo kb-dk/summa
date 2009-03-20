@@ -47,21 +47,33 @@ public class SummaKeywordAnalyzerTest extends TestCase {
     public void testFoo() throws Exception {
         a = new SummaKeywordAnalyzer();
         t = a.reusableTokenStream("testField",
-                              new StringReader("foo"));
+                                  new StringReader("foo"));
+        assertTokens(t, "foo");
+
+        t = a.tokenStream("testField",
+                           new StringReader("foo"));
         assertTokens(t, "foo");
     }
 
     public void testFooBar() throws Exception {
         a = new SummaKeywordAnalyzer();
         t = a.reusableTokenStream("testField",
-                              new StringReader("foo bar"));
+                                  new StringReader("foo bar"));
+        assertTokens(t, "foo bar");
+
+        t = a.tokenStream("testField",
+                          new StringReader("foo bar"));
         assertTokens(t, "foo bar");
     }
 
     public void testFooBarExtraSpaces() throws Exception {
         a = new SummaKeywordAnalyzer();
         t = a.reusableTokenStream("testField",
-                              new StringReader(" foo  bar   "));
+                                  new StringReader(" foo  bar   "));
+        assertTokens(t, "foo bar");
+
+        t = a.tokenStream("testField",
+                           new StringReader(" foo  bar   "));
         assertTokens(t, "foo bar");
     }
 
