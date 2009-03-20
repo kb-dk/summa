@@ -1,3 +1,106 @@
+2009-03-20 07:53  toke
+
+	* [r1126] Common/src/dk/statsbiblioteket/summa/common/pool,
+	  Common/src/dk/statsbiblioteket/summa/common/pool/CollatorSortedPool.java,
+	  Common/src/dk/statsbiblioteket/summa/common/pool/DiskPool.java,
+	  Common/src/dk/statsbiblioteket/summa/common/pool/DiskStringPool.java,
+	  Common/src/dk/statsbiblioteket/summa/common/pool/MemoryPool.java,
+	  Common/src/dk/statsbiblioteket/summa/common/pool/MemoryStringPool.java,
+	  Common/src/dk/statsbiblioteket/summa/common/pool/SortedPool.java,
+	  Common/src/dk/statsbiblioteket/summa/common/pool/SortedPoolImpl.java,
+	  Common/src/dk/statsbiblioteket/summa/common/pool/StringConverter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/pool/ValueConverter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/pool/package.html,
+	  Common/test/dk/statsbiblioteket/summa/common/pool,
+	  Common/test/dk/statsbiblioteket/summa/common/pool/CollatorSortedPoolTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/pool/DiskPoolTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/pool/MemoryStringPoolTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/pool/StringPoolSuperTest.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/tags/Facet.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/tags/TagHandlerImpl.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/util/pool[DEL],
+	  FacetBrowser/test/dk/statsbiblioteket/summa/facetbrowser/util/pool[DEL],
+	  FacetBrowser/test/log4j.xml, Summa.ipr:
+	  
+	  Refactoring: Moved the pool-framework to Common so that it can be
+	  used for distributed term stats (next stop SBUtil)
+
+2009-03-19 22:08  mke
+
+	* [r1125]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/TransliterationFilter.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/AnalyzerPerformance.java:
+	  
+	  Do batch read() calls (ie. reading into an array) in
+	  TransliterationFilter.next(). This gives a whopping 4x
+	  performance boost in the AnalyzerPerformance app. The final
+	  impact on indexing speed is yet to be measured.
+
+2009-03-19 20:34  mke
+
+	* [r1124]
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/AnalyzerPerformance.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/SampleDataLoader.java:
+	  
+	  Super simple performancometer for Lucene analyzers
+
+2009-03-19 18:55  mke
+
+	* [r1123] Common/test/data/lgpl-2.1-german.txt:
+	  
+	  Import German version of the LGPL v2.1, the idea is to use it for
+	  performance testing our analyzers
+
+2009-03-19 15:42  mke
+
+	* [r1122]
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/SummaAnalyzerTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/SummaKeywordAnalyzerTest.java:
+	  
+	  Add more tests with focus on white space handling
+
+2009-03-19 15:14  mke
+
+	* [r1121] ChangeLog,
+	  Common/attic/src/dk/statsbiblioteket/summa/common/lucene/analysis,
+	  Common/attic/src/dk/statsbiblioteket/summa/common/lucene/analysis/TokenMasker.java[CPY],
+	  Common/attic/src/dk/statsbiblioteket/summa/common/lucene/analysis/TransliteratorTokenizer.java[CPY],
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/SummaAnalyzer.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/SummaFieldSeparatingAnalyzer.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/SummaKeywordAnalyzer.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/SummaStandardAnalyzer.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/TokenMasker.java[DEL],
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/TransliterationFilter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/TransliteratorTokenizer.java[DEL]:
+	  
+	  Move deprecated tokenizers, TransliteratorTokenizer and
+	  TokenMasker to attic.
+	  
+	  Lots of javadoc updates in the analyzers
+
+2009-03-19 13:10  mke
+
+	* [r1120]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/TransliterationFilter.java:
+	  
+	  Slight cleanups in transliteration rules which should allow us to
+	  use a CharArrayReplacer instead of a StringReplacer
+
+2009-03-19 12:29  toke
+
+	* [r1119]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/MUXFilterFeeder.java:
+	  
+	  Tweak: Changed defaults for the PayloadQueues in MUXFilterFeeder
+	  to 100 Payloads instead of 1 (the memory-limit default is 1MByte)
+
+2009-03-19 11:50  mke
+
+	* [r1118]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/tools/StorageTool.java:
+	  
+	  Clearer output from storage-tool
+
 2009-03-19 11:18  mke
 
 	* [r1117]

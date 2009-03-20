@@ -1,4 +1,88 @@
 =======================
+2009-03-20: Summa 1.3.0
+=======================
+
+ * The 'data' column in H2Storage has been changed from type BLOB to type BYTEA.
+   We know it is bad style to break the DB schemas but with type BLOB H2
+   dumps _lots_ of small files with the content data. With BYTEA the data is
+   inlined in the db resulting in a static number of 5 files for the db
+
+ * Make DatabaseStorage use SQL transactions. While fixing some race conditions
+   this also gives a huge performance boost on flush() and flushAll().
+   This affects both H2Storage, DerbyStorage, and PostgresStorage
+
+ * In the config for H2Storahe you now only specify the root folder of the db,
+   not the root folder+fileprefix. The file prefix is always summa_h2storage
+
+ * Bump H2 library to 1.1.109. This fixes a gradual performance degradation on
+   H2Storage when inserting millions of records
+
+ * Bump SBUtil dep. to 0.4.3
+
+ * Rewrite of the core analyzers to use SBUtil 0.4.3. This brings a considerable
+   performance booost to indexing speed
+
+ * Use XSLT handling from SBUtil 0.4.3. This also means that XML transformations
+   can now optionally ignore namespaces
+
+ * Add runnable classes for launching the core Summa components without needing
+   the entire Control framework. The following classes now has main methods
+   detecting their config via the system prop. summa.configuration:
+   FilterControl, SummaSearcherRunner, and StorageRunner
+
+ * Optimize building of the facet structure by introducing an internal cache,
+   and by avoiding some memory allocations inside loops
+
+ * Change sorting strategy for disk based facets to use merge-sort
+   instead of heap-sort. This results in a lot less disk IO and coupled
+   with a cache for persistent values, this speeds up the sort after dirty
+   adds tremendously
+
+ * Changed FileReader to resolve files lazily. Before this change it build
+   a full list of all files before starting. This took a considerable amount of
+   time if the data dir contained hundred of thousands of files
+
+ * Changed the default queue-size and sleep-time for ThreadedStreamParser as
+   the old defaults resulted in poor performance
+
+ * Tweak the default sizes of the PayloadQueues in MUXFilterFeeder
+   to 100 Payloads instead of 1 (the memory-limit default is 1MByte). This may
+   give a performance boost on some setups depending on MUXFilters
+
+ * Bugfix: The ServiceObj (responsible for handling SOAP-requests) failed
+           randomly on multi-threading
+
+ * Bugfix: Merging of DocumentResponses did not update the total
+	       number of hits
+
+ * Bugfix: The TagHandler didn't perform dirty adds when asked to do so
+
+ * Bugfix: The FacetSearchNode did not open the TagHandlers in read-only mode
+
+ * Bugfix: Fix handling of quoted arguments to search-tool. This makes it
+           possible to do phrase searches with the search-tool
+
+ * Bugfix: The AbstractDiscardFilter (and its subclasses) wasn't
+	       actually ObjectFilters, they just had all the methods
+
+ * Bugfix: Made the FileReader auto-close delivered Streams when they reach
+           EOF. This guards against file handle starvation
+
+ * Bugfix: The IndexDescriptor class checked for changed descriptors
+           all the time when the check-interval was 0. The correct behaviour
+           is not to check when the interval is 0
+ * Bugfix: Fix compliance to ReadableStorage contract in StorageReaderClient -
+           to throw a NoSuchElementException when the iter is depleted in
+           next(iterKey) and next(iterKey, maxRecords)
+
+ * Bugfix: AggregatingStorage did not support base=null in
+           getModificationTime() and getRecordsModifiedAfter()
+
+ * Bugfix: The FileReader had a race-condition for closing and
+           renaming files that was triggered by the FileWatchers
+           multi-threaded usage of FileReader
+
+=======================
 2009-02-18: Summa 1.2.1
 =======================
 
