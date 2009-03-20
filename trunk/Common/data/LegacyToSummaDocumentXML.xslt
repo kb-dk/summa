@@ -13,7 +13,7 @@
           -->
     <xsl:output version="1.0" encoding="UTF-8" indent="yes" method="xml"/>
     <xsl:template match="Index:document">
-        <sd:SummaDocument version="1.0" xmlns:sd="http://statsbiblioteket.dk/2008/Index">
+        <sd:SummaDocument version="1.0" xmlns:sd="http://statsbiblioteket.dk/summa/2008/Document">
             <xsl:attribute name="id">
                 <xsl:value-of select="@Index:id" />
             </xsl:attribute>

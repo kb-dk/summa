@@ -37,7 +37,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
  *
  * Consider the following pseudo-code:
  * <pre>
- * doc.addFeild("author", "Hans Christian Andersen");
+ * doc.addField("author", "Hans Christian Andersen");
  * doc.addField("author", "Pedersen, Peter");
  * writer.addDoc(doc)
  * </pre>
@@ -84,7 +84,10 @@ public class SummaFieldSeparatingAnalyzer extends Analyzer {
         return 100;
     }
 
-
+    @Override
+    public String toString() {
+        return "SummaFieldSeparatingAnalyzer(" + _underlyingAnalyzer + ")";
+    }
 }
 
 

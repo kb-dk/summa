@@ -121,8 +121,8 @@
         <appender-ref ref="CONSOLE" />
     </logger>
         -->
-    <logger name="dk.statsbiblioteket.summa.facetbrowser">
-        <level value="debug" />
+    <logger name="dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode">
+        <level value="trace" />
         <appender-ref ref="CONSOLE" />
     </logger>
 <!--    <logger name="dk.statsbiblioteket.summa.facetbrowser.util.pool.DiskPool">

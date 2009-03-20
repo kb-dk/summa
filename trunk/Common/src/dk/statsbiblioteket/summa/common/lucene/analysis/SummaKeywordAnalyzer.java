@@ -93,6 +93,7 @@ public class SummaKeywordAnalyzer extends Analyzer {
         } catch (IOException e) {
             log.error("",e);
         }
+//        System.out.println(">>> " + buf.toString());
         return new KeywordAnalyzer().tokenStream(fieldName,
                                                  new CharSequenceReader(buf));
     }
@@ -130,6 +131,7 @@ public class SummaKeywordAnalyzer extends Analyzer {
                       + e.getMessage(), e);
         }
 
+//        System.out.println("**** " + ctx.buf.toString());
         return ctx.keywordAnalyzer.reusableTokenStream(fieldName,
                                                        ctx.seq.reset(ctx.buf));
     }
