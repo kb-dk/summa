@@ -68,6 +68,11 @@ public class SummaKeywordAnalyzer extends Analyzer {
         }
     }
 
+    public SummaKeywordAnalyzer() {
+        super();
+        log.debug("Creating SummaKeywordAnalyzer");
+    }
+
     /**
      * Gets the tokenStream for the field named by fieldName.
      *

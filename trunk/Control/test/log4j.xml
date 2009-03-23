@@ -125,7 +125,28 @@
         <level value="trace" />
         <appender-ref ref="CONSOLE" />
     </logger>
-<!--    <logger name="dk.statsbiblioteket.summa.facetbrowser.util.pool.DiskPool">
+
+    <logger name="dk.statsbiblioteket.summa.common.index.IndexDescriptor">
+        <level value="trace" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
+    <logger name="dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor">
+        <level value="trace" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
+    <logger name="dk.statsbiblioteket.summa.releasetest.AnalyzerTest">
+        <level value="trace" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
+    <logger name="dk.statsbiblioteket.summa.common.lucene.analysis">
+        <level value="debug" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
+    <!--    <logger name="dk.statsbiblioteket.summa.facetbrowser.util.pool.DiskPool">
         <level value="trace" />
         <appender-ref ref="CONSOLE" />
     </logger>
