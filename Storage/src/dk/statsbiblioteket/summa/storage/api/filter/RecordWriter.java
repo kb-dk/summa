@@ -211,6 +211,12 @@ public class RecordWriter extends ObjectFilterImpl {
             synchronized (this) {
                 notifyAll();
             }
+            try {
+                watcher.join();
+            } catch (InterruptedException e) {
+                log.warn("Interrupted while waiting for record "
+                         + "batching thread");
+            }
         }
 
         public void run () {
@@ -292,7 +298,7 @@ public class RecordWriter extends ObjectFilterImpl {
         super.close(success);
         log.info("Waiting for batch jobs to be committed");
         batcher.stop();
-        log.info("Closing down RecordWriter. " + getProcessStats()
+        log.info("Closed down RecordWriter. " + getProcessStats()
                  + ". Total time: " + profiler.getSpendTime());
     }
 
