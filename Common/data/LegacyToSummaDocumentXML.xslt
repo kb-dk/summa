@@ -2,7 +2,7 @@
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
                 xmlns:Index="http://statsbiblioteket.dk/2004/Index"
-                xmlns:sd="http://statsbiblioteket.dk/2008/Index"
+                xmlns:sd="http://statsbiblioteket.dk/summa/2008/Document"
                 exclude-result-prefixes="xsl xs Index"
                 version="1.0">
     <!-- Converts XML in the old style Index format to SummaDocumentXML.
