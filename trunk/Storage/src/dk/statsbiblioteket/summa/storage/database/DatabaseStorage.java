@@ -543,6 +543,20 @@ public abstract class DatabaseStorage extends StorageBase {
     protected abstract Connection getConnection();
 
     /**
+     * Get an auto committing, write enabled connection
+     * @return a pooled connection
+     * @throws SQLException if unable to set write access or auto commit
+     */
+    private Connection getDefaultConnection() throws SQLException {
+        Connection conn = getConnection();
+
+        conn.setReadOnly(false);
+        conn.setAutoCommit(true);
+
+        return conn;
+    }
+
+    /**
      * Get a new pooled connection via {@link #getConnection()} and optimize it
      * for transactional mode, meaning that auto commit is off and the
      * transaction isolation level is set to the fastet one making sense.
@@ -1421,11 +1435,16 @@ public abstract class DatabaseStorage extends StorageBase {
         // want to leak them pooled connections!
         String error = null;
         try {
+            conn.setReadOnly(false);
             flushWithConnection(record, conn);
         } catch (SQLException e) {
-            error = e.getMessage();
+            // This error is logged in the finally clause below
+            error = e.getMessage() + '\n' + Strings.getStackTrace(e);
+
+            // We can not throw the SQLException over RPC as the receiver
+            // probably does not have the relevant exception class
             throw new IOException("Failed to flush " + record.getId() + ": "
-                                  + e.getMessage(), e);
+                                  + e.getMessage());
         } finally {
             try {
                 if(error == null) {
@@ -1460,6 +1479,16 @@ public abstract class DatabaseStorage extends StorageBase {
     @Override
     public synchronized void flushAll(List<Record> recs) throws IOException {
         Connection conn = getTransactionalConnection();
+        try {
+            conn.setReadOnly(false);
+        } catch (SQLException e) {
+            log.error("Failed to set connection in write mode: "
+                      + e.getMessage(), e);
+            // We can not throw the SQLException over RPC as the receiver
+            // probably does not have the relevant exception class
+            throw new IOException("Can not prepare database for write mode: "
+                                  + e.getMessage());
+        }
 
         // Brace yourself for the try-catch-finally hell, but we really don't
         // want to leak them pooled connections!
@@ -1622,8 +1651,8 @@ public abstract class DatabaseStorage extends StorageBase {
     }
 
     protected List<Record> getParents (String id,
-                                                   QueryOptions options,
-                                                   Connection conn)
+                                       QueryOptions options,
+                                       Connection conn)
                                               throws IOException, SQLException {
         PreparedStatement stmt = conn.prepareStatement(stmtGetParents.getSql());
 
@@ -1669,8 +1698,8 @@ public abstract class DatabaseStorage extends StorageBase {
     }
 
     private List<Record> getChildren (String id,
-                                                    QueryOptions options,
-                                                    Connection conn)
+                                      QueryOptions options,
+                                      Connection conn)
                                               throws IOException, SQLException {
         PreparedStatement stmt =
                                 conn.prepareStatement(stmtGetChildren.getSql());
@@ -1796,9 +1825,10 @@ public abstract class DatabaseStorage extends StorageBase {
 
     @Override
     public void clearBase (String base) throws IOException {
-        Connection conn = getConnection();
+        Connection conn = null;
 
         try {
+            conn = getDefaultConnection();
             clearBaseWithConnection(base, conn);
         } catch (SQLException e) {
             String msg = "Error clearing base '" + base + "': "
@@ -1913,7 +1943,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * @param childIds
      */
     private void markHasRelations(List<String> childIds,
-                                                Connection conn) {
+                                  Connection conn) {
         // We can't use a PreparedStatement here because the parameter list
         // to the IN clause is of varying length
         String sql = "UPDATE " + RECORDS
@@ -2107,14 +2137,23 @@ public abstract class DatabaseStorage extends StorageBase {
      */
     protected void createSchema() throws IOException {
         log.debug("Creating database schema");
-        doCreateSchema();
+        try {
+            doCreateSchema();
+        } catch (Exception e) {
+            log.fatal("Error creating or checking database tables: "
+                      + e.getMessage(), e);
+            throw new IOException("Error creating or checking database tables: "
+                                  + e.getMessage());
+        }
     }
 
-    private void doCreateSchema() {
+    private void doCreateSchema() throws SQLException {
 
-        Connection conn = getConnection();
+        Connection conn = null;
 
         try {
+            conn = getDefaultConnection();
+
             /* RECORDS */
             try {
                 doCreateSummaRecordsTable(conn);
@@ -2233,7 +2272,7 @@ public abstract class DatabaseStorage extends StorageBase {
     public void destroyDatabase() throws SQLException {
         log.warn("Preparing to destroy database. All data will be lost");
 
-        Connection conn = getConnection();
+        Connection conn = getDefaultConnection();
 
         try {
             log.warn("Destroying all record data");

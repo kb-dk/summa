@@ -316,13 +316,15 @@ public class MiniConnectionPoolManager {
     }
 
     private synchronized void recycleConnection (PooledConnection pconn) {
+        log.trace("Recycling " + pconn.hashCode());
         if (isDisposed) {
             disposeConnection (pconn);
             return;
         }
 
         if (activeConnections <= 0) {
-            throw new AssertionError();
+            throw new AssertionError("Can not recycle " + pconn.hashCode()
+                                     + ". No connections registered as active");
         }
 
         activeConnections--;
@@ -339,7 +341,8 @@ public class MiniConnectionPoolManager {
 
     private synchronized void disposeConnection (PooledConnection pconn) {
         if (activeConnections <= 0) {
-            throw new AssertionError();
+            throw new AssertionError("Can not dispose " + pconn.hashCode()
+                                     + ". No connections registered as active");
         }
 
         log.debug("Disposing of connection " + pconn.hashCode());
@@ -361,15 +364,17 @@ public class MiniConnectionPoolManager {
 
     private void assertInnerState() {
         if (activeConnections < 0) {
-            throw new AssertionError();
+            throw new AssertionError("Negative number of active connections");
         }
 
         if (activeConnections+recycledConnections.size() > maxConnections) {
-            throw new AssertionError();
+            throw new AssertionError("Number of spawned connections exceeds "
+                                     + "the connection limit");
         }
 
         if (activeConnections+semaphore.availablePermits() > maxConnections) {
-            throw new AssertionError();
+            throw new AssertionError("Number of permits exceed the "
+                                     + "connection limit");
         }
     }
 
