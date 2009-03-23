@@ -665,7 +665,8 @@ public class StorageTest extends TestCase {
         assertEquals(batchCount*batchSize, result.size());
         for (int l = 0; l < result.size(); l++) {
             assertEquals(1, result.get(l).getChildren().size());
-            assertEquals("child_", result.get(l).getId().substring(0,6));
+            assertEquals("child_",
+                         result.get(l).getChildren().get(0).getId().substring(0,6));
         }
     }
 }
