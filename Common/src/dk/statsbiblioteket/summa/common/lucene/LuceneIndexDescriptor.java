@@ -36,6 +36,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.SimpleAnalyzer;
 import org.apache.lucene.analysis.PerFieldAnalyzerWrapper;
+import org.apache.lucene.analysis.KeywordAnalyzer;
 import org.apache.lucene.document.Field;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -90,16 +91,29 @@ public class LuceneIndexDescriptor
                            Field.Store.YES,
                            Field.TermVector.WITH_POSITIONS_OFFSETS,
                            new SummaStandardAnalyzer()));
-        addField(makeField("storedKeyWord",
-                           Field.Index.UN_TOKENIZED,
-                           Field.Store.YES,
-                           Field.TermVector.NO,
-                           new SummaKeywordAnalyzer()));
+
         addField(makeField("keyword",
                            Field.Index.TOKENIZED,
                            Field.Store.NO,
-                           Field.TermVector.YES,
+                           Field.TermVector.NO,
                            new SummaKeywordAnalyzer()));
+        addField(makeField("storedKeyWord",
+                           Field.Index.TOKENIZED,
+                           Field.Store.YES,
+                           Field.TermVector.NO,
+                           new SummaKeywordAnalyzer()));
+
+        addField(makeField("verbatim",
+                           Field.Index.ANALYZED,
+                           Field.Store.NO,
+                           Field.TermVector.NO,
+                           new KeywordAnalyzer()));
+        addField(makeField("storedVerbatim",
+                           Field.Index.ANALYZED,
+                           Field.Store.YES,
+                           Field.TermVector.NO,
+                           new KeywordAnalyzer()));
+
         addField(makeField("text",
                            Field.Index.TOKENIZED,
                            Field.Store.NO,
@@ -129,7 +143,7 @@ public class LuceneIndexDescriptor
 
     public void parse(String xml) throws ParseException {
         super.parse(xml);
-        createAnalyzers();
+        //createAnalyzers();
     }
 
     private LuceneIndexField makeField(String name, Field.Index index,
@@ -207,8 +221,14 @@ public class LuceneIndexDescriptor
                       + entry.getValue().getIndexAnalyzer()
                       + " and query-analyzer "
                       + entry.getValue().getQueryAnalyzer());
-            queryWrapper.addAnalyzer(entry.getKey(),
-                                     entry.getValue().getQueryAnalyzer());
+            if (entry.getValue().getIndexAnalyzer() != null) {
+                indexWrapper.addAnalyzer(entry.getKey(),
+                                         entry.getValue().getIndexAnalyzer());
+            }
+            if (entry.getValue().getQueryAnalyzer() != null) {
+                queryWrapper.addAnalyzer(entry.getKey(),
+                                         entry.getValue().getQueryAnalyzer());
+            }
         }
         indexAnalyzer = indexWrapper;
         queryAnalyzer = queryWrapper;

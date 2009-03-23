@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -72,6 +72,7 @@ public class AnalyzerTest extends TestCase {
     }
 
     private void createIndex() throws Exception {
+        log.debug("Creating index");
         Configuration creatorConf = Configuration.load(
                 "data/analyzer/DocumentCreatorConfiguration.xml");
         StreamingDocumentCreator creator =
@@ -87,23 +88,27 @@ public class AnalyzerTest extends TestCase {
         lucene.open(ROOT);
 
         for (Payload payload: processed) {
+            log.debug("Adding " + payload + " to index");
             lucene.update(payload);
         }
+        log.debug("Consolidating");
         lucene.consolidate();
         lucene.close();
+        log.debug("Index created");
     }
 
     public void testSearch() throws Exception {
         createIndex();
+        System.out.println("");
         LuceneSearchNode search = getLuceneSearchNode();
+        assertHits(search, "split:\"token1 token2 token3\"");
         assertHits(search, "t*");
         assertHits(search, "token1");
         assertHits(search, "split:token1");
         assertHits(search, "split:token1 split:token2 split:token3");
-        assertHits(search, "split:\"token1 token2 token3\"");
-        assertHits(search, "author:Direct");
+        assertNoHits(search, "author:Direct");
         assertNoHits(search, "author:Directo");
-        assertHits(search, "author:\"Direct field\"");
+        assertNoHits(search, "author:\"Direct field\"");
         assertHits(search, "author:\"Direct  field\"");
     }
 
