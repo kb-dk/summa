@@ -5,6 +5,7 @@ import dk.statsbiblioteket.summa.storage.api.rmi.RemoteStorage;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.database.derby.DerbyStorage;
+import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.storage.XStorage;
 import dk.statsbiblioteket.summa.common.Record;
@@ -44,7 +45,7 @@ public class RMIStorageProxy extends UnicastRemoteObject
      * Default class for the storage backend implementation
      */
     public static final Class<? extends Storage> DEFAULT_BACKEND =
-                                                             DerbyStorage.class;
+                                                             H2Storage.class;
 
     /**
      * Configuration property specifying which port the registry used by
