@@ -2,7 +2,7 @@
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
                 xmlns:Index="http://statsbiblioteket.dk/2004/Index"
-                xmlns:sd="http://statsbiblioteket.dk/2008/Index"
+                xmlns:sd="http://statsbiblioteket.dk/summa/2008/Document"
                 exclude-result-prefixes="xsl xs Index"
                 version="1.0">
     <!-- Old Summa handled multi volumes by concatenating the Records.
@@ -15,7 +15,7 @@
           -->
     <xsl:output version="1.0" encoding="UTF-8" indent="yes" method="xml"/>
     <xsl:template match="Index:document">
-        <sd:SummaDocument version="1.0" xmlns:sd="http://statsbiblioteket.dk/2008/Index">
+        <sd:SummaDocument version="1.0" xmlns:sd="http://statsbiblioteket.dk/summa/2008/Document">
             <xsl:attribute name="id">
                 <xsl:value-of select="@Index:id" />
             </xsl:attribute>
