@@ -43,11 +43,11 @@ import java.io.Serializable;
  */
 public class QueryOptions implements Serializable {
 
-    private Boolean deletedFilter;
-    private Boolean indexableFilter;
-    private int childDepth;
-    private int parentHeight;
-    private StringMap meta;
+    protected Boolean deletedFilter;
+    protected Boolean indexableFilter;
+    protected int childDepth;
+    protected int parentHeight;
+    protected StringMap meta;
 
     public QueryOptions(Boolean deletedFilter,
                         Boolean indexableFilter,

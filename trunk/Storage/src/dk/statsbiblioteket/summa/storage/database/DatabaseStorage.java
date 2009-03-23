@@ -381,6 +381,46 @@ public abstract class DatabaseStorage extends StorageBase {
                 return new RecursionQueryOptions(options);
             }
         }
+
+        /**
+         * Wrap {@code options} in a RecursionQueryOptions which will be
+         * set to not extract parent records.
+         *
+         * @param options the query options to wrap
+         * @return a new query options that will not extract parent records
+         */
+        public static RecursionQueryOptions asChildOnlyOptions(
+                                                         QueryOptions options) {
+            if (options.parentHeight() == 0
+                && options instanceof RecursionQueryOptions) {
+                return (RecursionQueryOptions)options;
+            }
+
+            RecursionQueryOptions o = new RecursionQueryOptions(options);
+            o.parentHeight = 0;
+            o.parentRecursionHeight = 0;
+            return o;
+        }
+
+        /**
+         * Wrap {@code options} in a RecursionQueryOptions which will be
+         * set to not extract child records.
+         *
+         * @param options the query options to wrap
+         * @return a new query options that will not extract child records
+         */
+        public static RecursionQueryOptions asParentsOnlyOptions(
+                                                         QueryOptions options) {
+            if (options.childDepth() == 0
+                && options instanceof RecursionQueryOptions) {
+                return (RecursionQueryOptions)options;
+            }
+
+            RecursionQueryOptions o = new RecursionQueryOptions(options);
+            o.childDepth = 0;
+            o.childRecursionDepth = 0;
+            return o;
+        }
     }
 
     public DatabaseStorage(Configuration conf) throws IOException {
@@ -1097,50 +1137,82 @@ public abstract class DatabaseStorage extends StorageBase {
     }    
 
     @Override
-    public Record getRecord(String id, QueryOptions options)
-                                                            throws IOException {
-        PreparedStatement stmt;
+    public List<Record> getRecords (List<String> ids, QueryOptions options)
+                                                        throws IOException {
+        Connection conn = getTransactionalConnection();
+        try {
+            conn.setReadOnly(true);
+        } catch (SQLException e) {
+            // This is not fatal for the operation so try and proceed
+            // past the exception
+            log.warn("Failed to optimize connection for batch retrieval: "
+                     + e.getMessage(), e);
+        }
 
         try {
-            stmt = getStatement(stmtGetRecord);
+            return getRecordsWithConnection(ids, options, conn);
+        } finally {
+            closeConnection(conn);
+        }
+    }
+
+    public List<Record> getRecordsWithConnection(List<String> ids,
+                                                 QueryOptions options,
+                                                 Connection conn)
+                                                            throws IOException {
+        ArrayList<Record> result = new ArrayList<Record>(ids.size());
+
+        for (String id : ids) {
+            try {
+                Record r = getRecordWithConnection(id, options, conn);
+                if (r != null) {
+                    result.add(r);
+                }
+            } catch (SQLException e) {
+                log.error("Failed to get record '" + id
+                          + "' for batch request: " + e.getMessage(), e);
+                result.add(null);
+            }
+
+        }
+
+        return result;
+    }
+
+    @Override
+    public Record getRecord(String id, QueryOptions options)
+                                                            throws IOException {
+        Connection conn = getTransactionalConnection();
+
+        try {
+            conn.setReadOnly(true);
         } catch (SQLException e) {
-            throw new IOException("Failed to get prepared statement "
+            throw new IOException("Failed to get prepared connection for "
                                   + stmtGetRecord + ": " + e.getMessage(), e);
         }
 
         try {
-            return doGetRecord(id, options, stmt);
+            return getRecordWithConnection(id, options, conn);
+        } catch (SQLException e){
+            log.error("Failed to get record '" + id + "': " + e.getMessage(),
+                      e);
+            return null;
         } finally {
-            try {
-                stmt.close();
-            } catch (SQLException e) {
-                log.warn("Failed to close statement: " + e.getMessage(), e);
-            }
+            closeConnection(conn);
         }
 
     }
 
-    private Record doGetRecord(String id, QueryOptions options,
-                               PreparedStatement stmt)
-                                                            throws IOException {
+    private Record getRecordWithConnection(String id, QueryOptions options,
+                                           Connection conn)
+                                              throws IOException, SQLException {
         log.trace("getRecord('" + id + "', " + options + ")");
 
-        try {
-            // Optimize conn for read-only
-            stmt.getConnection().setAutoCommit(false);
-            stmt.getConnection().setTransactionIsolation(
-                                       Connection.TRANSACTION_READ_UNCOMMITTED);
-            stmt.getConnection().setReadOnly(true);
-
-            stmt.setString(1, id);
-        } catch (SQLException e) {
-            throw new IOException("Could not prepare stmtGetRecord "
-                                      + "with id " + id + ": "
-                                      + e.getMessage(), e);
-        }
+        PreparedStatement stmt = conn.prepareStatement(stmtGetRecord.getSql());
 
         Record record = null;
         try {
+            stmt.setString(1, id);
             ResultSet resultSet = stmt.executeQuery();
 
             if (!resultSet.next()) {
@@ -1173,7 +1245,7 @@ public abstract class DatabaseStorage extends StorageBase {
                     return null;
                 }
 
-                expandRelations(record, options);
+                expandRelationsWithConnection(record, options, conn);
 
             } finally {
                 resultSet.close();
@@ -1182,14 +1254,18 @@ public abstract class DatabaseStorage extends StorageBase {
         } catch (SQLException e) {
             throw new IOException("Error getting record " + id +": "
                                   + e.getMessage(), e);
+        } finally {
+            closeStatement(stmt);
         }
+
         return record;
     }
 
     /* Expand child records if we need to and there indeed
      * are any children to expand */
     private void expandChildRecords (Record record,
-                                     RecursionQueryOptions options)
+                                     RecursionQueryOptions options,
+                                     Connection conn)
                                                         throws IOException {
         if (options.childRecursionDepth() == 0) {
             return;
@@ -1205,8 +1281,13 @@ public abstract class DatabaseStorage extends StorageBase {
                            + Strings.join(childIds, ", "));
             }
 
-            List<Record> children = getRecords(childIds,
-                                               options.decChildRecursionDepth());
+            // Make sure we don't go into an infinite parent/child
+            // expansion ping-pong
+            options = RecursionQueryOptions.asChildOnlyOptions(options);
+
+            List<Record> children = getRecordsWithConnection(
+                              childIds, options.decChildRecursionDepth(), conn);
+
             if (children.isEmpty()) {
                 record.setChildren(null);
             } else {
@@ -1218,7 +1299,8 @@ public abstract class DatabaseStorage extends StorageBase {
     /* Expand parent records if we need to and there indeed
      * are any parents to expand */
     private void expandParentRecords (Record record,
-                                      RecursionQueryOptions options)
+                                      RecursionQueryOptions options,
+                                      Connection conn)
                                                         throws IOException {
         if (options.parentRecursionHeight() == 0) {
             return;
@@ -1234,8 +1316,13 @@ public abstract class DatabaseStorage extends StorageBase {
                            + Strings.join(parentIds, ", "));
             }
 
-            List<Record> parents = getRecords(parentIds,
-                                              options.decParentRecursionHeight());
+            // Make sure we don't go into an infinite parent/child
+            // expansion ping-pong
+            options = RecursionQueryOptions.asParentsOnlyOptions(options);
+
+            List<Record> parents = getRecordsWithConnection(
+                           parentIds, options.decParentRecursionHeight(), conn);
+
             if (parents.isEmpty()) {
                 record.setParents(null);
             } else {
@@ -1247,28 +1334,59 @@ public abstract class DatabaseStorage extends StorageBase {
     @Override
     public Record next(long iteratorKey) throws IOException {
         if (iteratorKey == EMPTY_ITERATOR_KEY) {
-            throw new NoSuchElementException("Empty iterator");
+            throw new NoSuchElementException("Empty cursor");
         }
 
-        Cursor iterator = iterators.get(iteratorKey);
+        Cursor cursor = iterators.get(iteratorKey);
 
-        if (iterator == null) {
-            throw new IllegalArgumentException("No result iterator with key "
+        if (cursor == null) {
+            throw new IllegalArgumentException("No result cursor with key "
                                       + iteratorKey);
         }
 
-        if (!iterator.hasNext()) {
-            iterator.close();
-            iterators.remove(iterator.getKey());
+        if (!cursor.hasNext()) {
+            cursor.close();
+            iterators.remove(cursor.getKey());
             throw new NoSuchElementException ("Iterator " + iteratorKey
                                               + " depleted");
         }
 
-        Record r = iterator.next();
-        return expandRelations(r, iterator.getQueryOptions());
+        Record r = cursor.next();
+
+        try {
+            return expandRelations(r, cursor.getQueryOptions());
+        } catch (SQLException e) {
+            log.warn("Failed to expand relations for '" + r.getId() +"': "
+                     + e.getMessage(), e);
+            return r;
+        }                               
     }
 
-    private Record expandRelations(Record r, QueryOptions options)
+    private Record expandRelations(Record r,
+                                   QueryOptions options)
+                                              throws IOException, SQLException {
+
+        Connection conn = getTransactionalConnection();
+        try {
+            conn.setReadOnly(true);
+        } catch (SQLException e) {
+            // This is not fatal to the operation so try an proceed
+            // past the exception
+            log.warn("Failed to optimize connection for read only access: "
+                     + e.getMessage(), e);
+        }
+
+        try {
+            return expandRelationsWithConnection(r, options, conn);
+        } finally {
+            closeConnection(conn);
+        }
+
+    }
+
+    private Record expandRelationsWithConnection(Record r,
+                                                 QueryOptions options,
+                                                 Connection conn)
                                                              throws IOException{
         if (options == null) {
             return r;
@@ -1279,12 +1397,12 @@ public abstract class DatabaseStorage extends StorageBase {
 
         if (options.childDepth() != 0) {
             opts = RecursionQueryOptions.wrap(options);
-            expandChildRecords(r, opts);
+            expandChildRecords(r, opts, conn);
         }
 
         if (options.parentHeight() != 0) {
             opts = RecursionQueryOptions.wrap(options);
-            expandParentRecords(r, opts);
+            expandParentRecords(r, opts, conn);
         }
 
         return r;
@@ -1598,6 +1716,15 @@ public abstract class DatabaseStorage extends StorageBase {
         }
     }
 
+    /**
+     * Find all records related to {@code rec} and add them to {@code rec}
+     * as parents and children accordingly.
+     *
+     * @param rec the record to have its parent and child ids expanded
+     *            to real nested records
+     * @param conn the sql connection to use for the lookups
+     * @throws SQLException if stuff is bad
+     */
     protected void resolveRelatedIds (Record rec, Connection conn)
                                                            throws SQLException {
         if (log.isTraceEnabled()) {
@@ -2284,8 +2411,7 @@ public abstract class DatabaseStorage extends StorageBase {
          */
         if (useLazyRelations && hasRelations
             && parentIds == null && childIds == null) {
-            resolveRelatedIds(
-                                  rec,resultSet.getStatement().getConnection());
+            resolveRelatedIds(rec,resultSet.getStatement().getConnection());
         }
 
         return rec;
