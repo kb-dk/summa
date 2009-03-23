@@ -3,6 +3,7 @@ package dk.statsbiblioteket.summa.storage.api;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
+import dk.statsbiblioteket.summa.storage.database.derby.DerbyStorage;
 import dk.statsbiblioteket.summa.storage.database.postgres.PostgresStorage;
 import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.util.Files;
@@ -85,6 +86,8 @@ public class StorageTest extends TestCase {
     }
 
     public void tearDown () throws Exception {
+        log.info("Test case tear down commencing");
+        
         if (storage instanceof DatabaseStorage) {
             ((DatabaseStorage)storage).destroyDatabase();
         }
