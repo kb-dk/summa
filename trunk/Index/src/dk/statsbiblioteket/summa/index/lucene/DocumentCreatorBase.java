@@ -74,7 +74,10 @@ public abstract class DocumentCreatorBase extends ObjectFilterImpl {
                       + "' resolved to index field '"
                       + indexField.getName() + "'");
         }
-//        log.trace("Creating field '" + fieldName + "' with boost " + boost);
+        if (log.isTraceEnabled()) {
+            log.trace("Creating field '" + fieldName + "' with boost " + boost
+                      + " and content\n" + content);
+        }
         Field field = new Field(fieldName, content, indexField.getStore(),
                                 indexField.getIndex(),
                                 indexField.getTermVector());
@@ -121,12 +124,15 @@ public abstract class DocumentCreatorBase extends ObjectFilterImpl {
                      + " be located, so the content of field '" + fieldName
                      + "' is not added to freetext");
         } else {
+            if (log.isTraceEnabled()) {
+                log.trace("Adding content from '" + fieldName
+                          + "' to freetext\n" + content);
+            }
             Field freeField = new Field(freetext.getName(), content,
                                         freetext.getStore(),
                                         freetext.getIndex(),
                                         freetext.getTermVector());
             freeField.setBoost(freetext.getIndexBoost());
-            log.trace("Adding content from '" + fieldName + "' to freetext");
             luceneDoc.add(freeField);
         }
     }
