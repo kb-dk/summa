@@ -35,6 +35,7 @@ import java.io.ByteArrayInputStream;
 import java.text.ParseException;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.xml.DOM;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.xml.DefaultNamespaceContext;
@@ -169,9 +170,8 @@ public class DocumentCreator extends DocumentCreatorBase {
             throw new IllegalArgumentException("could not parse record content "
                                                + "in " + payload, e);
         } catch (IOException e) {
-            throw new IllegalStateException("Unable to process "
-                                            + "ByteArrayInputStream for "
-                                            + payload, e);
+            throw new IllegalStateException(
+                    "Unable to process ByteArrayInputStream for " + payload, e);
         }
 
 //        NamedNodeMap att = dom.getDocumentElement().getAttributes();
@@ -266,10 +266,11 @@ public class DocumentCreator extends DocumentCreatorBase {
                                            DEFAULT_BOOST);
             } catch (ParseException e) {
                 log.debug("makeIndexField: Could not extract boost from field '"
-                + fieldNode.getLocalName() + "' with expression '@boost'", e);
+                          + fieldNode.getLocalName()
+                          + "' with expression '@boost'", e);
                 continue;
             }
-            String content = ParseUtil.getElementNodeValue(fieldNode);
+            String content = DOM.getElementNodeValue(fieldNode);
             if (content != null) {
                 // TODO: Perform a more complete trim (newline et al)
                 content = content.trim();

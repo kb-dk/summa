@@ -20,6 +20,7 @@
 package dk.statsbiblioteket.summa.index.lucene;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.xml.XMLUtil;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexField;
@@ -174,7 +175,7 @@ public class StreamingDocumentCreator extends DocumentCreatorBase {
             //noinspection DuplicateStringLiteralInspection
             throw new ParseException(String.format(
                     "The first element was not start, it was %s",
-                    ParseUtil.eventID2String(eventType)), 0);
+                    XMLUtil.eventID2String(eventType)), 0);
         }
 
         if (!reader.hasNext()) {
@@ -250,7 +251,7 @@ public class StreamingDocumentCreator extends DocumentCreatorBase {
                     // Ignore text and comments in between fields
                 } else {
                     log.debug("Expected start-element but got "
-                              + ParseUtil.eventID2String(
+                              + XMLUtil.eventID2String(
                             reader.getEventType()) + " in " + payload);
                 }
                 continue;
