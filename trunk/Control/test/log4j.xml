@@ -140,8 +140,13 @@
         <level value="trace" />
         <appender-ref ref="CONSOLE" />
     </logger>
-
-    <logger name="dk.statsbiblioteket.summa">
+<!--
+    <logger name="dk.statsbiblioteket.summa.index.lucene.DocumentCreatorBase">
+        <level value="trace" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
+    -->
+    <logger name="dk.statsbiblioteket.summa.releasetest.MultipleSourcesTest">
         <level value="debug" />
         <appender-ref ref="CONSOLE" />
     </logger>
