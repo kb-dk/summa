@@ -101,4 +101,12 @@ public class SummaAnalyzerTest extends TestCase {
 
         assertTokens(t, "dotnet", "vs", "cstaralgebra");
     }
+
+    public void testDashes() throws Exception {
+        a = new SummaAnalyzer(null, true, null, true, true);
+        TokenStream t = a.reusableTokenStream(
+                                   "", new StringReader("Hr. A. Binde-Streg"));
+
+        assertTokens(t, "hr", "a", "binde", "streg");
+    }
 }
