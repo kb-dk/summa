@@ -108,5 +108,11 @@ public class SummaAnalyzerTest extends TestCase {
                                    "", new StringReader("Hr. A. Binde-Streg"));
 
         assertTokens(t, "hr", "a", "binde", "streg");
+
+        a = new SummaAnalyzer(null, true, null, false, false);
+        t = a.reusableTokenStream(
+                                   "", new StringReader("Hr. A. Binde-Streg"));
+
+        assertTokens(t, "Hr", "A", "Binde", "Streg");
     }
 }
