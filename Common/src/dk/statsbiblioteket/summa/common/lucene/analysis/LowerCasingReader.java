@@ -1,5 +1,8 @@
 package dk.statsbiblioteket.summa.common.lucene.analysis;
 
+import dk.statsbiblioteket.util.reader.ReplaceReader;
+import dk.statsbiblioteket.util.reader.CircularCharBuffer;
+
 import java.io.FilterReader;
 import java.io.Reader;
 import java.io.IOException;
@@ -7,7 +10,7 @@ import java.io.IOException;
 /**
  *
  */
-public class LowerCasingReader extends FilterReader {
+public class LowerCasingReader extends ReplaceReader {
 
     /**
      * Creates a new filtered reader.
@@ -40,6 +43,48 @@ public class LowerCasingReader extends FilterReader {
         }
         
         return numRead;
+    }
+
+    public int read(CircularCharBuffer cbuf, int length) throws IOException {
+        int codePoint;
+        int count = 0;
+
+        while ((codePoint = in.read()) != -1) {
+            cbuf.put((char)Character.toLowerCase(codePoint));
+            count++;
+        }
+
+        if (count == 0) {
+            return -1;
+        }
+
+        return count;
+    }
+
+    public String transform(String s) {
+        return s.toLowerCase();
+    }
+
+    public char[] transformToChars(char c) {
+        return new char[]{Character.toLowerCase(c)};
+    }
+
+    public char[] transformToChars(char[] chars) {
+        char[] result = new char[chars.length];
+
+        for (int i = 0; i < chars.length; i++) {
+            result[i] = Character.toLowerCase(chars[i]);
+        }
+
+        return result;
+    }
+
+    public char[] transformToCharsAllowInplace(char[] chars) {        
+        for (int i = 0; i < chars.length; i++) {
+            chars[i] = Character.toLowerCase(chars[i]);
+        }
+
+        return chars;
     }
 
     /**
