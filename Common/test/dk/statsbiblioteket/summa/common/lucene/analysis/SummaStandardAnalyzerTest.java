@@ -87,12 +87,29 @@ public class SummaStandardAnalyzerTest extends SummaAnalyzerTest {
         assertTokens(t, "dotnet", "vs", "cstaralgebra");
     }
 
+    public void testReuse() throws Exception {
+        a = new SummaAnalyzer(null, true, null, true, true);
+
+        TokenStream t = a.reusableTokenStream("", new StringReader("foo"));
+        assertTokens(t, "foo");
+
+        t = a.reusableTokenStream("", new StringReader("bar"));
+        assertTokens(t, "bar");
+
+        t = a.reusableTokenStream("",
+                                  new StringReader("Fast talking flip-flopper"));
+        assertTokens(t, "fast", "talking", "flip", "flopper");
+    }
+
     public void testDashes() throws Exception {
         a = new SummaStandardAnalyzer();//new SummaStandardAnalyzer(null, true, null, true, true);
         TokenStream t = a.reusableTokenStream(
                                    "", new StringReader("Hr. A. Binde-Streg"));
-
         assertTokens(t, "hr", "a", "binde", "streg");
+
+        t = a.reusableTokenStream(
+                                "", new StringReader("Jan-Hendrik S. Hofmeyr"));
+        assertTokens(t, "jan", "hendrik", "s", "hofmeyr");
     }
 
 }
