@@ -79,13 +79,6 @@ public class SummaAnalyzerTest extends TestCase {
         assertTokens(t, "barry", "white");
     }
 
-    public void testPunctuation() throws Exception {
-        a = new SummaAnalyzer("", true, null, true, true);
-        TokenStream t = a.reusableTokenStream("", new StringReader("barry   white."));
-
-        assertTokens(t, "barry", "white");
-    }
-
     public void testWhiteSpace3() throws Exception {
         // This tes is case sensitive, just try that combo as well
         a = new SummaAnalyzer(null, true, null, true, false);
@@ -94,4 +87,18 @@ public class SummaAnalyzerTest extends TestCase {
         assertTokens(t, "I", "P", "Jacobsen");
     }
 
+    public void testPunctuation() throws Exception {
+        a = new SummaAnalyzer("", true, null, true, true);
+        TokenStream t = a.reusableTokenStream("", new StringReader("barry   white."));
+
+        assertTokens(t, "barry", "white");
+    }
+
+    public void testTokenReplacements() throws Exception {
+        a = new SummaAnalyzer(null, true, null, true, true);
+        TokenStream t = a.reusableTokenStream(
+                                   "", new StringReader(".Net vs C* Algebra?"));
+
+        assertTokens(t, "dotnet", "vs", "cstaralgebra");
+    }
 }
