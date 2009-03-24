@@ -11,6 +11,7 @@ import java.io.StringReader;
 /**
  * Unit tests for {@link SummaAnalyzer}
  */
+@SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class SummaAnalyzerTest extends TestCase {
 
     SummaAnalyzer a;
@@ -79,7 +80,7 @@ public class SummaAnalyzerTest extends TestCase {
     }
 
     public void testPunctuation() throws Exception {
-        a = new SummaAnalyzer(null, true, null, true, true);
+        a = new SummaAnalyzer("", true, null, true, true);
         TokenStream t = a.reusableTokenStream("", new StringReader("barry   white."));
 
         assertTokens(t, "barry", "white");
