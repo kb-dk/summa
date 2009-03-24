@@ -29,6 +29,7 @@ public class SummaAnalyzerTest extends TestCase {
             assertEquals("Mismatch in token number " + (count + 1) + ":",
                          tokens[count], tok.term());
             count++;
+
         }
 
         assertEquals("To few tokens from tokenizer, found " + count
@@ -73,6 +74,13 @@ public class SummaAnalyzerTest extends TestCase {
     public void testWhiteSpace2() throws Exception {
         a = new SummaAnalyzer(null, true, null, true, true);
         TokenStream t = a.reusableTokenStream("", new StringReader("barry   white "));
+
+        assertTokens(t, "barry", "white");
+    }
+
+    public void testPunctuation() throws Exception {
+        a = new SummaAnalyzer(null, true, null, true, true);
+        TokenStream t = a.reusableTokenStream("", new StringReader("barry   white."));
 
         assertTokens(t, "barry", "white");
     }
