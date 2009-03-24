@@ -20,7 +20,8 @@ public class TokenReplaceFilter extends TokenFilter {
             "'c++' > 'cplusplus';"
             + "'c#' > 'csharp';"
             + " 'c* algebra' > 'cstaralgebra';"
-            + " 'c*-algebra > 'cstaralgebra'";
+            + " 'c*-algebra' > 'cstaralgebra'"
+            + " '.net' > 'dotnet'";
 
     protected Map<String,String> tokenMap;
 
