@@ -56,12 +56,13 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
     /**
      * The location of the XSLT that is applied to every Record-content.
      * </p><p>
-     * This property is optional. Default is sb-multivolume.xslt that handles
-     * Marc-records from Statsbiblioteket.
+     * This property is optional. Default is LegacyMultiVolumeConverter.xslt
+     * that handles Marc-records from Statsbiblioteket.
      */
     public static final String CONF_MERGE_XSLT =
             "summa.ingest.marcmultivolume.xslt";
-    public static final String DEFAULT_MERGE_XSLT = "sb-multivolume.xslt";
+    public static final String DEFAULT_MERGE_XSLT =
+            "LegacyMultiVolumeConverter.xslt";
 
     /**
      * If true, all namespaces in the XML is stripped prior to transformation.
@@ -179,8 +180,13 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
         String content = record.getContentAsUTF8();
         int endPos = content.lastIndexOf("</record>");
         if (endPos == -1) {
-            throw new IllegalArgumentException("The Record " + record
-                                               + " did not end in </record>");
+            String message = "The Record " + record
+                             + " did not end in </record>";
+            if (log.isDebugEnabled()) {
+                log.debug(message + ". The Record content was\n"
+                          + content);
+            }
+            throw new IllegalArgumentException(message);
         }
         if (level == 0) {
             output.append(content.subSequence(0, endPos));
