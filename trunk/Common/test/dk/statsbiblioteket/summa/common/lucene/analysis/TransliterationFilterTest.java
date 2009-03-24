@@ -89,7 +89,7 @@ public class TransliterationFilterTest extends TestCase {
 
     public void testOneDanishTokensWithDefaultRules() throws Exception {
         t = new TransliterationFilter(getStream("Åkjær"),
-                                        null, false);
+                                        null, true);
         assertTokens(t, "aakjær");
     }
 

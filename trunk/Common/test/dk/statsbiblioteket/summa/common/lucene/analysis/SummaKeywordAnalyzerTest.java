@@ -77,4 +77,15 @@ public class SummaKeywordAnalyzerTest extends TestCase {
         assertTokens(t, "foo bar");
     }
 
+    public void testPunctuation() throws Exception {
+        a = new SummaKeywordAnalyzer();
+        t = a.reusableTokenStream("testField",
+                                  new StringReader(".foo  bar."));
+        assertTokens(t, "foo bar");
+
+        t = a.tokenStream("testField",
+                           new StringReader("foo.bar   "));
+        assertTokens(t, "foo bar");
+    }
+
 }

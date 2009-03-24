@@ -165,7 +165,7 @@ public class TransliterationFilter extends TokenFilter {
                 this.rules = rules + ALL_TRANSLITERATIONS;
             }
         } else if (rules == null) {
-            this.rules = ALL_TRANSLITERATIONS;
+            this.rules = "";
         } else {
             this.rules = rules;
         }
