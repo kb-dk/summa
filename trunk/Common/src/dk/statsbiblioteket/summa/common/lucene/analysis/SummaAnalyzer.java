@@ -26,6 +26,8 @@ import org.apache.lucene.analysis.*;
 
 import java.io.Reader;
 import java.io.IOException;
+import java.util.List;
+import java.util.LinkedList;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.reader.ReplaceReader;
@@ -63,7 +65,8 @@ public class SummaAnalyzer extends Analyzer {
          * tokenstreams. We need a handle to this to be able to reset the
          * underlying Reader
          */
-        public Reader source;
+        public LinkedList<ReplaceReader> filters =
+                                                new LinkedList<ReplaceReader>();
     }
 
     /**
@@ -116,22 +119,21 @@ public class SummaAnalyzer extends Analyzer {
         TokenStreamContext ctx = new TokenStreamContext();
 
         if (ignoreCase) {
-            ctx.source = new LowerCasingReader(reader);
-            reader = new StringReplaceReader(ctx.source,
-                                             tokenRules,
-                                             keepDefaultTokenRules);
+            ctx.filters.add(new LowerCasingReader(reader));
+            ctx.filters.add(new StringReplaceReader(ctx.filters.getLast(),
+                                                    tokenRules,
+                                                    keepDefaultTokenRules));
         } else {
-            ctx.source = new StringReplaceReader(reader,
-                                                 tokenRules,
-                                                 keepDefaultTokenRules);
-            reader = ctx.source;
+            ctx.filters.add(new StringReplaceReader(reader,
+                                                    tokenRules,
+                                                    keepDefaultTokenRules));
         }
 
-        reader = new TransliteratingReader(reader,
-                                           transliterationRules,
-                                           keepDefaultTransliterations);
+        ctx.filters.add(new TransliteratingReader(ctx.filters.getLast(),
+                                                  transliterationRules,
+                                                  keepDefaultTransliterations));
 
-        ctx.tokenStream = new WhitespaceTokenizer(reader);
+        ctx.tokenStream = new WhitespaceTokenizer(ctx.filters.getLast());
 
         return ctx;
     }
@@ -148,10 +150,16 @@ public class SummaAnalyzer extends Analyzer {
             ctx = prepareReusableTokenStream(fieldName, reader);
             setPreviousTokenStream(ctx);
         } else {
-            if(ignoreCase) {
-                ((LowerCasingReader)ctx.source).setSource(reader);
-            } else {
-                ((ReplaceReader)ctx.source).setSource(reader);
+            // Reset all readers in the filter chain
+            ReplaceReader prev = null;
+            for (ReplaceReader r : ctx.filters) {
+                if (prev == null) {
+                    r.setSource(reader);
+                } else {
+                    r.setSource(prev);
+                }
+
+                prev = r;
             }
         }
 
