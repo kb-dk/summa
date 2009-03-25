@@ -25,6 +25,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.filter.PayloadQueue;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
@@ -89,6 +90,25 @@ public class MUXFilter implements ObjectFilter, Runnable {
     public static final int DEFAULT_INSTANCES = 1;
 
     /**
+     * The maximum number of Payloads in the output queue.
+     * </p><p>
+     * This property is optional. Default is 100.
+     * @see {@link MUXFilterFeeder#CONF_QUEUE_MAXPAYLOADS}.
+     */
+    public static final String CONF_OUTQUEUE_MAXPAYLOADS =
+            "summa.muxfilter.outqueue.maxpayloads";
+    public static final int DEFAULT_OUTQUEUE_MAXPAYLOADS = 100;
+
+    /**
+     * The maximum size in bytes of the Payloads in the queue.
+     * </p><p>
+     * This property is optional. Default is 1 MB.
+     */
+    public static final String CONF_OUTQUEUE_MAXBYTES =
+            "summa.muxfilter.outqueue.maxbytes";
+    public static final int DEFAULT_OUTQUEUE_MAXBYTES = 1024 * 1024;
+
+    /**
      * The number of ms to wait after trying to get a Payload from all feeders
      * before a retry is performed.
      */
@@ -100,9 +120,15 @@ public class MUXFilter implements ObjectFilter, Runnable {
     private Payload availablePayload = null;
     private boolean eofReached = false;
     private Profiler profiler;
+    private PayloadQueue outqueue;
 
     public MUXFilter(Configuration conf) {
         log.debug("Constructing MUXFilter");
+        outqueue = new PayloadQueue(
+                conf.getInt(CONF_OUTQUEUE_MAXPAYLOADS,
+                            DEFAULT_OUTQUEUE_MAXPAYLOADS),
+                conf.getInt(CONF_OUTQUEUE_MAXBYTES,
+                            DEFAULT_OUTQUEUE_MAXBYTES));
         if (!conf.valueExists(CONF_FILTERS)) {
             throw new Configurable.ConfigurationException(String.format(
                     "A value for the key %s must exist in the Configuration",
@@ -121,7 +147,7 @@ public class MUXFilter implements ObjectFilter, Runnable {
             for (int i = 0 ;
                  i < filterConf.getInt(CONF_INSTANCES, DEFAULT_INSTANCES) ;
                  i++) {
-                feeders.add(new MUXFilterFeeder(filterConf));
+                feeders.add(new MUXFilterFeeder(filterConf, outqueue));
             }
         }
         if (feeders.size() > 0) {
@@ -210,12 +236,12 @@ public class MUXFilter implements ObjectFilter, Runnable {
     private MUXFilterFeeder getFeeder(Payload payload) {
         // Find non-fallback candidates
         MUXFilterFeeder feederCandidate = null;
-        int queueSize = Integer.MAX_VALUE;
+        int maxFreeSlots = 0;
         for (MUXFilterFeeder feeder: feeders) {
             if (!feeder.isFallback() && feeder.accepts(payload)
-                && feeder.getInQueueSize() < queueSize) {
+                && feeder.getFreeSlots() >= maxFreeSlots) {
                 feederCandidate = feeder;
-                queueSize = feeder.getInQueueSize();
+                maxFreeSlots = feeder.getFreeSlots();
             }
         }
         if (feederCandidate != null) {
@@ -225,9 +251,9 @@ public class MUXFilter implements ObjectFilter, Runnable {
         // Find fallback candidates
         for (MUXFilterFeeder feeder: feeders) {
             if (feeder.isFallback() && feeder.accepts(payload)
-                && feeder.getInQueueSize() < queueSize) {
+                && feeder.getFreeSlots() >= maxFreeSlots) {
                 feederCandidate = feeder;
-                queueSize = feeder.getInQueueSize();
+                maxFreeSlots = feeder.getFreeSlots();
             }
         }
         if (feederCandidate == null) {
@@ -272,89 +298,66 @@ public class MUXFilter implements ObjectFilter, Runnable {
     }
 
     public void close(boolean success) {
-        for (MUXFilterFeeder feeder: feeders) {
-            feeder.close(success);
-        }
+        // No closing for feeders as they are push-oriented and EOF is sinalled
+        // when an EOF is received from the source.
         source.close(success);
     }
 
-    public boolean hasNext() {
+    public synchronized boolean hasNext() {
         while (true) {
-            if (eofReached) {
-                log.info(String.format(
-                        "Observed and processed %d Payloads in %s "
-                        + "(%s Payloads/sec). This includes processing time "
-                        + "outside of the muxer",
-                        profiler.getBeats(), profiler.getSpendTime(),
-                        profiler.getBps()));
-                return false;
-            }
             if (availablePayload != null) {
                 return true;
             }
-            availablePayload = getNextFilteredPayload();
+            if (eofReached) {
+                log.trace("hasNext() EOF reached");
+                return false;
+            }
+            // Check for EOF
+            // We need to do this before we drain to avoid race-conditions where
+            // EOF is raised and STOP is put in the queue
+            boolean allSaysEOF = true;
+            for (MUXFilterFeeder feeder: feeders) {
+                if (!feeder.isEOFReached()) {
+                    allSaysEOF = false;
+                    break;
+                }
+            }
+            availablePayload = drain();
+            if (availablePayload != null) {
+                // We got something, so we don't care about the EOF-signals
+                return true;
+            }
+
+            if (allSaysEOF) {
+                log.trace("hasNext() allSaysEOF and availablePayload == null");
+                // When all says EOF, we know that no new valid Payloads will
+                // appear in the outqueue. Since we just drained it and got
+                // null, we're finished.
+                eofReached = true;
+                return false;
+            }
+
+            // No payloads in the queue but not EOF either:
+            // We'll wait for something to appear.
+            Payload next = outqueue.uninterruptibleTake();
+            if (next != MUXFilterFeeder.STOP) {
+                availablePayload = next;
+            }
         }
     }
 
-    private int lastPolledPosition = -1;
     /**
-     * @return the next available Payload from the feeders by round-robin.
-     *         null is a valid value and does not indicate EOF (check for
-     *         EOF with {@link #eofReached}).
+     * @return the next available payload, if any.
      */
-    private Payload getNextFilteredPayload() {
-        if (feeders.size() == 0 || eofReached) {
-            return null;
-        }
-        int feederPos = lastPolledPosition;
-        boolean hasSlept = false;
-        while (true) {
-            boolean allSaysEOF = true;
-            /* Iterate through all feeders, starting from feederPos and wrapping
-               to 0 when the last feeder is reached. If an available Payload is
-               encountered, it is returned.
-            */
-            for (int counter = 0 ; counter < feeders.size() ; counter++) {
-                if (++feederPos >= feeders.size()) {
-                    feederPos = 0;
-                }
-                MUXFilterFeeder feeder = feeders.get(feederPos);
-                if (!feeder.isEofReached()) {
-                    allSaysEOF = false;
-
-                    // We check the size to make sure that we don't block on
-                    // the call to the feeder. We want the data from the first
-                    // feeder with avail. data
-                    if (feeder.getOutQueueSize() > 0) {
-                        lastPolledPosition = feederPos;
-                        return feeder.getNextFilteredPayload();
-                    }
-                } else if (log.isTraceEnabled()) {
-                    log.trace("Feeder " + feeder + " is EOF");
-                }
-            }
-            if (allSaysEOF) {
-                log.debug("All feeders says that EOF is reached");
-                eofReached = true;
-                return null;
-            }
-            if (!hasSlept) {
-                log.trace("No Payloads was ready in any of the feeders. "
-                          + "Sleeping a bit and retrying");
-                hasSlept = true;
-            }
-
-            // All feeders has responded that they don't have any data, so
-            // wait a bit and try again
-            // FIXME: We should really use a shared queue+wait/notify
-            //        to do this properly
-            try {
-                Thread.sleep(POLL_INTERVAL);
-            } catch (InterruptedException e) {
-                log.warn("Interrupted while sleeping before re-querying "
-                         + "feeders", e);
+    private Payload drain() {
+        Payload next = null;
+        while (outqueue.size() > 0) {
+            next = outqueue.uninterruptibleTake();
+            if (next != MUXFilterFeeder.STOP) {
+                break;
             }
         }
+        return next == MUXFilterFeeder.STOP ? null : next;
     }
 
     public Payload next() {

@@ -25,6 +25,7 @@ import org.apache.commons.logging.Log;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.Collection;
 
 /**
@@ -44,7 +45,7 @@ import java.util.Collection;
 public class PayloadQueue extends ArrayBlockingQueue<Payload> {
     private static Log log = LogFactory.getLog(PayloadQueue.class);
 
-    private long totalSize = 0;
+    private AtomicLong totalSize = new AtomicLong(0);
     private long maxSize;
     /**
      * The flag is notified when elements are removed from the queue.
@@ -58,34 +59,36 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
     public PayloadQueue(int maxCount, long maxSize) {
         super(maxCount, true);
         this.maxSize = maxSize;
+        log.debug("Constructed PayloadQueue with max Payloads " + maxCount
+                  + " and max bytes " + maxSize);
     }
 
     @Override
-    public synchronized boolean offer(Payload payload) {
+    public boolean offer(Payload payload) {
         long payloadSize = calculateSize(payload);
-        if (payloadSize + totalSize > maxSize) {
+        if (payloadSize + totalSize.get() > maxSize) {
             return false;
         }
         if (super.offer(payload)) {
-            totalSize += payloadSize;
+            totalSize.addAndGet(payloadSize);
             return true;
         }
         return false;
     }
 
     /**
-     * An offer the queue cannot refuse.
+     * A put the queue cannot refuse.
      * @param payload the Payload to offer.
      */
-    public void uninterruptableOffer(Payload payload) {
+    public void uninterruptablePut(Payload payload) {
         while (true) {
             try {
-                offer(payload, Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
+                put(payload);
                 return;
             } catch (InterruptedException e) {
                 log.warn(String.format(
-                        "Interrupted while offering %s. Retrying",
-                        payload), e);
+                        "Interrupted while calling put(%s) from "
+                        + "uninterruptiblePut. Retrying", payload), e);
             }
         }
     }
@@ -93,20 +96,19 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
 
 
     @Override
-    public synchronized void put(Payload payload) throws InterruptedException {
+    public void put(Payload payload) throws InterruptedException {
         long payloadSize = waitForRoom(payload);
         super.put(payload);
-        totalSize += payloadSize;
+        totalSize.addAndGet(payloadSize);
     }
 
     // TODO: Change implementation of waitforRoom to support timeouts
     @Override
-    public synchronized boolean offer(Payload payload, long timeout,
-                                      TimeUnit unit)
+    public boolean offer(Payload payload, long timeout, TimeUnit unit)
                                                    throws InterruptedException {
         long payloadSize = waitForRoom(payload);
         if (super.offer(payload, timeout, unit)) {
-            totalSize += payloadSize;
+            totalSize.addAndGet(payloadSize);
             return true;
         }
         return false;
@@ -119,19 +121,19 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
     }
 
     @Override
-    public synchronized Payload poll() {
+    public Payload poll() {
         Payload result = super.poll();
         if (result != null) {
-            totalSize -= calculateSize(result);
+            totalSize.addAndGet(-1 * calculateSize(result));
             flag.notifyAll();
         }
         return result;
     }
 
     @Override
-    public synchronized Payload take() throws InterruptedException {
+    public Payload take() throws InterruptedException {
         Payload result = super.take();
-        totalSize -= calculateSize(result);
+        totalSize.addAndGet(-1 * calculateSize(result));
         synchronized (flag) {
              flag.notifyAll();
          }
@@ -142,7 +144,7 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
      * Block until a Payload is available on the queue, then take it and return. 
      * @return the next element in the queue.
      */
-    public synchronized Payload uninterruptibleTake() {
+    public Payload uninterruptibleTake() {
         while (true) {
             try {
                 return take();
@@ -157,7 +159,7 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
     public boolean remove(Object o) {
         boolean success = super.remove(o);
         if (success && o instanceof Payload) {
-            totalSize -= calculateSize((Payload)o);
+            totalSize.addAndGet(-1 * calculateSize((Payload)o));
             synchronized (flag) {
                  flag.notifyAll();
              }
@@ -166,20 +168,20 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
     }
 
     @Override
-    public synchronized void clear() {
+    public void clear() {
         super.clear();
-        totalSize = 0;
+        totalSize.set(0);
         synchronized (flag) {
              flag.notifyAll();
          }
     }
 
     @Override
-    public synchronized Payload poll(long timeout, TimeUnit unit)
+    public Payload poll(long timeout, TimeUnit unit)
                                                    throws InterruptedException {
         Payload result = super.poll(timeout, unit);
         if (result != null) {
-            totalSize -= calculateSize(result);
+            totalSize.addAndGet(-1 * calculateSize(result));
             synchronized (flag) {
                 flag.notifyAll();
             }
@@ -188,9 +190,9 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
     }
 
     @Override
-    public synchronized int drainTo(Collection<? super Payload> c) {
+    public int drainTo(Collection<? super Payload> c) {
         int count = super.drainTo(c);
-        totalSize = 0;
+        totalSize.set(0);
         synchronized (flag) {
              flag.notifyAll();
          }
@@ -211,12 +213,12 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
      * @param payload estimated byte size if extracted from this payload.
      * @return the extimated size in bytes of the Payload to insert.
      */
-    public synchronized long waitForRoom(Payload payload) {
+    public long waitForRoom(Payload payload) {
         long size = calculateSize(payload);
         synchronized(flag) {
             while (size() != 0
                    && (remainingCapacity() == 0
-                       || size + totalSize > maxSize)) {
+                       || size + totalSize.get() > maxSize)) {
                 try {
                     flag.wait();
                 } catch (InterruptedException e) {

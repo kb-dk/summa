@@ -25,6 +25,8 @@ import junit.framework.TestCase;
 
 import java.util.concurrent.Semaphore;
 
+import dk.statsbiblioteket.summa.common.Record;
+
 /**
  * PayloadQueue Tester.
  *
@@ -37,127 +39,15 @@ public class PayloadQueueTest extends TestCase {
         super(name);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
     }
-
-    /**
-     *
-     * Method: add(Payload payload)
-     *
-     */
-    public void testAdd() throws Exception {
-        //TODO: Test goes here...
-    }
-
-    /**
-     *
-     * Method: hasNext()
-     *
-     */
-    public void testHasNext() throws Exception {
-        //TODO: Test goes here...
-    }
-
-    /**
-     *
-     * Method: next()
-     *
-     */
-    public void testNext() throws Exception {
-        //TODO: Test goes here...
-    }
-
-    /**
-     *
-     * Method: remove()
-     *
-     */
-    public void testRemove() throws Exception {
-        //TODO: Test goes here...
-    }
-
-
-    /**
-     *
-     * Method: addPreprocess(Payload payload)
-     *
-     */
-    public void testAddPreprocess() throws Exception {
-        //TODO: Test goes here...
-        /*
-        try {
-           Method method = PayloadQueue.class.getMethod("addPreprocess", Payload.class);
-           method.setAccessible(true);
-           method.invoke(<Object>, <Parameters>);
-        } catch(NoSuchMethodException e) {
-        } catch(IllegalAccessException e) {
-        } catch(InvocationTargetException e) {
-        }
-        */
-        }
-
-    /**
-     *
-     * Method: raiseFlag()
-     *
-     */
-    public void testRaiseFlag() throws Exception {
-        //TODO: Test goes here...
-        /*
-        try {
-           Method method = PayloadQueue.class.getMethod("raiseFlag");
-           method.setAccessible(true);
-           method.invoke(<Object>, <Parameters>);
-        } catch(NoSuchMethodException e) {
-        } catch(IllegalAccessException e) {
-        } catch(InvocationTargetException e) {
-        }
-        */
-        }
-
-    /**
-     *
-     * Method: calculateSize(Payload payload)
-     *
-     */
-    public void testCalculateSize() throws Exception {
-        //TODO: Test goes here...
-        /*
-        try {
-           Method method = PayloadQueue.class.getMethod("calculateSize", Payload.class);
-           method.setAccessible(true);
-           method.invoke(<Object>, <Parameters>);
-        } catch(NoSuchMethodException e) {
-        } catch(IllegalAccessException e) {
-        } catch(InvocationTargetException e) {
-        }
-        */
-        }
-
-    /**
-     *
-     * Method: checkNext()
-     *
-     */
-    public void testCheckNext() throws Exception {
-        //TODO: Test goes here...
-        /*
-        try {
-           Method method = PayloadQueue.class.getMethod("checkNext");
-           method.setAccessible(true);
-           method.invoke(<Object>, <Parameters>);
-        } catch(NoSuchMethodException e) {
-        } catch(IllegalAccessException e) {
-        } catch(InvocationTargetException e) {
-        }
-        */
-        }
-
 
     public void deprecatedTestSemaphore() throws InterruptedException {
         Semaphore one = new Semaphore(1);
@@ -174,6 +64,12 @@ public class PayloadQueueTest extends TestCase {
         one.release();
         assertEquals("4: Available permits should be the initial max",
                      1, one.availablePermits());
+    }
+
+    public void testUninterruptibleOffer() throws Exception {
+        PayloadQueue queue = new PayloadQueue(10, 1000);
+        Payload payload = new Payload(new Record("D", "D", new byte[0]));
+        queue.uninterruptablePut(payload);
     }
 
     public static Test suite() {
