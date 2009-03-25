@@ -48,7 +48,7 @@ public class FilterPump extends StateThread implements Configurable {
                         + configuration.getClass());
         chainName = configuration.getString(Filter.CONF_FILTER_NAME, chainName);
         classLog.trace ("Creating chain log for chain: " + chainName);
-        log = LogFactory.getLog(FilterPump.class.getName() + "." + chainName);
+        log = LogFactory.getLog(FilterPump.class.getName() + "#" + chainName);
         log.info("Constructing FilterPump for chain '" + chainName + "'");
         sequence = new FilterSequence(configuration);
         log.debug("Constructed filter sequence");
@@ -93,6 +93,15 @@ public class FilterPump extends StateThread implements Configurable {
         }
         // TODO: Check if this is redundant - doesn't EOF handle it? 
         close(true);
+    }
+
+    @Override
+    public void stop() {
+        log.info("Stopping filter pump " + getChainName());
+        super.stop();
+
+        sequence.close(true);
+        log.info("Filter pump " + getChainName() +" stopped");
     }
 
     private void close(boolean success) {
