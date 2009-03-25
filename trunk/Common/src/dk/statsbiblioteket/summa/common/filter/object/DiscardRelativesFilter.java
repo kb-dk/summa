@@ -73,15 +73,21 @@ public class DiscardRelativesFilter extends AbstractDiscardFilter {
 
     @Override
     protected boolean checkDiscard(Payload payload) {
+        if (log.isTraceEnabled()) {
+            //noinspection DuplicateStringLiteralInspection
+            log.trace("checkDiscard(" + payload + ") called");
+        }
         if (payload.getRecord() == null) {
             return false;
         }
+        log.trace("Checking for parents");
         List<Record> parents = payload.getRecord().getParents();
         if (discardHasParent && parents != null && parents.size() > 0) {
             //noinspection DuplicateStringLiteralInspection
             log.debug("Discarding " + payload + " due to parent existence");
             return true;
         }
+        log.trace("Checking for children");
         List<Record> children = payload.getRecord().getChildren();
         if (discardHasChildren && children != null && children.size() > 0) {
             //noinspection DuplicateStringLiteralInspection
