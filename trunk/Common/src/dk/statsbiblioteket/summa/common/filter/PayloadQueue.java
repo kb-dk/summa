@@ -31,7 +31,7 @@ import java.util.Collection;
  * A queue tailored for Payloads, where the maximum queue size can be defined
  * by either count of (estimated) size of the Payloads.
  * </p><p>
- * The queue is blocking and fair.
+ * The queue is blocking, thread-safe and fair.
  * </p><p>
  * Note: remainingCapacity is a maximum, as the sizes of Payloads are not known
  * before they are added.
@@ -60,7 +60,8 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
         this.maxSize = maxSize;
     }
 
-    public boolean offer(Payload payload) {
+    @Override
+    public synchronized boolean offer(Payload payload) {
         long payloadSize = calculateSize(payload);
         if (payloadSize + totalSize > maxSize) {
             return false;
@@ -72,14 +73,17 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
         return false;
     }
 
-    public void put(Payload payload) throws InterruptedException {
+    @Override
+    public synchronized void put(Payload payload) throws InterruptedException {
         long payloadSize = waitForRoom(payload);
         super.put(payload);
         totalSize += payloadSize;
     }
 
     // TODO: Change implementation of waitforRoom to support timeouts
-    public boolean offer(Payload payload, long timeout, TimeUnit unit)
+    @Override
+    public synchronized boolean offer(Payload payload, long timeout,
+                                      TimeUnit unit)
                                                    throws InterruptedException {
         long payloadSize = waitForRoom(payload);
         if (super.offer(payload, timeout, unit)) {
@@ -89,12 +93,14 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
         return false;
     }
 
+    @Override
     public boolean add(Payload payload) {
         // Add is a wrapper for offer, so don't update totalSize
         return super.add(payload);
     }
 
-    public Payload poll() {
+    @Override
+    public synchronized Payload poll() {
         Payload result = super.poll();
         if (result != null) {
             totalSize -= calculateSize(result);
@@ -103,7 +109,8 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
         return result;
     }
 
-    public Payload take() throws InterruptedException {
+    @Override
+    public synchronized Payload take() throws InterruptedException {
         Payload result = super.take();
         totalSize -= calculateSize(result);
         synchronized (flag) {
@@ -112,6 +119,7 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
         return result;
     }
 
+    @Override
     public boolean remove(Object o) {
         boolean success = super.remove(o);
         if (success && o instanceof Payload) {
@@ -123,7 +131,8 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
         return success;
     }
 
-    public void clear() {
+    @Override
+    public synchronized void clear() {
         super.clear();
         totalSize = 0;
         synchronized (flag) {
@@ -131,7 +140,9 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
          }
     }
 
-    public Payload poll(long timeout, TimeUnit unit) throws InterruptedException {
+    @Override
+    public synchronized Payload poll(long timeout, TimeUnit unit)
+                                                   throws InterruptedException {
         Payload result = super.poll(timeout, unit);
         if (result != null) {
             totalSize -= calculateSize(result);
@@ -142,7 +153,8 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
         return result;
     }
 
-    public int drainTo(Collection<? super Payload> c) {
+    @Override
+    public synchronized int drainTo(Collection<? super Payload> c) {
         int count = super.drainTo(c);
         totalSize = 0;
         synchronized (flag) {
@@ -151,6 +163,7 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
         return count;
     }
 
+    @Override
     public int drainTo(Collection<? super Payload> c, int maxElements) {
         throw new UnsupportedOperationException(
                 "drainTo with max not supported yet");
@@ -164,7 +177,7 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
      * @param payload estimated byte size if extracted from this payload.
      * @return the extimated size in bytes of the Payload to insert.
      */
-    public long waitForRoom(Payload payload) {
+    public synchronized long waitForRoom(Payload payload) {
         long size = calculateSize(payload);
         synchronized(flag) {
             while (size() != 0
@@ -173,8 +186,9 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
                 try {
                     flag.wait();
                 } catch (InterruptedException e) {
-                    log.debug("Was interrupted while waiting for flag. "
-                              + "Retrying", e);
+                    //noinspection DuplicateStringLiteralInspection
+                    log.debug("Was interrupted while waiting for flag."
+                              + " Retrying", e);
                 }
             }
         }
