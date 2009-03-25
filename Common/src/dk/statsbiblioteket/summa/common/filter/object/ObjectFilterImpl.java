@@ -82,7 +82,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
         // Do nothing as default
     }
 
-    public synchronized void setSource(Filter filter) {
+    public void setSource(Filter filter) {
         if (filter == null) {
             throw new IllegalArgumentException("Source filter was null");
         }
@@ -96,7 +96,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
     }
 
     // TODO: Consider if close is a wise action - what about pooled ingests?
-    public synchronized boolean pump() throws IOException {
+    public boolean pump() throws IOException {
         checkSource();
         if (!hasNext()) {
             return false;
@@ -108,7 +108,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
         return hasNext();
     }
 
-    public synchronized void close(boolean success) {
+    public void close(boolean success) {
         log.debug(String.format(
                 "Closing down '%s'. %s", this, getProcessStats()));
         checkSource();
