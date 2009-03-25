@@ -138,6 +138,21 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
         return result;
     }
 
+    /**
+     * Block until a Payload is available on the queue, then take it and return. 
+     * @return the next element in the queue.
+     */
+    public synchronized Payload uninterruptibleTake() {
+        while (true) {
+            try {
+                return take();
+            } catch (InterruptedException e) {
+                log.warn("Got InterruptedException while taking in "
+                         + "uninterruptibleTake. Retrying", e);
+            }
+        }
+    }
+
     @Override
     public boolean remove(Object o) {
         boolean success = super.remove(o);
