@@ -69,6 +69,29 @@
                                     <key>summa.rpc.vendor</key>
                                     <value class="string">//localhost:28000/summa-storage</value>
                                 </entry>
+                                <entry>
+                                    <key>summa.storage.recordreader.expandparents</key>
+                                    <value class="boolean">true</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.storage.recordreader.expandchildren</key>
+                                    <value class="boolean">true</value>
+                                </entry>
+                            </xproperties>
+
+                            <xproperties>
+                                <entry>
+                                    <key>filter.name</key>
+                                    <value class="string">ChildDiscarder</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.filter.sequence.filterclass</key>
+                                    <value class="string">dk.statsbiblioteket.summa.common.filter.object.DiscardRelativesFilter</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.relativesfilter.discard.hasparent</key>
+                                    <value class="boolean">true</value>
+                                </entry>
                             </xproperties>
 
                             <xproperties>
@@ -99,6 +122,10 @@
                                     <key>summa.xmltransformer.xslt</key>
                                     <value class="string">targets/horizon/horizon_index.xsl</value>
                                 </entry>
+                                <entry>
+                                    <key>summa.xmltransformer.ignorexmlnamespaces</key>
+                                    <value class="boolean">true</value>
+                                </entry>
                             </xproperties>
 
                             <xproperties>
@@ -113,6 +140,10 @@
                                 <entry>
                                     <key>summa.xmltransformer.xslt</key>
                                     <value class="string">LegacyToSummaDocumentXML.xslt</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.xmltransformer.ignorexmlnamespaces</key>
+                                    <value class="boolean">true</value>
                                 </entry>
                             </xproperties>
 
@@ -141,98 +172,99 @@
                                     <key>filter.name</key>
                                     <value class="string">IndexUpdate</value>
                                 </entry>
-                                <key>IndexUpdate</key>
-                                <value class="xproperties">
-                                    <entry>
-                                        <key>summa.filter.sequence.filterclass</key>
-                                        <value class="string">dk.statsbiblioteket.summa.index.IndexControllerImpl</value>
-                                    </entry>
-                                    <entry>
-                                        <key>summa.index.createnewindex</key>
-                                        <value class="boolean">false</value>
-                                    </entry>
-                                    <entry>
-                                        <key>summa.index.indexrootlocation</key>
-                                        <value class="string">index</value>
-                                    </entry>
-                                    <entry>
-                                        <key>summa.index.consolidatetimeout</key>
-                                        <value class="int">-1</value>
-                                    </entry>
-                                    <entry>
-                                        <key>summa.index.committimeout</key>
-                                        <value class="int">5000</value>
-                                    </entry>
-                                    <entry>
-                                        <key>summa.index.manipulators</key>
-                                        <value class="list">
+                                <entry>
+                                    <key>summa.filter.sequence.filterclass</key>
+                                    <value class="string">dk.statsbiblioteket.summa.index.IndexControllerImpl</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.index.createnewindex</key>
+                                    <value class="boolean">false</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.index.indexrootlocation</key>
+                                    <value class="string">index</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.index.consolidatetimeout</key>
+                                    <value class="int">-1</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.index.committimeout</key>
+                                    <value class="int">5000</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.index.consolidateonclose</key>
+                                    <value class="boolean">true</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.index.manipulators</key>
+                                    <value class="list">
 
-                                            <xproperties>
-                                                <entry>
-                                                    <key>summa.index.manipulatorclass</key>
-                                                    <value class="string">dk.statsbiblioteket.summa.index.lucene.LuceneManipulator</value>
-                                                </entry>
-                                                <entry>
-                                                    <key>summa.index.descriptorsetup</key>
-                                                    <value class="xproperties">
+                                        <xproperties>
+                                            <entry>
+                                                <key>summa.index.manipulatorclass</key>
+                                                <value class="string">dk.statsbiblioteket.summa.index.lucene.LuceneManipulator</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.index.descriptorsetup</key>
+                                                <value class="xproperties">
+                                                    <entry>
+                                                        <key>summa.common.indexdescriptor.absolutelocation</key>
+                                                        <value class="string">/tmp/summatest/data/oai/oai_IndexDescriptor.xml</value>
+                                                    </entry>
+                                                </value>
+                                            </entry>
+                                        </xproperties>
+
+                                        <xproperties>
+                                            <entry>
+                                                <key>summa.index.manipulatorclass</key>
+                                                <value class="string">dk.statsbiblioteket.summa.facetbrowser.FacetManipulator</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.facet.facets</key>
+                                                <value class="list">
+                                                    <xproperties>
                                                         <entry>
-                                                            <key>summa.common.indexdescriptor.absolutelocation</key>
-                                                            <value class="string">/tmp/summatest/data/oai/oai_IndexDescriptor.xml</value>
+                                                            <key>summa.facet.name</key>
+                                                            <value class="string">author</value>
                                                         </entry>
-                                                    </value>
-                                                </entry>
-                                            </xproperties>
-
-                                            <xproperties>
-                                                <entry>
-                                                    <key>summa.index.manipulatorclass</key>
-                                                    <value class="string">dk.statsbiblioteket.summa.facetbrowser.FacetManipulator</value>
-                                                </entry>
-                                                <entry>
-                                                    <key>summa.facet.facets</key>
-                                                    <value class="list">
-                                                        <xproperties>
-                                                            <entry>
-                                                                <key>summa.facet.name</key>
-                                                                <value class="string">author</value>
-                                                            </entry>
-                                                            <entry>
-                                                                <key>summa.facet.fields</key>
-                                                                <value class="list">
-                                                                    <item class="string">author_normalised</item>
-                                                                </value>
-                                                            </entry>
-                                                        </xproperties>
-                                                        <xproperties>
-                                                            <entry>
-                                                                <key>summa.facet.name</key>
-                                                                <value class="string">title</value>
-                                                            </entry>
-                                                            <entry>
-                                                                <key>summa.facet.fields</key>
-                                                                <value class="list">
-                                                                    <item class="string">main_titel</item>
-                                                                </value>
-                                                            </entry>
-                                                        </xproperties>
-                                                        <xproperties>
-                                                            <entry>
-                                                                <key>summa.facet.name</key>
-                                                                <value class="string">subject</value>
-                                                            </entry>
-                                                            <entry>
-                                                                <key>summa.facet.fields</key>
-                                                                <value class="list">
-                                                                    <item class="string">lsubject</item>
-                                                                </value>
-                                                            </entry>
-                                                        </xproperties>
-                                                    </value>
-                                                </entry>
-                                            </xproperties>
-                                        </value>
-                                    </entry>
-                                </value>
+                                                        <entry>
+                                                            <key>summa.facet.fields</key>
+                                                            <value class="list">
+                                                                <item class="string">author_normalised</item>
+                                                            </value>
+                                                        </entry>
+                                                    </xproperties>
+                                                    <xproperties>
+                                                        <entry>
+                                                            <key>summa.facet.name</key>
+                                                            <value class="string">title</value>
+                                                        </entry>
+                                                        <entry>
+                                                            <key>summa.facet.fields</key>
+                                                            <value class="list">
+                                                                <item class="string">main_titel</item>
+                                                            </value>
+                                                        </entry>
+                                                    </xproperties>
+                                                    <xproperties>
+                                                        <entry>
+                                                            <key>summa.facet.name</key>
+                                                            <value class="string">subject</value>
+                                                        </entry>
+                                                        <entry>
+                                                            <key>summa.facet.fields</key>
+                                                            <value class="list">
+                                                                <item class="string">lsubject</item>
+                                                            </value>
+                                                        </entry>
+                                                    </xproperties>
+                                                </value>
+                                            </entry>
+                                        </xproperties>
+                                    </value>
+                                </entry>
                             </xproperties>
                         </value>
                     </entry>

@@ -54,6 +54,14 @@
                                     <value class="boolean">false</value>
                                 </entry>
                                 <entry>
+                                    <key>summa.storage.recordreader.expandparents</key>
+                                    <value class="boolean">true</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.storage.recordreader.expandchildren</key>
+                                    <value class="boolean">true</value>
+                                </entry>
+                                <entry>
                                     <key>summa.storage.recordreader.maxread.records</key>
                                     <value class="int">-1</value>
                                 </entry>

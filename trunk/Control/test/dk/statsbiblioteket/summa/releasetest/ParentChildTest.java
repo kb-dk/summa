@@ -42,6 +42,7 @@ import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
+import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
@@ -71,7 +72,7 @@ public class ParentChildTest extends NoExitTestCase {
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
-        ReleaseTestCommon.tearDown();
+        //ReleaseTestCommon.tearDown();
     }
 
     public void testFull() throws Exception {
@@ -88,7 +89,7 @@ public class ParentChildTest extends NoExitTestCase {
         String indexTime = indexProfiler.getSpendTime();
 
         SearchService search = OAITest.getSearchService();
-        testSearch();
+        helpTestSearch();
 
         search.stop();
         storage.stop();
@@ -170,7 +171,7 @@ public class ParentChildTest extends NoExitTestCase {
                      6, counter);
     }
 
-    private void testSearch() throws IOException {
+    private void helpTestSearch() throws IOException {
         log.debug("Testing searching");
         SearchClient searchClient =
                 new SearchClient(Configuration.newMemoryBased(
@@ -229,10 +230,32 @@ public class ParentChildTest extends NoExitTestCase {
         }
         while (ingestService.getStatus().getCode() == Status.CODE.running) {
             log.trace("Waiting for ingest of horizon ½ a second");
-            Thread.sleep(500);
+            Thread.sleep(100);
         }
         ingestService.stop();
         log.debug("Finished ingesting horizon");
+    }
+
+    public void testIngest() throws Exception {
+        String[] IDS = new String[]{"horizon:child1", "horizon:child2",
+                "horizon:child4", "horizon:3319632", "horizon:parent1",
+                "horizon:subchild1"};
+
+        StorageService storage = OAITest.getStorageService();
+        performIngest();
+
+        for (String id: IDS) {
+            assertNotNull("A Record with the id " + id + " should exist",
+                          storage.getStorage().getRecord(id, null));
+        }
+        QueryOptions qo = new QueryOptions(null, null, -1, -1);
+        Record parent1 = storage.getStorage().getRecord(
+                "horizon:parent1", qo);
+        assertNotNull("parent1 should exist", parent1);
+        assertTrue(parent1 + " should have children", 
+                   parent1.getChildren() != null
+                   && parent1.getChildren().size() > 0);
+        storage.stop();
     }
 
     private void performIndex() throws IOException, InterruptedException {
@@ -250,7 +273,7 @@ public class ParentChildTest extends NoExitTestCase {
 
     public Configuration getIndexConfiguration() throws IOException {
         Configuration indexConf = Configuration.load(Resolver.getURL(
-                        "data/multiple/index_configuration.xml").
+                        "data/parent-child/index_configuration.xml").
                 getFile());
         indexConf.set(Service.CONF_SERVICE_ID, "IndexService");
 
@@ -262,14 +285,18 @@ public class ParentChildTest extends NoExitTestCase {
         log.debug("indexDescriptorLocation: " + indexDescriptorLocation);
 
         indexConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
-                getSubConfiguration("DocumentCreator").
+                getSubConfigurations(FilterSequence.CONF_FILTERS).get(5).
+//                getSubConfiguration("DocumentCreator").
                 getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
                     indexDescriptorLocation);
 
         indexConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
-                getSubConfiguration("IndexUpdate").
-                getSubConfiguration("LuceneUpdater").
+                getSubConfigurations(FilterSequence.CONF_FILTERS).get(6).
+//                getSubConfiguration("IndexUpdate").
+                getSubConfigurations(IndexControllerImpl.CONF_MANIPULATORS).
+                get(0).
+//                getSubConfiguration("LuceneUpdater").
                 getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
                     indexDescriptorLocation);

@@ -108,9 +108,9 @@ public class XMLTransformer extends ObjectFilterImpl {
     @Override
     protected void processPayload(Payload payload) {
         //noinspection DuplicateStringLiteralInspection
-        log.trace("processPayload(" + payload + ") called");
+        log.trace("processPayload(" + payload + ") called for " + this);
         if (payload.getRecord() == null) {
-            log.warn("No record defined. Discarding payload " + payload);
+            log.warn("No record defined for " + payload + " in " + this);
             return;
         }
         try {
@@ -119,10 +119,13 @@ public class XMLTransformer extends ObjectFilterImpl {
                     stripXMLNamespaces).
                     toByteArray());
         } catch (TransformerException e) {
-            log.warn("Transformer problems. Discarding payload " + payload, e);
+            log.warn("Transformer problems in " + this
+                     + ". Discarding payload " + payload, e);
             if (log.isTraceEnabled()) {
-                log.trace("Problematic record was:\n"
-                          + payload.getRecord().toString(true));
+                log.trace("Problematic record in " + this + " was:\n"
+                          + payload.getRecord().toString(true)
+                          + " with content\n"
+                          + payload.getRecord().getContentAsUTF8());
             }
         }
     }
@@ -133,7 +136,10 @@ public class XMLTransformer extends ObjectFilterImpl {
         log.info("Closing down XMLTransformer for '" + xsltLocation + "'. "
                  + getProcessStats());
     }
+
+    @Override
+    public String toString() {
+        return "XMLTransformer '" + getName() + "' (" + xsltLocation + ", "
+               + stripXMLNamespaces + ")";
+    }
 }
-
-
-
