@@ -320,7 +320,9 @@ public class MultipleSourcesTest extends NoExitTestCase {
 
         FilterService index = new FilterService(indexConf);
         index.start();
-        while (index.getStatus().getCode() == Status.CODE.running) {
+
+        while (index.getStatus().getCode() != Status.CODE.stopped &&
+               index.getStatus().getCode() != Status.CODE.crashed) {
             log.trace("Waiting for index ½ a second");
             Thread.sleep(500);
         }
