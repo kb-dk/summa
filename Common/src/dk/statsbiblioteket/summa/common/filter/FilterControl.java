@@ -115,7 +115,9 @@ public class FilterControl extends StateThread implements Configurable,
     @Override
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     protected void runMethod() {
-        log.info("Activating filter pump(s)");
+        log.info("Activating filter pump(s) " +
+                 (sequential ? "sequentially" : "in parallel"));
+        
         for (FilterPump pump: pumps) {
             if (getStatus() != STATUS.running) {
                 break;
@@ -131,6 +133,8 @@ public class FilterControl extends StateThread implements Configurable,
                         log.warn("run: Interrupted while waiting for '"
                                  + pump.getChainName() + "' to finish");
                     }
+                    log.info("Filter chain " + pump.getChainName()
+                             + " completed");
                 }
             } catch (Exception e) {
                 log.error("Unable to start pump for filter chain '"
@@ -141,7 +145,11 @@ public class FilterControl extends StateThread implements Configurable,
             log.info("Waiting for chains to finish");
             for (FilterPump pump: pumps) {
                 try {
+                    log.debug("Waiting for filter chain '" + pump.getChainName()
+                              + "' to finish");
                     pump.waitForFinish();
+                    log.info("Filter pump " + pump.getChainName()
+                             + " completed");
                 } catch (InterruptedException e) {
                     log.warn("run: Interrupted while waiting for '"
                              + pump.getChainName() + "' to finish");
@@ -166,6 +174,16 @@ public class FilterControl extends StateThread implements Configurable,
         }
         log.trace("Pumps stopped");
         // TODO: Add graceful timeout for pumping so cached data are processed
+    }
+
+    @Override
+    public void waitForFinish(long timeout) throws InterruptedException {
+        super.waitForFinish(timeout);
+
+        for (FilterPump pump : pumps) {
+            log.debug("Waiting for " + pump.getChainName());
+            pump.waitForFinish(timeout);
+        }
     }
 
     /**

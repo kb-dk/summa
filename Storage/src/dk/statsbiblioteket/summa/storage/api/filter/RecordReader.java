@@ -545,6 +545,12 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             progressTracker.updated(lastRecordTimestamp);
             progressTracker.updateProgressFile(); // Force a flush of the progress
         }
+
+        if (storageWatcher != null) {
+            log.debug("Stopping storage watcher");
+            storageWatcher.stop();
+            log.info("Storage watcher stopped");
+        }        
     }
 
     /**

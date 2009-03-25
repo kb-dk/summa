@@ -32,7 +32,7 @@
                 <xproperties>
                     <entry>
                         <key>filter.name</key>
-                        <value class="string">SingleChain</value>
+                        <value class="string">IngestChain</value>
                     </entry>
                     <entry>
                         <key>summa.filter.sequence.filters</key>

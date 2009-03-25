@@ -22,6 +22,7 @@ package dk.statsbiblioteket.summa.releasetest;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Zips;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
@@ -30,10 +31,12 @@ import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
 import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
 import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
 import dk.statsbiblioteket.summa.storage.api.StorageIterator;
+import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.control.api.Service;
 import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.control.service.StorageService;
@@ -51,6 +54,7 @@ import dk.statsbiblioteket.summa.index.IndexController;
 import dk.statsbiblioteket.summa.index.IndexManipulator;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.lucene.index.IndexReader;
 import junit.framework.TestCase;
 
 import java.io.File;
@@ -224,29 +228,44 @@ public class AutoDiscoverTest extends TestCase {
     public void testIndexer() throws Exception {
         StorageService storage = createStorage();
         Service ingest = createIngestChain();
+
         ingest.start();
+
+
         Service index = createIndexer();
         index.start();
-        putFiles();
-        Thread.sleep(2000);
 
-        checkRecords(storage);
+
+        putFiles();
+
+        boolean foundRecs = waitForRecords(storage.getStorage(), 5000,
+                       "fagref:gm@example.com", "fagref:hj@example.com",
+                       "fagref:jh@example.com");
+
+        assertTrue("The fagref records did not appear in storage withing "
+                   + "allowed timeframe", foundRecs);
+
         assertTrue("The index root must exist", new File(INDEX_ROOT).exists());
         File luceneDir = new File(new File(INDEX_ROOT).listFiles()[0],
                                   "lucene");
-        // 5 files: 1 segment/record (3 records), 2 bookkeeping files 
-        assertEquals("The Lucene folder (" + luceneDir
-                     + ") should contain the right number of files",
-                     5, luceneDir.listFiles().length);
+
+        // The records are in storage now, give the indexer 2s to react. This
+        // should be sufficient since the default poll time is 500ms
+        boolean foundDocs = waitForDocCount(luceneDir, TEST_FILES.size(), 2000);
+
+        assertTrue("The lucene index should eventually contain "
+                   + TEST_FILES.size() + " records", foundDocs);
+
         File facetDir = new File(new File(INDEX_ROOT).listFiles()[0], 
                                  "facet");
         assertTrue("The INDEX_ROOT/YYMMDD_HHMM/facet/author.dat (" + INDEX_ROOT
                    + ") should be > 0 bytes ",
                    facetDir.listFiles()[0].length() > 0);
 
-        index.stop();
         ingest.stop();
+        index.stop();
         storage.stop();
+        log.info("Test succes!");
     }
 
     private void checkRecords(StorageService storage) throws IOException {
@@ -260,6 +279,83 @@ public class AutoDiscoverTest extends TestCase {
         }
         assertEquals("The number of ingested records should match the files",
                      TEST_FILES.size(), count);
+    }
+
+    /*
+     * Block up to timeout milliseconds for a given set of records.
+     * Returns true if the records are found withing the allowed time,
+     * false otherwise
+     */
+    private boolean waitForRecords(Storage storage, long timeout, String... ids)
+                                                            throws Exception {
+        boolean foundRecords = false;
+        long startTime = System.currentTimeMillis();
+        List<String> idList = Arrays.asList(ids);
+
+        while (!foundRecords
+               && (System.currentTimeMillis() - startTime < timeout)) {
+            log.info("Waiting for records: " + Strings.join(ids, ", "));
+            Thread.sleep(100);
+
+            List<Record> recs = storage.getRecords(idList, null);
+
+            // Sanity check
+            if (recs.size() != ids.length) {
+                continue;
+            }
+
+            // Make sure the ids of the results match our request
+            for (Record r : recs) {
+                foundRecords = true;
+                if (!idList.contains(r.getId())) {
+                    foundRecords = false;
+                    break;
+                }
+            }
+        }
+
+        if (foundRecords) {
+            log.info("Found records: " + Strings.join(ids, ", "));
+        } else {
+            log.warn("Did NOT find records: " + Strings.join(ids, ", "));
+        }
+
+        return foundRecords;
+    }
+
+    public boolean waitForDocCount (File index, int docCount, long timeout)
+                                                               throws Exception{
+        boolean foundDocs = false;
+        long startTime = System.currentTimeMillis();
+
+        while (!foundDocs
+               && (System.currentTimeMillis() - startTime < timeout)) {
+            log.info("Waiting for " + docCount +" documents in: " + index);
+
+            Thread.sleep(100);
+
+            try {
+                IndexReader luceneIndex = IndexReader.open(index);
+                if (luceneIndex.maxDoc() == docCount) {
+                    foundDocs = true;
+                } else {
+                    log.debug("Index not ready, found " + luceneIndex.maxDoc()
+                              + " documents");
+                }
+                luceneIndex.close();
+            } catch (Exception e) {
+                // Ignore and rerun loop, the index might not even exist yet!
+            }
+        }
+
+        if (foundDocs) {
+            log.info("Got expected doc count, " + docCount + ", from: "
+                     + index);
+        } else {
+            log.warn("Did NOT get expected docu count from: " + index);
+        }
+
+        return foundDocs;
     }
 
     private SearchService createSearcher() throws Exception {

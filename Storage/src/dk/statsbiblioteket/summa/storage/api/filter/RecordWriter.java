@@ -294,7 +294,7 @@ public class RecordWriter extends ObjectFilterImpl {
     }
 
     @Override
-    public synchronized void close(boolean success) {
+    public void close(boolean success) {
         super.close(success);
         log.info("Waiting for batch jobs to be committed");
         batcher.stop();

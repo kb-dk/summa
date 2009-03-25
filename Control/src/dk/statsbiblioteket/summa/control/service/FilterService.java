@@ -136,6 +136,9 @@ public class FilterService extends ServiceBase implements FilterChainHandler {
             setStatus(Status.CODE.stopping, "Stopping FilterControl service",
                       Logging.LogLevel.DEBUG);
             filterControl.stop();
+            setStatus(Status.CODE.stopping, "Waiting for FilterControl to stop",
+                      Logging.LogLevel.INFO);
+            filterControl.waitForFinish();
             setStatus(Status.CODE.stopped,
                       "Filtercontrol stopped successfully",
                       Logging.LogLevel.INFO);

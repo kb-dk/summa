@@ -107,7 +107,7 @@ public class StorageWatcher implements Configurable, Runnable {
         bases = new HashSet<String>(10);
         listeners = new HashMap<StorageChangeListener,ListenerContext>();
 
-        thread = new Thread(this);
+        thread = new Thread(this, this.getClass().getSimpleName());
         thread.setDaemon(true); // Allow JVM to exit when watcher is running
 
         mayRun = false;
