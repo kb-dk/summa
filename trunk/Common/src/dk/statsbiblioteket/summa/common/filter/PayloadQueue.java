@@ -73,6 +73,25 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
         return false;
     }
 
+    /**
+     * An offer the queue cannot refuse.
+     * @param payload the Payload to offer.
+     */
+    public void uninterruptableOffer(Payload payload) {
+        while (true) {
+            try {
+                offer(payload, Integer.MAX_VALUE, TimeUnit.MILLISECONDS);
+                return;
+            } catch (InterruptedException e) {
+                log.warn(String.format(
+                        "Interrupted while offering %s. Retrying",
+                        payload), e);
+            }
+        }
+    }
+
+
+
     @Override
     public synchronized void put(Payload payload) throws InterruptedException {
         long payloadSize = waitForRoom(payload);
