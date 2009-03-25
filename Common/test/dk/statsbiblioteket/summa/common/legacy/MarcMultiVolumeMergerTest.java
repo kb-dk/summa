@@ -17,7 +17,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.summa.index.filter;
+package dk.statsbiblioteket.summa.common.legacy;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -27,7 +27,6 @@ import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.MarcAnnotations;
-import dk.statsbiblioteket.summa.common.legacy.MarcMultiVolumeMerger;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 
@@ -41,7 +40,7 @@ import org.apache.commons.logging.Log;
 
 public class MarcMultiVolumeMergerTest extends TestCase implements
                                                         ObjectFilter {
-    private static Log log = LogFactory.getLog(MarcMultiVolumeMerger.class);
+    private static Log log = LogFactory.getLog(MarcMultiVolumeMergerTest.class);
 
     private List<Record> records;
 

@@ -40,6 +40,7 @@ import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.LockObtainFailedException;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
 
 /**
  * Handles iterative updates of a Lucene index. A Record that is an update of an
@@ -297,6 +298,13 @@ public class LuceneManipulator implements IndexManipulator {
         Document document = (Document)payload.getData(Payload.LUCENE_DOCUMENT);
         // TODO: Add support for Tokenizer and Filters
         writer.addDocument(document, descriptor.getIndexAnalyzer());
+        if (log.isTraceEnabled()) {
+            log.trace("Dumping analyzed fields for " + payload);
+            for (Object field: document.getFields()) {
+                log.trace("Field " + ((Field)field).name() + " has content "
+                          + ((Field)field).stringValue());
+            }
+        }
         // TODO: Verify that docCount is trustable with regard to deletes
         payload.getData().put(LuceneIndexUtils.META_ADD_DOCID,
                               writer.maxDoc()-1);

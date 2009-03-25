@@ -121,6 +121,7 @@
         <appender-ref ref="CONSOLE" />
     </logger>
         -->
+    <!--
     <logger name="dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode">
         <level value="trace" />
         <appender-ref ref="CONSOLE" />
@@ -140,17 +141,21 @@
         <level value="trace" />
         <appender-ref ref="CONSOLE" />
     </logger>
-<!--
     <logger name="dk.statsbiblioteket.summa.index.lucene.DocumentCreatorBase">
         <level value="trace" />
         <appender-ref ref="CONSOLE" />
     </logger>
-    -->
-    <logger name="dk.statsbiblioteket.summa.releasetest.MultipleSourcesTest">
-        <level value="debug" />
+-->
+    <logger name="dk.statsbiblioteket.summa.common.lucene.analysis">
+        <level value="trace" />
         <appender-ref ref="CONSOLE" />
     </logger>
-
+<!--
+    <logger name="dk.statsbiblioteket.summa.index.lucene.LuceneManipulator">
+        <level value="trace" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
+   -->
     <!--    <logger name="dk.statsbiblioteket.summa.facetbrowser.util.pool.DiskPool">
         <level value="trace" />
         <appender-ref ref="CONSOLE" />

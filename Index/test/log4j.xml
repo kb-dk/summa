@@ -104,6 +104,11 @@
         <appender-ref ref="FILE" />
     </logger>
 
+    <logger name="dk.statsbiblioteket.summa.index.filter">
+        <level value="trace" />
+        <appender-ref ref="FILE" />
+    </logger>
+
     <!-- all loggeres inherit the root logger - so don't include the root appenders in the other loggers (will duplicate log entries in the log file) -->
     <root>
         <level value="FATAL" />

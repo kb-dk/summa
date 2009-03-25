@@ -72,6 +72,19 @@ public class SummaAnalyzerTest extends TestCase {
         assertTokens(t, "white");
     }
 
+    public void testLong() throws Exception {
+        a = new SummaAnalyzer(null, true, null, true, true);
+        TokenStream t = a.reusableTokenStream("", new StringReader(
+                "Captain Planet once again saves the world. This time by "
+                + "getting rid of dandruff."));
+
+        assertTokens(t, "captain", "planet", "once", "again", "saves", "the", 
+                     "world", "this", "time", "by", "getting", "rid", "of",
+                     "dandruff");
+    }
+
+
+
     public void testWhiteSpace2() throws Exception {
         a = new SummaAnalyzer(null, true, null, true, true);
         TokenStream t = a.reusableTokenStream("", new StringReader("barry   white "));

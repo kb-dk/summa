@@ -326,5 +326,4 @@ public class StreamingDocumentCreator extends DocumentCreatorBase {
         super.close(success);
         log.info("Closing down StreamingDocumentcreator. " + getProcessStats());
     }
-
 }
