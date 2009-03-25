@@ -39,7 +39,8 @@ import org.apache.commons.logging.LogFactory;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public abstract class ObjectFilterImpl implements ObjectFilter {
-    private static Log log = LogFactory.getLog(ObjectFilterImpl.class);
+    private Log log = LogFactory.getLog(ObjectFilterImpl.class.getName() + "#"
+                                        + this.getClass().getSimpleName());
 
     private ObjectFilter source;
     private long payloadCount = 0;
