@@ -28,6 +28,7 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -89,6 +90,80 @@ public class MUXFilterTest extends TestCase implements ObjectFilter {
         }
         assertEquals("The number of processed Payloads should be correct",
                      PAYLOADS, counter);
+    }
+
+    // TODO: Multiple sources test
+
+    public void testClose() throws Exception {
+        Configuration conf = Configuration.newMemoryBased();
+        List<Configuration> delays =
+                conf.createSubConfigurations(MUXFilter.CONF_FILTERS, 1);
+        delays.get(0).set(MUXFilterFeeder.CONF_FILTER_CLASS,
+                          DelayFilter.class.getCanonicalName());
+        delays.get(0).set(DelayFilter.CONF_FIXED_DELAY_PREREQUEST,
+                          100 * 1000000);
+        delays.get(0).set(DelayFilter.CONF_FIXED_DELAY_POSTREQUEST,
+                          100 * 1000000);
+        delays.get(0).set(MUXFilter.CONF_INSTANCES, 2);
+//        delays.get(0).set(MUXFilterFeeder.CONF_QUEUE_OUT_LENGTH, 1);
+        log.debug("Creating MUXFilter");
+        MUXFilter muxer = new MUXFilter(conf);
+        muxer.setSource(this);
+        assertTrue("Muxer should have next", muxer.hasNext());
+        muxer.close(true);
+
+        int counter = 0;
+        log.debug("Emptying MUXFilter after close");
+        while (muxer.hasNext()) {
+            counter++;
+            muxer.next();
+        }
+        assertEquals("The number of processed Payloads should be correct",
+                     PAYLOADS, counter);
+    }
+
+    public void testQueues() throws Exception {
+        Configuration conf = Configuration.newMemoryBased();
+        conf.set(MUXFilter.CONF_OUTQUEUE_MAXPAYLOADS, 2);
+        List<Configuration> delays =
+                conf.createSubConfigurations(MUXFilter.CONF_FILTERS, 2);
+        delays.get(0).set(MUXFilterFeeder.CONF_FILTER_CLASS,
+                          DelayFilter.class.getCanonicalName());
+        delays.get(0).set(DelayFilter.CONF_FIXED_DELAY_PREREQUEST,
+                          100 * 1000000);
+        delays.get(0).set(DelayFilter.CONF_FIXED_DELAY_POSTREQUEST,
+                          100 * 1000000);
+        delays.get(0).set(MUXFilter.CONF_INSTANCES, 1);
+        delays.get(0).set(MUXFilterFeeder.CONF_QUEUE_MAXPAYLOADS, 5);
+        delays.get(1).set(MUXFilterFeeder.CONF_FILTER_CLASS,
+                          DelayFilter.class.getCanonicalName());
+        delays.get(1).set(DelayFilter.CONF_FIXED_DELAY_PREREQUEST,
+                          10 * 1000000);
+        delays.get(1).set(DelayFilter.CONF_FIXED_DELAY_POSTREQUEST,
+                          50 * 1000000);
+        delays.get(1).set(MUXFilter.CONF_INSTANCES, 1);
+        delays.get(1).set(MUXFilterFeeder.CONF_QUEUE_MAXPAYLOADS, 1);
+        log.debug("Creating MUXFilter");
+
+        MUXFilter muxer = new MUXFilter(conf);
+        muxer.setSource(this);
+        muxer.close(true);
+
+        assertPayloads("The number of processed Payloads should be correct",
+                       PAYLOADS, muxer);
+    }
+
+    public void assertPayloads(String message, int expected,
+                               ObjectFilter filter) throws Exception {
+        int counter = 0;
+        log.debug("Emptying MUXFilter after close");
+        StringWriter sw = new StringWriter();
+        while (filter.hasNext()) {
+            counter++;
+            sw.append(filter.next().getId()).append(" ");
+        }
+        assertEquals(message + ". Received Payloads was " + sw.toString(),
+                     expected, counter);
     }
 
     /* ObjectFilter */

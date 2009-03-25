@@ -55,8 +55,13 @@
     </appender>  -->
 
 
-    <logger name="dk.statsbiblioteket">
-        <level value="debug" />
+    <logger name="dk.statsbiblioteket.summa.common.filter.object">
+        <level value="trace" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
+    <logger name="dk.statsbiblioteket.summa.common.filter.PayloadQueue">
+        <level value="trace" />
         <appender-ref ref="CONSOLE" />
     </logger>
 

@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -126,6 +126,7 @@ public class DelayFilter extends ObjectFilterImpl {
                 // We loop to ensure that we wait at least ns
                 Thread.sleep(remaining / 1000000, (int)(remaining % 1000000));
             }
+            log.trace("Finished sleeping " + ns + "ns");
         } catch (InterruptedException e) {
             //noinspection DuplicateStringLiteralInspection
             log.warn("Interrupted while sleeping " + ns + "ns. Skipping sleep");
