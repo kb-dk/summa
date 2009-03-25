@@ -178,7 +178,10 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
         log.debug("Processing "+record.getId()+"  at level " + level);
 
         String content = record.getContentAsUTF8();
-        int endPos = content.lastIndexOf("</record>");
+        // This ugly hack is to ensure efficiency and check that the last
+        // end-tag is for record, regardless of namespacing.
+        //noinspection DuplicateStringLiteralInspection
+        int endPos = content.indexOf("record", content.lastIndexOf("</"));
         if (endPos == -1) {
             String message = "The Record " + record
                              + " did not end in </record>";
