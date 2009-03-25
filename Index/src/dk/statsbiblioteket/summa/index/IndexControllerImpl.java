@@ -443,6 +443,10 @@ public class IndexControllerImpl extends StateThread implements
         String folderName = IndexCommon.getTimestamp();
         File concreteRoot = new File(indexRoot, folderName);
         log.debug("Got new root '" + concreteRoot + "'. Creating folder");
+        if (concreteRoot.exists()) {
+            log.warn("Sanity-check fail: The root '" + concreteRoot
+                     + "' should be new but already exists");
+        }
         if (!concreteRoot.mkdirs()) {
             throw new IOException("Could not create index folder '"
                                   + concreteRoot + "'");

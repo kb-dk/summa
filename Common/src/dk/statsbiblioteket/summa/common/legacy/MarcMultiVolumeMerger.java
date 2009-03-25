@@ -131,6 +131,10 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
         return result == null ? record.getContentAsUTF8() : result;
     }
 
+    private static final String NO_RELATIVES =
+            "%s was marked as having %s, but none were resolved. Make sure"
+            + " that RecordReader (or whatever else provides the Records) "
+            + "expands children";
     private String getMergedOrNull(Record record) {
         if (!record.hasChildren()) {
             log.debug("No children for " + record.getId());
@@ -139,6 +143,16 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
             log.debug("Can not expand unresolved children of "
                       + record.toString(true));
             return null;
+        } else if (record.hasChildren() && record.getChildren() == null) {
+            //noinspection DuplicateStringLiteralInspection
+            log.debug(String.format(
+                        NO_RELATIVES, record.getId(), "children"));
+                return null;
+        } else if (record.hasParents() && record.getParents() == null) {
+            //noinspection DuplicateStringLiteralInspection
+            log.debug(String.format(
+                        NO_RELATIVES, record.getId(), "parents"));
+                return null;
         } else {
             //noinspection DuplicateStringLiteralInspection
             log.debug("Processing " + record.getChildren().size()
