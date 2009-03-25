@@ -38,7 +38,8 @@ import org.apache.commons.logging.LogFactory;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public abstract class StateThread implements Runnable {
-    private final Log log = LogFactory.getLog(StateThread.class);
+    private final Log log = LogFactory.getLog(StateThread.class.getName()
+                                       + "#" + this.getClass().getSimpleName());
 
     /**
      * ready:    Ready to run for the first time since creation.<br />
@@ -92,6 +93,7 @@ public abstract class StateThread implements Runnable {
         try {
             log.debug("Starting run");
             runMethod();
+            log.debug("Run complete. Cleaning up");
             if (!status.equals(STATUS.error)) {
                 status = STATUS.stopped;
             }
@@ -151,8 +153,10 @@ public abstract class StateThread implements Runnable {
             case ready:
             case stopped: {
                 log.debug("start: Creating and starting Thread");
+                String threadName = "".equals(getClass().getSimpleName()) ?
+                                    "Anonymous" : getClass().getSimpleName();
                 thread = new Thread(this,
-                                    getClass().getSimpleName()+"-"+hashCode());
+                                    threadName+"-"+hashCode());
                 status = STATUS.running;
                 thread.start();
                 break;
@@ -170,6 +174,7 @@ public abstract class StateThread implements Runnable {
      * Signal the implementation to stop.
      */
     public synchronized void stop() {
+        log.debug("Instructed to stop with status: " + getStatus());
         switch (getStatus()) {
             case error: {
                 log.warn("stop called with status " + STATUS.error);
