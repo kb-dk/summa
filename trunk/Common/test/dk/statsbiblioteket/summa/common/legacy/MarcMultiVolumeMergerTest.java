@@ -107,6 +107,8 @@ public class MarcMultiVolumeMergerTest extends TestCase implements
         assertContains(processed, // HOVEDPOST
               "  <datafield tag=\"245\" ind1=\"0\" ind2=\"0\">\n"
               + "    <subfield code=\"a\">Kaoskyllingen</subfield>");
+        assertContains(processed, // Correct close tag
+              "</record>");
     }
 
     private void assertContains(String main, String sub) {
