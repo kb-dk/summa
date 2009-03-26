@@ -45,7 +45,7 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
     public void tearDown() throws Exception {
         super.tearDown();
         if (location.exists()) {
-//            Files.delete(location);
+            Files.delete(location);
         }
     }
 
@@ -104,6 +104,7 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
         manipulator = openIndex(100);
         for (int i = 0 ; i < docCount ; i++) {
             String id = "doc" + i;
+            manipulator.update(getPayload(id, true)); // A delete and an add
             manipulator.update(getPayload(id, false)); // A delete and an add
             profiler.beat();
         }
