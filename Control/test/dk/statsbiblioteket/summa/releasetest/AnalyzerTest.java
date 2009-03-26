@@ -28,6 +28,7 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.Request;
