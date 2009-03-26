@@ -72,19 +72,55 @@ public class Logging {
      * TRACE: Different stages that the Payload has passed, such as the Filters
      *        that processed it, processing time etc.<br />
      * </p><p>
+     * @param origin  where the message was from, e.g. "ClassName.methodName".
      * @param message the log message.
      * @param level   the log level.
      * @param payload the Payload related to the message.
      */
     public static void logProcess(
-            String message, LogLevel level, Payload payload) {
+            String origin, String message, LogLevel level, Payload payload) {
+        logProcess(origin, message, level, payload, null);
+    }
+
+    /**
+     * Special logging for process-related messages. Process-related messages
+     * differ from normal messages by being related to specific Payloads or
+     * Records, rather than the classes that handles these.
+     * </p><p>
+     * FATAL: Not used.<br />
+     * ERROR: Not used.<br />
+     * WARN:  When a Payload is discarded due to problems.<br />
+     * INFO:  Not used.<br />
+     * DEBUG: When a Payload is created.
+     * TRACE: Different stages that the Payload has passed, such as the Filters
+     *        that processed it, processing time etc.<br />
+     * </p><p>
+     * @param origin  where the message was from, e.g. "ClassName.methodName".
+     * @param message the log message.
+     * @param level   the log level.
+     * @param payload the Payload related to the message.
+     * @param cause   what caused this message.
+     */
+    public static void logProcess(
+            String origin, String message, LogLevel level, Payload payload,
+            Throwable cause) {
+        String fullMessage;
         if ((level == LogLevel.WARN && isProcessLogLevel(LogLevel.DEBUG)
              || level == LogLevel.TRACE)) {
-            log(message +". " + payload
-                + (payload.getRecord() != null
-                   ? ". Content:\n" + payload.getRecord().getContentAsUTF8()
-                   : ". No content"),
-                processLog, level);
+            fullMessage = (origin == null ? "" : origin + ": ") + message + ". "
+                          + payload + (payload.getRecord() != null ?
+                                       ". Content:\n"
+                                       + payload.getRecord().getContentAsUTF8()
+                                       : ". No content");
+        } else {
+            fullMessage = (origin == null ? "" : origin + ": ") + message + ". "
+                          + payload;
+        }
+
+        if (cause == null) {
+            log(fullMessage,processLog, level);
+        } else {
+            log(fullMessage,processLog, level, cause);
         }
     }
 

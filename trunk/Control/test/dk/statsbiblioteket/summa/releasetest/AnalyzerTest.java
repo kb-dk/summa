@@ -90,6 +90,7 @@ public class AnalyzerTest extends TestCase {
         for (Payload payload: processed) {
             log.debug("Adding " + payload + " to index");
             lucene.update(payload);
+            payload.close();
         }
         log.debug("Consolidating");
         lucene.consolidate();
@@ -99,7 +100,6 @@ public class AnalyzerTest extends TestCase {
 
     public void testSearch() throws Exception {
         createIndex();
-        System.out.println("");
         LuceneSearchNode search = getLuceneSearchNode();
         assertHits(search, "split:\"token1 token2 token3\"");
         assertHits(search, "t*");
@@ -110,6 +110,7 @@ public class AnalyzerTest extends TestCase {
         assertNoHits(search, "author:Directo");
         assertNoHits(search, "author:\"Direct field\"");
         assertHits(search, "author:\"Direct  field\"");
+        search.close();
     }
 
     private void assertHits(LuceneSearchNode search, String query) throws

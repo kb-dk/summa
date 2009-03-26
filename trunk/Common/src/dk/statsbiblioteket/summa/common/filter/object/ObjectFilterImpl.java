@@ -27,6 +27,7 @@ import java.io.IOException;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -47,29 +48,63 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
     private long totalTimeNS = 0;
 
     private String name;
+    private Payload processedPayload = null;
 
     public ObjectFilterImpl(Configuration conf) {
         name = conf.getString(CONF_FILTER_NAME, this.getClass().getName());
     }
 
+    // if hasNext is true, a processed Payload is ready for delivery
     public boolean hasNext() {
+        if (processedPayload != null) {
+            return true;
+        }
         checkSource();
-        return source.hasNext();
+        while (processedPayload == null && source.hasNext()) {
+            Payload processedPayload = source.next();
+            if (processedPayload == null) {
+                continue;
+            }
+            long startTime = System.nanoTime();
+            try {
+                processPayload(processedPayload);
+            } catch (Exception e) {
+                Logging.logProcess(name,
+                                   "processPayload failed, Payload discarded",
+                                   Logging.LogLevel.WARN, processedPayload, e);
+                processedPayload.close();
+                //noinspection UnusedAssignment
+                processedPayload = null;
+                continue;
+            }
+            long spendTime = System.nanoTime() - startTime;
+            totalTimeNS += spendTime;
+            payloadCount++;
+            String ms = Double.toString((spendTime / 1000000.0));
+            if (log.isTraceEnabled()) {
+                //noinspection DuplicateStringLiteralInspection
+                log.trace("Processed " + processedPayload + " (#" + payloadCount
+                          + " in " + ms + " ms using " + this);
+            }
+            Logging.logProcess(name,
+                               "processPayload #" + payloadCount
+                               + " finished in " + ms + "ms",
+                               Logging.LogLevel.TRACE, processedPayload);
+            break;
+        }
+
+        return processedPayload != null;
     }
 
     public Payload next() {
-        checkSource();
-        Payload payload = source.next();
-        long startTime = System.nanoTime();
-        processPayload(payload);
-        long spendTime = System.nanoTime() - startTime;
-        totalTimeNS += spendTime;
-        payloadCount++;
-        if (log.isTraceEnabled()) {
-            log.trace("Processed " + payload + " (#" + payloadCount + " in "
-                      + (spendTime / 1000000.0) + " ms using " + this);
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("next() called");
+        if (!hasNext()) {
+            throw new IllegalStateException("No more Payloads available");
         }
-        return payload;
+        Payload toDeliver = processedPayload;
+        processedPayload = null;
+        return toDeliver;
     }
 
     /**
@@ -84,13 +119,13 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
 
     public void setSource(Filter filter) {
         if (filter == null) {
+            //noinspection DuplicateStringLiteralInspection
             throw new IllegalArgumentException("Source filter was null");
         }
         if (!(filter instanceof ObjectFilter)) {
-            throw new IllegalArgumentException("Only ObjectFilters accepted as "
-                                               + "source. The filter provided "
-                                               + "was of class "
-                                               + filter.getClass());
+            throw new IllegalArgumentException(
+                    "Only ObjectFilters accepted as source. The filter"
+                    + " provided was of class " + filter.getClass());
         }
         source = (ObjectFilter)filter;
     }
