@@ -27,6 +27,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.MarcAnnotations;
+import dk.statsbiblioteket.summa.common.Logging;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
@@ -162,7 +163,7 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
         //noinspection DuplicateStringLiteralInspection
         StringWriter output = new StringWriter(5000);
         try {
-            addProcessedContent(output, record, 0);
+            addProcessedContent(output, record.getParents() != null, record, 0);
             log.trace("Finished processing content for " + record);
         } catch (Exception e) {
             log.warn("Exception transforming " + record
@@ -176,6 +177,7 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
      * Append the content of record to the output. For each child, perform a
      * recursive call with level+1 as depth.
      * @param output where to append the content.
+     * @param hasParent must be true if the record has a resolved parent.
      * @param record the record to transform.
      * @param level if 0, the content is added without transformation, except
      *        for the end-record-tag. All children are then processed and
@@ -186,8 +188,9 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
      * @throws javax.xml.transform.TransformerException if there was an error
      *         during transformation.
      */
-    private void addProcessedContent(StringWriter output, Record record,
-                                     int level) throws TransformerException {
+    private void addProcessedContent(StringWriter output, boolean hasParent,
+                                     Record record, int level) throws
+                                                          TransformerException {
         //noinspection DuplicateStringLiteralInspection
         log.debug("Processing "+record.getId()+"  at level " + level);
 
@@ -225,18 +228,7 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
                     if (line.startsWith("<?")) {
                         line = line.substring(line.indexOf("?>") + 2);
                     }
-                    if (line.contains("tag=\"24x\"")) {
-                        MarcAnnotations.MultiVolumeType type =
-                                MarcAnnotations.MultiVolumeType.fromString(
-                                        record.getMeta(MarcAnnotations.
-                                                META_MULTI_VOLUME_TYPE));
-                        if (type.equals(MarcAnnotations.MultiVolumeType.BIND)) {
-                            line = line.replace("tag=\"24x\"", "tag=\"248\"");
-                        } else if (type.equals(
-                                MarcAnnotations.MultiVolumeType.SEKTION)) {
-                            line = line.replace("tag=\"24x\"", "tag=\"247\"");
-                        }
-                    }
+                    line = handleTag24x(record, line, hasParent);
                     line = line.replace(
                             "xmlns=\"http://www.loc.gov/MARC21/slim\"", "");
 
@@ -250,11 +242,64 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
 
         if (record.getChildren() != null) {
             for (Record child: record.getChildren()) {
-                addProcessedContent(output, child, level+1);
+                addProcessedContent(output, true, child, level+1);
             }
         }
         if (level == 0) {
             output.append(content.subSequence(endPos-3, content.length()));
         }
+    }
+
+    private String handleTag24x(Record record, String line, boolean hasParent) {
+        if (!line.contains("tag=\"24x\"")) {
+            return line;
+        }
+        String ERROR_NOTMULTI =
+                "MarcAnnotation was NOTMULTI but the Record had ";
+        if (log.isTraceEnabled()) {
+            log.trace("Entering handleTag24x(" + record + ", " + line + ", "
+                      + hasParent + ")");
+        }
+        hasParent = hasParent || record.getParents() != null;
+        MarcAnnotations.MultiVolumeType type =
+                MarcAnnotations.MultiVolumeType.fromString(
+                        record.getMeta(MarcAnnotations.
+                                META_MULTI_VOLUME_TYPE));
+        if (type == MarcAnnotations.MultiVolumeType.NOTMULTI) {
+            if (hasParent && record.getChildren() != null) {
+                Logging.logProcess(
+                        this.getClass().getSimpleName(),
+                        ERROR_NOTMULTI + "parents and children. We set it to "
+                        + MarcAnnotations.MultiVolumeType.SEKTION + " for "
+                        + record, Logging.LogLevel.DEBUG, null);
+                type = MarcAnnotations.MultiVolumeType.SEKTION;
+            } else if (hasParent) {
+                Logging.logProcess(
+                        this.getClass().getSimpleName(),
+                        ERROR_NOTMULTI + "parents. We set it to "
+                        + MarcAnnotations.MultiVolumeType.BIND + " for "
+                        + record, Logging.LogLevel.DEBUG, null);
+                type = MarcAnnotations.MultiVolumeType.BIND;
+            } else if (record.getChildren() != null) {
+                Logging.logProcess(
+                        this.getClass().getSimpleName(),
+                        ERROR_NOTMULTI + "children. We set it to "
+                        + MarcAnnotations.MultiVolumeType.HOVEDPOST + " for "
+                        + record, Logging.LogLevel.DEBUG, null);
+                type = MarcAnnotations.MultiVolumeType.HOVEDPOST;
+            }
+        }
+        if (type.equals(MarcAnnotations.MultiVolumeType.BIND)) {
+            line = line.replace("tag=\"24x\"", "tag=\"248\"");
+        } else if (type.equals(
+                MarcAnnotations.MultiVolumeType.SEKTION)) {
+            line = line.replace("tag=\"24x\"", "tag=\"247\"");
+        } else {
+            Logging.logProcess(this.getClass().getSimpleName(),
+                    "Found 24x in " + record + ", but type was " + type
+                    + " so no replacement was done. The content will probably "
+                    + "not be processed", Logging.LogLevel.DEBUG, null);
+        }
+        return line;
     }
 }

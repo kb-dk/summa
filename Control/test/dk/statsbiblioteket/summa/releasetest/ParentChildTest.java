@@ -197,7 +197,8 @@ public class ParentChildTest extends NoExitTestCase {
         String result = performSearch(searchClient, query);
         int count = MultipleSourcesTest.getSearchResultCount(result);
         assertEquals("The query '" + query + "' for the case '" + testCase
-                     + "' should yield the expected number of hits",
+                     + "' should yield the expected number of hits. The result "
+                     + "was " + result,
                      expectedHits, count);
     }
 

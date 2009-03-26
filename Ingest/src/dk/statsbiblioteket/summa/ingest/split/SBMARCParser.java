@@ -219,6 +219,8 @@ public class SBMARCParser extends MARCParser {
 
         // Status and type
         if (STATUS_FIELD.equals(dataFieldTag)) {
+            log.trace("Entered " + dataFieldTag + " in " + id
+                      + " with subfield " + subFieldCode);
             if (STATUS_FIELD_SUBFIELD.equals(subFieldCode)) {
                 // d = deleted, c = corrected, n = new, "" = new or corrected
                 log.trace("Status for " + id + " is '" + subFieldContent + "'");
@@ -236,6 +238,7 @@ public class SBMARCParser extends MARCParser {
                 } else if (TYPE_BIND.equals(subFieldContent)) {
                     type = MarcAnnotations.MultiVolumeType.BIND;
                 } // We only handle the three types above and ignore the rest
+                log.trace("Type (004*a) for " + id + " resolved to " + type);
             }
         }
 
