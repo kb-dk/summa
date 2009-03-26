@@ -61,12 +61,15 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
         }
         checkSource();
         while (processedPayload == null && source.hasNext()) {
-            Payload processedPayload = source.next();
+            processedPayload = source.next();
             if (processedPayload == null) {
+                log.debug("hasNext(): Got null from source. This is legal but"
+                          + " unusual. Skipping to next payload");
                 continue;
             }
             long startTime = System.nanoTime();
             try {
+                log.trace("Processing Payload");
                 processPayload(processedPayload);
             } catch (Exception e) {
                 Logging.logProcess(name,
@@ -134,6 +137,7 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
     public boolean pump() throws IOException {
         checkSource();
         if (!hasNext()) {
+            log.trace("pump(): hasNext() returned false");
             return false;
         }
         Payload payload = next();
