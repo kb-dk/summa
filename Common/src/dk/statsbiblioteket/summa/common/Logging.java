@@ -23,7 +23,9 @@
 package dk.statsbiblioteket.summa.common;
 
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.common.filter.Payload;
 
 /**
  * Utility class for doing conditional logging. Consider the case with a method
@@ -47,6 +49,61 @@ import dk.statsbiblioteket.util.qa.QAInfo;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
 public class Logging {
+
+    /**
+     * The name of the process log: "process". Logging on trace-level will
+     * provide a full dump of the Payload or Record in question for every
+     * log message. Logging on debug-level will provide a full dump if a
+     * warn-level message is given.
+     */
+    public static final String PROCESS_LOG_NAME = "process";
+    private static final Log processLog = LogFactory.getLog(PROCESS_LOG_NAME);
+
+    /**
+     * Special logging for process-related messages. Process-related messages
+     * differ from normal messages by being related to specific Payloads or
+     * Records, rather than the classes that handles these.
+     * </p><p>
+     * FATAL: Not used.<br />
+     * ERROR: Not used.<br />
+     * WARN:  When a Payload is discarded due to problems.<br />
+     * INFO:  Not used.<br />
+     * DEBUG: When a Payload is created.
+     * TRACE: Different stages that the Payload has passed, such as the Filters
+     *        that processed it, processing time etc.<br />
+     * </p><p>
+     * @param message the log message.
+     * @param level   the log level.
+     * @param payload the Payload related to the message.
+     */
+    public static void logProcess(
+            String message, LogLevel level, Payload payload) {
+        if ((level == LogLevel.WARN && isProcessLogLevel(LogLevel.DEBUG)
+             || level == LogLevel.TRACE)) {
+            log(message +". " + payload
+                + (payload.getRecord() != null
+                   ? ". Content:\n" + payload.getRecord().getContentAsUTF8()
+                   : ". No content"),
+                processLog, level);
+        }
+    }
+
+    /**
+     * @param level is logging done on this level?
+     * @return true if process logging is done on the stated level.
+     */
+    public static boolean isProcessLogLevel(LogLevel level) {
+        switch (level) {
+            case FATAL: return processLog.isFatalEnabled();
+            case ERROR: return processLog.isErrorEnabled();
+            case WARN:  return processLog.isWarnEnabled();
+            case INFO:  return processLog.isInfoEnabled();
+            case DEBUG: return processLog.isDebugEnabled();
+            case TRACE: return processLog.isTraceEnabled();
+            default: return true; // Better to log extra than miss messages
+        }
+    }
+
     public static enum LogLevel {
         FATAL, ERROR, WARN, INFO, DEBUG, TRACE
     }
