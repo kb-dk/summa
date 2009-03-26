@@ -206,7 +206,7 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
             throw new IllegalArgumentException(message);
         }
         if (level == 0) {
-            output.append(content.subSequence(0, endPos));
+            output.append(content.subSequence(0, endPos-3));
         } else {
             byte[] transformed = XSLT.transform(
             xsltLocation, record.getContent(), null, stripXMLNamespaces).
@@ -254,7 +254,7 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
             }
         }
         if (level == 0) {
-            output.append(content.subSequence(endPos, content.length()));
+            output.append(content.subSequence(endPos-3, content.length()));
         }
     }
 }
