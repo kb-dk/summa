@@ -71,6 +71,16 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
             try {
                 log.trace("Processing Payload");
                 processPayload(processedPayload);
+            } catch (PayloadException e) {
+                Logging.logProcess(
+                        name,
+                        "processPayload failed with explicit PayloadException, "
+                        + "Payload discarded",
+                        Logging.LogLevel.WARN, processedPayload, e);
+                processedPayload.close();
+                //noinspection UnusedAssignment
+                processedPayload = null;
+                continue;
             } catch (Exception e) {
                 Logging.logProcess(name,
                                    "processPayload failed, Payload discarded",
@@ -113,8 +123,13 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
     /**
      * Perform implementation-specific processing of the given Payload.
      * @param payload the Payload to process.
+     * @throws PayloadException if it was not possible to process the Payload
+     *         and if this means that further processing of the Payload does
+     *         not make sense. Throwing this means that the Payload will be
+     *         discarded by ObjectFilterImpl.
      */
-    protected abstract void processPayload(Payload payload);
+    protected abstract void processPayload(Payload payload) throws 
+                                                               PayloadException;
 
     public void remove() {
         // Do nothing as default

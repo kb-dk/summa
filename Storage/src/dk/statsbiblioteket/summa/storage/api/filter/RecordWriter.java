@@ -31,6 +31,7 @@ import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
+import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
 import dk.statsbiblioteket.summa.storage.api.StorageWriterClient;
 import dk.statsbiblioteket.summa.storage.api.WritableStorage;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -287,11 +288,11 @@ public class RecordWriter extends ObjectFilterImpl {
      * @param payload the Payload containing the Record to flush.
      */
     @Override
-    protected void processPayload(Payload payload) {
+    protected void processPayload(Payload payload) throws PayloadException {
         Record record = payload.getRecord();
         if (record == null) {
-            throw new IllegalStateException("null received in Payload in next()"
-                                            + ". This should not happen");
+            throw new PayloadException("null received in Payload in next()"
+                                       + ". This should not happen");
         }
 
         batcher.add(record);
