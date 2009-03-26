@@ -48,10 +48,12 @@ public class RecordReaderTest extends TestCase {
         super(name);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
     }
@@ -67,6 +69,9 @@ public class RecordReaderTest extends TestCase {
         // Clean up and prepare a fresh directory
         db.mkdirs();
         Files.delete(db);
+        if (db.exists()) {
+            System.out.println("Unable to delete " + db);
+        }
         db.mkdirs();
 
         Configuration conf = Configuration.newMemoryBased(
@@ -142,6 +147,8 @@ public class RecordReaderTest extends TestCase {
         Record rec = p.getRecord();
 
         assertEquals(orig, rec);
+        r.close(true);
+        sto.close();
     }
 
     public void testTwo() throws Exception {
@@ -161,6 +168,8 @@ public class RecordReaderTest extends TestCase {
         p = r.next();
         rec = p.getRecord();
         assertEquals(orig2, rec);
+        r.close(true);
+        sto.close();
     }
 
     public void testThree() throws Exception {
@@ -185,6 +194,8 @@ public class RecordReaderTest extends TestCase {
         p = r.next();
         rec = p.getRecord();
         assertEquals(orig3, rec);
+        r.close(true);
+        sto.close();
     }
 
     public void testWatchOne() throws Exception {
@@ -211,6 +222,8 @@ public class RecordReaderTest extends TestCase {
         }
 
         assertEquals(orig, probe.records.get(0));
+        r.close(true);
+        sto.close();
     }
 
     public void testWatchThree() throws Exception {
@@ -241,6 +254,8 @@ public class RecordReaderTest extends TestCase {
         assertEquals(orig1, probe.records.get(0));
         assertEquals(orig2, probe.records.get(1));
         assertEquals(orig3, probe.records.get(2));
+        r.close(true);
+        sto.close();
     }
 
     static class RecordProbe implements Runnable {
