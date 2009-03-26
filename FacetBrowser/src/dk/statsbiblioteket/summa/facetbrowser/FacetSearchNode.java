@@ -187,7 +187,15 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
             log.trace("Finished waiting for BrowserThread, returning result");
             return browserThread.getResult().externalize();
         } finally {
-            browsers.offer(browserThread);
+            while (true) {
+                try {
+                    browsers.put(browserThread);
+                    break;
+                } catch (InterruptedException e) {
+                    log.debug("Interrupted while putting browserThread. "
+                              + "Retrying");
+                }
+            }
         }
         /*
     protected synchronized FacetResult getFacetMap(String query,

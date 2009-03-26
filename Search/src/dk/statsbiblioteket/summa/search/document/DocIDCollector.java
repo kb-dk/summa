@@ -53,7 +53,14 @@ public class DocIDCollector extends HitCollector {
      */
     public DocIDCollector(ArrayBlockingQueue<DocIDCollector> queue) {
         this.queue = queue;
-        queue.offer(this);
+        while (true) {
+            try {
+                queue.put(this);
+                break;
+            } catch (InterruptedException e) {
+                log.debug("Interrupted while putting DicIDCollector. Retrying");
+            }
+        }
     }
 
     /**
@@ -79,7 +86,15 @@ public class DocIDCollector extends HitCollector {
         if (queue == null) {
             log.debug("No queue present, so the collector is not put back");
         } else {
-            queue.offer(this);
+            while (true) {
+                try {
+                    queue.put(this);
+                    break;
+                } catch (InterruptedException e) {
+                    log.debug("Interrupted while putting "
+                               + "DocIDCollector. Retrying");
+                }
+            }
         }
     }
 
