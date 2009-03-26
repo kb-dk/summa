@@ -64,6 +64,29 @@
                                     <key>summa.xmltransformer.xslt</key>
                                     <value class="string">/tmp/summatest/data/fagref/fagref_index.xsl</value>
                                 </entry>
+                                <entry>
+                                    <key>summa.xmltransformer.ignorexmlnamespaces</key>
+                                    <value class="boolean">false</value>
+                                </entry>
+                            </xproperties>
+
+                            <xproperties>
+                                <entry>
+                                    <key>filter.name</key>
+                                    <value class="string">OldToNewTransformer</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.filter.sequence.filterclass</key>
+                                    <value class="string">dk.statsbiblioteket.summa.index.XMLTransformer</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.xmltransformer.xslt</key>
+                                    <value class="string">LegacyToSummaDocumentXML.xslt</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.xmltransformer.ignorexmlnamespaces</key>
+                                    <value class="boolean">false</value>
+                                </entry>
                             </xproperties>
 
                             <xproperties>

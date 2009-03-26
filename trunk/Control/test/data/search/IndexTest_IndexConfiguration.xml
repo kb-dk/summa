@@ -69,6 +69,10 @@
                                     <key>summa.xmltransformer.xslt</key>
                                     <value class="string">/tmp/summatest/data/search/fagref_xslt/fagref_index.xsl</value>
                                 </entry>
+                                <entry>
+                                    <key>summa.xmltransformer.ignorexmlnamespaces</key>
+                                    <value class="boolean">false</value>
+                                </entry>
                             </xproperties>
 
                             <xproperties>
@@ -82,8 +86,11 @@
                                 </entry>
                                 <entry>
                                     <key>summa.xmltransformer.xslt</key>
-                                    <value class="string">LegacyToSummaDocumentXML.xslt
-                                    </value>
+                                    <value class="string">LegacyToSummaDocumentXML.xslt</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.xmltransformer.ignorexmlnamespaces</key>
+                                    <value class="boolean">false</value>
                                 </entry>
                             </xproperties>
 
