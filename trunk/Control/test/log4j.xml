@@ -151,29 +151,27 @@
         <appender-ref ref="CONSOLE" />
     </logger>
     -->
-    <logger name="dk.statsbiblioteket.summa.index.XMLTransformer">
+    <!--
+    <logger name="dk.statsbiblioteket.summa.ingest.split.SBMARCParser">
         <level value="trace" />
         <appender-ref ref="CONSOLE" />
     </logger>
-    <logger name="dk.statsbiblioteket.summa.common.MarcAnnotations">
+    -->
+    <logger name="dk.statsbiblioteket.summa.common.legacy">
         <level value="trace" />
         <appender-ref ref="CONSOLE" />
     </logger>
     <!--
-    <logger name="dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl">
-        <level value="trace" />
-        <appender-ref ref="CONSOLE" />
-    </logger>
     <logger name="dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode">
         <level value="trace" />
         <appender-ref ref="CONSOLE" />
     </logger>
     -->
     <logger name="process">
-        <level value="trace" />
+        <level value="debug" />
         <appender-ref ref="CONSOLE" />
     </logger>
-<!--
+    <!--
     <logger name="dk.statsbiblioteket.summa.index.lucene.LuceneManipulator">
         <level value="trace" />
         <appender-ref ref="CONSOLE" />
