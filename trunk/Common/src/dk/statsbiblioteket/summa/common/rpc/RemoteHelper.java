@@ -184,7 +184,7 @@ public class RemoteHelper {
     }
 
     /**
-     * Throws a {@link dk.statsbiblioteket.summa.common.rpc.RemoteHelper.InvalidCodeBaseException} if one or more of the
+     * Throws a {@link InvalidCodeBaseException} if one or more of the
      * URIs listed in {@code uris} does not point at a valid {@code .jar}
      * file.
      * @param uris an array of uris to test for jar file contents
