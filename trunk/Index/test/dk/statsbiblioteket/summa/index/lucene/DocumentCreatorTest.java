@@ -41,10 +41,12 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
         super(name);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
     }
@@ -68,7 +70,7 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
             "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
             + "<SummaDocument version=\"1.0\" boost=\"1.5\" "
             + "id=\"mybase:grimme_aellinger\" xmlns=\""
-            + DocumentCreator.SUMMA_NAMESPACE + "\">\n"
+            + StreamingDocumentCreator.SUMMA_NAMESPACE + "\">\n"
             + "    <fields>\n"
             + "        <field name=\"mystored\" boost=\"2.0\">Foo bar</field>\n"
             + "        <field name=\"mystored\" boost=\"2.0\">Kazam</field>\n"
@@ -81,8 +83,9 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
             "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
             + "<SummaDocument version=\"1.0\" boost=\"1.5\" "
             + "id=\"mybase:grimme_aellinger\""
-            + " xmlns:Index=\"" + DocumentCreator.SUMMA_NAMESPACE + "\""
-            + " xmlns=\"" + DocumentCreator.SUMMA_NAMESPACE + "\">\n"
+            + " xmlns:Index=\"" + StreamingDocumentCreator.SUMMA_NAMESPACE
+            + "\""
+            + " xmlns=\"" + StreamingDocumentCreator.SUMMA_NAMESPACE + "\">\n"
             + "    <fields>\n"
             + "        <field name=\"mystored\" boost=\"2.0\">Foo bar</field>\n"
             + "        <field name=\"mystored\" boost=\"2.0\">Kazam</field>\n"
@@ -133,7 +136,7 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
 
     public void testXPath() throws Exception {
         DefaultNamespaceContext nsCon = new DefaultNamespaceContext();
-        nsCon.setNameSpace(DocumentCreator.SUMMA_NAMESPACE,
+        nsCon.setNameSpace(StreamingDocumentCreator.SUMMA_NAMESPACE,
                            DocumentCreator.SUMMA_NAMESPACE_PREFIX);
         XPath xPath = XPathFactory.newInstance().newXPath();
         xPath.setNamespaceContext(nsCon);
@@ -159,7 +162,7 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
 
     public void testsimpletransformation() throws Exception {
         Configuration conf = getCreatorConf();
-        testSimpleTransformation(new DocumentCreator(conf));
+        testSimpleTransformation(new StreamingDocumentCreator(conf));
     }
 
     public void testStreamTransformation() throws Exception {
@@ -174,7 +177,7 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
 
         System.out.println("Creating creators");
         Configuration conf = getCreatorConf();
-        ObjectFilter dom = new DocumentCreator(conf);
+        ObjectFilter dom = new StreamingDocumentCreator(conf);
         ObjectFilter stream = new StreamingDocumentCreator(conf);
 
         System.out.println("Performing warm up");

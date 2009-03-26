@@ -64,7 +64,6 @@ public class StreamingDocumentCreator extends DocumentCreatorBase {
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public static final String SUMMA_NAMESPACE =
 //            "http://statsbiblioteket.dk/2008/Index";
-    // TODO: Upgrade to new name space
             "http://statsbiblioteket.dk/summa/2008/Document";
     // TODO: Make DocumentCreator support namespace qualified attributes
 

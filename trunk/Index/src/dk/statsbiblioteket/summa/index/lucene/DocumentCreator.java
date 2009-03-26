@@ -79,8 +79,10 @@ public class DocumentCreator extends DocumentCreatorBase {
 
     // TODO: Reconsider this namespace
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
+//    public static final String SUMMA_NAMESPACE =
+//            "http://statsbiblioteket.dk/2008/Index";
     public static final String SUMMA_NAMESPACE =
-            "http://statsbiblioteket.dk/2008/Index";
+            "http://statsbiblioteket.dk/summa/2008/Document";
     public static final String SUMMA_NAMESPACE_PREFIX = "Index";
     // TODO: Make DocumentCreator support namespace qualified attributes
     /**
