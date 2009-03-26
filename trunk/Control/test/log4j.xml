@@ -155,6 +155,10 @@
         <level value="trace" />
         <appender-ref ref="CONSOLE" />
     </logger>
+    <logger name="dk.statsbiblioteket.summa.common.MarcAnnotations">
+        <level value="trace" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
     <!--
     <logger name="dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl">
         <level value="trace" />
@@ -166,7 +170,7 @@
     </logger>
     -->
     <logger name="process">
-        <level value="debug" />
+        <level value="trace" />
         <appender-ref ref="CONSOLE" />
     </logger>
 <!--
