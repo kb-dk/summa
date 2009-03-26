@@ -57,6 +57,7 @@ public class LegacyTest  extends TestCase {
 
         Configuration conf = Configuration.newMemoryBased();
         conf.set(XMLTransformer.CONF_XSLT, xslt);
+        conf.set(XMLTransformer.CONF_STRIP_XML_NAMESPACES, false);
         XMLTransformer transformer = new XMLTransformer(conf);
 
         transformer.processPayload(payload);
