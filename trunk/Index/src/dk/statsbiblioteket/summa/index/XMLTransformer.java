@@ -27,6 +27,7 @@ import javax.xml.transform.TransformerException;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XSLT;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
+import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
@@ -106,7 +107,7 @@ public class XMLTransformer extends ObjectFilterImpl {
      * @param payload the wrapper containing the Record with the content.
      */
     @Override
-    protected void processPayload(Payload payload) {
+    protected void processPayload(Payload payload) throws PayloadException {
         //noinspection DuplicateStringLiteralInspection
         log.trace("processPayload(" + payload + ") called for " + this);
         if (payload.getRecord() == null) {
@@ -119,14 +120,14 @@ public class XMLTransformer extends ObjectFilterImpl {
                     stripXMLNamespaces).
                     toByteArray());
         } catch (TransformerException e) {
-            log.warn("Transformer problems in " + this
-                     + ". Discarding payload " + payload, e);
             if (log.isTraceEnabled()) {
-                log.trace("Problematic record in " + this + " was:\n"
+                log.trace("Untransformable record in " + payload + " was:\n"
                           + payload.getRecord().toString(true)
                           + " with content\n"
                           + payload.getRecord().getContentAsUTF8());
             }
+            throw new PayloadException(
+                    "Unable to transform payload", e, payload);
         }
     }
 

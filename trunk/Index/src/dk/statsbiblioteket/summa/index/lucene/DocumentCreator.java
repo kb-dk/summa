@@ -37,6 +37,7 @@ import java.text.ParseException;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.DOM;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.xml.DefaultNamespaceContext;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
@@ -154,23 +155,23 @@ public class DocumentCreator extends DocumentCreatorBase {
      */
     // TODO: If not added, mark meta-data with unadded and continue gracefully
     @Override
-    public void processPayload(Payload payload) {
+    public void processPayload(Payload payload) throws PayloadException {
         //noinspection DuplicateStringLiteralInspection
         log.debug("processPayload(" + payload + ") called");
         long startTime = System.currentTimeMillis();
         if (payload.getRecord() == null) {
             //noinspection DuplicateStringLiteralInspection
-            throw new IllegalArgumentException(payload + " has no Record");
+            throw new PayloadException("Payload has no Record", payload);
         }
         Document dom;
         try {
             dom = domBuilder.parse(new ByteArrayInputStream(
                     payload.getRecord().getContent()));
         } catch (SAXException e) {
-            throw new IllegalArgumentException("could not parse record content "
-                                               + "in " + payload, e);
+            throw new PayloadException("could not parse record content",
+                                       e, payload);
         } catch (IOException e) {
-            throw new IllegalStateException(
+            throw new PayloadException(
                     "Unable to process ByteArrayInputStream for " + payload, e);
         }
 
