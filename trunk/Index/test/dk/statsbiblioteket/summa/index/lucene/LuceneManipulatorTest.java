@@ -20,9 +20,6 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.unittest.LuceneTestHelper;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
-import dk.statsbiblioteket.summa.index.lucene.DocumentCreator;
-import dk.statsbiblioteket.summa.index.lucene.DocumentCreatorTest;
-import dk.statsbiblioteket.summa.index.lucene.LuceneManipulator;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
@@ -36,6 +33,7 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
         super(name);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
         if (location.exists()) {
@@ -43,10 +41,11 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
         }
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
         if (location.exists()) {
-            Files.delete(location);
+//            Files.delete(location);
         }
     }
 
@@ -163,7 +162,7 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
         Document document = new Document();
         document.add(new Field("mynumber",
                                Integer.toString(random.nextInt(1000)),
-                               Field.Store.NO, Field.Index.UN_TOKENIZED));
+                               Field.Store.NO, Field.Index.NOT_ANALYZED));
         if (deleted) {
             record.setDeleted(true);
         }
@@ -187,7 +186,7 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
         LuceneManipulator manipulator = new LuceneManipulator(conf);
         manipulator.open(location);
 
-        DocumentCreator creator = new DocumentCreator(conf);
+        StreamingDocumentCreator creator = new StreamingDocumentCreator(conf);
         creator.setSource(this);
 
         while (creator.hasNext()) {

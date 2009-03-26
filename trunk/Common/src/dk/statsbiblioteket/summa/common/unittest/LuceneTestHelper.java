@@ -24,6 +24,8 @@ package dk.statsbiblioteket.summa.common.unittest;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
+import java.util.ArrayList;
 
 import org.apache.lucene.index.IndexReader;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
@@ -41,30 +43,31 @@ public class LuceneTestHelper extends TestCase {
      * @throws IOException if the index could not be accessed.
      */
     public static void verifyContent(File location,
-                                      String[] ids) throws IOException {
+                                     String[] ids) throws IOException {
+        List<String> actualIDs = getIDs(location);
+        for (int i = 0 ; i < ids.length; i++) {
+            assertEquals("The id '" + ids[i]
+                         + "' should be present in the index",
+                         ids[i], actualIDs.get(i));
+        }
+        assertEquals(String.format(
+                "The number of checked ids in %s should match", location),
+                     ids.length, actualIDs.size());
+    }
+
+    public static List<String> getIDs(File location) throws IOException {
+        List<String> ids = new ArrayList<String>(100);
         IndexReader reader = IndexReader.open(location);
         try {
-            int encountered = 0;
-            for (int i = 0 ; i < reader.maxDoc() && i < ids.length; i++) {
+            for (int i = 0 ; i < reader.maxDoc() ; i++) {
                 if (!reader.isDeleted(i)) {
-                    assertEquals("The id '" + ids[encountered]
-                                 + "' should be present in the "
-                                 + "index at position " + i,
-                                 ids[encountered],
-                                 reader.document(i).getValues(
-                                         IndexUtils.RECORD_FIELD)[0]);
-                    encountered++;
+                    ids.add(reader.document(i).getValues(
+                            IndexUtils.RECORD_FIELD)[0]);
                 }
             }
-            assertEquals(String.format(
-                    "The number of checked ids in %s should match", location),
-                         ids.length, encountered);
         } finally {
             reader.close();
         }
+        return ids;
     }
-
 }
-
-
-
