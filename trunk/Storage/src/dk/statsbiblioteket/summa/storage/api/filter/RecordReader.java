@@ -446,6 +446,13 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
 
         // We have to check this in a loop. See Javadoc for Object.wait()
         while (true) {
+            // If there is no watcher, just stop watching.
+            // We might be closing down or something
+            if (!storageWatcher.isRunning()) {
+                log.info("Storage watcher not running. Aborting wait");
+                break;
+            }
+
             try {
                 // Check if there has been changes since we last checked
                 // Keep the monitor on the storageWatcher until we have
