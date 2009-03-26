@@ -69,7 +69,7 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
 
     private static final long HASNEXT_SLEEP = 50; // Sleep-ms between polls
     private static final Record interruptor =
-            new Record("dummyID", "dummyBase", new byte[0]);
+            new Record("dummyID", "dummyStreamBase", new byte[0]);
 
     private int queueTimeout = DEFAULT_QUEUE_TIMEOUT;
     protected ArrayBlockingQueue<Record> queue;
@@ -109,6 +109,7 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
 
     @SuppressWarnings({"ObjectEquality"})
     public synchronized boolean hasNext() {
+        //noinspection DuplicateStringLiteralInspection
         log.trace("hasNext() called");
         // TODO: If this check solid enough?
         if (queue == null || sourcePayload == null) {
@@ -216,6 +217,7 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
     public void close() {
         //noinspection DuplicateStringLiteralInspection
         log.debug("close() called");
+        // TODO: Check whether this discards any currently processed Payloads
         finished = true;
         stop();
     }

@@ -37,6 +37,7 @@ import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.index.IndexCommon;
+import dk.statsbiblioteket.summa.common.Logging;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -491,6 +492,9 @@ public class IndexControllerImpl extends StateThread implements
             try {
                 requestCommit = requestCommit | manipulator.update(payload);
             } catch (Exception e) {
+                Logging.logProcess(this.getClass().getSimpleName(),
+                                   "Failed indexing",
+                                   Logging.LogLevel.WARN, payload, e);
                 if (manipulatorPosition == 0) {
                     failLog.warn(String.format(
                             "IOException for the first manipulator (%s) while "

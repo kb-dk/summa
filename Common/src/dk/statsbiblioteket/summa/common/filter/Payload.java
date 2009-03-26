@@ -24,11 +24,10 @@ package dk.statsbiblioteket.summa.common.filter;
 
 import java.io.InputStream;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.util.ConvenientMap;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import org.apache.commons.logging.Log;
@@ -82,12 +81,21 @@ public class Payload {
 
     public Payload(InputStream stream) {
         assignIfValid(stream, record);
+        Logging.logProcess(this.getClass().getSimpleName(),
+                           "Created based on InputStream",
+                           Logging.LogLevel.DEBUG, this);
     }
     public Payload(Record record) {
         assignIfValid(stream, record);
+        Logging.logProcess(this.getClass().getSimpleName(),
+                           "Created based on Record",
+                           Logging.LogLevel.DEBUG, this);
     }
     public Payload(InputStream stream, Record record) {
         assignIfValid(stream, record);
+        Logging.logProcess(this.getClass().getSimpleName(),
+                           "Created based on Record and InputStream", 
+                           Logging.LogLevel.DEBUG, this);
     }
 
     /* Accessors */
@@ -230,6 +238,9 @@ public class Payload {
      *       close(success) on the Filter.
      */
     public void close() {
+        Logging.logProcess(this.getClass().getSimpleName(),
+                           "Closing payload",
+                           Logging.LogLevel.TRACE, this);
         if (stream != null) {
             try {
                 log.debug("Closing embedded stream for " + this);
@@ -259,6 +270,7 @@ public class Payload {
      * content from the old map is assigned using putAll.
      * @return a shallow copy of this object.
      */
+    @Override
     @SuppressWarnings({"CloneDoesntDeclareCloneNotSupportedException",
                        "CloneDoesntCallSuperClone"})
     public Payload clone() {
@@ -269,6 +281,7 @@ public class Payload {
         return clone;
     }
 
+    @Override
     public String toString() {
         return "Payload(" + getId() + ")"
                + (getData(ORIGIN) == null ?
