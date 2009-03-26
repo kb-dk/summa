@@ -107,7 +107,10 @@ public class RecordReaderTest extends TestCase {
 
     private static final String expected =
             "<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n"
-            + "<lastRecordTimestamp>20080417-215057</lastRecordTimestamp>\n";
+            + "<lastRecordTimestamp>\n"
+            + "<epoch>1208461857000</epoch>\n"
+            + "<iso>20080417-215057</iso>\n"
+            + "</lastRecordTimestamp>\n";
 
     public void testPatternMatching() throws Exception {
         Pattern p = Pattern.compile("([0-9]{4})([0-9]{2})([0-9]{2})-"
@@ -121,9 +124,8 @@ public class RecordReaderTest extends TestCase {
                     + "([0-9]{2})([0-9]{2})([0-9]{2})"
                     + "</" + TAG + ">", Pattern.DOTALL);*/
         pfull = ProgressTracker.TIMESTAMP_PATTERN;
-        assertTrue("Pattern should match extended case",
-                   pfull.matcher("<lastRecordTimestamp>20080417-215057"
-                                 + "</lastRecordTimestamp>").matches());
+        assertTrue("Pattern should match extended case with input " + expected,
+                   pfull.matcher(expected).matches());
         assertTrue("Pattern should match full case",
                    pfull.matcher(expected).matches());
     }
