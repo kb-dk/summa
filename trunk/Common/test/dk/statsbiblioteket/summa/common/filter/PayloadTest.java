@@ -7,6 +7,7 @@ import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
+import dk.statsbiblioteket.util.Strings;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 
@@ -68,8 +69,8 @@ public class PayloadTest extends TestCase {
         payload.getData().put(Payload.LUCENE_DOCUMENT, document);
         Document insertedDocument =
                 (Document)payload.getData().get(Payload.LUCENE_DOCUMENT);
-        assertNull("The id in the document should be null",
-                   insertedDocument.getValues(IndexUtils.RECORD_FIELD));
+        assertEquals("The id in the document should be empty", 0,
+                   insertedDocument.getValues(IndexUtils.RECORD_FIELD).length);
         payload.setID("baz");
 /*        insertedDocument =
                 (Document)payload.getData().get(Payload.LUCENE_DOCUMENT);
