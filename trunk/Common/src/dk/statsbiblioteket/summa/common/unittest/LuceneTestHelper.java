@@ -27,11 +27,12 @@ import java.io.IOException;
 
 import org.apache.lucene.index.IndexReader;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
 
-/**
- * te forgot to document this class.
- */
+@QAInfo(level = QAInfo.Level.NORMAL,
+        state = QAInfo.State.QA_NEEDED,
+        author = "te, mke")
 public class LuceneTestHelper extends TestCase {
     /**
      * Verifies that the given ids are present in the given order in the index.
@@ -43,21 +44,21 @@ public class LuceneTestHelper extends TestCase {
                                       String[] ids) throws IOException {
         IndexReader reader = IndexReader.open(location);
         try {
-            int expectedCount = 0;
+            int encountered = 0;
             for (int i = 0 ; i < reader.maxDoc() && i < ids.length; i++) {
                 if (!reader.isDeleted(i)) {
-                    assertEquals("The id '" + ids[expectedCount]
+                    assertEquals("The id '" + ids[encountered]
                                  + "' should be present in the "
                                  + "index at position " + i,
-                                 ids[expectedCount],
+                                 ids[encountered],
                                  reader.document(i).getValues(
                                          IndexUtils.RECORD_FIELD)[0]);
-                    expectedCount++;
+                    encountered++;
                 }
             }
-            assertEquals("The number of checked ids in "
-                         + location + " should match",
-                         ids.length, expectedCount);
+            assertEquals(String.format(
+                    "The number of checked ids in %s should match", location),
+                         ids.length, encountered);
         } finally {
             reader.close();
         }
