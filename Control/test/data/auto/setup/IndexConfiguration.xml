@@ -55,6 +55,10 @@
                                     <key>summa.storage.recordreader.startfromscratch</key>
                                     <value class="boolean">true</value>
                                 </entry>
+                                <!--<entry>
+                                    <key>summa.storage.recordreader.usepersistence</key>
+                                    <value class="boolean">false</value>
+                                </entry>-->
                                 <entry>
                                     <key>summa.storage.watcher.pollinterval</key>
                                     <value class="int">500</value>
@@ -86,6 +90,10 @@
                                     <key>summa.xmltransformer.xslt</key>
                                     <value class="string">[fagrefxslt]</value>
                                 </entry>
+                                <entry>
+                                    <key>summa.xmltransformer.ignorexmlnamespaces</key>
+                                    <value class="boolean">false</value>
+                                </entry>
                             </xproperties>
 
                             <xproperties>
@@ -100,6 +108,10 @@
                                 <entry>
                                     <key>summa.xmltransformer.xslt</key>
                                     <value class="string">LegacyToSummaDocumentXML.xslt</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.xmltransformer.ignorexmlnamespaces</key>
+                                    <value class="boolean">false</value>
                                 </entry>
                             </xproperties>
 

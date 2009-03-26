@@ -231,10 +231,8 @@ public class AutoDiscoverTest extends TestCase {
 
         ingest.start();
 
-
         Service index = createIndexer();
         index.start();
-
 
         putFiles();
 
@@ -251,7 +249,7 @@ public class AutoDiscoverTest extends TestCase {
 
         // The records are in storage now, give the indexer 2s to react. This
         // should be sufficient since the default poll time is 500ms
-        boolean foundDocs = waitForDocCount(luceneDir, TEST_FILES.size(), 2000);
+        boolean foundDocs = waitForDocCount(luceneDir, TEST_FILES.size(), 4000);
 
         assertTrue("The lucene index should eventually contain "
                    + TEST_FILES.size() + " records", foundDocs);
