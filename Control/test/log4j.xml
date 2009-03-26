@@ -62,7 +62,7 @@
       -->
 
     <logger name="dk.statsbiblioteket.summa">
-        <level value="info" />
+        <level value="ERROR" />
         <appender-ref ref="CONSOLE" />
     </logger>
 
@@ -157,10 +157,12 @@
         <appender-ref ref="CONSOLE" />
     </logger>
     -->
+    <!--
     <logger name="dk.statsbiblioteket.summa.common.legacy">
         <level value="trace" />
         <appender-ref ref="CONSOLE" />
     </logger>
+    -->
     <!--
     <logger name="dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode">
         <level value="trace" />

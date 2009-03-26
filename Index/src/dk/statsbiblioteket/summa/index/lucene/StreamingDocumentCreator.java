@@ -29,6 +29,7 @@ import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.Logging;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
@@ -149,6 +150,8 @@ public class StreamingDocumentCreator extends DocumentCreatorBase {
                 log.debug(message + ". Problematic content was:\n"
                           + payload.getRecord().getContentAsUTF8());
             }
+            Logging.logProcess("StreamingDocumentcreator", message,
+                               Logging.LogLevel.WARN, payload, e);
             throw new IllegalArgumentException(message, e);
         } catch (IndexServiceException e) {
             throw new IllegalArgumentException(
