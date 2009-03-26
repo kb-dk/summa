@@ -118,6 +118,10 @@
                                                 <value class="string">dk.statsbiblioteket.summa.facetbrowser.FacetManipulator</value>
                                             </entry>
                                             <entry>
+                                                <key>summa.facet.lucene.build.docstoterms</key>
+                                                <value class="boolean">true</value>
+                                            </entry>
+                                            <entry>
                                                 <key>summa.facet.facets</key>
                                                 <value class="list">
                                                     <xproperties>
