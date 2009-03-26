@@ -55,8 +55,9 @@ public class LuceneTestHelper extends TestCase {
                     expectedCount++;
                 }
             }
-            assertEquals("The number of checked ids should match",
-                         expectedCount, ids.length);
+            assertEquals("The number of checked ids in "
+                         + location + " should match",
+                         ids.length, expectedCount);
         } finally {
             reader.close();
         }

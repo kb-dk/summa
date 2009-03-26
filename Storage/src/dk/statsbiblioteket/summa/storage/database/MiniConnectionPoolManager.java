@@ -239,7 +239,8 @@ public class MiniConnectionPoolManager {
         // This routine is unsynchronized, because semaphore.tryAcquire() may block.
 
         if (log.isTraceEnabled ()) {
-            log.trace("Getting connection, with " + getActiveConnections()
+            log.trace("Getting pooled connection, with "
+                      + getActiveConnections()
                       + " connections currently active");
         }
 
@@ -263,6 +264,9 @@ public class MiniConnectionPoolManager {
         try {
             PooledConnection pconn = _getPooledConnection();
             ok = true;
+            if (log.isTraceEnabled()) {
+                log.trace("Handing out connection " + pconn.hashCode());
+            }
             return pconn;
         } finally {
             if (!ok) {
