@@ -109,6 +109,10 @@
                                                 <key>summa.xmltransformer.xslt</key>
                                                 <value class="string">targets/csa/csa_index.xsl</value>
                                             </entry>
+                                            <entry>
+                                                <key>summa.xmltransformer.ignorexmlnamespaces</key>
+                                                <value class="boolean">false</value>
+                                            </entry>
                                         </xproperties>
 
                                         <xproperties>
@@ -131,6 +135,10 @@
                                             <entry>
                                                 <key>summa.xmltransformer.xslt</key>
                                                 <value class="string">targets/fagreferent/fagref_index.xsl</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.xmltransformer.ignorexmlnamespaces</key>
+                                                <value class="boolean">false</value>
                                             </entry>
                                         </xproperties>
 
@@ -155,6 +163,10 @@
                                                 <key>summa.xmltransformer.xslt</key>
                                                 <value class="string">targets/horizon/horizon_index.xsl</value>
                                             </entry>
+                                            <entry>
+                                                <key>summa.xmltransformer.ignorexmlnamespaces</key>
+                                                <value class="boolean">false</value>
+                                            </entry>
                                         </xproperties>
 
                                         <xproperties>
@@ -177,6 +189,10 @@
                                             <entry>
                                                 <key>summa.xmltransformer.xslt</key>
                                                 <value class="string">targets/oai/oai_index.xsl</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.xmltransformer.ignorexmlnamespaces</key>
+                                                <value class="boolean">false</value>
                                             </entry>
                                         </xproperties>
 
@@ -201,6 +217,10 @@
                                                 <key>summa.xmltransformer.xslt</key>
                                                 <value class="string">targets/aleph/aleph_index.xsl</value>
                                             </entry>
+                                            <entry>
+                                                <key>summa.xmltransformer.ignorexmlnamespaces</key>
+                                                <value class="boolean">false</value>
+                                            </entry>
                                         </xproperties>
 
                                         <xproperties>
@@ -223,6 +243,10 @@
                                             <entry>
                                                 <key>summa.xmltransformer.xslt</key>
                                                 <value class="string">targets/doms/doms_index.xsl</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.xmltransformer.ignorexmlnamespaces</key>
+                                                <value class="boolean">false</value>
                                             </entry>
                                         </xproperties>
 
@@ -247,6 +271,10 @@
                                                 <key>summa.xmltransformer.xslt</key>
                                                 <value class="string">targets/etss/etss_index.xsl</value>
                                             </entry>
+                                            <entry>
+                                                <key>summa.xmltransformer.ignorexmlnamespaces</key>
+                                                <value class="boolean">false</value>
+                                            </entry>
                                         </xproperties>
 
                                         <xproperties>
@@ -269,6 +297,10 @@
                                             <entry>
                                                 <key>summa.xmltransformer.xslt</key>
                                                 <value class="string">targets/DanskReklameFilm/reklamefilm_index.xsl</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.xmltransformer.ignorexmlnamespaces</key>
+                                                <value class="boolean">false</value>
                                             </entry>
                                         </xproperties>
 
@@ -293,6 +325,10 @@
                                                 <key>summa.xmltransformer.xslt</key>
                                                 <value class="string">targets/MuseumTusculanum/mustusc_index.xsl</value>
                                             </entry>
+                                            <entry>
+                                                <key>summa.xmltransformer.ignorexmlnamespaces</key>
+                                                <value class="boolean">false</value>
+                                            </entry>
                                         </xproperties>
                                     </value>
                                 </entry>
@@ -310,6 +346,10 @@
                                 <entry>
                                     <key>summa.xmltransformer.xslt</key>
                                     <value class="string">LegacyToSummaDocumentXML.xslt</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.xmltransformer.ignorexmlnamespaces</key>
+                                    <value class="boolean">false</value>
                                 </entry>
                             </xproperties>
 
