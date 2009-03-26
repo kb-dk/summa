@@ -37,7 +37,7 @@ public class BundleRepositoryTest extends TestCase {
     public void testList () throws Exception {
         Configuration localConf = Configuration.newMemoryBased(
                                          BundleRepository.CONF_REPO_ADDRESS,
-                                         "file:///tmp/summatest");
+                                         "file:///${user.dir}/Control/test/data/dummy-repo");
         BundleRepository remoteRepo = new RemoteURLRepositoryServer (localConf);
 
         String filter = ".*";
@@ -46,17 +46,18 @@ public class BundleRepositoryTest extends TestCase {
         System.out.println ("Repo list for '" + filter + "':\n\t"
                             + Strings.join (list, "\n\t"));
 
-        filter = "storage";
+        assertEquals(2, list.size());
+        assertTrue(list.contains("foo"));
+        assertTrue(list.contains("bar"));
+
+        filter = "foo";
         list = repo.list (filter);
         System.out.println ("Repo list for '" + filter + "':\n\t"
                             + Strings.join (list, "\n\t"));
+        assertEquals(1, list.size());
+        assertTrue(list.contains("foo"));
     }
 
-    public void testRemoteRepo () throws Exception {
-
-
-
-    }
 }
 
 
