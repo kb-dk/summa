@@ -56,17 +56,17 @@ public class XMLTransformer extends ObjectFilterImpl {
 
     /**
      * If true, all namespaces in the XML is stripped prior to transformation.
-     * This is not recommended, but i The Real World, there are a lot of XML
+     * This is not recommended, but in The Real World, there are a lot of XML
      * and XSLT's with garbled namespace matching.
      * </p><p>
-     * Note: Setting this to true might have a noticeable impact on processor-
-     * load and temporary object allocation.
+     * Note: Using true might have a noticeable impact on processor-load and
+     *       temporary object allocation.
      * </p><p>
-     * Optional. Default is false.
+     * Optional. Default is true.
      */
     public static final String CONF_STRIP_XML_NAMESPACES =
             "summa.xmltransformer.ignorexmlnamespaces";
-    public static final boolean DEFAULT_STRIP_XML_NAMESPACES = false;
+    public static final boolean DEFAULT_STRIP_XML_NAMESPACES = true;
 
     private URL xsltLocation;
     private boolean stripXMLNamespaces = DEFAULT_STRIP_XML_NAMESPACES;
