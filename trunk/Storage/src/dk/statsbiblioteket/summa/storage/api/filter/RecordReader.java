@@ -482,6 +482,8 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
         recordCounter++;
         lastRecordTimestamp = payload.getRecord().getLastModified();
 
+        log.debug("Emitting " + payload);
+
         if (log.isTraceEnabled()) {
             log.trace("next(): Got lastModified timestamp "
                       + String.format(ProgressTracker.ISO_TIME,
