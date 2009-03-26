@@ -22,15 +22,22 @@
  */
 package dk.statsbiblioteket.summa.storage.api.filter;
 
-import java.util.Calendar;
-import java.util.GregorianCalendar;
+import java.util.*;
 import java.util.regex.Pattern;
+import java.io.File;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import junit.framework.Assert;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.api.StorageFactory;
+import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.filter.Payload;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -53,11 +60,39 @@ public class RecordReaderTest extends TestCase {
         return new TestSuite(RecordReaderTest.class);
     }
 
+    public static Storage createStorage() throws Exception {
+        File db = new File(System.getProperty("java.io.tmpdir"),
+                           "summatest" + File.separator + "recordreadertest");
+
+        // Clean up and prepare a fresh directory
+        db.mkdirs();
+        Files.delete(db);
+        db.mkdirs();
+
+        Configuration conf = Configuration.newMemoryBased(
+                                             DatabaseStorage.CONF_LOCATION,
+                                             db.getAbsolutePath());
+
+        return StorageFactory.createStorage(conf);
+    }
+
     public void testTimestampFormatting() throws Exception {
         Calendar t = new GregorianCalendar(2008, 3, 17, 21, 50, 57);
         Assert.assertEquals("The timestamp should be properly formatted",
                      expected,
                      String.format(ProgressTracker.TIMESTAMP_FORMAT, t));
+    }
+
+    public void waitForHasNext(RecordReader r, long timeout) throws Exception{
+        long start = System.currentTimeMillis();
+
+        while (!r.hasNext()) {
+            Thread.sleep(100);
+            if (System.currentTimeMillis() - start > timeout) {
+                fail("RecordReader did not have any records before timeout");
+            }
+        }
+        System.out.println("RecordReader has next");
     }
 
    /*public void testTimestampExtraction() throws Exception {
@@ -93,6 +128,137 @@ public class RecordReaderTest extends TestCase {
                    pfull.matcher(expected).matches());
     }
 
+    public void testOne() throws Exception {
+        Storage sto = createStorage();
+        RecordReader r = new RecordReader(Configuration.newMemoryBased());
+        Record orig = new Record("test1", "base", "Hello".getBytes());
+
+        sto.flush(orig);
+        waitForHasNext(r, 1000);
+
+        Payload p = r.next();
+        Record rec = p.getRecord();
+
+        assertEquals(orig, rec);
+    }
+
+    public void testTwo() throws Exception {
+        Storage sto = createStorage();
+        RecordReader r = new RecordReader(Configuration.newMemoryBased());
+
+        Record orig1 = new Record("test1", "base", "Hello".getBytes());
+        Record orig2 = new Record("test2", "base", "Hello".getBytes());
+
+        sto.flushAll(Arrays.asList(orig1, orig2));
+        waitForHasNext(r, 1000);
+
+        Payload p = r.next();
+        Record rec = p.getRecord();
+        assertEquals(orig1, rec);
+
+        p = r.next();
+        rec = p.getRecord();
+        assertEquals(orig2, rec);
+    }
+
+    public void testThree() throws Exception {
+        Storage sto = createStorage();
+        RecordReader r = new RecordReader(Configuration.newMemoryBased());
+
+        Record orig1 = new Record("test1", "base", "Hello".getBytes());
+        Record orig2 = new Record("test2", "base", "Hello".getBytes());
+        Record orig3 = new Record("test3", "base", "Hello".getBytes());
+
+        sto.flushAll(Arrays.asList(orig1, orig2, orig3));
+        waitForHasNext(r, 1000);
+
+        Payload p = r.next();
+        Record rec = p.getRecord();
+        assertEquals(orig1, rec);
+
+        p = r.next();
+        rec = p.getRecord();
+        assertEquals(orig2, rec);
+
+        p = r.next();
+        rec = p.getRecord();
+        assertEquals(orig3, rec);
+    }
+
+    public void testWatchOne() throws Exception {
+        Storage sto = createStorage();
+        RecordReader r = new RecordReader(Configuration.newMemoryBased(
+                RecordReader.CONF_STAY_ALIVE, true
+        ));
+
+        // Launch the probe on an empty storage waiting for records
+        RecordProbe probe = new RecordProbe(r, 1);
+        Thread thread = new Thread(probe, "RecordProbe");
+        thread.start();
+
+        Record orig = new Record("test1", "base", "Hello".getBytes());
+        sto.flush(orig);
+
+        // Wait for the probe to return, 10s
+        thread.join(10000);
+        if (probe.records.isEmpty()) {
+            fail("No records appeared on reader before timeout");
+        } else if (probe.records.size() != 1) {
+            fail("Too many records. Expected 1, but got "
+                 + probe.records.size());
+        }
+
+        assertEquals(orig, probe.records.get(0));
+    }
+
+    public void testWatchThree() throws Exception {
+        Storage sto = createStorage();
+        RecordReader r = new RecordReader(Configuration.newMemoryBased(
+                RecordReader.CONF_STAY_ALIVE, true
+        ));
+
+        // Launch the probe on an empty storage waiting for records
+        RecordProbe probe = new RecordProbe(r, 3);
+        Thread thread = new Thread(probe, "RecordProbe");
+        thread.start();
+
+        Record orig1 = new Record("test1", "base", "Hello".getBytes());
+        Record orig2 = new Record("test2", "base", "Hello".getBytes());
+        Record orig3 = new Record("test3", "base", "Hello".getBytes());
+        sto.flushAll(Arrays.asList(orig1, orig2, orig3));
+
+        // Wait for the probe to return, 10s
+        thread.join(10000);
+        if (probe.records.isEmpty()) {
+            fail("No records appeared on reader before timeout");
+        } else if (probe.records.size() != 3) {
+            fail("Too many records. Expected 3, but got "
+                 + probe.records.size());
+        }
+
+        assertEquals(orig1, probe.records.get(0));
+        assertEquals(orig2, probe.records.get(1));
+        assertEquals(orig3, probe.records.get(2));
+    }
+
+    static class RecordProbe implements Runnable {
+        RecordReader r;
+        List<Record> records;
+        int recordCount;
+
+        public RecordProbe(RecordReader rr, int recordCount) {
+            r = rr;
+            records = new LinkedList<Record>();
+            this.recordCount = recordCount;
+        }
+
+        public void run() {
+            for (int i = 1; i <= recordCount; i++) {
+                Payload p = r.next();
+                records.add(p.getRecord());
+            }
+        }
+    }
 }
 
 
