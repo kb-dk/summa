@@ -101,11 +101,7 @@
                                 </entry>
                                 <entry>
                                     <key>summa.filter.sequence.filterclass</key>
-                                    <value class="string">dk.statsbiblioteket.summa.index.XMLTransformer</value>
-                                </entry>
-                                <entry>
-                                    <key>summa.xmltransformer.xslt</key>
-                                    <value class="string">LegacyMultiVolumeConverter.xslt</value>
+                                    <value class="string">dk.statsbiblioteket.summa.common.legacy.MarcMultiVolumeMerger</value>
                                 </entry>
                             </xproperties>
 
@@ -124,7 +120,7 @@
                                 </entry>
                                 <entry>
                                     <key>summa.xmltransformer.ignorexmlnamespaces</key>
-                                    <value class="boolean">true</value>
+                                    <value class="boolean">false</value>
                                 </entry>
                             </xproperties>
 
@@ -143,7 +139,7 @@
                                 </entry>
                                 <entry>
                                     <key>summa.xmltransformer.ignorexmlnamespaces</key>
-                                    <value class="boolean">true</value>
+                                    <value class="boolean">false</value>
                                 </entry>
                             </xproperties>
 
