@@ -140,6 +140,13 @@ public class StorageWatcher implements Configurable, Runnable {
             log.warn("Interrupted while joining watcher thread");
         }
 
+        // Important: We delay the notifyAll() until everything is turned off
+        //            otherwise clients may see it but think the watcher is
+        //            still running somehow
+        synchronized (this) {
+            notifyAll();
+        }
+
         log.info("Stopped");
     }
 
@@ -292,5 +299,9 @@ public class StorageWatcher implements Configurable, Runnable {
 
     public int getPollInterval () {
         return pollInterval;
+    }
+
+    public boolean isRunning() {
+        return thread.isAlive();
     }
 }
