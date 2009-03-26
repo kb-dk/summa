@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -162,6 +162,8 @@ public class ProgressTracker {
                 log.error("getStartTime: Unable to open existing file '"
                           + progressFile + "'. Returning 0");
             }
+        } else {
+            log.warn("Unable to read progress file " + progressFile);
         }
     }
 
