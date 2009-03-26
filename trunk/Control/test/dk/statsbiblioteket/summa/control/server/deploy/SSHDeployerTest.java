@@ -105,6 +105,8 @@ public class SSHDeployerTest extends TestCase {
         storage.put(SSHDeployer.CONF_DEPLOYER_TARGET, PROPERTY_LOGIN);
         storage.put(SSHDeployer.CONF_CLIENT_CONF, PROPERTY_START_CONFSERVER);
         storage.put(SSHDeployer.CONF_INSTANCE_ID, "test-client-1");
+        storage.put(SSHDeployer.CONF_DEPLOYER_BUNDLE_FILE,
+                         "${user.dir}/Control/test/data/dummy-repo/foo.bundle");
         new FakeThinClient();
         return new Configuration(storage);
     }
