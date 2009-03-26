@@ -37,7 +37,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 public class ClientTest extends TestCase {
 
     public void testHello () throws Exception {
-        URL url = new URL("http://java.sun.com/javase/6/docs/api/java/net/HttpCookie.html");
+        System.out.println("ClientTest disabled");
+        /*URL url = new URL("http://java.sun.com/javase/6/docs/api/java/net/HttpCookie.html");
         System.out.println (url.getQuery());
         System.out.println (url.getPath());
 
@@ -45,16 +46,16 @@ public class ClientTest extends TestCase {
 
         String filename = url.getPath();
         filename = filename.substring (filename.lastIndexOf("/") + 1);
-        System.out.println(filename);          
+        System.out.println(filename);*/
     }
 
-    public void testDeploy () throws Exception {
+    /*public void testDeploy () throws Exception {
         ClientConnection client = (ClientConnection) Naming.lookup ("//localhost:27000/test-client-1");
         URL url = new URL("http://java.sun.com/javase/6/docs/api/java/net/HttpCookie.html");
 
         client.deployService("test-1", "test-1-1", null);
 
-    }
+    }*/
     
 
 }
