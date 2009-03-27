@@ -1,6 +1,12 @@
 =======================
-2009-03-20: Summa 1.3.0
+2009-03-27: Summa 1.3.0
 =======================
+
+ * IMPORTANT: The DerbyStorage and PostgresStorage backends are not functional
+   in Summa 1.3.0. It is planned to fix them in later micro versions of the
+   Summa 1.3 series
+
+ * Make H2Storage the default storage backend
 
  * The 'data' column in H2Storage has been changed from type BLOB to type BYTEA.
    We know it is bad style to break the DB schemas but with type BLOB H2
@@ -49,6 +55,14 @@
    to 100 Payloads instead of 1 (the memory-limit default is 1MByte). This may
    give a performance boost on some setups depending on MUXFilters
 
+ * Introduce two new field types; 'verbatim' and 'storedVerbatim' which will
+   index the field contents as one unaltered token (with casing and diacritics),
+   but keep it searchable. In contrast the field types 'keyword' and
+   'storedKeyword' are case insensitive and removes non-alphanumeric symbols,
+   but also indexing the content as a single token
+
+ * Add an explicit log to follow record/payload lifetimes
+
  * Bugfix: The ServiceObj (responsible for handling SOAP-requests) failed
            randomly on multi-threading
 
@@ -71,6 +85,7 @@
  * Bugfix: The IndexDescriptor class checked for changed descriptors
            all the time when the check-interval was 0. The correct behaviour
            is not to check when the interval is 0
+
  * Bugfix: Fix compliance to ReadableStorage contract in StorageReaderClient -
            to throw a NoSuchElementException when the iter is depleted in
            next(iterKey) and next(iterKey, maxRecords)
@@ -81,6 +96,19 @@
  * Bugfix: The FileReader had a race-condition for closing and
            renaming files that was triggered by the FileWatchers
            multi-threaded usage of FileReader
+
+ * Bugfix: FilterService, FilterControl, and FilterPump will now properly
+           shut down and wait for all payloads to be processed before
+           shutting down when invoking close()/stop() on them
+
+ * Bugfix: The MarcMultiVolumeMerger is now more forgiving if the records does
+           not declare their type correctly
+
+ * Bugfix: Fix deadlock when closing down a RecordReader with a StorageWatcher
+
+ * Bugfix: Bugfix: queue.offer was used by FacetSearchNode and DocIDCollector
+           without check for success. This has been changed to put with a
+           retry in case of interruptions
 
 =======================
 2009-02-18: Summa 1.2.1
@@ -119,7 +147,9 @@
  * Bugfix: The round-robin used by the MUXFilter always selected the first
    available filter
 
- * Bugfix: Record did not clear the list of parents when setParentID was set   
+ * Bugfix: Record did not clear the list of parents when setParentID was set
+
+ * Way too many test cases and bug fixes to list here. Seriously.
 
 =======================
 2009-02-09: Summa 1.2.0
