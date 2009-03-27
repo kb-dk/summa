@@ -29,6 +29,7 @@ import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
 import dk.statsbiblioteket.summa.common.Logging;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
@@ -112,13 +113,13 @@ public class StreamingDocumentCreator extends DocumentCreatorBase {
      */
     // TODO: If not added, mark meta-data with unadded and continue gracefully
     @Override
-    public void processPayload(Payload payload) {
+    public boolean processPayload(Payload payload) throws PayloadException {
         //noinspection DuplicateStringLiteralInspection
         log.debug("processPayload(" + payload + ") called");
         long startTime = System.nanoTime();
         if (payload.getRecord() == null) {
             //noinspection DuplicateStringLiteralInspection
-            throw new IllegalArgumentException(payload + " has no Record");
+            throw new PayloadException("No Record present", payload);
         }
 
         XMLStreamReader reader;
@@ -127,8 +128,8 @@ public class StreamingDocumentCreator extends DocumentCreatorBase {
                     new ByteArrayInputStream(payload.getRecord().getContent()),
                     "utf-8");
         } catch (XMLStreamException e) {
-            throw new IllegalArgumentException(
-                    "Unable to make an XMLStream from " + payload, e);
+            throw new PayloadException(
+                    "Unable to make an XMLStream from Payload", e, payload);
         }
 
         // TODO: Use a pool of Documents so that they can be reused
@@ -140,22 +141,22 @@ public class StreamingDocumentCreator extends DocumentCreatorBase {
             processHeader(reader, luceneDoc, payload);
             processBody(reader, luceneDoc, payload);
         } catch (ParseException e) {
-            throw new IllegalArgumentException(
-                    "Unable to parse XMLStream from " + payload, e);
+            throw new PayloadException(
+                    "Unable to parse XMLStream from Payload", e, payload);
         } catch (XMLStreamException e) {
-            String message = "Unable to extract content from XMLStream from "
-                             + payload;
+            String message =
+                    "Unable to extract content from XMLStream from Payload";
             if (log.isDebugEnabled()) {
-                log.debug(message + ". Problematic content was:\n"
+                log.debug(message + " " + payload
+                          + ". Problematic content was:\n"
                           + payload.getRecord().getContentAsUTF8());
             }
             Logging.logProcess("StreamingDocumentcreator", message,
                                Logging.LogLevel.WARN, payload, e);
-            throw new IllegalArgumentException(message, e);
+            throw new PayloadException(message, e, payload);
         } catch (IndexServiceException e) {
-            throw new IllegalArgumentException(
-                    "exception whle updating the Lucene document for "
-                    + payload, e);
+            throw new PayloadException(
+                    "Exception whle updating the Lucene document", e, payload);
         }
         //noinspection DuplicateStringLiteralInspection
         log.trace("Setting " + IndexUtils.RECORD_FIELD + " to '"
@@ -167,6 +168,7 @@ public class StreamingDocumentCreator extends DocumentCreatorBase {
         log.debug("Added Lucene Document payload "
                   + payload + ". Processing time was "
                   + (System.nanoTime() - startTime) / 1000000D + " ms");
+        return true;
     }
 
     private void processHeader(XMLStreamReader reader,

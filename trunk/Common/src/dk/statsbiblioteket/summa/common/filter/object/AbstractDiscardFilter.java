@@ -23,6 +23,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.Logging;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
@@ -35,15 +36,12 @@ import java.io.IOException;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public abstract class AbstractDiscardFilter implements ObjectFilter {
+public abstract class AbstractDiscardFilter extends ObjectFilterImpl {
     private static Log log = LogFactory.getLog(AbstractDiscardFilter.class);
-
-    private ObjectFilter source;
-    private Payload payload;
 
     @SuppressWarnings({"UnusedDeclaration"})
     public AbstractDiscardFilter(Configuration conf) {
-        // No setup
+        super(conf);
     }
 
     /**
@@ -53,71 +51,20 @@ public abstract class AbstractDiscardFilter implements ObjectFilter {
      */
     protected abstract boolean checkDiscard(Payload payload);
 
-    public void setSource(Filter filter) {
-        if (filter == null) {
-            //noinspection DuplicateStringLiteralInspection
-            throw new IllegalArgumentException("Source filter was null");
+    @Override
+    protected boolean processPayload(Payload payload) throws PayloadException {
+        boolean discard = checkDiscard(payload);
+        if (discard) {
+            Logging.logProcess(
+                    getName() + "#" + this.getClass().getSimpleName(),
+                    "Discarding due to unwanted relatives (pun intended)",
+                    Logging.LogLevel.TRACE, payload);
+        } else {
+            Logging.logProcess(
+                    getName() + this.getClass().getSimpleName(),
+                    "No offending relatives: Payload not discarded",
+                    Logging.LogLevel.TRACE, payload);
         }
-        if (!(filter instanceof ObjectFilter)) {
-            throw new IllegalArgumentException(
-                    "Only ObjectFilters accepted as source. The filter "
-                    + "provided was of class " + filter.getClass());
-        }
-        source = (ObjectFilter)filter;
+        return discard;
     }
-
-    public boolean pump() throws IOException {
-        log.trace("Pump called");
-        if (!hasNext()) {
-            return false;
-        }
-        Payload payload = next();
-        if (payload != null) {
-            payload.close();
-        }
-        return hasNext();
-    }
-
-    public void close(boolean success) {
-        //noinspection DuplicateStringLiteralInspection
-        log.trace("Close(" + success + ") called");
-        source.close(success);
-    }
-
-    public boolean hasNext() {
-        checkPayload();
-        return payload != null;
-    }
-
-    public Payload next() {
-        checkPayload();
-        try {
-            return payload;
-        } finally {
-            payload = null;
-        }
-    }
-
-    private void checkPayload() {
-        while (payload == null && source.hasNext()) {
-            Payload potential = source.next();
-            if (potential != null) {
-                if (checkDiscard(potential)) {
-                    if (log.isDebugEnabled()) {
-                        //noinspection DuplicateStringLiteralInspection
-                        log.debug("Discarding " + payload);
-                    }
-                    potential.close();
-                } else {
-                    payload = potential;
-                }
-            }
-        }
-    }
-
-    public void remove() {
-        log.warn("Removal not supported for DiscardFilter");
-    }
-
-
 }

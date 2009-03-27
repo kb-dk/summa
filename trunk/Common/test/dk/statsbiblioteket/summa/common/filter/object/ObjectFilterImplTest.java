@@ -73,8 +73,9 @@ public class ObjectFilterImplTest extends TestCase {
         }
 
         @Override
-        protected void processPayload(Payload payload) {
+        protected boolean processPayload(Payload payload) {
             // Nada
+            return true;
         }
     }
 }

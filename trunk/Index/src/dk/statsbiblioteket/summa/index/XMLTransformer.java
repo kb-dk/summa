@@ -113,12 +113,11 @@ public class XMLTransformer extends ObjectFilterImpl {
      * @param payload the wrapper containing the Record with the content.
      */
     @Override
-    protected void processPayload(Payload payload) throws PayloadException {
+    protected boolean processPayload(Payload payload) throws PayloadException {
         //noinspection DuplicateStringLiteralInspection
         log.trace("processPayload(" + payload + ") called for " + this);
         if (payload.getRecord() == null) {
-            log.warn("No record defined for " + payload + " in " + this);
-            return;
+            throw new PayloadException("No Record defined", payload);
         }
         try {
             payload.getRecord().setRawContent(XSLT.transform(
@@ -135,6 +134,7 @@ public class XMLTransformer extends ObjectFilterImpl {
             throw new PayloadException(
                     "Unable to transform payload", e, payload);
         }
+        return true;
     }
 
     @Override

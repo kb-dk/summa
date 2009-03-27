@@ -29,6 +29,7 @@ import java.io.*;
 import java.util.ArrayList;
 
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
+import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.util.ParseUtil;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -196,14 +197,15 @@ public class Aleph2XML2 extends ObjectFilterImpl {
     }
 
     @Override
-    protected void processPayload(Payload payload) {
+    protected boolean processPayload(Payload payload) throws PayloadException {
         if (payload.getStream() == null) {
-            throw new IllegalArgumentException("No stream in " + payload);
+            throw new PayloadException("No stream in " + payload);
         }
         log.debug("Wrapping the Stream in " + payload
                   + " in a Aleph2XML2OutputStream");
         payload.setStream(new Aleph2XML2OutputStream(payload.getStream(),
                                                      payload.toString()));
+        return true;
     }
 
     /**

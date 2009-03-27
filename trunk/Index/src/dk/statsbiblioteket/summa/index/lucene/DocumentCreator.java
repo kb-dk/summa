@@ -157,7 +157,7 @@ public class DocumentCreator extends DocumentCreatorBase {
      */
     // TODO: If not added, mark meta-data with unadded and continue gracefully
     @Override
-    public void processPayload(Payload payload) throws PayloadException {
+    public boolean processPayload(Payload payload) throws PayloadException {
         //noinspection DuplicateStringLiteralInspection
         log.debug("processPayload(" + payload + ") called");
         long startTime = System.currentTimeMillis();
@@ -231,6 +231,7 @@ public class DocumentCreator extends DocumentCreatorBase {
         log.debug("Added Lucene Document and SearchDescriptor to payload "
                   + payload + ". Processing time was "
                   + (System.currentTimeMillis() - startTime) + " ms");
+        return true;
     }
 
     private static final Float DEFAULT_BOOST = 1.0f;
