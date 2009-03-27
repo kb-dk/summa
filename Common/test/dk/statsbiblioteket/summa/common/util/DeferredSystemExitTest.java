@@ -10,7 +10,8 @@ import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
  * and trapping of sub processes 
  */
 public class DeferredSystemExitTest extends NoExitTestCase {
-    private static final String NO_ATTEMPT_YET = "System.exit should not have been attempted by now";
+    private static final String NO_ATTEMPT_YET =
+            "System.exit should not have been attempted by now";
 
 
     /**
