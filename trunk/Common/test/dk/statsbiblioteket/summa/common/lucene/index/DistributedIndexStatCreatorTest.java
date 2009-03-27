@@ -64,7 +64,7 @@ public class DistributedIndexStatCreatorTest extends TestCase {
         return new TestSuite(DistributedIndexStatCreatorTest.class);
     }
 
-    public void testAdd() throws IOException {
+/*    public void testAdd() throws IOException {
        for (File f : new File(indexpart).listFiles()){
            if (f.isDirectory()){
                indexC.add(IndexReader.open(f));
@@ -77,7 +77,7 @@ public class DistributedIndexStatCreatorTest extends TestCase {
         testAdd();
         indexC.writeStats();
     }
-
+  */
 }
 
 
