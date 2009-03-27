@@ -412,7 +412,6 @@
   <component name="ProjectFileVersion" converted="true" />
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/ClusterExtractor/ClusterExtractor.iml" filepath="$PROJECT_DIR$/ClusterExtractor/ClusterExtractor.iml" />
       <module fileurl="file://$PROJECT_DIR$/Common/Common.iml" filepath="$PROJECT_DIR$/Common/Common.iml" />
       <module fileurl="file://$PROJECT_DIR$/Control/Control.iml" filepath="$PROJECT_DIR$/Control/Control.iml" />
       <module fileurl="file://$PROJECT_DIR$/FacetBrowser/FacetBrowser.iml" filepath="$PROJECT_DIR$/FacetBrowser/FacetBrowser.iml" />
