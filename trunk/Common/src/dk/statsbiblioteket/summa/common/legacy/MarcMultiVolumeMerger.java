@@ -203,9 +203,10 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
             String message = "The Record " + record
                              + " did not end in </record>";
             if (log.isDebugEnabled()) {
-                log.debug(message + ". The Record content was\n"
-                          + content);
+                log.debug(message + ". The Record content was\n" + content);
             }
+            // The exception will be caught and the message logged in the
+            // Logging.PROCESS_LOG_NAME log.
             throw new IllegalArgumentException(message);
         }
         if (level == 0) {
