@@ -1,6 +1,6 @@
 package dk.statsbiblioteket.summa.common.util;
 
-import junit.framework.TestCase;
+import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 
 /**
  * Unit tests for {@link DeferredSystemExit}.
@@ -9,7 +9,8 @@ import junit.framework.TestCase;
  * they need to call {@link System#exit} and Java does not support forking
  * and trapping of sub processes 
  */
-public class DeferredSystemExitTest extends TestCase {
+public class DeferredSystemExitTest extends NoExitTestCase {
+    private static final String NO_ATTEMPT_YET = "System.exit should not have been attempted by now";
 
 
     /**
@@ -18,10 +19,13 @@ public class DeferredSystemExitTest extends TestCase {
      * @throws Exception on frobnication
      */
     public void testExit () throws Exception {
-        DeferredSystemExit exit = new DeferredSystemExit(0, 1000);
-
+        assertFalse(NO_ATTEMPT_YET,this.exitHasBeenRequested);
+        new DeferredSystemExit(0, 1000);
         Thread.sleep (2000);
-        System.exit (1);
+        assertTrue("System.exit should have been attempted by now",
+                   this.exitHasBeenRequested);
+        assertEquals("The exit code should be as expected",
+                   0, this.exitCode);
     }
 
     /**
@@ -32,10 +36,12 @@ public class DeferredSystemExitTest extends TestCase {
     public void testAbortExit () throws Exception {
         DeferredSystemExit exit = new DeferredSystemExit(1, 1000);
 
+        assertFalse(NO_ATTEMPT_YET + " (1)", this.exitHasBeenRequested);
         Thread.sleep (500);
         exit.abortExit();
+        assertFalse(NO_ATTEMPT_YET + " (2)", this.exitHasBeenRequested);
         Thread.sleep (1500);
-        System.exit (0);
+        assertFalse(NO_ATTEMPT_YET + " (3)", this.exitHasBeenRequested);
     }
 
 }

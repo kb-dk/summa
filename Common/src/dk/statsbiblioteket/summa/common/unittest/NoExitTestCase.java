@@ -44,6 +44,8 @@ public class NoExitTestCase extends TestCase {
     protected static final String EXIT_MESSAGE =
             "System.exit not allowed at this point";
     private boolean allowExit = false;
+    protected boolean exitHasBeenRequested = false;
+    protected int exitCode = -1;
 
     public NoExitTestCase() {
         super();
@@ -56,6 +58,7 @@ public class NoExitTestCase extends TestCase {
      * Each call to setUp disables exitVM.
      * @throws Exception if the super-class encountered an exception.
      */
+    @Override
     public void setUp () throws Exception {
         super.setUp();
         allowExit =false;
@@ -66,6 +69,7 @@ public class NoExitTestCase extends TestCase {
      * Each call to tearDown enables exitVM.
      * @throws Exception if the super-class encountered an exception.
      */
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
         allowExit = true;
@@ -79,11 +83,17 @@ public class NoExitTestCase extends TestCase {
     private void checkSecurityManager() {
         if (System.getSecurityManager() == null) {
             System.setSecurityManager(new SecurityManager() {
+                @Override
                 public void checkPermission(Permission perm) {
                     checkPermission(perm, null);
                 }
+                @Override
                 public void checkPermission(Permission perm, Object context) {
                     if (perm.getName().startsWith("exitVM")) {
+                        // exitVM.1
+                        exitCode = Integer.valueOf(perm.getName().
+                                split("\\.")[1]);
+                        exitHasBeenRequested = true;
                         if (!allowExit) {
                             throw new SecurityException(EXIT_MESSAGE);
                         }
@@ -94,6 +104,3 @@ public class NoExitTestCase extends TestCase {
     }
 
 }
-
-
-
