@@ -1,3 +1,843 @@
+2009-03-27 11:40  mke
+
+	* [r1214] ChangeLog
+
+	Release Summa 1.3.0
+
+
+2009-03-27 11:20  toke
+
+	* [r1214]
+	  Common/src/dk/statsbiblioteket/summa/common/unittest/NoExitTestCase.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/DeferredSystemExitTest.java:
+	  
+	  Testing: Changed the DeferredSystemExitTest so that it does not
+	  cause the JVM to shut down
+
+2009-03-27 11:20  toke
+
+	* [r1213]
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/index/DistributedIndexStatCreatorTest.java:
+	  
+	  Testing: Removed deprecated tests from DistributesStatCreatorTest
+
+2009-03-27 11:19  toke
+
+	* [r1212] Summa.ipr:
+	  
+	  Removed the reference to the Cluster-module from Idea setup
+
+2009-03-27 11:04  mke
+
+	* [r1211]
+	  Index/src/dk/statsbiblioteket/summa/index/XMLTransformer.java:
+	  
+	  Fix missing arg to String.format
+
+2009-03-27 10:40  toke
+
+	* [r1210]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/GUNZIPFilter.java:
+	  
+	  Refactoring: Changed GUNZIPFilter to extend ObjectFilterImpl
+	  Enhancement: Avoided cloning of Payloads in GUNZIPFilter - just
+	  wrap the Stream in the existing Payload instead
+
+2009-03-27 10:35  mke
+
+	* [r1209] NEWS:
+	  
+	  Talk about PayloadException in the NEWS file
+
+2009-03-27 10:27  mke
+
+	* [r1208] NEWS:
+	  
+	  Update of NEWS in preparation for 1.3.0
+
+2009-03-27 10:26  mke
+
+	* [r1207]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/LuceneIndexDescriptor.java:
+	  
+	  Rename the field type 'storedKeyWord' to 'storedKeyword' for
+	  consistent field type naming
+
+2009-03-27 10:25  toke
+
+	* [r1206]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/AbstractDiscardFilter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/DelayFilter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/ObjectFilterImpl.java,
+	  Common/src/dk/statsbiblioteket/summa/common/legacy/MarcMultiVolumeMerger.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/DummyFilter.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/ObjectFilterImplTest.java,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/IterativeHelperDocCreator.java,
+	  Index/src/dk/statsbiblioteket/summa/index/XMLTransformer.java,
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/DocumentCreator.java,
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/StreamingDocumentCreator.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/Aleph2XML2.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/RecordWriter.java:
+	  
+	  Enhancement: The signature for processPayload in ObjectFilterImpl
+	  was changed to support graceful discarding of unwanted Payloads.
+	  This involved updates to all classes that extended
+	  ObjectFilterImpl
+
+2009-03-27 09:23  toke
+
+	* [r1205]
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/StreamingDocumentCreator.java:
+	  
+	  Debug: Changed the granularity of the feedback information in
+	  StreamingDocumentCreator to nano seconds
+
+2009-03-27 09:15  toke
+
+	* [r1204]
+	  Common/src/dk/statsbiblioteket/summa/common/legacy/MarcMultiVolumeMerger.java:
+	  
+	  Tweak: Added comments to the MarcMultiVolumeMerger code
+
+2009-03-27 07:35  toke
+
+	* [r1203]
+	  Index/src/dk/statsbiblioteket/summa/index/XMLTransformer.java:
+	  
+	  Tweak: Changed the default for stripXMLNamespaces to false in
+	  XMLTransformer and inserted a WARN if the value is not defined in
+	  the configuration
+
+2009-03-26 13:44  toke
+
+	* [r1202]
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/filter/RecordReaderTest.java:
+	  
+	  Testing: Updated the RecordReaderTest to properly close Storage
+	  connections after use
+
+2009-03-26 13:44  mke
+
+	* [r1201]
+	  Control/test/dk/statsbiblioteket/summa/control/client/ClientTest.java,
+	  Control/test/dk/statsbiblioteket/summa/control/rmiapi[DEL],
+	  Control/test/dk/statsbiblioteket/summa/control/rmid[DEL],
+	  Control/test/dk/statsbiblioteket/summa/control/service/StorageServiceTest.java:
+	  
+	  Make unit tests for the Control module all run (again)
+
+2009-03-26 13:41  toke
+
+	* [r1200]
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/filter/RecordReaderTest.java:
+	  
+	  Testing: Updated the RecordReaderTest to handle the new timestamp
+	  format
+
+2009-03-26 13:35  mke
+
+	* [r1199]
+	  Control/test/dk/statsbiblioteket/summa/control/server/deploy/SSHDeployerTest.java:
+	  
+	  Fix unit tests for SSHDeployer
+
+2009-03-26 13:33  toke
+
+	* [r1198]
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/DocumentCreator.java,
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/StreamingDocumentCreator.java,
+	  Index/test/dk/statsbiblioteket/summa/index/lucene/DocumentCreatorTest.java:
+	  
+	  Testing: The DocumentCreatorTest was updated to the
+	  StreamingDocumentCreator
+	  Bugfix: the deprecated documentcreater was updated to use the new
+	  document namespace
+
+2009-03-26 13:25  toke
+
+	* [r1197]
+	  Index/test/dk/statsbiblioteket/summa/index/lucene/LuceneManipulatorTest.java:
+	  
+	  Testing: The LuceneManipulatorTest did not properly delete
+	  previously added documents before re-adding them
+
+2009-03-26 13:19  toke
+
+	* [r1196]
+	  Common/src/dk/statsbiblioteket/summa/common/unittest/LuceneTestHelper.java,
+	  Index/test/dk/statsbiblioteket/summa/index/lucene/LuceneManipulatorTest.java,
+	  Index/test/log4j.xml:
+	  
+	  Testing: Bugfixed the LuceneTestHelper to actually compare the
+	  expected and the actual IDs properly
+
+2009-03-26 13:19  mke
+
+	* [r1195]
+	  Common/src/dk/statsbiblioteket/summa/common/rpc/RemoteHelper.java:
+	  
+	  Simplify javadoc
+
+2009-03-26 13:18  mke
+
+	* [r1194]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/Configuration.java:
+	  
+	  Bump default API version to 1.3.0 as we have made incompatible
+	  API changes (for RMI at least)
+
+2009-03-26 13:14  mke
+
+	* [r1193] Control/test/data/dummy-repo,
+	  Control/test/data/dummy-repo/bar.bundle,
+	  Control/test/data/dummy-repo/foo.bundle,
+	  Control/test/dk/statsbiblioteket/summa/control/bundle/BundleRepositoryTest.java:
+	  
+	  Make unit test for BundleRepository run
+
+2009-03-26 13:07  toke
+
+	* [r1192] Index/test/data/fagref/jens.hansen.newstyle.xml,
+	  Index/test/dk/statsbiblioteket/summa/index/LegacyTest.java:
+	  
+	  Testing: Updated LegacyTest to handle the new namespace for
+	  Document
+
+2009-03-26 13:03  mke
+
+	* [r1191] Web/config/search/log4j.xml,
+	  Web/config/storage/log4j.xml, Web/config/website/log4j.xml:
+	  
+	  Don't log all 'dk.statsbiblioteket' classes on TRACE. The
+	  connection monitor will spam the logs. Now only log on
+	  'dk.statsbiblioteket.summa'
+
+2009-03-26 12:59  toke
+
+	* [r1190] Control/test/data/multiple/index_configuration.xml:
+	  
+	  Testing: Updated the configuration for the MultipleSources
+	  release tests
+
+2009-03-26 12:50  toke
+
+	* [r1189]
+	  Control/test/data/iterative/IterativeTest_IndexConfiguration.xml:
+	  
+	  testing: The Facet configuration for TterativeTest did not
+	  explicitly set the docsToTerms to true, so stored-only Tags was
+	  not indexed
+
+2009-03-26 12:46  toke
+
+	* [r1188] Control/test/data/fagref/fagref_index_setup.xml,
+	  Control/test/data/search/IndexTest_IndexConfiguration.xml:
+	  
+	  testing: The IndexTest did not use an OldToNewtransformer
+
+2009-03-26 12:45  mke
+
+	* [r1187]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/ProgressTracker.java:
+	  
+	  Log a warning when we fail to load the progress file
+
+2009-03-26 12:43  toke
+
+	* [r1186]
+	  Common/src/dk/statsbiblioteket/summa/common/unittest/LuceneTestHelper.java:
+	  
+	  Cosmetics
+
+2009-03-26 12:42  mke
+
+	* [r1185]
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/filter/ProgressTrackerTest.java:
+	  
+	  Smallish unit testing of ProgressTracker used by RecordReader
+
+2009-03-26 12:34  toke
+
+	* [r1184]
+	  Control/test/data/search/FacetTest_IndexConfiguration.xml,
+	  Control/test/log4j.xml,
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/StreamingDocumentCreator.java:
+	  
+	  Testing: The configuration for the FacetTest ignored namespaces,
+	  which it should not
+
+2009-03-26 12:27  toke
+
+	* [r1183]
+	  Common/src/dk/statsbiblioteket/summa/common/legacy/MarcMultiVolumeMerger.java,
+	  Control/test/data/parent-child/horizondump/one_book.xml,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/ParentChildTest.java,
+	  Control/test/log4j.xml,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/SBMARCParser.java:
+	  
+	  Bugfix: The MarcMultiVolumeMerger relied on the input MARC being
+	  fully correct with regard to stating the type of record
+	  (hovedpost, sektion or bind). This has been changed so that
+	  explicit parents and children are used as fallbacks
+
+2009-03-26 11:30  toke
+
+	* [r1182] Control/test/data/parent-child/index_configuration.xml,
+	  Control/test/log4j.xml:
+	  
+	  Testing: Updated configuration for ParentChildTest to correct
+	  namespace problems. Still does not pass
+
+2009-03-26 11:29  mke
+
+	* [r1181]
+	  Common/src/dk/statsbiblioteket/summa/common/unittest/LuceneTestHelper.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/MiniConnectionPoolManager.java:
+	  
+	  Logging tweaks
+
+2009-03-26 11:25  toke
+
+	* [r1180]
+	  Common/test/dk/statsbiblioteket/summa/common/legacy/MarcMultiVolumeMergerTest.java:
+	  
+	  Testing: Check for correct record-closing tag in
+	  MarcMultiVolumeMerger
+
+2009-03-26 11:24  toke
+
+	* [r1179]
+	  Common/src/dk/statsbiblioteket/summa/common/legacy/MarcMultiVolumeMerger.java:
+	  
+	  Bugfix: The MarcMultiVolumeMerger incorrecly terminated the
+	  resulting XML with "record>" instead of "</record>"
+
+2009-03-26 11:05  toke
+
+	* [r1178]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/ObjectFilterImpl.java,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/PayloadException.java,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/PayloadFeederHelper.java[DEL],
+	  Control/test/dk/statsbiblioteket/summa/releasetest/SearchTest.java,
+	  Control/test/log4j.xml,
+	  Index/src/dk/statsbiblioteket/summa/index/XMLTransformer.java,
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/DocumentCreator.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/RecordWriter.java:
+	  
+	  Enhancement: Introduced PayloadException and better feedback on
+	  Exceptions in Filters
+	  Bugfix: When transformation was not possible in XMLTransformer it
+	  did not throw an exception
+
+2009-03-26 10:31  mke
+
+	* [r1177] Control/test/data/auto/setup/IndexConfiguration.xml,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/AutoDiscoverTest.java:
+	  
+	  Enforce using of namespaces in AutoDiscoverTest.
+	  
+	  Twiddle with the timeouts in AutoDiscoverTest
+
+2009-03-26 10:29  mke
+
+	* [r1176]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/RecordReader.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/watch/StorageWatcher.java:
+	  
+	  Fix deadlock when closing down a RecordReader with a
+	  StorageWatcher. The problem was that the RecordReader didn't
+	  check if the watcher wass even running when issuing
+	  watcher.wait(), thus never receiving watcher.notifyAll().
+
+2009-03-26 10:25  toke
+
+	* [r1175]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/ObjectFilterImpl.java,
+	  Common/src/dk/statsbiblioteket/summa/common/strings/LowercaseMap.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/LoggingReader.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/ObjectFilterImplTest.java,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/AnalyzerTest.java,
+	  Control/test/log4j.xml:
+	  
+	  Bugfix: The ObjectFilterImpl never returned and Payloads (a
+	  unit-test for this has been added)
+
+2009-03-26 10:16  toke
+
+	* [r1174]
+	  Common/src/dk/statsbiblioteket/summa/common/unittest/PayloadFeederHelper.java[CPY]:
+	  
+	  Testing: Made PayloadFeederHelper common in order to use it in
+	  different modules
+	  Bugfix: Made PayloadFeederHelper shallow copy the given list of
+	  Payloads in order to accept immutable lists
+
+2009-03-26 09:57  toke
+
+	* [r1173]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/FacetSearchNode.java,
+	  Search/src/dk/statsbiblioteket/summa/search/document/DocIDCollector.java:
+	  
+	  Bugfix: queue.offer was used by FacetSearchNode and
+	  DocIDCollector without check for success. This has been changed
+	  to put with a retry in case of interruptions
+
+2009-03-26 09:54  mke
+
+	* [r1172]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/RecordWriter.java:
+	  
+	  Don't commit if we don't have any records queued
+
+2009-03-26 09:53  toke
+
+	* [r1171] Common/src/dk/statsbiblioteket/summa/common/Logging.java,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/Payload.java,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/ObjectFilterImpl.java,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/AnalyzerTest.java,
+	  Control/test/log4j.xml,
+	  Index/src/dk/statsbiblioteket/summa/index/IndexControllerImpl.java,
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/StreamingDocumentCreator.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/ThreadedStreamParser.java:
+	  
+	  Enhancement: Added explicit process-logging to Payload and
+	  selected classes.
+	  Enhancement: ObjectFilterImpl now catches Exceptions, discards
+	  the offending Payload and keeps on running
+
+2009-03-26 09:37  mke
+
+	* [r1170]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/RecordReader.java:
+	  
+	  Log on debug when RecordReader emits a record
+
+2009-03-26 09:36  mke
+
+	* [r1169]
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/filter/RecordReaderTest.java:
+	  
+	  Proper unit tests for the RecordReader
+
+2009-03-26 09:33  toke
+
+	* [r1168]
+	  Common/test/dk/statsbiblioteket/summa/common/filter/PayloadTest.java:
+	  
+	  Testing: Updated PayloadTest to reflect changes to Lucene API
+
+2009-03-26 08:52  toke
+
+	* [r1167] Common/src/dk/statsbiblioteket/summa/common/Logging.java:
+	  
+	  Feature: Added explicit process-related logging handling
+
+2009-03-26 07:41  toke
+
+	* [r1166]
+	  Index/src/dk/statsbiblioteket/summa/index/XMLTransformer.java:
+	  
+	  Tweak: Changed the default for discardXMLNamespaces in
+	  XMLTransformer to true, as there are just too many
+	  namespace-garbled XML snippets out there
+
+2009-03-25 15:56  toke
+
+	* [r1165]
+	  Common/src/dk/statsbiblioteket/summa/common/legacy/MarcMultiVolumeMerger.java,
+	  Control/test/data/multiple/index_configuration.xml,
+	  Control/test/data/parent-child/index_configuration.xml,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/ParentChildTest.java,
+	  Control/test/log4j.xml,
+	  Index/src/dk/statsbiblioteket/summa/index/IndexControllerImpl.java,
+	  Index/src/dk/statsbiblioteket/summa/index/XMLTransformer.java:
+	  
+	  Testing: Work on upgrade of ParentChildtest to reflext changes to
+	  the underlying system. There's still some unresolved problems
+	  with the test
+
+2009-03-25 15:34  toke
+
+	* [r1164]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/DiscardRelativesFilter.java:
+	  
+	  Debug: More log.trace for DiscardRelativesFilter
+
+2009-03-25 14:31  toke
+
+	* [r1163]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/MARCParser.java:
+	  
+	  Minor bug: The MARCParser handled comments in XML by logging a
+	  warning
+
+2009-03-25 14:11  mke
+
+	* [r1162]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/FilterControl.java,
+	  Control/src/dk/statsbiblioteket/summa/control/service/FilterService.java,
+	  Control/test/data/auto/setup/IngestConfiguration.xml,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/AutoDiscoverTest.java,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/MultipleSourcesTest.java,
+	  Control/test/log4j.xml,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/RecordReader.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/RecordWriter.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/watch/StorageWatcher.java:
+	  
+	  FilterControl: Logging improvements and wait for the filter pumps
+	  in waitForFinish()
+	  
+	  FilterService: Wait for the FilterControl to return from
+	  waitForFinish() before returning from stop()
+	  
+	  IngestConfigyuration.xml test config: Rename chain to IngestChain
+	  
+	  AutoDiscoverTest: Improve checks in testIndex() by implementing
+	  generic probing methods for lucene indexes and storages
+	  
+	  RecordReader: Stop the StorageWatcher on close() if we are using
+	  one
+	  
+	  RecordWriter: Don't make close() synchronized
+	  
+	  StorageWatcher: Better thread naming
+
+2009-03-25 13:50  mke
+
+	* [r1161]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/FilterPump.java:
+	  
+	  Log twiddling
+
+2009-03-25 13:49  mke
+
+	* [r1160]
+	  Common/src/dk/statsbiblioteket/summa/common/util/StateThread.java:
+	  
+	  Logging cleanups. Also append "#this.getClass().getSimpleName()"
+	  to the log headers
+
+2009-03-25 13:10  toke
+
+	* [r1159]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/ObjectFilterImpl.java:
+	  
+	  Bugfix: Removes synchronized from ObjectFilterImpl
+
+2009-03-25 12:23  toke
+
+	* [r1158]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/PayloadQueue.java,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/DelayFilter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/MUXFilter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/MUXFilterFeeder.java,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/PushFilter.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/PayloadQueueTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/MUXFilterTest.java,
+	  Common/test/log4j.xml:
+	  
+	  Cleanup and enhancement: The MUXFilter was cleaned up and
+	  sleep-based wait was removed
+
+2009-03-25 10:43  toke
+
+	* [r1157]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/PayloadQueue.java:
+	  
+	  Enhancement: Added uninterruptibleTake to PayloadQueue
+
+2009-03-25 10:14  toke
+
+	* [r1156]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/PayloadQueue.java:
+	  
+	  Enhancement: Added uninterruptibleOffer to PayloadQueue
+
+2009-03-25 09:40  toke
+
+	* [r1155]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/PayloadQueue.java:
+	  
+	  Enhancement: Made PayloadQueue thread-safe
+
+2009-03-25 08:33  toke
+
+	* [r1154]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/ObjectFilterImpl.java:
+	  
+	  Debug: Better logging for ObjectFilterImpl
+
+2009-03-25 08:19  toke
+
+	* [r1153] Common/test/data/horizon[CPY],
+	  Common/test/dk/statsbiblioteket/summa/common/legacy,
+	  Common/test/dk/statsbiblioteket/summa/common/legacy/MarcMultiVolumeMergerTest.java[CPY],
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/SummaAnalyzerTest.java,
+	  Control/test/log4j.xml,
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/LuceneManipulator.java,
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/StreamingDocumentCreator.java,
+	  Index/test/data/horizon[DEL],
+	  Index/test/dk/statsbiblioteket/summa/index/filter/MarcMultiVolumeMergerTest.java[DEL],
+	  Index/test/log4j.xml:
+	  
+	  Refactoring: Moved the test of Marc multi volume to common
+
+2009-03-25 08:17  toke
+
+	* [r1152]
+	  Common/src/dk/statsbiblioteket/summa/common/legacy/MarcMultiVolumeMerger.java:
+	  
+	  Enhancement: Changes MarcMultiVolumeMerger to correctly locate
+	  end-tag for record with namespacing
+
+2009-03-24 14:33  toke
+
+	* [r1151] Common/data/LegacyMultiVolumeConverter.xslt,
+	  Common/src/dk/statsbiblioteket/summa/common/legacy/MarcMultiVolumeMerger.java:
+	  
+	  Minor bug: The MarcMultiVolumeMerger XSLT did not have the
+	  correct name (but the content was ok)
+
+2009-03-24 13:05  mke
+
+	* [r1150]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/SummaAnalyzer.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/SummaAnalyzerTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/SummaStandardAnalyzerTest.java:
+	  
+	  Fix bug where we didn't reset the filtering readers correctly
+	  when calling reusableTokenStream in SummaAnalyzer.
+
+2009-03-24 12:54  mke
+
+	* [r1149]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/LowerCasingReader.java:
+	  
+	  Make LowerCasingReader extend ReplaceReader
+
+2009-03-24 12:24  mke
+
+	* [r1148]
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/SummaStandardAnalyzerTest.java:
+	  
+	  Add unit tests for SummaStandardAnalyzer
+
+2009-03-24 12:15  mke
+
+	* [r1147]
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/SummaAnalyzerTest.java:
+	  
+	  More unit testing for tokenizing words with dashes in them
+
+2009-03-24 12:13  mke
+
+	* [r1146]
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/SummaAnalyzerTest.java:
+	  
+	  Add unit test for tokenizing words with dashes in them
+
+2009-03-24 10:45  mke
+
+	* [r1145]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/StringReplaceReader.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/SummaAnalyzer.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/TokenReplaceFilter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/TransliteratingReader.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/TransliterationFilter.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/StringReplaceReaderTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/SummaAnalyzerTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/SummaKeywordAnalyzerTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/TransliterationFilterTest.java:
+	  
+	  Rework our analysers to perform most of the analysis in the
+	  optimized Readers from SBUtil. This gives a MASSIVE performance
+	  boost (almost a factor 100) for the analysers.
+	  
+	  This should fix some whitespace bugs found when indexing the test
+	  data.
+	  
+	  Fix malformed token replacement rules in TokenReplaceFilter
+
+2009-03-24 09:51  mke
+
+	* [r1144]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/LowerCasingReader.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/LowerCasingReaderTest.java:
+	  
+	  Import lower casing reader with unit tests
+
+2009-03-24 09:46  mke
+
+	* [r1143]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/TokenReplaceFilter.java:
+	  
+	  Add .net -> dotnet replacement rule
+
+2009-03-24 09:16  toke
+
+	* [r1142]
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/SummaAnalyzerTest.java:
+	  
+	  JUnit: Updated test for proper punctuation analysis in
+	  SummaAnalyzer
+
+2009-03-24 08:33  toke
+
+	* [r1141]
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/SummaAnalyzerTest.java:
+	  
+	  JUnit: Added test for proper punctuation analysis in
+	  SummaAnalyzer
+
+2009-03-23 14:43  toke
+
+	* [r1140]
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/DocumentCreator.java,
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/DocumentCreatorBase.java,
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/StreamingDocumentCreator.java:
+	  
+	  Debug: Better debug for document creation on trace level
+
+2009-03-23 14:42  toke
+
+	* [r1139] Control/test/data/multiple/index_descriptor.xml,
+	  Control/test/log4j.xml:
+	  
+	  Bugfix: The index descriptor for the MultipleSources releasetest
+	  did not mirror the Field no to freetext
+
+2009-03-23 14:33  mke
+
+	* [r1138]
+	  Storage/src/dk/statsbiblioteket/summa/storage/rmi/RMIStorageProxy.java:
+	  
+	  Make H2Storage the default backend for RMIStorageProxy
+
+2009-03-23 14:21  mke
+
+	* [r1137]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/MiniConnectionPoolManager.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/StorageTest.java:
+	  
+	  Minor polish in debugging output. Observed that DerbyStorage and
+	  PostgresStorage are completely broken. It appears to be something
+	  related to transactions and connection pooling...
+
+2009-03-23 12:45  toke
+
+	* [r1136] Common/data/LegacyToSummaDocumentXML.xslt,
+	  Control/test/log4j.xml:
+	  
+	  Bugfix: The LegacyToSummaDocumentXML did not correctly use the
+	  new namespace "http://statsbiblioteket.dk/summa/2008/Document"
+
+2009-03-23 12:41  mke
+
+	* [r1135]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/RecordWriter.java:
+	  
+	  Join the record batching thread on close(). This fixes a race
+	  condition when expecting a given collection of records being
+	  present in the storage after the close() on RecordWriter has
+	  returned
+
+2009-03-23 12:16  toke
+
+	* [r1134] Common/data/LegacyMultiVolumeConverter.xslt:
+	  
+	  Bugfix: The LegacyMultiVolumeConverter did not use the new
+	  namespace "http://statsbiblioteket.dk/summa/2008/Document"
+
+2009-03-23 11:45  mke
+
+	* [r1133]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/QueryOptions.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/StorageTest.java:
+	  
+	  Make members protected in QueryOptions
+	  
+	  Fix infinite relations expansion recursion when fetching records
+	  with relations. This fixes bug #1589 "Connection leaks in
+	  H2Storage"
+	  
+	  Add unit test for checking relations expansion
+	  
+	  Make DatabaseStorage.getRecords() use one single connection for
+	  all sub getRecord() calls and re-use that connection all the way
+	  down the callstack of said method (among others, for relations
+	  expansion)
+
+2009-03-23 10:22  toke
+
+	* [r1132]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/LuceneIndexDescriptor.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/SummaKeywordAnalyzer.java,
+	  Control/test/data/analyzer/Analyzer_IndexDescriptor.xml,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/AnalyzerTest.java,
+	  Control/test/log4j.xml:
+	  
+	  Bugfix: storedKeyword had a mismatch for index vs. query-time
+	  Enhanvement: Introduced verbatim field, usable for recordID and
+	  similar
+
+2009-03-23 10:05  toke
+
+	* [r1131]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/index/IndexUtils.java:
+	  
+	  Minor: Updated indexing of RecordID to non-deprecated Lucene
+	  Field enums
+
+2009-03-20 10:40  toke
+
+	* [r1130] Common/data/LegacyToSummaDocumentXML.xslt,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/LuceneIndexDescriptor.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/SummaFieldSeparatingAnalyzer.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/SummaKeywordAnalyzer.java,
+	  Control/test/data/analyzer,
+	  Control/test/data/analyzer/Analyzer_IndexDescriptor.xml[CPY],
+	  Control/test/data/analyzer/DocumentCreatorConfiguration.xml,
+	  Control/test/data/analyzer/LuceneConfiguration.xml,
+	  Control/test/data/analyzer/SearchConfiguration.xml,
+	  Control/test/data/analyzer/document1.xml,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/AnalyzerTest.java,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/PayloadFeederHelper.java,
+	  Control/test/log4j.xml,
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/LuceneManipulator.java,
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/StreamingDocumentCreator.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/LuceneSearchNode.java:
+	  
+	  Bugfix: The index-workflow used an incorrect namespace for
+	  document-XML
+	  Unit-test: Testing analyzer-calls
+
+2009-03-20 10:39  mke
+
+	* [r1129]
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/StorageTest.java,
+	  Storage/test/log4j.xml:
+	  
+	  Add unit test that should catch most connection leaks when
+	  flushing records. It current fails and is considered a blocker
+	  for 1.3.0
+
+2009-03-20 10:37  mke
+
+	* [r1128]
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/SummaKeywordAnalyzerTest.java:
+	  
+	  Not only test the SummaKeywordAnalyzer.reusableTokenStream()
+	  method in the unit tests, also the
+	  SummaKeywordAnalyzer.tokenStream() method on the same input.
+
+2009-03-20 09:34  mke
+
+	* [r1127] ChangeLog, NEWS:
+	  
+	  Start updating the NEWS file preparing for the 1.3.0 relelase
+
 2009-03-20 07:53  toke
 
 	* [r1126] Common/src/dk/statsbiblioteket/summa/common/pool,
