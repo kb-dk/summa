@@ -81,7 +81,7 @@ public class NoExitTestCase extends TestCase {
      * disables exitVM.
      */
     private void checkSecurityManager() {
-        if (System.getSecurityManager() == null) {
+//        if (1 == 1 || System.getSecurityManager() == null) {
             System.setSecurityManager(new SecurityManager() {
                 @Override
                 public void checkPermission(Permission perm) {
@@ -100,7 +100,7 @@ public class NoExitTestCase extends TestCase {
                     }
                 }
             });
-        }
+//        }
     }
 
 }
