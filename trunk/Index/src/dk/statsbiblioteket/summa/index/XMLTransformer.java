@@ -67,7 +67,7 @@ public class XMLTransformer extends ObjectFilterImpl {
      */
     public static final String CONF_STRIP_XML_NAMESPACES =
             "summa.xmltransformer.ignorexmlnamespaces";
-    public static final boolean DEFAULT_STRIP_XML_NAMESPACES = true;
+    public static final boolean DEFAULT_STRIP_XML_NAMESPACES = false;
 
     private URL xsltLocation;
     private boolean stripXMLNamespaces = DEFAULT_STRIP_XML_NAMESPACES;
@@ -92,6 +92,12 @@ public class XMLTransformer extends ObjectFilterImpl {
             throw new ConfigurationException(String.format(
                     "The xsltLocation '%s' could not be resolved to a URL",
                     xsltLocation));
+        }
+        if (!conf.valueExists(CONF_STRIP_XML_NAMESPACES)) {
+            log.warn(String.format(
+                    "The key %s was not defined. It is highly recommended to"
+                    + " define it as the wrong value typically wrecks the "
+                    + "output. Falling back to default " + stripXMLNamespaces));
         }
         stripXMLNamespaces = conf.getBoolean(CONF_STRIP_XML_NAMESPACES,
                                              stripXMLNamespaces);
