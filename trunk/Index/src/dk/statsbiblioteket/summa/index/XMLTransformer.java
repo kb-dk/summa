@@ -97,7 +97,7 @@ public class XMLTransformer extends ObjectFilterImpl {
             log.warn(String.format(
                     "The key %s was not defined. It is highly recommended to"
                     + " define it as the wrong value typically wrecks the "
-                    + "output. Falling back to default " + stripXMLNamespaces));
+                    + "output. Falling back to default ", stripXMLNamespaces));
         }
         stripXMLNamespaces = conf.getBoolean(CONF_STRIP_XML_NAMESPACES,
                                              stripXMLNamespaces);
