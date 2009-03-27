@@ -46,26 +46,6 @@ public class NativeRunnerTest extends TestCase {
         super.tearDown();
     }
 
-    public void testSetParameters() throws Exception {
-        //TODO: Test goes here...
-    }
-
-    public void testGetProcessOutput() throws Exception {
-        //TODO: Test goes here...
-    }
-
-    public void testGetProcessError() throws Exception {
-        //TODO: Test goes here...
-    }
-
-    public void testGetProcessOutputAsString() throws Exception {
-        //TODO: Test goes here...
-    }
-
-    public void testGetProcessErrorAsString() throws Exception {
-        //TODO: Test goes here...
-    }
-
     public void testSimpleCall() throws Exception {
         NativeRunner runner = new NativeRunner("true");
         assertEquals("The execution of true should work fine",
@@ -74,6 +54,8 @@ public class NativeRunnerTest extends TestCase {
         assertEquals("The execution of false should give 1",
                      1, runner.executeNoCollect());
     }
+
+/* NativeRunner is deprecated
 
     public void testTimeout() throws Exception {
         NativeRunner runner = new NativeRunner(new String[]{"sleep", "2"});
@@ -94,7 +76,7 @@ public class NativeRunnerTest extends TestCase {
         assertEquals("The result of echo should be flim",
                      "flim", runner.getProcessOutputAsString());
     }
-
+*/
     public static Test suite() {
         return new TestSuite(NativeRunnerTest.class);
     }
