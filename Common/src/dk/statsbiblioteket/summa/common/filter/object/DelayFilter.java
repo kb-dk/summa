@@ -105,8 +105,9 @@ public class DelayFilter extends ObjectFilterImpl {
     }
 
     @Override
-    protected void processPayload(Payload payload) {
+    protected boolean processPayload(Payload payload) {
         // We don't do processing on the payload itself
+        return true;
     }
 
     private void sleep(long ns) {

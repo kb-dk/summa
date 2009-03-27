@@ -70,7 +70,11 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
             long startTime = System.nanoTime();
             try {
                 log.trace("Processing Payload");
-                processPayload(processedPayload);
+                if (!processPayload(processedPayload)) {
+                    processedPayload.close();
+                    processedPayload = null;
+                    continue;
+                }
             } catch (PayloadException e) {
                 Logging.logProcess(
                         name,
@@ -78,7 +82,6 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
                         + "Payload discarded",
                         Logging.LogLevel.WARN, processedPayload, e);
                 processedPayload.close();
-                //noinspection UnusedAssignment
                 processedPayload = null;
                 continue;
             } catch (Exception e) {
@@ -123,12 +126,19 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
     /**
      * Perform implementation-specific processing of the given Payload.
      * @param payload the Payload to process.
+     * @return true if the processing resulted in a payload that should be
+     *         preserved, false if the Payload should be discarded. Note that
+     *         returning false will not raise any warnings and should be used
+     *         where the discarding of the Payload is an non-exceptional event.
+     *         An example of such use is the AbstractDiscardFilter.
+     *         If the Payload is to be discarded because of an error, throw
+     *         a PayloadException instead.
      * @throws PayloadException if it was not possible to process the Payload
      *         and if this means that further processing of the Payload does
      *         not make sense. Throwing this means that the Payload will be
      *         discarded by ObjectFilterImpl.
      */
-    protected abstract void processPayload(Payload payload) throws 
+    protected abstract boolean processPayload(Payload payload) throws
                                                                PayloadException;
 
     public void remove() {

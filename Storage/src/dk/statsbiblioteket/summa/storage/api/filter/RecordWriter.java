@@ -140,6 +140,7 @@ public class RecordWriter extends ObjectFilterImpl {
                 //noinspection DuplicateStringLiteralInspection
                 log.debug("Batching: " + r.toString(true));
             } else {
+                //noinspection DuplicateStringLiteralInspection
                 log.debug("Batching: " + r);
             }
 
@@ -236,7 +237,7 @@ public class RecordWriter extends ObjectFilterImpl {
                         wait(batchTimeout);
                     } catch (InterruptedException e) {
                         // We have been awoken!
-                        log.trace("Interrupted");
+                        log.trace("Interrupted while waiting for records");
                     }
                     checkCommit();
                 }
@@ -288,7 +289,7 @@ public class RecordWriter extends ObjectFilterImpl {
      * @param payload the Payload containing the Record to flush.
      */
     @Override
-    protected void processPayload(Payload payload) throws PayloadException {
+    protected boolean processPayload(Payload payload) throws PayloadException {
         Record record = payload.getRecord();
         if (record == null) {
             throw new PayloadException("null received in Payload in next()"
@@ -297,6 +298,7 @@ public class RecordWriter extends ObjectFilterImpl {
 
         batcher.add(record);
         profiler.beat();
+        return true;
     }
 
     @Override

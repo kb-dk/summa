@@ -22,6 +22,7 @@ package dk.statsbiblioteket.summa.common.legacy;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XSLT;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
+import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
@@ -101,12 +102,11 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
     }
 
     @Override
-    protected void processPayload(Payload payload) {
+    protected boolean processPayload(Payload payload) throws PayloadException {
         if (payload.getRecord() == null
             || payload.getRecord().getContent() == null
             || payload.getRecord().getContent().length == 0) {
-            log.debug("No content for " + payload);
-            return;
+            throw new PayloadException("No content in Record", payload);
         }
         Record record = payload.getRecord();
         String mergedContent = getMergedOrNull(record);
@@ -118,6 +118,7 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
                 throw new IllegalArgumentException("utf-8 not supported");
             }
         }
+        return true;
     }
 
     /**

@@ -22,8 +22,6 @@ package dk.statsbiblioteket.summa.common.filter;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
 
 /**
  * Adds the given key and value to the meta data for the Payloads.
@@ -48,7 +46,8 @@ public class DummyFilter extends ObjectFilterImpl {
     }
 
     @Override
-    protected void processPayload(Payload payload) {
+    protected boolean processPayload(Payload payload) {
         payload.getData().put(key, value);
+        return true;
     }
 }

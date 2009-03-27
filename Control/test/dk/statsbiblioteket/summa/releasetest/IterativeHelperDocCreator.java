@@ -54,7 +54,7 @@ public class IterativeHelperDocCreator extends ObjectFilterImpl {
     }
 
     @Override
-    protected void processPayload(Payload payload) {
+    protected boolean processPayload(Payload payload) {
         log.debug("Processing " + payload);
         Document luceneDoc = new Document();
         String id = payload.getId();
@@ -75,5 +75,6 @@ public class IterativeHelperDocCreator extends ObjectFilterImpl {
                                 Field.Store.YES, Field.Index.UN_TOKENIZED));
         payload.getData().put(Payload.LUCENE_DOCUMENT, luceneDoc);
         processedIDs.add(id);
+        return true;
     }
 }
