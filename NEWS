@@ -61,6 +61,9 @@
    'storedKeyword' are case insensitive and removes non-alphanumeric symbols,
    but also indexing the content as a single token
 
+ * Better handling of failures in the ingest- and index chains by introducing
+   a PayloadException and return codes from ObjectFilterImpl.processPayload()
+
  * Add an explicit log to follow record/payload lifetimes
 
  * Bugfix: The ServiceObj (responsible for handling SOAP-requests) failed
