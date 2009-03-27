@@ -115,7 +115,7 @@ public class StreamingDocumentCreator extends DocumentCreatorBase {
     public void processPayload(Payload payload) {
         //noinspection DuplicateStringLiteralInspection
         log.debug("processPayload(" + payload + ") called");
-        long startTime = System.currentTimeMillis();
+        long startTime = System.nanoTime();
         if (payload.getRecord() == null) {
             //noinspection DuplicateStringLiteralInspection
             throw new IllegalArgumentException(payload + " has no Record");
@@ -166,7 +166,7 @@ public class StreamingDocumentCreator extends DocumentCreatorBase {
         //noinspection DuplicateStringLiteralInspection
         log.debug("Added Lucene Document payload "
                   + payload + ". Processing time was "
-                  + (System.currentTimeMillis() - startTime) + " ms");
+                  + (System.nanoTime() - startTime) / 1000000D + " ms");
     }
 
     private void processHeader(XMLStreamReader reader,
