@@ -97,7 +97,7 @@ public class LuceneIndexDescriptor
                            Field.Store.NO,
                            Field.TermVector.NO,
                            new SummaKeywordAnalyzer()));
-        addField(makeField("storedKeyWord",
+        addField(makeField("storedKeyword",
                            Field.Index.TOKENIZED,
                            Field.Store.YES,
                            Field.TermVector.NO,
