@@ -62,7 +62,7 @@
       -->
 
     <logger name="dk.statsbiblioteket.summa">
-        <level value="ERROR" />
+        <level value="debug" />
         <appender-ref ref="CONSOLE" />
     </logger>
 
@@ -152,7 +152,7 @@
     </logger>
     -->
     <!--
-    <logger name="dk.statsbiblioteket.summa.ingest.split.SBMARCParser">
+    <logger name="dk.statsbiblioteket.summa.index.XMLTransformer">
         <level value="trace" />
         <appender-ref ref="CONSOLE" />
     </logger>
@@ -173,7 +173,7 @@
         <level value="debug" />
         <appender-ref ref="CONSOLE" />
     </logger>
-    <!--
+<!--
     <logger name="dk.statsbiblioteket.summa.index.lucene.LuceneManipulator">
         <level value="trace" />
         <appender-ref ref="CONSOLE" />
