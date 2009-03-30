@@ -42,9 +42,9 @@
         </layout>
     </appender>
 
-    <appender name="FAILED_RECORDS" class="org.apache.log4j.RollingFileAppender">
-        <param name="Threshold" value="TRACE"/><!-- or DEBUG or INFO -->
-        <param name="File" value="log/failed-records.log"/>
+    <appender name="PROCESS" class="org.apache.log4j.RollingFileAppender">
+        <param name="Threshold" value="DEBUG"/><!-- or DEBUG or INFO -->
+        <param name="File" value="log/process.log"/>
         <param name="Append" value="true"/>
         <param name="MaxFileSize" value="500MB"/>
         <param name="MaxBackupIndex" value="5"/>
@@ -76,10 +76,10 @@
         <appender-ref ref="FILE" />
     </logger>
 
-    <!-- Records dropped from the index workflow go here -->
-    <logger name="index.failed">
+    <!-- Record/Payload lifetime log -->
+    <logger name="process">
         <level value="debug" />
-        <appender-ref ref="FAILED_RECORDS" />
+        <appender-ref ref="PROCESS" />
     </logger>
 
     <!-- all loggeres inherit the root logger - so don't include the root appenders in the other loggers (will duplicate log entries in the log file) -->
