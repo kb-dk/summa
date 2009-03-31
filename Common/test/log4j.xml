@@ -60,7 +60,12 @@
         <appender-ref ref="CONSOLE" />
     </logger>
 
-    <logger name="dk.statsbiblioteket.summa.common.filter.PayloadQueue">
+    <logger name="dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper">
+        <level value="trace" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
+
+    <logger name="process">
         <level value="trace" />
         <appender-ref ref="CONSOLE" />
     </logger>
