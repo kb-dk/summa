@@ -28,6 +28,9 @@ import java.util.List;
 import java.util.ArrayList;
 import java.io.IOException;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * Takes a list of Payloads in the constructor and delivers the Payloads when
  * requested. Used for testing.
@@ -36,9 +39,13 @@ import java.io.IOException;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class PayloadFeederHelper implements ObjectFilter {
+    private static Log log = LogFactory.getLog(PayloadFeederHelper.class);
+
     private List<Payload> payloads;
     
     public PayloadFeederHelper(List<Payload> payloads) {
+        //noinspection DuplicateStringLiteralInspection
+        log.debug("Creating feeder with " + payloads.size() + " Payloads");
         this.payloads = new ArrayList<Payload>(payloads.size());
         this.payloads.addAll(payloads);
     }
@@ -60,7 +67,11 @@ public class PayloadFeederHelper implements ObjectFilter {
     }
 
     public Payload next() {
-        return !hasNext() ? null : payloads.remove(0);
+        Payload payload = !hasNext() ? null : payloads.remove(0);
+        if (log.isTraceEnabled()) {
+            log.trace("Delivering " + payload);
+        }
+        return payload;
     }
 
     public void remove() {
