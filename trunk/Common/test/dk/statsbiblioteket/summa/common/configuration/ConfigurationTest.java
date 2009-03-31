@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.io.Serializable;
+import java.io.File;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -36,10 +37,12 @@ import dk.statsbiblioteket.summa.common.configuration.storage.FileStorage;
 import dk.statsbiblioteket.summa.common.configuration.storage.RemoteStorage;
 import dk.statsbiblioteket.summa.common.configuration.storage.XStorage;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.Files;
 
 /**
  * Configuration Tester.
  */
+@SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
@@ -257,8 +260,20 @@ public class ConfigurationTest extends TestCase {
 
     public void testLoadXConfiguration() throws Exception {
         Configuration conf = Configuration.load("data/simple_xstorage.xml");
+        assertTrue("The underlying Storage should be an XStorage",
+                   conf.getStorage() instanceof XStorage);
+    }
+
+    public void testLoadXConfigurationFromFile() throws Exception {
+        File tmp = new File(new File(System.getProperty("java.io.tmpdir")),
+                                     "tmpstorage.xml");
+        Files.copy(Resolver.getFile("data/simple_xstorage.xml"), tmp, true);
+
+        Configuration conf = Configuration.load(tmp.toString());
         assertTrue("The underlying Storage should be an XStorage", 
                    conf.getStorage() instanceof XStorage);
+        assertTrue("The underlying Storage should support sub storages",
+                   conf.supportsSubConfiguration());
     }
 
     public void testGetSystemConfigError () throws Exception {
