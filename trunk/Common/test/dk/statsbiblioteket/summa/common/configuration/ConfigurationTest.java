@@ -255,6 +255,12 @@ public class ConfigurationTest extends TestCase {
 
     }
 
+    public void testLoadXConfiguration() throws Exception {
+        Configuration conf = Configuration.load("data/simple_xstorage.xml");
+        assertTrue("The underlying Storage should be an XStorage", 
+                   conf.getStorage() instanceof XStorage);
+    }
+
     public void testGetSystemConfigError () throws Exception {
         try {
             Configuration.getSystemConfiguration ("summa.snafu", false);
