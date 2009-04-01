@@ -91,7 +91,7 @@ public class XMLTransformer extends ObjectFilterImpl {
         if (xsltLocation == null) {
             throw new ConfigurationException(String.format(
                     "The xsltLocation '%s' could not be resolved to a URL",
-                    xsltLocation));
+                    xsltLocationString));
         }
         if (!conf.valueExists(CONF_STRIP_XML_NAMESPACES)) {
             log.warn(String.format(
