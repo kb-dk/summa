@@ -399,7 +399,7 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
             checkIterator();
         } catch (IOException e) {
             log.warn("hasNext: An exception occured while checking for a new "
-                     + "iterator. Returning false");
+                     + "iterator. Returning false", e);
             return false;
         }
 

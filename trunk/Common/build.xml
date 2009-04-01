@@ -119,6 +119,7 @@
             <classpath refid="lib.path"/>
         </javac>
         <copy file="${basedir}/data/LegacyToSummaDocumentXML.xslt" tofile="${build.dir}/LegacyToSummaDocumentXML.xslt"/>
+        <copy file="${basedir}/data/LegacyMultiVolumeConverter.xslt" tofile="${build.dir}/LegacyMultiVolumeConverter.xslt"/>
     </target>
 
 
