@@ -54,7 +54,7 @@ public class ScriptFilterTest extends TestCase {
 
     public void testDropAllJS() throws Exception {
         ObjectFilter filter = new ScriptFilter(
-                   new StringReader("returnValue = false;"));
+                   new StringReader("allowPayload = false;"));
         PayloadBufferFilter buf = prepareFilterChain(
                        filter,
                        new Record("id1", "base1", "test content 1".getBytes()),
@@ -70,7 +70,7 @@ public class ScriptFilterTest extends TestCase {
         ObjectFilter filter = new ScriptFilter(
                    new StringReader(
                            "if (payload.getRecord().getId() == 'id1') { " +
-                           "    returnValue = false;" +
+                           "    allowPayload = false;" +
                            "}"));
         PayloadBufferFilter buf = prepareFilterChain(
                        filter,
