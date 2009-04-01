@@ -35,6 +35,7 @@ import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.util.ArrayUtil;
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Logs;
 import org.apache.commons.logging.Log;
@@ -481,10 +482,17 @@ public class FileReader implements ObjectFilter {
                 log.debug("Closing stream " + stream.file + " with success: "
                           + success);
                 stream.setSuccess(success);
+                Logging.logProcess("FileReader",
+                                   "Calling close in closeDelivered",
+                                   Logging.LogLevel.TRACE, payload);
                 payload.close(); // TODO: Do we want close always?
                 if (!success) {  // Or only on failure?
                     // Force close
                     log.debug("Forcing close on payload " + payload);
+                    //noinspection DuplicateStringLiteralInspection
+                    Logging.logProcess("IndexControllerImpl",
+                                       "Calling close with success = false",
+                                       Logging.LogLevel.WARN, payload);
                     payload.close();
                 }
             }

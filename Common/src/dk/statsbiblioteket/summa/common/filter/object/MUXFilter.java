@@ -26,6 +26,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.PayloadQueue;
+import dk.statsbiblioteket.summa.common.Logging;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
@@ -293,6 +294,9 @@ public class MUXFilter implements ObjectFilter, Runnable {
             return false;
         }
         Payload next = next();
+        Logging.logProcess("MUXFilter",
+                           "Calling close for object as part of pump()",
+                           Logging.LogLevel.TRACE, next);
         next.close();
         return hasNext();
     }

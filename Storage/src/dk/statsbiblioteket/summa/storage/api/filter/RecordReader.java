@@ -28,6 +28,7 @@ import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
@@ -536,6 +537,9 @@ public class RecordReader implements ObjectFilter, StorageChangeListener {
          if (next == null) {
              return false;
          }
+        Logging.logProcess("RecordReader",
+                           "Calling close for Payload as part of pump()",
+                           Logging.LogLevel.TRACE, next);
          next.close();
          return true;
      }

@@ -23,6 +23,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.Logging;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
@@ -83,6 +84,10 @@ public class DiscardRelativesFilter extends AbstractDiscardFilter {
         log.trace("Checking for parents");
         List<Record> parents = payload.getRecord().getParents();
         if (discardHasParent && parents != null && parents.size() > 0) {
+            Logging.logProcess(
+                    getName() + "#" + this.getClass().getSimpleName(),
+                    "Discarding due to parent existence",
+                    Logging.LogLevel.TRACE, payload);
             //noinspection DuplicateStringLiteralInspection
             log.debug("Discarding " + payload + " due to parent existence");
             return true;
@@ -90,6 +95,10 @@ public class DiscardRelativesFilter extends AbstractDiscardFilter {
         log.trace("Checking for children");
         List<Record> children = payload.getRecord().getChildren();
         if (discardHasChildren && children != null && children.size() > 0) {
+            Logging.logProcess(
+                    getName() + "#" + this.getClass().getSimpleName(),
+                    "Discarding due to children existence",
+                    Logging.LogLevel.TRACE, payload);
             //noinspection DuplicateStringLiteralInspection
             log.debug("Discarding " + payload + " due to children existence");
             return true;

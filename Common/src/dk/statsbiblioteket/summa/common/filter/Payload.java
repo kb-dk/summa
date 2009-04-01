@@ -259,6 +259,9 @@ public class Payload {
     public boolean pump() throws IOException {
         boolean cont = stream != null && stream.read() != -1;
         if (!cont) {
+            Logging.logProcess(this.getClass().getSimpleName(),
+                               "Calling close due to pump() being finished",
+                               Logging.LogLevel.TRACE, this);
             close();
         }
         return cont;

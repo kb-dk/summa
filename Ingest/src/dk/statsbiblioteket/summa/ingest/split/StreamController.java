@@ -32,6 +32,7 @@ import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.Logging;
 
 /**
  * Retrieves payloads from a given source and processes the streams from the
@@ -165,6 +166,10 @@ public class StreamController implements ObjectFilter {
             log.warn("pump: Got null as next after hasNext() was true");
             return false;
         }
+        //noinspection DuplicateStringLiteralInspection
+        Logging.logProcess("StreamController",
+                           "Calling close for Payload as part of pump()",
+                           Logging.LogLevel.TRACE, payload);
         next.close();
         return true;
     }
