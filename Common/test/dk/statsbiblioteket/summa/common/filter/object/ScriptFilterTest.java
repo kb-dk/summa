@@ -5,6 +5,7 @@ import junit.framework.TestCase;
 import java.io.StringReader;
 
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 
 /**
@@ -12,13 +13,9 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
  */
 public class ScriptFilterTest extends TestCase {
 
-    /**
-     * Create a filter that will emit one payload for each of the supplied
-     * records
-     * @param records add a payload to the source for each record
-     * @return an ObjectFilter with the requested payloads
-     */
-    public ObjectFilter getPayloadSource(Record... records) {
+    public PayloadBufferFilter prepareFilterChain(ObjectFilter filter,
+                                                  Record... records) {
+        // Set up the source filter
         PushFilter source = new PushFilter(records.length+1, 2048);
 
         for (int i = 0; i < records.length; i++) {
@@ -27,19 +24,64 @@ public class ScriptFilterTest extends TestCase {
         }
         source.signalEOF();
 
-        return source;
+        // Set up the endpoint filter
+        PayloadBufferFilter buf = new PayloadBufferFilter(
+                                                Configuration.newMemoryBased());
+
+        // Connect filters
+        filter.setSource(source);
+        buf.setSource(filter);
+
+        return buf;
+
     }
 
-    public void testSimpleJS() throws Exception {
-        ObjectFilter source = getPayloadSource(
-                new Record("id1", "base1", "test content 1".getBytes()),
-                new Record("id2", "base1", "test content 2".getBytes()));
-        ObjectFilter filter = new ScriptFilter(new StringReader("print(payload.getId()+'\\n'); true"));
-        filter.setSource(source);
+    public void testRenameRecordIdJS() throws Exception {
+        ObjectFilter filter = new ScriptFilter(
+                   new StringReader("payload.getRecord().setId('processed');"));
+        PayloadBufferFilter buf = prepareFilterChain(
+                       filter,
+                       new Record("id1", "base1", "test content 1".getBytes()),
+                       new Record("id2", "base1", "test content 2".getBytes()));
 
-        while (filter.pump()){;}
-        //assertEquals(true, filter.pump());
+        // Flush the filter chain
+        while (buf.pump()){;}
 
+        assertEquals(2, buf.size());
+        assertEquals("processed", buf.get(0).getRecord().getId());
+        assertEquals("processed", buf.get(1).getRecord().getId());
+    }
+
+    public void testDropAllJS() throws Exception {
+        ObjectFilter filter = new ScriptFilter(
+                   new StringReader("returnValue = false;"));
+        PayloadBufferFilter buf = prepareFilterChain(
+                       filter,
+                       new Record("id1", "base1", "test content 1".getBytes()),
+                       new Record("id2", "base1", "test content 2".getBytes()));
+
+        // Flush the filter chain
+        while (buf.pump()){;}
+
+        assertEquals(0, buf.size());
+    }
+
+    public void testDropOneJS() throws Exception {
+        ObjectFilter filter = new ScriptFilter(
+                   new StringReader(
+                           "if (payload.getRecord().getId() == 'id1') { " +
+                           "    returnValue = false;" +
+                           "}"));
+        PayloadBufferFilter buf = prepareFilterChain(
+                       filter,
+                       new Record("id1", "base1", "test content 1".getBytes()),
+                       new Record("id2", "base1", "test content 2".getBytes()));
+
+        // Flush the filter chain
+        while (buf.pump()){;}
+
+        assertEquals(1, buf.size());
+        assertEquals("id2", buf.get(0).getRecord().getId());
     }
 
 }

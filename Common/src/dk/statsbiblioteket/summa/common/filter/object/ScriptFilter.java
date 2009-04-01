@@ -146,14 +146,13 @@ public class ScriptFilter extends ObjectFilterImpl {
     protected boolean processPayload(Payload payload) throws PayloadException {
         // Put the payload into the engine so the script can access it
         engine.put("payload", payload);
-
-        Object result;
+        engine.put("returnValue", Boolean.TRUE);
 
         if (compiledScript != null) {
             log.debug("Processing " + payload.getId()
                       + " with compiled script");
             try {
-                result = (Boolean)compiledScript.eval();
+                compiledScript.eval();
             } catch (ScriptException e) {
                 throw new PayloadException("Error evaluating compiled script: "
                                            + e.getMessage(), e);
@@ -163,7 +162,7 @@ public class ScriptFilter extends ObjectFilterImpl {
             log.debug("Processing " + payload.getId()
                       + " with interpreted script");
             try {
-                result = engine.eval(new CharArrayReader(script));
+                engine.eval(new CharArrayReader(script));
             } catch (ScriptException e) {
                 throw new PayloadException("Error evaluating interpreted "
                                            + "script: " + e.getMessage(), e);
@@ -172,11 +171,11 @@ public class ScriptFilter extends ObjectFilterImpl {
         }
 
         try {
-                return (Boolean) result;
+                return (Boolean) engine.get("returnValue");
             } catch (ClassCastException e) {
                 throw new PayloadException("Script did not return a boolean, "
                                             + "but a "
-                                            + result.getClass().getName());
+                                            + engine.get("returnValue"));
             } catch (NullPointerException e) {
                 throw new PayloadException("Script returned null. It must "
                                            + "return a boolean");
