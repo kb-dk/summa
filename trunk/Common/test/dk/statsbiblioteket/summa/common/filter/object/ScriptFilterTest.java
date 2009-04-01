@@ -84,4 +84,29 @@ public class ScriptFilterTest extends TestCase {
         assertEquals("id2", buf.get(0).getRecord().getId());
     }
 
+    public void testBasePrefixRecordIdJS() throws Exception {
+        ObjectFilter filter = new ScriptFilter(
+                   new StringReader(
+            "var record = payload.getRecord();"+
+            "if (!record.getId().startsWith(record.getBase())) {"+
+            "    record.setId(record.getBase() + \"_\" + record.getId())"+
+            "}"+
+            "if (record.getId().endsWith('taboo')) {"+
+            "    allowPayload = false;" +
+            "}"));
+
+        PayloadBufferFilter buf = prepareFilterChain(
+                       filter,
+                       new Record("id1", "base1", "test content 1".getBytes()),
+                       new Record("id2", "base1", "test content 2".getBytes()),
+                       new Record("taboo", "base1", "test content".getBytes()));
+
+        // Flush the filter chain
+        while (buf.pump()){;}
+
+        assertEquals(2, buf.size());
+        assertEquals("base1_id1", buf.get(0).getRecord().getId());
+        assertEquals("base1_id2", buf.get(1).getRecord().getId());
+    }
+
 }
