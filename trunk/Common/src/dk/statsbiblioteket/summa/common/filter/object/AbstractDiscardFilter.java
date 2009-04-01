@@ -65,6 +65,6 @@ public abstract class AbstractDiscardFilter extends ObjectFilterImpl {
                     "No offending relatives: Payload not discarded",
                     Logging.LogLevel.TRACE, payload);
         }
-        return discard;
+        return !discard;
     }
 }
