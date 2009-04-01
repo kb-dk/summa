@@ -12,7 +12,6 @@ import org.apache.commons.logging.LogFactory;
  * given a {@link Configuration}
  */
 public class SummaSearcherFactory {
-
     private static final Log log = LogFactory.getLog (SummaSearcherFactory.class);
 
     /**
@@ -27,24 +26,21 @@ public class SummaSearcherFactory {
      *                     {@code conf}
      * @return a newly created {@code SummaSearcher}
      * @throws Configurable.ConfigurationException if there is an error reading
-     *                                             {@code conf} or there is an
-     *                                             error creating the searcher
-     *                                             instance
+     *         {@code conf} or there is an error creating the searcher instance.
      */
-    public static SummaSearcher createSearcher (Configuration conf,
-                                                Class<? extends SummaSearcher> defaultClass) {
+    public static SummaSearcher createSearcher (
+            Configuration conf, Class<? extends SummaSearcher> defaultClass) {
         log.trace("createSeacher called");
 
         Class<? extends SummaSearcher> seacherClass;
         try {
-            seacherClass = conf.getClass(SummaSearcher.CONF_CLASS,
-                                         SummaSearcher.class,
-                                         defaultClass);
+            seacherClass = conf.getClass(
+                    SummaSearcher.CONF_CLASS, SummaSearcher.class,
+                    defaultClass);
         } catch (Exception e) {
-            throw new Configurable.ConfigurationException ("Could not get searcher"
-                                                           + " class from property "
-                                                           + SummaSearcher.CONF_CLASS,
-                                                           e);
+            throw new Configurable.ConfigurationException(String.format(
+                    "Could not get searcher class from property %s",
+                    SummaSearcher.CONF_CLASS), e);
         }
         
         log.debug("Instantiating searcher class: " + seacherClass);
@@ -52,9 +48,8 @@ public class SummaSearcherFactory {
         try {
             return Configuration.create(seacherClass, conf);
         } catch (Exception e) {
-            throw new Configurable.ConfigurationException ("Failed to instantiate"
-                                                           + " seacher class "
-                                                           + seacherClass, e);
+            throw new Configurable.ConfigurationException(String.format(
+                    "Failed to instantiate seacher class %s", seacherClass), e);
         }
     }
 
