@@ -182,7 +182,8 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
     private void checkSource() {
         if (source == null) {
             throw new IllegalStateException("No source defined for "
-                                            + "CreateDocument filter");
+                                            + getClass().getSimpleName()
+                                            + " filter");
         }
     }
 
