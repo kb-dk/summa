@@ -655,6 +655,10 @@ public class IndexControllerImpl extends StateThread implements
         }
         Payload payload = next(); // Also calls update(payload)
         try {
+            //noinspection DuplicateStringLiteralInspection
+            Logging.logProcess("IndexControllerImpl",
+                               "Calling close for Payload as part of pump()",
+                               Logging.LogLevel.TRACE, payload);
             payload.close();
         } catch (Exception e) {
             log.warn("Exception while calling close() on payload '" + payload

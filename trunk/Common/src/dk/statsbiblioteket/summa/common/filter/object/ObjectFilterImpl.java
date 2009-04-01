@@ -167,6 +167,10 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
         }
         Payload payload = next();
         if (payload != null) {
+            //noinspection DuplicateStringLiteralInspection
+            Logging.logProcess("ObjectFilterImpl",
+                               "Calling close for Payload as part of pump()",
+                               Logging.LogLevel.TRACE, payload);
             payload.close();
         }
         return hasNext();

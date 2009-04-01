@@ -25,6 +25,7 @@ package dk.statsbiblioteket.summa.ingest.stream;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -135,7 +136,12 @@ public class FileWatcher extends FileReader implements Runnable {
     @Override
     public boolean pump() throws IOException {
         if (hasNext()) {
-            next().close();
+            Payload payload = next();
+            //noinspection DuplicateStringLiteralInspection
+            Logging.logProcess("FileWatcher",
+                               "Calling close for Payload as part of pump()",
+                               Logging.LogLevel.TRACE, payload);
+            payload.close();
             return true;
         }
         return false;
