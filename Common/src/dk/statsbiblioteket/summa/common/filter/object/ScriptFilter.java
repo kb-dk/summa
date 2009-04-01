@@ -144,7 +144,8 @@ public class ScriptFilter extends ObjectFilterImpl {
     }
 
     protected boolean processPayload(Payload payload) throws PayloadException {
-        engine.put("summa.filter.payload", payload);
+        // Put the payload into the engine so the script can access it
+        engine.put("payload", payload);
 
         Object result;
 
@@ -176,6 +177,9 @@ public class ScriptFilter extends ObjectFilterImpl {
                 throw new PayloadException("Script did not return a boolean, "
                                             + "but a "
                                             + result.getClass().getName());
-            }
+            } catch (NullPointerException e) {
+                throw new PayloadException("Script returned null. It must "
+                                           + "return a boolean");
+        }
     }
 }
