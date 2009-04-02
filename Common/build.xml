@@ -145,7 +145,8 @@
     </target>
 
     <target name=".jar" depends="compile">
-        <jar basedir="${build.dir}" compress="true" jarfile="${release.jar}"/>
+        <jar basedir="${build.dir}" compress="true" jarfile="${release.jar}"
+                excludes="log4j.xml"/>
     </target>
 
     <target name="release" depends="distclean, depends, .jar, doc">
