@@ -8,7 +8,7 @@
         <key>filter.script.inline</key>
         <value class="string"><![CDATA[
                 payload.getRecord().setId('inlineJavascript');
-        <!--]]></value>
+        ]]></value>
     </entry>
 </xproperties>
 </xproperties>
