@@ -107,9 +107,10 @@ public class ScriptFilter extends ObjectFilterImpl {
                 String urlString = url.toString();
 
                 if (urlString.indexOf('.') == -1) {
-                    throw new ConfigurationException("Unable to detect script "
-                                                     + "extension from: "
-                                                     + urlString);
+                    log.warn("Unable to detect script extension from: "
+                              + urlString + ". Using default: "
+                              + DEFAULT_SCRIPT_LANG);
+                    return DEFAULT_SCRIPT_LANG;
                 }
 
                 return urlString.substring(urlString.lastIndexOf('.'));
