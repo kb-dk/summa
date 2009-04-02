@@ -6,6 +6,7 @@ import dk.statsbiblioteket.util.reader.CircularCharBuffer;
 import java.io.FilterReader;
 import java.io.Reader;
 import java.io.IOException;
+import java.io.StringReader;
 
 /**
  *
@@ -97,5 +98,12 @@ public class LowerCasingReader extends ReplaceReader {
     public LowerCasingReader setSource(Reader in) {
         this.in = in;
         return this;
+    }
+
+    @Override
+    @SuppressWarnings({"CloneDoesntCallSuperClone",
+            "CloneDoesntDeclareCloneNotSupportedException"})
+    public LowerCasingReader clone() {
+        return new LowerCasingReader(new StringReader(""));
     }
 }
