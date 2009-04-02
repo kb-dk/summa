@@ -173,7 +173,22 @@
         <delete dir="${dist.dir}" />
         <delete dir="${summa.apidocs.dir}" />
     </target>
-    
+
+    <!-- Compile all project jar files -->
+    <target name=".jar">
+        <echo message="Compiling all jar files"/>
+        <ant dir="Common" inheritall="false" target=".jar"/>
+        <ant dir="Storage" inheritall="false" target=".jar"/>
+        <ant dir="Ingest" inheritall="false" target=".jar"/>
+        <ant dir="Index" inheritall="false" target=".jar"/>
+        <ant dir="Search" inheritall="false" target=".jar"/>
+        <ant dir="Support" inheritall="false" target=".jar"/>
+        <ant dir="FacetBrowser" inheritall="false" target=".jar"/>
+        <ant dir="Control" inheritall="false" target=".jar"/>
+        <!--<ant dir="Web" inheritall="false" target=".jar"/>-->
+        <ant dir="Workflow" inheritall="false" target=".jar"/>
+    </target>
+
     <!-- Wrap up a tarball ready for distribution -->
     <target name="release" depends="depends, distclean, all, doc">
         <property name="release.tmp.dir" value="${dist.dir}/summa-${summa.version}.tmp" />
