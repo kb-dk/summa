@@ -16,6 +16,9 @@ import org.apache.commons.logging.LogFactory;
  * An {@link ObjectFilter} processing incoming payloads in some scripting
  * language supported by the Java runtime. The prime example here would be
  * Javascript.
+ * <p/>
+ * You can find a list of supported scripting languages at
+ * <a href="https://scripting.dev.java.net/">scripting.dev.java.net</a>.
  */
 public class ScriptFilter extends ObjectFilterImpl {
 
