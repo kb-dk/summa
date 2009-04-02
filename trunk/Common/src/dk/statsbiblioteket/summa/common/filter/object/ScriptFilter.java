@@ -25,6 +25,9 @@ public class ScriptFilter extends ObjectFilterImpl {
     public static final boolean DEFAULT_COMPILE = true;
 
     public static final String CONF_SCRIPT_URL = "filter.script.url";
+    public static final String CONF_SCRIPT_INLINE = "filter.script.inline";
+    public static final String CONF_SCRIPT_LANG = "filter.script.lang";
+    public static final String DEFAULT_SCRIPT_LANG = "js";
 
     private ScriptEngine engine;
     private ScriptEngineManager engineManager;
@@ -94,52 +97,77 @@ public class ScriptFilter extends ObjectFilterImpl {
     }
 
     private static String getScriptExtension(Configuration conf) {
-        if (!conf.valueExists(CONF_SCRIPT_URL)) {
-            throw new ConfigurationException("No script URL defined in "
-                                             + "configuration. Please set the "
-                                             + CONF_SCRIPT_URL
-                                             + " property for this filter");
-        }
-
-        try {
-            URL url = new URL(conf.getString(CONF_SCRIPT_URL));
-            String urlString = url.toString();
-
-            if (urlString.indexOf('.') == -1) {
-                throw new ConfigurationException("Unable to detect script "
-                                                 + "extension from: "
-                                                 + urlString);
+        if (conf.valueExists(CONF_SCRIPT_URL)) {
+            if (conf.valueExists(CONF_SCRIPT_LANG)) {
+                return conf.getString(CONF_SCRIPT_LANG);
             }
 
-            return urlString.substring(urlString.lastIndexOf('.'));
+            try {
+                URL url = new URL(conf.getString(CONF_SCRIPT_URL));
+                String urlString = url.toString();
 
-        } catch (MalformedURLException e) {
-            throw new ConfigurationException("Malformed URL in "
-                                             + CONF_SCRIPT_URL
-                                             + ":" + e.getMessage(), e);
-        }
+                if (urlString.indexOf('.') == -1) {
+                    throw new ConfigurationException("Unable to detect script "
+                                                     + "extension from: "
+                                                     + urlString);
+                }
+
+                return urlString.substring(urlString.lastIndexOf('.'));
+
+            } catch (MalformedURLException e) {
+                throw new ConfigurationException("Malformed URL in "
+                                                 + CONF_SCRIPT_URL
+                                                 + ":" + e.getMessage(), e);
+            }
+        } else if (conf.valueExists(CONF_SCRIPT_INLINE)) {
+            return conf.getString(CONF_SCRIPT_LANG, DEFAULT_SCRIPT_LANG);
+        } else {
+            throw new ConfigurationException("No URL or inlined script defined."
+                                             + " Please set one of the "
+                                             + CONF_SCRIPT_URL + " or "
+                                             + CONF_SCRIPT_INLINE
+                                             + " properties for this filter");
+        }        
     }
 
     private static InputStream readScript(Configuration conf) {
-        if (!conf.valueExists(CONF_SCRIPT_URL)) {
-            throw new ConfigurationException("No script URL defined in "
-                                             + "configuration. Please set the "
-                                             + CONF_SCRIPT_URL
-                                             + " property for this filter");
+        if (!conf.valueExists(CONF_SCRIPT_URL)
+            && !conf.valueExists(CONF_SCRIPT_INLINE)) {
+            throw new ConfigurationException("No URL or inlined script defined." +
+                                             " Please set one of the "
+                                             + CONF_SCRIPT_URL + " or "
+                                             + CONF_SCRIPT_INLINE
+                                             + " properties for this filter");
         }
 
-        try {
-            URL url = new URL(conf.getString(CONF_SCRIPT_URL));
-            return url.openStream();
-        } catch (MalformedURLException e) {
-            throw new ConfigurationException("Malformed URL in "
-                                             + CONF_SCRIPT_URL
-                                             + ":" + e.getMessage(), e);
-        } catch (IOException e) {
-            throw new ConfigurationException("Unable to read script data from"
-                                             + " URL "
-                                             + conf.getString(CONF_SCRIPT_URL)
-                                             + ": " + e.getMessage(), e);
+        if (conf.valueExists(CONF_SCRIPT_URL)) {
+            if (conf.valueExists(CONF_SCRIPT_INLINE)) {
+                log.error("Both an inlined script and a script URL are defined."
+                          + " Please use only one of " + CONF_SCRIPT_URL
+                          + " or " + CONF_SCRIPT_INLINE + ". Using script" +
+                          "from " + conf.getString(CONF_SCRIPT_URL));
+            }
+
+            try {
+                log.info("Reading script from "
+                         + conf.getString(CONF_SCRIPT_URL));
+                URL url = new URL(conf.getString(CONF_SCRIPT_URL));
+                return url.openStream();
+            } catch (MalformedURLException e) {
+                throw new ConfigurationException("Malformed URL in "
+                                                 + CONF_SCRIPT_URL
+                                                 + ":" + e.getMessage(), e);
+            } catch (IOException e) {
+                throw new ConfigurationException("Unable to read script data from"
+                                                 + " URL "
+                                                 + conf.getString(CONF_SCRIPT_URL)
+                                                 + ": " + e.getMessage(), e);
+            }
+        } else {
+            assert conf.valueExists(CONF_SCRIPT_INLINE);
+            log.info("Using inlined script");
+            return new ByteArrayInputStream(
+                                 conf.getString(CONF_SCRIPT_INLINE).getBytes());
         }
     }
 
