@@ -29,8 +29,8 @@ import java.io.StringReader;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
- * This is a simple RuleParser, used for reading mapping rules for the
- * {@link TransliteratorTokenizer}.
+ * This is a simple RuleParser, used for reading mapping rules found in
+ * {@link Rules}.
  * <p/>
  * The rules should follow this notation:
  * <pre>
@@ -179,7 +179,20 @@ public class RuleParser {
         return maxLen + "_" + rules;
     }
 
-
+    public static String sanitize(String rules,
+                                  boolean keepDefaults, String defaults) {
+        if (keepDefaults) {
+            if (rules == null || "".equals(rules)) {
+                return defaults;
+            } else {
+                return rules + defaults;
+            }
+        } else if (rules == null) {
+            return "";
+        } else {
+            return rules;
+        }
+    }
 }
 
 

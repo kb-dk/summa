@@ -26,7 +26,6 @@ import org.apache.lucene.analysis.*;
 
 import java.io.Reader;
 import java.io.IOException;
-import java.util.List;
 import java.util.LinkedList;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -49,6 +48,9 @@ public class SummaAnalyzer extends Analyzer {
     String tokenRules;
     boolean keepDefaultTokenRules;
     boolean ignoreCase;
+
+    private ReplaceFactory transliteratorFactory;
+    private ReplaceFactory tokenReplacerFactory;
 
     /**
      * Encapsulation of a TokenStream and it data source (a Tokenizer)
@@ -73,15 +75,17 @@ public class SummaAnalyzer extends Analyzer {
      * Makes a SummaAnalyzer.
      *
      * @param transliterationRules       the transliteration rules are parsed to
-     *                                   a {@link TransliterationFilter}.
+     *                                   a {@link RuleParser} and fed to a
+     *                                   {@link ReplaceFactory}.
      * @param keepDefaultTransliterations if true the transliterationRules are
      *                                   added to the defined in
-     *                                   {@link TransliterationFilter#ALL_TRANSLITERATIONS}
+     *                                   {@link Rules#ALL_TRANSLITERATIONS}
      * @param tokenRules                 transliteration rules passed to a
-     *                                   {@link TokenReplaceFilter}
+     *                                   {@link RuleParser} and fed to a
+     *                                   {@link ReplaceFactory}
      * @param keepDefaultTokenRules      if true the tokenRules are added to
      *                                   the default rules defined in
-     *                                   {@link TokenReplaceFilter#DEFAULT_REPLACE_RULES}
+     *                                   {@link Rules#DEFAULT_REPLACE_RULES}
      * @param ignoreCase                 if true everything will be converted to
      *                                   lower case
      */
@@ -90,12 +94,23 @@ public class SummaAnalyzer extends Analyzer {
                          String tokenRules,
                          boolean keepDefaultTokenRules,
                          boolean ignoreCase){
-         super();
-         this.transliterationRules = transliterationRules;
-         this.keepDefaultTransliterations = keepDefaultTransliterations;
-         this.tokenRules = tokenRules;
-         this.keepDefaultTokenRules = keepDefaultTokenRules;
-         this.ignoreCase = ignoreCase;
+        super();
+        this.transliterationRules = transliterationRules;
+        this.keepDefaultTransliterations = keepDefaultTransliterations;
+        this.tokenRules = tokenRules;
+        this.keepDefaultTokenRules = keepDefaultTokenRules;
+        this.ignoreCase = ignoreCase;
+
+        transliteratorFactory =
+                new ReplaceFactory(RuleParser.parse(RuleParser.sanitize(
+                                  transliterationRules,
+                                  keepDefaultTransliterations,
+                                  Rules.ALL_TRANSLITERATIONS)));
+        tokenReplacerFactory =
+                new ReplaceFactory(RuleParser.parse(RuleParser.sanitize(
+                                  tokenRules,
+                                  keepDefaultTokenRules,
+                                  Rules.DEFAULT_REPLACE_RULES)));
      }
 
     /**
@@ -120,18 +135,14 @@ public class SummaAnalyzer extends Analyzer {
 
         if (ignoreCase) {
             ctx.filters.add(new LowerCasingReader(reader));
-            ctx.filters.add(new StringReplaceReader(ctx.filters.getLast(),
-                                                    tokenRules,
-                                                    keepDefaultTokenRules));
+            ctx.filters.add(tokenReplacerFactory.getReplacer(
+                                                        ctx.filters.getLast()));
         } else {
-            ctx.filters.add(new StringReplaceReader(reader,
-                                                    tokenRules,
-                                                    keepDefaultTokenRules));
+            ctx.filters.add(tokenReplacerFactory.getReplacer(reader));
         }
 
-        ctx.filters.add(new TransliteratingReader(ctx.filters.getLast(),
-                                                  transliterationRules,
-                                                  keepDefaultTransliterations));
+        ctx.filters.add(transliteratorFactory.getReplacer(
+                                                        ctx.filters.getLast()));
 
         ctx.tokenStream = new WhitespaceTokenizer(ctx.filters.getLast());
 
