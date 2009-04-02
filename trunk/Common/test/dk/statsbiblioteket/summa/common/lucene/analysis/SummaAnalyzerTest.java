@@ -93,7 +93,7 @@ public class SummaAnalyzerTest extends TestCase {
     }
 
     public void testWhiteSpace3() throws Exception {
-        // This tes is case sensitive, just try that combo as well
+        // This test is case sensitive, just try that combo as well
         a = new SummaAnalyzer(null, true, null, true, false);
         TokenStream t = a.reusableTokenStream("", new StringReader(" I  P Jacobsen    "));
 
@@ -140,5 +140,15 @@ public class SummaAnalyzerTest extends TestCase {
         t = a.reusableTokenStream("", new StringReader("Hr. A. Binde-Streg"));
 
         assertTokens(t, "Hr", "A", "Binde", "Streg");
+    }
+
+    public void testTransliterations() throws Exception {
+        a = new SummaAnalyzer(null, true, null, true, true);
+        TokenStream t = a.reusableTokenStream(
+                                   "", new StringReader("Über Ål!"));
+
+        assertTokens(t, "yber", "aal");
+
+        
     }
 }

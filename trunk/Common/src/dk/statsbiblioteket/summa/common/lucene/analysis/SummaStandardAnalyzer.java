@@ -25,22 +25,22 @@ package dk.statsbiblioteket.summa.common.lucene.analysis;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
- * The SummaStandardAnalyzer extends the SummaAnalyzer. No translitteration will
+ * Default analyzer for fields in Summa. No translitteration will
  * be performed, but chars will be removed or replaced by space.
  *
  * @see SummaAnalyzer
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "hal")
+        author = "mke")
 public class SummaStandardAnalyzer extends SummaAnalyzer {
 
     /**
      * @see SummaAnalyzer
      */
    public SummaStandardAnalyzer() {
-       super(TransliterationFilter.VOID_TRANSLITERATIONS
-             + TransliterationFilter.BLANK_TRANSLITERATIONS,
+       super(Rules.VOID_TRANSLITERATIONS
+             + Rules.BLANK_TRANSLITERATIONS,
              false, "", true, true);
    }
 
