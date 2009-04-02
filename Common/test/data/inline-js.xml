@@ -5,10 +5,6 @@
         <value class="string">InlineJavascriptTest</value>
     </entry>
     <entry>
-        <key>summa.filter.sequence.filterclass</key>
-        <value class="string">dk.statsbiblioteket.summa.common.filter.object.ScriptFilter</value>
-    </entry>
-    <entry>
         <key>filter.script.inline</key>
         <value class="string"><![CDATA[
                 payload.getRecord().setId('inlineJavascript');
