@@ -22,37 +22,33 @@
  */
 package dk.statsbiblioteket.summa.common.index;
 
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPathFactory;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import java.io.IOException;
-import java.io.File;
-import java.io.StringWriter;
-import java.io.ByteArrayInputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URL;
-import java.util.*;
-import java.text.ParseException;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Files;
-import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
-import dk.statsbiblioteket.summa.common.util.ResourceListener;
 import dk.statsbiblioteket.summa.common.util.ParseUtil;
+import dk.statsbiblioteket.summa.common.util.ResourceListener;
 import dk.statsbiblioteket.summa.common.xml.DefaultNamespaceContext;
+import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.w3c.dom.NodeList;
 import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+import java.io.*;
+import java.net.URL;
+import java.text.ParseException;
+import java.util.*;
 
 /**
  * A description of the layout of the index, such as default fields, groups
@@ -290,8 +286,9 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      * parse was called. See the class documentation for the format of the XML.
      * @param xml an XML representation of an IndexDescriptor.
      * @throws ParseException if there was an error parsing the xml.
+     * @return the input parsed as a Document, for further processing.
      */
-    public synchronized void parse(String xml) throws ParseException {
+    public synchronized Document parse(String xml) throws ParseException {
         //noinspection DuplicateStringLiteralInspection
         log.trace("parse called");
 
@@ -323,6 +320,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
                          + "' did not have any corresponding field or group");
             }
         }
+        return document;
     }
 
     private Document parseXMLToDocument(String xml) throws ParseException {

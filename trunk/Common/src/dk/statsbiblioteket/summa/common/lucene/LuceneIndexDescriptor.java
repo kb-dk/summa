@@ -22,25 +22,35 @@
  */
 package dk.statsbiblioteket.summa.common.lucene;
 
-import java.text.ParseException;
-import java.io.IOException;
-import java.net.URL;
-import java.util.Map;
-
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.index.IndexField;
-import dk.statsbiblioteket.summa.common.lucene.analysis.SummaSymbolRemovingAnalyzer;
 import dk.statsbiblioteket.summa.common.lucene.analysis.*;
 import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.SimpleAnalyzer;
-import org.apache.lucene.analysis.PerFieldAnalyzerWrapper;
-import org.apache.lucene.analysis.KeywordAnalyzer;
-import org.apache.lucene.document.Field;
+import dk.statsbiblioteket.summa.common.util.ParseUtil;
+import dk.statsbiblioteket.summa.common.xml.DefaultNamespaceContext;
+import dk.statsbiblioteket.util.Logs;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.KeywordAnalyzer;
+import org.apache.lucene.analysis.PerFieldAnalyzerWrapper;
+import org.apache.lucene.analysis.SimpleAnalyzer;
+import org.apache.lucene.document.Field;
+import org.w3c.dom.Document;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+import java.io.IOException;
+import java.net.URL;
+import java.text.ParseException;
+import java.util.List;
+import java.util.Map;
+import java.util.ArrayList;
 
 /**
  * Trivial implementation of a Lucene IndexDescriptor.
@@ -48,8 +58,15 @@ import org.w3c.dom.Node;
 public class LuceneIndexDescriptor
         extends IndexDescriptor<LuceneIndexField> {
     private static Log log = LogFactory.getLog(LuceneIndexDescriptor.class);
+
+    public static final String LUCENE_DESCRIPTOR_NAMESPACE =
+            "http://statsbiblioteket.dk/summa/2009/LuceneIndexDescriptor";
+    public static final String LUCENE_DESCRIPTOR_NAMESPACE_PREFIX = "lu";
+
     private Analyzer indexAnalyzer;
     private Analyzer queryAnalyzer;
+
+    private List<String> moreLikethisFields;
 
     public LuceneIndexDescriptor(Configuration configuration) throws IOException {
         super(configuration);
@@ -141,9 +158,59 @@ public class LuceneIndexDescriptor
                            new SummaNumberAnalyzer()));
     }
 
-    public void parse(String xml) throws ParseException {
-        super.parse(xml);
+    final static String MLT_EXPR = String.format(
+            "%s:IndexDescriptor/%s:moreLikethisFields/%1$s:field",
+            DESCRIPTOR_NAMESPACE_PREFIX, LUCENE_DESCRIPTOR_NAMESPACE_PREFIX);
+    @Override
+    public Document parse(String xml) throws ParseException {
+        XPath xPath = createXPath();
+        Document document = super.parse(xml);
+        if (document == null) {
+            log.warn("parse(" + xml + ") error: Document was null");
+        }
+
+        log.trace("Extracting nodes with expression '" + MLT_EXPR + "'");
+        NodeList mltNodes;
+        try {
+            mltNodes = (NodeList)xPath.evaluate(MLT_EXPR, document,
+                                                XPathConstants.NODESET);
+        } catch (XPathExpressionException e) {
+            throw new ParseException(String.format(
+                    "Expression '%s' for selecting MoreLikeThis was invalid",
+                    MLT_EXPR), -1);
+        }
+        moreLikethisFields = new ArrayList<String>(mltNodes.getLength());
+        if (mltNodes.getLength() == 0) {
+            log.debug("No MoreLikeThis nodes in index descriptor");
+            return document;
+        }
+        for (int i = 0 ; i < mltNodes.getLength() ; i++) {
+            String ref = ParseUtil.getValue(
+                    xPath, mltNodes.item(i), "@ref", (String)null);
+            if (ref == null || "".equals(ref)) {
+                log.warn("Got field without reference in moreLikeThisFields");
+            } else {
+                moreLikethisFields.add(ref);
+            }
+        }
+        log.info("Finished extracting MoreLikeThis fields: "
+                 + Logs.expand(moreLikethisFields, 20));
+
+        return document;
         //createAnalyzers();
+    }
+
+    private XPath createXPath() {
+        DefaultNamespaceContext nsCon = new DefaultNamespaceContext();
+        nsCon.setNameSpace(DESCRIPTOR_NAMESPACE,
+                           DESCRIPTOR_NAMESPACE_PREFIX);
+        nsCon.setNameSpace(LUCENE_DESCRIPTOR_NAMESPACE,
+                           LUCENE_DESCRIPTOR_NAMESPACE_PREFIX);
+        XPathFactory factory = XPathFactory.newInstance();
+        XPath xPath = factory.newXPath();
+        xPath.setNamespaceContext(nsCon);
+        log.trace("XPath created");
+        return xPath;
     }
 
     private LuceneIndexField makeField(String name, Field.Index index,
@@ -232,6 +299,13 @@ public class LuceneIndexDescriptor
         }
         indexAnalyzer = indexWrapper;
         queryAnalyzer = queryWrapper;
+    }
+
+    /**
+     * @return the fields that should be used for MoreLikeThis functionality.
+     */
+    public List<String> getMoreLikethisFields() {
+        return moreLikethisFields;
     }
 }
 

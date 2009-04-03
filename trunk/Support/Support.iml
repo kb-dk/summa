@@ -18,6 +18,7 @@
     <orderEntry type="library" name="junit-3.8.1" level="project" />
     <orderEntry type="library" name="commons-logging-1.1" level="project" />
     <orderEntry type="library" name="lucene-core" level="project" />
+    <orderEntry type="library" name="lucene-queries" level="project" />
     <orderEntryProperties />
   </component>
 </module>
