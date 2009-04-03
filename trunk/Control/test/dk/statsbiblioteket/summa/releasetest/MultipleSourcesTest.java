@@ -331,7 +331,11 @@ public class MultipleSourcesTest extends NoExitTestCase {
 
     public void testGetIndexConfiguration() throws Exception {
         // Throws exceptions by itself if something is blatantly wrong
-        getIndexConfiguration();
+        try {
+            getIndexConfiguration();
+        } catch (Exception e) {
+            fail("getIndexConfiguration failed with " + e.getMessage());
+        }
     }
 
     private Configuration getIndexConfiguration() throws IOException {
