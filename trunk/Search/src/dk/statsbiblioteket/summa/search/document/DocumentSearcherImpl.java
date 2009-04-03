@@ -22,13 +22,6 @@
  */
 package dk.statsbiblioteket.summa.search.document;
 
-import java.rmi.RemoteException;
-import java.util.Arrays;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.io.IOException;
-
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
@@ -37,8 +30,13 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.search.Filter;
-import org.apache.lucene.search.Query;
+
+import java.io.IOException;
+import java.rmi.RemoteException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
 
 /**
  * Default implementation of {@link DocumentSearcher} that handles
@@ -159,7 +157,7 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements
 
     public String simpleSearch(String query, long startIndex,
                                long maxRecords) throws RemoteException {
-        return fullSearch(null, query, startIndex, maxRecords, null, false,
+        return fullSearch(null, null, query, startIndex, maxRecords, null, false,
                           null, null).toXML();
     }
 
@@ -174,16 +172,14 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements
      * @param responses the responses from searches.
      * @throws RemoteException if the search failed.
      */
+    @Override
     protected void managedSearch(Request request, ResponseCollection responses)
                                                         throws RemoteException {
-        String query = request.getString(DocumentKeys.SEARCH_QUERY, null);
-        String filter = request.getString(DocumentKeys.SEARCH_FILTER, null);
-        if ((query == null || "".equals(query)) &&
-            (filter == null || "".equals(filter))) {
-            log.warn("No query and no filter specified for document search, "
-                     + "skipping search");
+        if (!isRequestUsable(request)) {
             return;
         }
+        String query = request.getString(DocumentKeys.SEARCH_QUERY, null);
+        String filter = request.getString(DocumentKeys.SEARCH_FILTER, null);
         //noinspection OverlyBroadCatchBlock
         try {
             long startIndex = request.getLong(DocumentKeys.SEARCH_START_INDEX,
@@ -196,26 +192,30 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements
                           ". Adjusting records to max");
                 records = maxRecords;
             }
-            String sortKey = request.getString(DocumentKeys.SEARCH_SORTKEY, this.sortKey);
-            Boolean reverse = request.getBoolean(DocumentKeys.SEARCH_REVERSE, false);
-            String[] resultFields = request.getStrings(DocumentKeys.SEARCH_RESULT_FIELDS,
-                                                       this.resultFields);
-            String[] fallbackValues = request.getStrings(DocumentKeys.SEARCH_FALLBACK_VALUES,
-                                                         this.fallbackValues);
+            String sortKey = request.getString(
+                    DocumentKeys.SEARCH_SORTKEY, this.sortKey);
+            Boolean reverse = request.getBoolean(
+                    DocumentKeys.SEARCH_REVERSE, false);
+            String[] resultFields = request.getStrings(
+                    DocumentKeys.SEARCH_RESULT_FIELDS, this.resultFields);
+            String[] fallbackValues = request.getStrings(
+                    DocumentKeys.SEARCH_FALLBACK_VALUES, this.fallbackValues);
 
             if (fallbackValues != null &&
                 resultFields.length != fallbackValues.length) {
                 log.debug(String.format(
                           "Incoming request uses mistmatching result fields and"
                           + "fallback values %s(%s) and %s(%s)",
-                          DocumentKeys.SEARCH_RESULT_FIELDS, resultFields.length,
-                          DocumentKeys.SEARCH_FALLBACK_VALUES, fallbackValues.length));
+                          DocumentKeys.SEARCH_RESULT_FIELDS,
+                          resultFields.length,
+                          DocumentKeys.SEARCH_FALLBACK_VALUES,
+                          fallbackValues.length));
             }
             fallbackValues = fixFallbackValues(resultFields, fallbackValues);
 
-            responses.add(fullSearch(filter, query, startIndex, records,
-                                     sortKey, reverse,
-                                     resultFields, fallbackValues));
+            responses.add(fullSearch(
+                    request, filter, query, startIndex, records, sortKey,
+                    reverse, resultFields, fallbackValues));
         } catch (Exception e) {
             throw new RemoteException(String.format(
                     "Unable to perform search for query '%s' with filter '%s'",
@@ -223,8 +223,8 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements
         }
         if (request.getBoolean(SEARCH_COLLECT_DOCIDS, collectDocIDs)) {
             try {
-                responses.getTransient().put(DOCIDS,
-                                             collectDocIDs(query, filter));
+                responses.getTransient().put(
+                        DOCIDS, collectDocIDs(request, query, filter));
             } catch (IOException e) {
                 throw new RemoteException(String.format(
                         "Unable to collect doc ids for query '%s', filter '%s'",
@@ -233,8 +233,25 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements
         }
     }
 
-    protected abstract DocIDCollector collectDocIDs(String query, String filter)
-                                                             throws IOException;
+    /**
+     * Makes a quick test of the given request to see if a proper result should
+     * be expected from a full processing.
+     * @param request the request to judge.
+     * @return true if this Searcher expects to be able to handle this request.
+     */
+    protected boolean isRequestUsable(Request request) {
+        String query = request.getString(DocumentKeys.SEARCH_QUERY, null);
+        String filter = request.getString(DocumentKeys.SEARCH_FILTER, null);
+        if ((query == null || "".equals(query)) &&
+            (filter == null || "".equals(filter))) {
+            log.trace("No query, no filter, returning false");
+            return false;
+        }
+        return true;
+    }
+
+    protected abstract DocIDCollector collectDocIDs(
+            Request request, String query, String filter) throws IOException;
 
 
     /* Mutators */

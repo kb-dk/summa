@@ -22,43 +22,42 @@
  */
 package dk.statsbiblioteket.summa.support.lucene.search;
 
+import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
+import dk.statsbiblioteket.summa.common.index.IndexException;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
+import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
+import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
+import dk.statsbiblioteket.summa.search.SearchNodeImpl;
+import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
+import dk.statsbiblioteket.summa.search.document.DocIDCollector;
+import dk.statsbiblioteket.summa.search.document.DocumentSearcherImpl;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.FieldSelector;
+import org.apache.lucene.document.SetBasedFieldSelector;
+import org.apache.lucene.index.CorruptIndexException;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.queryParser.ParseException;
+import org.apache.lucene.search.*;
+import org.apache.lucene.search.similar.MoreLikeThis;
+import org.apache.lucene.store.FSDirectory;
+
 import java.io.IOException;
 import java.net.URL;
 import java.rmi.RemoteException;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.configuration.Configurable;
-import dk.statsbiblioteket.summa.common.configuration.Resolver;
-import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
-import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
-import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
-import dk.statsbiblioteket.summa.common.index.IndexException;
-import dk.statsbiblioteket.summa.search.document.DocumentSearcherImpl;
-import dk.statsbiblioteket.summa.search.document.DocIDCollector;
-import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
-import dk.statsbiblioteket.summa.search.SearchNodeImpl;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Filter;
-import org.apache.lucene.search.QueryWrapperFilter;
-import org.apache.lucene.search.TopFieldDocs;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.Sort;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.queryParser.ParseException;
-import org.apache.lucene.document.FieldSelector;
-import org.apache.lucene.document.SetBasedFieldSelector;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.index.CorruptIndexException;
-import org.apache.lucene.index.IndexReader;
 
 /**
  * Lucene-specific search node.
@@ -81,7 +80,117 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
     public static final String CONF_MAX_BOOLEAN_CLAUSES =
             "summa.support.lucene.clauses.max";
     public static final int DEFAULT_MAX_BOOLEAN_CLAUSES = 10000;
+
     private int maxBooleanClauses = DEFAULT_MAX_BOOLEAN_CLAUSES;
+
+    /**
+     * If present, normal search will be skipped an a MoreLikeThis-search will
+     * be performed. The recordid is verbatim for the record (document) that
+     * should be used as base for the MoreLikethis-functionality.
+     * </p><p>
+     * Optional. If no value is present, MoreLikeThis will not be active.
+     * @see {@link dk.statsbiblioteket.summa.search.api.document.DocumentKeys#SEARCH_START_INDEX}.
+     * @see {@link dk.statsbiblioteket.summa.search.api.document.DocumentKeys#SEARCH_MAX_RECORDS}.
+     */
+    public static final String SEARCH_MORELIKETHIS_RECORDID =
+            "search.document.lucene.morelikethis.recordid";
+
+    /**
+     * A sub-configuration for the MoreLikeThis functionality. All tweaks to
+     * MoreLikeThis must go into this sub configuration.
+     * </p><p>
+     * Optional. If no sub configuration is present, MoreLikeThis uses default
+     * values.
+     */
+    public static final String CONF_MORELIKETHIS_CONF =
+            "summa.support.lucene.morelikethis.configuration";
+
+    /**
+     * If true, the MoreLikeThis-functionality is enabled. MoreLikeThis
+     * co-exists peacefully with the standard search, although only one the
+     * results from one of the modes can be returned at a time.
+     * </p><p>
+     * Optional. Default is false;
+     */
+    public static final String CONF_MORELIKETHIS_ENABLED =
+            "summa.support.lucene.morelikethis.enabled";
+    public static final boolean DEFAULT_MORELIKETHIS_ENABLED = true;
+
+    /* http://lucene.apache.org/java/2_4_0/api/contrib-queries/org/apache/lucene/search/similar/MoreLikeThis.html */
+
+    /**
+     * Lucene MoreLikeThis property.<br />
+     * "Sets the frequency below which terms will be ignored in the source doc".
+     * </p><p>
+     * Optional. If not defined, Lucene MoreLikeThis defaults will be used.
+     */
+    public static final String CONF_MORELIKETHIS_MINTERMFREQ =
+            "summa.support.lucene.morelikethis.mintermfreq";
+
+    /**
+     * Lucene MoreLikeThis property.<br />
+     * "Sets the frequency at which words will be ignored which do not occur in
+     * at least this many docs".
+     * </p><p>
+     * Optional. If not defined, Lucene MoreLikeThis defaults will be used.
+     */
+    public static final String CONF_MORELIKETHIS_MINDOCFREQ =
+            "summa.support.lucene.morelikethis.mindocfreq";
+
+    /**
+     * Lucene MoreLikeThis property.<br />
+     * "Sets the minimum word length below which words will be ignored".
+     * </p><p>
+     * Optional. If not defined, Lucene MoreLikeThis defaults will be used.
+     */
+    public static final String CONF_MORELIKETHIS_MINWORDLENGTH =
+            "summa.support.lucene.morelikethis.minwordlength";
+
+    /**
+     * Lucene MoreLikeThis property.<br />
+     * "Returns the maximum word length above which words will be ignored.
+     *  Set this to 0 for no maximum word length. The default is
+     * {@link MoreLikeThis#DEFAULT_MAX_WORD_LENGTH"}..
+     * </p><p>
+     * Optional. If not defined, Lucene MoreLikeThis defaults will be used.
+     */
+    public static final String CONF_MORELIKETHIS_MAXWORDLENGTH =
+            "summa.support.lucene.morelikethis.maxwordlength";
+
+    /**
+     * Lucene MoreLikeThis property.<br />
+     * "Sets the maximum number of query terms that will be included in any
+     *  generated query".
+     * </p><p>
+     * Optional. If not defined, Lucene MoreLikeThis defaults will be used.
+     */
+    public static final String CONF_MORELIKETHIS_MAXQUERYTERMS =
+            "summa.support.lucene.morelikethis.maxwueryterms";
+
+    /**
+     * Lucene MoreLikeThis property.<br />
+     * "The maximum number of tokens to parse in each example doc field that is
+     *  not stored with TermVector support".
+     * </p><p>
+     * Optional. If not defined, Lucene MoreLikeThis defaults will be used.
+     */
+    public static final String CONF_MORELIKETHIS_MAXNUMTOKENSPARSED =
+            "summa.support.lucene.morelikethis.maxnumtokensparsed";
+
+    /**
+     * Lucene MoreLikeThis property.<br />
+     * "Set the set of stopwords. Any word in this set is considered
+     *  'uninteresting' and ignored. Even if your Analyzer allows stopwords,
+     *  you might want to tell the MoreLikeThis code to ignore them, as for the
+     *  purposes of document similarity it seems reasonable to assume that
+     * 'a stop word is never interesting'".
+     * </p><p>
+     * The stop words is given as a list of Strings.
+     * </p><p>
+     * Optional. If not defined, Lucene MoreLikeThis defaults will be used.
+     */
+    public static final String CONF_MORELIKETHIS_STOPWORDS =
+            "summa.support.lucene.morelikethis.stopwords";
 
     @SuppressWarnings({"FieldCanBeLocal"})
     private LuceneIndexDescriptor descriptor;
@@ -90,6 +199,16 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
     private String location = null;
     private static final long WARMUP_MAX_HITS = 50;
     private static final int COLLECTOR_REQUEST_TIMEOUT = 20 * 1000;
+
+    private boolean mlt_enabled = DEFAULT_MORELIKETHIS_ENABLED;
+    private Integer mlt_minTermFreq = null;
+    private Integer mlt_minDocFrew = null;
+    private Integer mlt_minWordLength = null;
+    private Integer mlt_maxWordLength = null;
+    private Integer mlt_maxQueryTerms = null;
+    private Integer mlt_maxNumTokensParsed = null;
+    private Set<String> mlt_stopWords = null;
+    private MoreLikeThis moreLikeThis = null;
 
     /**
      * Constructs a Lucene search node from the given configuration. This
@@ -108,6 +227,59 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
         BooleanQuery.setMaxClauseCount(maxBooleanClauses);
         descriptor = LuceneIndexUtils.getDescriptor(conf);
         parser = new SummaQueryParser(descriptor);
+
+        // MoreLikeThis
+        if (!conf.valueExists(CONF_MORELIKETHIS_CONF)) {
+            log.debug("No MoreLikeThis configuration present, skipping with "
+                      + "MoreLikeThis.enabled == " + mlt_enabled);
+            return;
+        }
+        log.debug("Opening and extracting MoreLikeThis-config");
+        Configuration mltConf;
+        try {
+            mltConf = conf.getSubConfiguration(CONF_MORELIKETHIS_CONF);
+            if (mltConf == null) {
+                log.debug("No MoreLikeThis sub configuration present at '"
+                          + CONF_MORELIKETHIS_CONF + "'");
+                return;
+            }
+        } catch (IOException e) {
+            log.error(String.format(
+                    "The key '%s' existed, but did not resolve to a sub "
+                    + "configuration. The configuration for MoreLikeThis "
+                    + "will be ignored", CONF_MORELIKETHIS_CONF), e);
+            return;
+        }
+        mlt_enabled = mltConf.valueExists(CONF_MORELIKETHIS_ENABLED) ?
+                      mltConf.getBoolean(CONF_MORELIKETHIS_ENABLED) :
+                      mlt_enabled;
+        mlt_minTermFreq = getIntOrNull(mltConf, CONF_MORELIKETHIS_MINTERMFREQ);
+        mlt_minDocFrew = getIntOrNull(mltConf, CONF_MORELIKETHIS_MINDOCFREQ);
+        mlt_minWordLength =
+                getIntOrNull(mltConf, CONF_MORELIKETHIS_MINWORDLENGTH);
+        mlt_maxWordLength =
+                getIntOrNull(mltConf, CONF_MORELIKETHIS_MAXWORDLENGTH);
+        mlt_maxQueryTerms =
+                getIntOrNull(mltConf, CONF_MORELIKETHIS_MAXQUERYTERMS);
+        mlt_maxNumTokensParsed =
+                getIntOrNull(mltConf, CONF_MORELIKETHIS_MAXNUMTOKENSPARSED);
+        List<String> stopWords = mltConf.getStrings(
+                CONF_MORELIKETHIS_STOPWORDS, (List<String>)null);
+        if (stopWords != null) {
+            mlt_stopWords = new HashSet<String>(stopWords);
+        }
+        log.debug(String.format(
+                "Finished setting up MoreLikeThis with enabled=%s, "
+                + "minTermFreq=%s, minDocFreq=%s, minWordLength=%s, "
+                + "maxWordLength=%s, maxQueryTerms=%s, maxNumTokensParsed=%s, "
+                + "stopWords-count=%s",
+                mlt_enabled, mlt_minTermFreq, mlt_minDocFrew, mlt_minWordLength,
+                mlt_minWordLength, mlt_maxQueryTerms, mlt_maxNumTokensParsed,
+                mlt_stopWords == null ? "[None]" : mlt_stopWords.size()));
+    }
+
+    private Integer getIntOrNull(Configuration conf, String key) {
+        return conf.valueExists(key) ? conf.getInt(key) : null;
     }
 
     @Override
@@ -139,6 +311,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                     FSDirectory.getDirectory(urlLocation.getFile()), true));
             log.debug("Opened Lucene searcher for " + urlLocation
                       + " with maxDoc " + searcher.maxDoc());
+            createMoreLikeThis();
         } catch (CorruptIndexException e) {
             throw new RemoteException(String.format(
                     "Corrupt index at '%s'", urlLocation.getFile()), e);
@@ -155,6 +328,46 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                     "Unable to determine searcher.maxDoc for searcher opened at"
                     + " location '%s'", location), e);
         }
+    }
+
+    private void createMoreLikeThis() {
+        if (!mlt_enabled) {
+            log.trace("MoreLikethis disabled");
+            return;
+        }
+        log.trace("Opening MoreLikeThis");
+
+        moreLikeThis = new MoreLikeThis(searcher.getIndexReader());
+        if (mlt_minTermFreq != null) {
+            moreLikeThis.setMinTermFreq(mlt_minTermFreq);
+        }
+        if (mlt_minDocFrew != null) {
+            moreLikeThis.setMinDocFreq(mlt_minDocFrew);
+        }
+        if (mlt_minWordLength != null) {
+            moreLikeThis.setMinWordLen(mlt_minWordLength);
+        }
+        if (mlt_maxWordLength != null) {
+            moreLikeThis.setMaxWordLen(mlt_maxWordLength);
+        }
+        if (mlt_maxQueryTerms != null) {
+            moreLikeThis.setMaxQueryTerms(mlt_maxQueryTerms);
+        }
+        if (mlt_maxNumTokensParsed != null) {
+            moreLikeThis.setMaxNumTokensParsed(mlt_maxNumTokensParsed);
+        }
+        if (mlt_stopWords != null) {
+            moreLikeThis.setStopWords(mlt_stopWords);
+        }
+        if (descriptor.getMoreLikethisFields().size() == 0) {
+            log.warn("No MoreLikethis-fields defined in LuceneIndexDescriptor. "
+                     + "MoreLikethis probably won't return any results");
+        } else {
+            moreLikeThis.setFieldNames(
+                    descriptor.getMoreLikethisFields().toArray(new String[
+                            descriptor.getMoreLikethisFields().size()]));
+        }
+        log.debug("MoreLikeThis created for reader for '" + location + "'");
     }
 
     @Override
@@ -179,51 +392,39 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
     public void managedWarmup(String query) {
         //noinspection OverlyBroadCatchBlock
         try {
-            fullSearch(null, query, 0, WARMUP_MAX_HITS, null, false, null,
+            fullSearch(null, null, query, 0, WARMUP_MAX_HITS, null, false, null,
                        null);
         } catch (Throwable t) {
             log.warn("Throwable caught in warmup", t);
         }
     }
 
-    public DocumentResponse fullSearch(String filter, String query,
-                                       long startIndex, long maxRecords,
-                                       String sortKey, boolean reverseSort,
-                                       String[] fields, String[] fallbacks)
-                                                        throws RemoteException {
-        return fullSearch(filter, query, startIndex, maxRecords,
+    @Override
+    protected boolean isRequestUsable(Request request) {
+        return request.containsKey(SEARCH_MORELIKETHIS_RECORDID)
+               || super.isRequestUsable(request);
+    }
+
+    public DocumentResponse fullSearch(Request request,
+            String filter, String query, long startIndex, long maxRecords,
+            String sortKey, boolean reverseSort,
+            String[] fields, String[] fallbacks) throws RemoteException {
+        return fullSearch(request, filter, query, startIndex, maxRecords,
                           sortKey, reverseSort, fields, fallbacks, true);
     }
 
-    private DocumentResponse fullSearch(String filter, String query,
-                                    long startIndex, long maxRecords,
-                                    String sortKey, boolean reverseSort,
-                                    String[] fields, String[] fallbacks,
-                                    boolean doLog) throws
-                                                               RemoteException {
-        if (searcher == null) {
-            throw new IndexException("No searcher available", location, null);
-        }
-        if (startIndex > Integer.MAX_VALUE) {
-            throw new IllegalArgumentException(
-                    "The Lucene search node does not support start indexes "
-                    + "above Integer.MAX_VALUE. startIndex was " + startIndex);
-        }
-        if (maxRecords > Integer.MAX_VALUE) {
-            throw new IllegalArgumentException(
-                    "The Lucene search node does not support max records "
-                    + "above Integer.MAX_VALUE. max records was " + maxRecords);
-        }
-        if (startIndex + maxRecords > Integer.MAX_VALUE) {
-            throw new IllegalArgumentException(
-                    "The Lucene search node does not support that start index +"
-                    + " max records is above Integer.MAX_VALUE. "
-                    + "start index was" + startIndex + " and max records was "
-                    + maxRecords);
-        }
+    private DocumentResponse fullSearch(
+            Request request, String filter, String query,
+            long startIndex, long maxRecords,
+            String sortKey, boolean reverseSort,
+            String[] fields, String[] fallbacks,
+            boolean doLog) throws RemoteException {
+        sanityCheck(startIndex, maxRecords);
         if (sortKey == null) {
             sortKey = getSortKey();
         }
+        Filter luceneFilter;
+        Query luceneQuery;
         try {
             if (log.isTraceEnabled() && doLog) {
                 //noinspection DuplicateStringLiteralInspection
@@ -232,18 +433,95 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                           + "', " + reverseSort + ", " + Arrays.toString(fields)
                           + ", " + Arrays.toString(fallbacks) + ") called");
             }
-            long startTime = System.currentTimeMillis();
             if (fields == null) {
                 fields = getResultFields();
                 fallbacks = getFallbackValues();
             }
-            Filter luceneFilter = filter == null || "".equals(filter) ? null :
-                             new QueryWrapperFilter(parser.parse(filter));
-            Query luceneQuery = parser.parse(query);
+            luceneFilter = parseFilter(filter);
+            luceneQuery = parseQuery(request, query);
+        } catch (ParseException e) {
+            throw new IndexException(String.format(
+                    "ParseException during fullSearch for query '%s'", query),
+                                     location, e);
+        }
+        if (luceneQuery == null) {
+            return new DocumentResponse(
+                    filter, query, startIndex, maxRecords, sortKey,
+                    reverseSort, fallbacks, 0, 0);
+        }
+        log.trace("Calling private fullSearch with parsed query");
+        return fullSearch(luceneFilter, luceneQuery, filter, query,
+                          startIndex, maxRecords, sortKey, reverseSort,
+                          fields, fallbacks, doLog);
+    }
 
+    // Can return null on MoreLikeThis parsing
+    private Query parseQuery(Request request, String query) throws
+                                                            RemoteException,
+                                                            ParseException {
+        if (!mlt_enabled
+            || !request.containsKey(SEARCH_MORELIKETHIS_RECORDID)) {
+            return query == null ? null : parser.parse(query);
+        }
+        if (moreLikeThis == null) {
+            throw new RemoteException(
+                    "MoreLikethis not initialized (Index might not have been"
+                    + " opened)");
+        }
+
+        String recordID = request.getString(SEARCH_MORELIKETHIS_RECORDID);
+        log.trace("constructing MoreLikeThis query for '" + recordID + "'");
+        if (recordID == null || "".equals(recordID)) {
+            throw new ParseException(
+                    "RecordID invalid. Expected something, got '" + recordID
+                    + "'");
+        }
+        int docID = -1;
+        Query moreLikeThisQuery;
+        try {
+            TermQuery q = new TermQuery(new Term(
+                    IndexUtils.RECORD_FIELD, recordID));
+            TopDocs recordDocs = searcher.search(q, null, 1);
+            if (recordDocs.totalHits == 0) {
+                log.debug("Unable to locate recordID in MoreLikeThis query "
+                          + "resolving for '" + recordID + "'");
+                return null;
+            }
+            docID = recordDocs.scoreDocs[0].doc;
+            moreLikeThisQuery = moreLikeThis.like(docID);
+        } catch (IOException e) {
+            log.error("Unable to create MoreLikeThis query for "
+                      + recordID + "'", e);
+            return null;
+        }
+        if (log.isTraceEnabled()) {
+            log.trace("Created MoreLikeThis query for '" + recordID
+                      + "' with docID " + docID + ": "
+                      + SummaQueryParser.queryToString(moreLikeThisQuery));
+        }
+        return moreLikeThisQuery;
+    }
+
+    private Filter parseFilter(String filter) throws ParseException {
+        return filter == null || "".equals(filter) ? null :
+               new QueryWrapperFilter(parser.parse(filter));
+    }
+
+    private DocumentResponse fullSearch(
+            Filter luceneFilter, Query luceneQuery, String filter, String query,
+            long startIndex, long maxRecords, String sortKey,
+            boolean reverseSort, String[] fields, String[] fallbacks,
+            boolean doLog) throws RemoteException {
+        long startTime = System.currentTimeMillis();
+        try {
             TopFieldDocs topDocs = searcher.search(
                     luceneQuery, luceneFilter,
                     (int)(startIndex + maxRecords), Sort.RELEVANCE);
+
+            if (log.isTraceEnabled()) {
+                log.trace("Got " + topDocs.totalHits + " hits for query "
+                          + SummaQueryParser.queryToString(luceneQuery));
+            }
 
             FieldSelector selector = new SetBasedFieldSelector(
                     new HashSet<String>(Arrays.asList(fields)),
@@ -293,10 +571,6 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                           + (System.currentTimeMillis()-startTime) + " ms");
             }
             return result;
-        } catch (ParseException e) {
-            throw new IndexException(String.format(
-                    "ParseException during search for query '%s'", query),
-                                     location, e);
         } catch (CorruptIndexException e) {
             throw new IndexException(String.format(
                     "CorruptIndexException during search for query '%s'",
@@ -315,26 +589,54 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
         }
     }
 
+    private void sanityCheck(long startIndex, long maxRecords) throws
+                                                                IndexException {
+        if (searcher == null) {
+            throw new IndexException("No searcher available", location, null);
+        }
+        if (startIndex > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException(
+                    "The Lucene search node does not support start indexes "
+                    + "above Integer.MAX_VALUE. startIndex was " + startIndex);
+        }
+        if (maxRecords > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException(
+                    "The Lucene search node does not support max records "
+                    + "above Integer.MAX_VALUE. max records was " + maxRecords);
+        }
+        if (startIndex + maxRecords > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException(
+                    "The Lucene search node does not support that start index +"
+                    + " max records is above Integer.MAX_VALUE. "
+                    + "start index was" + startIndex + " and max records was "
+                    + maxRecords);
+        }
+    }
+
     @Override
-    protected DocIDCollector collectDocIDs(String query,
-                                           String filter) throws IOException {
+    protected DocIDCollector collectDocIDs(
+            Request request, String query, String filter) throws IOException {
         //noinspection DuplicateStringLiteralInspection
         log.trace("collectDocIDs(" + filter + ", " + query + ") called");
         Filter luceneFilter;
         Query luceneQuery;
         try {
             //noinspection AssignmentToNull
-            luceneFilter = filter == null || "".equals(filter) ? null :
-                             new QueryWrapperFilter(parser.parse(filter));
+            luceneFilter = parseFilter(filter);
         } catch (ParseException e) {
             throw new RemoteException(String.format(
                     "Unable to parse filter '%s'", query), e);
         }
+        log.trace("Parsing collectDocID query '" + query + "'");
         try {
-            luceneQuery = parser.parse(query);
+            luceneQuery = parseQuery(request, query);
         } catch (ParseException e) {
             throw new RemoteException(String.format(
                     "Unable to parse query '%s'", query), e);
+        }
+        if (luceneQuery == null) {
+            throw new RemoteException(String.format(
+                    "The query '%s' parsed to null", query));
         }
         return collectDocIDs(luceneQuery, luceneFilter);
     }

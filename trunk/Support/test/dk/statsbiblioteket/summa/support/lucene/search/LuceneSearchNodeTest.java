@@ -1,33 +1,28 @@
 package dk.statsbiblioteket.summa.support.lucene.search;
 
-import java.io.File;
-import java.util.BitSet;
-import java.rmi.RemoteException;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
-import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.index.IndexCommon;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
-import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
-import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
+import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
+import dk.statsbiblioteket.util.Files;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.QueryWrapperFilter;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.BooleanClause;
-import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.queryParser.QueryParser;
+import org.apache.lucene.search.*;
+
+import java.io.File;
+import java.rmi.RemoteException;
+import java.util.BitSet;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class LuceneSearchNodeTest extends TestCase {
@@ -37,6 +32,7 @@ public class LuceneSearchNodeTest extends TestCase {
         super(name);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
         if (testRoot.exists()) {
@@ -48,10 +44,11 @@ public class LuceneSearchNodeTest extends TestCase {
                    sourceDir.exists());
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
         if (testRoot.exists()) {
-            Files.delete(testRoot);
+//            Files.delete(testRoot);
         }
     }
 
@@ -120,6 +117,41 @@ public class LuceneSearchNodeTest extends TestCase {
 //        assertEquals("The right number of docIDs should be collected",
 //                     1, collector.getDocCount());
         searcher.close();
+    }
+
+    public void testMoreLikeThis() throws Exception {
+        makeIndex();
+        Configuration conf = Configuration.load(basicSetup().getAbsolutePath());
+        conf.set(DocumentSearcher.CONF_COLLECT_DOCIDS, true);
+        Configuration moreConf = conf.createSubConfiguration(
+                LuceneSearchNode.CONF_MORELIKETHIS_CONF);
+        moreConf.set(
+                LuceneSearchNode.CONF_MORELIKETHIS_MAXNUMTOKENSPARSED, 10000);
+        moreConf.set(LuceneSearchNode.CONF_MORELIKETHIS_MAXQUERYTERMS, 10000);
+        moreConf.set(LuceneSearchNode.CONF_MORELIKETHIS_MAXWORDLENGTH, 10000);
+        moreConf.set(LuceneSearchNode.CONF_MORELIKETHIS_MINDOCFREQ, 0);
+        moreConf.set(LuceneSearchNode.CONF_MORELIKETHIS_MINTERMFREQ, 0);
+        moreConf.set(LuceneSearchNode.CONF_MORELIKETHIS_MINWORDLENGTH, 0);
+
+        SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
+        Request request = new Request();
+        request.put(LuceneSearchNode.SEARCH_MORELIKETHIS_RECORDID,
+                    "fagref:jh@example.com");
+        ResponseCollection responses = searcher.search(request);
+        assertTrue("MoreLikeThis should return something else than the input",
+                   responses.toXML().contains("fagref:gm@example.com"));
+        log.debug("Search for 'hans' gave\n" + responses.toXML());
+    }
+
+    public void testDumpSearch() throws Exception {
+        makeIndex();
+        Configuration conf = Configuration.load(basicSetup().getAbsolutePath());
+        conf.set(DocumentSearcher.CONF_COLLECT_DOCIDS, true);
+        SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
+        Request request = new Request();
+        request.put(DocumentKeys.SEARCH_QUERY, "hans");
+        ResponseCollection responses = searcher.search(request);
+        log.debug("Search for 'hans' gave\n" + responses.toXML());
     }
 
     public void testDiscovery() throws Exception {
