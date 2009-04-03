@@ -22,13 +22,13 @@
  */
 package dk.statsbiblioteket.summa.search.document;
 
-import java.rmi.RemoteException;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.search.SearchNode;
 import dk.statsbiblioteket.summa.search.api.Request;
-import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
+import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
+import dk.statsbiblioteket.util.qa.QAInfo;
+
+import java.rmi.RemoteException;
 
 /**
  * A DocumentSearcher performs a query-based search and returns a set of fields
@@ -275,6 +275,7 @@ public interface DocumentSearcher extends SearchNode, DocumentKeys {
      * reverse order if reverseSort is true. fields and defaultValues define
      * how the records should be represented.<br />
      * Optional parameters can be null, signifying that they are not defined.
+     * @param request     the unprocessed request. This can be null.
      * @param filter      a query that narrows the search. A filter does not
      *                    affect scores.<br />
      *                    This parameter is optional. Default is null.
@@ -309,10 +310,10 @@ public interface DocumentSearcher extends SearchNode, DocumentKeys {
      * @return the result of a search, suitable for merging and XML generation.
      * @throws RemoteException if there was an exception during search.
      */
-    public DocumentResponse fullSearch(String filter, String query,
-                                   long startIndex, long maxRecords,
-                                   String sortKey, boolean reverseSort,
-                                   String[] resultFields, String[] fallbacks)
-            throws RemoteException;
+    public DocumentResponse fullSearch(
+            Request request, String filter, String query,
+            long startIndex, long maxRecords,
+            String sortKey, boolean reverseSort,
+            String[] resultFields, String[] fallbacks) throws RemoteException;
 
 }
