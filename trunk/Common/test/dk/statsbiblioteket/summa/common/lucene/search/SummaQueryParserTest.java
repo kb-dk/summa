@@ -97,9 +97,20 @@ public class SummaQueryParserTest extends TestCase {
     public void testDefaultExpansionSpeed() throws Exception {
         SummaQueryParser qp = getQueryParser();
         Random random = new Random(87);
-        int RUNS = 10000;
+        int RUNS = 50000;
+                         // ~250 q/s
         Profiler profiler = new Profiler();
         profiler.setExpectedTotal(RUNS);
+        for (int i = 0 ; i < RUNS ; i++) {
+            new String(Character.toChars((char)(
+                    'a' + random.nextInt(25))));
+            profiler.beat();
+        }
+        System.out.println("Dry-run generated " + RUNS + " queries at "
+                           + profiler.getBps(false) + " q/sec");
+
+        random = new Random(87);
+        profiler.reset();
         for (int i = 0 ; i < RUNS ; i++) {
             qp.parse(new String(Character.toChars((char)(
                     'a' + random.nextInt(25)))));

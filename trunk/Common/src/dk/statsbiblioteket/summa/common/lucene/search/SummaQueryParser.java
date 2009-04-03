@@ -22,22 +22,21 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.search;
 
-import java.io.StringWriter;
-import java.util.*;
-
-import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
-import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.util.qa.QAInfo;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.queryParser.QueryParserConstants;
 import org.apache.lucene.queryParser.Token;
 import org.apache.lucene.search.*;
+
+import java.io.StringWriter;
+import java.util.Iterator;
+import java.util.Stack;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -189,6 +188,7 @@ public class SummaQueryParser {
      * @throws ParseException if the query could not be parsed.
      */
     public synchronized Query parse(String queryString) throws ParseException {
+        long startTime = System.nanoTime();
         String boosts = null;
         if (supportQueryTimeBoosts) {
             try {
@@ -205,22 +205,31 @@ public class SummaQueryParser {
 //        Query a = parser.parse(qstr);
 
 
-        log.debug("Parsed query (" + a.getClass() + "): " + a.toString());
+        if (log.isDebugEnabled()) {
+            log.debug("Parsed query (" + a + ") in "
+                      + (System.nanoTime() - startTime) / 1000000D + "ms: "
+                      + a.toString());
+        }
 
         if (supportQueryTimeBoosts) {
+            long boostStartTime = System.nanoTime();
             try {
                 booster.applyBoost(a, boosts);
             } catch (Exception e) {
                 log.error("Exception applying query-time boost", e);
             }
+            log.debug("Applied boost in " + (System.nanoTime() - boostStartTime)
+                                            / 1000000D + "ms: ");
         }
 
         if (log.isDebugEnabled()) {
             try {
-                log.debug("Boosted query: "
-                          + LuceneIndexUtils.queryToString(a));
+                log.debug("Fully parsed and boosted query in "
+                          + (System.nanoTime() - startTime) / 1000000D
+                          + "ms: " + LuceneIndexUtils.queryToString(a));
             } catch (Exception e) {
-                log.error("Could not dump boosted query to String", e);
+                log.error("Could not dump fully parsed and boosted query to" 
+                          + " String", e);
             }
         }
         return a;
