@@ -476,7 +476,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                     "RecordID invalid. Expected something, got '" + recordID
                     + "'");
         }
-        int docID = -1;
+        int docID;
         Query moreLikeThisQuery;
         try {
             TermQuery q = new TermQuery(new Term(
@@ -487,6 +487,10 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                           + "resolving for '" + recordID + "'");
                 return null;
             }
+            // TODO: This really needs to be updated for storage use
+            // In a distributed environment, only the Searcher containing the
+            // document will return any hits. Just as bad: The doc-id-trick only
+            // works within the index that contains the document.
             docID = recordDocs.scoreDocs[0].doc;
             moreLikeThisQuery = moreLikeThis.like(docID);
         } catch (IOException e) {
