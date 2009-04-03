@@ -85,7 +85,7 @@ public class FagrefGeneratorTest extends NoExitTestCase {
     }
 
     public void testPerformance() throws Exception {
-        int RUNS = 10000;
+        int RUNS = 1000;
         Profiler profiler = new Profiler();
         profiler.setBpsSpan(100);
         profiler.setExpectedTotal(RUNS);
@@ -121,7 +121,7 @@ public class FagrefGeneratorTest extends NoExitTestCase {
     }
 
     public void testIngest() throws Exception {
-        final int RECORDS = 10000;
+        final int RECORDS = 1000;
         // Quick test on pc286 (desktop 7200 RPM hard disk)
         //   5000: 141/s
         //  10000: 127/s
