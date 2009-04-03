@@ -22,22 +22,23 @@
  */
 package dk.statsbiblioteket.summa.search;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.util.ChangingSemaphore;
-import dk.statsbiblioteket.summa.search.dummy.SearchNodeDummy;
-import dk.statsbiblioteket.summa.search.api.*;
-import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
+import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.ResponseCollection;
+import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.document.DocIDCollector;
-
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.TimeUnit;
-import java.rmi.RemoteException;
-import java.io.File;
-
+import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
+import dk.statsbiblioteket.summa.search.dummy.SearchNodeDummy;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.File;
+import java.rmi.RemoteException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Convenience base class for SummaSearchers, taking care of basic setup.
@@ -116,7 +117,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
         watcher = new IndexWatcher(conf);
         watcher.addIndexListener(this);
         watcher.startWatching(); // This fires an open to the indexes
-        log.debug("Finsihed constructing SummaSearcherImpl");
+        log.debug("Finished constructing SummaSearcherImpl");
     }
 
     public ResponseCollection search(Request request) throws RemoteException {
