@@ -58,7 +58,7 @@ DEPLOY=`dirname $0`/..
 
 ###MAINJAR=
 MAINCLASS=dk.statsbiblioteket.summa.common.filter.FilterControl
-CODEBASE_BASEURL="file://$(pwd)/lib"
+CODEBASE_BASEURL="file://$DEPLOY/lib"
 
 PRINT_CONFIG=true
 ###LIBDIRS=
@@ -80,9 +80,6 @@ fi
 #
 # DON'T EDIT BEYOND THIS POINT
 #
-
-DEPLOY=`dirname $0`/..
-pushd $DEPLOY > /dev/null
 
 # Helper function to set properties in a properties file
 # $1 : property name
@@ -126,7 +123,7 @@ do
         fi
     done
 done
-CLASSPATH=$CLASSPATH:config/:lib/:$MAINJAR
+CLASSPATH=$CLASSPATH:$DEPLOY/config/:$DEPLOY/lib/:$MAINJAR
 
 # Check JAVA_HOME
 DEFAULT_JAVA_HOME=/usr/lib/jvm/java
@@ -177,4 +174,3 @@ fi
 #$JAVA_HOME/bin/java "$CODEBASE" $COMMAND "$@"
 $JAVA_HOME/bin/java $COMMAND "$@"
 
-popd > /dev/null
