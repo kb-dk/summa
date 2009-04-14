@@ -58,7 +58,7 @@ DEPLOY=`dirname $0`/..
 
 ###MAINJAR=
 MAINCLASS=dk.statsbiblioteket.summa.search.tools.SummaSearcherRunner
-CODEBASE_BASEURL="file://$(pwd)/lib"
+CODEBASE_BASEURL="file://$DEPLOY/lib"
 
 PRINT_CONFIG=true
 ###LIBDIRS=
@@ -81,8 +81,8 @@ fi
 # DON'T EDIT BEYOND THIS POINT
 #
 
-DEPLOY=`dirname $0`/..
-pushd $DEPLOY > /dev/null
+#DEPLOY=`dirname $0`/..
+#pushd $DEPLOY > /dev/null
 
 # Helper function to set properties in a properties file
 # $1 : property name
@@ -126,7 +126,7 @@ do
         fi
     done
 done
-CLASSPATH=$CLASSPATH:config/:lib/:$MAINJAR
+CLASSPATH=$CLASSPATH:$DEPLOY/config/:$DEPLOY/lib/:$MAINJAR
 
 # Check JAVA_HOME
 DEFAULT_JAVA_HOME=/usr/lib/jvm/java
@@ -154,9 +154,9 @@ if [ "$ENABLE_JMX" == "true" ]; then
     JMX="$JMX_PORT $JMX_SSL $JMX_PASS $JMX_ACCESS";
 fi;
 
-pushd lib > /dev/null
-CODEBASE="-Djava.rmi.server.codebase=$CODEBASE_BASEURL/$(ls summa-common-*.jar) $CODEBASE_BASEURL/$(ls summa-search-api-*.jar) $CODEBASE_BASEURL/$(ls summa-facetbrowser-api-*.jar)"
-popd
+#pushd lib > /dev/null
+#CODEBASE="-Djava.rmi.server.codebase=$CODEBASE_BASEURL/$(ls summa-common-*.jar) $CODEBASE_BASEURL/$(ls summa-search-api-*.jar) $CODEBASE_BASEURL/$(ls summa-facetbrowser-api-*.jar)"
+#popd
 
 COMMAND="$JVM_OPTS $SECURITY_POLICY $JMX -cp $CLASSPATH $MAINCLASS"
 
@@ -177,4 +177,4 @@ fi
 #$JAVA_HOME/bin/java "$CODEBASE" $COMMAND "$@"
 $JAVA_HOME/bin/java $COMMAND "$@"
 
-popd > /dev/null
+#popd > /dev/null

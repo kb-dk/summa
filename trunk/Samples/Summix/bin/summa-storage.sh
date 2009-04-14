@@ -177,4 +177,4 @@ fi
 #$JAVA_HOME/bin/java "$CODEBASE" $COMMAND "$@"
 $JAVA_HOME/bin/java $COMMAND "$@"
 
-popd > /dev/null
+#popd > /dev/null
