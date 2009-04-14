@@ -58,7 +58,7 @@ DEPLOY=`dirname $0`/..
 
 ###MAINJAR=
 MAINCLASS=dk.statsbiblioteket.summa.storage.tools.StorageRunner
-CODEBASE_BASEURL="file://$(pwd)/lib"
+CODEBASE_BASEURL="file://$DEPLOY/lib"
 
 PRINT_CONFIG=true
 ###LIBDIRS=
@@ -82,7 +82,7 @@ fi
 #
 
 DEPLOY=`dirname $0`/..
-pushd $DEPLOY > /dev/null
+#pushd $DEPLOY > /dev/null
 
 # Helper function to set properties in a properties file
 # $1 : property name
@@ -126,7 +126,7 @@ do
         fi
     done
 done
-CLASSPATH=$CLASSPATH:config/:lib/:$MAINJAR
+CLASSPATH=$CLASSPATH:$DEPLOY/config/:$DEPLOY/lib/:$MAINJAR
 
 # Check JAVA_HOME
 DEFAULT_JAVA_HOME=/usr/lib/jvm/java
