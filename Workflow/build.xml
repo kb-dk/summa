@@ -68,6 +68,10 @@
         <ant inheritAll="false" dir="../Storage" target="release"/>
     </target>
 
+    <target name=".releaseSearch">
+        <ant inheritAll="false" dir="../Search" target="release"/>
+    </target>
+
     <target name=".releaseControl">
         <ant inheritAll="false" dir="../Control" target="release"/>
     </target>
