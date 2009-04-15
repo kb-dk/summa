@@ -320,7 +320,8 @@ public class Configuration implements Serializable,
             throw new NullPointerException ("No such property: " + key);
         }
         try {
-            return Integer.parseInt(val.toString());
+            return Integer.parseInt(
+                     Environment.escapeSystemProperties(val.toString()));
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Bad number format for '" + key
                                                + "': " + e.getMessage());
@@ -365,7 +366,8 @@ public class Configuration implements Serializable,
             throw new NullPointerException ("No such property: " + key);
         }
         try {
-            return Long.parseLong(val.toString());
+            return Long.parseLong(
+                    Environment.escapeSystemProperties(val.toString()));
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Bad number format for '" + key
                                                + "': " + e.getMessage());
@@ -410,7 +412,8 @@ public class Configuration implements Serializable,
             throw new NullPointerException ("No such property: " + key);
         }
         try {
-            return Boolean.parseBoolean(val.toString());
+            return Boolean.parseBoolean(
+                    Environment.escapeSystemProperties(val.toString()));
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("The property " + key
                                                + " is not a boolean, but a "
@@ -426,7 +429,8 @@ public class Configuration implements Serializable,
             return defaultValue;
         }
         try {
-            return Boolean.parseBoolean(val.toString());
+            return Boolean.parseBoolean(
+                    Environment.escapeSystemProperties(val.toString()));
         } catch (NumberFormatException e) {
             //noinspection DuplicateStringLiteralInspection
             log.warn("Bad format for property '" + key + "' with value '"
@@ -566,6 +570,15 @@ public class Configuration implements Serializable,
         public U getSecond() {
             return u;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (!(o instanceof Pair)) {
+                return false;
+            }
+            Pair p = (Pair)o;
+            return t.equals(p.getFirst()) && u.equals(p.getSecond()); 
+        }
     }
     protected Pattern numberPattern =
             Pattern.compile("(.+)\\( *(\\-?[0-9]+) *\\).*");
@@ -596,8 +609,11 @@ public class Configuration implements Serializable,
         for (String element: elements) {
             Matcher numberMatcher = numberPattern.matcher(element);
             if (numberMatcher.matches()) {
-                result.add(new Pair<String, Integer>(numberMatcher.group(1),
-                                     Integer.parseInt(numberMatcher.group(2))));
+                result.add(new Pair<String, Integer>(
+                     Environment.escapeSystemProperties(numberMatcher.group(1)),
+                     Integer.parseInt(
+                                      Environment.escapeSystemProperties(
+                                                     numberMatcher.group(2)))));
             } else {
                 result.add(new Pair<String, Integer>(element.trim(),
                                                      defaultValue));

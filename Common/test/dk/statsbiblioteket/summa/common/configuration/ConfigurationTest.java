@@ -329,7 +329,64 @@ public class ConfigurationTest extends TestCase {
                      conf.getStrings("b0rk", val));
     }
 
-    public void testExpandedSysPropArray () throws Exception {
+    public void testExpandedSysPropIntValues () throws Exception {
+        System.setProperty("intprop", "27");
+        String val = "a(1), b(${intprop}), ${os.name}";
+        Configuration conf = Configuration.newMemoryBased("foo.bar",
+                                                          val);
+
+        List<Configuration.Pair<String,Integer>> expected = Arrays.asList(
+                new Configuration.Pair<String,Integer>("a",1),
+                new Configuration.Pair<String,Integer>("b",2)
+        );
+
+        List<Configuration.Pair<String,Integer>> result =
+                                             conf.getIntValues("foo.bar", 3);
+
+        // Clear the sys prop before the test has a chance of failing
+        System.clearProperty("intprop");
+
+        assertEquals(3, result.size());
+
+        assertEquals(new Configuration.Pair<String,Integer>("a",1),
+                     result.get(0));
+
+        assertEquals(new Configuration.Pair<String,Integer>("b",
+                                                            27),
+                     result.get(1));
+
+        assertEquals(new Configuration.Pair<String,Integer>(
+                                              System.getProperty("os.name"), 3),
+                     result.get(2));
+    }
+
+    public void testExpandSysPropSimpleValues() throws Exception {
+        System.setProperty("intprop", "27");
+        System.setProperty("boolprop", "true");
+        System.setProperty("longprop", "270");
+
+        Configuration conf = Configuration.newMemoryBased("intprop",
+                                                          "${intprop}",
+                                                          "boolprop",
+                                                          "${boolprop}",
+                                                          "longprop",
+                                                          "${longprop}");
+
+        int intprop = conf.getInt("intprop");
+        boolean boolprop = conf.getBoolean("boolprop");
+        long longprop = conf.getLong("longprop");
+
+        // Clear the sys prop before the test has a chance of failing
+        System.clearProperty("intprop");
+        System.clearProperty("boolprop");
+        System.clearProperty("longprop");
+
+        assertEquals(27, intprop);
+        assertEquals(true, boolprop);
+        assertEquals(270, longprop);
+    }
+
+    public void testExpandedSysPropArray() throws Exception {
         String[] val = new String[]{"${user.dir}", "bar"};
         Configuration conf = Configuration.newMemoryBased("foo.bar",
                                                           val);
