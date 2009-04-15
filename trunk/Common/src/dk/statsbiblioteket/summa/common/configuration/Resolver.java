@@ -22,20 +22,18 @@
  */
 package dk.statsbiblioteket.summa.common.configuration;
 
+import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.Streams;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URL;
 import java.net.MalformedURLException;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Streams;
-import dk.statsbiblioteket.util.Files;
-import dk.statsbiblioteket.summa.common.util.ResourceListener;
+import java.net.URL;
 
 /**
  * Resolves paths relative to System properties.
@@ -94,14 +92,10 @@ public class Resolver {
             log.debug("Returning resolved File '" + resolved.getPath() + "'");
             return resolved;
         } catch (Exception e) {
-            if (log.isDebugEnabled()) {
-                log.error("Could not resolve File '" + file
-                          + "' to absolute File", e);
-            } else {
-                log.info ("Could not resolve File '" + file
-                          + "' to absolute File");
-            }
-
+            log.warn(String.format(
+                    "Could not resolve File '%s' to persistentBaseFile with "
+                    + "persistent base '%s'. Using file directly as '%s'", 
+                    file, persistentBase, file.getAbsolutePath()), e);
             return file;
         }
     }
