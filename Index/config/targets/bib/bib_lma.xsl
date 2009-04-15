@@ -18,7 +18,7 @@
             <xsl:for-each select="mc:field[@type='009_00']/mc:subfield[@type='a' or @type='b']">
                 <xsl:if test="contains(.,'a')">
                     <xsl:choose>
-                        <xsl:when test="contains(/marc/mc:record/mc:field[@type='008_00']/mc:subfield[@type='t'],'m') or contains(/mc:record/mc:field[@type='008_00']/mc:subfield[@type='t'],'s')">
+                        <xsl:when test="contains(/marc/mc:record/mc:field[@type='008_00']/mc:subfield[@type='t'],'m') or contains(/marc/mc:record/mc:field[@type='008_00']/mc:subfield[@type='t'],'s')">
                             <xsl:for-each select="/marc/mc:record/mc:field[@type='009_00']/mc:subfield[@type='g' or @type='h']">
                                 <xsl:choose>
                                     <xsl:when test="contains(.,'xx')">
