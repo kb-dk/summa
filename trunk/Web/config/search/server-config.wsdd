@@ -41,8 +41,23 @@
         <documentation>Search web service for the Summa system</documentation>
         <parameter name="className" value="dk.statsbiblioteket.summa.web.services.SearchWS"/>
 
-        <parameter name="allowedMethods" value="simpleSearch simpleSearchSorted simpleFacet"/>
+        <parameter name="allowedMethods" value="simpleSearch simpleSearchSorted simpleFacet getMoreLikeThis"/>
         <namespace>http://statsbiblioteket.dk/summa/search</namespace>
+
+        <operation name="getMoreLikeThis">
+            <documentation>
+                Gives a search result of records that "are similar to" a given record.
+            </documentation>
+            <parameter name="id" type="tns:string">
+                <documentation>The recordID of the record that should be used as base for the MoreLikeThis query.</documentation>
+            </parameter>
+            <parameter name="numberOfRecords" type="tns:int">
+                <documentation>The maximum number of records returned in the search result.</documentation>
+            </parameter>
+            <parameter name="startIndex" type="tns:int">
+                <documentation>The number of the first record to return.</documentation>
+            </parameter>
+        </operation>
 
         <operation name="simpleSearch">
             <documentation>

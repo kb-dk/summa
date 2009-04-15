@@ -38,6 +38,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import javax.xml.stream.XMLStreamException;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 
 /**
  * A class containing methods meant to be exposed as a web service
@@ -67,12 +69,24 @@ public class StorageWS {
     }
 
     /**
-     * Get the System Configuration
-     * @return The System Configuration object
+     * Get the a Configuration object. First trying to load the configuration from the location
+     * specified in the JNDI property java:comp/env/confLocation, and if that fails, then the System
+     * Configuration will be returned.
+     * @return The Configuration object
      */
     private Configuration getConfiguration() {
         if (conf == null) {
-            conf = Configuration.getSystemConfiguration(true);
+            InitialContext context;
+            try {
+                context = new InitialContext();
+                String paramValue = (String) context.lookup("java:comp/env/confLocation");
+                log.debug("Trying to load configuration from: " + paramValue);
+                conf = Configuration.load(paramValue);
+            } catch (NamingException e) {
+                log.error("Failed to lookup env-entry.", e);
+                log.warn("Trying to load system configuration.");
+                conf = Configuration.getSystemConfiguration(true);
+            }
         }
 
         return conf;

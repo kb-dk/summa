@@ -9,7 +9,12 @@
     <display-name>summa</display-name>
     <description>Summa</description>
 
+    <!--
+        to set confLocation from context.xml use
+        <Environment name=’confLocation’ type=’java.lang.String’ value=’complete path to xml file’ />
 
+        to set confLocation in web.xml use <env-entry>
+    -->
 
     <!-- Axis stuff -->
     <servlet>

@@ -132,6 +132,7 @@
 <!--                <available file="${summa.lib.sbutil}"/>-->
                 <available file="${summa.lib.commons-logging}"/>
                 <available file="${summa.lib.axis.axis}"/>
+                <available file="${summa.lib.servlet-api}"/>
             </and>
         </condition>
         <antcall target="${newTask}"/>
@@ -180,6 +181,7 @@
         <copy file="../${summa.lib.junit}" tofile="${summa.lib.junit}"/>
         <copy file="../${summa.lib.log4j}" tofile="${summa.lib.log4j}"/>
         <copy file="../${summa.lib.commons-logging}" tofile="${summa.lib.commons-logging}"/>
+        <copy file="../${summa.lib.servlet-api}" tofile="${summa.lib.servlet-api}"/>
 
         <copy todir="${lib.dir}" flatten="true">
             <fileset dir="${basedir}/.." includes="${summa.lib.axis.all}"/>
@@ -243,9 +245,11 @@
              webxml="config/search/web.xml">
             <lib dir="${lib.dir}">
                 <include name="*.jar"/>
+                <exclude name="servlet-api-${summa.servlet.version}.jar" />
             </lib>
             <lib dir="${lib.dir}">
                 <include name="${lib.files}"/>
+                <exclude name="servlet-api-${summa.servlet.version}.jar" />
             </lib>
             <webinf dir="${basedir}/config/search">
                 <include name="server-config.wsdd"/>
@@ -270,9 +274,11 @@
              webxml="config/storage/web.xml">
             <lib dir="${lib.dir}">
                 <include name="*.jar"/>
+                <exclude name="servlet-api-${summa.servlet.version}.jar" />
             </lib>
             <lib dir="${lib.dir}">
                 <include name="${lib.files}"/>
+                <exclude name="servlet-api-${summa.servlet.version}.jar" />
             </lib>
             <webinf dir="${basedir}/config/storage">
                 <include name="server-config.wsdd"/>
