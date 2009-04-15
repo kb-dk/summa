@@ -130,10 +130,18 @@ public class XStorage implements ConfigurationStorage {
                  + "This won't work well with nesting");
         Map<String, Serializable> tempMap =
                 new HashMap<String, Serializable>(size());
-            for (Map.Entry<Object, Object> entry: xprops.entrySet()) {
+        for (Map.Entry<Object, Object> entry: xprops.entrySet()) {
+        try {
                 tempMap.put((String)entry.getKey(),
                             (Serializable)entry.getValue());
-            }
+        } catch (ClassCastException e) {
+            throw new ClassCastException(String.format(
+                    "Unable to cast '%s' of class %s to String and '%s' of "
+                    + "class %s to Serializable",
+                    entry.getKey(), entry.getKey().getClass(),
+                    entry.getValue(), entry.getValue().getClass()));
+        }
+        }
         log.trace("Created shallow copy of storage with " + size()
                   + " elements. Returning iterator");
         return tempMap.entrySet().iterator();
