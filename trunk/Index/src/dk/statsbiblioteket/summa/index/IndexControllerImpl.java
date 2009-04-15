@@ -22,24 +22,24 @@
  */
 package dk.statsbiblioteket.summa.index;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.io.IOException;
-import java.io.File;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Profiler;
-import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
-import dk.statsbiblioteket.summa.common.util.StateThread;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.index.IndexCommon;
-import dk.statsbiblioteket.summa.common.Logging;
+import dk.statsbiblioteket.summa.common.util.StateThread;
+import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.Profiler;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The default implementation of IndexController. It is basically an aggregator
@@ -220,6 +220,9 @@ public class IndexControllerImpl extends StateThread implements
                                              + indexRoot
                                              + "' to absolute path");
         }
+        log.debug(String.format("Using indexRoot '%s' at location '%s'",
+                                indexRoot.toString(),
+                                indexLocation.getAbsolutePath()));
         List<Configuration> manipulatorConfs;
         try {
             manipulatorConfs = conf.getSubConfigurations(CONF_MANIPULATORS);
