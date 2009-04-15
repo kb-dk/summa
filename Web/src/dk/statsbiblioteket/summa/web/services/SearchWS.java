@@ -28,29 +28,32 @@ import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.SearchClient;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.commons.XmlOperations;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.w3c.dom.NamedNodeMap;
-import org.xml.sax.SAXException;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
-import javax.xml.parsers.ParserConfigurationException;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathFactory;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
-import javax.xml.transform.*;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.dom.DOMSource;
+import javax.xml.xpath.XPathFactory;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.util.Map;
 
 /**
  * A class containing methods meant to be exposed as a web service
@@ -74,14 +77,69 @@ public class SearchWS {
      */
     private synchronized SearchClient getSearchClient() {
         if (searcher == null) {
-            if (conf == null) {
-                conf = Configuration.getSystemConfiguration(true);
-            }
-            searcher = new SearchClient(conf);
+            searcher = new SearchClient(getConfiguration());
         }
         return searcher;
     }
 
+    /**
+     * Get the a Configuration object. First trying to load the configuration from the location
+     * specified in the JNDI property java:comp/env/confLocation, and if that fails, then the System
+     * Configuration will be returned.
+     * @return The Configuration object
+     */
+    private Configuration getConfiguration() {
+        if (conf == null) {
+            InitialContext context;
+            try {
+                context = new InitialContext();
+                String paramValue = (String) context.lookup("java:comp/env/confLocation");
+                log.debug("Trying to load configuration from: " + paramValue);
+                conf = Configuration.load(paramValue);
+            } catch (NamingException e) {
+                log.error("Failed to lookup env-entry.", e);
+                log.warn("Trying to load system configuration.");
+                conf = Configuration.getSystemConfiguration(true);
+            }
+        }
+
+        return conf;
+    }
+
+    /**
+     * Gives a search result of records that "are similar to" a given record. 
+     * @param id The recordID of the record that should be used as base for the MoreLikeThis query.
+     * @param numberOfRecords The maximum number of records to return.
+     * @param startIndex Where to start returning records from (used to implement paging).
+     * @return An XML string containing the result or an error description.
+     */
+    public String getMoreLikeThis(String id, int numberOfRecords, int startIndex) {
+        String retXML;
+
+        ResponseCollection res;
+
+        Request req = new Request();
+        // TODO: Correctly set this using SEARCH_MORELIKETHIS_RECORDID
+        req.put("search.document.lucene.morelikethis.recordid", id);
+        req.put(DocumentKeys.SEARCH_MAX_RECORDS, numberOfRecords);
+        req.put(DocumentKeys.SEARCH_START_INDEX, startIndex);
+        req.put(DocumentKeys.SEARCH_SORTKEY, DocumentKeys.SORT_ON_SCORE);
+        req.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
+
+        try {
+            res = getSearchClient().search(req);
+            retXML = res.toXML();
+        } catch (IOException e) {
+            log.error("Error executing morelikethis: '" + id + "', " +
+                    numberOfRecords + ", " +
+                    startIndex +
+                    ". Error was: ", e);
+            // TODO: return a nicer error xml block
+            retXML = "<error>Error performing morelikethis</error>";
+        }
+
+        return retXML;
+    }
     /**
      * A simple way to query the index returning results sorted by relevance. The same as calling
      * simpleSearchSorted while specifying a normal sort on relevancy.
