@@ -22,7 +22,7 @@
     <xsl:template match="/">
 
         <Index:document Index:defaultBoost="1" Index:defaultType="token" Index:defaultFreetext="true" Index:defaultSuggest="false"
-                        Index:defaultGroup="false" Index:langAutogroup="true" Index:resolver="nordicom">
+                        Index:defaultGroup="false" Index:langAutogroup="true" Index:resolver="bib">
             <xsl:attribute name="Index:id">
                 <xsl:text>bib_</xsl:text>
                 <xsl:value-of select="marc/mc:record/mc:field[@type='001_00']/mc:subfield[@type='a']" />
