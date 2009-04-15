@@ -203,8 +203,9 @@ public class IndexControllerImpl extends StateThread implements
 
     public IndexControllerImpl(Configuration conf) {
         log.debug("Creating IndexControllerImpl");
-        String indexRootCandidate = conf.getString(CONF_INDEX_ROOT_LOCATION,
-                                                   DEFAULT_INDEX_ROOT_LOCATION);
+        String indexRootCandidate = conf.getString(
+                CONF_INDEX_ROOT_LOCATION, DEFAULT_INDEX_ROOT_LOCATION);
+        log.debug("Located indexRootCandidate '" + indexRootCandidate + "'");
         try {
             indexRoot = new File(indexRootCandidate);
         } catch (Exception e) {
@@ -216,9 +217,8 @@ public class IndexControllerImpl extends StateThread implements
         try {
             indexLocation = Resolver.getPersistentFile(indexRoot);
         } catch (Exception e) {
-            throw new ConfigurationException("Exception resolving '"
-                                             + indexRoot
-                                             + "' to absolute path");
+            throw new ConfigurationException(String.format(
+                    "Exception resolving '%s' to absolute path", indexRoot));
         }
         log.debug(String.format("Using indexRoot '%s' at location '%s'",
                                 indexRoot.toString(),
