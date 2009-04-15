@@ -5,8 +5,10 @@ import org.apache.commons.cli.*;
 import java.util.*;
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 
 import dk.statsbiblioteket.summa.common.util.Environment;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.Strings;
 
 /**
@@ -311,6 +313,12 @@ public class BundleTool {
                          Environment.escapeSystemProperties(builder.getFiles());
         builder.getFiles().clear();
         builder.getFiles().addAll(files);
+
+        // Update property values        
+        for (Map.Entry<String, Serializable> entry: builder.getProperties()) {
+            entry.setValue(
+               Environment.escapeSystemProperties(entry.getValue().toString()));
+        }
     }
 
     private void validate (BundleSpecBuilder builder) {
