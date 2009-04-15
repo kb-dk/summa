@@ -151,9 +151,9 @@ if [ "$ENABLE_JMX" == "true" ]; then
     JMX="$JMX_PORT $JMX_SSL $JMX_PASS $JMX_ACCESS";
 fi;
 
-pushd lib > /dev/null
-CODEBASE="-Djava.rmi.server.codebase=$CODEBASE_BASEURL/$(ls summa-common-*.jar)"
-popd
+#pushd lib > /dev/null
+#CODEBASE="-Djava.rmi.server.codebase=$CODEBASE_BASEURL/$(ls summa-common-*.jar)"
+#popd
 
 COMMAND="$JVM_OPTS $SECURITY_POLICY $JMX -cp $CLASSPATH $MAINCLASS"
 
