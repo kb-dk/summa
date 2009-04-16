@@ -50,7 +50,7 @@ public class FilterControlTest extends TestCase {
         chainConfs.get(0).put(Filter.CONF_FILTER_NAME, "FilterPumptest");
         List<ConfigurationStorage> filterConfs =
                 chainConfs.get(0).createSubStorages(
-                        FilterSequence.CONF_FILTERS,  1);
+                        FilterSequence.CONF_FILTERS,  2);
 
         ConfigurationStorage streamSub = filterConfs.get(0);
         streamSub.put(Filter.CONF_FILTER_NAME, "Streamer");
