@@ -96,7 +96,7 @@
                                 <dc:type xml:lang="da">
                                     <xsl:for-each select=".">
                                         <xsl:choose>
-                                            <xsl:when test="contains(/marc/mc:record/mc:field[@type='008']/mc:subfield[@type='t'],'a')">
+                                            <xsl:when test="contains(/marc/mc:record/mc:field[@type='008_00']/mc:subfield[@type='t'],'a')">
                                                 <xsl:choose>
                                                     <xsl:when test="/marc/mc:record/mc:field[@type='557_00']">
                                                         <xsl:text>tidsskriftartikel</xsl:text>
