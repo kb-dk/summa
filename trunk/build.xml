@@ -41,6 +41,8 @@
                 <available file="${summa.lib.junit}"/>
                 <available file="${summa.lib.sbutil}"/>
                 <available file="${summa.lib.derby}"/>
+                <available file="${summa.lib.postgres}"/>
+                <available file="${summa.lib.h2}"/>
             </and>
         </condition>
         <fail unless="hasLibs" message="Some the required libs seem to be missing. Please check the contents of the `lib´ directory against the summa.lib.* properties listed in the `build.properties´ file"/>
@@ -62,6 +64,7 @@
         <ant dir="Control" inheritall="false"/>
         <ant dir="Web" inheritall="false"/>
         <ant dir="Workflow" inheritall="false"/>
+        <ant dir="Samples" inheritall="false"/>
         
         <!-- Legacy modules not build : -->
         <!-- <ant dir="Dice" inheritall="false"/> -->
@@ -133,6 +136,7 @@
         <ant dir="Control" inheritall="false" target="clean"/>
         <ant dir="Web" inheritall="false" target="clean"/>
         <ant dir="Workflow" inheritall="false" target="clean"/>
+        <ant dir="Samples" inheritall="false" target="clean"/>
         <delete dir="${dist.dir}" />
 
         <!-- Legacy modules not built: -->
@@ -153,6 +157,7 @@
         <ant dir="Control" inheritall="false" target="distclean"/>
         <ant dir="Web" inheritall="false" target="distclean"/>
         <ant dir="Workflow" inheritall="false" target="distclean"/>
+        <ant dir="Samples" inheritall="false" target="distclean"/>
 
         <echo message="Cleaning test artifacts"/>
         <delete includeemptydirs="true">
