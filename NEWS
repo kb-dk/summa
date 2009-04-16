@@ -1,4 +1,54 @@
 =======================
+2009-04-16: Summa 1.3.1
+=======================
+
+ NOTE: Since Summa has now attracted third party contributors we will, starting
+       from Summa 1.3.1, postfix each news entry with an attribution to the
+       responsible party/parties enclosed in braces.
+
+ * Add a MoreLikeThis capability to the LuceneSearchNode and a web service
+   interface for this on the search web service (SB)
+
+ * Allow web services in the Web module to fetch their configurations from
+   outside the .war file, by using some JNDI-fu (SB)
+
+ * Add a ScriptFilter that runs a Payload through any script engine supported
+   by the JVM (such as Javascript). The script can be fetched externally or
+   inlined in the configuration (SB)
+
+ * Added DumpFilter which dumps Payloads into a designated folder. Used
+   primarily for debugging (Refind)
+
+ * The usual round of logging clarifications (SB, Refind)
+
+ * Include a Samples module which as a start contains a very simple Summa
+   setup called Summix. Summix does not depend on the Control framework used
+   by Summa (think, bundles and services) and is mostly designed as a stand
+   alone search engine for people without huge scalability needs. Summix
+   also runs on Windows. (Refind)
+
+ * Bump SBUtil from 0.4.3 to 0.4.4. This brings in new features in
+   ReplaceFactory we need in order to optimize query analysis (SB)
+
+ * Consolidation of the Lucene analyzers in the Common module. This means
+   dropping TokenReplaceFilter, TransliteratingReader, StringReplaceReader,
+   and TransliterionFilter from the source tree. All the replacement is now done
+   entirely inside the ReplaceReaders from SBUtil. This brings a hefty
+   optimization to query parser performance (at least a factor of 20) (SB)
+
+ * Configurations can now escpae system properties inside integer, long, and
+   boolean values. It only did strings before (SB)
+
+ * Bugfix: Explicitly remove log4j.xml from the summa-common.jar
+
+ * Bugfix: Add a 'process' appender to the log4j configuration in the
+           sample bundles. Output goes to log/process.log (SB)
+
+ * Bugfix: The AbstractDiscardFilter has its logic reversed so that
+	       only Payloads that were judged discardable was preserved and vise
+	       versa (Refind)
+
+=======================
 2009-03-27: Summa 1.3.0
 =======================
 
