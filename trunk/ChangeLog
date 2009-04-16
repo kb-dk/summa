@@ -1,9 +1,573 @@
-2009-03-27 11:40  mke
+2009-04-16 10:25  mke
 
-	* [r1214] ChangeLog
+	* [r1276] build.properties, ChangeLog, NEWS
 
-	Release Summa 1.3.0
+	Release Summa 1.3.1
 
+2009-04-16 08:14  toke
+
+	* [r1275]
+	  Common/test/dk/statsbiblioteket/summa/common/configuration/ConfigurationStorageTestCase.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/FilterControlTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/DelayFilterTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/FilterSequenceTest.java:
+	  
+	  Testing: Tweaked and deprecated tests to reflect changes to
+	  architecture
+	  Testing: Made the timing-oriented DelayFilterTest more lenient,
+	  reducing the chance of failed runs due to timing issues
+
+2009-04-16 07:06  mke
+
+	* [r1274]
+	  Common/test/dk/statsbiblioteket/summa/common/filter/FilterControlTest.java:
+	  
+	  Fix buggy test case in FilterControlTest
+
+2009-04-16 06:22  mke
+
+	* [r1273]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/ScriptFilter.java:
+	  
+	  Add full javadoc for ScriptFilter
+
+2009-04-16 06:00  mke
+
+	* [r1272] build.xml:
+	  
+	  Add the Samples module (and hence Summix) to the global build.
+	  This will include the Summix zip-ball in the distributed archive
+
+2009-04-16 05:58  mke
+
+	* [r1271]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/ScriptFilter.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/ScriptFilterTest.java:
+	  
+	  Add a feedbackMessage variable to ScriptFilter used for
+	  additional logging info passed back by the script
+	  
+	  Also add profiling to the script execution in ScriptFilter
+
+2009-04-15 21:28  tokerefind
+
+	* [r1270] Samples/Summix/bin/summa-filter.sh:
+	  
+	  Bigfix: the summa-filter.sh script contained invalid operations
+	  that resulted in warnings
+
+2009-04-15 21:08  tokerefind
+
+	* [r1269] Samples/Summix/build.xml, Workflow/build.xml:
+	  
+	  Bugfix: The build.xml for Workflow missed a .releaseSearch-target
+	  Improvement: The build.xml for Summix did not include the Windows
+	  BAT-files
+
+2009-04-15 14:16  nig
+
+	* [r1268] Index/config/targets/dkb,
+	  Index/config/targets/dkb/dkb_author.xsl,
+	  Index/config/targets/dkb/dkb_identifiers.xsl,
+	  Index/config/targets/dkb/dkb_index.xsl,
+	  Index/config/targets/dkb/dkb_lma.xsl,
+	  Index/config/targets/dkb/dkb_material.xsl,
+	  Index/config/targets/dkb/dkb_notes.xsl,
+	  Index/config/targets/dkb/dkb_other.xsl,
+	  Index/config/targets/dkb/dkb_publisher.xsl,
+	  Index/config/targets/dkb/dkb_short_format.xsl,
+	  Index/config/targets/dkb/dkb_subject.xsl,
+	  Index/config/targets/dkb/dkb_title.xsl:
+	  
+	  dkb i summa
+
+2009-04-15 13:27  mke
+
+	* [r1267]
+	  Control/src/dk/statsbiblioteket/summa/control/bundle/BundleTool.java:
+	  
+	  Escape system property values defined in the bundle spec when
+	  using BundleTool to compile bundles
+
+2009-04-15 12:30  toke
+
+	* [r1266]
+	  Index/src/dk/statsbiblioteket/summa/index/IndexControllerImpl.java:
+	  
+	  Logging: Better feedback on index location in IndexControllerImpl
+
+2009-04-15 10:43  nig
+
+	* [r1265] Index/config/targets/bib/bib_index.xsl,
+	  Index/config/targets/bib/bib_lma.xsl,
+	  Index/config/targets/bib/bib_material.xsl,
+	  Index/config/targets/bib/bib_short_format.xsl,
+	  Index/config/targets/bib/bib_subject.xsl,
+	  Index/config/targets/bib/bib_title.xsl:
+	  
+	  bib i summa
+
+2009-04-15 09:27  toke
+
+	* [r1264]
+	  Index/src/dk/statsbiblioteket/summa/index/IndexControllerImpl.java:
+	  
+	  Logging: Better feedback on index location in IndexControllerImpl
+
+2009-04-15 08:51  mads
+
+	* [r1263] Web/build.xml, Web/config/search/server-config.wsdd,
+	  Web/config/search/web.xml, Web/config/storage/web.xml,
+	  Web/src/dk/statsbiblioteket/summa/web/services/SearchWS.java,
+	  Web/src/dk/statsbiblioteket/summa/web/services/StorageWS.java,
+	  build.properties, lib/servlet-api-2.5.jar:
+	  
+	  Added web service to MoreLikeThis.
+	  
+	  Added JNDI support to get the location of the xml configuration
+	  to use for SearchClient and StorageClient. This required adding
+	  servlet-api-2.5.jar as a dependency.
+
+2009-04-15 08:26  toke
+
+	* [r1262] Samples/Summix/bin/summa-storage.sh:
+	  
+	  Fixed all sh-scripts to be callable from arbitrary paths
+
+2009-04-15 08:02  toke
+
+	* [r1261]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/Resolver.java:
+	  
+	  Logging: Better feedback on Resolver when a file cannot be found
+	  under persistent base
+
+2009-04-15 07:51  toke
+
+	* [r1260]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/storage/XStorage.java:
+	  
+	  Logging: Better feedback on ClassCastException in iterator
+
+2009-04-15 07:32  mke
+
+	* [r1259]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/Configuration.java,
+	  Common/test/dk/statsbiblioteket/summa/common/configuration/ConfigurationTest.java:
+	  
+	  Implement .equals() method on Configuration.Pair
+	  
+	  Add system property expansion to Configuration's getInt()
+	  getBoolean(), getLong(), and getIntValues() methods.
+	  
+	  Implement unit tests for above code paths
+
+2009-04-14 14:10  nig
+
+	* [r1258] Index/config/targets/bib,
+	  Index/config/targets/bib/bib_author.xsl,
+	  Index/config/targets/bib/bib_identifiers.xsl,
+	  Index/config/targets/bib/bib_index.xsl,
+	  Index/config/targets/bib/bib_lma.xsl,
+	  Index/config/targets/bib/bib_material.xsl,
+	  Index/config/targets/bib/bib_notes.xsl,
+	  Index/config/targets/bib/bib_other.xsl,
+	  Index/config/targets/bib/bib_publisher.xsl,
+	  Index/config/targets/bib/bib_short_format.xsl,
+	  Index/config/targets/bib/bib_subject.xsl,
+	  Index/config/targets/bib/bib_title.xsl:
+	  
+	  bib i summa
+
+2009-04-14 12:20  toke
+
+	* [r1257] Samples/Summix/bin/summa-filter.sh,
+	  Samples/Summix/bin/summa-searcher.sh,
+	  Samples/Summix/bin/summa-storage.sh:
+	  
+	  Updated Summix-scripts to be callable from anywhere
+
+2009-04-14 12:13  toke
+
+	* [r1256] Samples/Summix/bin/summa-storage.sh:
+	  
+	  Updated summa-storage.sh so that it can be called from anywhere
+
+2009-04-14 10:50  mke
+
+	* [r1255] Support/build.xml:
+	  
+	  Add lucene-queries as lib to the Ant script for the Support
+	  module
+
+2009-04-03 13:40  toke
+
+	* [r1254]
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/LuceneSearchNode.java:
+	  
+	  Documentation: Described limitations of the current MoreLikeThis
+	  functionality
+
+2009-04-03 13:27  toke
+
+	* [r1253]
+	  Control/test/dk/statsbiblioteket/summa/releasetest/FagrefGeneratorTest.java:
+	  
+	  Testing: Lowered the amount of test-cases in the
+	  FagrefGeneratorTest to 1000 as 10,000 Records took minutes to
+	  process
+
+2009-04-03 13:09  toke
+
+	* [r1252]
+	  Search/src/dk/statsbiblioteket/summa/search/SearchNodeImpl.java,
+	  Search/src/dk/statsbiblioteket/summa/search/document/DocumentSearcher.java,
+	  Search/src/dk/statsbiblioteket/summa/search/document/DocumentSearcherImpl.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/LuceneSearchNode.java,
+	  Support/test/data/fagref/fagref_IndexDescriptor.xml,
+	  Support/test/dk/statsbiblioteket/summa/support/lucene/search/LuceneSearchNodeTest.java:
+	  
+	  Feature: Added MoreLikeThis functionality to the LuceneSearchNode
+	  Feature: Made it easier to do custom processing in sub classes to
+	  DocumentSearcher
+
+2009-04-03 12:58  toke
+
+	* [r1251]
+	  Common/src/dk/statsbiblioteket/summa/common/index/IndexDescriptor.java,
+	  Common/src/dk/statsbiblioteket/summa/common/index/LuceneIndexDescriptorSample.xml[CPY],
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/LuceneIndexDescriptor.java,
+	  Common/test/data/MoreLikeThisDescriptor.xml,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/LuceneIndexDescriptorTest.java,
+	  Common/test/log4j.xml, Support/Support.iml:
+	  
+	  Feature: Added MoreLikeThis fields to the LuceneIndexDescriptor
+	  Sample: Added a sample Lucene-oriented IndexDescriptor
+
+2009-04-03 10:34  toke
+
+	* [r1250]
+	  Search/src/dk/statsbiblioteket/summa/search/SummaSearcherImpl.java:
+	  
+	  Cosmetics
+
+2009-04-03 08:27  toke
+
+	* [r1249]
+	  Control/test/dk/statsbiblioteket/summa/releasetest/MultipleSourcesTest.java:
+	  
+	  Testing: Better feedback on failed unit-test for
+	  MultipleSourcesTest
+
+2009-04-03 08:27  toke
+
+	* [r1248]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/search/SummaQueryParser.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/search/SummaQueryParserTest.java:
+	  
+	  Testing: Query parser performance
+	  Logging: Better logging for the query parser
+
+2009-04-02 14:13  mke
+
+	* [r1247]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/RuleParser.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/Rules.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/StringReplaceReader.java[DEL],
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/SummaAnalyzer.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/SummaStandardAnalyzer.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/TokenReplaceFilter.java[DEL],
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/TransliteratingReader.java[DEL],
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/TransliterationFilter.java[DEL],
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/StringReplaceReaderTest.java[DEL],
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/SummaAnalyzerTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/TokenReplaceFilterTest.java[DEL],
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/analysis/TransliterationFilterTest.java[DEL]:
+	  
+	  Move all transliertion and token-replacement rules into a shared
+	  Rules class.
+	  
+	  Move to using the new ReplaceFactory methods for efficiently
+	  creating new replace readers. This should speed up query parsing
+	  significantly.
+	  
+	  Drop TokenReplaceFilter, TransliteratingReader,
+	  StringReplaceReader and TransliterionFilter and the unit tests
+	  for these
+
+2009-04-02 13:33  mke
+
+	* [r1246] Common/Common.iml,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/LowerCasingReader.java,
+	  Control/Control.iml, FacetBrowser/FacetBrowser.iml, Summa.ipr,
+	  build.properties, lib/apidocs/sbutil-0.4.3-apidocs.zip[DEL],
+	  lib/apidocs/sbutil-0.4.4-apidocs.zip, lib/sbutil-0.4.3.jar[DEL],
+	  lib/sbutil-0.4.4.jar, lib/src/sbutil-0.4.3-src.zip[DEL],
+	  lib/src/sbutil-0.4.4-src.zip:
+	  
+	  Make LowerCasingReader impl. Clonable
+	  
+	  Bump SBUtil from 0.4.3 to 0.4.4. This brings in new features in
+	  ReplaceFactory we need in order to optimize query analysis.
+	  
+	  Bump Summa version number to 1.3.1-rc
+
+2009-04-02 09:55  mke
+
+	* [r1245] Common/build.xml:
+	  
+	  Explicitly remove log4j.xml from the summa-common.jar
+
+2009-04-02 09:35  mke
+
+	* [r1244]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/ScriptFilter.java:
+	  
+	  Include a link to scripting.dev.java.net in the ScriptFilters
+	  javadoc
+
+2009-04-02 09:29  mke
+
+	* [r1243]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/ScriptFilter.java:
+	  
+	  Fall back to JS if scripting lang can't be determined from the
+	  URL
+
+2009-04-02 09:23  mke
+
+	* [r1242] Common/test/data/inline-js.xml:
+	  
+	  Remove XML artifacts
+
+2009-04-02 09:11  mke
+
+	* [r1241] Common/test/data/inline-js.xml:
+	  
+	  Simplify inline js config
+
+2009-04-02 09:02  mke
+
+	* [r1240]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/ScriptFilter.java,
+	  Common/test/data/inline-js.xml,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/ScriptFilterTest.java:
+	  
+	  Implement support for inlined scripts in the configuration for
+	  ScriptFilter
+
+2009-04-02 07:53  mke
+
+	* [r1239] Summa.ipr, build.xml:
+	  
+	  Add global .jar target to make Summix compile
+
+2009-04-01 23:26  tokerefind
+
+	* [r1238] Samples/Summix/bin/storage-tool.bat:
+	  
+	  Bugfix: The storage-tool.bat did not work at all. Now it works
+	  badly
+
+2009-04-01 22:51  tokerefind
+
+	* [r1237] Samples/Summix/bin/search-tool.bat,
+	  Samples/Summix/bin/storage-tool.bat,
+	  Samples/Summix/bin/summa-filter.bat,
+	  Samples/Summix/bin/summa-searcher.bat,
+	  Samples/Summix/bin/summa-storage.bat:
+	  
+	  Added Windows BAT-equivalents to the .sh-scripts.
+	  The BAT-files are first drafts and not at all as generic as the
+	  .sh-scripts
+
+2009-04-01 21:55  tokerefind
+
+	* [r1236]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/Payload.java,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/DiscardRelativesFilter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/MUXFilter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/ObjectFilterImpl.java,
+	  Index/src/dk/statsbiblioteket/summa/index/IndexControllerImpl.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/StreamController.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/FileReader.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/FileWatcher.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/RecordReader.java:
+	  
+	  Logging: Added explicit process-logging everywhere a
+	  Payload.close() was called
+
+2009-04-01 21:53  tokerefind
+
+	* [r1235]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/AbstractDiscardFilter.java:
+	  
+	  Bugfix: The AbstractDiscardFilter has its logic reversed so that
+	  only Payloads that were judged discardable was preserved and vise
+	  versa
+
+2009-04-01 21:29  mke_refind
+
+	* [r1234] Samples/Summix/README, Samples/Summix/bin,
+	  Samples/Summix/bin/summa-filter.sh,
+	  Samples/Summix/bin/summa-searcher.sh,
+	  Samples/Summix/bin/summa-storage.sh, Samples/Summix/build.xml,
+	  Samples/Summix/config, Samples/Summix/config/indexer.xml,
+	  Samples/Summix/config/ingest.xml,
+	  Samples/Summix/config/log4j.xml, Samples/Summix/config/policy,
+	  Samples/Summix/config/search-tool.configuration.xml,
+	  Samples/Summix/config/searcher.xml,
+	  Samples/Summix/config/storage-tool.configuration.xml,
+	  Samples/Summix/config/storage.xml, Samples/build.xml:
+	  
+	  Import full Summix sample from Refind SMBA. See
+	  Samples/Summix/README for a description.
+
+2009-04-01 19:10  tokerefind
+
+	* [r1233]
+	  Search/src/dk/statsbiblioteket/summa/search/SummaSearcherFactory.java:
+	  
+	  Cosmetics
+
+2009-04-01 19:05  tokerefind
+
+	* [r1232] Common/build.xml, Control/Control.iml,
+	  FacetBrowser/FacetBrowser.iml,
+	  Index/src/dk/statsbiblioteket/summa/index/XMLTransformer.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/RecordReader.java:
+	  
+	  Logging: The XMLTransformer did not output anything useful if it
+	  could not locate the XSLT. It now outputs the location where the
+	  XSLT was expected
+	  Logging: The RecordReader did not log the Exception when an
+	  exception was encountered. The exception is now logged
+
+2009-04-01 18:38  mke_refind
+
+	* [r1231] Samples, Samples/Summix, Samples/Summix/build.xml,
+	  Samples/build.xml:
+	  
+	  Prepare skeleton for Summix (this is a Refind commit, I hope it
+	  is registered under the right user(mke_refind))
+
+2009-04-01 08:13  mke
+
+	* [r1230]
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/ScriptFilterTest.java:
+	  
+	  Add wee bit more advanced test case
+
+2009-04-01 07:52  mke
+
+	* [r1229]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/ScriptFilter.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/ScriptFilterTest.java:
+	  
+	  Rename magic var 'returnValue' to 'allowRecord'
+
+2009-04-01 07:41  mke
+
+	* [r1228]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/ScriptFilter.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/PayloadBufferFilter.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/ScriptFilterTest.java:
+	  
+	  Fix ScriptFilter and add a collection of unit tests. Works very
+	  fine.
+
+2009-04-01 07:13  mke
+
+	* [r1227]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/ScriptFilter.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/ScriptFilterTest.java:
+	  
+	  Small fixes to ScriptFilter
+
+2009-04-01 07:11  mke
+
+	* [r1226]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/ObjectFilterImpl.java:
+	  
+	  Fix error message in ObjectFilterImpl when the source filter is
+	  missing
+
+2009-03-31 18:56  mke
+
+	* [r1225]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/ScriptFilter.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/ScriptFilterTest.java:
+	  
+	  Initial import of ScriptFilter. Still not working properly, but
+	  it compiles and is almost working :-)
+
+2009-03-31 12:39  tokerefind
+
+	* [r1224]
+	  Common/test/dk/statsbiblioteket/summa/common/configuration/ConfigurationTest.java:
+	  
+	  Testing: Added another test for proper XConfiguration-loading
+
+2009-03-31 12:33  tokerefind
+
+	* [r1223] Common/test/data/simple_xstorage.xml,
+	  Common/test/dk/statsbiblioteket/summa/common/configuration/ConfigurationTest.java:
+	  
+	  Testing: Added unit-test for proper loading of XStorage from file
+
+2009-03-31 11:17  tokerefind
+
+	* [r1222] Common/Common.iml,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/DumpFilter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/unittest/PayloadFeederHelper.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/DumpFilterTest.java,
+	  Common/test/log4j.xml:
+	  
+	  Added DumpFilter which dumps Payloads into a designated folder.
+	  Used primarily for debugging
+
+2009-03-30 13:11  mke
+
+	* [r1221] Control/test/log4j.xml:
+	  
+	  Output the process log to the console when running tests in the
+	  control module
+
+2009-03-30 13:07  mke
+
+	* [r1220] Control/config/log4j.xml:
+	  
+	  Add process log
+
+2009-03-27 12:53  toke
+
+	* [r1219]
+	  Common/src/dk/statsbiblioteket/summa/common/unittest/NoExitTestCase.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/DeferredSystemExitTest.java:
+	  
+	  Testing: Updated the DeferredSystemTest to not shut down the JVM
+
+2009-03-27 12:52  toke
+
+	* [r1218]
+	  Common/test/dk/statsbiblioteket/summa/common/util/NativeRunnerTest.java:
+	  
+	  Testing: Removed some tests from NativeRunnerTest as they did not
+	  run and NativeRunner is deprecated & unused
+
+2009-03-27 12:52  toke
+
+	* [r1217]
+	  Common/test/dk/statsbiblioteket/summa/common/filter/FilterPumpTest.java[DEL]:
+	  
+	  Testing: Removed FilterPumpTest as the only test in it used a
+	  deprecated class
+
+2009-03-27 11:34  mke
+
+	* [r1215] ChangeLog:
+	  
+	  Release Summa 1.3.0
 
 2009-03-27 11:20  toke
 
