@@ -1,13 +1,5 @@
 package dk.statsbiblioteket.summa.ingest.stream;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.SequenceInputStream;
-import java.util.*;
-
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
@@ -18,6 +10,12 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class FileReaderTest extends TestCase {
@@ -135,6 +133,37 @@ public class FileReaderTest extends TestCase {
         reader.close(true);
         assertTrue("The file should be renamed after close(true)",
                    new File(rootFileFoo20.getPath() + ".finito").exists());
+    }
+
+    public void testEmptyThenFull() throws Exception {
+        if (root.exists()) {
+            Files.delete(root);
+        }
+        root.mkdirs();
+        new File(root, "empty/moreempty").mkdirs();
+        new File(root, "full").mkdir();
+        new File(new File(root, "full"), "whatever.xml").createNewFile();
+
+        /*
+        empty
+        empty/moreempty
+        full/whatever.xml
+         */
+
+        Configuration conf = Configuration.newMemoryBased();
+        conf.set(FileReader.CONF_ROOT_FOLDER, root.toString());
+        conf.set(FileReader.CONF_RECURSIVE, true);
+        conf.set(FileReader.CONF_FILE_PATTERN, ".*\\.xml");
+        conf.set(FileReader.CONF_COMPLETED_POSTFIX, ".finito");
+        FileReader reader = new FileReader(conf);
+        assertTrue("There should be at least one file", reader.hasNext());
+        Payload payload = reader.next();
+        assertNotNull("A payload should be recoived", payload);
+        payload.close();
+        if (reader.hasNext()) {
+            fail("There should be no more files. Got " + reader.next());
+        }
+        reader.close(true);
     }
 
     // TODO: Check for file rename, depending on success
