@@ -16,6 +16,24 @@ import org.apache.commons.logging.LogFactory;
  * language supported by the Java runtime. The prime example here would be
  * Javascript.
  * <p/>
+ * The scripting environment has three global varibles injected into the global
+ * scope. These are;
+ * {@code payload}, {@code allowPayload}, and {@code feedbackMessage}.
+ * <p/>
+ * The {@code payload} variable holds the raw {@link Payload} object to be
+ * processed. The two other variables {@code allowPayload} and
+ * {@code feedbackMessage} basically holds the return values of the script.
+ * Most important is {@code allowPayload} - set this to a boolean value
+ * indicating whether this payload should dropped from the filter chain or not.
+ * If {@code allowPayload} is {@code false} it will be dropped from the
+ * processing chain. If it is {@code true} it will be kept and passed on for
+ * further processing. The default value for {@code allowPayload} is
+ * {@code true}.
+ * <p/>
+ * The {@code feedbackMessage} is mainly for debugging purposes. It may
+ * optionally be set to a string which will be printed in the log when the
+ * script completes.
+ * <p/>
  * You can find a list of supported scripting languages at
  * <a href="https://scripting.dev.java.net/">scripting.dev.java.net</a>.
  */
@@ -23,12 +41,51 @@ public class ScriptFilter extends ObjectFilterImpl {
 
     private static final Log log = LogFactory.getLog(ScriptFilter.class);
 
+    /**
+     * Whether or not to precompile the script. In almost all cases this
+     * should give a performance boost (gievn that the script engine supports
+     * compilation. Default is {@code true}
+     */
     public static final String CONF_COMPILE = "filter.script.compile";
+
+    /**
+     * The default value for the {@link #CONF_COMPILE} property
+     */
     public static final boolean DEFAULT_COMPILE = true;
 
+    /**
+     * URL to fetch the script file from. Alternatively define the script
+     * inlined in your configuration by setting the {@link #CONF_SCRIPT_INLINE}
+     * instead of using this property.
+     * <p/>
+     * Either {@link #CONF_SCRIPT_URL} or {@link #CONF_SCRIPT_INLINE}
+     * <i>must</i> be defined.
+     */
     public static final String CONF_SCRIPT_URL = "filter.script.url";
+
+    /**
+     * Contains the entire script to be executed. Alternatively fetch
+     * the script from an external resource by setting {@link #CONF_SCRIPT_URL}
+     * instead of using this property.
+     * <p/>
+     * Either {@link #CONF_SCRIPT_URL} or {@link #CONF_SCRIPT_INLINE}
+     * <i>must</i> be defined.
+     */
     public static final String CONF_SCRIPT_INLINE = "filter.script.inline";
+
+    /**
+     * If the scripting language can not be deducted from the URL supplied
+     * in {@link #CONF_SCRIPT_URL}, or if the script is inlined via
+     * {@link #CONF_SCRIPT_INLINE}, the scripting language is defined by this
+     * property.
+     * <p/>
+     * Default is <code>js</code> for Javascript.
+     */
     public static final String CONF_SCRIPT_LANG = "filter.script.lang";
+
+    /**
+     * Default value for the {@link #CONF_SCRIPT_LANG} property.
+     */
     public static final String DEFAULT_SCRIPT_LANG = "js";
 
     private ScriptEngine engine;
