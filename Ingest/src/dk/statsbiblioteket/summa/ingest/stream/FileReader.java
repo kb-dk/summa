@@ -22,24 +22,20 @@
  */
 package dk.statsbiblioteket.summa.ingest.stream;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.FileFilter;
-import java.util.*;
-import java.util.regex.Pattern;
-
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.util.ArrayUtil;
-import dk.statsbiblioteket.summa.common.Logging;
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.*;
+import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * This reader performs a recursive scan for a given pattern of files.
@@ -206,45 +202,48 @@ public class FileReader implements ObjectFilter {
      * file as the first entry.
      **/
     protected synchronized void updateToDo() {
-        File start = null;
         if (log.isTraceEnabled()) {
             log.trace("updateTodo() called with first todo-element: "
                       + (todo.size() > 0 ? todo.get(0) : "NA"));
         }
-        try {
-            if (todo.size() == 0 || todo.get(0).isFile()) {
-                return;
+        while (true) {
+            File start = null;
+            try {
+                if (todo.size() == 0 || todo.get(0).isFile()) {
+                    return;
+                }
+
+                // The first File is a folder
+                start = todo.remove(0);
+                if (!recursive) { // No expansion, just skip it
+                    log.debug("Skipping folder '" + start
+                              + "' as recursion is not enabled");
+                    continue;
+                }
+
+                // Get files from folder
+                File files[] = start.listFiles(dataAndFolderFilter);
+                if (files.length == 0) {
+                    log.trace("No files in '" + start + "'");
+                    continue;
+                }
+                Arrays.sort(files, fileComparator);
+                if (reverse_sort) {
+                    ArrayUtil.reverse(files);
+                }
+                //noinspection DuplicateStringLiteralInspection
+                log.debug("Queueing " + files.length + " files or folders from "
+                          + "'" + start + "'. Queue size before: "
+                          + todo.size());
+                if (log.isTraceEnabled()) {
+                    Logs.log(log, Logs.Level.TRACE, "Queueing Files: ", files);
+                }
+                todo.addAll(0, Arrays.asList(files));
+            } catch (Exception e) {
+                log.warn("Could not process '" + start + ". Skipping: "
+                         + e.getMessage(), e);
             }
-            // The first File is a folder
-            start = todo.remove(0);
-            if (!recursive) { // No expansion, just skip it
-                log.debug("Skipping folder '" + start
-                          + "' as recursion is not enabled");
-                updateToDo();
-                return;
-            }
-            File files[] = start.listFiles(dataAndFolderFilter);
-            if (files.length == 0) {
-                log.trace("No files in '" + start + "'");
-                return;
-            }
-            Arrays.sort(files, fileComparator);
-            if (reverse_sort) {
-                ArrayUtil.reverse(files);
-            }
-            //noinspection DuplicateStringLiteralInspection
-            log.debug("Queueing " + files.length + " data files from '"
-                      + start + "'. Queue size before: " + todo.size());
-            if (log.isTraceEnabled()) {
-                Logs.log(log, Logs.Level.TRACE, "Queueing Files: ", files);
-            }
-            todo.addAll(0, Arrays.asList(files));
-        } catch (Exception e) {
-            log.warn("Could not process '" + start + ". Skipping: "
-                     + e.getMessage(), e);
         }
-        log.trace("Recursively calling updateToDo");
-        updateToDo(); // Further descending if the first File is a folder
     }
 
     /**
@@ -472,16 +471,16 @@ public class FileReader implements ObjectFilter {
                     continue;
                 }
                 if (!(payload.getStream() instanceof RenamingFileStream)) {
-                    log.warn("Unexpected stream type when closing payload "
-                             + payload.getId() + ": "
-                             + payload.getStream().getClass().getName());
-                    continue;
+                    log.debug("RenamingFilestream not located when closing "
+                              + "payload " + payload.getId() + ". Got: "
+                              + payload.getStream().getClass().getName());
+                } else {
+                    RenamingFileStream stream =
+                            (RenamingFileStream)payload.getStream();
+                    log.debug("Closing stream " + stream.file
+                              + " with success: " + success);
+                    stream.setSuccess(success);
                 }
-                RenamingFileStream stream = 
-                        (RenamingFileStream)payload.getStream();
-                log.debug("Closing stream " + stream.file + " with success: "
-                          + success);
-                stream.setSuccess(success);
                 Logging.logProcess("FileReader",
                                    "Calling close in closeDelivered",
                                    Logging.LogLevel.TRACE, payload);
