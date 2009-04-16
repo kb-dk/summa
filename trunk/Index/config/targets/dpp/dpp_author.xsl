@@ -28,22 +28,30 @@
             </xsl:for-each>
         </Index:group>
 
+        <xsl:for-each select="mc:field[@type='700_00']">
+            <Index:field Index:repeat="false" Index:name="author_normalised" Index:navn="lfo"  Index:type="keyword" Index:boostFactor="10">
+                <xsl:call-template name="person_inverted"/>
+            </Index:field>
+        </xsl:for-each>
+
         <xsl:for-each select="mc:field[@type='558_00']/mc:subfield[@type='e']">
             <Index:field Index:name="author_descr" Index:navn="fb" Index:type="token" Index:repeat="true">
                 <xsl:value-of select="."/>
             </Index:field>
         </xsl:for-each>
 
-        <xsl:for-each select="mc:field[@type='700_00']/mc:subfield[@type='b']">
-            <Index:field Index:name="author_descr" Index:navn="fb" Index:type="token" Index:repeat="true">
-                <xsl:value-of select="."/>
-            </Index:field>
-        </xsl:for-each>
-
         <xsl:for-each select="mc:field[@type='700_00']">
-            <Index:field Index:repeat="false" Index:name="author_normalised" Index:navn="lfo"  Index:type="keyword" Index:boostFactor="10">
-                <xsl:call-template name="person_inverted"/>
-            </Index:field>
+            <xsl:if test="mc:subfield[@type='b']">
+                <Index:field Index:name="author_descr" Index:navn="fb" Index:type="token" Index:repeat="true">
+                    <xsl:value-of select="mc:subfield[@type='b']"/>
+                    <xsl:text> </xsl:text>
+                    <xsl:if test="mc:subfield[@type='h']">
+                        <xsl:value-of select="mc:subfield[@type='h']"/>
+                        <xsl:text> </xsl:text>
+                    </xsl:if>
+                    <xsl:value-of select="mc:subfield[@type='a']"/>
+                </Index:field>
+            </xsl:if>
         </xsl:for-each>
 
         <xsl:for-each select="mc:field[@type='710_00']">
