@@ -52,7 +52,7 @@ public class DelayFilterTest extends TestCase implements ObjectFilter {
 
     private static final long MS = 1000000; // Expressed in ns
     private static final long DELAY = 500 * MS; // More than GC + processing
-    private static final long PROCESSING = 100 * MS; // Processing < this
+    private static final long PROCESSING = 500 * MS; // Processing < this
 
     public void testPreDelay() {
         Configuration conf = Configuration.newMemoryBased(
@@ -142,8 +142,8 @@ public class DelayFilterTest extends TestCase implements ObjectFilter {
     private void assertBetween(String message, long ns,
                                long minNS, long maxNS) {
         if (ns < minNS || ns > maxNS) {
-            fail(message + ". " + ns + " did not satisfy "
-                 + minNS + " <= x <= " + maxNS);
+            fail(message + ". " + ns / 1000000D + " did not satisfy "
+                 + minNS / 1000000D + " <= x <= " + maxNS / 1000000D);
         }
     }
 
