@@ -34,6 +34,12 @@
             </Index:field>
         </xsl:for-each>
 
+        <xsl:for-each select="mc:field[@type='700_00']/mc:subfield[@type='b']">
+            <Index:field Index:name="author_descr" Index:navn="fb" Index:type="token" Index:repeat="true">
+                <xsl:value-of select="."/>
+            </Index:field>
+        </xsl:for-each>
+
         <xsl:for-each select="mc:field[@type='700_00']">
             <Index:field Index:repeat="false" Index:name="author_normalised" Index:navn="lfo"  Index:type="keyword" Index:boostFactor="10">
                 <xsl:call-template name="person_inverted"/>
@@ -129,7 +135,7 @@
     </xsl:template>
 
     <xsl:template name="corp">
-        <xsl:for-each select="mc:subfield[@type='a'or @type='s' or @type='e' or @type='c' or @type='i' or @type='k' or @type='j']">
+        <xsl:for-each select="mc:subfield[@type='a' or @type='s' or @type='e' or @type='c' or @type='i' or @type='k' or @type='j']">
             <xsl:choose>
                 <xsl:when test="position()=1">
                     <xsl:value-of select="."/>
