@@ -82,7 +82,7 @@ public class DumpFilter extends ObjectFilterImpl {
         }
         log.debug("Output folder is '" + outputStr + "'");
         if (!output.exists()) {
-            output.mkdir();
+            output.mkdirs();
         }
         basePattern =
                 Pattern.compile(conf.getString(CONF_BASEEXP, DEFAULT_BASEEXP));
