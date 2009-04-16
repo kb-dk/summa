@@ -467,7 +467,7 @@
                                     <xsl:text>Statsbiblioteket</xsl:text>
                                 </xsl:when>
                                 <xsl:when test="substring(.,1)='SB-e'">
-                                    <xsl:text>Internetværker (adgang fra Statsbiblioteket)</xsl:text>
+                                    <!--Not relevant <xsl:text>Internetværker (adgang fra Statsbiblioteket)</xsl:text>-->
                                 </xsl:when>
                                 <xsl:when test="substring(.,1)='SB-fag'">
                                     <xsl:text>Statsbiblioteket</xsl:text>
@@ -613,9 +613,9 @@
                                 <xsl:when test="substring(.,1)='Zool'">
                                     <xsl:text>Biobiblioteket, AU</xsl:text>
                                 </xsl:when>
-                                <xsl:otherwise>
-                                    <xsl:value-of select="."/>
-                                </xsl:otherwise>
+                                <!--Not relevant <xsl:otherwise>-->
+                                    <!--<xsl:value-of select="."/>-->
+                                <!--</xsl:otherwise>-->
                             </xsl:choose>
                         </Index:field>
                     </xsl:for-each>
