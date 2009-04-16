@@ -2,7 +2,6 @@ package dk.statsbiblioteket.summa.common.filter.object;
 
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.util.Streams;
 
 import javax.script.*;
 import java.io.*;
@@ -176,9 +175,12 @@ public class ScriptFilter extends ObjectFilterImpl {
     }
 
     protected boolean processPayload(Payload payload) throws PayloadException {
+        long time = System.nanoTime();
+
         // Put the payload into the engine so the script can access it
         engine.put("payload", payload);
         engine.put("allowPayload", Boolean.TRUE);
+        engine.put("feedbackMessage", null);
 
         if (compiledScript != null) {
             log.debug("Processing " + payload.getId()
@@ -202,15 +204,34 @@ public class ScriptFilter extends ObjectFilterImpl {
 
         }
 
+        // Calc processing time in ns
+        time = System.nanoTime() - time;
+
         try {
-                return (Boolean) engine.get("allowPayload");
-            } catch (ClassCastException e) {
-                throw new PayloadException("Script did not return a boolean, "
-                                            + "but a "
-                                            + engine.get("allowPayload"));
-            } catch (NullPointerException e) {
+            Boolean result = (Boolean) engine.get("allowPayload");
+
+            if (result == null) {
                 throw new PayloadException("Script returned null. It must "
                                            + "return a boolean");
+            }
+
+            String message = (String) engine.get("feedbackMessage");
+            if (result) {
+                log.debug("Processed " + payload.getId() + " in "
+                          + (time/1000000D) + "ms"
+                          + (message == null ? "" : (": " + message)));
+            } else {
+                log.debug("Discarded " + payload.getId() + " in "
+                          + (time/1000000D) + "ms"
+                          + (message == null ? "" : (": " + message)));
+            }
+
+            return result;
+            
+        } catch (ClassCastException e) {
+            throw new PayloadException("Script did not return a boolean, "
+                                       + "but a "
+                                       + engine.get("allowPayload"));
         }
     }
 }

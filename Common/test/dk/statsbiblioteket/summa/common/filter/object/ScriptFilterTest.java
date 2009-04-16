@@ -94,6 +94,7 @@ public class ScriptFilterTest extends TestCase {
             "}"+
             "if (record.getId().endsWith('taboo')) {"+
             "    allowPayload = false;" +
+            "    feedbackMessage = 'Record id ends with \"taboo\"';" +
             "}"));
 
         PayloadBufferFilter buf = prepareFilterChain(
