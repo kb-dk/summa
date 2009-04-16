@@ -19,17 +19,17 @@
  */
 package dk.statsbiblioteket.summa.common.filter.object;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.DummyFilter;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.Record;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
-import java.util.Arrays;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * FilterSequence Tester.
@@ -57,14 +57,15 @@ public class FilterSequenceTest extends TestCase implements ObjectFilter {
 
     public void testSimpleSequence() throws Exception {
         Configuration seqConf = Configuration.newMemoryBased();
-        seqConf.set(FilterSequence.CONF_FILTERS, new String[]{"a", "b"});
+        List<Configuration> seqElements =
+                seqConf.createSubConfigurations(FilterSequence.CONF_FILTERS, 2);
 
-        Configuration aConf = seqConf.createSubConfiguration("a");
+        Configuration aConf = seqElements.get(0); // a
         aConf.set(FilterSequence.CONF_FILTER_CLASS, DummyFilter.class);
         aConf.set("key", "aFoo");
         aConf.set("value", "aBar");
 
-        Configuration bConf = seqConf.createSubConfiguration("b");
+        Configuration bConf = seqElements.get(1); // b
         bConf.set(FilterSequence.CONF_FILTER_CLASS, DummyFilter.class);
         bConf.set("key", "bFoo");
         bConf.set("value", "bBar");

@@ -26,6 +26,7 @@ import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.configuration.storage.RemoteStorageMBean;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
+@SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "mke")
@@ -63,6 +64,7 @@ public class ConfigurationStorageTestCase extends TestCase {
         assertNull("Purging a key should remove it from storage", storage.get (testPurgeKey));
     }
 
+    /* This fails when called directly, by design */
     public void testConfigurationInstantiation () throws Exception {
         System.out.println (testName + ": Testing instantiation with Configuration");
 
@@ -72,8 +74,6 @@ public class ConfigurationStorageTestCase extends TestCase {
                 Configuration.create(storage.getClass(), conf);
         assertEquals("value", testStorage.get("key"));
     }
-
-    
 }
 
 
