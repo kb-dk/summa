@@ -1,0 +1,8 @@
+<bundle>
+  <bundleId>unit-test</bundleId>
+  <autoStart>false</autoStart>
+  <fileList>
+    <file>service.xml</file>
+    <file>config/configuration.xml</file>
+  </fileList>
+</bundle>
