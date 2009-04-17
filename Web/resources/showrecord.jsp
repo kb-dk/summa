@@ -7,22 +7,28 @@
     String basepath = request.getSession().getServletContext().getRealPath("/");
     request.setCharacterEncoding("UTF-8");
 
-    String record_id;
-    String record_type = "";
 
-    record_id = request.getParameter("record_id");
-    if (record_id != null && !record_id.equals("")) {
-        record_type = record_id.substring(0, record_id.indexOf(":")); // extract the first part of the id - ie. the type
-    }
-    String record_html = "";
-
-    File show_xslt = new File(basepath + "xslt/full_record/full_record_show.xsl");
-
+    String record_id = request.getParameter("record_id");
     WebServices services = WebServices.getInstance();
     String xml_record = (String) services.execute("summagetrecord", record_id);
-    Document dom_record = XmlOperations.stringToDOM(xml_record);
+    String record_html = "";
 
-    record_html = XmlOperations.xsltTransform(dom_record, show_xslt);
+
+    if (record_id == null || record_id.equals("") || record_id.indexOf(":") == -1) {
+	if (xml_record.indexOf("<content>") == -1) {
+	    record_html = XmlOperations.entityEncode(xml_record).replace("\n", "<br />\n");
+	} else {
+	    // Stupid double-work, but hey... This is just a quick web site
+	    record_html = xml_record.substring(xml_record.indexOf("<content>") + 9, xml_record.lastIndexOf("</record>")).replace("\n", "<br />\n");
+	}
+    } else {
+        String record_type = record_id.substring(0, record_id.indexOf(":")); // extract the first part of the id - ie. the type
+	File show_xslt = new File(basepath + "xslt/full_record/full_record_show.xsl");
+	
+	Document dom_record = XmlOperations.stringToDOM(xml_record);
+	
+	record_html = XmlOperations.xsltTransform(dom_record, show_xslt);
+    }
 %>
 <html>
 <head>
