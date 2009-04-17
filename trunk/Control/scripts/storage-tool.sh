@@ -66,7 +66,7 @@ SECURITY_POLICY="$DEPLOY/config/.server.policy"
 #
 
 DEPLOY=`dirname $0`/..
-pushd $DEPLOY > /dev/null
+#pushd $DEPLOY > /dev/null
 
 # Helper function to set properties in a properties file
 # $1 : property name
@@ -110,7 +110,7 @@ do
         fi
     done
 done
-CLASSPATH=$CLASSPATH:config/:$MAINJAR
+CLASSPATH=$CLASSPATH:$DEPLOY/config/:$MAINJAR
 
 # Check JAVA_HOME
 DEFAULT_JAVA_HOME=/usr/lib/jvm/java
@@ -153,4 +153,4 @@ fi
 
 $COMMAND "$@"
 
-popd > /dev/null
+#popd > /dev/null
