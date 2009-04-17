@@ -322,6 +322,12 @@
             </classes>
         </war>
     </target>
+
+    <target name=".jar" depends=".search.war, .storage.war, .website.war">
+
+    </target>
+
+
     <target name=".release.search" depends=".release.depends, .search.war, .storage.war, .website.war, doc">
 
         <mkdir dir="${dist.dir}"/>
