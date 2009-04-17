@@ -46,9 +46,9 @@
             <zipfileset dir="${basedir}/../../FacetBrowser" includes="summa-*-${summa.version}.jar" prefix="${root}/lib"/>
             <zipfileset dir="${basedir}/../../Control" includes="summa-*-${summa.version}.jar" prefix="${root}/lib"/>
             <zipfileset dir="${basedir}/../../Workflow" includes="summa-*-${summa.version}.jar" prefix="${root}/lib"/>
-            <zipfileset dir="${basedir}/../../Web/dist" includes="summa-web-search.war" prefix="${root}/lib"/>
-            <zipfileset dir="${basedir}/../../Web/dist" includes="summa-web-storage.war" prefix="${root}/lib"/>
-            <zipfileset dir="${basedir}/../../Web/dist" includes="summa-web-website.war" prefix="${root}/lib"/>
+            <zipfileset dir="${basedir}/../../Web/dist" includes="summa-web-search.war" prefix="${root}/web"/>
+            <zipfileset dir="${basedir}/../../Web/dist" includes="summa-web-storage.war" prefix="${root}/web"/>
+            <zipfileset dir="${basedir}/../../Web/dist" includes="summa-web-website.war" prefix="${root}/web"/>
 
             <!-- 3rd party libs -->
             <zipfileset dir="${basedir}/../../lib" includes="*.jar" prefix="${root}/lib"/>
