@@ -24,7 +24,7 @@ set MAINCLASS=dk.statsbiblioteket.summa.storage.api.tools.StorageTool
 rem echo %MAINCLASS% 
 rem echo %1%
 
-set JVM_OPTS=-Dsumma.configuration=%1%
+set JVM_OPTS=-Dsumma.configuration=%CONFIGURATION%
 
 rem
 rem DON'T EDIT BEYOND THIS POINT
@@ -36,5 +36,5 @@ rem echo %NEWCLASSPATH%
 rem COMMAND="$JAVA_HOME/bin/java $JVM_OPTS $SECURITY_POLICY $JMX -cp $CLASSPATH $MAINCLASS"
 
 @echo on
-java %JVM_OPTS% -cp %NEWCLASSPATH% %MAINCLASS% %2 %3
+java %JVM_OPTS% -cp %NEWCLASSPATH% %MAINCLASS% %*%
 
