@@ -226,6 +226,9 @@ public class LuceneFacetBuilder extends BuilderImpl {
                         break;
                     }
                     String shortTerm = term.text();
+                    if ("".equals(shortTerm)) {
+                        continue; // Just ignore empty tags
+                    }
                     lastTerm = shortTerm;
                     if (log.isTraceEnabled()) {
                         log.trace("Adding tag '" + shortTerm
@@ -348,6 +351,9 @@ public class LuceneFacetBuilder extends BuilderImpl {
                     continue;
                 }
                 for (String term: terms) {
+                    if ("".equals(term)) {
+                        continue; // Ignore empty terms
+                    }
                     if (log.isTraceEnabled()) {
                         //noinspection DuplicateStringLiteralInspection
                         log.trace("Adding Tag " + term + " to Facet"
