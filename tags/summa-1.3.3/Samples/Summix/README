@@ -1,0 +1,65 @@
+README for the Summix, Summa Example
+------------------------------------
+
+Copyright :    Refind SMBA, April 2009
+Author    :    Mikkel Kamstrup Erlandsen <mikkel.kamstrup@gmail.com>
+
+About Summix
+------------
+Summix is a simple example of a Summa packaging. You can run it out of the
+box to set up a search engine on top of the very small collection of OAI
+data in the data/oai/minidump directory.
+
+Running this example
+--------------------
+Start a Storage instance. The database will be stored in the summix directory
+in the 'storage' folder:
+
+  bin/summa-storage.sh config/storage.xml &
+
+With the storage running in the background we are ready to put some data in it.
+We start the ingester in the foreground because it exits quite quickly:
+
+  bin/summa-filter.sh config/ingest.xml
+  
+When the ingester exits we are ready to index the data. This can also be done
+in the foreground and takes only a little longer than the ingest:
+
+  bin/summa-filter.sh config/indexer.xml
+
+Assuming this all runs without errors we can now start the search engine in the
+background:
+
+  bin/summa-searcher.sh config/searcher.xml &
+
+
+Testing the storage and search engine
+-------------------------------------
+If you are wondering how to search and/or retrieve the data here's how. Try
+doing a test search:
+
+  bin/search-tool.sh search.document.query=bar
+  
+With the sample OAI minidump this gives two hits (and a considerable amount of
+XML on your console :-)).
+
+If you drill into the result set you should be able to pull out a field called
+'recordID'. I found one called:
+
+  oai:doaj-articles:7286e8e5f5f74b32fe85c9915e5e4ad5
+
+We can now extract this record in full from the storage by issuing:
+
+  bin/storage-tool-sh get oai:doaj-articles:7286e8e5f5f74b32fe85c9915e5e4ad5
+  
+This should print out the original raw XML as found when the record was
+ingested.
+
+Tips and Tricks
+---------------
+Try running search-tool.sh and storage-tool.sh without arguments to get basic
+usage tips. They can do a lot more than showed here.
+
+
+Enjoy!
+
