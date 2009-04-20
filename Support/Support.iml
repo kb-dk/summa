@@ -19,6 +19,7 @@
     <orderEntry type="library" name="commons-logging-1.1" level="project" />
     <orderEntry type="library" name="lucene-core" level="project" />
     <orderEntry type="library" name="lucene-queries" level="project" />
+    <orderEntry type="library" name="h2" level="project" />
     <orderEntryProperties />
   </component>
 </module>
