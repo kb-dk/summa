@@ -1,4 +1,45 @@
 =======================
+2009-04-20: Summa 1.3.2
+=======================
+
+ * Some tweaks to the commands in control-shell (SB):
+
+   - 'repo' no longer requires a -l to work, -l is the default
+
+   - 'deploy' defaults to to target host 'localhost' and now displays a better
+     help message
+
+   - Prettify some status codes in the 'clients -s' and 'status' comamnds
+
+ * Don't default to setting summa.configuration=configuration.xml in the
+   'start' command of the client shell. Just allow
+   Configuration.getSystemConfiguration() in the service Launcher class
+   to autodetect the config if the system property summa.configuration is unset.
+   This allows for setting summa.configuration in places like
+   bundles specs (service.xml and client.xml) and other useful stuff (SB)
+
+ * The LuceneFacetBuilder did not discard empty Tags, which it does now (Refind)
+
+ * The Windows commands search-tool.bat and storage-tool.bar in Samples/Summix
+   now supports an arbitrary number of arguments (Refind)
+
+ * The storage-tool.sh and search-tool.sh scripts from the Control module
+   are now runnable from everywhere (SB)
+
+ * When clicking a record in the demo website you now get the raw record
+   contents dumped. This way the website can display all kinds of records even
+   though no presentation XSLTs are provided (SB)
+
+ * Include .war files from the Web module in Summix (SB)
+
+ * Bugfix: When non-existing nested folders were stated in the
+	       DumpFilter, it did not create the folders (SB)
+
+ * Bugfix: Some folder structures triggered skipping of valid files
+           in the FileReader (SB)
+
+
+=======================
 2009-04-16: Summa 1.3.1
 =======================
 
