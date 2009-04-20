@@ -194,14 +194,13 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                 continue;
             }
 
-            if (spec.isAutoStart ()) {
+            if (spec.isAutoStart()) {
                 try {
                     log.info("Auto-starting service '" + instanceId + "'");
-                    log.warn("FIXME: confLocation hardcoded to 'configuration.xml'");
 
                     /* This method call will only start the service if it isn't
                      * already running: */
-                    startService(instanceId, "configuration.xml");
+                    startService(instanceId, null);
                 } catch (Exception e) {
                     log.error("Failed to auto-start service '" + instanceId
                               + "': " + e.getMessage(), e);
@@ -504,7 +503,12 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         stub.addSystemProperty(Service.CONF_SERVICE_ID, instanceId);
         stub.addSystemProperty(Service.CONF_SERVICE_BASEPATH,
                 serviceFile.getParent());
-        stub.addSystemProperty("summa.configuration", confLocation);
+
+        if (confLocation != null) {
+            log.info("Overriding default system configuration for "
+                     + instanceId + ", using " + confLocation);
+            stub.addSystemProperty("summa.configuration", confLocation);
+        }
 
 
         if (log.isDebugEnabled()) {
