@@ -1,8 +1,175 @@
-2009-04-16 10:25  mke
+2009-04-20 10:00  mke
 
-	* [r1276] build.properties, ChangeLog, NEWS
+	* [r1294] ., ClusterExtractor, Common, Control, FacetBrowser,
+	  Index, Ingest, Samples, Samples/Summix, Search, Storage, Support,
+	  Web, Workflow, doc:
+	  
+	  Set a bunch of ignore props throughout the Summa project to make
+	  Subversion command line usage easier
 
-	Release Summa 1.3.1
+2009-04-20 09:44  mke
+
+	* [r1293]
+	  Control/src/dk/statsbiblioteket/summa/control/api/InvalidClientStateException.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/shell/ClientsCommand.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/shell/DeployCommand.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/shell/RepositoryCommand.java:
+	  
+	  Default to target host 'localhost' in the 'deploy' command of
+	  ControlShell and add a better explanation of the formatting of
+	  the target host parameter, basically
+	  '[[user@]target-host[:port]]'
+	  
+	  Prettify client status output in ControlShell, this is partially
+	  achieved by simplifying the message in
+	  InvalidClientStateExceptions
+	  
+	  Default to -l in the 'repo' command of ControlShell (which means
+	  "list contents")
+
+2009-04-20 09:11  mke
+
+	* [r1292]
+	  Control/src/dk/statsbiblioteket/summa/control/client/Client.java,
+	  Control/src/dk/statsbiblioteket/summa/control/client/shell/StartServiceCommand.java,
+	  Control/src/dk/statsbiblioteket/summa/control/service/Launcher.java,
+	  build.properties:
+	  
+	  Bump Summa version to 1.3.2-rc
+	  
+	  Don't default to setting summa.configuration=configuration.xml in
+	  StartServiceCommand and in Client. Just allow
+	  Configuration.getSystemConfiguration() in Launcher to autodetect
+	  the config if the system property summa.configuration is unset.
+	  This allows for setting summa.configuration in places like
+	  bundles specs (service.xml and client.xml) and other useful stuff
+
+2009-04-19 17:13  tokerefind
+
+	* [r1291]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/lucene/LuceneFacetBuilder.java:
+	  
+	  Bugfix: The LuceneFacetBuilder did not discard empty Tags
+
+2009-04-18 23:28  tokerefind
+
+	* [r1290] Samples/Summix/bin/search-tool.bat,
+	  Samples/Summix/bin/storage-tool.bat:
+	  
+	  Updated the Windows versions of search and storage tools to
+	  support an arbitrary number of commands
+
+2009-04-17 14:50  toke
+
+	* [r1289] Web/resources/showrecord.jsp:
+	  
+	  Modified showrecord in the demo web site to do a raw dump of the
+	  Record if the expected id was not found
+
+2009-04-17 11:25  mke
+
+	* [r1288] Samples/Summix/build.xml:
+	  
+	  Put .war files for Summix inside a web/ folder
+
+2009-04-17 11:18  toke
+
+	* [r1287] Control/scripts/search-tool.sh,
+	  Control/scripts/storage-tool.sh:
+	  
+	  Updated tools to be runnable from everywhere
+
+2009-04-17 09:17  toke
+
+	* [r1286] Samples/Summix/build.xml, Samples/build.xml,
+	  Web/build.xml:
+	  
+	  Feature: Made Summix include WAR-files from the Web-module
+
+2009-04-16 13:36  nig
+
+	* [r1285] Index/config/targets/dub,
+	  Index/config/targets/dub/dub_author.xsl,
+	  Index/config/targets/dub/dub_identifiers.xsl,
+	  Index/config/targets/dub/dub_index.xsl,
+	  Index/config/targets/dub/dub_lma.xsl,
+	  Index/config/targets/dub/dub_material.xsl,
+	  Index/config/targets/dub/dub_notes.xsl,
+	  Index/config/targets/dub/dub_other.xsl,
+	  Index/config/targets/dub/dub_publisher.xsl,
+	  Index/config/targets/dub/dub_short_format.xsl,
+	  Index/config/targets/dub/dub_subject.xsl,
+	  Index/config/targets/dub/dub_title.xsl:
+	  
+	  dub(dansk udenrigspolitisk bibliografi) i Summa
+
+2009-04-16 12:55  toke
+
+	* [r1284]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/DumpFilter.java:
+	  
+	  Bugfix: When non-existing nested folders were stated in the
+	  DumpFilter, it did not create the folders
+
+2009-04-16 12:49  toke
+
+	* [r1283]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/FileReader.java,
+	  Ingest/test/dk/statsbiblioteket/summa/ingest/stream/FileReaderTest.java:
+	  
+	  Bugfix: Some folder structures triggered skipping of valid files
+	  in the FileReader. The bug was not reproducable in unit tests and
+	  the faulty code segment has fundamentally changed with regards to
+	  its logic
+
+2009-04-16 12:23  nig
+
+	* [r1282] Index/config/targets/dkb/dkb_author.xsl,
+	  Index/config/targets/dpp/dpp_author.xsl:
+	  
+	  bugfixes
+
+2009-04-16 11:30  nig
+
+	* [r1281] Index/config/targets/dpp,
+	  Index/config/targets/dpp/dpp_author.xsl,
+	  Index/config/targets/dpp/dpp_identifiers.xsl,
+	  Index/config/targets/dpp/dpp_index.xsl,
+	  Index/config/targets/dpp/dpp_lma.xsl,
+	  Index/config/targets/dpp/dpp_material.xsl,
+	  Index/config/targets/dpp/dpp_notes.xsl,
+	  Index/config/targets/dpp/dpp_other.xsl,
+	  Index/config/targets/dpp/dpp_publisher.xsl,
+	  Index/config/targets/dpp/dpp_short_format.xsl,
+	  Index/config/targets/dpp/dpp_subject.xsl,
+	  Index/config/targets/dpp/dpp_title.xsl:
+	  
+	  dpp (danske politiske partier) i Summa
+
+2009-04-16 10:59  dorete
+
+	* [r1280] Index/config/targets/horizon/horizon_index.xsl:
+	  
+	  Ændring af location_normalised
+
+2009-04-16 10:47  nig
+
+	* [r1279] Index/config/targets/bib/bib_short_format.xsl,
+	  Index/config/targets/dkb/dkb_short_format.xsl:
+	  
+	  bugfixes
+
+2009-04-16 09:35  nig
+
+	* [r1278] Index/config/targets/dkb/dkb_author.xsl:
+	  
+	  dkb i summa
+
+2009-04-16 08:20  mke
+
+	* [r1276] ChangeLog, NEWS, build.properties:
+	  
+	  Release Summa 1.3.1
 
 2009-04-16 08:14  toke
 
