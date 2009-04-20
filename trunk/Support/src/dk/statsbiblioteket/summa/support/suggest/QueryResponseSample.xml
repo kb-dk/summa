@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<QueryResponse xmlns="http://statsbiblioteket.dk/summa/2009/QueryResponse" version="1.0" query="Foo" maxResults="10">
+    <suggestions>
+        <suggestion hits="3456" queryCount="56">foo fighters</suggestion>
+        <suggestion hits="43567" queryCount="12">foo bears</suggestion>
+        <suggestion hits="23" queryCount="11">foo bar</suggestion>
+        <suggestion hits="4563454" queryCount="2">fooey kabloey</suggestion>
+    </suggestions>
+</QueryResponse>
+
+
