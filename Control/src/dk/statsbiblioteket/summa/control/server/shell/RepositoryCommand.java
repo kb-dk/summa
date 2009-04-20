@@ -25,7 +25,7 @@ public class RepositoryCommand extends Command {
         this.cm = cm;
         this.controlAddress = controlAddress;
 
-        setUsage("repo <action>");
+        setUsage("repo [action]");
 
         installOption("l", "list", false, "List all available bundles");
         installOption("r", "regex", true, "List all available bundles matching"
@@ -42,8 +42,7 @@ public class RepositoryCommand extends Command {
         } else if (hasOption("r")) {
             doListBundles (ctx, getOption("r"));
         } else {
-            ctx.error ("No valid action switches, nothing to do."
-                       + " Try 'help " + getName() + "'");
+            doListBundles(ctx, null);
         }
     }
 

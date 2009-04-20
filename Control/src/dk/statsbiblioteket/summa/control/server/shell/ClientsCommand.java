@@ -3,10 +3,7 @@ package dk.statsbiblioteket.summa.control.server.shell;
 import dk.statsbiblioteket.summa.common.shell.Command;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.control.api.ControlConnection;
-import dk.statsbiblioteket.summa.control.api.ClientConnection;
-import dk.statsbiblioteket.summa.control.api.Status;
-import dk.statsbiblioteket.summa.control.api.ClientDeployer;
+import dk.statsbiblioteket.summa.control.api.*;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
 
@@ -56,7 +53,7 @@ public class ClientsCommand extends Command {
                 header += "\tStatus";
             }
             if (doExtended) {
-                header += "\tBundle, Configuration, Address";
+                header += "\tBundle, Address";
             }
             ctx.info (header);
 
@@ -73,10 +70,10 @@ public class ClientsCommand extends Command {
                         } else {
                             msg += "\t" + conn.getStatus();
                         }
+                    } catch (InvalidClientStateException e) {
+                        msg += "\t" + e.getMessage();
                     } catch (Exception e) {
-                        msg += "\tError";
-                        ctx.error ("When contacting '" + client + "': "
-                                   +e.getMessage());
+                        msg += "\tConnection error: " + e.getMessage();                        
                     }
                 }
                 if (doExtended) {
@@ -85,8 +82,6 @@ public class ClientsCommand extends Command {
 
                         String bundleId = conf.getString (ClientDeployer.CONF_DEPLOYER_BUNDLE,
                                                           "ERROR");
-                        String confLoc = conf.getString (ClientDeployer.CONF_CLIENT_CONF,
-                                                         "ERROR");
                         String host = conf.getString (ClientConnection.CONF_REGISTRY_HOST,
                                                       "ERROR");
                         String port = conf.getString (ClientConnection.CONF_REGISTRY_PORT,
@@ -96,7 +91,7 @@ public class ClientsCommand extends Command {
                             address = "//" + host + ":" + port + "/" + client;
                         }
 
-                        msg += "\t" + bundleId + ", " + confLoc + ", " + address;
+                        msg += "\t" + bundleId + ", " + address;
                     } catch (Exception e) {
                         msg += "\tError";
                         ctx.error ("When contacting '" + client + "': "

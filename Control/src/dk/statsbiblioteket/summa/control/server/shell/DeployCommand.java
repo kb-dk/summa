@@ -33,7 +33,7 @@ public class DeployCommand extends Command {
                          String controlAddress) {
         super("deploy", "Deploy a client bundle");
 
-        setUsage("deploy [options] <bundle-id> <instance-id> <target-host>");
+        setUsage("deploy [options] <bundle-id> <instance-id> [[user@]target-host[:port]]");
 
         installOption ("t", "transport", true,
                        "Which deployment transport to use. Allowed values are"
@@ -58,14 +58,20 @@ public class DeployCommand extends Command {
         log.trace("invoke called");
         /* Extract and validate arguments */
         String[] args = getArguments();
-        if (args.length != 3) {
-            ctx.error("You must provide exactly 3 arguments. Found "
+        if (args.length < 2) {
+            ctx.error("You must provide at least 2 arguments. Found "
                       + args.length);
             return;
         }
         String bundleId = args[0];
         String instanceId = args[1];
-        String target = args[2];
+        String target = "localhost";
+
+        if (args.length >= 3) {
+            target = args[2];
+        } else {
+            ctx.info("No target host specified, defaulting to 'localhost´");
+        }
 
         log.trace("invoke called with bundleId '" + bundleId
                   + "', instanceId '"
