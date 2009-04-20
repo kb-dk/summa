@@ -6,13 +6,21 @@ package dk.statsbiblioteket.summa.control.api;
  */
 public class InvalidClientStateException extends RuntimeException {
 
+    private String clientId;
+
     public InvalidClientStateException (String clientId, String msg) {
-        super ("Error connecting to '" + clientId + "': " + msg);
+        super (msg);
+        this.clientId = clientId;
     }
 
     public InvalidClientStateException (String clientId, String msg,
                                         Throwable cause) {
-        super ("Error connecting to '" + clientId + "': " + msg, cause);
+        super (msg, cause);
+        this.clientId = clientId;
+    }
+
+    public String getClientId() {
+        return clientId;
     }
 
 }
