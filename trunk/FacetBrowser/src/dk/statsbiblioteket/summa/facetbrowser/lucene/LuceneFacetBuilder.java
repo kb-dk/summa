@@ -227,7 +227,10 @@ public class LuceneFacetBuilder extends BuilderImpl {
                     }
                     String shortTerm = term.text();
                     if ("".equals(shortTerm)) {
-                        continue; // Just ignore empty tags
+                        if (!terms.next()) {
+                            break;
+                        }
+                        continue; // We skip empty tags
                     }
                     lastTerm = shortTerm;
                     if (log.isTraceEnabled()) {
