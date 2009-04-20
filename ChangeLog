@@ -1,3 +1,26 @@
+2009-04-20 11:40  toke
+
+	* [r1298]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/lucene/LuceneFacetBuilder.java:
+	  
+	  Potential bugfix: Empty values in the tagbuilder might have
+	  resulted in an off-by-one error or (unlikely) a non-terminating
+	  facet build. This bug was introduced by the empty-Tag fix
+
+2009-04-20 11:26  toke
+
+	* [r1297]
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/LuceneSearchNode.java:
+	  
+	  Micro bugfix: The check for location == null in managedOpen in
+	  LuceneSearchNode was at the wrong place
+
+2009-04-20 10:18  mke
+
+	* [r1295] ChangeLog, NEWS, build.properties:
+	  
+	  Release Summa 1.3.2
+
 2009-04-20 10:00  mke
 
 	* [r1294] ., ClusterExtractor, Common, Control, FacetBrowser,
