@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+
+<project default="release" name="Samples" basedir=".">
+
+    <property file="${basedir}/../build.properties"/>
+    
+    <property name="dist.dir" value="${basedir}/dist"/>
+    <property name="doc.dir" value="${basedir}/${summa.doc.dir}"/>
+    <property name="apidocs.dir" value="${basedir}/${summa.apidocs.dir}"/>
+    <property name="lib.dir" value="${basedir}/lib"/>
+    <property name="tmp.dir" value="${basedir}/tmp"/>
+    
+    <tstamp>
+        <format property="build.time" pattern="MM/dd/yyyy HH:mm"/>
+    </tstamp>
+
+    <!-- Run all samples -->
+    <target name="release">
+        <ant dir="Summix" inheritall="false"/>
+    </target>
+    
+    <!-- Dist clean of all samples -->
+    <target name="distclean">
+        <ant dir="Summix" inheritall="false" target="distclean"/>
+    </target>
+    
+    <!-- Basic clean of all samples -->
+    <target name="clean">
+        <ant dir="Summix" inheritall="false" target="clean"/>
+    </target>
+
+</project>

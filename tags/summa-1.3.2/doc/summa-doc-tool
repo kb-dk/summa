@@ -1,0 +1,593 @@
+#!/usr/bin/python
+
+#
+# summa-doc-tool
+# Author: Mikkel Kamstrup Erlandsen
+# Copyright (C) 2008, State and University Library of Denmark
+#
+# summa-doctool is used to extract documentation for configuration
+# properties defined in the Summa source code.
+#
+# To get a short help type:
+#
+#   summa-doc-tool -h
+#
+# To write a summary of all properties to stdout run the following command
+# from the Summa/ root dir::
+#
+#   summa-doc-tool -r */src
+#
+# The proerpties within the source code must comply to the naming conventions
+# used in Summa. This means that properties must be named as
+#
+#   public static final String CONF_<NAME> = "summa.foobar";
+#
+# A default value for the <NAME> property is defined as:
+#
+#   public static final <type> DEFAULT_<NAME> = 27;
+#
+
+
+import sys
+import os
+import re
+from optparse import OptionParser
+from datetime import datetime
+
+class JavaMetaProp :
+	def __init__ (self, parent_class, name, default=None, doc=None, codename=None):
+		self._name = name
+		self._parent_class = parent_class
+		self._default  = default
+		self._doc = doc
+		self._codename = codename
+
+	def set_default (self, default):
+		self._default = default
+	
+	def has_default (self):
+		return self._default != None
+
+	def get_default (self):
+		return self._default
+
+	def get_name (self):
+		return self._name
+
+	def get_class (self):
+		return self._parent_class
+	
+	def get_doc (self):
+		return self._doc
+		
+	def set_doc (self, doc):
+		self._doc = doc
+		
+	def set_codename (self, codename):
+		self._codename = codename
+	
+	def get_codename (self):
+		return self._codename
+	
+	def __str__ (self):
+		s = "%s, codename %s" % (self._name, self._codename)
+		if self._default != None:
+			s = s + ", default is %s:\n%s" % (self._default, self._doc)
+		else:
+			s = s + ", no default:\n%s" % self._doc
+		return s 
+
+class JavaMetaClass :
+	def __init__ (self, name, package):
+		self._name = name
+		self._package = package
+		self._props = {} # name -> JavaMetaProp mapping
+		self._children = {} # full_name -> JavaMetaClass map
+		self._parents = {} # full_name -> JavaMetaClass map
+		self._inh_decl = None #  the 'extends Foo implements Bar' part of the class declaration
+		self._parent_names = []
+	
+	def add_prop (self, prop):
+		self._props[prop.get_name()] = prop
+	
+	def get_prop (self, name):
+		return self._props[name]
+	
+	def iter_props (self):
+		return self._props.itervalues()
+	
+	def num_props (self):
+		return len(self._props)
+	
+	def full_name (self):
+		return self._package + '.' + self._name
+	
+	def get_name (self):
+		return self._name
+
+	def add_child (self, child, notify_child= True):
+		self._children[child.full_name()] = child
+		if notify_child:
+			child.add_parent(self, notify_parent=False)
+	
+	def add_parent (self, parent, notify_parent=True, import_props=True):
+		self._parents[parent.full_name()] = parent
+		
+		#
+		# Import properties from parents recursively upwards
+		#
+		if import_props:
+			for parent in self.get_all_parents():
+				for prop in parent.iter_props():
+					self.add_prop(prop)
+		
+		if notify_parent:
+			parent.add_child (self, notify_child=False)
+	
+	def has_parent (self, full_name):
+		if self.full_name() == full_name:
+			return True
+		for parent in self._parents.itervalues():
+			if parent.has_parent(full_name):
+				return True
+		return False
+	
+	def get_all_parents (self):
+		result = set()
+		for parent in self._parents.itervalues():
+			result.add(parent)
+			result = result.union(parent.get_all_parents())
+		return list(result)
+	
+	def get_all_parent_names (self):
+		return [p.full_name() for p in self.get_all_parents()]
+	
+	def get_parent_names (self):
+		return self._parent_names
+	
+	def get_parents (self):
+		return self._parents.values()
+	
+	def get_children (self):
+		return self._children.values()
+		
+	def get_all_children (self):
+		result = set()
+		for child in self._children.itervalues():
+			result.add(child)
+			result = result.union(child.get_all_parents())
+		return list(result)
+	
+	def set_inheritance_decl (self, decl):
+		self._inh_decl = decl
+		decls = self._parse_inh_decl (decl)
+		
+		if len(decls) == 0:
+			return
+		
+		self._parent_names = decls
+	
+	def __str__ (self):
+		s = "Class: %s. Parent classes: %s" % (self.full_name(), self._parent_names)
+		for prop in self._props.itervalues():
+			s = s + "\n-------------------------------\n%s" % prop
+		return s + "\n================================"
+	
+	def _parse_inh_decl (self, decl):
+		"""
+		Returns a list which first element is the class which is
+		extended, possibly None, and any following elements are
+		implemented interfaces		
+		"""
+		#base_classes = re.search(r"(?<=extends )\s*(.*)\s*(?=($|implements))", decl)
+		#if base_classes != None:
+		#	base_classes = base_classes.group(1).split(",")
+		#	for i in range(len(base_classes)):
+		#		base_classes[i] = base_classes[i].strip()
+		#
+		#interfaces = []
+		#interface_decl = re.search(r"(?<=implements )\s*(.*)", decl)
+		#if interface_decl != None:
+		#	interfaces = interface_decl.group(1).split(",")
+		#	for i in range(len(interfaces)):
+		#		interfaces[i] = interfaces[i].strip()
+		#
+		#if base_classes != None:
+		#	interfaces.extend(base_classes)
+		#
+		pre_parents = decl.split(" ")
+		parents = []
+		for p in pre_parents:
+			parents.extend(p.split(","))
+		
+		parents = map(lambda x : x.strip(), parents)
+		parents = filter(lambda x : x not in ["", ",", " ", "implements", "extends"], parents)
+		
+		return parents
+ 
+class JavaMetaRepo :
+	def __init__ (self):
+		self._classes = {} # full_name -> JavaMetaClass mapping
+		self._class_bases = {} # base_name -> JavaMetaClass map
+		self._verbose = False
+	
+	def set_verbose (self, boolean):
+		self._verbose = boolean
+	
+	def add_class (self, meta_class):
+		self._classes[meta_class.full_name()] = meta_class
+		self._class_bases[meta_class.get_name()] = meta_class
+	
+	def resolve_inheritance (self, bootstrap=True):
+		if self._verbose:
+			print >> sys.stderr, "Starting inheritance resolution"
+		for meta_class in self._classes.itervalues():
+			if self._verbose:
+				print >> sys.stderr, "Resolving %s" % meta_class.full_name(), meta_class.get_all_parent_names()
+			for parent_name in meta_class.get_parent_names():
+				parent_class = self.find_class(parent_name)
+				
+				if parent_class != None:
+					if self._verbose:
+						print >> sys.stderr,\
+						      "Found parent of %s: %s" %\
+						      (meta_class.full_name(), parent_name)
+					meta_class.add_parent(parent_class)
+				else:
+					if self._verbose:
+						print >> sys.stderr,\
+						      "Missing parent of %s: %s" %\
+						      (meta_class.full_name(), parent_name)
+		
+		#
+		# We need to bootstrap to get all property inheritance correct
+		#
+		if bootstrap:
+			if self._verbose:
+				print >> sys.stderr, "Bootstrapping property resolution"
+			self.resolve_inheritance(bootstrap=False)
+	
+	def find_class (self, class_name):
+		"""
+		Try and look up the fully qualified class name. If it fails
+		try and look up the class by simply matching the class base
+		name
+		"""
+		if self._classes.has_key(class_name):
+			return self._classes[class_name]
+		
+		#
+		# We don't have a class ref by full class name. Try matching
+		# it by base name only
+		#
+		if self._class_bases.has_key(class_name):
+			return self._class_bases[class_name]
+		
+		return None
+	
+	def iter_classes (self):
+		return self._classes.itervalues()
+		
+	def get_root_classes (self):
+		"""
+		Extract all classes that does not have a parent class
+		"""
+		result = []
+		for meta_class in self.iter_classes():
+			if len(meta_class.get_parents()) == 0:
+				result.append(meta_class)
+		
+		return result
+		
+
+
+
+PACKAGE_REGEX = \
+r'package\s+(?P<pkg>\S+)\s*;\s*'
+
+CLASS_REGEX = \
+r'^(\s*(abstract|public|final)\s*)*(?P<type>class|interface|enum)(\s+)(?P<class>\S+)(?P<inh>[^\{]*)\{'
+
+COMMENT_REGEX = \
+r'/\*\*(?P<doc>(.|[\n])*?)(\*/)*?'
+
+PROPS_REGEX = \
+COMMENT_REGEX + r'\s*public static final (?P<javatype>[^ ]+) (?P<type>CONF|DEFAULT)_(?P<name>[^ ]+)\s*=\s*(?P<val>[^ ]+);$'
+
+class PropParser :
+	def __init__ (self):
+		self._class_re = re.compile(CLASS_REGEX, re.MULTILINE)
+		self._props_re = re.compile(PROPS_REGEX, re.MULTILINE)
+		self._package_re = re.compile(PACKAGE_REGEX)
+		self._verbose = False
+	
+	def set_verbose (self, boolean):
+		"""
+		Control whether to print debugging info to sys.stderr
+		"""
+		self._verbose = boolean
+	
+	def parse_to_repo (self, repo, dirname, fnames):
+		"""
+		Callback suitable for os.path.walk() adding any parsed classes
+		to repo.
+		"""
+		for f in fnames:
+			f = os.path.join(dirname, f)
+			if not f.endswith(".java"):
+				continue
+			if os.path.isdir(f):
+				continue
+			if self._verbose:
+				print >> sys.stderr, f
+			meta_class = self.parse(f)
+			repo.add_class(meta_class)
+		
+	def parse (self, stream):
+		"""
+		If 'stream' has the method 'readlines()' parse the content of
+		this else assume that it is a string and open corresponding file
+		"""
+		blob = None
+		try:
+			if callable(stream.readlines):
+				lines = stream.readlines()
+				blob = "".join(lines)
+		except AttributeError:
+			stream = str(stream)
+			blob = file(stream)
+			blob = "".join(blob.readlines())
+		
+		if self._verbose:
+			print >> sys.stderr, "Extracting package name"
+		
+		package = self._package_re.search(blob)				
+		if package is None:
+			print >> sys.stderr, "ERROR: No package definition found in '%s'" % stream
+			raise SystemExit
+		package = package.group('pkg')
+		
+		if self._verbose:
+			print >> sys.stderr, "Extracting class info"
+		
+		classes = self._class_re.search(blob)
+		if classes is None:
+			print >> sys.stderr, "ERROR: No class definition found in '%s'" % stream
+			raise SystemExit
+		
+		if self._verbose:
+			print >> sys.stderr, "Extracting properties"
+		
+		#
+		# Resolve properties, default values, and doc strings
+		#
+		props = self._props_re.finditer(blob)
+		meta_class = JavaMetaClass (classes.group('class'), package)
+		meta_class.set_inheritance_decl(classes.group('inh'))
+		propgroups = {}
+		for prop in props:
+			propgroups[prop.group('type')+"_"+prop.group('name')] = prop.groupdict()
+		
+		propmap = {}
+		
+		for groups in propgroups.itervalues():
+			if groups['type'] == "CONF":
+				meta_prop = JavaMetaProp(meta_class,
+				                         groups['val'],
+				                         doc=groups['doc'],
+				                         codename=groups['name'])
+				propmap[groups['name']] = meta_prop
+		
+		for default in propgroups.itervalues():
+			if default['type'] == "DEFAULT":
+				if not propmap.has_key(default['name']):
+					print >> sys.stderr, "WARN: Default value '%(name)s' without a CONF_%(name)s. Please fix your code" % default
+					continue
+				propmap[default['name']].set_default(default['val'])
+		
+		for prop in propmap.itervalues():
+			meta_class.add_prop(prop)
+		
+		#
+		# Sanitize the doc strings
+		#
+		for prop in meta_class.iter_props():
+			doc = prop.get_doc()
+			doc = re.sub("(.|[\n\r])+/\*\*", "", doc) # We remove any sections before a /**. This is a hack to work around a bug in our regexes where the first prop picks up the class' comment
+			doc = re.sub("(^|\n)\s*\*", " ", doc)
+			doc = re.sub("\s+", " ", doc)
+			prop.set_doc(doc)
+			
+		return meta_class
+				
+class Formatter:
+	def __init__ (self, repo, parent_filter=None):
+		self._repo = repo
+		self._parent_filter = parent_filter
+	
+	def should_display (self, meta_class):
+		if not self._parent_filter:
+			return True
+		return meta_class.has_parent(self._parent_filter)
+	
+	def get_parent_filter (self):
+		return self._parent_filter
+
+class TermFormatter (Formatter) :
+	def __init__ (self, repo, parent_filter=None):
+		Formatter.__init__ (self, repo, parent_filter)
+	
+	def format (self, repo):
+		result = ""
+		for meta_class in repo.iter_classes():
+			if self.should_display (meta_class):
+				result += str(meta_class) + "\n"
+		
+		return result
+
+class ClassFormatter (Formatter) :
+	def __init__ (self, repo, parent_filter=None):
+		Formatter.__init__ (self, repo, parent_filter)
+	
+	def format (self, repo):
+		result = ""
+		for meta_class in repo.iter_classes():
+			if self.should_display (meta_class):
+				result += meta_class.full_name() + " -> "
+				result += "[" + ", ".join([p.full_name() for p in meta_class.get_parents()]) + "] >>> "
+				result += str(meta_class.get_all_parent_names()) + "\n"
+		
+		return result
+
+MOIN_HEADER = \
+"""
+##
+## %(stamp)s
+##
+
+= %(header)s =
+
+'''Contents'''
+[[TableOfContents(3)]]
+
+"""
+
+MOIN_PROP_TEMPLATE = \
+"""
+{{{         Name: }}} '''%(name)s'''
+
+{{{      Default: }}} %(default)s
+
+''Description:'' %(desc)s
+"""
+
+MOIN_ROOT_CLASS_TEMPLATE = \
+"""[[Anchor(%(class)s)]]
+== %(class)s ==
+"""
+
+MOIN_CHILD_CLASS_TEMPLATE = \
+"""[[Anchor(%(class)s)]]
+=== %(class)s ===
+"""
+		
+class MoinFormatter (Formatter) :
+	def __init__ (self, repo, parent_filter=None):
+		Formatter.__init__ (self, repo, parent_filter)		
+	
+	def format (self, repo):
+		if self.get_parent_filter() == None:
+			header_dict = { "header" : "Summa Property Documentation" }
+		else:
+			header_dict = { "header" : "Summa Properties for %ss" % self._short_filter_name()}
+			
+		header_dict["stamp"] = "Generated on %s, with the command\n##\n## %s" % \
+		                       (datetime.now(), " ".join(sys.argv))
+			
+		result = MOIN_HEADER % header_dict
+		roots = list(repo.iter_classes())
+		roots.sort(lambda x, y : cmp (x.full_name(), y.full_name()))
+		
+		for meta_class in roots:
+			result += self.format_class (meta_class)
+			
+		return result
+			
+	def format_class (self, meta_class, format_children=True):
+		if not self.should_display (meta_class):
+			return ""
+				
+		class_dict = { "class" : meta_class.full_name() }		
+		
+		# If no props and no children, don't doc the class
+		if len(meta_class.get_children()) == 0 and \
+		   meta_class.num_props() == 0 :
+			return ""						
+		
+		result = MOIN_CHILD_CLASS_TEMPLATE % class_dict		
+				
+		for prop in meta_class.iter_props():
+			prop_dict = {
+				"name"    : prop.get_name(),
+				"default" : prop.get_default(),
+				"desc"    : prop.get_doc()
+			}
+			result += MOIN_PROP_TEMPLATE % prop_dict
+		
+		#if format_children:
+		#	children = meta_class.get_all_children()
+		#	children.sort (lambda x, y : cmp (x.full_name(), y.full_name()))
+		#	for child in children:
+		#		result += self.format_class(child, format_children=False)
+		
+		return self._javadoc2moin(result)
+	
+	def _short_filter_name (self):
+		pf = self.get_parent_filter()
+		return pf[pf.rfind(".")+1 : ]
+	
+	def _javadoc2moin (self, string):
+		string = re.sub(r"<i>([^<]*)</i>", r"''\1''", string)
+		string = re.sub(r"<b>([^<]*)</b>", r"'''\1'''", string)
+		string = re.sub(r"\{@code ([^\}]*)\}", r"{{{\1}}}", string)
+		string = re.sub(r"<p></p>", "\n", string)
+		string = re.sub(r"<p\s*/>", "\n", string)
+		string = re.sub(r"<br\s*/>", "\n", string)
+		#string = re.sub(r"<[^>]>[^<]+</[^>]>", r"\1", string)
+		return string
+	
+FORMATTERS = {
+	"term"    : TermFormatter,
+	"moin"    : MoinFormatter,
+	"default" : TermFormatter,
+	"class"   : ClassFormatter,
+}
+		
+if __name__ == "__main__" :
+	parser = PropParser()
+	
+	opt_parser = OptionParser()
+	opt_parser.add_option("-v", "--verbose", action="store_true",
+			  help="Print verbose information about what the program is doing")
+	opt_parser.add_option("-r", "--recursive", action="store_true",
+			  help="Do recursive descent into a directory an scan all .java files")
+	opt_parser.add_option("-f", "--formatter", metavar="FORMATTER",
+			  help="Which output formatter to use. Supported: %s" % ", ".join(FORMATTERS.keys()))
+	opt_parser.add_option("-p", "--parent", metavar="PARENT",
+			  help="Only output classes that are children of PARENT")
+	
+	
+	options, args = opt_parser.parse_args()
+	repo = JavaMetaRepo()
+	
+	if options.formatter:
+		if not FORMATTERS.has_key(options.formatter):
+			raise SystemExit("Only the formatters %s are supported"
+			                  % FORMATTERS.keys())
+		formatter = FORMATTERS[options.formatter](repo, parent_filter=options.parent)
+		if options.verbose:
+			print >> sys.stderr, "Using formatter: %s" % formatter 
+	else:
+		formatter = FORMATTERS["default"](repo, parent_filter=options.parent)
+	
+	if options.verbose:
+		repo.set_verbose(True)
+		parser.set_verbose(True)
+	
+	if options.recursive:
+		for path in args:
+			if os.path.isdir(path):
+				os.path.walk(path, parser.parse_to_repo, repo)
+			else:
+				meta_class = parser.parse(path)
+				repo.add_class (meta_class)
+	else:
+		for path in args:
+			if options.verbose:
+				print >> sys.stderr, "Parsing '%s'" % path
+			meta_class = parser.parse(path)
+			repo.add_class (meta_class)
+			
+	repo.resolve_inheritance()
+	
+	print formatter.format(repo)
