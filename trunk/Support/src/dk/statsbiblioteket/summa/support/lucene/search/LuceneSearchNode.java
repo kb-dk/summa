@@ -286,15 +286,15 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
     public void managedOpen(String location) throws RemoteException {
         log.debug("Open called for location '" + location
                   + "'. Appending /" + LuceneIndexUtils.LUCENE_FOLDER);
+        if (location == null || "".equals(location)) {
+            log.warn("open(null) called, no index available");
+            return;
+        }
         location +=  "/" + LuceneIndexUtils.LUCENE_FOLDER;
         if (this.location != null) {
             close();
         }
         this.location = location;
-        if (location == null || "".equals(location)) {
-            log.warn("open(null) called, no index available");
-            return;
-        }
         URL urlLocation = Resolver.getURL(location);
         if (urlLocation == null) {
             log.warn("Could not resolve URL for location '" + location
