@@ -35,7 +35,7 @@ public class Launcher {
         log.debug("SecurityManager: " + System.getSecurityManager());
 
         try {
-            Configuration conf = Configuration.getSystemConfiguration();
+            Configuration conf = Configuration.getSystemConfiguration(true);
 
             log.trace ("Got system configuration");
 

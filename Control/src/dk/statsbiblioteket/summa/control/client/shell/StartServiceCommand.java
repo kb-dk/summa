@@ -53,18 +53,12 @@ public class StartServiceCommand extends RemoteCommand<ClientConnection> {
         setUsage("start [options] <service-id>");
 
         installOption("c", "configuration", true, "Location of configuration. "
-                                                  + "Url, file, or RMI server."
-                                                  + " Defaults to "
-                                                  + "'configuration.xml'");
+                                                  + "Url, file, or RMI server");
     }
 
     public void invoke(ShellContext ctx) throws Exception {
         String confLocation = getOption("c");
-        log.debug("invoke called with confLocation '" + confLocation + "'");
-        if (confLocation == null) {
-            confLocation = "configuration.xml";
-            log.debug("confLocation for invoke sat to " + confLocation);
-        }
+        log.debug("Invoke called with confLocation '" + confLocation + "'");        
 
         if (getArguments().length != 1) {
             ctx.error ("Exactly one package id should be specified. Found "
