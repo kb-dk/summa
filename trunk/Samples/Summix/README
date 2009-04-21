@@ -50,7 +50,7 @@ If you drill into the result set you should be able to pull out a field called
 
 We can now extract this record in full from the storage by issuing:
 
-  bin/storage-tool-sh get oai:doaj-articles:7286e8e5f5f74b32fe85c9915e5e4ad5
+  bin/storage-tool.sh get oai:doaj-articles:7286e8e5f5f74b32fe85c9915e5e4ad5
   
 This should print out the original raw XML as found when the record was
 ingested.
