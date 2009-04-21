@@ -7,6 +7,7 @@ import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.support.api.SuggestKeys;
 import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.Profiler;
 import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -72,19 +73,54 @@ public class SuggestSearcherTest extends TestCase {
         assertGet("Foo", "queryCount=\"1\">foo fighters");
     }
 
+    public void testPerformance() throws Exception {
+        int SETTERS = 10000;
+        int GETTERS = 10000;
+
+        Profiler setProfiler = new Profiler(SETTERS);
+        for (int i = 0 ; i < SETTERS ; i++) {
+            put("Foo " + i % 3, i * 2);
+            setProfiler.beat();
+            put("Foo flam" + i % 3, i * 2);
+            setProfiler.beat();
+            put("Bar", 12);
+            setProfiler.beat();
+        }
+        String updates =String.format(
+                "Did %d updates at %s updates/sec",
+                setProfiler.getBeats(), setProfiler.getBps(false));
+
+        Profiler getProfiler = new Profiler(GETTERS);
+        for (int i = 0 ; i < GETTERS ; i++) {
+            assertGet("Foo", "foo");
+            getProfiler.beat();
+            assertGet("B", "bar");
+            getProfiler.beat();
+        }
+        log.info(updates);
+        log.info(String.format(
+                "Did %d requests at %s requests/sec",
+                getProfiler.getBeats(), getProfiler.getBps(false)));
+    }
+
     /* Helpers */
 
     private void assertGet(String prefix, String expected) throws
                                                            IOException {
-        Request request = new Request();
-        request.put(SuggestKeys.SEARCH_PREFIX, prefix);
-        ResponseCollection responses =  searcher.search(request);
-        String xml = responses.toXML();
+        String xml = get(prefix);
         assertTrue(String.format("The string '%s' should be in the result '%s'",
                                  expected, xml),
                    xml.contains(expected));
-        log.debug("Got xml for prefix '" + prefix + "':\n" + xml);
+        log.trace("Got xml for prefix '" + prefix + "':\n" + xml);
     }
+
+    private String get(String prefix) throws IOException {
+        Request request = new Request();
+        request.put(SuggestKeys.SEARCH_PREFIX, prefix);
+        ResponseCollection responses =  searcher.search(request);
+        return responses.toXML();
+    }
+
 
     private void put(String query, int hits) throws IOException {
         Request request = new Request();

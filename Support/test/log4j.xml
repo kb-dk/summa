@@ -24,7 +24,7 @@
 
     <appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
        <param name="Target" value="System.out"/>
-       <param name="Threshold" value="TRACE"/>
+       <param name="Threshold" value="DEBUG"/>
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
         </layout>
@@ -66,23 +66,13 @@
         </layout>
     </appender>
 
-    <logger name="dk.statsbiblioteket.summa.cluster">
-        <level value="debug" />
-        <appender-ref ref="CLUSTER" />
-    </logger>
-
-    <logger name="dk.statsbiblioteket.summa.search">
-        <level value="TRACE" />
-        <appender-ref ref="FILE" />
-    </logger>
-
     <logger name="dk.statsbiblioteket.summa.suggest">
         <level value="DEBUG" />
         <appender-ref ref="FILE" />
     </logger>
 
     <logger name="dk.statsbiblioteket.summa.support">
-        <level value="TRACE" />
+        <level value="DEBUG" />
         <appender-ref ref="CONSOLE" />
     </logger>
 
