@@ -133,7 +133,7 @@ public class SuggestSearchNode extends SearchNodeImpl {
             }
         } catch (IOException e) {
             throw new RemoteException(
-                    "Exception performing managed search with " + request);
+                    "Exception performing managed search with " + request, e);
         }
         log.debug("None of the expected keys " + SuggestKeys.SEARCH_PREFIX + " or "
                   + SuggestKeys.SEARCH_UPDATE_QUERY + " encountered, no suggest performed");

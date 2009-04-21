@@ -102,7 +102,7 @@ public class SuggestStorageH2 implements SuggestStorage {
     private void createSchema() throws SQLException {
         Statement s = connection.createStatement();
         s.execute("create table suggest("
-                  + "query varchar(250), query_count int, hitcount int)");
+                  + "query varchar(250), query_count int, hit_count int)");
         s.execute("create index suggest_query ON suggest(query)");
         s.execute("create index suggest_query_count ON suggest(query_count)");
         s.execute("create index suggest_query_count_desc ON "
@@ -130,7 +130,7 @@ public class SuggestStorageH2 implements SuggestStorage {
         try {
             long startTime = System.nanoTime();
             PreparedStatement psExists = connection.prepareStatement(
-                "SELECT query, query_count, hitcount FROM suggest WHERE query "
+                "SELECT query, query_count, hit_count FROM suggest WHERE query "
                 + "LIKE '" + prefix.toLowerCase() + "%' ORDER BY query_count "
                 + "DESC");
             ResultSet rs = psExists.executeQuery();
@@ -165,6 +165,7 @@ public class SuggestStorageH2 implements SuggestStorage {
     public synchronized void addSuggestion(String query, int hits,
                                            int queryCount) throws IOException {
         if (hits == 0) {
+            log.trace("No hits for '" + query + "'. Deleting query...");
             try {
                 deleteSuggestion(query);
             } catch (SQLException e) {
@@ -175,13 +176,14 @@ public class SuggestStorageH2 implements SuggestStorage {
         }
         try {
             if (existsInDb(query)) {
-                if (queryCount != -1) {
-                    updateDb(query, getQueryCount(query) + 1, hits);
+                if (queryCount == -1) {
+                    updateDb(query, hits, getQueryCount(query) + 1);
                 } else {
-                    updateDb(query, queryCount, hits);
+                    updateDb(query, hits, queryCount);
                 }
                 return;
             }
+            log.trace("New query '" + query + "' with hits " + hits);
             insertIntoDb(query, hits, 1);
         } catch (SQLException e) {
             throw new IOException(String.format(
@@ -249,7 +251,7 @@ public class SuggestStorageH2 implements SuggestStorage {
     private void updateDb(String query, int hits, int queryCount)
             throws SQLException {
         PreparedStatement psUpdate = connection.prepareStatement(
-                "UPDATE suggest SET query_count=?, hitcount=? WHERE query=?");
+                "UPDATE suggest SET query_count=?, hit_count=? WHERE query=?");
         psUpdate.setInt(1, queryCount);
         psUpdate.setLong(2, hits);
         psUpdate.setString(3, query.toLowerCase());
