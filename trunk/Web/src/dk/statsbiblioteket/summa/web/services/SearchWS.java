@@ -27,6 +27,7 @@ import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.SearchClient;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
+import dk.statsbiblioteket.summa.support.api.LuceneKeys;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -119,8 +120,7 @@ public class SearchWS {
         ResponseCollection res;
 
         Request req = new Request();
-        // TODO: Correctly set this using SEARCH_MORELIKETHIS_RECORDID
-        req.put("search.document.lucene.morelikethis.recordid", id);
+        req.put(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID, id);
         req.put(DocumentKeys.SEARCH_MAX_RECORDS, numberOfRecords);
         req.put(DocumentKeys.SEARCH_START_INDEX, startIndex);
         req.put(DocumentKeys.SEARCH_SORTKEY, DocumentKeys.SORT_ON_SCORE);
