@@ -25,28 +25,21 @@ package dk.statsbiblioteket.summa.facetbrowser.core;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
 import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
-import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
+import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMap;
 import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMapBitStuffed;
-import dk.statsbiblioteket.summa.facetbrowser.core.tags.Facet;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandlerImpl;
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-import java.io.StringWriter;
 import java.io.File;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Collections;
-import java.util.ArrayList;
-import java.util.Random;
+import java.io.StringWriter;
+import java.util.*;
 
 /**
  * FacetMap Tester.
@@ -258,7 +251,7 @@ public class FacetMapTest extends TestCase {
         };
         insertTags(INSERTS);
         assertHasTags("Doc 0 Facet A should be right", 0, "A",
-                      new String[]{"1", "2", "3"});
+                      new String[]{"2", "3"});
         assertHasTags("Doc 0 Facet B should be right", 0, "B",
                       new String[]{"4"});
         assertHasTags("Doc 1 Facet A should be right", 1, "A",
