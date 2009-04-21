@@ -42,6 +42,7 @@ public class ControlShell {
         shell.installCommand(new StartCommand(connManager, rmiAddress));
         shell.installCommand(new ClientsCommand(connManager, rmiAddress));
         shell.installCommand(new StatusCommand(connManager, rmiAddress));
+        shell.installCommand(new ControlCommand(connManager, rmiAddress));
     }
 
     public int run (Script script) {

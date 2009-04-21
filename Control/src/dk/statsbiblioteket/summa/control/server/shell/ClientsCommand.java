@@ -23,7 +23,7 @@ public class ClientsCommand extends Command {
         super ("clients", "list all deployed clients");
 
         installOption("s", "status", false, "Look up status for each client (slow)");
-        installOption("e", "extended", false, "Get extended metadata about each client");
+        installOption("e", "extended", false, "Get deployment metadata about each client");
 
         this.cm = cm;
         this.controlAddress = controlAddress;

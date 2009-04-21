@@ -17,7 +17,9 @@ import dk.statsbiblioteket.summa.control.bundle.Bundle;
 import java.io.IOException;
 import java.io.File;
 import java.io.ByteArrayInputStream;
+import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.RemoteException;
 
@@ -213,7 +215,12 @@ public class ControlCore extends UnicastRemoteObject
         BundleSpecBuilder spec = BundleSpecBuilder.open(
                                    new ByteArrayInputStream(bundleSpecContent));
 
-        // Write client meta file
+	// Push all properties from the client spec into the control file
+	for (Map.Entry<String,Serializable> prop : spec.getProperties()){
+	    conf.set(prop.getKey(), prop.getValue());
+	}
+
+        // Write client control file
         clientManager.register(instanceId,
                                deployer.getTargetHost(),
                                conf,
@@ -385,17 +392,6 @@ public class ControlCore extends UnicastRemoteObject
             throw new BadConfigurationException("Required property: "
                                                 + ClientDeployer.CONF_DEPLOYER_FEEDBACK
                                                 + " not set ");
-        }
-
-        try {
-            conf.getString(ClientDeployer.CONF_CLIENT_CONF);
-        } catch (NullPointerException e) {
-            // The ClientDeployer.CONF_CLIENT_CONF is not set, set it as
-            // specified by our contract (see javadoc for said property)
-            log.debug (ClientDeployer.CONF_CLIENT_CONF + " not set, "
-                       + "setting to 'configuration.xml'");
-            conf.set(ClientDeployer.CONF_CLIENT_CONF,
-                     "configuration.xml");
         }
     }
 

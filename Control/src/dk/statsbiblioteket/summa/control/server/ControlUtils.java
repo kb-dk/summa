@@ -73,25 +73,6 @@ public class ControlUtils {
     }
 
     /**
-     * Get a File pointing at the
-     * @param conf
-     * @return
-     */
-    public static File getClientMetaDir (Configuration conf) {
-        File controlBase = getControlBaseDir(conf);
-        String metaPath = conf.getString (ClientManager.CLIENT_META_DIR_PROPERTY,
-                                          "meta");
-
-        File metaDir = new File (controlBase, metaPath);
-        if (!metaDir.exists()) {
-            if (metaDir.mkdirs()) {
-                log.debug ("Created dir for client metadata '" + metaDir + "'");
-            }
-        }
-        return metaDir;
-    }
-
-    /**
      * Get the address the repository is exposed on. This is the address
      * clients will use to download bundles from.
      * @param conf
