@@ -44,11 +44,11 @@
 
             <xsl:otherwise>
 
-                <xsl:if test="/mc:record/mc:datafield[@tag='130']/mc:subfield[@code='a']">
+                <xsl:for-each select="mc:datafield[@tag='130']/mc:subfield[@code='a']">
                     <Index:field Index:repeat="true" Index:name="other" Index:navn="andet" Index:type="token">
-                        <xsl:value-of select="mc:datafield[@tag='130']/mc:subfield[@code='a']"/>
+                        <xsl:value-of select="."/>
                     </Index:field>
-               </xsl:if>
+               </xsl:for-each>
                 
             </xsl:otherwise>
         </xsl:choose>
