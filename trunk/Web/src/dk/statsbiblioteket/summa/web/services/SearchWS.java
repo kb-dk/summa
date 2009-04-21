@@ -94,6 +94,46 @@ public class SearchWS {
     }
 
     /**
+     * Returns a given field from the search index for a specific recordId. This could for instance be used to get the
+     * shortformat for a specific record. 
+     * @param id The recordId to look up.
+     * @param fieldName The name of the field to return.
+     * @return An XML string containing the result or an error description.
+     */
+    public String getField(String id, String fieldName) {
+        String retXML;
+
+        ResponseCollection res;
+
+        Request req = new Request();
+        req.put(DocumentKeys.SEARCH_QUERY, "recordID:" + id);
+        req.put(DocumentKeys.SEARCH_MAX_RECORDS, 1);
+        req.put(DocumentKeys.SEARCH_START_INDEX, 0);
+        req.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
+
+        try {
+            res = getSearchClient().search(req);
+
+            Document dom = DOM.stringToDOM(res.toXML());
+            Node subDom = DOM.selectNode(dom,
+                    "/responsecollection/response/documentresult/record/field[@name='" + fieldName + "']");
+            retXML = DOM.domToString(subDom);
+        } catch (IOException e) {
+            log.error("Error querying for id: '" + id + "'." +
+                    "Error was: ", e);
+            // TODO: return a nicer error xml block
+            retXML = "<error>Error performing query</error>";
+        } catch (TransformerException e) {
+            log.error("Error querying for id: '" + id + "'." +
+                    "Error was: ", e);
+            // TODO: return a nicer error xml block
+            retXML = "<error>Error performing query</error>";
+        }
+
+        return retXML;
+    }
+
+    /**
      * Gives a search result of records that "are similar to" a given record. 
      * @param id The recordID of the record that should be used as base for the MoreLikeThis query.
      * @param numberOfRecords The maximum number of records to return.
@@ -126,6 +166,7 @@ public class SearchWS {
 
         return retXML;
     }
+
     /**
      * A simple way to query the index returning results sorted by relevance. The same as calling
      * simpleSearchSorted while specifying a normal sort on relevancy.

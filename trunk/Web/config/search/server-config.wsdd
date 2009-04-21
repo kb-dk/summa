@@ -41,8 +41,17 @@
         <documentation>Search web service for the Summa system</documentation>
         <parameter name="className" value="dk.statsbiblioteket.summa.web.services.SearchWS"/>
 
-        <parameter name="allowedMethods" value="simpleSearch simpleSearchSorted simpleFacet getMoreLikeThis"/>
+        <parameter name="allowedMethods" value="simpleSearch simpleSearchSorted simpleFacet getMoreLikeThis getField"/>
         <namespace>http://statsbiblioteket.dk/summa/search</namespace>
+
+        <operation name="getField">
+            <documentation>
+                Returns a given field from the search index for a specific recordId. This could for instance be used to get the shortformat for a specific record. 
+             </documentation>
+            <parameter name="id" type="tns:string">
+                <documentation>The recordID to look up.</documentation>
+            </parameter>
+        </operation>
 
         <operation name="getMoreLikeThis">
             <documentation>
