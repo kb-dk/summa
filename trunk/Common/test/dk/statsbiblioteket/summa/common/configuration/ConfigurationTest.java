@@ -112,10 +112,37 @@ public class ConfigurationTest extends TestCase {
         configuration.set("a", "12");
         configuration.set("b", "-12");
         configuration.set("c", "krabardaf");
+        configuration.set("d", " 12");
+        configuration.set("e", "12 ");
+        configuration.set("f", " 12 ");
         assertEquals("a should give 12", 12, configuration.getInt("a"));
         assertEquals("b should give -12", -12, configuration.getInt("b"));
+        assertEquals("d should give 12", 12, configuration.getInt("d"));
+        assertEquals("e should give 12", 12, configuration.getInt("e"));
+        assertEquals("f should give 12", 12, configuration.getInt("f"));
         try {
             configuration.getInt("c");
+            fail("c should throw an exception");
+        } catch (Exception e) {
+            // Expected behaviour
+        }
+    }
+
+    public void testGetLong() throws Exception {
+        Configuration configuration = new Configuration(new MemoryStorage());
+        configuration.set("a", "12");
+        configuration.set("b", "-12");
+        configuration.set("c", "krabardaf");
+        configuration.set("d", " 12");
+        configuration.set("e", "12 ");
+        configuration.set("f", " 12 ");
+        assertEquals("a should give 12", 12, configuration.getLong("a"));
+        assertEquals("b should give -12", -12, configuration.getLong("b"));
+        assertEquals("d should give 12", 12, configuration.getLong("d"));
+        assertEquals("e should give 12", 12, configuration.getLong("e"));
+        assertEquals("f should give 12", 12, configuration.getLong("f"));
+        try {
+            configuration.getLong("c");
             fail("c should throw an exception");
         } catch (Exception e) {
             // Expected behaviour
