@@ -94,6 +94,29 @@ public class SearchWS {
     }
 
     /**
+     * Given a prefix this method returns other queries that start with the same prefix.
+     * @param prefix The prefix that the returned queries must start with.
+     * @param maxSuggestions The maximum number of queries to be returned.
+     * @return An XML string containing the result or an error description.
+     */
+    public String getSuggestions(String prefix, int maxSuggestions) {
+        return("<error>Not implemented yet</error>");
+    }
+
+    /**
+     * Commits a query to the Suggestion database. This enables this query to be returned in the result from
+     * getSuggestions. It is recommended that only query that the user actually enters are committed - ie. it might not
+     * be a good idea to commit queries that come from the user clicking facets, etc.
+     * @param query the query to commit to the database.
+     * @param hitCount the number of hits that resulted from the query. If this is 0 then the query is removed from the
+     * Suggestion database.
+     */
+    public void commitQuery(String query, long hitCount) {
+
+    }
+
+
+    /**
      * Returns a given field from the search index for a specific recordId. This could for instance be used to get the
      * shortformat for a specific record. 
      * @param id The recordId to look up.
