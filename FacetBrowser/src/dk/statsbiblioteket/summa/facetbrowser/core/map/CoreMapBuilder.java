@@ -172,7 +172,23 @@ public class CoreMapBuilder extends CoreMap32 {
         if (delta == 0) {
             return;
         }
-        throw new UnsupportedOperationException(
-                "adjustPositions not supported for this map");
+
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("Adjusting position for facetID " + facetID + " tags >= "
+                  + position + " with delta " + delta);
+        for (int docID = 0 ; docID < map.length ; docID++) {
+            if (map[docID] == null) {
+                continue;
+            }
+            for (int valuePos = 0 ; valuePos < map[docID].length ; valuePos++) {
+                int value = map[docID][valuePos];
+                int facet = value >>> FACETSHIFT;
+                int tag = value & TAG_MASK;
+                if (facet == facetID && tag >= position) {
+                    map[docID][valuePos] =
+                            facet << FACETSHIFT | tag + delta & TAG_MASK;
+                }
+            }
+        }
     }
 }

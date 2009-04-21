@@ -100,6 +100,7 @@ public class Facet implements CollatorSortedPool {
     private final static String META_NAME = "name";
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     private final static String META_FIELDS = "fields";
+    @SuppressWarnings({"DuplicateStringLiteralInspection"})
     private final static String META_LOCALE = "locale";
     private static final Object META_FACET_COUNT = "facetCount";
 
@@ -179,12 +180,13 @@ public class Facet implements CollatorSortedPool {
                     forceNew = false;
                 } else {
                     log.info(String.format(
-                            "The meta-data for the persistent facet did not match "
-                            + "the structure for Facet '%s' at '%s', forcing new",
+                            "The meta-data for the persistent facet did not "
+                            + "match the structure for Facet '%s' at '%s', "
+                            + "forcing new",
                             structure.getName(), location));
                 }
             } else {
-                log.warn("No name located in properties for '" + metaFile
+                log.info("No name located in properties for '" + metaFile
                          + ". Forcing new facets");
             }
         } catch (IOException e) {
