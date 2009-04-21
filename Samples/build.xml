@@ -15,12 +15,12 @@
     </tstamp>
 
     <!-- Run all samples -->
-    <target name="release">
+    <target name="release" depends="distclean">
         <ant dir="Summix" inheritall="false"/>
     </target>
     
     <!-- Dist clean of all samples -->
-    <target name="distclean">
+    <target name="distclean" depends="clean">
         <ant dir="Summix" inheritall="false" target="distclean"/>
     </target>
     
