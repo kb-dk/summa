@@ -11,7 +11,7 @@
 
                 <xsl:for-each select="mc:field[@type='130_00']/mc:subfield[@type='a']">
                     <Index:field Index:repeat="true" Index:name="other" Index:navn="andet" Index:type="token">
-                        <xsl:value-of select="mc:field[@type='130_00']/mc:subfield[@type='a']"/>
+                        <xsl:value-of select="."/>
                     </Index:field>
                </xsl:for-each>
 
