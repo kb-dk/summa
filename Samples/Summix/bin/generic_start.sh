@@ -125,8 +125,12 @@ if [ -f "$PROPERTIES_FILE" ]; then
     done < "$PROPERTIES_FILE"
 fi
 
+# The fix below ensures that localhost is always used as RMI server address.
+# This is necessary to avoid problems with firewalls and routing outside
+# of the local computer.
+LOCALRMI="-Djava.rmi.server.hostname=localhost"
 
-COMMAND="$JAVA_HOME/bin/java $JVM_OPTS $CONFIGURATION $SECURITY_POLICY $JMX -cp $CLASSPATH $MAINCLASS"
+COMMAND="$JAVA_HOME/bin/java $LOCALRMI $JVM_OPTS $CONFIGURATION $SECURITY_POLICY $JMX -cp $CLASSPATH $MAINCLASS"
 
 # Report settings
 if [ ! -z $PRINT_CONFIG ]; then
@@ -143,7 +147,7 @@ fi
 
 if [ ! -z "$SYS_PROPS" ]; then
     # We need 'eval' to get system property quoting right
-    eval "$JAVA_HOME/bin/java $SYS_PROPS $CONFIGURATION $JVM_OPTS $SECURITY_POLICY $JMX -cp $CLASSPATH $MAINCLASS $@"
+    eval "$JAVA_HOME/bin/java $LOCALRMI $SYS_PROPS $CONFIGURATION $JVM_OPTS $SECURITY_POLICY $JMX -cp $CLASSPATH $MAINCLASS $@"
 else
     $COMMAND "$@"
 fi
