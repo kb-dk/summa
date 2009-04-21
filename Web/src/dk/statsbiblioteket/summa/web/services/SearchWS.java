@@ -112,7 +112,6 @@ public class SearchWS {
      * Suggestion database.
      */
     public void commitQuery(String query, long hitCount) {
-
     }
 
 
@@ -142,12 +141,12 @@ public class SearchWS {
                     "/responsecollection/response/documentresult/record/field[@name='" + fieldName + "']");
             retXML = DOM.domToString(subDom);
         } catch (IOException e) {
-            log.error("Error querying for id: '" + id + "'." +
+            log.warn("Error querying for id: '" + id + "'." +
                     "Error was: ", e);
             // TODO: return a nicer error xml block
             retXML = "<error>Error performing query</error>";
         } catch (TransformerException e) {
-            log.error("Error querying for id: '" + id + "'." +
+            log.warn("Error querying for id: '" + id + "'." +
                     "Error was: ", e);
             // TODO: return a nicer error xml block
             retXML = "<error>Error performing query</error>";
@@ -179,7 +178,7 @@ public class SearchWS {
             res = getSearchClient().search(req);
             retXML = res.toXML();
         } catch (IOException e) {
-            log.error("Error executing morelikethis: '" + id + "', " +
+            log.warn("Error executing morelikethis: '" + id + "', " +
                     numberOfRecords + ", " +
                     startIndex +
                     ". Error was: ", e);
@@ -229,7 +228,7 @@ public class SearchWS {
             res = getSearchClient().search(req);
             retXML = res.toXML();
         } catch (IOException e) {
-            log.error("Error executing query: '" + query + "', " +
+            log.warn("Error executing query: '" + query + "', " +
                     numberOfRecords + ", " +
                     startIndex + ", " +
                     sortKey + ", " +
@@ -279,12 +278,12 @@ public class SearchWS {
             // transform dom back into a string
             retXML = DOM.domToString(dom);
         } catch (IOException e) {
-            log.error("Error faceting query: '" + query + "'" +
+            log.warn("Error faceting query: '" + query + "'" +
                     ". Error was: ", e);
             // TODO: return a nicer error xml block
             retXML = "<error>Error performing query</error>";
         } catch (TransformerException e) {
-            log.error("Error faceting query: '" + query + "'" +
+            log.warn("Error faceting query: '" + query + "'" +
                     ". Error was: ", e);
             // TODO: return a nicer error xml block
             retXML = "<error>Error performing query</error>";
