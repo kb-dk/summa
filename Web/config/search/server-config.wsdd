@@ -41,8 +41,31 @@
         <documentation>Search web service for the Summa system</documentation>
         <parameter name="className" value="dk.statsbiblioteket.summa.web.services.SearchWS"/>
 
-        <parameter name="allowedMethods" value="simpleSearch simpleSearchSorted simpleFacet getMoreLikeThis getField"/>
+        <parameter name="allowedMethods" value="simpleSearch simpleSearchSorted simpleFacet getMoreLikeThis getField getSuggestions commitQuery"/>
         <namespace>http://statsbiblioteket.dk/summa/search</namespace>
+
+        <operation name="getSuggestions">
+            <documentation>
+                Given a prefix this method returns other queries that start with the same prefix.
+             </documentation>
+            <parameter name="prefix" type="tns:string">
+                <documentation>The prefix that the returned queries must start with.</documentation>
+            </parameter>
+            <parameter name="maxSuggestions" type="tns:int">
+                <documentation>The maximum number of queries to be returned.</documentation>
+            </parameter>
+        </operation>
+
+        <operation name="commitQuery">
+            <documentation>
+                Commits a query to the Suggestion database. This enables this query to be returned in the result from getSuggestions. It is recommended that only query that the user actually enters are committed - ie. it might not be a good idea to commit queries that come from the user clicking facets, etc.             </documentation>
+            <parameter name="query" type="tns:string">
+                <documentation>the query to commit to the database.</documentation>
+            </parameter>
+            <parameter name="hitCount" type="tns:int">
+                <documentation>the number of hits that resulted from the query. If this is 0 then the query is removed from the Suggestion database.</documentation>
+            </parameter>
+        </operation>
 
         <operation name="getField">
             <documentation>
