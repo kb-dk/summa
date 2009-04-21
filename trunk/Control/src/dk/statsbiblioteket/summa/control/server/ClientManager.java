@@ -16,7 +16,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionFactory;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
-import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.util.Strings;
 
 import java.io.File;
 import java.io.IOException;
@@ -52,24 +52,17 @@ public class ClientManager extends ConnectionManager<ClientConnection>
                                           GenericConnectionFactory.CONF_FACTORY;
 
     /**
-     * Configuration property defining in what directory to store
-     * client deployment metadata
-     */
-    public static final String CLIENT_META_DIR_PROPERTY =
-                                                       "summa.control.meta.dir";
-
-    /**
      * File extension for client metadata files
      */
-    public static final String CLIENT_META_FILE_EXT = ".meta.xml";
+    public static final String CLIENT_CONTROL_FILE = "control.xml";
 
     private Log log = LogFactory.getLog (ClientManager.class);
-    private File metaDir;
+    private File baseDir;
 
     public ClientManager(Configuration conf) throws IOException {
         super (getConnectionFactory(conf));
 
-        metaDir = ControlUtils.getClientMetaDir(conf);
+        baseDir = ControlUtils.getControlBaseDir(conf);
     }
 
     @SuppressWarnings("unchecked")
@@ -82,7 +75,7 @@ public class ClientManager extends ConnectionManager<ClientConnection>
         ConnectionFactory connFact = Configuration.create(connFactClass, conf);
         connFact.setGraceTime(1);
         connFact.setNumRetries(2);
-
+	
         return (ConnectionFactory<ClientConnection>) connFact;
     }
 
@@ -93,7 +86,7 @@ public class ClientManager extends ConnectionManager<ClientConnection>
      * @return true if the client is already registered
      */
     public boolean knowsClient (String instanceId) {
-        return getClientMetaFile(instanceId).exists();
+        return getClientControlFile(instanceId).exists();
     }
 
     /**
@@ -114,13 +107,16 @@ public class ClientManager extends ConnectionManager<ClientConnection>
         log.debug ("Registering Client instance '" + instanceId + "' on host '"
                    + clientHost + "'");
 
-        File clientMeta = getClientMetaFile(instanceId);
+        File clientMeta = getClientControlFile(instanceId);
 
         if (clientMeta.exists()) {
             throw new BadConfigurationException ("Client with instance id '"
                                                  + instanceId + "' is already"
                                                  + " registered");
         }
+
+        // Make sure the client directory exists
+        clientMeta.getParentFile().mkdir();
 
         try {
             Configuration conf = new Configuration (
@@ -139,7 +135,8 @@ public class ClientManager extends ConnectionManager<ClientConnection>
 
         } catch (IOException e) {
             log.error ("Failed to write client registration for '"
-                       + instanceId + "' in '" + clientMeta + "'");
+                       + instanceId + "' in '" + clientMeta + "': "
+                       + e.getMessage(), e);
         }
 
     }
@@ -153,7 +150,7 @@ public class ClientManager extends ConnectionManager<ClientConnection>
      */
     public String getDeployTarget (String instanceId) {
         try {
-            File clientMeta = getClientMetaFile(instanceId);
+            File clientMeta = getClientControlFile(instanceId);
             Configuration conf = new Configuration (new FileStorage(clientMeta));
             return conf.getString(ClientDeployer.CONF_DEPLOYER_TARGET);
         } catch (IOException e) {
@@ -171,7 +168,7 @@ public class ClientManager extends ConnectionManager<ClientConnection>
         try {
             /* We use a memory backed conf storage to avoid people being
             * able to edit the legacy configs */
-            File clientMeta = getClientMetaFile(instanceId);
+            File clientMeta = getClientControlFile(instanceId);
             InputStream in = new FileInputStream(clientMeta);
             return new Configuration (new MemoryStorage(in));
         } catch (IOException e) {
@@ -194,7 +191,7 @@ public class ClientManager extends ConnectionManager<ClientConnection>
         }
 
         try {
-            File clientMeta = getClientMetaFile(instanceId);
+            File clientMeta = getClientControlFile(instanceId);
             Configuration conf = new Configuration (new FileStorage(clientMeta));
 
             return conf.getString(ClientDeployer.CONF_DEPLOYER_BUNDLE);
@@ -222,24 +219,8 @@ public class ClientManager extends ConnectionManager<ClientConnection>
      */
     private int getClientRegistryPort(String instanceId,
                                       Configuration deployConfig) {
-        String clientConfLocation = deployConfig.getString (
-                                           ClientDeployer.CONF_CLIENT_CONF);
-
-       /* TODO:
-        * if clientConfLocation starts with // create remote storage
-        * else if clientConfLocation contains :// or starts with /
-        *     create a resource/file storage
-        * else if clientConfLocation  does not match any of the above
-        *     it is a bundled resource (in the .bundle file)
-        *     create a MemoryStorage on the zip-entry of the config
-        *     by using ControlUtils.getZipEntry
-        *
-        * Create a Configuration on the previsouly created storage.
-        * Retrieve ClientConnection.CONF_REGISTRY_HOST and return it
-        * */
-
-        log.error ("WARNING - HARDCODED CLIENT REG. PORT 2700");
-        return 27000;
+        return deployConfig.getInt (ClientConnection.CONF_REGISTRY_PORT,
+				    ClientConnection.DEFAULT_REGISTRY_PORT);
     }
 
     public ConnectionContext<ClientConnection>get (String clientId) {
@@ -283,34 +264,41 @@ public class ClientManager extends ConnectionManager<ClientConnection>
         throw new UnsupportedOperationException();
     }
 
-    private File getClientMetaFile (String instanceId) {
-        File metaFile = new File (metaDir, instanceId + CLIENT_META_FILE_EXT);
-        log.trace ("Metafile for '" + instanceId + " is " + metaFile);
-        return metaFile;
+    private File getClientControlFile(String instanceId) {
+        File controlFile = new File (baseDir,
+                                  instanceId + File.separator
+                                  + CLIENT_CONTROL_FILE);
+        log.trace ("Controlfile for '" + instanceId + " is " + controlFile);
+        return controlFile;
     }
 
+    /**
+     * Return a list of all clients known by the control server.
+     * This amounts to a list of all directories in the control's base dir
+     * containing a {@code control.xml} file.
+     * @return
+     */
     public List<String> getClients() {
         log.trace ("Getting client list");
-        String[] metaContents = metaDir.list();
+        String[] baseContents = baseDir.list();
 
-        if (metaContents == null) {
-            log.warn ("Error reading " + metaDir + ". It has probably been" +
+        if (baseContents == null) {
+            log.warn ("Error reading " + baseDir + ". It has probably been" +
                     "deleted");
             return new ArrayList<String>(0);
         }
 
-        List<String> clients = new ArrayList<String>(metaContents.length);
+        List<String> clients = new ArrayList<String>(baseContents.length);
 
-        for (String client : metaContents) {
-            if (client.endsWith(CLIENT_META_FILE_EXT)) {
-                clients.add (
-                        client.substring(0,
-                                         client.length()
-                                         - CLIENT_META_FILE_EXT.length()));
+        for (String client : baseContents) {
+ 	    if (new File(baseDir, 
+                         client + File.separator 
+                         + CLIENT_CONTROL_FILE).exists()) {
+                clients.add (client);
             }
         }
 
-        log.trace ("Found clients: " + Logs.expand(clients, 10));
+        log.trace ("Found clients: " + Strings.join(clients, ", "));
 
         return clients;
     }

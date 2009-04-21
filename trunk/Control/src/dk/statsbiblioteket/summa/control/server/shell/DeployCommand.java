@@ -89,8 +89,6 @@ public class DeployCommand extends Command {
                 Configuration.newMemoryBased(
                         ClientDeployer.CONF_BASEPATH,
                         basePath,
-                        ClientDeployer.CONF_CLIENT_CONF,
-                        confLocation,
                         ClientDeployer.CONF_DEPLOYER_BUNDLE,
                         bundleId,
                         ClientDeployer.CONF_INSTANCE_ID,
@@ -103,6 +101,10 @@ public class DeployCommand extends Command {
                 "dk.statsbiblioteket.summa.control.api.feedback.rmi.RemoteFeedbackClient",
                         RemoteFeedback.CONF_REGISTRY_HOST,
                         hostname);
+
+        if (confLocation != null){
+ 	    conf.set(ClientDeployer.CONF_CLIENT_CONF, confLocation);
+        }        
 
         log.trace ("Created deployment config:\n" + conf.dumpString());
 

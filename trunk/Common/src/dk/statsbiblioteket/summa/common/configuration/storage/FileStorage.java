@@ -159,6 +159,13 @@ public class FileStorage implements ConfigurationStorage {
     }
 
     public synchronized void put(String key, Serializable value) throws IOException {
+        if (key == null){
+	  throw new NullPointerException("Can not store value with 'null' key");
+	}
+	if (value == null) {
+	    // We can not store a 'null', Properties.put() throws a NPE
+	    value = "";
+	}
         map.put (key, value);
         writeConfig();
     }

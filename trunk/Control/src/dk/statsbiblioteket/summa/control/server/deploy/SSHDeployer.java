@@ -311,8 +311,6 @@ public class SSHDeployer implements ClientDeployer {
 
         log.trace("Adding properties to command line");
         /* Add properties to the command line as we are obliged to */
-        stub.addSystemProperty(Configuration.CONF_CONFIGURATION_PROPERTY,
-                               confLocation);
         stub.addSystemProperty(ClientConnection.CONF_CLIENT_ID,
                                clientId);
 

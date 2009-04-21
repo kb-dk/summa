@@ -82,6 +82,11 @@ public interface ClientConnection extends Monitorable {
     public static final String CONF_REGISTRY_PORT =
                                              "summa.control.client.registry.port";
 
+    /**
+     * Default value for {@link #CONF_REGISTRY_PORT}
+     */
+    public static final int DEFAULT_REGISTRY_PORT = 27000;
+
     /** <p>Property defining the host on which the client can find the rmi registry.
      * If this is set to {@code localhost} the client will create the registry
      * if it is not already running</p>
