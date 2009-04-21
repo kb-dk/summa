@@ -29,32 +29,18 @@ import dk.statsbiblioteket.summa.search.api.SearchClient;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.support.api.LuceneKeys;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.xml.DOM;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
 import java.io.IOException;
-import java.io.StringReader;
-import java.io.StringWriter;
 
 /**
  * A class containing methods meant to be exposed as a web service
@@ -210,14 +196,10 @@ public class SearchWS {
             res = getSearchClient().search(req);
 
             // parse string into dom
-            Document dom;
-            InputSource in = new InputSource();
-            in.setCharacterStream(new StringReader(res.toXML()));
-            dom = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(in);
+            Document dom = DOM.stringToDOM(res.toXML());
 
             // remove any response not related to FacetResult
-            XPath xp = XPathFactory.newInstance().newXPath();
-            NodeList nl = (NodeList) xp.evaluate("/responsecollection/response", dom, XPathConstants.NODESET);
+            NodeList nl = DOM.selectNodeList(dom, "/responsecollection/response");
             for (int i = 0; i < nl.getLength(); i++) {
                 Node n = nl.item(i);
                 NamedNodeMap attr = n.getAttributes();
@@ -231,34 +213,13 @@ public class SearchWS {
             }
 
             // transform dom back into a string
-            Transformer tran = TransformerFactory.newInstance().newTransformer();
-            tran.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-            tran.setOutputProperty(OutputKeys.METHOD, "xml");
-            StringWriter sw = new StringWriter();
-            tran.transform(new DOMSource(dom), new StreamResult(sw));
-
-            retXML = sw.toString();
+            retXML = DOM.domToString(dom);
         } catch (IOException e) {
             log.error("Error faceting query: '" + query + "'" +
                     ". Error was: ", e);
             // TODO: return a nicer error xml block
             retXML = "<error>Error performing query</error>";
         } catch (TransformerException e) {
-            log.error("Error faceting query: '" + query + "'" +
-                    ". Error was: ", e);
-            // TODO: return a nicer error xml block
-            retXML = "<error>Error performing query</error>";
-        } catch (SAXException e) {
-            log.error("Error faceting query: '" + query + "'" +
-                    ". Error was: ", e);
-            // TODO: return a nicer error xml block
-            retXML = "<error>Error performing query</error>";
-        } catch (XPathExpressionException e) {
-            log.error("Error faceting query: '" + query + "'" +
-                    ". Error was: ", e);
-            // TODO: return a nicer error xml block
-            retXML = "<error>Error performing query</error>";
-        } catch (ParserConfigurationException e) {
             log.error("Error faceting query: '" + query + "'" +
                     ". Error was: ", e);
             // TODO: return a nicer error xml block
