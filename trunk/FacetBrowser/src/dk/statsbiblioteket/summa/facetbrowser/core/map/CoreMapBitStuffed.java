@@ -413,10 +413,10 @@ public class CoreMapBitStuffed extends CoreMap32 {
             values = new int[valueSize];
             openValues(valuePos);
         } catch (IOException e) {
-            log.warn(String.format(
+            log.info(String.format(
                     "Could not load persistent data for core map at '%s'."
                     + " Creating new core map",
-                    location), e);
+                    location));
             clear();
             return false;
         }

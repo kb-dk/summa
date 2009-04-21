@@ -92,10 +92,10 @@ public class Resolver {
             log.debug("Returning resolved File '" + resolved.getPath() + "'");
             return resolved;
         } catch (Exception e) {
-            log.warn(String.format(
+            log.info(String.format(
                     "Could not resolve File '%s' to persistentBaseFile with "
                     + "persistent base '%s'. Using file directly as '%s'", 
-                    file, persistentBase, file.getAbsolutePath()), e);
+                    file, persistentBase, file.getAbsolutePath()));
             return file;
         }
     }
