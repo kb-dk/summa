@@ -35,6 +35,7 @@ import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.summa.search.document.DocumentSearcherImpl;
+import dk.statsbiblioteket.summa.support.api.LuceneKeys;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -82,18 +83,6 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
     public static final int DEFAULT_MAX_BOOLEAN_CLAUSES = 10000;
 
     private int maxBooleanClauses = DEFAULT_MAX_BOOLEAN_CLAUSES;
-
-    /**
-     * If present, normal search will be skipped an a MoreLikeThis-search will
-     * be performed. The recordid is verbatim for the record (document) that
-     * should be used as base for the MoreLikethis-functionality.
-     * </p><p>
-     * Optional. If no value is present, MoreLikeThis will not be active.
-     * @see {@link dk.statsbiblioteket.summa.search.api.document.DocumentKeys#SEARCH_START_INDEX}.
-     * @see {@link dk.statsbiblioteket.summa.search.api.document.DocumentKeys#SEARCH_MAX_RECORDS}.
-     */
-    public static final String SEARCH_MORELIKETHIS_RECORDID =
-            "search.document.lucene.morelikethis.recordid";
 
     /**
      * A sub-configuration for the MoreLikeThis functionality. All tweaks to
@@ -401,7 +390,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
 
     @Override
     protected boolean isRequestUsable(Request request) {
-        return request.containsKey(SEARCH_MORELIKETHIS_RECORDID)
+        return request.containsKey(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID)
                || super.isRequestUsable(request);
     }
 
@@ -460,7 +449,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                                                             RemoteException,
                                                             ParseException {
         if (!mlt_enabled
-            || !request.containsKey(SEARCH_MORELIKETHIS_RECORDID)) {
+            || !request.containsKey(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID)) {
             return query == null ? null : parser.parse(query);
         }
         if (moreLikeThis == null) {
@@ -469,7 +458,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                     + " opened)");
         }
 
-        String recordID = request.getString(SEARCH_MORELIKETHIS_RECORDID);
+        String recordID = request.getString(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID);
         log.trace("constructing MoreLikeThis query for '" + recordID + "'");
         if (recordID == null || "".equals(recordID)) {
             throw new ParseException(

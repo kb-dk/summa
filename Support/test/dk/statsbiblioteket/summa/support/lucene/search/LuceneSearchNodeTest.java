@@ -9,6 +9,7 @@ import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
+import dk.statsbiblioteket.summa.support.api.LuceneKeys;
 import dk.statsbiblioteket.util.Files;
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -135,7 +136,7 @@ public class LuceneSearchNodeTest extends TestCase {
 
         SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
         Request request = new Request();
-        request.put(LuceneSearchNode.SEARCH_MORELIKETHIS_RECORDID,
+        request.put(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID,
                     "fagref:jh@example.com");
         ResponseCollection responses = searcher.search(request);
         assertTrue("MoreLikeThis should return something else than the input",
