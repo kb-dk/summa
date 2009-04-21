@@ -69,10 +69,13 @@
 
         <operation name="getField">
             <documentation>
-                Returns a given field from the search index for a specific recordId. This could for instance be used to get the shortformat for a specific record. 
-             </documentation>
+                Returns a given field from the search index for a specific recordId. This could for instance be used to get the shortformat for a specific record.
+            </documentation>
             <parameter name="id" type="tns:string">
                 <documentation>The recordID to look up.</documentation>
+            </parameter>
+            <parameter name="fieldName" type="tns:string">
+                <documentation>The name of the field to return.</documentation>
             </parameter>
         </operation>
 
