@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -85,10 +85,12 @@ public class SuggestSearchNode extends SearchNodeImpl {
      * The class for the back-end storage for suggest.
      * </p><p>
      * Optional. Default is
-     * {@link dk.statsbiblioteket.summa.support.suggest.SuggestStorage}.
+     * {@link dk.statsbiblioteket.summa.support.suggest.SuggestStorageH2}.
      */
-    public static final String CONF_STORAGE_CLASS = "summa.support.suggest.storage";
-    public static final String DEFAULT_STORAGE = SuggestStorage.class.getName();
+    public static final String CONF_STORAGE_CLASS =
+                                                "summa.support.suggest.storage";
+    public static final Class<? extends SuggestStorage> DEFAULT_STORAGE =
+                                                         SuggestStorageH2.class;
 
     /**
      * The prefix to use as the base for the suggestions-list.
@@ -147,16 +149,10 @@ public class SuggestSearchNode extends SearchNodeImpl {
                 CONF_DEFAULT_MAX_RESULTS, defaultMaxResults);
 
         Class<? extends SuggestStorage> storageClass;
-        try {
-            storageClass = Configuration.getClass(
-                    CONF_STORAGE_CLASS, SuggestStorage.class, conf);
-        } catch (NullPointerException e) {
-            throw new ConfigurationException(String.format(
-                    "Unable to initialize the storage class '%s' for key %s",
-                    conf.valueExists(CONF_STORAGE_CLASS) ?
-                    conf.getString(CONF_STORAGE_CLASS) : "N/A",
-                    CONF_STORAGE_CLASS), e);
-        }
+        storageClass = Configuration.getClass(CONF_STORAGE_CLASS,
+                                              SuggestStorage.class,
+                                              DEFAULT_STORAGE,
+                                              conf);
 
         storage = Configuration.create(storageClass, conf);
         log.info(String.format("Created SuggestSearchNode with maxResults=%d, "
