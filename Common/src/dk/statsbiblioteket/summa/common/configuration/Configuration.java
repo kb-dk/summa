@@ -321,7 +321,7 @@ public class Configuration implements Serializable,
         }
         try {
             return Integer.parseInt(
-                     Environment.escapeSystemProperties(val.toString()));
+                     Environment.escapeSystemProperties(val.toString()).trim());
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Bad number format for '" + key
                                                + "': " + e.getMessage());
@@ -367,7 +367,7 @@ public class Configuration implements Serializable,
         }
         try {
             return Long.parseLong(
-                    Environment.escapeSystemProperties(val.toString()));
+                    Environment.escapeSystemProperties(val.toString()).trim());
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Bad number format for '" + key
                                                + "': " + e.getMessage());
@@ -413,7 +413,7 @@ public class Configuration implements Serializable,
         }
         try {
             return Boolean.parseBoolean(
-                    Environment.escapeSystemProperties(val.toString()));
+                    Environment.escapeSystemProperties(val.toString()).trim());
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("The property " + key
                                                + " is not a boolean, but a "
@@ -430,7 +430,7 @@ public class Configuration implements Serializable,
         }
         try {
             return Boolean.parseBoolean(
-                    Environment.escapeSystemProperties(val.toString()));
+                    Environment.escapeSystemProperties(val.toString()).trim());
         } catch (NumberFormatException e) {
             //noinspection DuplicateStringLiteralInspection
             log.warn("Bad format for property '" + key + "' with value '"
