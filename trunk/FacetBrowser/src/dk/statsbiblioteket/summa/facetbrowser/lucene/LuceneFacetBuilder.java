@@ -159,19 +159,23 @@ public class LuceneFacetBuilder extends BuilderImpl {
         log.debug("build: Temporarily switching to CoreMapBuilder"); // Hack!
         try {
             CoreMap oldMap = coreMap;
-            coreMap = new CoreMapBuilder(Configuration.newMemoryBased(),
-                                         structure);
-            facetMap.setCoreMap(coreMap);
-            if (docsToTerms) {
-                buildDocsToTerms(ir);
+            try {
+                coreMap = new CoreMapBuilder(Configuration.newMemoryBased(),
+                                             structure);
+                facetMap.setCoreMap(coreMap);
+                if (docsToTerms) {
+                    buildDocsToTerms(ir);
+                }
+                if (termsToDocs) {
+                    buildTermsToDocs(ir);
+                }
+                log.debug("Using copyTo to fill the standard "
+                          + "CoreMapBitStuffed");
+                coreMap.copyTo(oldMap);
+            } finally {
+                coreMap = oldMap;
+                facetMap.setCoreMap(coreMap);
             }
-            if (termsToDocs) {
-                buildTermsToDocs(ir);
-            }
-            log.debug("Using copyTo to fill the standard CoreMapBitStuffed");
-            coreMap.copyTo(oldMap);
-            coreMap = oldMap;
-            facetMap.setCoreMap(coreMap);
         } catch (IOException e) {
             throw new IOException("Failed building new facet index", e);
         } catch (Exception e) {
@@ -260,7 +264,7 @@ public class LuceneFacetBuilder extends BuilderImpl {
                 "Finished filling tag handler with %d tags in %d facets from "
                 + "the index with %d documents in %s",
                 termCount, tagHandler.getFacetNames().size(), ir.numDocs(),
-                 profiler.getSpendTime()));
+                profiler.getSpendTime()));
     }
 
     /**
@@ -377,7 +381,7 @@ public class LuceneFacetBuilder extends BuilderImpl {
     private int[] freqBuffer = new int[BUFFER_SIZE];
     // TODO: Only fill fields that has not previously been filled
     private synchronized void buildTermsToDocs(IndexReader ir) throws
-                                                                   IOException {
+                                                               IOException {
         log.debug("buildTermsToDocs() started");
         long startTime = System.currentTimeMillis();
         for (Map.Entry<String, FacetStructure> entry:
@@ -405,7 +409,7 @@ public class LuceneFacetBuilder extends BuilderImpl {
                             log.trace("Adding " + docCount + " references to "
                                       + facet.getName() + ":" + term.text());
                         }
-                        facetMap.add(docBuffer, docCount, facet.getName(), 
+                        facetMap.add(docBuffer, docCount, facet.getName(),
                                      term.text());
                     }
                     /* Mind-numbingly slow due to repeated term lookups

@@ -488,6 +488,7 @@ public class CoreMapBitStuffed extends CoreMap32 {
     }
 
     public void adjustPositions(int facetID, int position, int delta) {
+        //noinspection DuplicateStringLiteralInspection
         log.trace("Adjusting position for facetID " + facetID + " tags >= "
                   + position + " with delta " + delta);
         for (int vPos = 0 ; vPos < valuePos ; vPos++) {
