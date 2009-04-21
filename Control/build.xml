@@ -141,6 +141,7 @@
                 <available file="${summa.lib.junit}"/>
                 <available file="${summa.lib.sbutil}"/>
                 <available file="${summa.lib.lucene}"/>
+                <available file="${summa.lib.lucene.queries}"/>
             </and>
         </condition>
         <antcall target="${newTask}"/>
@@ -267,6 +268,7 @@
         <copy file="${basedir}/../${summa.lib.junit}" tofile="${summa.lib.junit}"/>
         <copy file="${basedir}/../${summa.lib.sbutil}" tofile="${summa.lib.sbutil}"/>
         <copy file="${basedir}/../${summa.lib.lucene}" tofile="${summa.lib.lucene}"/>
+        <copy file="${basedir}/../${summa.lib.lucene.queries}" tofile="${summa.lib.lucene.queries}"/>
     </target>
 
 
@@ -482,6 +484,7 @@
             <zipfileset prefix="lib" file="${summa.lib.log4j}"/>
             <zipfileset prefix="lib" file="${summa.lib.sbutil}"/>
             <zipfileset prefix="lib" file="${summa.lib.lucene}"/>
+            <zipfileset prefix="lib" file="${summa.lib.lucene.queries}"/>
             <zipfileset prefix="lib" file="${release.jar}"/>
 
             <zipfileset prefix="config" file="${test.src.dir}/test-search-1/config/configuration.xml"/>
@@ -588,6 +591,7 @@
             <zipfileset prefix="lib" file="${summa.lib.log4j}"/>
             <zipfileset prefix="lib" file="${summa.lib.sbutil}"/>
             <zipfileset prefix="lib" file="${summa.lib.lucene}"/>
+            <zipfileset prefix="lib" file="${summa.lib.lucene.queries}"/>
             <zipfileset prefix="lib" file="${release.jar}"/>
 
             <zipfileset prefix="config" file="${test.src.dir}/test-facet-search-1/config/configuration.xml"/>
@@ -989,6 +993,7 @@
             <zipfileset prefix="lib" file="${summa.lib.log4j}"/>
             <zipfileset prefix="lib" file="${summa.lib.sbutil}"/>
             <zipfileset prefix="lib" file="${summa.lib.lucene}"/>
+            <zipfileset prefix="lib" file="${summa.lib.lucene.queries}"/>
             <zipfileset prefix="lib" file="${release.jar}"/>
 
             <zipfileset prefix="bin" file="${tmp.dir}/performance.sh" filemode="755"/>
