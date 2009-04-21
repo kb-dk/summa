@@ -12,7 +12,7 @@ import org.apache.commons.logging.LogFactory;
 import java.io.File;
 import java.rmi.RemoteException;
 
-@SuppressWarnings({"ALL"})
+@SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class SuggestSearchNodeTest extends TestCase {
     private static Log log = LogFactory.getLog(SuggestSearchNodeTest.class);
 
@@ -33,8 +33,7 @@ public class SuggestSearchNodeTest extends TestCase {
     }
 
     public void testEmptyConfigInstantiation() throws Exception {
-        SuggestSearchNode node = new SuggestSearchNode(
-                Configuration.newMemoryBased());
+        new SuggestSearchNode(Configuration.newMemoryBased()).close();
     }
 
     public void testOpen() throws Exception {

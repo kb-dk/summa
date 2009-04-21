@@ -42,7 +42,10 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Convenience base class for SummaSearchers, taking care of basic setup.
- * Relevant properties from {@link SearchNodeFactory}, {@link dk.statsbiblioteket.summa.search.api.SummaSearcher},
+ * The default Impl is oriented towards watching for changes to the file system,
+ * normally initiated by index manipulators.
+ * Relevant properties from {@link SearchNodeFactory},
+ * {@link dk.statsbiblioteket.summa.search.api.SummaSearcher},
  * {@link IndexWatcher}, {@link SearchNodeLoadBalancer} and
  * {@link LuceneIndexUtils} needs to be specified in the configuration.
  */
@@ -72,6 +75,15 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
     public static final String CONF_SEARCHER_AVAILABILITY_TIMEOUT =
             "summa.search.searcheravailability.timeout";
     public static final int DEFAULT_SEARCHER_AVAILABILITY_TIMEOUT = 5 * 60000;
+
+    /**
+     * If specified, watching for index changes will be disabled and an open
+     * will be called with the stated root when the SummaSearcher is created.
+     * </p><p>
+     * Optional. Default is null (disabled).
+     */
+    public static final String CONF_STATIC_ROOT = "summa.search.staticroot";
+    public static final String DEFAULT_STATIC_ROOT = null;
 
     private int searcherAvailabilityTimeout =
             DEFAULT_SEARCHER_AVAILABILITY_TIMEOUT;
@@ -114,9 +126,16 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
                                                         SearchNodeDummy.class);
 
         // Ready for open
-        watcher = new IndexWatcher(conf);
-        watcher.addIndexListener(this);
-        watcher.startWatching(); // This fires an open to the indexes
+        String staticRoot =
+                conf.getString(CONF_STATIC_ROOT, DEFAULT_STATIC_ROOT);
+        if (staticRoot == null || "".equals(staticRoot)) {
+            log.trace("Starting watcher");
+            watcher = new IndexWatcher(conf);
+            watcher.addIndexListener(this);
+            watcher.startWatching(); // This fires an open to the indexes
+        } else {
+            indexChanged(new File(staticRoot));
+        }
         log.debug("Finished constructing SummaSearcherImpl");
     }
 
@@ -197,7 +216,9 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
      *                         underlying SearchNode.
      */
     public synchronized void close() throws RemoteException {
-        watcher.stopWatching();
+        if (watcher != null) {
+            watcher.stopWatching();
+        }
         searchNode.close();
         freeSlots.setOverallPermits(0);
 //        freeSlots.setPermits(searchNode.getFreeSlots());

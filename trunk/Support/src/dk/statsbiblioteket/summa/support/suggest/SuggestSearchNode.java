@@ -55,6 +55,11 @@ import java.rmi.RemoteException;
  * It follows that suggest is independent of other searchers.
  * </p><p>
  * The suggest is updated through a pseudo-search-call. This is a bit of a hack.
+ * </p><p>
+ * The search-node is normally the only node in a SummaSearcher, as suggest
+ * is normally used with a static location for persistence. In order to specify
+ * a static location, set the following property in a SummaSearcherImpl:
+ * {@link dk.statsbiblioteket.summa.search.SummaSearcherImpl#CONF_STATIC_ROOT}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
