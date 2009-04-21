@@ -28,6 +28,7 @@ import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.SearchClient;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.support.api.LuceneKeys;
+import dk.statsbiblioteket.summa.support.api.SuggestKeys;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.DOM;
 import org.apache.commons.logging.Log;
@@ -100,7 +101,26 @@ public class SearchWS {
      * @return An XML string containing the result or an error description.
      */
     public String getSuggestions(String prefix, int maxSuggestions) {
-        return("<error>Not implemented yet</error>");
+        String retXML;
+
+        ResponseCollection res;
+
+        Request req = new Request();
+        req.put(SuggestKeys.SEARCH_PREFIX, prefix);
+        req.put(SuggestKeys.SEARCH_MAX_RESULTS, maxSuggestions);
+
+        try {
+            res = getSearchClient().search(req);
+            retXML = res.toXML();
+        } catch (IOException e) {
+            log.warn("Error executing getSuggestions: '" + prefix + "', " +
+                    maxSuggestions +
+                    ". Error was: ", e);
+            // TODO: return a nicer error xml block
+            retXML = "<error>Error performing getSuggestions</error>";
+        }
+
+        return retXML;
     }
 
     /**
@@ -112,6 +132,17 @@ public class SearchWS {
      * Suggestion database.
      */
     public void commitQuery(String query, long hitCount) {
+        ResponseCollection res;
+
+        Request req = new Request();
+        req.put(SuggestKeys.SEARCH_UPDATE_QUERY, query);
+        req.put(SuggestKeys.SEARCH_UPDATE_HITCOUNT, hitCount);
+
+        try {
+            getSearchClient().search(req);
+        } catch (IOException e) {
+            log.warn("Error committing query '" + query + "' with hitCount '" + hitCount + "'");
+        }
     }
 
 
