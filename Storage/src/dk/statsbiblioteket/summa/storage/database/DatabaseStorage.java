@@ -26,27 +26,27 @@
  */
 package dk.statsbiblioteket.summa.storage.database;
 
-import java.io.File;
-import java.io.IOException;
-import java.sql.*;
-import java.util.*;
-
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.summa.storage.StorageBase;
+import dk.statsbiblioteket.summa.storage.api.QueryOptions;
+import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager.StatementHandle;
 import dk.statsbiblioteket.summa.storage.database.cursors.Cursor;
+import dk.statsbiblioteket.summa.storage.database.cursors.CursorReaper;
 import dk.statsbiblioteket.summa.storage.database.cursors.PagingCursor;
 import dk.statsbiblioteket.summa.storage.database.cursors.ResultSetCursor;
-import dk.statsbiblioteket.summa.storage.database.cursors.CursorReaper;
-import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager.StatementHandle;
-import dk.statsbiblioteket.summa.storage.api.QueryOptions;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Zips;
 import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.Zips;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.sql.*;
+import java.util.*;
 
 /**
  * An abstract implementation of a SQL database driven extension
@@ -64,7 +64,7 @@ public abstract class DatabaseStorage extends StorageBase {
      * {@link #getRecordsModifiedAfter} are valid if they are unused. After the
      * specified amount of inactivity they may be cleaned up by the storage.
      * The default value is {@link #DEFAULT_ITERATOR_TIMEOUT}.
-     */
+getco     */
     public static final String CONF_ITERATOR_TIMEOUT =
                                        "summa.storage.database.iteratortimeout";
 
