@@ -22,18 +22,17 @@
  */
 package dk.statsbiblioteket.summa.index;
 
-import javax.xml.transform.TransformerException;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.xml.XSLT;
-import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
-import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
-import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
+import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
+import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.xml.XSLT;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import javax.xml.transform.TransformerException;
 import java.net.URL;
 
 /**
@@ -97,7 +96,8 @@ public class XMLTransformer extends ObjectFilterImpl {
             log.warn(String.format(
                     "The key %s was not defined. It is highly recommended to"
                     + " define it as the wrong value typically wrecks the "
-                    + "output. Falling back to default ", stripXMLNamespaces));
+                    + "output. Falling back to default %b",
+                    CONF_STRIP_XML_NAMESPACES, stripXMLNamespaces));
         }
         stripXMLNamespaces = conf.getBoolean(CONF_STRIP_XML_NAMESPACES,
                                              stripXMLNamespaces);
