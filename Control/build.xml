@@ -415,6 +415,7 @@
             <zipfileset prefix="${prefix}/lib" file="../${summa.ilib.search}"/>
             <zipfileset prefix="${prefix}/lib" file="../${summa.ilib.search.api}"/>
             <zipfileset prefix="${prefix}/lib" file="../${summa.ilib.support}"/>
+            <zipfileset prefix="${prefix}/lib" file="../${summa.ilib.support.api}"/>
 
             <zipfileset prefix="${prefix}/config" file="${basedir}/config/log4j.xml"/>
             <zipfileset prefix="${prefix}/config" file="${basedir}/config/configuration-server.xml"/>
@@ -476,6 +477,7 @@
             <zipfileset prefix="lib" file="../${summa.ilib.search}"/>
             <zipfileset prefix="lib" file="../${summa.ilib.search.api}"/>
             <zipfileset prefix="lib" file="../${summa.ilib.support}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.support.api}"/>
             <zipfileset prefix="lib" file="${summa.lib.commons-logging}"/>
             <zipfileset prefix="lib" file="${summa.lib.log4j}"/>
             <zipfileset prefix="lib" file="${summa.lib.sbutil}"/>
@@ -526,6 +528,7 @@
             <zipfileset prefix="lib" file="../${summa.ilib.storage.api}"/>
             <zipfileset prefix="lib" file="../${summa.ilib.index}"/>
             <zipfileset prefix="lib" file="../${summa.ilib.support}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.support.api}"/>
             <zipfileset prefix="lib" file="../${summa.ilib.facetbrowser}"/>
             <zipfileset prefix="lib" file="../${summa.ilib.facetbrowser.api}"/>
             <zipfileset prefix="lib" file="${summa.lib.commons-logging}"/>
@@ -578,6 +581,7 @@
             <zipfileset prefix="lib" file="../${summa.ilib.search}"/>
             <zipfileset prefix="lib" file="../${summa.ilib.search.api}"/>
             <zipfileset prefix="lib" file="../${summa.ilib.support}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.support.api}"/>
             <zipfileset prefix="lib" file="../${summa.ilib.facetbrowser}"/>
             <zipfileset prefix="lib" file="../${summa.ilib.facetbrowser.api}"/>
             <zipfileset prefix="lib" file="${summa.lib.commons-logging}"/>
@@ -978,6 +982,7 @@
             <zipfileset prefix="lib" file="../${summa.ilib.storage.api}"/>
             <zipfileset prefix="lib" file="../${summa.ilib.index}"/>
             <zipfileset prefix="lib" file="../${summa.ilib.support}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.support.api}"/>
             <zipfileset prefix="lib" file="../${summa.ilib.facetbrowser}"/>
             <zipfileset prefix="lib" file="../${summa.ilib.facetbrowser.api}"/>
             <zipfileset prefix="lib" file="${summa.lib.commons-logging}"/>

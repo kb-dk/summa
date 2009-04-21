@@ -8,6 +8,7 @@
 	<publicApi>
         <file>lib/summa-search-api-@summa.version@.jar</file>
         <file>lib/summa-facetbrowser-api-@summa.version@.jar</file>
+        <file>lib/summa-support-api-@summa.version@.jar</file>
     </publicApi>
 </bundle>
 
