@@ -92,6 +92,18 @@
         <ant inheritAll="false" dir="../Storage" target="release"/>
     </target>
 
+    <target name=".getSupport">
+        <condition property="releaseSupportTask" value=".phony" else=".releaseSupport">
+            <available file="../${summa.ilib.support.api}"/>
+        </condition>
+        <antcall target="${releaseSupportTask}"/>
+        <copy file="../${summa.ilib.support.api}" todir="${lib.dir}"/>
+    </target>
+
+    <target name=".releaseSupport">
+        <ant inheritAll="false" dir="../Support" target="release"/>
+    </target>
+
     <target name=".getSearch">
         <condition property="releaseSearchTask" value=".phony" else=".releaseSearch">
             <available file="../${summa.ilib.search.api}"/>
@@ -160,6 +172,12 @@
             <available file="lib/summa-facetbrowser-api-${summa.version}.jar"/>
         </condition>
         <antcall target="${getFacetBrowserTask}"/>
+
+        <!-- Check that Suppport API is compiled -->
+        <condition property="getSupportTask" value=".phony" else=".getSupport">
+            <available file="lib/summa-support-api-${summa.version}.jar"/>
+        </condition>
+        <antcall target="${getSupportTask}"/>
 
         <!-- Store space-separated list of lib-filenames in lib.files -->
         <pathconvert refid="lib.path" property="lib.files" pathsep=" ">
