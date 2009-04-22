@@ -1,8 +1,10 @@
 <%@ page import="java.io.File" %>
 <%@ page import="dk.statsbiblioteket.gwsc.WebServices" %>
 <%@ page import="org.w3c.dom.Document" %>
-<%@ page import="dk.statsbiblioteket.commons.XmlOperations" %>
+<%@ page import="dk.statsbiblioteket.util.xml.*" %>
 <%@ page import="java.util.Properties" %>
+<%@ page import="java.net.URL" %>
+<%@ page import="javax.xml.transform.TransformerException" %>
 <%@ page pageEncoding="UTF-8" %>
 <%
     response.setContentType("text/html; charset=UTF-8");
@@ -37,15 +39,18 @@
         if (xml_search_result == null) {
             search_html = "Error executing query";
         } else {
-            Document dom_search_result = XmlOperations.stringToDOM(xml_search_result);
-            File search_xslt = new File(basepath + "xslt/short_records.xsl");
+            URL search_xslt = new File(basepath + "xslt/short_records.xsl").toURI().toURL();
 
             Properties search_prop = new Properties();
             search_prop.put("query", query);
             search_prop.put("per_page", per_page);
             search_prop.put("current_page", current_page);
 
-            search_html = XmlOperations.xsltTransform(dom_search_result, search_xslt, search_prop);
+            try {
+                search_html = XSLT.transform(search_xslt, xml_search_result, search_prop, true);
+            } catch (TransformerException e) {
+                search_html = "Transformer exception: " + e.getMessage();
+            }
         }
 
         String xml_facet_result = (String) services.execute("summasimplefacet", query);
@@ -53,13 +58,17 @@
         if (xml_facet_result == null) {
             facet_html = "Error faceting query";
         } else {
-            Document dom_facet_result = XmlOperations.stringToDOM(xml_facet_result);
-            File facet_xslt = new File(basepath + "xslt/facet_overview.xsl");
+            URL facet_xslt = new File(basepath + "xslt/facet_overview.xsl")
+                                                               .toURI().toURL();
 
             Properties facet_prop = new Properties();
             facet_prop.put("query", query);
 
-            facet_html = XmlOperations.xsltTransform(dom_facet_result, facet_xslt, facet_prop);
+            try {
+                facet_html = XSLT.transform(facet_xslt, xml_facet_result, facet_prop);
+            } catch (TransformerException e) {
+                facet_html = "Transformer exception: " + e.getMessage();
+            }
         }
 
     }
