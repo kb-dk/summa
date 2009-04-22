@@ -22,7 +22,7 @@
  */
 package dk.statsbiblioteket.gwsc;
 
-import dk.statsbiblioteket.commons.XmlOperations;
+import dk.statsbiblioteket.util.xml.*;
 import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -72,7 +72,7 @@ public class WebServices {
                 docBuilder.isValidating();
                 docBuilder.isNamespaceAware();
                 Document doc = docBuilder.parse(new File(propurl.getFile()));
-                Node nn = XmlOperations.xpathSelectSingleNode(doc,"properties/service[name=\""+ name + "\"]");
+                Node nn = DOM.selectNode(doc,"properties/service[name=\""+ name + "\"]");
                 ServiceObj service = null;
                 if (nn != null) {
                     service = getServiceObj(nn);
@@ -105,7 +105,7 @@ public class WebServices {
             docBuilder.isValidating();
             docBuilder.isNamespaceAware();
             Document doc = docBuilder.parse(new File(propurl.getFile()));
-            NodeList nl = XmlOperations.xpathSelectNodeList(doc,"properties/service");
+            NodeList nl = DOM.selectNodeList(doc,"properties/service");
             for (int i = 0; i < nl.getLength(); i++) {
                 ServiceObj service = getServiceObj(nl.item(i));
                 if (service != null && service.getName() != null && !service.getName().equals("") && !servicehash.containsKey(service.getName().toLowerCase())) {
@@ -132,36 +132,36 @@ public class WebServices {
         String name = "";
         boolean ok = false;
         if (nn.getAttributes().getNamedItem("type").getNodeValue().equals("soap")) {
-            String wsdlurl = XmlOperations.xpathSelectSingleNode(nn,"wsdl/text()").getNodeValue();
+            String wsdlurl = DOM.selectNode(nn,"wsdl/text()").getNodeValue();
             if (checkUrl(new URL(wsdlurl))) {
                 service = new ServiceObj(nn.getAttributes().getNamedItem("type").getNodeValue());
                 name = nn.getAttributes().getNamedItem("name").getNodeValue();
                 System.out.println(name);
-                String servicename = XmlOperations.xpathSelectSingleNode(nn,"servicename/text()").getNodeValue();
-                String operationname = XmlOperations.xpathSelectSingleNode(nn,"operationname/text()").getNodeValue();
-                String wsdl = postData(XmlOperations.xpathSelectSingleNode(nn,"wsdl/text()").getNodeValue(),"");
-                Document wsdldoc = XmlOperations.stringToDOM(wsdl);
-                nn = XmlOperations.xpathSelectSingleNode(wsdldoc,"//*/address[@location]");
+                String servicename = DOM.selectNode(nn,"servicename/text()").getNodeValue();
+                String operationname = DOM.selectNode(nn,"operationname/text()").getNodeValue();
+                String wsdl = postData(DOM.selectNode(nn,"wsdl/text()").getNodeValue(),"");
+                Document wsdldoc = DOM.stringToDOM(wsdl);
+                nn = DOM.selectNode(wsdldoc,"//*/address[@location]");
                 if (nn != null) {
                     String serviceurl = nn.getAttributes().getNamedItem("location").getNodeValue();
-                    nn = XmlOperations.xpathSelectSingleNode(wsdldoc,"definitions");
+                    nn = DOM.selectNode(wsdldoc,"definitions");
                     if (nn != null) {
                         String namespace = nn.getAttributes().getNamedItem("targetNamespace").getNodeValue();
-                        NodeList nl1 = XmlOperations.xpathSelectNodeList(wsdldoc,"definitions/service/port");
+                        NodeList nl1 = DOM.selectNodeList(wsdldoc,"definitions/service/port");
                         //System.out.println(nl1.item(0).getAttributes().getNamedItem("name").getNodeValue() + " - " + servicename);
                         if (nl1.item(0).getAttributes().getNamedItem("name").getNodeValue().equals(servicename)) {
                             service.setName(name);
                             service.createCallObj(serviceurl,namespace,servicename,operationname);
-                            nl1 = XmlOperations.xpathSelectNodeList(wsdldoc,"definitions/portType/operation");
+                            nl1 = DOM.selectNodeList(wsdldoc,"definitions/portType/operation");
                             for (int j=0; j < nl1.getLength(); j++) {
                                 if (nl1.item(j).getAttributes().getNamedItem("name").getNodeValue().trim().equals(operationname)) {
-                                    Node input = XmlOperations.xpathSelectSingleNode(nl1.item(j),"./input");
-                                    Node output = XmlOperations.xpathSelectSingleNode(nl1.item(j),"./output");
+                                    Node input = DOM.selectNode(nl1.item(j),"./input");
+                                    Node output = DOM.selectNode(nl1.item(j),"./output");
                                     String inputstr = input.getAttributes().getNamedItem("name").getNodeValue();
                                     String outputstr = output.getAttributes().getNamedItem("name").getNodeValue();
-                                    NodeList nl2 = XmlOperations.xpathSelectNodeList(wsdldoc,"definitions/message[@name='" + inputstr + "']/part");
+                                    NodeList nl2 = DOM.selectNodeList(wsdldoc,"definitions/message[@name='" + inputstr + "']/part");
                                     if (nl2 != null && nl2.getLength() == 1 && nl2.item(0).getAttributes().getNamedItem("name").getNodeValue().equals("parameters")) {
-                                        NodeList nl3 = XmlOperations.xpathSelectNodeList(wsdldoc,"definitions/types/schema/element[@name='" + nl1.item(j).getAttributes().getNamedItem("name").getNodeValue() + "']" + "/complexType/sequence/element");
+                                        NodeList nl3 = DOM.selectNodeList(wsdldoc,"definitions/types/schema/element[@name='" + nl1.item(j).getAttributes().getNamedItem("name").getNodeValue() + "']" + "/complexType/sequence/element");
                                         for (int k = 0; k < nl3.getLength(); k++) {
                                             service.setParameters(nl3.item(k).getAttributes().getNamedItem("name").getNodeValue(),nl3.item(k).getAttributes().getNamedItem("type").getNodeValue());
                                         }
@@ -170,9 +170,9 @@ public class WebServices {
                                             service.setParameters(nl2.item(k).getAttributes().getNamedItem("name").getNodeValue(), nl2.item(k).getAttributes().getNamedItem("type").getNodeValue());
                                         }
                                     }
-                                    nl2 = XmlOperations.xpathSelectNodeList(wsdldoc,"definitions/message[@name='" + outputstr + "']/part");
+                                    nl2 = DOM.selectNodeList(wsdldoc,"definitions/message[@name='" + outputstr + "']/part");
                                     if (nl2 != null && nl2.getLength() == 1 && nl2.item(0).getAttributes().getNamedItem("name").getNodeValue().equals("parameters")) {
-                                        NodeList nl3 = XmlOperations.xpathSelectNodeList(wsdldoc,"definitions/types/schema/element[@name='" + outputstr + "']" + "/complexType/sequence/element");
+                                        NodeList nl3 = DOM.selectNodeList(wsdldoc,"definitions/types/schema/element[@name='" + outputstr + "']" + "/complexType/sequence/element");
                                         for (int k = 0; k < nl3.getLength(); k++) {
                                             service.setReturnvalue(nl3.item(k).getAttributes().getNamedItem("name").getNodeValue(),nl3.item(k).getAttributes().getNamedItem("type").getNodeValue());
                                         }
@@ -196,13 +196,13 @@ public class WebServices {
                 log.info("Soap-Service: " + wsdlurl + " not available!");
             }
         } else if (nn.getAttributes().getNamedItem("type").getNodeValue().equals("rest")) {
-            String url = XmlOperations.xpathSelectSingleNode(nn,"url/text()").getNodeValue();
+            String url = DOM.selectNode(nn,"url/text()").getNodeValue();
             service = new ServiceObj(nn.getAttributes().getNamedItem("type").getNodeValue());
             name = nn.getAttributes().getNamedItem("name").getNodeValue();
             System.out.println(name);
             service.setName(name);
-            service.createCallObj(XmlOperations.xpathSelectSingleNode(nn,"url/text()").getNodeValue());
-            NodeList nl1 = XmlOperations.xpathSelectNodeList(nn,"parameters/parameter");
+            service.createCallObj(DOM.selectNode(nn,"url/text()").getNodeValue());
+            NodeList nl1 = DOM.selectNodeList(nn,"parameters/parameter");
             for (int j=0; j < nl1.getLength(); j++) {
                 service.setParameters(nl1.item(j).getAttributes().getNamedItem("name").getNodeValue());
             }
