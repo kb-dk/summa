@@ -136,8 +136,9 @@ public class SuggestResponse implements Response {
         }
         try {
             writer.setDefaultNamespace(NAMESPACE);
-            writer.writeStartDocument();
+            //writer.writeStartDocument();
             writer.writeStartElement(QUERY_RESPONSE);
+            writer.writeDefaultNamespace(NAMESPACE);
             writer.writeAttribute(VERSION_TAG, VERSION);
             writer.writeAttribute(QUERY_TAG, query);
             writer.writeAttribute(MAXRESULTS_TAG, Integer.toString(maxResults));
