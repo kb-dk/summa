@@ -22,25 +22,25 @@
  */
 package dk.statsbiblioteket.summa.index.lucene;
 
-import java.io.IOException;
-import java.io.File;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
+import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.index.IndexManipulator;
+import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.index.*;
-import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.store.LockObtainFailedException;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.index.*;
+import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.store.LockObtainFailedException;
+
+import java.io.File;
+import java.io.IOException;
 
 /**
  * Handles iterative updates of a Lucene index. A Record that is an update of an
@@ -259,11 +259,11 @@ public class LuceneManipulator implements IndexManipulator {
             throw new IllegalArgumentException(String.format(
                     "Could not extract id from %s", payload));
         }
-        ensureStoredID(id, payload);
         if (payload.getRecord() == null) {
             log.debug("update: The Payload " + id + " did not have a record, so"
                       + " it will always be processed as a plain addition");
         }
+        IndexUtils.assignBasicProperties(payload);
         boolean deleted =
                 payload.getRecord() != null && payload.getRecord().isDeleted();
         boolean updated =
@@ -301,6 +301,7 @@ public class LuceneManipulator implements IndexManipulator {
         if (log.isTraceEnabled()) {
             log.trace("Dumping analyzed fields for " + payload);
             for (Object field: document.getFields()) {
+                //noinspection DuplicateStringLiteralInspection
                 log.trace("Field " + ((Field)field).name() + " has content "
                           + ((Field)field).stringValue());
             }
@@ -332,18 +333,6 @@ public class LuceneManipulator implements IndexManipulator {
             log.info("Delete requested for " + payload + ", but it was not "
                      + "present in the index");
         }
-    }
-
-    /**
-     * Ensures that the Document in payload has a RecordID-field which contains
-     * id as term.
-     * @param id      the RecordID for the Document.
-     * @param payload the container containing the Document.
-     */
-    private void ensureStoredID(String id, Payload payload) {
-        Document document =
-                (Document)payload.getData(Payload.LUCENE_DOCUMENT);
-        IndexUtils.assignID(id, document);
     }
 
     public synchronized void commit() throws IOException {

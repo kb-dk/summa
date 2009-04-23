@@ -19,24 +19,23 @@
  */
 package dk.statsbiblioteket.summa.index.lucene;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.xml.XMLUtil;
-import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
-import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
-import dk.statsbiblioteket.summa.common.lucene.LuceneIndexField;
-import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
-import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
-import dk.statsbiblioteket.summa.common.Logging;
-import org.apache.commons.logging.LogFactory;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexField;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
+import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.events.XMLEvent;
 import java.io.ByteArrayInputStream;
 import java.text.ParseException;
@@ -158,10 +157,6 @@ public class StreamingDocumentCreator extends DocumentCreatorBase {
             throw new PayloadException(
                     "Exception whle updating the Lucene document", e, payload);
         }
-        //noinspection DuplicateStringLiteralInspection
-        log.trace("Setting " + IndexUtils.RECORD_FIELD + " to '"
-                  + payload.getId() + "'");
-        IndexUtils.assignID(payload.getId(), luceneDoc);
 
         payload.getData().put(Payload.LUCENE_DOCUMENT, luceneDoc);
         //noinspection DuplicateStringLiteralInspection
@@ -333,4 +328,5 @@ public class StreamingDocumentCreator extends DocumentCreatorBase {
         super.close(success);
         log.info("Closing down StreamingDocumentcreator. " + getProcessStats());
     }
+
 }
