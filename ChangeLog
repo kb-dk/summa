@@ -1,3 +1,466 @@
+2009-04-23 12:20  mke
+
+	* [r1347]
+	  Control/src/dk/statsbiblioteket/summa/control/client/Client.java:
+	  
+	  Allow the Client.main() method to heuristically detect a config
+	  if none is found
+
+2009-04-23 11:53  mke
+
+	* [r1346] Common/build.xml,
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/Configuration.java,
+	  Control/scripts/search-tool.sh,
+	  Control/src/dk/statsbiblioteket/summa/control/api/StatusMonitor.java,
+	  Control/src/dk/statsbiblioteket/summa/control/bundle/BundleUtils.java,
+	  Control/src/dk/statsbiblioteket/summa/control/client/shell/ClientShell.java,
+	  Control/src/dk/statsbiblioteket/summa/control/client/shell/RestartServiceCommand.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/ClientMonitor.java[DEL],
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestSearchNode.java:
+	  
+	  Auto insert the summa.api.version property into the Configuration
+	  class on compile time (this currently doesn't work when compiling
+	  from Idea)
+	  
+	  Make search-tool.sh detect config properly
+	  
+	  Fix a connection called "null" in the output of StatusMonitor
+	  
+	  Allow hard coded .jar files when calculating the RMI codebase in
+	  BundleUtils
+	  
+	  Install a new command 'restart' in the client-shell
+	  
+	  Remove deprecated class ClientMonitor
+	  
+	  Better error reporting from SuggestSearchNode
+
+2009-04-23 11:51  toke
+
+	* [r1345] Samples/Summix/bin/generic_start.bat,
+	  Samples/Summix/bin/search-tool.bat,
+	  Samples/Summix/bin/storage-tool.bat,
+	  Samples/Summix/bin/summa-filter.bat,
+	  Samples/Summix/bin/summa-searcher.bat,
+	  Samples/Summix/bin/summa-storage.bat:
+	  
+	  Updated the Windows-scripts to handle properties and every other
+	  functionality that the sh-scripts does
+
+2009-04-23 11:46  mads
+
+	* [r1344] Summa.ipr, Web/config/search/server-config.wsdd,
+	  Web/src/dk/statsbiblioteket/summa/web/services/SearchWS.java:
+	  
+	  Removed startIndex argument from getMoreLikeThis. You most likely
+	  don't want paging in a moreLikeThis query.
+
+2009-04-23 10:23  dorete
+
+	* [r1343] Index/config/targets/etss/etss_short_format.xsl:
+	  
+	  Ændring af e-tss (short_format medtager requires_pw="true")
+
+2009-04-23 10:05  mke
+
+	* [r1342] Samples/Summix/bin/suggest-tool.sh,
+	  Samples/Summix/config/suggest-tool.configuration.xml[CPY]:
+	  
+	  Import a suggest-tool.sh to Summix and corresponding config. This
+	  might get moved to the Control module at some point (and
+	  automagically pulled into Summix just like storage-tool and
+	  search-tool does)
+
+2009-04-23 09:45  mke
+
+	* [r1341] Samples/Summix/README:
+	  
+	  Update Summix README to mention how to start the suggestion
+	  engine
+
+2009-04-23 09:43  mke
+
+	* [r1340] Samples/Summix/config/suggest.xml:
+	  
+	  Include a Summa suggest searcher in Summix
+
+2009-04-23 09:15  dorete
+
+	* [r1339] Index/config/targets/etss/etss_short_format.xsl:
+	  
+	  Ændring af e-tss (short_format medtager requires_pw="true")
+
+2009-04-23 08:36  mke
+
+	* [r1338] build.properties:
+	  
+	  Bump version to 1.4.0 - this does _not_ mark the release!
+
+2009-04-22 12:51  mke
+
+	* [r1337] Web/resources/index.jsp, Web/resources/showrecord.jsp,
+	  Web/src/dk/statsbiblioteket/commons[DEL],
+	  Web/src/dk/statsbiblioteket/gwsc/WebServices.java:
+	  
+	  Remove XmlOperations and use the 'xml' package from SBUtil in the
+	  Web module @Mads - please review this!
+
+2009-04-21 21:29  mke
+
+	* [r1336]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/storage/FileStorage.java,
+	  Control/src/dk/statsbiblioteket/summa/control/api/ClientConnection.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/ClientManager.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/ControlCore.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/ControlUtils.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/deploy/SSHDeployer.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/shell/ClientsCommand.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/shell/ControlCommand.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/shell/ControlShell.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/shell/DeployCommand.java:
+	  
+	  Allow for clients to load their configurations sloppily, by
+	  allowing gestSystemConfiguration() to search for a config. This
+	  also allows one to specify the summa.configuration property in a
+	  client.xml
+	  spec file.
+	  
+	  In the Control module rename the concept of "client meta files"
+	  to "client control files"
+	  
+	  Move client control files from the meta/ dir directly into
+	  <clientId>/control.xml. This makes it way easier to remove
+	  unwanted clients without having artifacts lying around
+	  
+	  Introduce new command in the control-shell, 'control', that can
+	  inspect the contents of a client control file given a client id
+	  
+	  Add DEFAULT_REGISTRY_PORT to ClientConnection
+	  
+	  Make the ControlCore's ClientManager look up the client's
+	  registry port by inspecting the control.xml and returning a
+	  default value (27000) if it is undefined. This fixes an age old
+	  warning issued about
+	  hard coded client registry ports of 2700.
+
+2009-04-21 18:46  tokerefind
+
+	* [r1335] Samples/Summix/bin/generic_start.sh:
+	  
+	  Tweak: Added -Djava.rmi.server.hostname=localhost to the JVM
+	  invocation to avoid problems with firewalls and routing outside
+	  of the local computer
+
+2009-04-21 13:45  toke
+
+	* [r1334] Samples/Summix/bin/generic_start.sh,
+	  Samples/Summix/bin/summa-filter.sh,
+	  Samples/Summix/bin/summa-searcher.sh,
+	  Samples/Summix/bin/summa-storage.sh:
+	  
+	  Refactoring of Summix-scripts to source a common script to reduce
+	  reduncancy. Expansion of properties from file to Java properties
+	  was also added
+
+2009-04-21 12:27  mke
+
+	* [r1333]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/Configuration.java,
+	  Common/test/dk/statsbiblioteket/summa/common/configuration/ConfigurationTest.java:
+	  
+	  Make Configuration more forgiving when parsing ints, longs, and
+	  booleans (allowing surrounding white space)
+
+2009-04-21 11:14  mads
+
+	* [r1332] Web/config/search/server-config.wsdd,
+	  Web/src/dk/statsbiblioteket/summa/web/services/SearchWS.java:
+	  
+	  Initial implementation of getSuggestions and commitQuery.
+	  
+	  Minor fix for getField method in wsdd-file.
+
+2009-04-21 11:07  mads
+
+	* [r1331]
+	  Web/src/dk/statsbiblioteket/summa/web/services/SearchWS.java:
+	  
+	  Changed log levels to be more consistent with the rest of Summa
+
+2009-04-21 10:25  mke
+
+	* [r1330] build.properties:
+	  
+	  Bump version to 1.3.4-rc
+
+2009-04-21 09:55  mads
+
+	* [r1329] Web/config/search/server-config.wsdd,
+	  Web/src/dk/statsbiblioteket/summa/web/services/SearchWS.java:
+	  
+	  Stubs for the Suggestion WS methods
+
+2009-04-21 09:52  toke
+
+	* [r1328]
+	  Support/test/dk/statsbiblioteket/summa/support/suggest/SuggestSearcherTest.java,
+	  Support/test/log4j.xml:
+	  
+	  Testing: Added a small performance-test to SuggestSearcherTest
+
+2009-04-21 09:47  mads
+
+	* [r1327] Web/config/search/server-config.wsdd,
+	  Web/src/dk/statsbiblioteket/summa/web/services/SearchWS.java:
+	  
+	  First attempt at making a getField method, that can be used to
+	  get a given field from the search index for a specific recordID.
+
+2009-04-21 09:32  toke
+
+	* [r1326]
+	  Search/src/dk/statsbiblioteket/summa/search/SummaSearcherImpl.java,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestSearchNode.java,
+	  Support/test/data/suggest,
+	  Support/test/data/suggest/SuggestSearch.xml,
+	  Support/test/dk/statsbiblioteket/summa/support/suggest/SuggestSearchNodeTest.java,
+	  Support/test/dk/statsbiblioteket/summa/support/suggest/SuggestSearcherTest.java[CPY]:
+	  
+	  Testing: Unit-test for wrapping Suggest in a SummaSearcher has
+	  been added
+	  Feature: SummaSearcherImpl now supports using a static index-root
+
+2009-04-21 09:26  nig
+
+	* [r1325] Index/config/targets/mis/mis_other.xsl,
+	  Index/config/targets/nordicom/nordicom_other.xsl:
+	  
+	  optimering af xslt i nordicom old formattet i other-tagget
+
+2009-04-21 09:19  nig
+
+	* [r1324] Index/config/targets/dub/dub_classification.xsl,
+	  Index/config/targets/dub/dub_index.xsl:
+	  
+	  classification.xsl tilføjet til dub formattet
+
+2009-04-21 09:14  mads
+
+	* [r1323]
+	  Web/src/dk/statsbiblioteket/summa/web/services/SearchWS.java:
+	  
+	  Rewrite simpleFacet method to use the DOM methods in sbutil
+
+2009-04-21 09:09  mads
+
+	* [r1322] Summa.ipr, Web/build.xml,
+	  Web/src/dk/statsbiblioteket/summa/web/services/SearchWS.java:
+	  
+	  Update MoreLikeThis to use the proper key from Support
+
+2009-04-21 08:55  toke
+
+	* [r1321]
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestSearchNode.java,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorageH2.java,
+	  Support/test/dk/statsbiblioteket/summa/support/suggest/SuggestSearchNodeTest.java:
+	  
+	  Bugfix: Suggest had some mixups between queryCount and hits
+	  Testing: Added unit-tests for Suggest
+
+2009-04-21 08:50  nig
+
+	* [r1320] Index/config/targets/mis,
+	  Index/config/targets/mis/mis_author.xsl,
+	  Index/config/targets/mis/mis_identifiers.xsl,
+	  Index/config/targets/mis/mis_index.xsl,
+	  Index/config/targets/mis/mis_lma.xsl,
+	  Index/config/targets/mis/mis_material.xsl,
+	  Index/config/targets/mis/mis_notes.xsl,
+	  Index/config/targets/mis/mis_other.xsl,
+	  Index/config/targets/mis/mis_publisher.xsl,
+	  Index/config/targets/mis/mis_short_format.xsl,
+	  Index/config/targets/mis/mis_subject.xsl,
+	  Index/config/targets/mis/mis_title.xsl:
+	  
+	  mis(Missio Nordica Database) i Summa
+
+2009-04-21 08:37  mke
+
+	* [r1319] Control/build.xml:
+	  
+	  Include lucene-queries.jar in searcher bundles as this is needed
+	  for MoreLikeThis
+
+2009-04-21 08:23  toke
+
+	* [r1318]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/ZIPHandler.java,
+	  Support/src/dk/statsbiblioteket/summa/support/api/SuggestResponse.xsd[CPY],
+	  Support/src/dk/statsbiblioteket/summa/support/api/SuggestResponseSample.xml[CPY],
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestResponse.xsd[DEL],
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestResponseSample.xml[DEL]:
+	  
+	  Cleanup: Moved SuggestResponse schema and sample to the api
+	  folder
+
+2009-04-21 08:22  toke
+
+	* [r1317]
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/QueryResponse.xsd[DEL],
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/QueryResponseSample.xml[DEL],
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestResponse.xsd[CPY],
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestResponseSample.xml[CPY]:
+	  
+	  Cleanup: Renamed the QueryResponse-files to the more specific
+	  SuggestResponse
+
+2009-04-21 08:19  toke
+
+	* [r1316]
+	  Common/src/dk/statsbiblioteket/summa/common/index/QueryResponse.xsd[DEL],
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/QueryResponse.xsd[CPY]:
+	  
+	  Cleanup: Moved the QueryResponse schema to the support module
+
+2009-04-21 08:17  toke
+
+	* [r1315]
+	  Common/src/dk/statsbiblioteket/summa/common/index/QueryResponse.xsd[CPY],
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java:
+	  
+	  Cosmetics: Removed unused imports in DatabaseStorage
+
+2009-04-21 08:16  toke
+
+	* [r1314]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/map/CoreMapBitStuffed.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/map/CoreMapBuilder.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/tags/Facet.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/lucene/LuceneFacetBuilder.java:
+	  
+	  Bugfix: The Facet building failed due to missing implementation
+	  of adjustPositions in the CoreMapBuilder
+
+2009-04-21 08:16  mke
+
+	* [r1313] Support/test/dk/statsbiblioteket/summa/support/suggest,
+	  Support/test/dk/statsbiblioteket/summa/support/suggest/SuggestSearchNodeTest.java:
+	  
+	  Start writing test cases for SuggestSearchNode
+
+2009-04-21 08:04  mke
+
+	* [r1312] Control/build.xml,
+	  Control/test/test-facet-search-1/service.xml, build.properties:
+	  
+	  Add the new support-api.jar to the build.properties so that it
+	  can be reffed like summa.ilib.support.api
+	  
+	  Update sample bundles in the COntrol module to include the
+	  support-api.jar file where appropriate
+
+2009-04-21 07:51  toke
+
+	* [r1311]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/Resolver.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/map/CoreMapBitStuffed.java:
+	  
+	  Logging: Lowered some common occuring WARN to INFO
+
+2009-04-21 07:49  mke
+
+	* [r1310] Samples/Summix/README:
+	  
+	  Fix typo
+
+2009-04-21 07:47  toke
+
+	* [r1309]
+	  Index/src/dk/statsbiblioteket/summa/index/XMLTransformer.java:
+	  
+	  Logging: Fixed faulty logging of missing discard namespaces
+	  property in XMLTransformer
+
+2009-04-21 07:46  mke
+
+	* [r1308] Samples/build.xml:
+	  
+	  Make the 'release' target of Samples depend on 'distclean' and
+	  make distclean depend on 'clean'
+
+2009-04-21 07:44  mke
+
+	* [r1307]
+	  Support/src/dk/statsbiblioteket/summa/support/api/LuceneKeys.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/LuceneSearchNode.java,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestResponse.java[DEL],
+	  Support/test/dk/statsbiblioteket/summa/support/lucene/search/LuceneSearchNodeTest.java:
+	  
+	  Create a LuceneKeys interface for the api package of the Support
+	  module and move the definition of the morelikethis key into this
+	  interface (from the LuceneSearchNode)
+
+2009-04-21 07:36  mke
+
+	* [r1306] Support/src/dk/statsbiblioteket/summa/support/api,
+	  Support/src/dk/statsbiblioteket/summa/support/api/SuggestKeys.java,
+	  Support/src/dk/statsbiblioteket/summa/support/api/SuggestResponse.java[CPY],
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestSearchNode.java,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorage.java,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorageH2.java:
+	  
+	  Pull any remotely available classes out into the support.api
+	  package, that is SuggestResponse and add a SuggestKeys interface
+	  in the api package defining any search keys used to interface
+	  with the SuggestSearchNode
+
+2009-04-21 07:19  mke
+
+	* [r1305] Support/build.xml:
+	  
+	  Roll support-api.jar lin in the Support module
+
+2009-04-21 07:14  toke
+
+	* [r1304]
+	  FacetBrowser/test/dk/statsbiblioteket/summa/facetbrowser/core/FacetMapTest.java:
+	  
+	  Testing: Fixed bad unit-test for Tag insertion
+
+2009-04-21 06:37  mke
+
+	* [r1303] Support/build.xml:
+	  
+	  Add H2 jar file dependency to Support/build.xml
+
+2009-04-21 06:29  mke
+
+	* [r1302]
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestSearchNode.java:
+	  
+	  Use SuggestStorageH2 as default storage impl
+
+2009-04-20 13:35  toke
+
+	* [r1301] Support/Support.iml,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/QueryResponseSample.xml,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestResponse.java,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestSearchNode.java,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorage.java,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorageH2.java:
+	  
+	  Feature: Added initial and completely untested suggest
+	  functionality. The H2 database is used for back-end
+	  (configurable, although none other are supported at this time)
+
+2009-04-20 11:54  mke
+
+	* [r1299] ChangeLog, NEWS, build.properties:
+	  
+	  Release Summa 1.3.3
+
 2009-04-20 11:40  toke
 
 	* [r1298]

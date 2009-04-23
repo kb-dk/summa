@@ -1,4 +1,48 @@
 =======================
+2009-04-23: Summa 1.4.0
+=======================
+
+ * Implement a Suggestion engine. For an example on how to use it see the
+   Summix README. You will also find a suggest-tool.sh in Summix (SB)
+
+ * Implement a MoreLikeThis service. It runs by default when using a
+   LuceneSearchNode (SB)
+
+ * Add a summa-support-api.jar file to the distribution (SB)
+
+ * Much imrpoved Windows scripts in Summix (SB)
+
+ * Removed all usages of of the olde XmlOperations class from the Web module
+   and use SBUtils xml handling throughout
+
+ * In the Control module rename the concept of "client meta files"
+   to "client control files". Control files are found in the client dir
+   as control.xml. This means that there no longer is a
+   ~/summa-control/meta directory
+
+ * Add a command, 'control', on the control shell to inspect the
+   deployment metadata of a deployed client
+
+ * Added -Djava.rmi.server.hostname=localhost to the Summix JVM invocation
+   to avoid problems with firewalls and routing outside of the local computer
+   (Refind)
+
+ * Add a 'restart' command to the client shell (SB)
+
+ * SummaSearcherImpl now supports using a static, non-monitored, index-root
+
+ * Bugfix: The Facet building failed due to missing implementation
+           of adjustPositions in the CoreMapBuilder
+
+ * Bugfix: Allow surrounding whitespace in ints, longs, and booleans
+           in configuration files
+
+ * Bugfix: Make search-tool.sh detect its configuration properly (SB)
+
+ * Bugfix: Spurious reporting of connections called 'null' in client- and
+           control shells (SB)
+
+=======================
 2009-04-20: Summa 1.3.3
 =======================
 
