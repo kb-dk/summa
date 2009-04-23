@@ -99,9 +99,20 @@ public interface DocumentKeys {
      * thus making the search return records in order of relevance.
      */
     public static final String SORT_ON_SCORE = "summa-score";
+
+    /**
+     * Every Document is guaranteed to have the field "recordID", which will
+     * be stored, indexable and identical to
+     * {@link dk.statsbiblioteket.summa.common.Record#getId()}.
+     */
+    @SuppressWarnings({"DuplicateStringLiteralInspection"})
+    public static final String RECORD_ID = "recordID";
+
+    /**
+     * Every Document is guaranteed to have the field "recordBase", which will
+     * be stored, indexable and identical to
+     * {@link dk.statsbiblioteket.summa.common.Record#getBase()}}.
+     */
+    @SuppressWarnings({"DuplicateStringLiteralInspection"})
+    public static final String RECORD_BASE = "recordBase";
 }
-
-
-
-
-

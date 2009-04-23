@@ -22,14 +22,14 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.index;
 
+import dk.statsbiblioteket.summa.common.Logging;
+import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
-
-
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Logs;
 
 /**
  * IndexUtils is a set of static common used methods used for manipulating or
@@ -50,39 +50,68 @@ public class IndexUtils {
     public static final String RECORD_FIELD = "recordID";
 
     /**
-     * Stores the given ID in the Field RECORD_FIELD in the given Document.
-     * If the Field already exists, it is overwritten.
-     * @param id       the ID to store in the document.
-     * @param document where the ID is stored.
+     * The field-name for the Lucene Field containing the Record base for the
+     * Document. All Document in Summa Lucene Indexes must have one and only
+     * one RecordBase stored and indexed.
+     */
+    @SuppressWarnings({"DuplicateStringLiteralInspection"})
+    public static final String RECORD_BASE = "recordBase";
+
+    /**
+     * Ensures that one and only one recordID and one and only one recordBase
+     * is assigned to the Lucene Document, taken from record.
+     * </p><p>
+     * If no Document is present, a warning is logged.
+     * @param payload    the Payload with the Record with the ID and the base.
      */
     @QAInfo(level = QAInfo.Level.NORMAL,
             state = QAInfo.State.QA_NEEDED,
             author = "te")
-    public static void assignID(String id, Document document) {
-        //noinspection DuplicateStringLiteralInspection
-        log.trace("assignID(" + id + ", ...) called");
-        String[] ids = document.getValues(RECORD_FIELD);
-        if (ids != null && ids.length == 1 && ids[0].equals(id)) {
+    public static void assignBasicProperties(Payload payload) {
+        System.out.println("***************");
+        if (log.isTraceEnabled()) {
+            log.trace(String.format("assignBasicProperties(%s)", payload));
+        }
+        if (payload.getData(Payload.LUCENE_DOCUMENT) == null) {
+            String message = "No Document present, so no basic properties can"
+                               + " be assigned";
+            //noinspection DuplicateStringLiteralInspection
+            Logging.logProcess("IndexUtils.assignBasicProperties",
+                               message, Logging.LogLevel.DEBUG, payload);
+            log.warn(String.format(message + ": " + payload));
             return;
         }
-        if (ids == null || ids.length == 0) {
-            log.trace("setId: Adding id '" + id + "' to Document");
-        } else {
-            if (id.length() == 1) {
-                if (ids[0].equals(id)) {
-                    return;
-                }
-                log.debug("Old Document id was '" + ids[0]
-                          + "'. Assigning new id '" + id + "'");
-            } else {
-                Logs.log(log, Logs.Level.WARN,
-                         "Document contains multiple RecordIDs. Clearing "
-                         + "old ids and assigning id '" + id
-                         + "'. Old ids:", (Object)ids);
-            }
-            document.removeFields(RECORD_FIELD);
+        Document document = (Document)payload.getData(Payload.LUCENE_DOCUMENT);
+
+        String id = payload.getId();
+        assignSingleField(document, payload, RECORD_FIELD, id);
+
+        if (payload.getRecord() == null) {
+            String message = "No Record present, so no base can be assigned";
+            //noinspection DuplicateStringLiteralInspection
+            Logging.logProcess("IndexUtils.assignBasicProperties",
+                               message, Logging.LogLevel.DEBUG, payload);
+            log.warn(String.format(message + ": " + payload));
+            return;
         }
-        document.add(new Field(RECORD_FIELD, id,
+        String base = payload.getRecord().getBase();
+        assignSingleField(document, payload, RECORD_BASE, base);
+    }
+
+    private static void assignSingleField(Document document, Payload payload,
+                                          String field, String term) {
+        if (log.isTraceEnabled()) {
+            log.trace(String.format("Assigning %s:%s to %s",
+                                    field, term, payload));
+        }
+        String[] fields = document.getValues(field);
+        if (fields != null && fields.length > 1) {
+            //noinspection DuplicateStringLiteralInspection
+            log.trace("The " + field + " for " + payload + " was already "
+                      + "assigned. Clearing and re-adding");
+            document.removeFields(field);
+        }
+        document.add(new Field(field, term,
                                Field.Store.YES,
                                Field.Index.NOT_ANALYZED));
     }
@@ -112,5 +141,4 @@ public class IndexUtils {
         log.trace("getID: No ID found in document");
         return null;
     }
-
 }

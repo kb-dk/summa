@@ -22,36 +22,31 @@
  */
 package dk.statsbiblioteket.summa.index.lucene;
 
-import javax.xml.xpath.XPathFactory;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.DocumentBuilder;
-import java.io.IOException;
-import java.io.ByteArrayInputStream;
-import java.text.ParseException;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.xml.DOM;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.xml.DefaultNamespaceContext;
-import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
-import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexField;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
+import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
 import dk.statsbiblioteket.summa.common.util.ParseUtil;
+import dk.statsbiblioteket.summa.common.xml.DefaultNamespaceContext;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.xml.DOM;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.xml.sax.SAXException;
-import org.w3c.dom.NodeList;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.text.ParseException;
 
 /**
  * Converter from SummaDocumentXML to Lucene Documents. The generated Document
@@ -209,11 +204,6 @@ public class DocumentCreator extends DocumentCreatorBase {
             log.warn("Got IndexServiceException while processing single fields "
                      + "for " + payload);
         }
-
-        //noinspection DuplicateStringLiteralInspection
-        log.trace("Setting " + IndexUtils.RECORD_FIELD + " to '"
-                  + payload.getId() + "'");
-        IndexUtils.assignID(payload.getId(), luceneDoc);
 
         //noinspection NumberEquality
         if (docBoost != DEFAULT_BOOST) {
