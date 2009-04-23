@@ -141,6 +141,10 @@ public class LuceneSearchNodeTest extends TestCase {
         ResponseCollection responses = searcher.search(request);
         assertTrue("MoreLikeThis should return something else than the input",
                    responses.toXML().contains("fagref:gm@example.com"));
+        assertFalse("MoreLikeThis should not return the input",
+                    responses.toXML().contains(
+                            "<field name=\"recordID\">fagref:jh@example.com"
+                            + "</field>"));
         log.debug("Search for 'hans' gave\n" + responses.toXML());
     }
 
@@ -227,7 +231,7 @@ public class LuceneSearchNodeTest extends TestCase {
         QueryParser parser =
                 new QueryParser("freetext", new StandardAnalyzer());
         IndexReader reader = IndexReader.open(indexLocation);
-        IndexSearcher searcher = new IndexSearcher(indexLocation.toString());
+        new IndexSearcher(indexLocation.toString());
 
         Query query = parser.parse("java");
         BooleanQuery notQuery = new BooleanQuery();

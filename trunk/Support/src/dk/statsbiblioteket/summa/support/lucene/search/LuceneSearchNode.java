@@ -32,6 +32,7 @@ import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
 import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.summa.search.document.DocumentSearcherImpl;
@@ -439,7 +440,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                     reverseSort, fallbacks, 0, 0);
         }
         log.trace("Calling private fullSearch with parsed query");
-        return fullSearch(luceneFilter, luceneQuery, filter, query,
+        return fullSearch(request, luceneFilter, luceneQuery, filter, query,
                           startIndex, maxRecords, sortKey, reverseSort,
                           fields, fallbacks, doLog);
     }
@@ -458,7 +459,8 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                     + " opened)");
         }
 
-        String recordID = request.getString(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID);
+        String recordID = request.getString(
+                LuceneKeys.SEARCH_MORELIKETHIS_RECORDID);
         log.trace("constructing MoreLikeThis query for '" + recordID + "'");
         if (recordID == null || "".equals(recordID)) {
             throw new ParseException(
@@ -500,16 +502,18 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                new QueryWrapperFilter(parser.parse(filter));
     }
 
-    private DocumentResponse fullSearch(
+    private DocumentResponse fullSearch(Request request,
             Filter luceneFilter, Query luceneQuery, String filter, String query,
             long startIndex, long maxRecords, String sortKey,
             boolean reverseSort, String[] fields, String[] fallbacks,
             boolean doLog) throws RemoteException {
         long startTime = System.currentTimeMillis();
         try {
+            // MoreLikeThis needs an extra in max to compensate for self-match
             TopFieldDocs topDocs = searcher.search(
                     luceneQuery, luceneFilter,
-                    (int)(startIndex + maxRecords), Sort.RELEVANCE);
+                    (int)(startIndex + maxRecords + (mlt_enabled ? 1 : 0)),
+                    Sort.RELEVANCE);
 
             if (log.isTraceEnabled()) {
                 log.trace("Got " + topDocs.totalHits + " hits for query "
@@ -527,7 +531,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
             // TODO: What about longs for startIndex and maxRecords?
             for (int i = (int)startIndex ;
                  i < topDocs.scoreDocs.length
-                 && i < (int)(startIndex + maxRecords);
+                 && i < (int)(startIndex + maxRecords+ (mlt_enabled ? 1 : 0));
                  i++) {
                 ScoreDoc scoreDoc = topDocs.scoreDocs[i];
                 // TODO: Get a service id and the sort value
@@ -537,6 +541,10 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                                 scoreDoc.score, null);
                 Document doc =
                      searcher.getIndexReader().document(scoreDoc.doc, selector);
+                if (isMoreLikeThisSelfMatch(request, doc)) {
+                    log.trace("Ignoring MoreLikeThis hit on source document");
+                    continue;
+                }
                 for (int fieldIndex = 0; fieldIndex < fields.length;
                      fieldIndex++) {
                     String field = fields[fieldIndex];
@@ -580,6 +588,19 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
             throw new RemoteException(String.format(
                     "Exception during search for query '%s'", query), t);
         }
+    }
+
+    private boolean isMoreLikeThisSelfMatch(Request request, Document doc) {
+        if (request.containsKey(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID)) {
+            Field field = doc.getField(DocumentKeys.RECORD_ID);
+            if (field == null) {
+                return false;
+            }
+            String sv = field.stringValue();
+            return (sv != null && sv.equals(request.get(
+                    LuceneKeys.SEARCH_MORELIKETHIS_RECORDID)));
+        }
+        return false;
     }
 
     private void sanityCheck(long startIndex, long maxRecords) throws
