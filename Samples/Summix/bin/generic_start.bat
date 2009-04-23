@@ -70,15 +70,14 @@ if "%CONFIGURATION%."=="." (
 )
 
 rem Build classpath
+
 if "%LIBDIRS%."=="." (
     set LIBDIRS="%DEPLOY%\lib\*"
 )
 set CLASSPATH=%CLASSPATH%;"%DEPLOY%\config";%LIBDIRS%;%MAINJAR%
 
 rem Check security policy
-if "%SECURITY_POLICY%."=="." (
-    rem nada
-) else (
+if not "%SECURITY_POLICY%."=="." (
     set SECURITY_POLICY=-Djava.security.policy="%SECURITY_POLICY%"
 )
 
@@ -92,7 +91,6 @@ if "%ENABLE_JMX%"=="true" (
 )
 
 rem Expand system properties
-
 set SYS_PROPS=
 if not "%PROPERTIES_FILE%."=="." (
     find "=" %PROPERTIES_FILE% > find.tmp
@@ -117,8 +115,7 @@ rem of the local computer.
 rem It is not tested if this is necessary under Windows.
 set LOCALRMI=-Djava.rmi.server.hostname=localhost
 
-set COMMAND="%JAVA_HOME%\bin\java.exe" %LOCALRMI% %JVM_OPTS% %SYS_PROPS% %CONFIGURATION% %SECURITY_POLICY% %JMX% -cp %CLASSPATH% %MAINCLASS% %*%
-
+set COMMAND="%JAVA_HOME%\bin\java.exe" %LOCALRMI% %SYS_PROPS% %JVM_OPTS% %CONFIGURATION% %SECURITY_POLICY% %JMX% -cp %CLASSPATH% %MAINCLASS% %*%
 
 rem Report settings
 if not "%PRINT_CONFIG%."=="." (
