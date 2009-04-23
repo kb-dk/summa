@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -19,8 +19,9 @@
  */
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.xml.DOM;
+import dk.statsbiblioteket.util.xml.XSLT;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
-import dk.statsbiblioteket.commons.XmlOperations;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 import org.w3c.dom.Document;
@@ -55,11 +56,10 @@ public class CallbackTest extends TestCase {
         prop.put("locale", "da");
 
 
-        Document dom = XmlOperations.stringToDOM(
-                Resolver.getUTF8Content(XMLLocationString));
-        System.out.println(XmlOperations.xsltTransform(
-                dom, new File(Resolver.getURL(XSLTLocationString).getFile()),
-                prop));
+        System.out.println(XSLT.transform(
+                Resolver.getURL(XSLTLocationString),
+                Resolver.getUTF8Content(XMLLocationString),
+                prop, true));
     }
 
 

@@ -65,7 +65,26 @@ public class SearchWS {
      */
     private synchronized SearchClient getSearchClient() {
         if (searcher == null) {
-            searcher = new SearchClient(getConfiguration());
+            try {
+                searcher = new SearchClient(getConfiguration().getSubConfiguration("summa.web.search"));
+            } catch (IOException e) {
+                log.error("Failed to load subConfiguration for search.", e);
+            }
+        }
+        return searcher;
+    }
+
+    /**
+     * Get a single SearchClient for Suggest based on the system configuration.
+     * @return A SearchClient to be used for Suggest.
+     */
+    private synchronized SearchClient getSuggestClient() {
+        if (searcher == null) {
+            try {
+                searcher = new SearchClient(getConfiguration().getSubConfiguration("summa.web.suggest"));
+            } catch (IOException e) {
+                log.error("Failed to load subConfiguration for suggest.", e);
+            }
         }
         return searcher;
     }
@@ -110,9 +129,18 @@ public class SearchWS {
         req.put(SuggestKeys.SEARCH_MAX_RESULTS, maxSuggestions);
 
         try {
-            res = getSearchClient().search(req);
-            retXML = res.toXML();
+            res = getSuggestClient().search(req);
+            Document dom = DOM.stringToDOM(res.toXML());
+            Node subDom = DOM.selectNode(dom,
+                    "/responsecollection/response[@name='SuggestResponse']/QueryResponse/suggestions");
+            retXML = DOM.domToString(subDom);
         } catch (IOException e) {
+            log.warn("Error executing getSuggestions: '" + prefix + "', " +
+                    maxSuggestions +
+                    ". Error was: ", e);
+            // TODO: return a nicer error xml block
+            retXML = "<error>Error performing getSuggestions</error>";
+        } catch (TransformerException e) {
             log.warn("Error executing getSuggestions: '" + prefix + "', " +
                     maxSuggestions +
                     ". Error was: ", e);
@@ -139,7 +167,7 @@ public class SearchWS {
         req.put(SuggestKeys.SEARCH_UPDATE_HITCOUNT, hitCount);
 
         try {
-            getSearchClient().search(req);
+            getSuggestClient().search(req);
         } catch (IOException e) {
             log.warn("Error committing query '" + query + "' with hitCount '" + hitCount + "'");
         }
@@ -159,7 +187,7 @@ public class SearchWS {
         ResponseCollection res;
 
         Request req = new Request();
-        req.put(DocumentKeys.SEARCH_QUERY, "recordID:" + id);
+        req.put(DocumentKeys.SEARCH_QUERY, "recordID:\"" + id + "\"");
         req.put(DocumentKeys.SEARCH_MAX_RECORDS, 1);
         req.put(DocumentKeys.SEARCH_START_INDEX, 0);
         req.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);

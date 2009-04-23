@@ -1,10 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
 
 <!-- Configuration used by the Summa Searcher web service  -->
-<properties>
-
-    <entry key="summa.rpc.vendor">//localhost:28000/summa-searcher</entry>
-
-</properties>
+<xproperties>
+    <xproperties>
+        <entry>
+            <key>summa.web.search</key>
+            <value class="xproperties">
+                <entry>
+                    <key>summa.rpc.vendor</key>
+                    <value class="string">//localhost:28000/summa-searcher</value>
+                </entry>
+            </value>
+        </entry>
+        <entry>
+            <key>summa.web.suggest</key>
+            <value class="xproperties">
+                <entry>
+                    <key>summa.rpc.vendor</key>
+                    <value class="string">//localhost:28000/summa-suggest</value>
+                </entry>
+            </value>
+        </entry>
+    </xproperties>
+</xproperties>
 
