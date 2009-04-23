@@ -1085,7 +1085,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
 
     public static void main(String[] args) {
         try {
-            Configuration conf = Configuration.getSystemConfiguration();
+            Configuration conf = Configuration.getSystemConfiguration(true);
             new Client(conf);
             // The spawned server thread for RMI will cause the JVM to not exit
         } catch (Throwable e) {
