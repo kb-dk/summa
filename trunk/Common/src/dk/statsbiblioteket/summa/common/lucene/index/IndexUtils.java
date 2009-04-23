@@ -68,7 +68,6 @@ public class IndexUtils {
             state = QAInfo.State.QA_NEEDED,
             author = "te")
     public static void assignBasicProperties(Payload payload) {
-        System.out.println("***************");
         if (log.isTraceEnabled()) {
             log.trace(String.format("assignBasicProperties(%s)", payload));
         }
