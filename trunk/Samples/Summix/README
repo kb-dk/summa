@@ -32,6 +32,11 @@ background:
 
   bin/summa-searcher.sh config/searcher.xml &
 
+The suggestion engine does not require any of the other services and can be
+started at any time simply by running:
+
+  bin/summa-searcher.sh config/suggest.xml &
+
 
 Testing the storage and search engine
 -------------------------------------
