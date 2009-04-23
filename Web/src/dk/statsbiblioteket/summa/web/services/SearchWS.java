@@ -190,10 +190,9 @@ public class SearchWS {
      * Gives a search result of records that "are similar to" a given record. 
      * @param id The recordID of the record that should be used as base for the MoreLikeThis query.
      * @param numberOfRecords The maximum number of records to return.
-     * @param startIndex Where to start returning records from (used to implement paging).
      * @return An XML string containing the result or an error description.
      */
-    public String getMoreLikeThis(String id, int numberOfRecords, int startIndex) {
+    public String getMoreLikeThis(String id, int numberOfRecords) {
         String retXML;
 
         ResponseCollection res;
@@ -201,7 +200,7 @@ public class SearchWS {
         Request req = new Request();
         req.put(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID, id);
         req.put(DocumentKeys.SEARCH_MAX_RECORDS, numberOfRecords);
-        req.put(DocumentKeys.SEARCH_START_INDEX, startIndex);
+        req.put(DocumentKeys.SEARCH_START_INDEX, 0); // TODO: should this be 1 to skip the record that is used as input
         req.put(DocumentKeys.SEARCH_SORTKEY, DocumentKeys.SORT_ON_SCORE);
         req.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
 
@@ -210,8 +209,7 @@ public class SearchWS {
             retXML = res.toXML();
         } catch (IOException e) {
             log.warn("Error executing morelikethis: '" + id + "', " +
-                    numberOfRecords + ", " +
-                    startIndex +
+                    numberOfRecords +
                     ". Error was: ", e);
             // TODO: return a nicer error xml block
             retXML = "<error>Error performing morelikethis</error>";
