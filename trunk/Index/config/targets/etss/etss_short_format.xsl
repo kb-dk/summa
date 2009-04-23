@@ -46,10 +46,27 @@
                                         </xsl:for-each>
                                     </xsl:if>
                                 </dc:date>
-                                     <dc:identifier summapos="{$pos}">
+                                <xsl:variable name="pw">
+                                    <xsl:value-of select="requires_password"/>
+                                </xsl:variable>
+                                <xsl:choose>
+                                <xsl:when test="$pw!=''">
+                                     <dc:identifier summapos="{$pos}" requires_passord="{$pw}">
+
                                 <xsl:value-of select="url"/>
                             </dc:identifier>
+                            </xsl:when>
+                                    <xsl:otherwise>
+                                          <dc:identifier summapos="{$pos}">
+
+                                <xsl:value-of select="url"/>
+                            </dc:identifier>
+                                    </xsl:otherwise>
+                                </xsl:choose>
                             </xsl:if>
+
+
+
 
                         </xsl:for-each>
                         <xsl:for-each select=".">
