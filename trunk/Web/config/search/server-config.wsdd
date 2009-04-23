@@ -89,9 +89,6 @@
             <parameter name="numberOfRecords" type="tns:int">
                 <documentation>The maximum number of records returned in the search result.</documentation>
             </parameter>
-            <parameter name="startIndex" type="tns:int">
-                <documentation>The number of the first record to return.</documentation>
-            </parameter>
         </operation>
 
         <operation name="simpleSearch">
