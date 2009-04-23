@@ -94,7 +94,8 @@ public class Configuration implements Serializable,
      public static final String CONF_API_VERSION = "summa.api.version";
 
     /** API version of the Summa release */
-     public static final String DEFAULT_API_VERSION = "1.3.0";
+     public static final String DEFAULT_API_VERSION =
+                      "@summa.api.version@"; // Auto-expanded in compile target
 
     /** System property defining the root directory from which persistent
      * data should be read and stored to. The default value is

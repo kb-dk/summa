@@ -171,9 +171,14 @@ public class SuggestSearchNode extends SearchNodeImpl {
         long startTime = System.nanoTime();
         String query = request.getString(SuggestKeys.SEARCH_UPDATE_QUERY);
         if (!request.containsKey(SuggestKeys.SEARCH_UPDATE_HITCOUNT)) {
-            log.warn(String.format(
+            String msg = String.format(
                     "Received an update with %s='%s' but no '%s' defined",
-                    SuggestKeys.SEARCH_UPDATE_QUERY, query, SuggestKeys.SEARCH_UPDATE_HITCOUNT));
+                    SuggestKeys.SEARCH_UPDATE_QUERY, query,
+                    SuggestKeys.SEARCH_UPDATE_HITCOUNT);
+            log.warn(msg);
+            responses.add(new SuggestResponse(
+                "Error: " + msg, 0));
+            return;
         }
         int hits = request.getInt(SuggestKeys.SEARCH_UPDATE_HITCOUNT);
         if (!request.containsKey(SuggestKeys.SEARCH_UPDATE_QUERYCOUNT)) {

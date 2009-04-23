@@ -112,14 +112,37 @@
 
 
     <target name="compile" depends="depends">
+        <!-- Set source files up in tmp.dir and expand any properties
+             inside the codebase -->
+        <delete dir="${build.dir}"/>
+        <mkdir dir="${tmp.dir}"/>
+        <copy todir="${tmp.dir}">
+            <fileset dir="${src.dir}" includes="**/*"/>
+        </copy>
+        <replace value="!not found!" propertyfile="../build.properties"
+                 dir="${tmp.dir}">
+            <replacefilter
+                token="@summa.api.version@"
+                value="${summa.version}"/>
+            <replacefilter
+                token="@summa.commons-logging.version@"
+                value="${summa.commons-logging.version}"/>
+            <replacefilter
+                token="@summa.sbutil.version@"
+                value="${summa.sbutil.version}"/>
+        </replace>
+
+        <!-- Compile classes to build.dir -->
         <mkdir dir="${build.dir}"/>
-        <javac srcdir="${src.dir}" destdir="${build.dir}" encoding="UTF-8"
+        <javac srcdir="${tmp.dir}" destdir="${build.dir}" encoding="UTF-8"
                compiler="${compiler}" optimize="${compiler.optimize}"
                debug="${compiler.debug}">
             <classpath refid="lib.path"/>
         </javac>
         <copy file="${basedir}/data/LegacyToSummaDocumentXML.xslt" tofile="${build.dir}/LegacyToSummaDocumentXML.xslt"/>
         <copy file="${basedir}/data/LegacyMultiVolumeConverter.xslt" tofile="${build.dir}/LegacyMultiVolumeConverter.xslt"/>
+
+        <delete dir="${tmp.dir}"/>
     </target>
 
 

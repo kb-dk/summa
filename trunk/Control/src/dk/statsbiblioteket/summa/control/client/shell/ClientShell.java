@@ -166,6 +166,7 @@ public class ClientShell {
         shell.installCommand(new IdCommand(connManager, target));
         shell.installCommand(new RepositoryCommand(connManager, target));
         shell.installCommand(new KillCommand(connManager, target));
+        shell.installCommand(new RestartServiceCommand(connManager, target));
         shell.installCommand(new RemoveServiceCommand(connManager, target));
         shell.installCommand(new SpecCommand(connManager, target));
     }

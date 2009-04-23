@@ -123,8 +123,10 @@ public class StatusMonitor implements Runnable {
                 Monitorable mon = getConnection();
 
                 if (mon == null) {
-                    ctx.info ("Connection to '" + connectionId + "', still not " +
-                              "up. Waiting...");
+                    ctx.info (connectionId == null ?
+                              "Connection still not up. Waiting..." :
+                              ("Connection to '" + connectionId
+                               + "', still not up. Waiting..."));
                     continue;
                 }
 

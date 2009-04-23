@@ -34,10 +34,11 @@ public class BundleUtils {
      * @param conf configuration to extract {@link Configuration#CONF_API_VERSION}
      *             from
      * @param jarNames names of the {@code .jar} files to depend on for public
-     *                 API. The names should be stripped of versioning information
-     *                 and the {@link .jar} extension. For example
-     *                 {@code summa-control-api-1.1.jar} would become
-     *                 {@code summa-control-api}.
+     *                 API. If a jarName does not end in {@code .jar} the
+     *                 current Summa version of the environment will be appended
+     *                 together with the {@code .jar} extension. For example
+     *                 {@code summa-control-api} might become
+     *                 {@code summa-control-api-1.3.4.jar}.
      */
     public static void prepareCodeBase(Configuration conf,
                                        BundleRepository repo,
@@ -58,7 +59,10 @@ public class BundleUtils {
                                             Arrays.asList(codeBase.split(" ")));
 
         for (String jar : jarNames) {
-            String jarFile = jar+"-"+summaVersion+".jar";
+            String jarFile = jar;
+            if (!jarFile.endsWith(".jar")) {
+                jarFile += "-"+summaVersion+".jar";
+            }
             String jarUrl = repo.expandApiUrl(jarFile);
 
             if (jarUrl == null) {
@@ -72,6 +76,9 @@ public class BundleUtils {
 
         codeBase = Strings.join(codeSet, " ");
 
+        // Fixme: We also need sbutil and commons-logging in the codebase,
+        //        but how should we include versioning info here without
+        //        hard coding it..?
         log.debug("Updating java.rmi.server.codebase: " + codeBase);
         System.setProperty("java.rmi.server.codebase", codeBase);
     }
