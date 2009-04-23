@@ -49,9 +49,16 @@
                                 <xsl:variable name="pw">
                                     <xsl:value-of select="requires_password"/>
                                 </xsl:variable>
+                                <xsl:variable name="id">
+                                    <xsl:value-of select="//id"/>
+                                </xsl:variable>
+                                <xsl:variable name="res_id">
+                                    <xsl:value-of select="resource"/>
+                                </xsl:variable>
                                 <xsl:choose>
                                 <xsl:when test="$pw!=''">
-                                     <dc:identifier summapos="{$pos}" requires_passord="{$pw}">
+                                     <dc:identifier summapos="{$pos}" requires_passord="{$pw}" id="{$id}" resource_id="{$res_id}">
+
 
                                 <xsl:value-of select="url"/>
                             </dc:identifier>
