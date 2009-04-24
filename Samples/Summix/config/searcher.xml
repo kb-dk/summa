@@ -45,11 +45,11 @@
         <entry>
             <key>summa.support.lucene.morelikethis.maxnumtokensparsed</key>
             <value class="int">5000</value>
-        </entry>=1000
+        </entry>
         <entry>
             <key>summa.support.lucene.morelikethis.maxqueryterms</key>
             <value class="int">5000</value>
-        </entry>=1000
+        </entry>
         <entry>
             <key>summa.support.lucene.morelikethis.maxwordlength</key>
             <value class="int">5000</value>
