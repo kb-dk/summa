@@ -146,6 +146,16 @@ public class LuceneSearchNodeTest extends TestCase {
                             "<field name=\"recordID\">fagref:jh@example.com"
                             + "</field>"));
         log.debug("Search for 'hans' gave\n" + responses.toXML());
+
+        request = new Request();
+        request.put(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID,
+                    "nonexisting");
+        try {
+            searcher.search(request);
+            fail("Performinf MoreLikeThis on nonexisting recordID should fail");
+        } catch (RemoteException e) {
+            log.debug("Got exception as expected in MoreLikeThis", e);
+        }
     }
 
     public void testDumpSearch() throws Exception {

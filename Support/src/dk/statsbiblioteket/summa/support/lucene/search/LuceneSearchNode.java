@@ -463,9 +463,9 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                 LuceneKeys.SEARCH_MORELIKETHIS_RECORDID);
         log.trace("constructing MoreLikeThis query for '" + recordID + "'");
         if (recordID == null || "".equals(recordID)) {
-            throw new ParseException(
-                    "RecordID invalid. Expected something, got '" + recordID
-                    + "'");
+            throw new ParseException(String.format(
+                    "RecordID invalid. Expected something, got '%s'",
+                    recordID));
         }
         int docID;
         Query moreLikeThisQuery;
@@ -474,9 +474,9 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                     IndexUtils.RECORD_FIELD, recordID));
             TopDocs recordDocs = searcher.search(q, null, 1);
             if (recordDocs.totalHits == 0) {
-                log.debug("Unable to locate recordID in MoreLikeThis query "
-                          + "resolving for '" + recordID + "'");
-                return null;
+                throw new RemoteException(String.format(
+                        "Unable to locate recordID '%s' in MoreLikeThis query",
+                        recordID));
             }
             // TODO: This really needs to be updated for storage use
             // In a distributed environment, only the Searcher containing the
@@ -485,9 +485,9 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
             docID = recordDocs.scoreDocs[0].doc;
             moreLikeThisQuery = moreLikeThis.like(docID);
         } catch (IOException e) {
-            log.error("Unable to create MoreLikeThis query for "
-                      + recordID + "'", e);
-            return null;
+            throw new RemoteException(String.format(
+                    "Unable to create MoreLikeThis query for recordID '%s'",
+                    recordID), e);
         }
         if (log.isTraceEnabled()) {
             log.trace("Created MoreLikeThis query for '" + recordID
