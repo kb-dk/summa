@@ -189,12 +189,10 @@ public class SearchWS {
         Request req = new Request();
         req.put(DocumentKeys.SEARCH_QUERY, "recordID:\"" + id + "\"");
         req.put(DocumentKeys.SEARCH_MAX_RECORDS, 1);
-        req.put(DocumentKeys.SEARCH_START_INDEX, 0);
         req.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
 
         try {
             res = getSearchClient().search(req);
-
             Document dom = DOM.stringToDOM(res.toXML());
             Node subDom = DOM.selectNode(dom,
                     "/responsecollection/response/documentresult/record/field[@name='" + fieldName + "']");
@@ -228,7 +226,6 @@ public class SearchWS {
         Request req = new Request();
         req.put(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID, id);
         req.put(DocumentKeys.SEARCH_MAX_RECORDS, numberOfRecords);
-        req.put(DocumentKeys.SEARCH_START_INDEX, 0); // TODO: should this be 1 to skip the record that is used as input
         req.put(DocumentKeys.SEARCH_SORTKEY, DocumentKeys.SORT_ON_SCORE);
         req.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
 
