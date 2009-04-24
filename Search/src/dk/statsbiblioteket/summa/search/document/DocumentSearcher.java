@@ -71,7 +71,7 @@ public interface DocumentSearcher extends SearchNode, DocumentKeys {
      */
     public static final String CONF_RESULT_FIELDS = "summa.search.resultfields";
     public static final String[] DEFAULT_RESULT_FIELDS =
-            "recordID shortformat".split(" ");
+            "recordID recordBase shortformat".split(" ");
 
     /**
      * If a result-field is not present in a given hit, the fallback-value
