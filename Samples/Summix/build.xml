@@ -54,7 +54,6 @@
             <zipfileset dir="${basedir}/../../lib" includes="*.jar" prefix="${root}/lib"/>
             
             <!-- Scripts -->
-            <zipfileset dir="${basedir}/../../Control/scripts" includes="*-tool.sh" prefix="${root}/bin" filemode="755"/>
             <zipfileset dir="${basedir}/bin" includes="*.sh" prefix="${root}/bin" filemode="755"/>
             <zipfileset dir="${basedir}/bin" includes="*.bat" prefix="${root}/bin" filemode="755"/>
             
