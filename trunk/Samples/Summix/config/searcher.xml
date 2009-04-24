@@ -39,33 +39,7 @@
         <entry>
             <key>summa.search.searcheravailability.timeout</key>
             <value class="int">5000</value>
-        </entry>
-
-        <!-- MoreLikeThis configuration -->
-        <entry>
-            <key>summa.support.lucene.morelikethis.maxnumtokensparsed</key>
-            <value class="int">5000</value>
-        </entry>
-        <entry>
-            <key>summa.support.lucene.morelikethis.maxqueryterms</key>
-            <value class="int">5000</value>
-        </entry>
-        <entry>
-            <key>summa.support.lucene.morelikethis.maxwordlength</key>
-            <value class="int">5000</value>
-        </entry>
-        <entry>
-            <key>summa.support.lucene.morelikethis.mindocfreq</key>
-            <value class="int">0</value>
-        </entry>
-        <entry>
-            <key>summa.support.lucene.morelikethis.mintermfreq</key>
-            <value class="int">0</value>
-        </entry>
-        <entry>
-            <key>summa.support.lucene.morelikethis.minwordlength</key>
-            <value class="int">0</value>
-        </entry>
+        </entry>        
 
         <entry>
             <key>summa.search.aggregator.sequential</key>
@@ -78,7 +52,41 @@
                     <entry>
                         <key>summa.search.node.class</key>
                         <value class="string">dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode</value>
+                    </entry>                                        
+                    
+                    <!-- MoreLikeThis configuration
+                         This setup is *hyper sensitive* and picks up way too
+                         much, tweak to own liking -->
+                    <entry>
+                        <key>summa.support.lucene.morelikethis.configuration</key>
+                        <value class="xproperties">
+                            <entry>
+                                <key>summa.support.lucene.morelikethis.maxnumtokensparsed</key>
+                                <value class="int">5000</value>
+                            </entry>
+                            <entry>
+                                <key>summa.support.lucene.morelikethis.maxqueryterms</key>
+                                <value class="int">5000</value>
+                            </entry>
+                            <entry>
+                                <key>summa.support.lucene.morelikethis.maxwordlength</key>
+                                <value class="int">5000</value>
+                            </entry>
+                            <entry>
+                                <key>summa.support.lucene.morelikethis.mindocfreq</key>
+                                <value class="int">0</value>
+                            </entry>
+                            <entry>
+                                <key>summa.support.lucene.morelikethis.mintermfreq</key>
+                                <value class="int">0</value>
+                            </entry>
+                            <entry>
+                                <key>summa.support.lucene.morelikethis.minwordlength</key>
+                                <value class="int">0</value>
+                            </entry>
+                        </value>
                     </entry>
+                    
                     <entry>
                         <key>summa.index.descriptorsetup</key>
                         <value class="xproperties">
