@@ -33,6 +33,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import javax.xml.transform.TransformerException;
+import java.io.ByteArrayOutputStream;
 import java.net.URL;
 
 /**
@@ -119,11 +120,33 @@ public class XMLTransformer extends ObjectFilterImpl {
         if (payload.getRecord() == null) {
             throw new PayloadException("No Record defined", payload);
         }
+        if (payload.getRecord() == null) {
+            throw new PayloadException(String.format(
+                    "Unable to transform payload with '%s' due to no Record",
+                    xsltLocation), payload);
+        }
+        byte[] content = payload.getRecord().getContent();
+        if (content == null) {
+            throw new PayloadException(String.format(
+                    "Unable to transform payload with '%s' due to no content",
+                    xsltLocation), payload);
+        }
         try {
-            payload.getRecord().setRawContent(XSLT.transform(
-                    xsltLocation, payload.getRecord().getContent(), null,
-                    stripXMLNamespaces).
-                    toByteArray());
+            ByteArrayOutputStream out = XSLT.transform(
+                    xsltLocation, content, null, stripXMLNamespaces);
+            if (out == null) {
+                throw new PayloadException(String.format(
+                        "null return from transformation  XSLT '%s' and"
+                        + " stripNamespaces %b", 
+                        xsltLocation, stripXMLNamespaces),
+                        payload);
+            }
+            payload.getRecord().setRawContent(out.toByteArray());
+        } catch (NullPointerException e) {
+            throw new PayloadException(String.format(
+                    "NPE in transform call with XSLT '%s' and "
+                    + "stripNamespaces %b", xsltLocation, stripXMLNamespaces),
+                    e, payload);
         } catch (TransformerException e) {
             if (log.isTraceEnabled()) {
                 log.trace("Untransformable record in " + payload + " was:\n"
