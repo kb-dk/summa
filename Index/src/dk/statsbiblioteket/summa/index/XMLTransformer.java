@@ -128,11 +128,12 @@ public class XMLTransformer extends ObjectFilterImpl {
             if (log.isTraceEnabled()) {
                 log.trace("Untransformable record in " + payload + " was:\n"
                           + payload.getRecord().toString(true)
-                          + " with content\n"
+                          + " with xslt '" + xsltLocation + "' and content\n"
                           + payload.getRecord().getContentAsUTF8());
             }
             throw new PayloadException(
-                    "Unable to transform payload", e, payload);
+                    "Unable to transform payload with '" + xsltLocation + "'",
+                    e, payload);
         }
         return true;
     }
