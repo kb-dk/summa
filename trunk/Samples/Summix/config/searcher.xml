@@ -7,13 +7,13 @@
             <key>summa.searcher.class</key>
             <value class="string">dk.statsbiblioteket.summa.search.rmi.RMISearcherProxy</value>
         </entry>
-        
+
         <!-- What backend class to support the RMI proxy-->
         <entry>
             <key>summa.searcher.rmi.backend</key>
             <value class="string">dk.statsbiblioteket.summa.search.SummaSearcherImpl</value>
         </entry>
-        
+
         <!-- The internal searcher node used by the SummaSearcherImpl.
              We need an aggregator because we have to go through the
              LuceneSearchNode and the FacetSearchNode -->
@@ -41,6 +41,31 @@
             <value class="int">5000</value>
         </entry>
 
+        <!-- MoreLikeThis configuration -->
+        <entry>
+            <key>summa.support.lucene.morelikethis.maxnumtokensparsed</key>
+            <value class="int">5000</value>
+        </entry>=1000
+        <entry>
+            <key>summa.support.lucene.morelikethis.maxqueryterms</key>
+            <value class="int">5000</value>
+        </entry>=1000
+        <entry>
+            <key>summa.support.lucene.morelikethis.maxwordlength</key>
+            <value class="int">5000</value>
+        </entry>
+        <entry>
+            <key>summa.support.lucene.morelikethis.mindocfreq</key>
+            <value class="int">0</value>
+        </entry>
+        <entry>
+            <key>summa.support.lucene.morelikethis.mintermfreq</key>
+            <value class="int">0</value>
+        </entry>
+        <entry>
+            <key>summa.support.lucene.morelikethis.minwordlength</key>
+            <value class="int">0</value>
+        </entry>
 
         <entry>
             <key>summa.search.aggregator.sequential</key>
@@ -185,5 +210,4 @@
         </entry>
     </xproperties>
 </xproperties>
-
 
