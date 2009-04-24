@@ -39,6 +39,23 @@
         if (xml_search_result == null) {
             search_html = "Error executing query";
         } else {
+            String usersearch = request.getParameter("usersearch");
+            if (usersearch != null && "true".equals(usersearch)) {
+                // this search comes from the form, ie. it is submitted by a user
+                // so we extract the hitCount and submit it to the Suggestions index
+                Document search_dom = DOM.stringToDOM(xml_search_result);
+                String hitCountStr = DOM.selectString(search_dom,
+                        "/responsecollection/response/documentresult/@hitCount", "0");
+                long hitCount = 0;
+                try {
+                    hitCount = Long.parseLong(hitCountStr);
+                } catch (NumberFormatException e) {
+                    hitCount = 0;
+                }
+                services.execute("summacommitquery", query, hitCount);
+            }
+
+
             URL search_xslt = new File(basepath + "xslt/short_records.xsl").toURI().toURL();
 
             Properties search_prop = new Properties();
@@ -78,8 +95,16 @@
 <head>
     <title>summa example website</title>
     <link rel="stylesheet" type="text/css" href="css/project.css"/>
+    <script type="text/javascript" src="js/jquery-1.3.2.min.js"></script>
+    <script type="text/javascript" src="js/jquery.autocomplete.min.js"></script>
+
+    <script type="text/javascript">
+        function init() {
+            $('#q').autocomplete({ serviceUrl:'service/autocomplete.jsp' });
+        }
+    </script>
 </head>
-<body style="padding: 10px;">
+<body style="padding: 10px;" onload="init();">
 
 <img src="images/summa-logo_h40.png" alt="Summa logo" />
 <br />
@@ -87,8 +112,9 @@
 <div class="searchBoxContainer" id="searchBoxContainer">
     <div class="searchBox" id="searchBox">
         <form action="index.jsp" class="searchBoxTweak" id="fpSearch">
-            <input type="text" name="query" value="<%= form_query %>" />
+            <input type="text" name="query" id="q" value="<%= form_query %>" />
             <input type="submit" value="Search" />
+            <input type="hidden" name="usersearch" value="true" />
         </form>
     </div>
 </div>
