@@ -209,6 +209,8 @@
     <target name="clean">
         <delete dir="${build.dir}"/>
         <delete file="${release.search.war}"/>
+        <delete file="${release.storage.war}"/>
+        <delete file="${release.website.war}"/>
     </target>
 
     <target name="distclean" depends="clean">
