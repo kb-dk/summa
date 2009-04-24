@@ -1,0 +1,2 @@
+This folder contains 3 XML-files with fake fagref-profiles ans the XSLTs to
+transform the XML to SummaDocumentXML.

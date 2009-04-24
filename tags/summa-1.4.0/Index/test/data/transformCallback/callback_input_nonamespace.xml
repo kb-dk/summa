@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<searchresult totalhits="10298" firstRecord="1" >
+    <record searchscore="0.476372" recordID="horizon_1234567">
+        <shortrecord>
+            <RDF>
+                <Description>
+                    <title>Mongo pongo</title>
+                    <creator>Vı̄dā Mömbodār</creator>
+                    <type xml:lang="da">bog</type>
+                    <type xml:lang="en">book</type>
+                    <date>1973</date>
+                    <format>duo</format>
+                </Description>
+            </RDF>
+        </shortrecord></record>
+    <record searchscore="0.4541077" recordID="horizon_123458">
+        <shortrecord>
+            <RDF>
+                <Description>
+                    <title>Monstrognuf : a leasure lazy kit</title>
+                    <creator>Palle Pallesen</creator>
+                    <creator>Ole Olsen</creator>
+                    <type xml:lang="da">bog</type>
+                    <type xml:lang="en">book</type>
+                    <date>1998</date>
+                    <identifier>ISBN 1234567890</identifier>
+                    <format>duo</format>
+                </Description>
+            </RDF>
+        </shortrecord></record>
+</searchresult>
