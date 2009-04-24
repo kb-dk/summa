@@ -24,8 +24,11 @@ public class SearchTool {
         if (args.length < 1) {
             System.err.println ("USAGE:\n\t" +
                                 "search-tool.sh <key=val> [key=val]...");
-            System.err.println ("Example:\n\tsearch-tool.sh " +
+            System.err.println ("Examples:");
+            System.err.println ("\tsearch-tool.sh " +
                                 "search.document.query=foo\n");
+            System.err.println ("\tsearch-tool.sh " +
+                                "search.document.lucene.morelikethis.recordid=myRecordId27\n");
             System.err.println ("Optionally you may set the CONFIGURATION" +
                                 "variable in your shell and it will be used for" +
                                 "the summa.configuration property\n");            
