@@ -1,3 +1,223 @@
+2009-04-24 13:25  mke
+
+	* [r1376] ChangeLog, NEWS:
+	  
+	  Release Summa 1.4.0
+
+2009-04-24 12:59  mke
+
+	* [r1375] Control/test/data/oai/oai_IndexDescriptor.xml,
+	  Samples/Summix/config/searcher.xml:
+	  
+	  Add support for MoreLikeThis to Summix
+
+2009-04-24 12:43  toke
+
+	* [r1374]
+	  Index/src/dk/statsbiblioteket/summa/index/XMLTransformer.java:
+	  
+	  Logging: The XMLTransformer gives more detailed information in
+	  case of trouble
+
+2009-04-24 12:36  mke
+
+	* [r1373] Samples/Summix/config/searcher.xml:
+	  
+	  Remoev garbage from searcher.xml
+
+2009-04-24 12:27  mads
+
+	* [r1372] Web/resources/js, Web/resources/js/jquery-1.3.2.min.js,
+	  Web/resources/js/jquery.autocomplete.min.js:
+	  
+	  Added the needed javascript for the autocomplete feature
+
+2009-04-24 12:20  mads
+
+	* [r1371] Web/config/website/services.xml,
+	  Web/resources/css/project.css, Web/resources/images/shadow.png,
+	  Web/resources/index.jsp, Web/resources/service,
+	  Web/resources/service/autocomplete.jsp:
+	  
+	  Implemented autocomplete using jquery and autocomplete.jquery
+
+2009-04-24 12:05  mke
+
+	* [r1370] Samples/Summix/bin/all.sh:
+	  
+	  Import 'all.sh' into Summix
+
+2009-04-24 09:40  toke
+
+	* [r1369] Samples/Summix/bin/storage-tool.sh:
+	  
+	  Minor bugfix: Removed unneded popd
+
+2009-04-24 09:38  mke
+
+	* [r1368]
+	  Search/src/dk/statsbiblioteket/summa/search/document/DocumentSearcher.java:
+	  
+	  Twiddle javadoc
+
+2009-04-24 09:32  toke
+
+	* [r1367]
+	  Search/src/dk/statsbiblioteket/summa/search/document/DocumentSearcher.java:
+	  
+	  Enhancement: Changed the default for DocumentSearcher to include
+	  recordBase in the result
+
+2009-04-24 09:20  mke
+
+	* [r1366]
+	  Search/src/dk/statsbiblioteket/summa/search/api/tools/SearchTool.java:
+	  
+	  Morelikethis example added to search-tool output
+
+2009-04-24 09:14  mke
+
+	* [r1365] Samples/Summix/config/searcher.xml:
+	  
+	  Add MoreLikeThis configuration to config/searcher.xml for Summix
+
+2009-04-24 09:13  toke
+
+	* [r1364] Samples/Summix/bin/search-tool.sh,
+	  Samples/Summix/bin/storage-tool.sh:
+	  
+	  Added search and storage tools
+
+2009-04-24 09:11  mke
+
+	* [r1363]
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/LuceneSearchNode.java:
+	  
+	  Typo in property
+	  "summa.support.lucene.morelikethis.maxwueryterms"
+
+2009-04-24 09:06  toke
+
+	* [r1362]
+	  Index/src/dk/statsbiblioteket/summa/index/XMLTransformer.java:
+	  
+	  Logging: Better feedback in XMLTransformer
+
+2009-04-24 08:27  mads
+
+	* [r1361]
+	  Web/src/dk/statsbiblioteket/summa/web/services/SearchWS.java:
+	  
+	  Cleaned up unneeded parameters
+
+2009-04-24 06:48  toke
+
+	* [r1360]
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/LuceneSearchNode.java,
+	  Support/test/dk/statsbiblioteket/summa/support/lucene/search/LuceneSearchNodeTest.java:
+	  
+	  Enhancement: MoreLikeThis that fails will now output a better
+	  error message
+
+2009-04-24 06:40  toke
+
+	* [r1359]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/LuceneIndexDescriptor.java,
+	  Support/test/dk/statsbiblioteket/summa/support/lucene/search/LuceneSearchNodeTest.java:
+	  
+	  Bugfix: The recordID and recordBase was not properly analyzed
+
+2009-04-24 06:35  mke
+
+	* [r1358] Samples/Summix/build.xml:
+	  
+	  In Summix, use private scripts instead of importing those from
+	  Control
+
+2009-04-24 06:31  mke
+
+	* [r1357] Web/build.xml:
+	  
+	  Clean up storage.war and website.war in 'clean' target of the Web
+	  module
+
+2009-04-23 23:00  tokerefind
+
+	* [r1356] Samples/Summix/bin/summa-storage.bat:
+	  
+	  Bugfix: The summa-storage.bat script always used the default
+	  configuration
+
+2009-04-23 22:38  tokerefind
+
+	* [r1355] Samples/Summix/bin/generic_start.bat:
+	  
+	  Bugfix: The generic_start did not passed expanded properties
+	  onwards to the JVM
+
+2009-04-23 13:09  mads
+
+	* [r1354] Web/config/search/configuration.xml,
+	  Web/src/dk/statsbiblioteket/summa/web/services/SearchWS.java,
+	  Web/test/CallbackTest.java:
+	  
+	  Switch to nested configuration to use both a searcher and
+	  suggest.
+	  Fix CallbackTest to use sbutil.
+	  Only return the relevant xml in getSuggestions webservice.
+
+2009-04-23 13:07  toke
+
+	* [r1353]
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/LuceneSearchNode.java,
+	  Support/test/dk/statsbiblioteket/summa/support/lucene/search/LuceneSearchNodeTest.java:
+	  
+	  Bugfix: MoreLikeThis returned the document used as source
+
+2009-04-23 12:50  toke
+
+	* [r1352]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/index/IndexUtils.java:
+	  
+	  Logging: Removed System.out.println
+
+2009-04-23 12:50  mke
+
+	* [r1351] ChangeLog, NEWS:
+	  
+	  Partial commit of updated NEWS and ChangeLog... Can you feel that
+	  Summa 1.4.0 is near?
+
+2009-04-23 12:45  toke
+
+	* [r1350]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/index/IndexUtils.java,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/SearchTest.java,
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/DocumentCreator.java,
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/LuceneManipulator.java,
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/StreamingDocumentCreator.java,
+	  Search/src/dk/statsbiblioteket/summa/search/api/document/DocumentKeys.java:
+	  
+	  Feature: The LuceneManipulator now guaranteed that recordId and
+	  RecordBase is assigned if a Record is present in the Payload that
+	  is added to the index
+
+2009-04-23 12:40  toke
+
+	* [r1349]
+	  Support/test/dk/statsbiblioteket/summa/support/suggest/SuggestSearcherTest.java:
+	  
+	  Tweak: Removed a System.out.println from the suggest test
+
+2009-04-23 12:39  toke
+
+	* [r1348]
+	  Support/src/dk/statsbiblioteket/summa/support/api/SuggestResponse.java,
+	  Support/test/dk/statsbiblioteket/summa/support/suggest/SuggestSearcherTest.java:
+	  
+	  Bugfix: The XML for the Suggest module containd an inner
+	  XML-declaration
+
 2009-04-23 12:20  mke
 
 	* [r1347]
