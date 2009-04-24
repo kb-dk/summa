@@ -26,6 +26,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.index.IndexField;
 import dk.statsbiblioteket.summa.common.lucene.analysis.*;
+import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.lucene.search.SummaQueryParser;
 import dk.statsbiblioteket.summa.common.util.ParseUtil;
 import dk.statsbiblioteket.summa.common.xml.DefaultNamespaceContext;
@@ -48,9 +49,9 @@ import javax.xml.xpath.XPathFactory;
 import java.io.IOException;
 import java.net.URL;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.ArrayList;
 
 /**
  * Trivial implementation of a Lucene IndexDescriptor.
@@ -98,6 +99,19 @@ public class LuceneIndexDescriptor
      */
     public void init() {
         log.trace("init() called");
+        addField(makeField(IndexUtils.RECORD_FIELD,
+                           Field.Index.NOT_ANALYZED,
+                           Field.Store.YES,
+                           Field.TermVector.NO,
+                           new KeywordAnalyzer()));
+
+        addField(makeField(IndexUtils.RECORD_BASE,
+                           Field.Index.NOT_ANALYZED,
+                           Field.Store.YES,
+                           Field.TermVector.NO,
+                           new KeywordAnalyzer()));
+
+
         addField(makeField(IndexField.FREETEXT,
                            Field.Index.TOKENIZED,
                            Field.Store.NO,

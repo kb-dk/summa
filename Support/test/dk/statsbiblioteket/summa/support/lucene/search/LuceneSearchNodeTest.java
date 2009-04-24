@@ -157,6 +157,12 @@ public class LuceneSearchNodeTest extends TestCase {
         request.put(DocumentKeys.SEARCH_QUERY, "hans");
         ResponseCollection responses = searcher.search(request);
         log.debug("Search for 'hans' gave\n" + responses.toXML());
+
+        request = new Request();
+        request.put(DocumentKeys.SEARCH_QUERY,
+                    "recordID:\"fagref:hj@example.com\"");
+        responses = searcher.search(request);
+        log.debug("Search for recordID gave\n" + responses.toXML());
     }
 
     public void testDiscovery() throws Exception {
