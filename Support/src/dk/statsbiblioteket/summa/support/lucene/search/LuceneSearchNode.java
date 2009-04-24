@@ -155,7 +155,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
      * Optional. If not defined, Lucene MoreLikeThis defaults will be used.
      */
     public static final String CONF_MORELIKETHIS_MAXQUERYTERMS =
-            "summa.support.lucene.morelikethis.maxwueryterms";
+            "summa.support.lucene.morelikethis.maxqueryterms";
 
     /**
      * Lucene MoreLikeThis property.<br />
