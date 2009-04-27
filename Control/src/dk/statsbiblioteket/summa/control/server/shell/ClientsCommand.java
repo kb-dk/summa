@@ -8,6 +8,8 @@ import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
 
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
  * Created by IntelliJ IDEA. User: mikkel Date: Jan 31, 2008 Time: 11:09:01 AM
@@ -57,8 +59,9 @@ public class ClientsCommand extends Command {
             }
             ctx.info (header);
 
-            /* Generate report */
-            for (String client : clients) {
+            /* Generate report, sorting alphabetically by client id */
+            SortedSet<String> sortedClients = new TreeSet<String>(clients);
+            for (String client : sortedClients) {
                 String msg = "\t" + client;
                 if (doStatus) {
                     try {
