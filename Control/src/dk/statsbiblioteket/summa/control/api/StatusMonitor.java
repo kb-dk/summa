@@ -107,8 +107,11 @@ public class StatusMonitor implements Runnable {
     }
 
     public void run() {
-        ctx.debug ("Waiting for status from " + connectionId + "...");
-        log.trace ("Waiting for status from " + connectionId + "...");
+        String msg = "Waiting for status"
+                   + (connectionId == null ? "" : ("from " + connectionId))
+                   + "...";
+        ctx.debug (msg);
+        log.trace (msg);
         for (int tick = 0; tick < timeout; tick++) {
 
             try {
@@ -152,17 +155,27 @@ public class StatusMonitor implements Runnable {
 
                 return;
             } catch (Exception e) {
-                ctx.error ("Failed to ping '" + connectionId
-                           + "'. Error was:\n " + Strings.getStackTrace(e));
+                if (connectionId == null) {
+                    msg = "Ping failed, error was:\n"+ Strings.getStackTrace(e);
+                } else {
+                    msg = "Failed to ping '" + connectionId
+                           + "', error was:\n " + Strings.getStackTrace(e);
+                }
+                ctx.error (msg);
                 log.warn ("Failed to ping '" + connectionId + "'", e);
             } finally {
                 releaseConnection();
             }
         }
-        ctx.error ("'" + connectionId + "' did not respond after "
-                   + timeout + "s. It has probably crashed.");
-        log.warn ("'" + connectionId + "' did not respond after "
-                   + timeout + "s. It has probably crashed.");
+        if (connectionId == null) {
+            msg = "No response after " + timeout + "s. "
+                  + "The endpoint has probably crashed";
+        } else {
+            msg = "'" + connectionId + "' did not respond after "
+                   + timeout + "s. It has probably crashed.";
+        }
+        ctx.error (msg);
+        log.warn (msg);
     }
 
     private synchronized Monitorable getConnection() {
