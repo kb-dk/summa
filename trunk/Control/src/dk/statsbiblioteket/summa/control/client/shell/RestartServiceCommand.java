@@ -59,8 +59,8 @@ public class RestartServiceCommand extends RemoteCommand<ClientConnection> {
                     }
 
                     // Start the service(s)
-                    // Wait the default JVM tear down gracetime
-                    Thread.sleep(DeferredSystemExit.DEFAULT_DELAY);
+                    // Wait the default JVM tear down gracetime + 1s
+                    Thread.sleep(DeferredSystemExit.DEFAULT_DELAY + 1000);
                     try {
                         client.startService(serviceId, null);
                         StatusMonitor mon = new StatusMonitor(client.getServiceConnection(serviceId),
