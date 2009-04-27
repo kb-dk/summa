@@ -10,6 +10,8 @@ import dk.statsbiblioteket.summa.control.client.Client;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
  * A {@link Command} to list the services deployed in a {@link Client}.
@@ -38,7 +40,9 @@ public class ServicesCommand extends RemoteCommand<ClientConnection> {
 
             ctx.info ("Known services:");
 
-            for (String service : services) {
+            /* List services sorted alphabetically */
+            SortedSet<String> sortedServices = new TreeSet<String>(services);
+            for (String service : sortedServices) {
                 String msg = "\t" + service;
                 if (listStatus) {
                     String status;

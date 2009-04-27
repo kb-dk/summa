@@ -3,18 +3,18 @@ package dk.statsbiblioteket.summa.control.client.shell;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.common.shell.RemoteCommand;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
+import dk.statsbiblioteket.summa.common.shell.Command;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.Strings;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
- * Created by IntelliJ IDEA.
- * User: mikkel
- * Date: Aug 13, 2008
- * Time: 2:12:44 PM
- * To change this template use File | Settings | File Templates.
+ * A {@link Command} for the {@link ClientShell} used to list the contents
+ * of the configured repository.
  */
 public class RepositoryCommand extends RemoteCommand<ClientConnection> {
 
@@ -47,7 +47,10 @@ public class RepositoryCommand extends RemoteCommand<ClientConnection> {
             } else {
                 ctx.info ("Bundles in repository, matching '" + filter + "':");
             }
-            for (String bdlId : bundles) {
+
+            /* Sort the bundles before displaying them  */
+            SortedSet<String> sortedBundles = new TreeSet<String>(bundles);
+            for (String bdlId : sortedBundles) {
                 ctx.info("\t" + bdlId);
             }
         } finally {

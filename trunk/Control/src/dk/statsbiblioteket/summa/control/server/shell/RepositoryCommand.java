@@ -7,6 +7,8 @@ import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
 
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.rmi.RemoteException;
 
@@ -65,7 +67,7 @@ public class RepositoryCommand extends Command {
                 return;
             }
             control = conn.getConnection();
-            List<String> bundleIds = control.getBundles();
+            List<String> bundles = control.getBundles();
 
             /* Header message */
             if (regex != null) {
@@ -74,8 +76,9 @@ public class RepositoryCommand extends Command {
                 ctx.info ("Known bundles:");
             }
 
-            /* List the matching bundles */
-            for (String bundleId : bundleIds) {
+            /* List the matching bundles sorted alphabetically */
+            SortedSet<String> sortedBundles = new TreeSet<String>(bundles);
+            for (String bundleId : sortedBundles) {
                 if (regex != null) {
                     if (regex.matcher(bundleId).matches()) {
                         ctx.info ("\t" + bundleId);
