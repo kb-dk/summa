@@ -53,11 +53,13 @@
                                     <xsl:value-of select="//id"/>
                                 </xsl:variable>
                                 <xsl:variable name="res_id">
-                                    <xsl:value-of select="resource"/>
+                                    <xsl:for-each select="resource">
+                                        <xsl:value-of select="@id"/>
+                                    </xsl:for-each>
                                 </xsl:variable>
                                 <xsl:choose>
                                 <xsl:when test="$pw!=''">
-                                     <dc:identifier summapos="{$pos}" requires_passord="{$pw}" id="{$id}" resource_id="{$res_id}">
+                                     <dc:identifier summapos="{$pos}" requires_password="{$pw}" id="{$id}" resource_id="{$res_id}">
 
 
                                 <xsl:value-of select="url"/>
