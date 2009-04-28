@@ -31,6 +31,7 @@ import dk.statsbiblioteket.summa.search.rmi.RMISearcherProxy;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.control.api.Status;
+import dk.statsbiblioteket.summa.control.api.InvalidServiceStateException;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -73,7 +74,8 @@ public class SearchService extends ServiceBase {
 
     public synchronized void start() throws RemoteException {
         if (searcher != null) {
-            log.debug("Start called on an already running searcher");
+            throw new InvalidServiceStateException(getClientId(), getId(),
+                                                   "start", "Already running");
         }
 
         setStatusRunning("Creating Searcher");
@@ -107,8 +109,8 @@ public class SearchService extends ServiceBase {
 
     public synchronized void stop() throws RemoteException {
         if (searcher == null) {
-            log.debug("stop called, but status is already stopped");
-            return;
+            throw new InvalidServiceStateException(getClientId(), getId(),
+                                                   "start", "Not running");
         }
         //noinspection OverlyBroadCatchBlock
         try {

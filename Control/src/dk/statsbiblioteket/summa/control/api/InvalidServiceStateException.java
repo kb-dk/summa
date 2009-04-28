@@ -25,6 +25,20 @@ public class InvalidServiceStateException extends ClientException {
         super (client, "Request '" + action + "' on service '" + serviceId
                 + "' is illegal. Cause: " + cause);
     }
+
+    /**
+     *
+     * @param clientId the instance id of the client encountering the
+     *                 exceptional state
+     * @param serviceId the id of the service which is involved
+     * @param action the action which was requested to be performed on the service
+     * @param cause Short string describing the cause of the problem
+     */
+    public InvalidServiceStateException (String clientId, String serviceId,
+                                         String action, String cause) {
+        super (clientId, "Request '" + action + "' on service '" + serviceId
+                + "' is illegal. Cause: " + cause);
+    }
 }
 
 
