@@ -1,6 +1,8 @@
 #! /bin/bash
 
-pushd $(dirname $0/..) > /dev/null
+DEPLOY=`dirname $0`/..
+pushd $DEPLOY > /dev/null
+DEPLOY=`pwd`
 
 if [ "$CONFIGURATION" == "" ]; then
     export CONFIGURATION=config/suggest-tool.configuration.xml
