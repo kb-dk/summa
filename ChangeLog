@@ -1,4 +1,97 @@
-2009-04-24 13:25  mke
+2009-04-28 15:15  mke
+
+	* [r1388] ChangeLog, NEWS,
+	  
+	  Release Summa 1.4.1
+
+2009-04-28 12:35  nig
+
+	* [r1387] Index/config/targets/dpp/dpp_short_format.xsl,
+	  Index/config/targets/dpp/dpp_title.xsl:
+	  
+	  Fjernet "hvide firkanter"
+	  (&#238;&#8364;&#402;&#238;&#8364;&#8222;) fra titel i dpp
+
+2009-04-28 12:16  toke
+
+	* [r1386] Samples/Summix/bin/suggest-tool.sh:
+	  
+	  Fixed problem with configuration and path in suggest-tool
+
+2009-04-28 11:59  toke
+
+	* [r1385] Samples/Summix/bin/suggest-tool.sh:
+	  
+	  Made it possible to override CONFIGURATION in suggest-tool
+
+2009-04-28 10:40  toke
+
+	* [r1384]
+	  Search/src/dk/statsbiblioteket/summa/search/api/document/DocumentResponse.java,
+	  Web/src/dk/statsbiblioteket/gwsc/WebServices.java:
+	  
+	  Bugfix: The WebServices did not work when the WAR-file contained
+	  a '#' (used to make URLs with slashes in tomcat)
+
+2009-04-28 09:30  mke
+
+	* [r1383]
+	  Control/src/dk/statsbiblioteket/summa/control/api/InvalidServiceStateException.java,
+	  Control/src/dk/statsbiblioteket/summa/control/service/FilterService.java,
+	  Control/src/dk/statsbiblioteket/summa/control/service/SearchService.java,
+	  Control/src/dk/statsbiblioteket/summa/control/service/ServiceBase.java,
+	  Control/src/dk/statsbiblioteket/summa/control/service/StorageService.java,
+	  build.properties:
+	  
+	  Make FilterService (general indexer and ingester services) exit
+	  the JVM when the underlying FilterControl exits. This behavior
+	  can be tweaked via the summa.control.service.exitwithfilter
+	  property
+	  
+	  Allow SearchService and StorageService to restart cleanly
+	  
+	  Pre-release version bump to 1.4.1
+
+2009-04-27 08:18  mke
+
+	* [r1382]
+	  Control/src/dk/statsbiblioteket/summa/control/api/StatusMonitor.java:
+	  
+	  Clean up message reporting where 'null' was sometimes reported as
+	  connection id
+
+2009-04-27 08:06  mke
+
+	* [r1381]
+	  Control/src/dk/statsbiblioteket/summa/control/client/shell/RestartServiceCommand.java:
+	  
+	  Increment restart gracetime with 1s
+
+2009-04-27 07:39  mke
+
+	* [r1380]
+	  Control/src/dk/statsbiblioteket/summa/control/client/shell/RepositoryCommand.java,
+	  Control/src/dk/statsbiblioteket/summa/control/client/shell/ServicesCommand.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/shell/ClientsCommand.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/shell/RepositoryCommand.java:
+	  
+	  Do alphabetic sorting in all client-shell/control-shell commands
+	  listing services or clients
+
+2009-04-27 07:37  dorete
+
+	* [r1379] Index/config/targets/etss/etss_short_format.xsl:
+	  
+	  Ændring af e-tss (short_format medtager requires_pw="true" og
+	  resource_id)
+
+2009-04-26 09:40  mke_refind
+
+	* [r1378] Samples/Summix/config/log4j.xml:
+	  
+	  Fix 'process.log' for the Summix setup
+
+2009-04-24 13:23  mke
 
 	* [r1376] ChangeLog, NEWS:
 	  
