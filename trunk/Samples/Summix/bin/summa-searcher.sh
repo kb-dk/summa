@@ -34,4 +34,3 @@ fi
 
 # All is ready, execute!
 source $DEPLOY/bin/generic_start.sh
-summa-storage.sh (END) 
