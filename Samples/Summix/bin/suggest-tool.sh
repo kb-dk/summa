@@ -2,7 +2,9 @@
 
 pushd $(dirname $0/..) > /dev/null
 
-export CONFIGURATION=config/suggest-tool.configuration.xml
+if [ "$CONFIGURATION" == "" ]; then
+    export CONFIGURATION=config/suggest-tool.configuration.xml
+fi;
 
 ACTION="$1"
 QUERY="$2"
