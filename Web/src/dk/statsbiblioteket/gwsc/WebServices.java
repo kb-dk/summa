@@ -22,7 +22,7 @@
  */
 package dk.statsbiblioteket.gwsc;
 
-import dk.statsbiblioteket.util.xml.*;
+import dk.statsbiblioteket.util.xml.DOM;
 import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -36,7 +36,6 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
-import java.net.MalformedURLException;
 import java.security.Security;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -71,13 +70,19 @@ public class WebServices {
                 docBuilder = docBuilderFactory.newDocumentBuilder();
                 docBuilder.isValidating();
                 docBuilder.isNamespaceAware();
-                Document doc = docBuilder.parse(new File(propurl.getFile()));
-                Node nn = DOM.selectNode(doc,"properties/service[name=\""+ name + "\"]");
+//                Document doc = docBuilder.parse(new File(propurl.getFile().replace("%23", "#")));
+                Document doc =
+                        docBuilder.parse(getResourceInputStream(propurl));
+                Node nn = DOM.selectNode(doc,"properties/service[name=\""
+                                             + name + "\"]");
                 ServiceObj service = null;
                 if (nn != null) {
                     service = getServiceObj(nn);
                 }
-                if (service != null && service.getName() != null && !service.getName().equals("") && !servicehash.containsKey(service.getName().toLowerCase())) {
+                if (service != null && service.getName() != null
+                    && !service.getName().equals("")
+                    && !servicehash.containsKey(
+                        service.getName().toLowerCase())) {
                     servicehash.put(service.getName().toLowerCase(),service);
                     success = true;
                 }
@@ -94,6 +99,21 @@ public class WebServices {
         return success;
     }
 
+    /**
+     * Workaround for a bug in DocumentBuilder.parse where Files with '#' cannot
+     * be opened.
+     * @param resource the URL to the resource to open,. Must be present at the
+     *                 local file system.
+     * @return an InputStream for the given property.
+     * @throws FileNotFoundException if the property could not be resolved to
+     *         a file.
+     */
+    private InputStream getResourceInputStream(URL resource) throws
+                                                         FileNotFoundException {
+        return new FileInputStream(new File(resource.getFile().
+                replace("%23", "#")));
+    }
+
     private boolean createServices() {
         //parsing service.xml + wsdls creating serviceobjects
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
@@ -104,7 +124,7 @@ public class WebServices {
             docBuilder = docBuilderFactory.newDocumentBuilder();
             docBuilder.isValidating();
             docBuilder.isNamespaceAware();
-            Document doc = docBuilder.parse(new File(propurl.getFile()));
+            Document doc = docBuilder.parse(getResourceInputStream(propurl));
             NodeList nl = DOM.selectNodeList(doc,"properties/service");
             for (int i = 0; i < nl.getLength(); i++) {
                 ServiceObj service = getServiceObj(nl.item(i));

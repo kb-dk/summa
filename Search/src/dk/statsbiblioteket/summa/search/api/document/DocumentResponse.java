@@ -22,18 +22,18 @@
  */
 package dk.statsbiblioteket.summa.search.api.document;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Collections;
-import java.util.Comparator;
-import java.io.StringWriter;
-import java.io.Serializable;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.util.ParseUtil;
 import dk.statsbiblioteket.summa.search.api.Response;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.Serializable;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * The result of a search, suitable for later merging and sorting.
