@@ -1,4 +1,28 @@
 =======================
+2009-04-28: Summa 1.4.1
+=======================
+
+ * Make FilterService exit the JVM when underlying FilterControl stops.
+   This behaviour can be tweaked via the property
+   summa.control.service.exitwithfilter (SB)
+ 
+ * Alphabetic sorting of bundles in the commands in control-shell and
+   client-shell (SB)
+ 
+ * Bugfix: Make StorageService and SearchService able to restart cleanly (SB)
+ 
+ * Bugfix: Clean up messages from StatusMonitor reporting connectionIds
+           of null (SB)
+
+ * Bugfix: The WebServices did not work when the WAR-file contained
+           a '#' (used to make URLs with slashes in tomcat) (SB)
+
+ * Bugfix: Allow overriding configuration path in the Summix suggest-tool (SB)
+ 
+ * Bugfix: Fix process.log in Summix (Refind)
+
+
+=======================
 2009-04-24: Summa 1.4.0
 =======================
 
