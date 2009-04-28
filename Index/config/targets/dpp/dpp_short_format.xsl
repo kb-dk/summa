@@ -21,17 +21,17 @@
                                         <xsl:for-each select="mc:subfield[@type='a' or @type='c']">
                                             <xsl:choose>
                                                 <xsl:when test="position()=1">
-                                                    <xsl:value-of select="."/>
+                                                    <xsl:value-of select="translate(.,'','')"/>
                                                 </xsl:when>
                                                 <xsl:otherwise>
                                                     <xsl:if test="@type='a'">
                                                         <xsl:if test="not(preceding-sibling::mc:subfield[@type='a'])">
                                                             <xsl:text>&#32;:&#32;</xsl:text>
-                                                            <xsl:value-of select="."/>
+                                                            <xsl:value-of select="translate(.,'&#238;&#8364;&#402;&#238;&#8364;&#8222;','')"/>
                                                         </xsl:if>
                                                         <xsl:if test="(preceding-sibling::mc:subfield[@type='a'])">
                                                             <xsl:text>&#32;;&#32;</xsl:text>
-                                                            <xsl:value-of select="."/>
+                                                            <xsl:value-of select="translate(.,'&#238;&#8364;&#402;&#238;&#8364;&#8222;','')"/>
                                                         </xsl:if>
                                                     </xsl:if>
                                                     <xsl:if test="@type='c'">
