@@ -12,14 +12,14 @@
                 <Index:group Index:name="ti" Index:navn="ti" >
                     <xsl:for-each select="mc:field[@type='245_00']/mc:subfield[@type='a']">
                         <Index:field Index:repeat="true" Index:name="title" Index:navn="titel" Index:type="token" Index:boostFactor="10"  Index:suggest="true">
-                            <xsl:value-of select="."/>
+                            <xsl:value-of select="translate(.,'&#238;&#8364;&#402;&#238;&#8364;&#8222;','')"/>
                         </Index:field>
                     </xsl:for-each>
 
                     <xsl:for-each select="mc:field[@type='245_00']/mc:subfield[@type='a']">
                         <Index:field Index:repeat="true" Index:name="main_titel" Index:navn="ht" Index:type="token" Index:boostFactor="10"  Index:suggest="true">
                             <xsl:for-each select=".">
-                                <xsl:value-of select="."/>
+                                <xsl:value-of select="translate(.,'&#238;&#8364;&#402;&#238;&#8364;&#8222;','')"/>
                             </xsl:for-each>
                         </Index:field>
                     </xsl:for-each>
