@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<SummaDocument version="1.0" id="mybase:test1" boost="1.0" xmlns="http://statsbiblioteket.dk/summa/2008/Document">
+    <fields>
+        <field name="author">Direct  field</field>
+        <field name="split">token1 token2 token3</field>
+    </fields>
+</SummaDocument>
+
+

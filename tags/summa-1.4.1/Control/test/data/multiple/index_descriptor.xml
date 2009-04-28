@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<IndexDescriptor version="1.0" xmlns="http://statsbiblioteket.dk/summa/2008/IndexDescriptor">
+
+    <groups>
+        <group name="au">
+            <field ref="author_person"/>
+            <field ref="author_normalised"/>
+            <field ref="au_other"/>
+        </group>
+        <group name="ti">
+            <field ref="main_titel"/>
+            <field ref="sort_title"/>
+        </group>
+        <group name="su">
+            <field ref="lsu_oai"/>
+            <field ref="lsubject"/>
+            <field ref="subject_other"/>
+        </group>
+        <group name="lma">
+            <field ref="lma_long"/>
+        </group>
+    </groups>
+
+    <fields>
+        <!-- TODO: Check how defaultType="token" works -->
+        <field name="token" index="true" inFreeText="true" required="true"/>
+        <!-- TODO: Consider compression of shortformat -->
+        <field name="shortformat" parent="stored" indexed="false" inFreeText="false" required="true"/>
+
+        <field name="author_normalised" parent="token" multiValued="true" queryBoost="10"/>
+        <field name="author_person" parent="token" multiValued="true" queryBoost="10"/>
+        <field name="author_corporation" parent="token" multiValued="true"/>
+        <field name="au_other" parent="token" multiValued="true" queryBoost="5"/>
+
+        <field name="main_titel" parent="token" queryBoost="10"/>
+        <field name="sort_title" parent="keyword" sortLocale="da"/>
+
+        <field name="lsubject" parent="keyword" inFreeText="true" queryBoost="10"/>
+        <field name="subject_other" parent="keyword" inFreeText="true" queryBoost="10"/>
+        <field name="lsu_oai" parent="keyword" inFreeText="true" queryBoost="10"/>
+
+        <field name="no" parent="token" inFreeText="true" queryBoost="7"/>
+        <field name="ma_long" parent="token" multiValued="true"/>
+        <field name="lma_long" parent="keyword"/>
+
+        <field name="id" parent="keyword"/>
+        <field name="ww" parent="keyword"/>
+        <field name="ma_short" parent="token"/>
+        <field name="ltarget" parent="keyword"/>
+        <field name="openUrl" parent="keyword"/>
+        <field name="pu" parent="token"/>
+        <field name="py" parent="token"/>
+        <field name="sort_year_desc" parent="keyword"/>
+    </fields>
+
+    <defaultSearchFields>
+        <field ref="freetext"/>
+        <field ref="au"/>
+        <field ref="ti"/>
+        <field ref="su"/>
+        <field ref="lma"/>
+        <field ref="id"/>
+    </defaultSearchFields>
+</IndexDescriptor>
+
+
