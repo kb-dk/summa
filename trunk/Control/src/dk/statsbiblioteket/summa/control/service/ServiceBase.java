@@ -30,6 +30,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.control.api.BadConfigurationException;
 import dk.statsbiblioteket.summa.control.api.Service;
 import dk.statsbiblioteket.summa.control.api.Status;
+import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -114,6 +115,10 @@ public abstract class ServiceBase extends UnicastRemoteObject
     public String getId() throws RemoteException {
         log.trace("getID called, returning '" + id + "'");
         return id;
+    }
+
+    public String getClientId() {
+        return System.getProperty(ClientConnection.CONF_CLIENT_ID);
     }
 
     /**

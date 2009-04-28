@@ -25,6 +25,7 @@ package dk.statsbiblioteket.summa.control.service;
 import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.control.api.Status;
+import dk.statsbiblioteket.summa.control.api.InvalidServiceStateException;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -72,16 +73,16 @@ public class StorageService extends ServiceBase {
                   Logging.LogLevel.DEBUG);
     }
 
-    private boolean stopped = true;
     private Configuration conf; // Is it okay to keep this? (NO -- mke)
+
     public void start() throws RemoteException {
-        if (!stopped) {
-            log.warn("start called when already running");
-            return;
+        if (storage != null) {
+            throw new InvalidServiceStateException(getClientId(), getId(),
+                                                   "start", "Already running");
         }
+
         setStatus(Status.CODE.startingUp, "Starting StorageServiceThread",
                   Logging.LogLevel.INFO);
-        stopped = false;
         log.info ("StorageService started");
         log.debug("Creating Storage instance");
         try {
@@ -90,14 +91,12 @@ public class StorageService extends ServiceBase {
             setStatus(Status.CODE.crashed,
                       "Crashed due to RemoteException when requesting storage",
                       Logging.LogLevel.FATAL, t);
-            stopped = true;
             throw new RemoteException("Crashed during startup", t);
         } catch (Throwable t) {
             //noinspection DuplicateStringLiteralInspection
             setStatus(Status.CODE.crashed,
                       "Crashed due to unexpected Throwable when requesting "
                       + "storage", Logging.LogLevel.FATAL, t);
-            stopped = true;
             throw new RemoteException("Crashed with throwable during startup",
                                       t);
         }
@@ -106,10 +105,17 @@ public class StorageService extends ServiceBase {
 
     public void stop() throws RemoteException {
         log.trace("Recieved request to stop Storage service");
-        if (stopped) {
-            log.warn("Attempting to stop when not started");
-            return;
+        if (storage == null) {
+            throw new InvalidServiceStateException(getClientId(), getId(),
+                                                   "stop", "Already stopped");
         }
+        closeStorage();
+        setStatus(Status.CODE.stopped,
+                  "StorageService down, all lights green, performing clean-up",
+                  Logging.LogLevel.INFO);
+    }
+
+    private void closeStorage() throws RemoteException {
         try {
             setStatus(Status.CODE.stopping, "Stopping storage control",
                       Logging.LogLevel.DEBUG);
@@ -122,12 +128,9 @@ public class StorageService extends ServiceBase {
             setStatus(Status.CODE.crashed,
                       "Storage control crashed while closing",
                       Logging.LogLevel.ERROR, e);
-            throw new RemoteException("RemoteException when closing storage "
+            throw new RemoteException("Error closing storage "
                                       + "control", e);
         }
-        setStatus(Status.CODE.stopped,
-                  "StorageService down, all lights green, performing clean-up",
-                  Logging.LogLevel.INFO);
     }
 
     /**
