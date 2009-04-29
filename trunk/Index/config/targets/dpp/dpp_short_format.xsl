@@ -21,7 +21,7 @@
                                         <xsl:for-each select="mc:subfield[@type='a' or @type='c']">
                                             <xsl:choose>
                                                 <xsl:when test="position()=1">
-                                                    <xsl:value-of select="translate(.,'','')"/>
+                                                    <xsl:value-of select="translate(.,'&#238;&#8364;&#402;&#238;&#8364;&#8222;','')"/>
                                                 </xsl:when>
                                                 <xsl:otherwise>
                                                     <xsl:if test="@type='a'">
