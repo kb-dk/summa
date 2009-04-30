@@ -173,7 +173,7 @@ public class ClientManager extends ConnectionManager<ClientConnection>
             return new Configuration (new MemoryStorage(in));
         } catch (IOException e) {
             log.error ("Error while looking up deployment target for '"
-                       + instanceId + "'");
+                       + instanceId + "': " + e.getMessage(), e);
             return null;
         }
     }

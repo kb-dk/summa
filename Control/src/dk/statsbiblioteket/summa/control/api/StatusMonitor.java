@@ -4,6 +4,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
+import dk.statsbiblioteket.util.rpc.ConnectionFactory;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
@@ -12,6 +13,7 @@ import dk.statsbiblioteket.summa.control.api.feedback.Feedback;
 
 import java.util.List;
 import java.util.Arrays;
+import java.io.IOException;
 
 /**
  * A {@link Runnable} helper class to monitor a {@link Monitorable} until
@@ -22,12 +24,14 @@ public class StatusMonitor implements Runnable {
     private static final Log log = LogFactory.getLog(StatusMonitor.class);
 
     private ConnectionManager<? extends Monitorable> connMgr;
+    private ConnectionFactory<? extends Monitorable> connFact;
     private Monitorable _mon;
     private String connectionId;
     private int timeout;
     private ShellContext ctx;
     private List<Status.CODE> ignoreStatuses;
     private ConnectionContext<? extends Monitorable> connCtx;
+    private Status lastStatus;
 
 
     /**
@@ -79,9 +83,29 @@ public class StatusMonitor implements Runnable {
         this.ctx = ctx;
         this.ignoreStatuses = Arrays.asList(ignoreStatuses);
 
-        log.trace ("Created StatusMonitor with statis connection and timeout "
+        log.trace ("Created StatusMonitor with static connection and timeout "
                    + timeout  + ", ignoring statuses "
                    + Logs.expand(this.ignoreStatuses, 5) + ". "
+                   + "Outputting to a " + ctx);
+    }
+
+    public StatusMonitor (ConnectionFactory<? extends Monitorable> connFact,
+                          String connectionId,
+                          int timeout,
+                          ShellContext ctx,
+                          Status.CODE... ignoreStatuses) {
+        this.connFact = connFact;
+        this.connectionId = connectionId;
+        this.timeout = timeout;
+        this.ctx = ctx;
+        this.ignoreStatuses = Arrays.asList(ignoreStatuses);
+
+        // Configure the connection factory so we can uphold our timig promises
+        connFact.setGraceTime(1);
+        connFact.setNumRetries(1);
+
+        log.trace ("Created StatusMonitor with timeout " + timeout  + ", ignoring"
+                   + " statuses " + Logs.expand(this.ignoreStatuses, 5) + ". "
                    + "Outputting to a " + ctx);
     }
 
@@ -110,35 +134,32 @@ public class StatusMonitor implements Runnable {
         String msg = "Waiting for status"
                    + (connectionId == null ? "" : ("from " + connectionId))
                    + "...";
-        ctx.debug (msg);
-        log.trace (msg);
+        log.debug(msg);
+
+        try {
+            updateStatus();
+        } catch (IOException e) {
+            lastStatus = new Status(Status.CODE.crashed, msg);
+        }
+
         for (int tick = 0; tick < timeout; tick++) {
 
             try {
                 Thread.sleep (1000);
             } catch (InterruptedException e) {
                 // We should probably die if somebody interrupts us
-                ctx.debug ("Status monitor interrupted");
+                ctx.warn("Status monitor interrupted");
                 return;
             }
 
             try {
-                Monitorable mon = getConnection();
+                updateStatus();
 
-                if (mon == null) {
-                    ctx.info (connectionId == null ?
-                              "Connection still not up. Waiting..." :
-                              ("Connection to '" + connectionId
-                               + "', still not up. Waiting..."));
-                    continue;
-                }
-
-                Status s = mon.getStatus();
-
-                if (ignoreStatuses.contains(s.getCode())) {
+                if (ignoreStatuses.contains(lastStatus.getCode())) {
                     // Wait another interation
-                    ctx.debug ("Got status: " + s + ". Waiting for update...");
-                    log.trace ("Got status: " + s + ". Waiting for update...");
+                    msg = "Got status: "
+                          + lastStatus + ". Waiting for update...";
+                    log.trace (msg);
                     continue;
                 }
 
@@ -146,14 +167,15 @@ public class StatusMonitor implements Runnable {
                 // If we reach this point we are good,
                 // and the monitor should die
                 if (connectionId != null) {
-                    ctx.info ("'" + connectionId + "' reports status: " + s);
-                    log.debug ("'" + connectionId + "' reports status: " + s);
+                    msg = "'" + connectionId + "'"
+                          +" reports status: " + lastStatus;
                 } else {
-                    ctx.info ("Connection reports status: " + s);
-                    log.debug ("Connection reports status: " + s);
+                    msg = "Connection reports status: " + lastStatus;
                 }
+                log.debug (msg);
 
                 return;
+
             } catch (Exception e) {
                 if (connectionId == null) {
                     msg = "Ping failed, error was:\n"+ Strings.getStackTrace(e);
@@ -163,19 +185,71 @@ public class StatusMonitor implements Runnable {
                 }
                 ctx.error (msg);
                 log.warn ("Failed to ping '" + connectionId + "'", e);
+
+                lastStatus = new Status(Status.CODE.crashed,
+                                        msg);
             } finally {
                 releaseConnection();
             }
         }
-        if (connectionId == null) {
-            msg = "No response after " + timeout + "s. "
-                  + "The endpoint has probably crashed";
+
+        if (lastStatus == null) {
+            if (connectionId == null) {
+                msg = "No response after " + timeout + "s. "
+                      + "The endpoint has probably crashed";
+            } else {
+                msg = "'" + connectionId + "' did not respond after "
+                      + timeout + "s. It has probably crashed.";
+            }
+
+            ctx.error (msg);
+            log.warn (msg);
+            lastStatus = new Status(Status.CODE.crashed, msg);
+
         } else {
-            msg = "'" + connectionId + "' did not respond after "
-                   + timeout + "s. It has probably crashed.";
+            log.warn("No valid state within " + timeout + "s. "
+                     + "Last status was: " + lastStatus);
         }
-        ctx.error (msg);
-        log.warn (msg);
+
+    }
+
+    private void reportProgress() {
+        ctx.prompt(".");
+    }
+
+    /**
+     * Retrieve the last {@link Status} that was retrieved from the monitored
+     * object.
+     * @return the last status that was retrieved from the monitored object.
+     *         In case no status has been retrieved yet the status will be
+     *         {@code null}
+     */
+    public Status getLastStatus() {
+        return lastStatus;
+    }
+
+    private void updateStatus() throws IOException {
+        reportProgress();
+        Monitorable mon = getConnection();
+
+        if (mon == null) {
+            String msg = connectionId == null ?
+                         "Connection still not up. Waiting..." :
+                         ("Connection to '" + connectionId
+                          + "', still not up. Waiting...");
+            lastStatus = new Status(Status.CODE.not_instantiated, msg);
+            return;
+        }
+
+        try {
+            lastStatus = mon.getStatus();
+        } catch (InvalidServiceStateException e) {
+            lastStatus = new Status(Status.CODE.not_instantiated,
+                                    "Connection up" +
+                                    (connectionId == null ?
+                                           "": (" to " + connectionId))
+                                    + ", but service is not ready"); 
+        }
     }
 
     private synchronized Monitorable getConnection() {
@@ -184,6 +258,10 @@ public class StatusMonitor implements Runnable {
             return _mon;
         }
 
+        if (connFact != null) {
+            log.debug("Creating connection to " + connectionId);
+            return connFact.createConnection(connectionId);
+        }
 
         if (connCtx == null) {
             connCtx = connMgr.get(connectionId);
