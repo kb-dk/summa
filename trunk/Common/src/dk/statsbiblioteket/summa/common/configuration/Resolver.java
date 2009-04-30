@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URISyntaxException;
 
 /**
  * Resolves paths relative to System properties.
@@ -149,7 +150,13 @@ public class Resolver {
      */
     public static File getFile(String resource) {
         URL url = getURL(resource);
-        return url == null ? null : new File(url.getFile());
+        try {
+            return url == null ? null : new File(url.toURI());
+        } catch (URISyntaxException e) {
+            //noinspection DuplicateStringLiteralInspection
+            throw new RuntimeException(String.format(
+                    "Unable to convert URL '%s' to URI", url));
+        }
     }
 
     /**
@@ -217,7 +224,20 @@ public class Resolver {
         }
     }
 
+    /**
+     * Converts a URL to a File.
+     * </p><p>
+     * Note: Do not just make a {@code new File(url.getFile())} as it does not
+     * work for much else that paths consisting of a-zA-Z0-9 due to escaping.
+     * @param url the URL to convert to File.
+     * @return the URL as a File.
+     */
+    public static File urlToFile(URL url) {
+        try {
+            return new File(url.toURI());
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(String.format(
+                    "Unable to convert the URL '%s' to URI", url), e);
+        }
+    }
 }
-
-
-

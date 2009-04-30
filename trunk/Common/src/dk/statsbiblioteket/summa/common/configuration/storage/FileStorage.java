@@ -22,16 +22,16 @@
  */
 package dk.statsbiblioteket.summa.common.configuration.storage;
 
-import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
 import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorageException;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
-import java.util.*;
 import java.io.*;
+import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.HttpURLConnection;
 import java.net.URLConnection;
+import java.util.*;
 
 /**
  * A {@link ConfigurationStorage} backed by a file.
@@ -106,7 +106,13 @@ public class FileStorage implements ConfigurationStorage {
                                                   + resource + "'"); 
         }
 
-        return new File(url.getFile());
+        try {
+            return new File(url.toURI());
+        } catch (URISyntaxException e) {
+            //noinspection DuplicateStringLiteralInspection
+            throw new RuntimeException(String.format(
+                    "Unable to convert URL '%s' to URI", url));
+        }
     }
 
     /**

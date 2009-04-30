@@ -19,43 +19,41 @@
  */
 package dk.statsbiblioteket.summa.releasetest;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Files;
-import dk.statsbiblioteket.util.Zips;
-import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
-import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
-import dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory;
-import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
-import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
 import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
-import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
-import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
-import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
-import dk.statsbiblioteket.summa.storage.api.StorageIterator;
-import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
+import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
+import dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory;
 import dk.statsbiblioteket.summa.control.api.Service;
 import dk.statsbiblioteket.summa.control.api.Status;
-import dk.statsbiblioteket.summa.control.service.StorageService;
 import dk.statsbiblioteket.summa.control.service.FilterService;
 import dk.statsbiblioteket.summa.control.service.SearchService;
-import dk.statsbiblioteket.summa.search.api.SearchClient;
-import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.control.service.StorageService;
+import dk.statsbiblioteket.summa.index.IndexControllerImpl;
+import dk.statsbiblioteket.summa.index.XMLTransformer;
+import dk.statsbiblioteket.summa.ingest.stream.FileReader;
 import dk.statsbiblioteket.summa.search.IndexWatcher;
 import dk.statsbiblioteket.summa.search.SearchNodeFactory;
+import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.SearchClient;
 import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
-import dk.statsbiblioteket.summa.ingest.stream.FileReader;
-import dk.statsbiblioteket.summa.index.XMLTransformer;
-import dk.statsbiblioteket.summa.index.IndexControllerImpl;
-import dk.statsbiblioteket.summa.index.IndexController;
-import dk.statsbiblioteket.summa.index.IndexManipulator;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
-import org.apache.lucene.index.IndexReader;
+import dk.statsbiblioteket.summa.storage.api.ReadableStorage;
+import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.api.StorageIterator;
+import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
+import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
+import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.Zips;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.index.IndexReader;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -105,11 +103,12 @@ public class AutoDiscoverTest extends TestCase {
     String STORAGE_CONF_LOCATION = "data/auto/setup/StorageConfiguration.xml";
     String INGEST_FOLDER = new File(TEST_DIR, "data_in").toString();
     String INDEX_ROOT = new File(TEST_DIR, "index").toString();
-    File INGEST_SOURCE = new File(Resolver.getURL("data/auto/data").getFile());
+    File INGEST_SOURCE = Resolver.urlToFile(Resolver.getURL("data/auto/data"));
+
     List<String> TEST_FILES = Arrays.asList(
             "gurli.margrethe.xml", "hans.jensen.xml", "jens.hansen.xml");
-    String FAGREF_XSLT = Resolver.getURL(
-            "data/search/fagref_xslt/fagref_index.xsl").getFile();
+    String FAGREF_XSLT = Resolver.urlToFile(Resolver.getURL(
+            "data/search/fagref_xslt/fagref_index.xsl")).getAbsolutePath();
     String INDEX_DESCRIPTOR =
             Resolver.getURL("data/auto/setup/IndexDescriptor.xml").getFile();
 
