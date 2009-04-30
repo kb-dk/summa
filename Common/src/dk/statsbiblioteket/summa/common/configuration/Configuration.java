@@ -22,33 +22,23 @@
  */
 package dk.statsbiblioteket.summa.common.configuration;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.Serializable;
-import java.io.StringWriter;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Collections;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import dk.statsbiblioteket.summa.common.configuration.storage.FileStorage;
 import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
 import dk.statsbiblioteket.summa.common.configuration.storage.RemoteStorage;
 import dk.statsbiblioteket.summa.common.configuration.storage.XStorage;
-import dk.statsbiblioteket.summa.common.util.Security;
 import dk.statsbiblioteket.summa.common.util.Environment;
+import dk.statsbiblioteket.summa.common.util.Security;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.net.URL;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -1003,10 +993,10 @@ public class Configuration implements Serializable,
                     log.debug ("Loaded '" + confResource + "' as XProperties");
                     return new Configuration (storage);
                 } catch (Exception e) {
-                    log.info ("Failed to load '" + confResource + "':"
-                              + e.getMessage ());
-                    log.debug ("Failed to load '" + confResource + "':"
-                               + e.getMessage (), e);
+                    log.info ("Failed to load '" + confResource
+                              + "' as XProperties:" + e.getMessage ());
+                    log.debug ("Failed to load '" + confResource
+                               + "' as XProperties:" + e.getMessage (), e);
                 }
 
                 try {
