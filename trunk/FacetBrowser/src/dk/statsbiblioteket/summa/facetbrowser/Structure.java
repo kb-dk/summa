@@ -24,22 +24,23 @@ package dk.statsbiblioteket.summa.facetbrowser;
 
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
+import dk.statsbiblioteket.summa.common.index.IndexField;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
+import java.text.ParseException;
+import java.util.*;
 
 /**
  * The Facet Structure holds top-level information, such as the Facet names
- * and the maximum number of Tags in each Facet. Setup is done through
- * {@link Configuration} - see {@link FacetStructure} for valid parameters.
+ * and the maximum number of Tags in each Facet.
  * </p><p>
  * Note: The Facet names and IDs in the FacetStructure does not change during an
  *       execution, nor are any Facets added or removed.
@@ -54,8 +55,13 @@ public class Structure implements Configurable, Serializable {
      * The property-key CONF_FACETS must contain a list of sub-properties,
      * each holding the setup for a single Facet.
      * </p><p>
-     * This property is mandatory.
+     * Either this property or
+     * {@link LuceneIndexUtils#CONF_DESCRIPTOR} must be specified.
+     * If both properties are specified, the descriptor takes precedence.
+     * See the FacetIndexDescriptor.xsd for how to setup the facets.
      * @see {@link FacetStructure}.
+     * @deprecated Specify {@link LuceneIndexUtils#CONF_DESCRIPTOR} instead and
+     *             set up the facet structure in an IndexDescriptor.
      */
     public static final String CONF_FACETS = "summa.facet.facets";
 
@@ -77,6 +83,94 @@ public class Structure implements Configurable, Serializable {
 
     public Structure(Configuration conf) {
         log.debug("Constructing Structure from configuration");
+
+        if (conf.valueExists(LuceneIndexUtils.CONF_DESCRIPTOR)) {
+            defineFacetsFromDescriptor(conf);
+        } else if (conf.valueExists(CONF_FACETS)) {
+            defineFacetsFromConfiguration(conf);
+        } else {
+            throw new ConfigurationException(String.format(
+                    "Either %s or %s must be specified",
+                    LuceneIndexUtils.CONF_DESCRIPTOR, CONF_FACETS));
+        }
+
+        freezeFacets();
+        log.trace("Finished constructing Structure from configuration");
+    }
+
+    private void defineFacetsFromDescriptor(Configuration conf) {
+        Configuration descriptorConf;
+        try {
+            descriptorConf =
+                    conf.getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR);
+        } catch (IOException e) {
+            throw new ConfigurationException(String.format(
+                    "Unable to extract sub configuration %s",
+                    LuceneIndexUtils.CONF_DESCRIPTOR));
+        }
+        Document dom;
+        try {
+            FacetIndexDescriptor descriptor =
+                    new FacetIndexDescriptor(descriptorConf);
+            dom = descriptor.getDOM();
+            descriptor.close();
+        } catch (IOException e) {
+            throw new ConfigurationException(
+                    "Unable to extract facet structure from configuration", e);
+        }
+        parseFacetNodes(dom);
+    }
+
+    private void parseFacetNodes(Document dom) {
+        NodeList fieldNodes;
+/**        final String FIELD_EXPR = "/id:IndexDescriptor/id:fields/id:field";
+        try {
+            fieldNodes = (NodeList)xPath.evaluate(FIELD_EXPR, document,
+                                                 XPathConstants.NODESET);
+        } catch (XPathExpressionException e) {
+            throw new ParseException(String.format(
+                    "Expression '%s' for selecting fields was invalid",
+                    FIELD_EXPR), -1);
+        }
+        //noinspection DuplicateStringLiteralInspection
+        log.trace("Located " + fieldNodes.getLength() + " field nodes");
+        for (int i = 0 ; i < fieldNodes.getLength(); i++) {
+            addField(createNewField(fieldNodes.item(i)));
+        }*/
+        throw new UnsupportedOperationException(
+                "Specifying facets in the IndexDescriptor is currently under " 
+                + "implementation");
+        // TODO: Implement this
+    }
+
+    private class FacetIndexDescriptor extends IndexDescriptor {
+        Document dom = null;
+        private int dummyCount = 0;
+
+        private FacetIndexDescriptor(Configuration configuration) throws
+                                                                  IOException {
+            super(configuration);
+        }
+
+        public IndexField createNewField() {
+            //noinspection DuplicateStringLiteralInspection
+            return new IndexField("Dummy " + dummyCount++);
+        }
+        public IndexField createNewField(Node node) throws ParseException {
+            return new IndexField("Anotherdummy " + dummyCount++);
+        }
+
+        @Override
+        public Document parse(String xml) throws ParseException {
+            dom = super.parse(xml);
+            return dom;
+        }
+        public Document getDOM() {
+            return dom;
+        }
+    };
+
+    private void defineFacetsFromConfiguration(Configuration conf) {
         List<Configuration> facetConfs;
         try {
             facetConfs = conf.getSubConfigurations(CONF_FACETS);
@@ -104,12 +198,10 @@ public class Structure implements Configurable, Serializable {
                 log.trace("Adding Facet '" + fc.getName() + "' to facets");
                 facets.put(fc.getName(), fc);
             } catch (Exception e) {
-                throw new ConfigurationException("Unable to extract single "
-                                                 + "Facet configuration", e);
+                throw new ConfigurationException(
+                        "Unable to extract single Facet configuration", e);
             }
         }
-        freezeFacets();
-        log.trace("Finished constructing Structure from configuration");
     }
 
     /**
