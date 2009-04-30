@@ -442,6 +442,12 @@ public class ConfigurationTest extends TestCase {
         assertTrue("mykey should exist in XProperties in special#%Path",
                    Configuration.load("data/special#%Path/simpleconf.xml").
                            valueExists("mykey"));
+        assertTrue("myOldKey should exist in Properties in plainPath",
+                   Configuration.load("data/plainPath/oldconf.xml").
+                           valueExists("myOldKey"));
+        assertTrue("myOldKey should exist in Properties in special#%Path",
+                   Configuration.load("data/special#%Path/oldconf.xml").
+                           valueExists("myOldKey"));
     }
 
     public void testGetClass() throws Exception {
