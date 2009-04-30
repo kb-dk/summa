@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-            targetNamespace="http://statsbiblioteket.dk/summa/2009/QueryResponse"
+            targetNamespace="http://statsbiblioteket.dk/summa/2009/SuggestResponse"
             elementFormDefault="qualified"
-            xmlns:suggest="http://statsbiblioteket.dk/summa/2009/QueryResponse">
+            xmlns:suggest="http://statsbiblioteket.dk/summa/2009/SuggestResponse">
     <xsd:annotation>
         <xsd:documentation xml:lang="en">
             XML Schema for the Suggest Response. Simple triples of queries,

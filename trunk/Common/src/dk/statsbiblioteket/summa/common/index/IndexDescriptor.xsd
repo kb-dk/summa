@@ -4,7 +4,7 @@
             elementFormDefault="qualified"
             xmlns:summa="http://statsbiblioteket.dk/summa/2008/IndexDescriptor">
     <!--
-     TODO: Consider making this a 3-parter: Core, Lucene and Facet
+     Note: This only describes the core. Lucene and Facet are extensions
     -->
     <xsd:annotation>
         <xsd:documentation xml:lang="en">
@@ -19,7 +19,7 @@
 
     <xsd:element name="IndexDescriptor">
         <xsd:complexType>
-            <xsd:all>
+            <xsd:choice maxOccurs="unbounded">
                 <xsd:element name="groups" minOccurs="0" maxOccurs="1">
                     <xsd:complexType>
                         <xsd:sequence>
@@ -99,7 +99,12 @@
                         </xsd:documentation>
                     </xsd:annotation>
                 </xsd:element>
-            </xsd:all>
+
+                <xsd:any namespace="##any" processContents="skip" minOccurs="0" maxOccurs="unbounded"/>
+
+            </xsd:choice>
+
+
             <xsd:attribute name="version" type="xsd:string" use="optional"/>
         </xsd:complexType>
     </xsd:element>
@@ -134,15 +139,15 @@
                     </xsd:annotation>
                     <!-- TODO: Use reference to the field to ensure existence -->
                     <xsd:attribute name="ref" type="xsd:string" use="required"/>
-<!--                    <xsd:attribute name="excludeFromFacets" type="xsd:boolean" use="optional"/>-->
+                    <!--                    <xsd:attribute name="excludeFromFacets" type="xsd:boolean" use="optional"/>-->
                     <xsd:anyAttribute processContents="lax"/>
                 </xsd:complexType>
             </xsd:element>
         </xsd:sequence>
 
         <xsd:attribute name="name" type="xsd:string" use="required"/>
-<!--        <xsd:attribute name="isFacet" type="xsd:boolean" use="optional"/>
-        <xsd:attribute name="facetName" type="xsd:string" use="optional"/>-->
+        <!--        <xsd:attribute name="isFacet" type="xsd:boolean" use="optional"/>
+     <xsd:attribute name="facetName" type="xsd:string" use="optional"/>-->
         <xsd:anyAttribute processContents="lax"/>
     </xsd:complexType>
 
@@ -209,8 +214,11 @@
         <xsd:attribute name="sortLocale" type="xsd:string" use="optional"/>
         <xsd:attribute name="inFreeText" type="xsd:boolean" use="optional"/>
         <xsd:attribute name="required" type="xsd:boolean" use="optional"/>
-<!--        <xsd:attribute name="isFacet" type="xsd:boolean" use="optional"/>
-        <xsd:attribute name="facetName" type="xsd:string" use="optional"/>-->
+        <!--        <xsd:attribute name="isFacet" type="xsd:boolean" use="optional"/>
+     <xsd:attribute name="facetName" type="xsd:string" use="optional"/>-->
         <xsd:anyAttribute processContents="lax"/>
     </xsd:complexType>
+
+
+
 </xsd:schema>
