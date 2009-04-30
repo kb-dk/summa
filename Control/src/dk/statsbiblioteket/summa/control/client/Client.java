@@ -602,7 +602,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
             case recovering:
                 mon = new StatusMonitor(service, 10,
                         new VoidShellContext(),
-                        Status.CODE.stopping);
+                        Status.CODE.recovering);
                 log.info ("Service is recovering, waiting for it to "
                         + "come back before retrying start");
                 mon.run(); // Waits until service leaves stopping state
@@ -611,12 +611,11 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                 log.warn ("Service " + instanceId + " has crashed."
                         + "Killing it before restart");
                 service.kill ();
-                try {
-                    Thread.sleep (5000);
-                } catch (InterruptedException e) {
-                    log.warn("Interrupted while waiting for service "
-                            + "to shut down");
-                }
+                mon = new StatusMonitor(service, 10,
+                        new VoidShellContext(),
+                        Status.CODE.not_instantiated);
+                log.info("Waiting for " + instanceId + " to shut down");
+                mon.run();
                 return StartAction.RETRY;
             case not_instantiated:
                 log.info ("Service '" + instanceId + "' not running. Requesting"
