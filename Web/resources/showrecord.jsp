@@ -18,7 +18,9 @@
     String record_html = "";
 
 
-    if (record_id == null
+    if (xml_record == null || "".equals(xml_record)) {
+        record_html = "Unable to resolve '" + record_id + "'";
+    } else if (record_id == null
         || record_id.equals("")
         || record_id.indexOf(":") == -1) {
 
