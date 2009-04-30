@@ -107,8 +107,14 @@ public class ControlCore extends UnicastRemoteObject
         setStatusRunning("Starting auto-start clients");
 
         for (String instanceId : clientManager) {
-            Configuration conf =
-                               clientManager.getDeployConfiguration(instanceId);
+            Configuration conf;
+            try {
+                conf = clientManager.getDeployConfiguration(instanceId);
+            } catch (Exception e) {
+                log.error("Failed to load deployment configuration for '"
+                          + instanceId + "': " + e.getMessage());
+                continue;
+            }
 
             if (conf.getBoolean(Bundle.CONF_AUTO_START,
                                 Bundle.DEFAULT_AUTO_START)) {
