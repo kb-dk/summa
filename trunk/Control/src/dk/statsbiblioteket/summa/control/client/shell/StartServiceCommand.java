@@ -22,20 +22,13 @@
  */
 package dk.statsbiblioteket.summa.control.client.shell;
 
-import dk.statsbiblioteket.summa.common.shell.Command;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.common.shell.RemoteCommand;
-import dk.statsbiblioteket.summa.control.api.ClientConnection;
-import dk.statsbiblioteket.summa.control.api.Service;
-import dk.statsbiblioteket.summa.control.api.Status;
-import dk.statsbiblioteket.summa.control.api.StatusMonitor;
+import dk.statsbiblioteket.summa.control.api.*;
 import dk.statsbiblioteket.summa.control.client.Client;
-import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import java.net.SocketException;
 
 /**
  * A shell command to launch a {@link Service} deployed in a {@link Client}.
@@ -79,26 +72,33 @@ public class StartServiceCommand extends RemoteCommand<ClientConnection> {
         String baseMeta = "client '" + client.getId()+ "' with pkgId '"
                           + pkgId + "' and confLocation '" + confLocation
                           + "' in invoke";
+
+        // Wait for the service to leave the not_instantiated status
+        StatusMonitor mon = new StatusMonitor(
+                                     new ServiceConnectionFactory(clientAddress,
+                                                                  client),
+                                     pkgId, 5, ctx,
+                                     Status.CODE.not_instantiated);
+
         try {
 
             log.debug("calling startService for " + baseMeta);
             client.startService(pkgId, confLocation);
             log.debug("Attaching ServiceMonitor to " + baseMeta);
-            StatusMonitor mon = new StatusMonitor(client.getServiceConnection(pkgId),
-                                                  5, ctx,
-                                                  Status.CODE.not_instantiated);
-            Thread monThread = new Thread (mon, "ServiceStatusMonitor");
-            monThread.setDaemon (true); // Allow the JVM to exit
-            monThread.start();
+
+            // Block until we have a response
+            mon.run();
         } catch (Exception e) {
             connectionError(e);
-            throw new RuntimeException ("Start of service failed: "
+            throw new RuntimeException ("Start for service failed: "
                                         + e.getMessage(), e);
         } finally {
             releaseConnection();
         }
-        log.debug("End if invoke for " + baseMeta);
-        ctx.info("OK");
+
+        log.debug("End invoke for " + baseMeta);
+        ctx.info(mon.getLastStatus() == null ?
+                 "Timed out" : mon.getLastStatus().toString());
     }
 }
 
