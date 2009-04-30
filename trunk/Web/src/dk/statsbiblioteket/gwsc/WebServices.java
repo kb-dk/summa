@@ -22,7 +22,6 @@
  */
 package dk.statsbiblioteket.gwsc;
 
-import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.util.xml.DOM;
 import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
@@ -35,6 +34,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.security.Security;
@@ -111,7 +111,13 @@ public class WebServices {
      */
     private InputStream getResourceInputStream(URL resource) throws
                                                          FileNotFoundException {
-        return new FileInputStream(Resolver.urlToFile(resource));
+        try {
+            return new FileInputStream(new File(resource.toURI()));
+        } catch (URISyntaxException e) {
+            //noinspection DuplicateStringLiteralInspection
+            throw new RuntimeException(String.format(
+                    "Unable to convert the URL '%s' to URI", resource), e);
+        }
     }
 
     private boolean createServices() {
