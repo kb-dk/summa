@@ -1055,6 +1055,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
         while (new File (artifactPkgPath).exists()) {
             artifactPkgPath =  artifactPath +File.separator
                                + pkgFile.getName() + ".old." + availNum;
+            availNum++;
         }
 
         log.info("Service '" + id + "' removed. Backup kept as: "

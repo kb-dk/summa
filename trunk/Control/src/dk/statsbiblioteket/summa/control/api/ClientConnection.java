@@ -192,6 +192,7 @@ public interface ClientConnection extends Monitorable {
      * @throws IOException in case of communication errors
      * @throws InvalidServiceStateException if the service is deployed but not
      *                                      running
+     * @throws NoSuchServiceException if the service is not known by the client
      */
     public Status getServiceStatus(String id) throws IOException;
 

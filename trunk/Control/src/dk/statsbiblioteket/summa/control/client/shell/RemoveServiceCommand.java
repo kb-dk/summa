@@ -5,6 +5,8 @@ import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.common.shell.RemoteCommand;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 
+import java.io.IOException;
+
 /**
  * {@link dk.statsbiblioteket.summa.common.shell.Command} for the client shell
  * to remove a service given by id.
@@ -32,10 +34,22 @@ public class RemoveServiceCommand extends RemoteCommand<ClientConnection> {
             return;
         }
 
-        ClientConnection client = getConnection(clientAddress);
+        String[] serviceIds = getArguments();
+        boolean force = hasOption("force");
 
+        ClientConnection client = getConnection(clientAddress);
         try {
-            for (String id : getArguments()) {
+            removeService(client, ctx, serviceIds, force);
+        } finally {
+            releaseConnection();
+        }
+    }
+
+    public void removeService(ClientConnection client,
+                              ShellContext ctx, String[] serviceIds,
+                              boolean force) throws IOException {
+
+        for (String id : serviceIds) {
 
                 /* Make sure service is stopped */
                 ctx.prompt ("Killing service '" + id + "' ... ");
@@ -57,7 +71,7 @@ public class RemoveServiceCommand extends RemoteCommand<ClientConnection> {
                     ctx.error(e.getMessage());
 
                     /* Skip removal of this service unless we are forced to */
-                    if (hasOption("force")) {
+                    if (force) {
                         ctx.info("Forcing removal");
                     } else {
                         ctx.info("Service not removed. You can force removal of"
@@ -80,9 +94,7 @@ public class RemoveServiceCommand extends RemoteCommand<ClientConnection> {
                 ctx.info("OK"); // Removed
 
             }
-        } finally {
-            releaseConnection();
-        }
+
     }
 
 }

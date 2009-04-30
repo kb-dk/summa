@@ -56,9 +56,9 @@ public class RestartServiceCommand extends RemoteCommand<ClientConnection> {
 
     }
 
-    private void restartService(String serviceId, ClientConnection client,
-                                ShellContext ctx, boolean kill)
-                                      throws IOException, InterruptedException {
+    public void restartService(String serviceId, ClientConnection client,
+                               ShellContext ctx, boolean kill)
+                                                            throws IOException {
         ctx.prompt("Restarting '" + serviceId + "' ... ");
         try {
             // Stop or kill the service
