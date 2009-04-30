@@ -22,6 +22,7 @@
  */
 package dk.statsbiblioteket.gwsc;
 
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.util.xml.DOM;
 import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
@@ -110,8 +111,7 @@ public class WebServices {
      */
     private InputStream getResourceInputStream(URL resource) throws
                                                          FileNotFoundException {
-        return new FileInputStream(new File(resource.getFile().
-                replace("%23", "#")));
+        return new FileInputStream(Resolver.urlToFile(resource));
     }
 
     private boolean createServices() {

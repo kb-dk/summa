@@ -298,17 +298,19 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
         }
         try {
             searcher = new IndexSearcher(IndexReader.open(
-                    FSDirectory.getDirectory(urlLocation.getFile()), true));
+                    FSDirectory.getDirectory(
+                            Resolver.urlToFile(urlLocation).getAbsolutePath()),
+                    true));
             log.debug("Opened Lucene searcher for " + urlLocation
                       + " with maxDoc " + searcher.maxDoc());
             createMoreLikeThis();
         } catch (CorruptIndexException e) {
             throw new RemoteException(String.format(
-                    "Corrupt index at '%s'", urlLocation.getFile()), e);
+                    "Corrupt index at '%s'", urlLocation), e);
         } catch (IOException e) {
             throw new RemoteException(String.format(
                     "Could not create an IndexSearcher for '%s'",
-                    urlLocation.getFile()), e);
+                    urlLocation), e);
         }
         try {
             log.debug("Open finished for location '" + location

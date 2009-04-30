@@ -22,20 +22,19 @@
  */
 package dk.statsbiblioteket.summa.control.bundle;
 
-import dk.statsbiblioteket.util.Streams;
-import dk.statsbiblioteket.util.Files;
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.control.api.bundle.BundleRepository;
+import dk.statsbiblioteket.util.Streams;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.*;
 import java.net.URL;
-import java.util.regex.Pattern;
-import java.util.List;
 import java.util.ArrayList;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * A {@link dk.statsbiblioteket.summa.control.api.bundle.BundleRepository}
@@ -191,7 +190,7 @@ public class URLRepository implements BundleRepository {
     }
 
     public List<String> listDir (String regex) throws IOException {
-        File baseDir = new File (new URL(baseUrl).getFile());
+        File baseDir = Resolver.urlToFile(new URL(baseUrl));
         Pattern pat = Pattern.compile(regex);
         List<String> result = new ArrayList <String> (10);
 

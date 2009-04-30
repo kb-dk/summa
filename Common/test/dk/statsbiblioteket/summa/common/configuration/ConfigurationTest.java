@@ -22,22 +22,22 @@
  */
 package dk.statsbiblioteket.summa.common.configuration;
 
-import java.util.List;
-import java.util.Map;
+import dk.statsbiblioteket.summa.common.configuration.storage.FileStorage;
+import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
+import dk.statsbiblioteket.summa.common.configuration.storage.XStorage;
+import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+
+import java.io.File;
+import java.io.Serializable;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.io.Serializable;
-import java.io.File;
-
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
-import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
-import dk.statsbiblioteket.summa.common.configuration.storage.FileStorage;
-import dk.statsbiblioteket.summa.common.configuration.storage.RemoteStorage;
-import dk.statsbiblioteket.summa.common.configuration.storage.XStorage;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Files;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Configuration Tester.
@@ -426,6 +426,22 @@ public class ConfigurationTest extends TestCase {
         // Also test that we expand the default value
         assertTrue(Arrays.equals(expected,
                                  conf.getStrings("b0rk", val)));
+    }
+
+    public void testUnescape() throws Exception {
+        URL url = new File("mypath#klaf/somefile.xml").toURI().toURL();
+        System.out.println("Got URL " + url);
+        System.out.println("Got File from URL: " + url.getFile());
+        System.out.println("new File(URI): " + new File(url.toURI()));
+    }
+
+    public void testPathEscape() {
+        assertTrue("mykey should exist in XProperties in plainPath",
+                   Configuration.load("data/plainPath/simpleconf.xml").
+                           valueExists("mykey"));
+        assertTrue("mykey should exist in XProperties in special#%Path",
+                   Configuration.load("data/special#%Path/simpleconf.xml").
+                           valueExists("mykey"));
     }
 
     public void testGetClass() throws Exception {
