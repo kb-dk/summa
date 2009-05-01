@@ -50,7 +50,8 @@ public class ConfigurationStorageTestCase extends TestCase {
         storage.put (RemoteStorageMBean.CONF_NAME, testValue);
         resultValue = (String) storage.get (RemoteStorageMBean.CONF_NAME);
 
-        assertTrue ("Setting and getting a property should leave it unchanged", testValue.equals(resultValue));
+        assertEquals("Setting and getting a property should leave it unchanged",
+                     testValue, resultValue);
     }
 
     public void testPurge () throws Exception {
@@ -61,7 +62,8 @@ public class ConfigurationStorageTestCase extends TestCase {
         storage.put (testPurgeKey, testPurgeValue);
         storage.purge (testPurgeKey);
 
-        assertNull("Purging a key should remove it from storage", storage.get (testPurgeKey));
+        assertNull("Purging a key should remove it from storage",
+                   storage.get(testPurgeKey));
     }
 
     /* This fails when called directly, by design */

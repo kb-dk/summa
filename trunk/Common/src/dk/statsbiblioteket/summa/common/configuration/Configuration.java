@@ -310,12 +310,17 @@ public class Configuration implements Serializable,
         if (val == null) {
             throw new NullPointerException ("No such property: " + key);
         }
+
+        String sval = Environment.escapeSystemProperties(val.toString()).trim();
         try {
-            return Integer.parseInt(
-                     Environment.escapeSystemProperties(val.toString()).trim());
+            return Integer.parseInt(sval);
         } catch (NumberFormatException e) {
+            try {
+                return (int) Double.parseDouble(sval);
+            } catch (NumberFormatException ee) {
             throw new IllegalArgumentException("Bad number format for '" + key
                                                + "': " + e.getMessage());
+            }
         }
     }
 
@@ -356,12 +361,18 @@ public class Configuration implements Serializable,
         if (val == null) {
             throw new NullPointerException ("No such property: " + key);
         }
+
+        String sval = Environment.escapeSystemProperties(val.toString()).trim();
         try {
-            return Long.parseLong(
-                    Environment.escapeSystemProperties(val.toString()).trim());
+            return Long.parseLong(sval);
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Bad number format for '" + key
-                                               + "': " + e.getMessage());
+            try {
+                return (long) Double.parseDouble(sval);
+            } catch (NumberFormatException ee) {
+                throw new IllegalArgumentException("Bad number format for '"
+                                                   + key + "': "
+                                                   + e.getMessage());
+            }
         }
     }
 
