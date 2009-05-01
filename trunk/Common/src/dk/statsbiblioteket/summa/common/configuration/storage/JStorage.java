@@ -110,6 +110,16 @@ public class JStorage implements ConfigurationStorage {
             throw new RuntimeException("Script engine 'js'"
                                        + " not supported by JRE");
         }
+
+        /* Install size() method on all objects */
+        eval(
+        "Object.prototype.size = function () {\n" +
+        "  var len = this.length ? --this.length : -1;\n" +
+        "    for (var k in this)\n" +
+        "      len++;\n" +
+        "  return len;\n" +
+        "}"
+        );
     }
 
     public void put(String key, Serializable value) throws IOException {
@@ -136,8 +146,7 @@ public class JStorage implements ConfigurationStorage {
     }
 
     public int size() throws IOException {
-        // FIXME: Doesn't work
-        return Integer.parseInt(eval(config+".length"));
+        return (int) Double.parseDouble(eval(config+".size()"));
     }
 
     public boolean supportsSubStorage() throws IOException {
