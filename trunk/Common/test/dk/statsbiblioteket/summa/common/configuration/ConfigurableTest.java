@@ -26,6 +26,7 @@ import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.configuration.storage.FileStorage;
 import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
 import dk.statsbiblioteket.summa.common.configuration.storage.RemoteStorage;
+import dk.statsbiblioteket.summa.common.configuration.storage.JStorage;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -58,6 +59,9 @@ public class ConfigurableTest extends TestCase {
 
         Configuration remoteConf = new Configuration ((ConfigurationStorage)Configuration.create(RemoteStorage.class, base));
         assertTrue (base.equals(remoteConf));
+
+        Configuration jConf = new Configuration ((ConfigurationStorage)Configuration.create(JStorage.class, base));
+        assertTrue (base.equals(jConf));
     }
 }
 

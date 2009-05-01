@@ -22,10 +22,7 @@
  */
 package dk.statsbiblioteket.summa.common.configuration;
 
-import dk.statsbiblioteket.summa.common.configuration.storage.FileStorage;
-import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
-import dk.statsbiblioteket.summa.common.configuration.storage.RemoteStorage;
-import dk.statsbiblioteket.summa.common.configuration.storage.XStorage;
+import dk.statsbiblioteket.summa.common.configuration.storage.*;
 import dk.statsbiblioteket.summa.common.util.Environment;
 import dk.statsbiblioteket.summa.common.util.Security;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -63,13 +60,19 @@ public class Configuration implements Serializable,
      */
     public static final String[] DEFAULT_RESOURCES = {
                                                       "configuration.xml",
+                                                      "configuration.js",
                                                       "config.xml",
+                                                      "config.js",
                                                       "properties.xml",
+                                                      "properties.js",
                                                       "configuration.properties",
                                                       "config.properties",
                                                       "config/configuration.xml",
+                                                      "config/configuration.js",
                                                       "config/config.xml",
+                                                      "config/config.js",
                                                       "config/properties.xml",
+                                                      "config/properties.js",
                                                       "config/configuration.properties",
                                                       "config/config.properties"
                                                      };
@@ -999,6 +1002,19 @@ public class Configuration implements Serializable,
 
                 /* We have a resource, now try and load it however we can */
                 ConfigurationStorage storage;
+
+                // Does this look like a Javascript resource?
+                if (confResource.endsWith(".js")) {
+                    try {
+                        storage = new JStorage(confResource);
+                    } catch (IOException e) {
+                        throw new ConfigurationStorageException(
+                                    "Failed to load Javascript configuration '"
+                                    + confLocation + "': " + e.getMessage(), e);
+                    }
+                    return new Configuration(storage);
+                }
+
                 try {
                     storage = new XStorage (confResource);
                     log.debug ("Loaded '" + confResource + "' as XProperties");
@@ -1089,7 +1105,7 @@ public class Configuration implements Serializable,
             log.debug ("Loading configuration from URL " + confLocation);
             try {
                 URL storageUrl = new URL (confLocation);
-                // TODO: Add XStorage capabilities
+                // TODO: Add XStorage and JStorage capabilities
                 storage = new MemoryStorage(storageUrl);
             } catch (Exception e) {
                 throw new ConfigurationException("Unable retrieve configuration from " + confLocation, e);
@@ -1100,13 +1116,23 @@ public class Configuration implements Serializable,
                 if (confLocation.startsWith("/")) {
                     log.debug ("Loading configuration from file "
                                + confLocation);
-                    storage = new FileStorage(new File(confLocation));
-                    log.trace("Loaded FileStorage configuration");
+                    if (confLocation.endsWith(".js")) {
+                        storage = new JStorage(new File(confLocation));
+                        log.trace("Loaded JStorage configuration");
+                    } else {
+                        storage = new FileStorage(new File(confLocation));
+                        log.trace("Loaded FileStorage configuration");
+                    }
                 } else {
                     log.debug ("Loading configuration from resource "
                                + confLocation);
-                    storage = new FileStorage (confLocation);
-                    log.trace("Loaded FileStorage configuration from resource");
+                    if (confLocation.endsWith(".js")) {
+                        storage = new JStorage(confLocation);
+                        log.trace("Loaded JStorage from resource");
+                    } else {
+                        storage = new FileStorage (confLocation);
+                        log.trace("Loaded FileStorage configuration from resource");
+                    }
                 }
             } catch (FileNotFoundException e) {
                 //noinspection DuplicateStringLiteralInspection
