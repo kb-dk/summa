@@ -23,6 +23,12 @@ public class JStorage implements ConfigurationStorage {
     private ScriptEngine engine;
     private String config;
 
+    public JStorage (File file) throws IOException {
+        this();
+
+        eval(new FileReader(file));        
+    }
+
     public JStorage (String resource) throws IOException {
         this();
 
@@ -130,6 +136,7 @@ public class JStorage implements ConfigurationStorage {
     }
 
     public int size() throws IOException {
+        // FIXME: Doesn't work
         return Integer.parseInt(eval(config+".length"));
     }
 
