@@ -28,6 +28,7 @@
                     </Index:field>
                 </xsl:if>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='601' or @tag='602']">
                 <Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="6">
                     <xsl:call-template name="person"/>
@@ -36,6 +37,7 @@
                     <xsl:call-template name="person_inverted"/>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='083']">
                 <Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="4">
                     <xsl:for-each select="mc:subfield[@code='a']">
@@ -47,6 +49,7 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='588']">
                 <Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="4">
                     <xsl:for-each select="mc:subfield[@code='5']">
@@ -65,6 +68,7 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='610']">
                 <Index:field Index:repeat="true" Index:name="subject_controlled" Index:navn="ke" Index:type="token" Index:boostFactor="6">
                     <xsl:call-template name="corp"/>
@@ -75,6 +79,7 @@
                     </Index:field>
                 </xsl:if>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='621']">
                 <Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="4">
                     <xsl:for-each select="mc:subfield[@code='a']">
@@ -98,6 +103,7 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='630']">
                 <Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="6">
                     <xsl:for-each select="mc:subfield[@code='a']">
@@ -109,6 +115,7 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='630']">
                 <Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="6">
                     <xsl:for-each select="mc:subfield[@code='b']">
@@ -120,6 +127,7 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='630']">
                 <Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="6">
                     <xsl:for-each select="mc:subfield[@code='f']">
@@ -131,6 +139,7 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='630']">
                 <Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="6">
                     <xsl:for-each select="mc:subfield[@code='g']">
@@ -142,6 +151,7 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='630']">
                 <Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="6">
                     <xsl:for-each select="mc:subfield[@code='s']">
@@ -153,6 +163,7 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='630']">
                 <Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="6">
                     <xsl:for-each select="mc:subfield[@code='t']">
@@ -164,11 +175,13 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='631']/mc:subfield[@code='a' or @code='b' or @code='f' or @code='g' or @code='s' or @code='t']">
                 <Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="6">
                     <xsl:value-of select="."/>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='633']">
                 <Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="6">
                     <xsl:for-each select="mc:subfield[@code='a']">
@@ -180,6 +193,7 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='634']">
                 <Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="6">
                     <xsl:for-each select="mc:subfield[@code='a']">
@@ -191,6 +205,7 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='634']">
                 <Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="6">
                     <xsl:for-each select="mc:subfield[@code='b']">
@@ -202,6 +217,7 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='634']">
                 <Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="6">
                     <xsl:for-each select="mc:subfield[@code='c']">
@@ -216,6 +232,7 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='640']">
                 <Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="6">
                     <xsl:for-each select="mc:subfield[@code='a']">
@@ -250,6 +267,7 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='645']">
                 <Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="6">
                     <xsl:for-each select="mc:subfield[@code='a']">
@@ -261,6 +279,7 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='645']">
                 <Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="6">
                     <xsl:for-each select="mc:subfield[@code='b']">
@@ -272,6 +291,7 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='645']">
                 <Index:field Index:repeat="true" Index:name="subject_other" Index:navn="uk" Index:type="token" Index:boostFactor="6">
                     <xsl:for-each select="mc:subfield[@code='c']">
@@ -283,6 +303,7 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='650']">
                 <Index:field Index:repeat="true" Index:name="subject_controlled" Index:navn="ke" Index:type="token" Index:boostFactor="10">
                     <xsl:for-each select="mc:subfield">
@@ -326,6 +347,7 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='651']">
                 <Index:field Index:repeat="true" Index:name="subject_controlled" Index:navn="ke" Index:type="token" Index:boostFactor="10">
                     <xsl:for-each select="mc:subfield">
@@ -353,17 +375,16 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='652']">
                 <Index:field Index:repeat="true" Index:name="subject_dk5" Index:navn="au" Index:type="token" Index:boostFactor="10">
                     <xsl:for-each select="mc:subfield[@code='h']">
-
                         <xsl:value-of select="."/>
                         <xsl:text> </xsl:text>
                     </xsl:for-each>
                     <xsl:for-each select="mc:subfield[@code='a']">
                         <xsl:value-of select="."/>
                     </xsl:for-each>
-
                     <xsl:for-each select="mc:subfield[@code='e']">
                         <xsl:text> </xsl:text>
                         <xsl:value-of select="."/>
@@ -392,6 +413,7 @@
                         </xsl:choose>
                     </xsl:if>
                 </Index:field>
+
                 <Index:field Index:repeat="true" Index:name="subject_dk5" Index:navn="au" Index:type="token" Index:boostFactor="10">
                     <xsl:for-each select="mc:subfield[@code='a']">
                         <xsl:value-of select="."/>
@@ -429,6 +451,7 @@
                     </xsl:if>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='652']/mc:subfield[@code='b' or @code='t']">
                 <Index:field Index:repeat="true" Index:name="subject_dk5" Index:navn="au" Index:type="token" Index:boostFactor="6">
                     <xsl:value-of select="."/>
@@ -472,10 +495,10 @@
                     </xsl:if>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='653' or @tag='654' or @tag='655']/mc:subfield[@code='b']">
                 <Index:field Index:repeat="true" Index:name="subject_dk5" Index:navn="au" Index:type="token" Index:boostFactor="4">
-
-                     <xsl:value-of select="."/>
+                    <xsl:value-of select="."/>
                 </Index:field>
             </xsl:for-each>
             <xsl:for-each select="mc:datafield[@tag='653'or @tag='654' or @tag='655']/mc:subfield[@code='t']">
@@ -628,6 +651,7 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='690'][count(mc:subfield[@code='z']) = 0]">
                 <Index:field Index:repeat="true" Index:name="subject_controlled" Index:navn="ke" Index:type="token" Index:boostFactor="6">
                     <xsl:for-each select="mc:subfield">
@@ -652,14 +676,13 @@
                 </Index:field>
             </xsl:for-each>
         </Index:group>
+
         <Index:group Index:suggest="true" Index:navn="lem" Index:name="lsubj">
             <xsl:for-each select="mc:datafield[@tag='600' or @tag='601' or @tag='602']">
                 <Index:field Index:repeat="false" Index:name="su_pe" Index:navn="lep" Index:type="keyword" Index:boostFactor="10">
-
                     <xsl:call-template name="person_inverted"/>
                 </Index:field>
                 <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="10">
-
                     <xsl:call-template name="person_inverted"/>
                 </Index:field>
             </xsl:for-each>
@@ -674,6 +697,7 @@
                     </Index:field>
                 </xsl:if>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='601' or @tag='602']">
                 <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="10">
                     <xsl:call-template name="person_inverted"/>
@@ -687,8 +711,8 @@
                 <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="10">
                     <xsl:call-template name="corp"/>
                 </Index:field>
-
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='610']">
                 <Index:field Index:repeat="false" Index:name="su_lc" Index:navn="llcm" Index:type="keyword" Index:boostFactor="10">
                     <xsl:call-template name="corp_subdiv"/>
@@ -740,6 +764,7 @@
                         </xsl:choose>
                     </xsl:for-each>
                 </Index:field>
+
                 <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="10">
                     <xsl:for-each select="mc:subfield">
                         <xsl:choose>
@@ -782,6 +807,7 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='651']">
                 <Index:field Index:repeat="false" Index:name="su_lc" Index:navn="llcm" Index:type="keyword" Index:boostFactor="10">
                     <xsl:for-each select="mc:subfield">
@@ -808,6 +834,7 @@
                         </xsl:choose>
                     </xsl:for-each>
                 </Index:field>
+
                 <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="10">
                     <xsl:for-each select="mc:subfield">
                         <xsl:choose>
@@ -833,8 +860,8 @@
                         </xsl:choose>
                     </xsl:for-each>
                 </Index:field>
-
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='660']">
                 <Index:field Index:repeat="false" Index:name="mesh" Index:navn="lms" Index:type="keyword" Index:boostFactor="10">
                     <xsl:if test="mc:subfield[@code='a' or @code='s' or @code='e' or @code='c' or @code='i' or @code='k' or @code='j']">
@@ -860,6 +887,7 @@
                         </xsl:for-each>
                     </xsl:if>
                 </Index:field>
+
                 <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="10">
                     <xsl:if test="mc:subfield[@code='a' or @code='s' or @code='e' or @code='c' or @code='i' or @code='k' or @code='j']">
                         <xsl:for-each select="mc:subfield">
@@ -894,6 +922,7 @@
                     <xsl:value-of select="."/>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='668']">
                 <Index:field Index:repeat="false" Index:name="su_dk" Index:navn="ldb" Index:type="keyword" Index:boostFactor="10">
                     <xsl:for-each select="mc:subfield[@code='a']">
@@ -921,8 +950,8 @@
                         <xsl:value-of select="."/>
                     </xsl:for-each>
                 </Index:field>
-
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='083']">
                 <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="10">
                     <xsl:for-each select="mc:subfield[@code='a']">
@@ -934,6 +963,7 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='588']">
                 <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="10">
                     <xsl:for-each select="mc:subfield[@code='a']">
@@ -949,7 +979,8 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
-             <xsl:for-each select="mc:datafield[@tag='621']">
+
+            <xsl:for-each select="mc:datafield[@tag='621']">
                 <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="6">
                     <xsl:for-each select="mc:subfield[@code='a']">
                         <xsl:value-of select="."/>
@@ -972,8 +1003,9 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
-              <xsl:for-each select="mc:datafield[@tag='630']">
-                    <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="6">
+
+            <xsl:for-each select="mc:datafield[@tag='630']">
+                <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="6">
                     <xsl:for-each select="mc:subfield[@code='a']">
                         <xsl:value-of select="."/>
                     </xsl:for-each>
@@ -983,8 +1015,9 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
-             <xsl:for-each select="mc:datafield[@tag='630']">
-                  <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="6">
+
+            <xsl:for-each select="mc:datafield[@tag='630']">
+                <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="6">
                     <xsl:for-each select="mc:subfield[@code='b']">
                         <xsl:value-of select="."/>
                     </xsl:for-each>
@@ -994,8 +1027,9 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='630']">
-                  <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="6">
+                <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="6">
                     <xsl:for-each select="mc:subfield[@code='f']">
                         <xsl:value-of select="."/>
                     </xsl:for-each>
@@ -1005,8 +1039,9 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='630']">
-                 <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="6">
+                <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="6">
                     <xsl:for-each select="mc:subfield[@code='g']">
                         <xsl:value-of select="."/>
                     </xsl:for-each>
@@ -1016,8 +1051,9 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='630']">
-                 <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="6">
+                <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="6">
                     <xsl:for-each select="mc:subfield[@code='s']">
                         <xsl:value-of select="."/>
                     </xsl:for-each>
@@ -1027,6 +1063,7 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='630']">
                 <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="6">
                     <xsl:for-each select="mc:subfield[@code='t']">
@@ -1038,13 +1075,14 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='631']/mc:subfield[@code='a' or @code='b' or @code='f' or @code='g' or @code='s' or @code='t']">
-                  <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="6">
+                <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="6">
                     <xsl:value-of select="."/>
                 </Index:field>
             </xsl:for-each>
             <xsl:for-each select="mc:datafield[@tag='633']">
-                 <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="6">
+                <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="6">
                     <xsl:for-each select="mc:subfield[@code='a']">
                         <xsl:value-of select="."/>
                     </xsl:for-each>
@@ -1055,7 +1093,7 @@
                 </Index:field>
             </xsl:for-each>
             <xsl:for-each select="mc:datafield[@tag='634']">
-                 <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="6">
+                <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="6">
                     <xsl:for-each select="mc:subfield[@code='a']">
                         <xsl:value-of select="."/>
                     </xsl:for-each>
@@ -1066,7 +1104,7 @@
                 </Index:field>
             </xsl:for-each>
             <xsl:for-each select="mc:datafield[@tag='634']">
-                  <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="6">
+                <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="6">
                     <xsl:for-each select="mc:subfield[@code='b']">
                         <xsl:value-of select="."/>
                     </xsl:for-each>
@@ -1077,7 +1115,7 @@
                 </Index:field>
             </xsl:for-each>
             <xsl:for-each select="mc:datafield[@tag='634']">
-                  <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="6">
+                <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="6">
                     <xsl:for-each select="mc:subfield[@code='c']">
                         <xsl:value-of select="."/>
                     </xsl:for-each>
@@ -1090,7 +1128,8 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
-                <xsl:for-each select="mc:datafield[@tag='640']">
+
+            <xsl:for-each select="mc:datafield[@tag='640']">
                 <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="6">
                     <xsl:for-each select="mc:subfield[@code='a']">
                         <xsl:value-of select="."/>
@@ -1124,8 +1163,9 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='645']">
-                 <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="6">
+                <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="6">
                     <xsl:for-each select="mc:subfield[@code='a']">
                         <xsl:value-of select="."/>
                     </xsl:for-each>
@@ -1135,6 +1175,7 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='645']">
                 <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="6">
                     <xsl:for-each select="mc:subfield[@code='b']">
@@ -1146,6 +1187,7 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='645']">
                 <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="6">
                     <xsl:for-each select="mc:subfield[@code='c']">
@@ -1157,7 +1199,8 @@
                     </xsl:for-each>
                 </Index:field>
             </xsl:for-each>
-                        <xsl:for-each select="mc:datafield[@tag='652']">
+
+            <xsl:for-each select="mc:datafield[@tag='652']">
                 <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="6">
                     <xsl:for-each select="mc:subfield[@code='a']">
                         <xsl:value-of select="."/>
@@ -1195,22 +1238,21 @@
                     </xsl:if>
                 </Index:field>
             </xsl:for-each>
-               <xsl:for-each select="mc:datafield[@tag='652']/mc:subfield[@code='b' or @code='t']">
-               <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="6">
+
+            <xsl:for-each select="mc:datafield[@tag='652']/mc:subfield[@code='b' or @code='t']">
+                <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="6">
                     <xsl:value-of select="."/>
                 </Index:field>
             </xsl:for-each>
-            <xsl:for-each select="mc:datafield[@tag='653' or @tag='654' or @tag='655']">
-                 <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="4">
 
+            <xsl:for-each select="mc:datafield[@tag='653' or @tag='654' or @tag='655']">
+                <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="4">
                     <xsl:for-each select="mc:subfield[@code='a']">
                         <xsl:value-of select="."/>
                     </xsl:for-each>
-                     <xsl:for-each select="mc:subfield[@code='h']">
-
+                    <xsl:for-each select="mc:subfield[@code='h']">
                         <xsl:text>,&#32;</xsl:text>
-                         <xsl:value-of select="."/>
-
+                        <xsl:value-of select="."/>
                     </xsl:for-each>
                     <xsl:for-each select="mc:subfield[@code='e']">
                         <xsl:text> </xsl:text>
@@ -1241,70 +1283,72 @@
                     </xsl:if>
                 </Index:field>
             </xsl:for-each>
+
             <xsl:for-each select="mc:datafield[@tag='653' or @tag='654' or @tag='655']/mc:subfield[@code='b']">
                 <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="4">
-
-                     <xsl:value-of select="."/>
+                    <xsl:value-of select="."/>
                 </Index:field>
             </xsl:for-each>
             <xsl:for-each select="mc:datafield[@tag='653'or @tag='654' or @tag='655']/mc:subfield[@code='t']">
                 <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="4">
-                  <xsl:value-of select="."/>
+                    <xsl:value-of select="."/>
                 </Index:field>
             </xsl:for-each>
             <xsl:for-each select="mc:datafield[@tag='661']/mc:subfield[@code='a' or @code='b' or @code='c' or @code='d']">
                 <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="4">
-                                             <xsl:value-of select="."/>
-                          </Index:field>
-                      </xsl:for-each>
-                      <xsl:for-each select="mc:datafield[@tag='662']/mc:subfield[@code='a' or @code='b' or @code='c']">
-                          <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="4">
-                                             <xsl:value-of select="."/>
-                          </Index:field>
-                      </xsl:for-each>
+                    <xsl:value-of select="."/>
+                </Index:field>
+            </xsl:for-each>
+            <xsl:for-each select="mc:datafield[@tag='662']/mc:subfield[@code='a' or @code='b' or @code='c']">
+                <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="4">
+                    <xsl:value-of select="."/>
+                </Index:field>
+            </xsl:for-each>
             <xsl:for-each select="mc:datafield[@tag='667']/mc:subfield[@code='e' or @code='f' or @code='i' or @code='l' or @code='m' or @code='n' or @code='o' or @code='p' or @code='q' or @code='r' or @code='s' or @code='t' or @code='u']">
                 <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="4">
-                                                 <xsl:value-of select="."/>
-                          </Index:field>
-                      </xsl:for-each>
-                      <xsl:for-each select="mc:datafield[@tag='668']">
-                          <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="4">
-                                              <xsl:for-each select="mc:subfield[@code='a']">
-                                  <xsl:value-of select="."/>
-                              </xsl:for-each>
-                              <xsl:for-each select="mc:subfield[@code='b']">
-                                  <xsl:text> </xsl:text>
-                                  <xsl:value-of select="."/>
-                              </xsl:for-each>
-                              <xsl:for-each select="mc:subfield[@code='c']">
-                                  <xsl:text> </xsl:text>
-                                  <xsl:value-of select="."/>
-                              </xsl:for-each>
-                          </Index:field>
-                      </xsl:for-each>
-                      <xsl:for-each select="mc:datafield[@tag='670']">
-                          <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="4">
-                                               <xsl:for-each select="mc:subfield">
-                                  <xsl:choose>
-                                      <xsl:when test="@code='a'">
-                                          <xsl:value-of select="."/>
-                                      </xsl:when>
-                                      <xsl:when test="@code='x'">
-                                          <xsl:text>  - </xsl:text>
-                                          <xsl:value-of select="."/>
-                                      </xsl:when>
-                                      <xsl:when test="@code='y'">
-                                          <xsl:text> - </xsl:text>
-                                          <xsl:value-of select="."/>
-                                      </xsl:when>
-                                      <xsl:when test="@code='z'">
-                                          <xsl:text> - </xsl:text>
-                                          <xsl:value-of select="."/>
-                                      </xsl:when>
-                                  </xsl:choose>
-                              </xsl:for-each>
-                          </Index:field>
-                      </xsl:for-each>
+                    <xsl:value-of select="."/>
+                </Index:field>
+            </xsl:for-each>
+
+            <xsl:for-each select="mc:datafield[@tag='668']">
+                <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="4">
+                    <xsl:for-each select="mc:subfield[@code='a']">
+                        <xsl:value-of select="."/>
+                    </xsl:for-each>
+                    <xsl:for-each select="mc:subfield[@code='b']">
+                        <xsl:text> </xsl:text>
+                        <xsl:value-of select="."/>
+                    </xsl:for-each>
+                    <xsl:for-each select="mc:subfield[@code='c']">
+                        <xsl:text> </xsl:text>
+                        <xsl:value-of select="."/>
+                    </xsl:for-each>
+                </Index:field>
+            </xsl:for-each>
+            
+            <xsl:for-each select="mc:datafield[@tag='670']">
+                <Index:field Index:repeat="false" Index:name="lsubject" Index:navn="lsubject" Index:type="keyword" Index:boostFactor="4">
+                    <xsl:for-each select="mc:subfield">
+                        <xsl:choose>
+                            <xsl:when test="@code='a'">
+                                <xsl:value-of select="."/>
+                            </xsl:when>
+                            <xsl:when test="@code='x'">
+                                <xsl:text>  - </xsl:text>
+                                <xsl:value-of select="."/>
+                            </xsl:when>
+                            <xsl:when test="@code='y'">
+                                <xsl:text> - </xsl:text>
+                                <xsl:value-of select="."/>
+                            </xsl:when>
+                            <xsl:when test="@code='z'">
+                                <xsl:text> - </xsl:text>
+                                <xsl:value-of select="."/>
+                            </xsl:when>
+                        </xsl:choose>
+                    </xsl:for-each>
+                </Index:field>
+            </xsl:for-each>
 
         </Index:group>
 
@@ -1345,6 +1389,7 @@
             </xsl:choose>
         </xsl:if>
     </xsl:template>
+
     <xsl:template name="person">
         <xsl:for-each select="mc:subfield[@code='h']">
             <xsl:value-of select="."/>
@@ -1381,6 +1426,7 @@
             </xsl:choose>
         </xsl:if>
     </xsl:template>
+
     <xsl:template name="person_subdiv">
         <xsl:call-template name="person"/>
         <xsl:for-each select="mc:subfield[@code='t']">
@@ -1404,6 +1450,7 @@
             <xsl:value-of select="."/>
         </xsl:for-each>
     </xsl:template>
+
     <xsl:template name="person_inverted_subdiv">
         <xsl:call-template name="person_inverted"/>
         <xsl:for-each select="mc:subfield[@code='t']">
@@ -1427,6 +1474,7 @@
             <xsl:value-of select="."/>
         </xsl:for-each>
     </xsl:template>
+
     <xsl:template name="corp">
         <xsl:for-each select="mc:subfield[@code='a'or @code='s' or @code='e' or @code='c' or @code='i' or @code='k' or @code='j']">
             <xsl:choose>
@@ -1489,8 +1537,8 @@
                 </xsl:otherwise>
             </xsl:choose>
         </xsl:for-each>
-
     </xsl:template>
+
     <xsl:template name="corp_subdiv">
         <xsl:call-template name="corp"/>
         <xsl:for-each select="mc:subfield[@code='t']">
@@ -1514,7 +1562,6 @@
             <xsl:text> : </xsl:text>
             <xsl:value-of select="."/>
         </xsl:for-each>
-
     </xsl:template>
 
 
