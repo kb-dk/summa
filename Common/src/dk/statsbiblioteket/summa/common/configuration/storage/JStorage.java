@@ -158,17 +158,30 @@ public class JStorage implements ConfigurationStorage {
         // The only way to do this is to extract the configuration level level
         // from the JS engine into a hashmap...
         Map<String,Serializable> map = new HashMap<String,Serializable>();
+
+        // Install context
         engine.put("__ext_map", map);
-        eval(("for (var key in CONFIG) {                 \n" +
-              "  if ( key.substr(0,6) == '__ext_' )      \n" +
-              "      continue                            \n" +
-              "  if ( typeof(CONFIG[key]) == 'function' )\n" +
-              "      __ext_map.put(key, CONFIG[key]())   \n" +
-              "  else                                    \n" +
-              "      __ext_map.put(key, CONFIG[key])     \n" +
-              "}                                         \n").
+        engine.put("__ext_storage", this);
+
+        eval(("for (var key in CONFIG) {                                  \n" +
+              "  if ( key.substr(0,6) == '__ext_' )                       \n" +
+              "      continue                                             \n" +
+              "  if ( typeof(CONFIG[key]) == 'function' )                 \n" +
+              "      __ext_map.put(key, CONFIG[key]().toString())         \n" +
+              "  else if ( typeof(CONFIG[key]) == 'object' ) {            \n" +
+              "      if ( CONFIG[key] instanceof Array )                  \n" +
+              "          __ext_map.put(key, __ext_storage.getSubStorages(key)) \n" +
+              "      else                                                 \n" +
+              "          __ext_map.put(key, __ext_storage.getSubStorage(key))\n" +
+              "  }                                                        \n" +
+              "  else                                                     \n" +
+              "      __ext_map.put(key, CONFIG[key].toString())           \n" +
+              "}                                                          \n").
               replace("CONFIG", config));
+
+        // Remove context
         eval("__ext_map = null");
+        eval("__ext_storage = null");
 
         return map.entrySet().iterator();
     }
@@ -198,7 +211,7 @@ public class JStorage implements ConfigurationStorage {
     public List<ConfigurationStorage> createSubStorages(String key, int count) throws IOException {
         List<ConfigurationStorage> storages =
                                      new ArrayList<ConfigurationStorage>(count);
-        String list = config + "[" + key + "]";
+        String list = config + "['" + key + "']";
 
         eval(list +" = new Array()");
 
@@ -212,10 +225,10 @@ public class JStorage implements ConfigurationStorage {
     }
 
     public List<ConfigurationStorage> getSubStorages(String key) throws IOException {
-        int count = evalInt(config + "[" + key + "].__ext_size()");
+        int count = evalInt(config + "['" + key + "'].__ext_size()");
         JStorage container = getSubStorage(key);
         List<ConfigurationStorage> storages =
-                                     new ArrayList<ConfigurationStorage>(count);
+                                     new ArrayList<ConfigurationStorage>();
 
         for (int i = 0; i < count; i++) {
             storages.add(container.getSubStorage("" + i));
@@ -238,7 +251,7 @@ public class JStorage implements ConfigurationStorage {
             }
             return null;
         } catch (ScriptException e) {
-            throw new RuntimeException("Unexpected error executing\n:"
+            throw new RuntimeException("Unexpected error executing:\n"
                                        +s+"\nError: " + e.getMessage(), e);
         }
     }
@@ -268,6 +281,6 @@ public class JStorage implements ConfigurationStorage {
      */
     private int evalInt(String s) {
         String val = eval(s);
-        return Integer.parseInt(val == null ? "0" : val);
+        return (int)Double.parseDouble(val == null ? "0" : val);
     }
 }
