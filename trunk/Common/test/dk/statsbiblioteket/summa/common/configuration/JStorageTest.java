@@ -60,7 +60,8 @@ public class JStorageTest extends ConfigurationStorageTestCase {
         checkSampleConfig(conf);
 
         for (Map.Entry<String, Serializable> entry : conf) {
-            System.out.println(entry.getKey() + " = " + entry.getValue() + "   (" + entry.getValue().getClass() + ")");
+            System.out.println(entry.getKey() + " = " + entry.getValue()
+                               + "   (" + entry.getValue().getClass() + ")");
         }
     }
 }
