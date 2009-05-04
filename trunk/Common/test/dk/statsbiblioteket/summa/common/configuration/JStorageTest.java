@@ -2,6 +2,9 @@ package dk.statsbiblioteket.summa.common.configuration;
 
 import dk.statsbiblioteket.summa.common.configuration.storage.JStorage;
 
+import java.util.Map;
+import java.io.Serializable;
+
 /**
  *
  */
@@ -49,5 +52,15 @@ public class JStorageTest extends ConfigurationStorageTestCase {
         JStorage sub = sto.createSubStorage("summa.sub");
 
         assertEquals(0, sub.size());
+    }
+
+    public void testIteration() throws Exception {
+        JStorage js = new JStorage("configuration.js");
+        Configuration conf = new Configuration(js);
+        checkSampleConfig(conf);
+
+        for (Map.Entry<String, Serializable> entry : conf) {
+            System.out.println(entry.getKey() + " = " + entry.getValue() + "   (" + entry.getValue().getClass() + ")");
+        }
     }
 }
