@@ -60,10 +60,11 @@ public class ConfigurationStorageTestCase extends TestCase {
         String testPurgeValue = "testValue";
 
         storage.put (testPurgeKey, testPurgeValue);
-        storage.purge (testPurgeKey);
+        assertEquals(testPurgeValue, storage.get(testPurgeKey));
 
-        assertNull("Purging a key should remove it from storage",
-                   storage.get(testPurgeKey));
+        storage.purge (testPurgeKey);
+        assertEquals("Purging a key should remove it from storage",
+                     null, storage.get(testPurgeKey));
     }
 
     /* This fails when called directly, by design */

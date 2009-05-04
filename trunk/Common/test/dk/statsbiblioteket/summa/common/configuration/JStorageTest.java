@@ -3,6 +3,7 @@ package dk.statsbiblioteket.summa.common.configuration;
 import dk.statsbiblioteket.summa.common.configuration.storage.JStorage;
 
 import java.util.Map;
+import java.util.List;
 import java.io.Serializable;
 
 /**
@@ -63,5 +64,16 @@ public class JStorageTest extends ConfigurationStorageTestCase {
             System.out.println(entry.getKey() + " = " + entry.getValue()
                                + "   (" + entry.getValue().getClass() + ")");
         }
+    }
+
+    public void testSubStorages() throws Exception {
+        JStorage js = new JStorage("configuration.js");
+        JStorage sub = js.getSubStorage("summa.test.nested");
+        List<ConfigurationStorage> subs =
+                                     js.getSubStorages("summa.test.nestedlist");
+
+        assertEquals(1, sub.size());
+        assertEquals(2, subs.size());
+
     }
 }
