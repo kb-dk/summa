@@ -77,7 +77,7 @@
                             <xsl:text> </xsl:text>
                         </Index:field>
                     </xsl:for-each>
-                    <xsl:for-each select="mc:datafield[@tag='532' or @tag='534' or @tag='559' or @tag='565' or @tag='856' or @tag='860' or @tag='861' or @tag='863' or @tag='865' or @tag='866' or @tag='867' or @tag='868' or @tag='870' or @tag='871' or @tag='873' or @tag='874' or @tag='879']/mc:subfield[@code='u']">
+                    <xsl:for-each select="mc:datafield[@tag='501' or @tag='504' or @tag='532' or @tag='534' or @tag='559' or @tag='565' or @tag='856' or @tag='860' or @tag='861' or @tag='863' or @tag='865' or @tag='866' or @tag='867' or @tag='868' or @tag='870' or @tag='871' or @tag='873' or @tag='874' or @tag='879']/mc:subfield[@code='u']">
                         <Index:field Index:repeat="true" Index:name="ww" Index:navn="ww" Index:type="token">
                             <xsl:value-of select="."/>
                         </Index:field>
