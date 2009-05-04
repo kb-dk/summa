@@ -155,11 +155,11 @@
         </Index:group>
 
         <!-- Forfatterbeskrivelser på dansk -->
-        <xsl:if test="mc:datafield[@tag='100']/mc:subfield[@code='4']">
+        <xsl:if test="mc:datafield[@tag='100']/mc:subfield[@code='8']">
             <xsl:for-each select="mc:datafield[@tag='100']">
                 <Index:field Index:name="author_descr" Index:navn="fb" Index:type="token" Index:repeat="true">
                     <xsl:call-template name="author_da_description">
-                        <xsl:with-param name="func_code" select="mc:subfield[@code='4']" />
+                        <xsl:with-param name="func_code" select="mc:subfield[@code='8']" />
                     </xsl:call-template>
                     <xsl:if test="mc:subfield[@code='h']">
                         <xsl:text>&#32;</xsl:text>
@@ -173,11 +173,11 @@
             </xsl:for-each>
         </xsl:if>
 
-        <xsl:if test="mc:datafield[@tag='110']/mc:subfield[@code='4']">
+        <xsl:if test="mc:datafield[@tag='110']/mc:subfield[@code='8']">
             <xsl:for-each select="mc:datafield[@tag='110']">
                 <Index:field Index:name="author_descr" Index:navn="fb" Index:type="token" Index:repeat="true">
                     <xsl:call-template name="author_da_description">
-                        <xsl:with-param name="func_code" select="mc:subfield[@code='4']" />
+                        <xsl:with-param name="func_code" select="mc:subfield[@code='8']" />
                     </xsl:call-template>
                     <xsl:text>&#32;</xsl:text>
                     <xsl:value-of select="mc:subfield[@code='a']">
@@ -186,39 +186,11 @@
             </xsl:for-each>
         </xsl:if>
 
-        <xsl:if test="mc:datafield[@tag='710']/mc:subfield[@code='4']">
-            <xsl:for-each select="mc:datafield[@tag='710']">
+        <xsl:if test="mc:datafield[@tag='239']/mc:subfield[@code='8']">
+            <xsl:for-each select="mc:datafield[@tag='239']">
                 <Index:field Index:name="author_descr" Index:navn="fb" Index:type="token" Index:repeat="true">
                     <xsl:call-template name="author_da_description">
-                        <xsl:with-param name="func_code" select="mc:subfield[@code='4']" />
-                    </xsl:call-template>
-                    <xsl:text>&#32;</xsl:text>
-                    <xsl:value-of select="mc:subfield[@code='a']">
-                    </xsl:value-of>
-                </Index:field>
-            </xsl:for-each>
-        </xsl:if>
-
-        <xsl:if test="mc:datafield[@tag='720']/mc:subfield[@code='4']">
-            <xsl:for-each select="mc:datafield[@tag='720']">
-                <Index:field Index:name="author_descr" Index:navn="fb" Index:type="token" Index:repeat="true">
-                    <xsl:call-template name="author_da_description">
-                        <xsl:with-param name="func_code" select="mc:subfield[@code='4']" />
-                    </xsl:call-template>
-                    <xsl:text>&#32;</xsl:text>
-                    <xsl:value-of select="mc:subfield[@code='o']">
-                    </xsl:value-of>
-                </Index:field>
-            </xsl:for-each>
-        </xsl:if>
-
-
-       <!-- Forfatterbeskrivelser på engelsk -->
-        <xsl:if test="mc:datafield[@tag='100']/mc:subfield[@code='4']">
-            <xsl:for-each select="mc:datafield[@tag='100']">
-                <Index:field Index:name="author_descr" Index:navn="fb" Index:type="token" Index:repeat="true">
-                    <xsl:call-template name="author_en_description">
-                        <xsl:with-param name="func_code" select="mc:subfield[@code='4']" />
+                        <xsl:with-param name="func_code" select="mc:subfield[@code='8']" />
                     </xsl:call-template>
                     <xsl:if test="mc:subfield[@code='h']">
                         <xsl:text>&#32;</xsl:text>
@@ -232,12 +204,17 @@
             </xsl:for-each>
         </xsl:if>
 
-        <xsl:if test="mc:datafield[@tag='110']/mc:subfield[@code='4']">
-            <xsl:for-each select="mc:datafield[@tag='110']">
+        <xsl:if test="mc:datafield[@tag='700']/mc:subfield[@code='8']">
+            <xsl:for-each select="mc:datafield[@tag='700']">
                 <Index:field Index:name="author_descr" Index:navn="fb" Index:type="token" Index:repeat="true">
-                    <xsl:call-template name="author_en_description">
-                        <xsl:with-param name="func_code" select="mc:subfield[@code='4']" />
+                    <xsl:call-template name="author_da_description">
+                        <xsl:with-param name="func_code" select="mc:subfield[@code='8']" />
                     </xsl:call-template>
+                    <xsl:if test="mc:subfield[@code='h']">
+                        <xsl:text>&#32;</xsl:text>
+                        <xsl:value-of select="mc:subfield[@code='h']">
+                        </xsl:value-of>
+                    </xsl:if>
                     <xsl:text>&#32;</xsl:text>
                     <xsl:value-of select="mc:subfield[@code='a']">
                     </xsl:value-of>
@@ -245,11 +222,11 @@
             </xsl:for-each>
         </xsl:if>
 
-        <xsl:if test="mc:datafield[@tag='710']/mc:subfield[@code='4']">
+        <xsl:if test="mc:datafield[@tag='710']/mc:subfield[@code='8']">
             <xsl:for-each select="mc:datafield[@tag='710']">
                 <Index:field Index:name="author_descr" Index:navn="fb" Index:type="token" Index:repeat="true">
-                    <xsl:call-template name="author_en_description">
-                        <xsl:with-param name="func_code" select="mc:subfield[@code='4']" />
+                    <xsl:call-template name="author_da_description">
+                        <xsl:with-param name="func_code" select="mc:subfield[@code='8']" />
                     </xsl:call-template>
                     <xsl:text>&#32;</xsl:text>
                     <xsl:value-of select="mc:subfield[@code='a']">
@@ -258,14 +235,145 @@
             </xsl:for-each>
         </xsl:if>
 
-       <xsl:if test="mc:datafield[@tag='720']/mc:subfield[@code='4']">
+        <xsl:if test="mc:datafield[@tag='720']/mc:subfield[@code='8']">
             <xsl:for-each select="mc:datafield[@tag='720']">
                 <Index:field Index:name="author_descr" Index:navn="fb" Index:type="token" Index:repeat="true">
-                    <xsl:call-template name="author_en_description">
-                        <xsl:with-param name="func_code" select="mc:subfield[@code='4']" />
+                    <xsl:call-template name="author_da_description">
+                        <xsl:with-param name="func_code" select="mc:subfield[@code='8']" />
                     </xsl:call-template>
                     <xsl:text>&#32;</xsl:text>
                     <xsl:value-of select="mc:subfield[@code='o']">
+                    </xsl:value-of>
+                </Index:field>
+            </xsl:for-each>
+        </xsl:if>
+
+        <xsl:if test="mc:datafield[@tag='739']/mc:subfield[@code='8']">
+            <xsl:for-each select="mc:datafield[@tag='739']">
+                <Index:field Index:name="author_descr" Index:navn="fb" Index:type="token" Index:repeat="true">
+                    <xsl:call-template name="author_da_description">
+                        <xsl:with-param name="func_code" select="mc:subfield[@code='8']" />
+                    </xsl:call-template>
+                    <xsl:if test="mc:subfield[@code='h']">
+                        <xsl:text>&#32;</xsl:text>
+                        <xsl:value-of select="mc:subfield[@code='h']">
+                        </xsl:value-of>
+                    </xsl:if>
+                    <xsl:text>&#32;</xsl:text>
+                    <xsl:value-of select="mc:subfield[@code='a']">
+                    </xsl:value-of>
+                </Index:field>
+            </xsl:for-each>
+        </xsl:if>
+
+
+        <!-- Forfatterbeskrivelser på engelsk -->
+        <xsl:if test="mc:datafield[@tag='100']/mc:subfield[@code='8']">
+            <xsl:for-each select="mc:datafield[@tag='100']">
+                <Index:field Index:name="author_descr" Index:navn="fb" Index:type="token" Index:repeat="true">
+                    <xsl:call-template name="author_en_description">
+                        <xsl:with-param name="func_code" select="mc:subfield[@code='8']" />
+                    </xsl:call-template>
+                    <xsl:if test="mc:subfield[@code='h']">
+                        <xsl:text>&#32;</xsl:text>
+                        <xsl:value-of select="mc:subfield[@code='h']">
+                        </xsl:value-of>
+                    </xsl:if>
+                    <xsl:text>&#32;</xsl:text>
+                    <xsl:value-of select="mc:subfield[@code='a']">
+                    </xsl:value-of>
+                </Index:field>
+            </xsl:for-each>
+        </xsl:if>
+
+        <xsl:if test="mc:datafield[@tag='110']/mc:subfield[@code='8']">
+            <xsl:for-each select="mc:datafield[@tag='110']">
+                <Index:field Index:name="author_descr" Index:navn="fb" Index:type="token" Index:repeat="true">
+                    <xsl:call-template name="author_en_description">
+                        <xsl:with-param name="func_code" select="mc:subfield[@code='8']" />
+                    </xsl:call-template>
+                    <xsl:text>&#32;</xsl:text>
+                    <xsl:value-of select="mc:subfield[@code='a']">
+                    </xsl:value-of>
+                </Index:field>
+            </xsl:for-each>
+        </xsl:if>
+
+        <xsl:if test="mc:datafield[@tag='239']/mc:subfield[@code='8']">
+            <xsl:for-each select="mc:datafield[@tag='239']">
+                <Index:field Index:name="author_descr" Index:navn="fb" Index:type="token" Index:repeat="true">
+                    <xsl:call-template name="author_en_description">
+                        <xsl:with-param name="func_code" select="mc:subfield[@code='8']" />
+                    </xsl:call-template>
+                    <xsl:if test="mc:subfield[@code='h']">
+                        <xsl:text>&#32;</xsl:text>
+                        <xsl:value-of select="mc:subfield[@code='h']">
+                        </xsl:value-of>
+                    </xsl:if>
+                    <xsl:text>&#32;</xsl:text>
+                    <xsl:value-of select="mc:subfield[@code='a']">
+                    </xsl:value-of>
+                </Index:field>
+            </xsl:for-each>
+        </xsl:if>
+
+        <xsl:if test="mc:datafield[@tag='700']/mc:subfield[@code='8']">
+            <xsl:for-each select="mc:datafield[@tag='700']">
+                <Index:field Index:name="author_descr" Index:navn="fb" Index:type="token" Index:repeat="true">
+                    <xsl:call-template name="author_en_description">
+                        <xsl:with-param name="func_code" select="mc:subfield[@code='8']" />
+                    </xsl:call-template>
+                    <xsl:if test="mc:subfield[@code='h']">
+                        <xsl:text>&#32;</xsl:text>
+                        <xsl:value-of select="mc:subfield[@code='h']">
+                        </xsl:value-of>
+                    </xsl:if>
+                    <xsl:text>&#32;</xsl:text>
+                    <xsl:value-of select="mc:subfield[@code='a']">
+                    </xsl:value-of>
+                </Index:field>
+            </xsl:for-each>
+        </xsl:if>
+
+        <xsl:if test="mc:datafield[@tag='710']/mc:subfield[@code='8']">
+            <xsl:for-each select="mc:datafield[@tag='710']">
+                <Index:field Index:name="author_descr" Index:navn="fb" Index:type="token" Index:repeat="true">
+                    <xsl:call-template name="author_en_description">
+                        <xsl:with-param name="func_code" select="mc:subfield[@code='8']" />
+                    </xsl:call-template>
+                    <xsl:text>&#32;</xsl:text>
+                    <xsl:value-of select="mc:subfield[@code='a']">
+                    </xsl:value-of>
+                </Index:field>
+            </xsl:for-each>
+        </xsl:if>
+
+        <xsl:if test="mc:datafield[@tag='720']/mc:subfield[@code='8']">
+            <xsl:for-each select="mc:datafield[@tag='720']">
+                <Index:field Index:name="author_descr" Index:navn="fb" Index:type="token" Index:repeat="true">
+                    <xsl:call-template name="author_en_description">
+                        <xsl:with-param name="func_code" select="mc:subfield[@code='8']" />
+                    </xsl:call-template>
+                    <xsl:text>&#32;</xsl:text>
+                    <xsl:value-of select="mc:subfield[@code='o']">
+                    </xsl:value-of>
+                </Index:field>
+            </xsl:for-each>
+        </xsl:if>
+
+         <xsl:if test="mc:datafield[@tag='739']/mc:subfield[@code='8']">
+            <xsl:for-each select="mc:datafield[@tag='739']">
+                <Index:field Index:name="author_descr" Index:navn="fb" Index:type="token" Index:repeat="true">
+                    <xsl:call-template name="author_en_description">
+                        <xsl:with-param name="func_code" select="mc:subfield[@code='8']" />
+                    </xsl:call-template>
+                    <xsl:if test="mc:subfield[@code='h']">
+                        <xsl:text>&#32;</xsl:text>
+                        <xsl:value-of select="mc:subfield[@code='h']">
+                        </xsl:value-of>
+                    </xsl:if>
+                    <xsl:text>&#32;</xsl:text>
+                    <xsl:value-of select="mc:subfield[@code='a']">
                     </xsl:value-of>
                 </Index:field>
             </xsl:for-each>
@@ -589,7 +697,7 @@
         </xsl:if>
         <xsl:if test="$func_code = 'aut'">
             <xsl:text>Author</xsl:text>
-        </xsl:if>       
+        </xsl:if>
         <xsl:if test="$func_code = 'ccp'">
             <xsl:text>Conceptor</xsl:text>
         </xsl:if>
@@ -680,7 +788,7 @@
         <xsl:if test="$func_code = 'oth'">
             <xsl:text>Other</xsl:text>
         </xsl:if>
-         <xsl:if test="$func_code = 'pht'">
+        <xsl:if test="$func_code = 'pht'">
             <xsl:text>Photographer</xsl:text>
         </xsl:if>
         <xsl:if test="$func_code = 'ppt'">
