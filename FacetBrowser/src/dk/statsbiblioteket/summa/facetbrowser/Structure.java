@@ -24,18 +24,14 @@ package dk.statsbiblioteket.summa.facetbrowser;
 
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
-import dk.statsbiblioteket.summa.common.index.IndexField;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.text.ParseException;
 import java.util.*;
 
 /**
@@ -108,10 +104,10 @@ public class Structure implements Configurable, Serializable {
                     "Unable to extract sub configuration %s",
                     LuceneIndexUtils.CONF_DESCRIPTOR));
         }
+        FacetIndexDescriptor descriptor;
         Document dom;
         try {
-            FacetIndexDescriptor descriptor =
-                    new FacetIndexDescriptor(descriptorConf);
+            descriptor = new FacetIndexDescriptor(descriptorConf);
             dom = descriptor.getDOM();
             descriptor.close();
         } catch (IOException e) {
@@ -143,32 +139,7 @@ public class Structure implements Configurable, Serializable {
         // TODO: Implement this
     }
 
-    private class FacetIndexDescriptor extends IndexDescriptor {
-        Document dom = null;
-        private int dummyCount = 0;
-
-        private FacetIndexDescriptor(Configuration configuration) throws
-                                                                  IOException {
-            super(configuration);
-        }
-
-        public IndexField createNewField() {
-            //noinspection DuplicateStringLiteralInspection
-            return new IndexField("Dummy " + dummyCount++);
-        }
-        public IndexField createNewField(Node node) throws ParseException {
-            return new IndexField("Anotherdummy " + dummyCount++);
-        }
-
-        @Override
-        public Document parse(String xml) throws ParseException {
-            dom = super.parse(xml);
-            return dom;
-        }
-        public Document getDOM() {
-            return dom;
-        }
-    };
+    ;
 
     private void defineFacetsFromConfiguration(Configuration conf) {
         List<Configuration> facetConfs;

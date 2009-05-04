@@ -22,21 +22,21 @@
  */
 package dk.statsbiblioteket.summa.common.index;
 
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathFactory;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import java.util.List;
-import java.util.ArrayList;
-import java.io.StringWriter;
-import java.text.ParseException;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.util.ParseUtil;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+import java.io.StringWriter;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * IndexFields are used on several levels. From abstract to concrete, their
@@ -768,6 +768,11 @@ public class IndexField<A, T, F> {
     }
 
     /* Setters */
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public void setDoIndex(boolean doIndex) {
         this.doIndex = doIndex;
     }
@@ -816,6 +821,3 @@ public class IndexField<A, T, F> {
         queryAnalyzer = analyzer;
     }
 }
-
-
-

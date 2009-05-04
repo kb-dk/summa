@@ -22,12 +22,12 @@
  */
 package dk.statsbiblioteket.summa.index;
 
-import java.io.IOException;
-import java.io.File;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.util.qa.QAInfo;
+
+import java.io.File;
+import java.io.IOException;
 
 /**
  * A manipulator is responsible for updating part of an index. This could be a
@@ -129,6 +129,3 @@ public interface IndexManipulator extends Configurable {
      */
     public void close() throws IOException;
 }
-
-
-
