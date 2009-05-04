@@ -8,10 +8,7 @@ import javax.script.ScriptEngineManager;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 import java.io.*;
-import java.util.Map;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
 import java.net.URL;
 
 /**
@@ -111,13 +108,33 @@ public class JStorage implements ConfigurationStorage {
                                        + " not supported by JRE");
         }
 
-        /* Install size() method on all objects */
+        /* Install __ext_size() method on all objects */
         eval(
-        "Object.prototype.size = function () {\n" +
-        "  var len = this.length ? --this.length : -1;\n" +
-        "    for (var k in this)\n" +
-        "      len++;\n" +
-        "  return len;\n" +
+        "Object.prototype.__ext_size = function () {     \n" +
+        "  var len = this.length ? --this.length : -1;   \n" +
+        "  for (var k in this) {                         \n" +
+        "      if ( k.substr(0,6) != '__ext_' )          \n" +
+        "          len++;                                \n" +
+        "  }                                             \n" +
+        "  return len;                                   \n" +
+        "}                                               \n"
+        );
+
+        /* Install __ext_type function in the global scope. We use this to
+         * differentiate between objects and arrays */
+        eval(
+        "function __ext_type(value) {               \n" +
+        "    var s = typeof value;                  \n" +
+        "    if (s === 'object') {                  \n" +
+        "        if (value) {                       \n" +
+        "            if (value instanceof Array) {  \n" +
+        "                s = 'array';               \n" +
+        "            }                              \n" +
+        "        } else {                           \n" +
+        "            s = 'null';                    \n" +
+        "        }                                  \n" +
+        "    }                                      \n" +
+        "    return s;                              \n" +
         "}"
         );
     }
@@ -138,7 +155,22 @@ public class JStorage implements ConfigurationStorage {
     }
 
     public Iterator<Map.Entry<String, Serializable>> iterator() throws IOException {
-        throw new UnsupportedOperationException();
+        // The only way to do this is to extract the configuration level level
+        // from the JS engine into a hashmap...
+        Map<String,Serializable> map = new HashMap<String,Serializable>();
+        engine.put("__ext_map", map);
+        eval(("for (var key in CONFIG) {                 \n" +
+              "  if ( key.substr(0,6) == '__ext_' )      \n" +
+              "      continue                            \n" +
+              "  if ( typeof(CONFIG[key]) == 'function' )\n" +
+              "      __ext_map.put(key, CONFIG[key]())   \n" +
+              "  else                                    \n" +
+              "      __ext_map.put(key, CONFIG[key])     \n" +
+              "}                                         \n").
+              replace("CONFIG", config));
+        eval("__ext_map = null");
+
+        return map.entrySet().iterator();
     }
 
     public void purge(String key) throws IOException {
@@ -146,7 +178,7 @@ public class JStorage implements ConfigurationStorage {
     }
 
     public int size() throws IOException {
-        return (int) Double.parseDouble(eval(config+".size()"));
+        return (int) Double.parseDouble(eval(config+".__ext_size()"));
     }
 
     public boolean supportsSubStorage() throws IOException {
@@ -166,17 +198,21 @@ public class JStorage implements ConfigurationStorage {
     public List<ConfigurationStorage> createSubStorages(String key, int count) throws IOException {
         List<ConfigurationStorage> storages =
                                      new ArrayList<ConfigurationStorage>(count);
-        JStorage container = createSubStorage(key);
+        String list = config + "[" + key + "]";
+
+        eval(list +" = new Array()");
 
         for (int i = 0; i < count; i++) {
-            storages.add(container.createSubStorage("" + i));
+            eval(list + ".push({})");
+            storages.add(new JStorage(engine, engineManager,
+                                      list+"[" + i + "]", false));
         }
 
         return storages;
     }
 
     public List<ConfigurationStorage> getSubStorages(String key) throws IOException {
-        int count = evalInt(config + "[" + key + "].length");
+        int count = evalInt(config + "[" + key + "].__ext_size()");
         JStorage container = getSubStorage(key);
         List<ConfigurationStorage> storages =
                                      new ArrayList<ConfigurationStorage>(count);
@@ -202,7 +238,8 @@ public class JStorage implements ConfigurationStorage {
             }
             return null;
         } catch (ScriptException e) {
-            throw new RuntimeException("Unexpected error executing: '" +s+"'");
+            throw new RuntimeException("Unexpected error executing\n:"
+                                       +s+"\nError: " + e.getMessage(), e);
         }
     }
 
@@ -215,7 +252,8 @@ public class JStorage implements ConfigurationStorage {
             return null;
         } catch (ScriptException e) {
             throw new RuntimeException("Unexpected error executing "
-                                       + "streamed script");
+                                       + "streamed script: " + e.getMessage(),
+                                       e);
         }
     }
 
