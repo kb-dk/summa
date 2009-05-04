@@ -22,20 +22,20 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser;
 
-import java.util.List;
-import java.util.Locale;
-import java.io.Serializable;
-
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
+
+import java.io.Serializable;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * The structure for a single Facet.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_NEEDED,
         author = "te")
 public class FacetStructure implements Serializable {
     private static volatile Logger log = Logger.getLogger(Structure.class);

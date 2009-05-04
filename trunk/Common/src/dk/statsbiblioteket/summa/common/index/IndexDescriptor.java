@@ -28,6 +28,7 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.util.ParseUtil;
 import dk.statsbiblioteket.summa.common.util.ResourceListener;
 import dk.statsbiblioteket.summa.common.xml.DefaultNamespaceContext;
+import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -64,6 +65,9 @@ import java.util.*;
  * somewhat simpler. It is envisioned that SOLR's classes for indexing and
  * querying can be used in Summa instead of raw Lucene at some point in time.
  * @see {@url http://wiki.apache.org/solr/SchemaXml}
+ * </p><p>
+ * The IndexDescriptor is abstract. Besides implementing the abstract methods,
+ * sub classes will normally need to override {@link #createBaseField(String)}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -118,6 +122,36 @@ public abstract class IndexDescriptor<F extends IndexField> implements
 
     public static enum OPERATOR {and, or}
 
+    public static final String KEYWORD = "keyword";
+    public static final String STORED_KEYWORD = "storedKeyword";
+    public static final String VERBATIM = "verbatim";
+    public static final String STORED_VERBATIM = "storedVerbatim";
+    public static final String TEXT = "text";
+    public static final String SORTKEY = "sortkey";
+    @SuppressWarnings({"DuplicateStringLiteralInspection"})
+    public static final String STORED = "stored";
+    public static final String DATE = "date";
+    public static final String NUMBER = "number";
+
+    /**
+     * The base fields must be defined in all implementations of the
+     * IndexDescriptor. This is enforced by the IndexDescriptor calling
+     * {@link #createBaseField} with all BASE_FIELDS.
+     */
+    public static final String[] BASE_FIELDS = new String[]{
+            IndexField.SUMMA_DEFAULT, // Index, store
+            IndexUtils.RECORD_FIELD,  // Index (no analyze), store
+            IndexUtils.RECORD_BASE,   // Index (no analyze), store
+            IndexField.FREETEXT,      // Index
+            KEYWORD, STORED_KEYWORD,  // Index / Index, store
+            VERBATIM, STORED_VERBATIM,// Index / Index, store
+            TEXT,                     // Index
+            SORTKEY,                  // Index
+            STORED,                   // Store
+            DATE,                     // Index
+            NUMBER                    // Index, store
+    };
+
     private ResourceListener listener;
     private URL absoluteLocation;
 
@@ -152,6 +186,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      */
     public IndexDescriptor(Configuration configuration) throws IOException {
         init();
+        createBaseFields();
         String locationRoot = configuration.getString(CONF_LOCATION_ROOT, null);
         String absoluteLocationString =
                 configuration.getString(CONF_ABSOLUTE_LOCATION, null);
@@ -200,6 +235,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
     public IndexDescriptor() {
         log.debug("Empty descriptor created");
         init();
+        createBaseFields();
     }
 
     /**
@@ -212,6 +248,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
     public IndexDescriptor(URL absoluteLocation) throws IOException {
         log.trace("Creating descriptor based on '" + absoluteLocation + "'");
         init();
+        createBaseFields();
         this.absoluteLocation = absoluteLocation;
         fetchStateAndActivateListener(0);
     }
@@ -224,6 +261,7 @@ public abstract class IndexDescriptor<F extends IndexField> implements
     public IndexDescriptor(String xml) throws ParseException {
         log.trace("Creating descriptor based on XML");
         init();
+        createBaseFields();
         parse(xml);
         log.debug("Descriptor created based on XML");
     }
@@ -267,16 +305,71 @@ public abstract class IndexDescriptor<F extends IndexField> implements
     /**
      * The init-method will be called before any IndexDescriptor-specific
      * initialization takes place. Override this method to provide
-     * implementation-specific initialization, such as creating default
-     * field definitions.
+     * implementation-specific initialization.
      * </p><p>
-     * Note: Implementations should ensure that the fields "freetext" and
-     * "summa_default" are created. Freetext will be stored in the field
-     * "freetext" and "summa_default" will be used as the base default if
-     * no parent is given in the field Node.
+     * Note: base fields are created explicitely by {@link #createBaseFields}.
      */
     public void init() {
-        log.trace("init for IndexDescriptor called - does nothing");
+        log.trace("init() does nothing in the default method");
+    }
+
+    /**
+     * Iterator over {@link #BASE_FIELDS} that calls {@link #createBaseField}
+     * and adds results to {@link #allFields}. Called by all constructors.
+     */
+    private void createBaseFields() {
+        for (String baseFieldName: BASE_FIELDS) {
+            F field = createBaseField(baseFieldName);
+            allFields.put(field.getName(), field);
+        }
+    }
+
+    /**
+     * Create a base field from the given name. One special field is the
+     * {@link IndexField#SUMMA_DEFAULT} which is the field that all other
+     * fields should inherit from. The first time this method is called, it
+     * will be with this field name.
+     * </p><p>
+     * The basic implementation of the is method does create valid IndexFields
+     * which can be used for analysis of the IndexDescriptor. However, it is
+     * expected that implementations will normally want to override the method.
+     * @param baseFieldName the name of the field. It is guaranteed that all the
+     *                      names from {@link #BASE_FIELDS} will be fed to this
+     *                      method. 
+     * @return a base field from the given name.
+     */
+    protected F createBaseField(String baseFieldName) {
+        log.debug(String.format("createBaseField(%s) called", baseFieldName));
+        if (baseFieldName.equals(IndexField.SUMMA_DEFAULT)
+            || baseFieldName.equals(IndexUtils.RECORD_FIELD)
+            || baseFieldName.equals(IndexUtils.RECORD_BASE)
+            || baseFieldName.equals(NUMBER)) {
+            return createNewField(baseFieldName, true, true);
+        }
+        if (baseFieldName.equals(IndexField.FREETEXT)
+            || baseFieldName.equals(KEYWORD)
+            || baseFieldName.equals(VERBATIM)
+            || baseFieldName.equals(TEXT)
+            || baseFieldName.equals(SORTKEY)
+            || baseFieldName.equals(DATE)) {
+            return createNewField(baseFieldName, true, false);
+        }
+        if (baseFieldName.equals(STORED_KEYWORD)
+            || baseFieldName.equals(STORED_VERBATIM)
+            || baseFieldName.equals(STORED)) {
+            return createNewField(baseFieldName, false, true);
+        }
+
+        throw new IllegalArgumentException(String.format(
+                "The base field '%s' is unknown", baseFieldName));
+    }
+
+    private F createNewField(String name, boolean index, boolean store) {
+        F field = createNewField();
+        field.setName(name);
+        field.setDoIndex(index);
+        field.setDoStore(store);
+        return field;
     }
 
     /**

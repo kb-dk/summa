@@ -94,82 +94,109 @@ public class LuceneIndexDescriptor
         return new LuceneIndexField(node, this);
     }
 
-    /**
-     * Creates default fields, ready to be inherited.
-     */
-    public void init() {
-        log.trace("init() called");
-        addField(makeField(IndexUtils.RECORD_FIELD,
-                           Field.Index.NOT_ANALYZED,
-                           Field.Store.YES,
-                           Field.TermVector.NO,
-                           new KeywordAnalyzer()));
+    @Override
+    protected LuceneIndexField createBaseField(String baseFieldName) {
+        log.debug(String.format(
+                "createBaseField(%s) for LuceneIndexDescriptor called",
+                baseFieldName));
+        if (baseFieldName.equals(IndexField.SUMMA_DEFAULT)) {
+            return makeField(baseFieldName,
+                             Field.Index.ANALYZED,
+                             Field.Store.YES,
+                             Field.TermVector.WITH_POSITIONS_OFFSETS,
+                             new SummaStandardAnalyzer());
+        }
+        if (baseFieldName.equals(IndexUtils.RECORD_FIELD)) {
+            return makeField(baseFieldName,
+                             Field.Index.NOT_ANALYZED,
+                             Field.Store.YES,
+                             Field.TermVector.NO,
+                             new KeywordAnalyzer());
+        }
+        if (baseFieldName.equals(IndexUtils.RECORD_BASE)) {
+            return makeField(baseFieldName,
+                             Field.Index.NOT_ANALYZED,
+                             Field.Store.YES,
+                             Field.TermVector.NO,
+                             new KeywordAnalyzer());
+        }
+        if (baseFieldName.equals(IndexField.FREETEXT)) {
+            return makeField(baseFieldName,
+                             Field.Index.ANALYZED,
+                             Field.Store.NO,
+                             Field.TermVector.WITH_POSITIONS_OFFSETS, // ?
+                             new FreeTextAnalyzer());
+        }
 
-        addField(makeField(IndexUtils.RECORD_BASE,
-                           Field.Index.NOT_ANALYZED,
-                           Field.Store.YES,
-                           Field.TermVector.NO,
-                           new KeywordAnalyzer()));
+        if (baseFieldName.equals(KEYWORD)) {
+            return makeField(baseFieldName,
+                             Field.Index.ANALYZED,
+                             Field.Store.NO,
+                             Field.TermVector.NO,
+                             new SummaKeywordAnalyzer());
+        }
+        if (baseFieldName.equals(STORED_KEYWORD)) {
+            return makeField(baseFieldName,
+                             Field.Index.ANALYZED,
+                             Field.Store.YES,
+                             Field.TermVector.NO,
+                             new SummaKeywordAnalyzer());
+        }
 
+        if (baseFieldName.equals(VERBATIM)) {
+            return makeField(baseFieldName,
+                             Field.Index.ANALYZED,
+                             Field.Store.NO,
+                             Field.TermVector.NO,
+                             new KeywordAnalyzer());
+        }
+        if (baseFieldName.equals(STORED_VERBATIM)) {
+            return makeField(baseFieldName,
+                             Field.Index.ANALYZED,
+                             Field.Store.YES,
+                             Field.TermVector.NO,
+                             new KeywordAnalyzer());
+        }
 
-        addField(makeField(IndexField.FREETEXT,
-                           Field.Index.TOKENIZED,
-                           Field.Store.NO,
-                           Field.TermVector.WITH_POSITIONS_OFFSETS, // ?
-                           new FreeTextAnalyzer()));
-        addField(makeField(IndexField.SUMMA_DEFAULT,
-                           Field.Index.TOKENIZED,
-                           Field.Store.YES,
-                           Field.TermVector.WITH_POSITIONS_OFFSETS,
-                           new SummaStandardAnalyzer()));
+        if (baseFieldName.equals(TEXT)) {
+            return makeField(baseFieldName,
+                             Field.Index.ANALYZED,
+                             Field.Store.NO,
+                             Field.TermVector.WITH_POSITIONS_OFFSETS,
+                             new SummaStandardAnalyzer());
+        }
+        if (baseFieldName.equals(SORTKEY)) {
+            return makeField(baseFieldName,
+                             Field.Index.ANALYZED,
+                             Field.Store.NO,
+                             Field.TermVector.YES,
+                             new SummaSymbolRemovingAnalyzer());
+        }
+        if (baseFieldName.equals(STORED)) {
+            return makeField(baseFieldName,
+                             Field.Index.NO,
+                             Field.Store.COMPRESS,
+                             Field.TermVector.NO,
+                             new SummaStandardAnalyzer());
+        }
+        if (baseFieldName.equals(DATE)) {
+            return makeField(baseFieldName,
+                             Field.Index.ANALYZED,
+                             Field.Store.NO,
+                             Field.TermVector.NO,
+                             new SimpleAnalyzer());
+        }
+        if (baseFieldName.equals(NUMBER)) {
+            return makeField(baseFieldName,
+                             Field.Index.ANALYZED,
+                             Field.Store.YES,
+                             Field.TermVector.NO,
+                             new SummaNumberAnalyzer());
+        }
 
-        addField(makeField("keyword",
-                           Field.Index.TOKENIZED,
-                           Field.Store.NO,
-                           Field.TermVector.NO,
-                           new SummaKeywordAnalyzer()));
-        addField(makeField("storedKeyword",
-                           Field.Index.TOKENIZED,
-                           Field.Store.YES,
-                           Field.TermVector.NO,
-                           new SummaKeywordAnalyzer()));
-
-        addField(makeField("verbatim",
-                           Field.Index.ANALYZED,
-                           Field.Store.NO,
-                           Field.TermVector.NO,
-                           new KeywordAnalyzer()));
-        addField(makeField("storedVerbatim",
-                           Field.Index.ANALYZED,
-                           Field.Store.YES,
-                           Field.TermVector.NO,
-                           new KeywordAnalyzer()));
-
-        addField(makeField("text",
-                           Field.Index.TOKENIZED,
-                           Field.Store.NO,
-                           Field.TermVector.WITH_POSITIONS_OFFSETS,
-                           new SummaStandardAnalyzer()));
-        addField(makeField("sortkey",
-                           Field.Index.TOKENIZED,
-                           Field.Store.NO,
-                           Field.TermVector.YES,
-                           new SummaSymbolRemovingAnalyzer()));
-        addField(makeField("stored",
-                           Field.Index.NO,
-                           Field.Store.COMPRESS,
-                           Field.TermVector.NO,
-                           new SummaStandardAnalyzer()));
-        addField(makeField("date",
-                           Field.Index.TOKENIZED,
-                           Field.Store.NO,
-                           Field.TermVector.NO,
-                           new SimpleAnalyzer()));
-        addField(makeField("number",
-                           Field.Index.TOKENIZED,
-                           Field.Store.YES,
-                           Field.TermVector.NO,
-                           new SummaNumberAnalyzer()));
+        throw new IllegalArgumentException(String.format(
+                "The base field '%s' is unknown by the LuceneIndexDescriptor",
+                baseFieldName));
     }
 
     final static String MLT_EXPR = String.format(
