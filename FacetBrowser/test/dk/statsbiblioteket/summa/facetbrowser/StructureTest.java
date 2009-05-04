@@ -109,6 +109,10 @@ public class StructureTest extends TestCase {
         assertEquals("locale shuld be as expected", "de", full.getLocale());
     }
 
+    public void testIndexDescriptorSetup() {
+//        URL descLocation = Resolver.getURL()
+    }
+
     public void testGetFacets() throws Exception {
         //TODO: Test goes here...
     }
