@@ -144,14 +144,25 @@ public class JStorage implements ConfigurationStorage {
     }
 
     public Serializable get(String key) throws IOException {
-        final String query =
-                "var val = " + config+"['%s']     \n"+
-                "if( typeof(val) == 'function' ) {\n" +
-                "    val = val()                  \n" +
-                "}                                \n" +
-                "val                              \n";
+        engine.put("__ext_storage", this);
 
-        return  eval(String.format(query, key));
+        String query =
+                "var val = CONFIG['KEY']                             \n"+
+                "if( typeof(val) == 'function' )                     \n" +
+                "    val = val()                                     \n" +
+                "else if ( typeof(val) == 'object' && val != null) { \n" +
+                "    if (val instanceof Array)                       \n" +
+                "        val = __ext_storage.getSubStorages('KEY')   \n" +
+                "    else                                            \n" +
+                "        val = __ext_storage.getSubStorage('KEY')    \n" +
+                "}                                                   \n" +
+                "val                                                 \n";
+
+        try {
+            return  eval(query.replace("KEY", key).replace("CONFIG", config));
+        } finally {
+            engine.put("__ext_storage", null);
+        }
     }
 
     public Iterator<Map.Entry<String, Serializable>> iterator() throws IOException {
@@ -163,25 +174,29 @@ public class JStorage implements ConfigurationStorage {
         engine.put("__ext_map", map);
         engine.put("__ext_storage", this);
 
-        eval(("for (var key in CONFIG) {                                  \n" +
+        try {
+            eval((
+              "for (var key in CONFIG) {                                  \n" +
               "  if ( key.substr(0,6) == '__ext_' )                       \n" +
               "      continue                                             \n" +
-              "  if ( typeof(CONFIG[key]) == 'function' )                 \n" +
-              "      __ext_map.put(key, CONFIG[key]().toString())         \n" +
-              "  else if ( typeof(CONFIG[key]) == 'object' ) {            \n" +
-              "      if ( CONFIG[key] instanceof Array )                  \n" +
+              "  var val = CONFIG[key]                                    \n" +
+              "  if ( typeof(val) == 'function' )                         \n" +
+              "      __ext_map.put(key, val.toString())                   \n" +
+              "  else if ( typeof(val) == 'object' && val != null) {      \n" +
+              "      if ( val instanceof Array )                          \n" +
               "          __ext_map.put(key, __ext_storage.getSubStorages(key)) \n" +
               "      else                                                 \n" +
               "          __ext_map.put(key, __ext_storage.getSubStorage(key))\n" +
               "  }                                                        \n" +
               "  else                                                     \n" +
-              "      __ext_map.put(key, CONFIG[key].toString())           \n" +
+              "      __ext_map.put(key, val.toString())                   \n" +
               "}                                                          \n").
               replace("CONFIG", config));
-
-        // Remove context
-        eval("__ext_map = null");
-        eval("__ext_storage = null");
+        } finally {
+            // Remove context
+            engine.put("__ext_map", null);
+            engine.put("__ext_storage", null);
+        }
 
         return map.entrySet().iterator();
     }
