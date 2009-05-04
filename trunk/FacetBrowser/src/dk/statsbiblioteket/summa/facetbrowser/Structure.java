@@ -27,8 +27,6 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
-import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -67,6 +65,9 @@ public class Structure implements Configurable, Serializable {
      */
     private Map<String, FacetStructure> facets;
 
+    // TODO: Add support for changing definition of facets
+    private FacetIndexDescriptor descriptor;
+
     /**
      * Constructs a new Structure and empty Structure, ready to be filled with
      * FacetStructures.
@@ -104,42 +105,14 @@ public class Structure implements Configurable, Serializable {
                     "Unable to extract sub configuration %s",
                     LuceneIndexUtils.CONF_DESCRIPTOR));
         }
-        FacetIndexDescriptor descriptor;
-        Document dom;
         try {
             descriptor = new FacetIndexDescriptor(descriptorConf);
-            dom = descriptor.getDOM();
-            descriptor.close();
+            facets = descriptor.getFacets();
         } catch (IOException e) {
             throw new ConfigurationException(
                     "Unable to extract facet structure from configuration", e);
         }
-        parseFacetNodes(dom);
     }
-
-    private void parseFacetNodes(Document dom) {
-        NodeList fieldNodes;
-/**        final String FIELD_EXPR = "/id:IndexDescriptor/id:fields/id:field";
-        try {
-            fieldNodes = (NodeList)xPath.evaluate(FIELD_EXPR, document,
-                                                 XPathConstants.NODESET);
-        } catch (XPathExpressionException e) {
-            throw new ParseException(String.format(
-                    "Expression '%s' for selecting fields was invalid",
-                    FIELD_EXPR), -1);
-        }
-        //noinspection DuplicateStringLiteralInspection
-        log.trace("Located " + fieldNodes.getLength() + " field nodes");
-        for (int i = 0 ; i < fieldNodes.getLength(); i++) {
-            addField(createNewField(fieldNodes.item(i)));
-        }*/
-        throw new UnsupportedOperationException(
-                "Specifying facets in the IndexDescriptor is currently under " 
-                + "implementation");
-        // TODO: Implement this
-    }
-
-    ;
 
     private void defineFacetsFromConfiguration(Configuration conf) {
         List<Configuration> facetConfs;
