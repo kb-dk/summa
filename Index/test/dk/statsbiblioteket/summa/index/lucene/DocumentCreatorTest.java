@@ -25,7 +25,6 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.xml.DefaultNamespaceContext;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
-import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.index.lucene.DocumentCreator;
 import org.apache.lucene.document.Document;
@@ -99,7 +98,7 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
             "<xproperties>\n"
             + "    <xproperties>\n"
             + "        <entry>\n"
-            + "            <key>" + LuceneIndexUtils.CONF_DESCRIPTOR
+            + "            <key>" + IndexDescriptor.CONF_DESCRIPTOR
             + "</key>\n"
             + "            <value class=\"xproperties\">\n"
             + "                <entry>\n"
@@ -217,7 +216,7 @@ public class DocumentCreatorTest extends TestCase implements ObjectFilter {
 
         Configuration conf = new Configuration(new XStorage(confLocation));
         LuceneIndexDescriptor id = new LuceneIndexDescriptor(
-                    conf.getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR));
+                    conf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR));
         assertNotNull("A descriptor should be created", id);
         return conf;
     }

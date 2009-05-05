@@ -120,6 +120,13 @@ public abstract class IndexDescriptor<F extends IndexField> implements
             "summa.common.index.checkinterval";
     public static final int DEFAULT_CHECK_INTERVAL = -1;
 
+    /**
+     * The property-key for a substorage containing the properties for the
+     * IndexDescriptor. This is used for inlining descriptor setup in other
+     * configurations.
+     */
+    public static final String CONF_DESCRIPTOR = "summa.index.descriptorsetup";
+
     public static enum OPERATOR {and, or}
 
     public static final String KEYWORD = "keyword";
@@ -843,5 +850,47 @@ public abstract class IndexDescriptor<F extends IndexField> implements
 
     public Map<String, F> getFields() {
         return allFields;
+    }
+
+    /**
+     * If the sub-configuration {@link #CONF_DESCRIPTOR} is present in the
+     * given conf, it is copied to all the subConfs. If the CONF_DESCRIPTOR is
+     * not present, nothing is done.
+     * @param conf     the configuration that might contain IndexDescriptor
+     *                 setup.
+     * @param subConfs the configurations to copy the setup to, if present.
+     */
+    public static void copySetupToSubConfigurations(
+            Configuration conf, List<Configuration> subConfs) {
+        if (!conf.valueExists(CONF_DESCRIPTOR)) {
+            log.debug(String.format(
+                    "No %s found in configuration. No copy of the index "
+                    + "descriptor setup is done", CONF_DESCRIPTOR));
+            return;
+        }
+        log.debug("IndexDescriptor setup found. Copying to sub configurations");
+        Configuration id;
+        try {
+            id = conf.getSubConfiguration(CONF_DESCRIPTOR);
+        } catch (IOException e) {
+            throw new ConfigurationException(String.format(
+                    "Unable to extract %s from configuration", CONF_DESCRIPTOR),
+                                             e);
+        }
+        for (Configuration subConf: subConfs) {
+            if (subConf.valueExists(CONF_DESCRIPTOR)) {
+                log.debug("Skipping assignment og index descriptor setup for "
+                          + "subConf as it is already present");
+                continue;
+            }
+            try {
+                subConf.createSubConfiguration(CONF_DESCRIPTOR).
+                    importConfiguration(id);
+            } catch (IOException e) {
+                throw new ConfigurationException(
+                        "Unable to insert index description in "
+                        + "sub configuration", e);
+            }
+        }
     }
 }

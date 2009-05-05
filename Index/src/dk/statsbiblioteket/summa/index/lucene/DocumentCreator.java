@@ -56,7 +56,7 @@ import java.text.ParseException;
  * </p><p>
  * Note: The DocumentCreator need an index-description. The setup for retrieving
  * the description must be stored in the sub-property 
- * {@link LuceneIndexUtils#CONF_DESCRIPTOR} with parameters from
+ * {@link dk.statsbiblioteket.summa.common.index.IndexDescriptor#CONF_DESCRIPTOR} with parameters from
  * {@link dk.statsbiblioteket.summa.common.index.IndexDescriptor}.
  * @deprecated
  * {@link dk.statsbiblioteket.summa.index.lucene.StreamingDocumentCreator}
