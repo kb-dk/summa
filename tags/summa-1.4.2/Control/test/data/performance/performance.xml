@@ -1,0 +1,62 @@
+<xproperties>
+    <xproperties>
+
+        <!-- Copy of the default values for SearchPerformance, tweaked to make
+             the paths valid. -->
+        
+        <entry>
+            <key>summa.performance.index.location</key>
+            <value class="string">data/performance/index</value>
+        </entry>
+        <entry>
+            <key>summa.performance.dir.type</key>
+            <value class="string">FSDirectory</value>
+        </entry>
+        <entry>
+            <key>summa.performance.dir.readonly</key>
+            <value class="boolean">true</value>
+        </entry>
+        <entry>
+            <key>summa.performance.threads</key>
+            <value class="int">1</value>
+        </entry>
+        <entry>
+            <key>summa.performance.sharedreader</key>
+            <value class="boolean">true</value>
+        </entry>
+
+        <!-- Mediator setup -->
+        <entry>
+            <key>summa.performance.simulate</key>
+            <value class="boolean">false</value>
+        </entry>
+        <entry>
+            <key>summa.performance.maxhits</key>
+            <value class="int">20</value>
+        </entry>
+        <entry>
+            <key>summa.performance.maxqueries</key>
+            <value class="string">99999999</value>
+        </entry>
+<!--        <entry>
+            <key>summa.performance.feedback.prefix</key>
+            <value class="string">test</value>
+        </entry>-->
+        <entry>
+            <key>summa.performance.feedback.postfix</key>
+            <value class="string">.log</value>
+        </entry>
+        <entry>
+            <key>summa.performance.queries.file</key>
+            <value class="string">data/performance/queries.dat</value>
+        </entry>
+        <entry>
+            <key>summa.performance.fields</key>
+            <value class="string">shortformat</value>
+        </entry>
+        <entry>
+            <key>summa.performance.index.descriptor</key>
+            <value class="string">data/performance/index/IndexDescriptor.xml</value>
+        </entry>
+    </xproperties>
+</xproperties>

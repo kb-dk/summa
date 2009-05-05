@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Setup for LuceneSearcher -->
+<xproperties>
+    <xproperties>
+        <entry>
+            <key>summa.control.service.port</key>
+            <value class="int">2783</value>
+        </entry>
+        <entry>
+            <key>summa.control.service.registry.port</key>
+            <value class="int">27000</value>
+        </entry>
+        <!--<entry>
+            <key>summa.control.service.id</key>
+            <value class="string">Search</value>
+        </entry>-->
+
+        <!-- The class implementing the Service interface -->
+        <entry>
+            <key>control.launcher.service.class</key>
+            <value class="string">dk.statsbiblioteket.summa.control.service.SearchService</value>
+        </entry>
+        
+        <entry>
+            <key>summa.search.node.class</key>
+            <value class="string">dk.statsbiblioteket.summa.search.SearchNodeAggregator</value>
+        </entry>
+
+        <!-- IndexWatcher -->
+        <entry>
+            <key>summa.indexwatcher.checkinterval</key>
+            <value class="int">1000</value>
+        </entry>
+        <entry>
+            <key>summa.indexwatcher.indexroot</key>
+            <value class="string">index</value>
+        </entry>
+        <entry>
+            <key>summa.indexwatcher.minretention</key>
+            <!-- Very aggressive value - probably too low for production -->
+            <value class="int">1000</value>
+        </entry>
+        <entry>
+            <key>summa.search.searcheravailability.timeout</key>
+            <value class="int">5000</value>
+        </entry>
+
+
+        <entry>
+            <key>summa.search.aggregator.sequential</key>
+            <value class="boolean">true</value>
+        </entry>
+
+        <entry>
+            <key>summa.index.descriptorsetup</key>
+            <value class="xproperties">
+                <entry>
+                    <key>summa.common.indexdescriptor.absolutelocation</key>
+                    <value class="string">/tmp/summatest/data/oai/oai_IndexDescriptor.xml</value>
+                </entry>
+            </value>
+        </entry>
+
+        <entry>
+            <key>summa.search.nodes</key>
+            <value class="list">
+                <xproperties>
+                    <entry>
+                        <key>summa.search.node.class</key>
+                        <value class="string">dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode</value>
+                    </entry>
+
+                    <entry>
+                        <key>summa.search.collectdocids</key>
+                        <value class="string">true</value>
+                    </entry>
+
+                    <entry>
+                        <key>search.clauses.max</key>
+                        <value class="int">20000</value>
+                    </entry>
+                    <entry>
+                        <key>summa.search.resultfields</key>
+                        <value class="string-array">
+                            <string>main_titel</string>
+                            <string>lsubject</string>
+                            <string>lsu_oai</string>
+                            <string>author_normalised</string>
+                            <string>recordID</string>
+                            <string>shortformat</string>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>summa.search.fallbackvalues</key>
+                        <value class="string-array">
+                            <string>NoTitle</string>
+                            <string>NoSubject</string>
+                            <string>NoOAI</string>
+                            <string>NoAuthor</string>
+                            <string>NoID</string>
+                            <string>NoShortformat</string>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>summa.search.nonescapedfields</key>
+                        <value class="string-array">
+                            <string>shortformat</string>
+                        </value>
+                    </entry>
+                    <!--        <entry>
+                        <key>summa.search.warmup.data</key>
+                        <value class="string">/tmp/warmup...</value>
+                    </entry>-->
+                    <entry>
+                        <key>summa.search.warmup.maxtime</key>
+                        <value class="string">10000</value>
+                    </entry>
+                    <entry>
+                        <key>summa.search.maxrecords</key>
+                        <value class="int">10002</value>
+                    </entry>
+                    <entry>
+                        <key>summa.search.number-of-searchers</key>
+                        <value class="int">2</value>
+                    </entry>
+                    <entry>
+                        <key>summa.search.numberofconcurrentsearches</key>
+                        <value class="int">4</value>
+                    </entry>
+                    <entry>
+                        <key>summa.search.searchqueue.maxsize</key>
+                        <value class="int">50</value>
+                    </entry>
+                    <entry>
+                        <key>summa.search.searcheravailability.timeout</key>
+                        <value class="int">5000</value>
+                    </entry>
+                </xproperties>
+
+                <xproperties>
+                    <entry>
+                        <key>summa.search.node.class</key>
+                        <value class="string">
+                            dk.statsbiblioteket.summa.facetbrowser.FacetSearchNode
+                        </value>
+                    </entry>
+                </xproperties>
+
+            </value>
+        </entry>
+    </xproperties>
+</xproperties>
+
+

@@ -1,0 +1,25 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+<head></head>
+<body bgcolor="white">
+<p>
+    Searching is the act of sending a request which delegates to one or more
+    searchers. The results from the searches is then returned.
+</p><p>
+    The SummaSearcher defines the outer interface, SearchNode defines the
+    underlying searchers.
+</p><p>
+    SearchNodeFactory    - constructs SearchNodes from properties.
+    SummaSearcherImpl    - handles queueing of requests to a single SearchNode.
+    SearchNodeAggregator - contains one or more SearchNodes that are searched
+                           in parallel or in sequence, depending on setup.
+    SearchNodeImpl       - base inplementation of SearchNode that handles
+                           threading and open/close/warmup coordination.
+</p>
+
+
+<h2>Related Documentation</h2>
+
+
+</body>
+</html>
