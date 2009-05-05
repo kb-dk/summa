@@ -664,7 +664,26 @@
         <xsl:if test="$func_code = 'wdc'">
             <xsl:text>Træskærer</xsl:text>
         </xsl:if>
+        <xsl:if test="$func_code = 'dkani'">
+            <xsl:text>Ansvarlig institution</xsl:text>
+        </xsl:if>
+        <xsl:if test="$func_code = 'dkbea'">
+            <xsl:text>Bearbejder</xsl:text>
+        </xsl:if>
+        <xsl:if test="$func_code = 'dkdes'">
+            <xsl:text>Designer</xsl:text>
+        </xsl:if>
+        <xsl:if test="$func_code = 'dkind'">
+            <xsl:text>Indlæser</xsl:text>
+        </xsl:if>
+        <xsl:if test="$func_code = 'dkmed'">
+            <xsl:text>Medforfatter</xsl:text>
+        </xsl:if>
+        <xsl:if test="$func_code = 'dkref'">
+            <xsl:text>Referent</xsl:text>
+        </xsl:if>
     </xsl:template>
+
 
     <xsl:template name="author_en_description">
         <xsl:param name="func_code" />
