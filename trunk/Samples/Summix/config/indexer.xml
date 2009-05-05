@@ -134,6 +134,18 @@
                                     <key>summa.index.consolidateonclose</key>
                                     <value class="boolean">true</value>
                                 </entry>
+
+                                <!-- This global index descr. will be used by all manipulators -->
+                                <entry>
+                                    <key>summa.index.descriptorsetup</key>
+                                    <value class="xproperties">
+                                        <entry>
+                                            <key>summa.common.indexdescriptor.absolutelocation</key>
+                                            <value class="string">${user.dir}/data/oai/oai_IndexDescriptor.xml</value>
+                                        </entry>
+                                    </value>
+                                </entry>
+
                                 <entry>
                                     <key>summa.index.manipulators</key>
                                     <value class="list">
@@ -142,15 +154,6 @@
                                             <entry>
                                                 <key>summa.index.manipulatorclass</key>
                                                 <value class="string">dk.statsbiblioteket.summa.index.lucene.LuceneManipulator</value>
-                                            </entry>
-                                            <entry>
-                                                <key>summa.index.descriptorsetup</key>
-                                                <value class="xproperties">
-                                                    <entry>
-                                                        <key>summa.common.indexdescriptor.absolutelocation</key>
-                                                        <value class="string">${user.dir}/data/oai/oai_IndexDescriptor.xml</value>
-                                                    </entry>
-                                                </value>
                                             </entry>
                                         </xproperties>
 
@@ -165,47 +168,7 @@
                                                 <key>summa.facet.skipfacetonupdate</key>
                                                 <value class="string">true</value>
                                             </entry>
-                                            <entry>
-                                                <key>summa.facet.facets</key>
-                                                <value class="list">
-                                                    <xproperties>
-                                                        <entry>
-                                                            <key>summa.facet.name</key>
-                                                            <value class="string">author</value>
-                                                        </entry>
-                                                        <entry>
-                                                            <key>summa.facet.fields</key>
-                                                            <value class="list">
-                                                                <item class="string">author_normalised</item>
-                                                            </value>
-                                                        </entry>
-                                                    </xproperties>
-                                                    <xproperties>
-                                                        <entry>
-                                                            <key>summa.facet.name</key>
-                                                            <value class="string">title</value>
-                                                        </entry>
-                                                        <entry>
-                                                            <key>summa.facet.fields</key>
-                                                            <value class="list">
-                                                                <item class="string">main_titel</item>
-                                                            </value>
-                                                        </entry>
-                                                    </xproperties>
-                                                    <xproperties>
-                                                        <entry>
-                                                            <key>summa.facet.name</key>
-                                                            <value class="string">subject</value>
-                                                        </entry>
-                                                        <entry>
-                                                            <key>summa.facet.fields</key>
-                                                            <value class="list">
-                                                                <item class="string">lsubject</item>
-                                                            </value>
-                                                        </entry>
-                                                    </xproperties>
-                                                </value>
-                                            </entry>
+
                                         </xproperties>
                                     </value>
                                 </entry>
