@@ -130,7 +130,7 @@ public class LuceneIndexField extends
      */
     public Field.Index getIndex() {
         if (isDoIndex()) {
-            if (isTokenize()) {
+            if (isAnalyze()) {
                 return Field.Index.TOKENIZED;
             } else {
                 return Field.Index.UN_TOKENIZED;

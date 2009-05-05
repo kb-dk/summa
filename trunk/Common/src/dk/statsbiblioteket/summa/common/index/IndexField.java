@@ -98,7 +98,7 @@ public class IndexField<A, T, F> {
      * </p><p>
      * This is used at index-time.
      */
-    private boolean tokenize = true;
+    private boolean analyze = true;
 
     /**
      * If true, the field should be stored in the index.
@@ -295,7 +295,7 @@ public class IndexField<A, T, F> {
         name = parent.getName();
         this.parent = parent.getParent();
         doIndex = parent.isDoIndex();
-        tokenize = parent.isTokenize();
+        analyze = parent.isAnalyze();
         doStore = parent.isDoStore();
         doCompress = parent.isDoCompress();
         multiValued = parent.isMultiValued();
@@ -329,9 +329,9 @@ public class IndexField<A, T, F> {
                 + "sortLocale=\"%s\" " + "inFreeText=\"%s\" required=\"%s\" "
                 + "tokenized=\"%s\">\n",
                 name, parent == null ? "" : parent.getName(), doIndex,
-                tokenize, doStore, doCompress,
+                analyze, doStore, doCompress,
                 multiValued, queryBoost, indexBoost, sortLocale,
-                inFreetext, required, tokenize));
+                inFreetext, required, analyze));
         for (IndexAlias alias: aliases) {
             sw.append(alias.toXMLFragment());
         }
@@ -417,8 +417,8 @@ public class IndexField<A, T, F> {
                                          queryBoost);
         indexBoost =  ParseUtil.getValue(xPath, node, "@indexBoost",
                                          indexBoost);
-        tokenize =    ParseUtil.getValue(xPath, node, "@tokenized",
-                                         tokenize);
+        analyze =    ParseUtil.getValue(xPath, node, "@analyzed",
+                                        analyze);
         doCompress =  ParseUtil.getValue(xPath, node, "@compressed",
                                          doCompress); 
         sortLocale =  ParseUtil.getValue(xPath, node, "@sortLocale",
@@ -656,7 +656,7 @@ public class IndexField<A, T, F> {
         }
         return nullCompare(name, other.getName())
                && doIndex == other.isDoIndex()
-               && tokenize == other.isTokenize()
+               && analyze == other.isAnalyze()
                && doStore == other.doStore
                && doCompress == other.isDoCompress()
                && multiValued == other.isMultiValued()
@@ -699,8 +699,8 @@ public class IndexField<A, T, F> {
         return doIndex;
     }
 
-    public boolean isTokenize() {
-        return tokenize;
+    public boolean isAnalyze() {
+        return analyze;
     }
 
     public boolean isDoStore() {
@@ -777,8 +777,8 @@ public class IndexField<A, T, F> {
         this.doIndex = doIndex;
     }
 
-    public void setTokenize(boolean tokenize) {
-        this.tokenize = tokenize;
+    public void setAnalyze(boolean analyze) {
+        this.analyze = analyze;
     }
 
     public void setDoStore(boolean doStore) {

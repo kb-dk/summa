@@ -185,13 +185,16 @@
                 sub-fields.
                 indexed:     true if this field should be indexed.
                 stored:      true if this field should be retrievable.
+                analyzed:    true if this field should be analyzed. Setting this
+                             to false will result in the content being tokenized
+                             as a single token.
                 multiValued: true if this field may contain multiple values per
-                document.
+                             document.
                 indexBoost:  the index-time boost for this field (default: 1.0).
                 queryBoost:  the query-time boost for this field (default: 1.0).
                 sortLocale:  the locale (see Java Locale) used for sorting the Field.
-                inFreeText:  if true, the tokens in this field are automatically added
-                to the freetext field.
+                inFreeText:  if true, the tokens in this field are automatically
+                             added to the freetext field.
                 required:    the field must be present in the record-XML. This is used
                 for validation of documents prior to indexing.
 
@@ -208,6 +211,7 @@
         <xsd:attribute name="parent" type="xsd:string" use="optional"/>
         <xsd:attribute name="indexed" type="xsd:boolean" use="optional"/>
         <xsd:attribute name="stored" type="xsd:boolean" use="optional"/>
+        <xsd:attribute name="analyzed" type="xsd:boolean" use="optional"/>
         <xsd:attribute name="multiValued" type="xsd:boolean" use="optional"/>
         <xsd:attribute name="indexBoost" type="xsd:float" use="optional"/>
         <xsd:attribute name="queryBoost" type="xsd:float" use="optional"/>
