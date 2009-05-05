@@ -23,6 +23,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.index.IndexField;
 import dk.statsbiblioteket.summa.common.index.IndexGroup;
+import dk.statsbiblioteket.summa.common.index.FieldProvider;
 import dk.statsbiblioteket.summa.common.xml.DefaultNamespaceContext;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
@@ -48,41 +49,92 @@ import java.util.*;
 public class FacetIndexDescriptor extends IndexDescriptor<IndexField> {
     private static Logger log = Logger.getLogger(FacetIndexDescriptor.class);
 
-    private Map<String, FacetStructure> facets = null;
+    /* Do not set facets to null here, as they are assigned upon construction
+       by the parse-method. Setting to null will override this assignment.
+     */
+    private Map<String, FacetStructure> facets;
     public static final String FACET_NAMESPACE = 
             "http://statsbiblioteket.dk/summa/2009/FacetIndexDescriptor";
     public static final String FACET_NAMESPACE_PREFIX = "fa";
 
-    private final static String FACET_EXPR =
+    private final static String FACET_NODE_EXPR =
             "/" + DESCRIPTOR_NAMESPACE_PREFIX + ":IndexDescriptor/"
-            + FACET_NAMESPACE_PREFIX + ":facets/"
-            + FACET_NAMESPACE_PREFIX + ":facet";
+            + FACET_NAMESPACE_PREFIX + ":facets";
+    private final static String FACET_EXPR = FACET_NAMESPACE_PREFIX + ":facet";
 
-    private XPath xPath = createXPath();
+    private XPath facetXPath = null;
 
     public FacetIndexDescriptor(Configuration configuration) throws IOException{
         super(configuration);
     }
 
     public IndexField createNewField() {
-        return new IndexField();
+        return new FacetField();
     }
 
     public IndexField createNewField(Node node) throws ParseException {
-        return new IndexField(node, this);
+        return new FacetField(node, this);
     }
+
+    private static class FacetField extends IndexField {
+        private FacetField() {
+        }
+        private FacetField(Node node, FieldProvider fieldProvider) throws ParseException {
+            super(node, fieldProvider);
+        }
+        @Override
+        protected Object getDefaultIndexAnalyzer() {
+            return new Object();
+        }
+        @Override
+        protected Object getDefaultQueryAnalyzer() {
+            return new Object();
+        }
+    }
+
 
     @Override
     public Document parse(String xml) throws ParseException {
+        // TODO: Guard against changing facets (subsequent calls to parse)
         Document dom = super.parse(xml);
+        if (dom == null) {
+            throw new ParseException(String.format(
+                    "The DOM from IndexDescriptor.parse(%s) was null", xml),
+                                     -1);
+        }
         NodeList facetNodes;
         try {
-            facetNodes = (NodeList)xPath.evaluate(
-                    FACET_EXPR, dom, XPathConstants.NODESET);
-        } catch (XPathExpressionException e) {
+            Node facetNode = (Node)getXPath().evaluate(
+                    FACET_NODE_EXPR, dom, XPathConstants.NODE);
+            if (facetNode == null) {
+                throw new ParseException(String.format(
+                        "The XPath expression '%s' gave null. Apparently there " 
+                        + "are no facets defined in the IndexDescriptor",
+                        FACET_NODE_EXPR), -1);
+            }
+            facetNodes = (NodeList)getXPath().evaluate(
+                    FACET_EXPR, facetNode, XPathConstants.NODESET);
+        } catch (final XPathExpressionException e) {
             throw new ParseException(String.format(
-                    "Expression '%s' for selecting facets was invalid",
-                    FACET_EXPR), -1);
+                    "Expressions '%s' and '%s' were  invalid",
+                    FACET_NODE_EXPR, FACET_EXPR), -1) {
+                { initCause(e); } };
+        } catch (final NullPointerException e) {
+            log.warn(String.format(
+                    "Unable to extracts facets with expressions '%s' and '%s' "
+                    + " with name spaces '%s' and '%s' from xml:\n%s",
+                    FACET_NODE_EXPR, FACET_EXPR,
+                    DESCRIPTOR_NAMESPACE_PREFIX + ":"
+                    + getXPath().getNamespaceContext().getNamespaceURI(
+                            DESCRIPTOR_NAMESPACE_PREFIX),
+                    FACET_NAMESPACE_PREFIX + ":"
+                    + getXPath().getNamespaceContext().getNamespaceURI(
+                            FACET_NAMESPACE_PREFIX),
+                    xml), e);
+            throw new ParseException(String.format(
+                    "Got NullPointerException while evaluating node with "
+                    + "expressions '%s' and '%s' and dom '%s'",
+                    FACET_NODE_EXPR, FACET_EXPR, dom), -1) {{ initCause(e); }};
         }
         log.trace(String.format("Located %d facet nodes",
                                 facetNodes.getLength()));
@@ -139,6 +191,9 @@ public class FacetIndexDescriptor extends IndexDescriptor<IndexField> {
             throw new ConfigurationException(String.format(
                     "No ref specified in facet '%s'", name));
         }
+        if (name == null || "".equals(name)) {
+            name = ref;
+        }
         IndexField field = getField(ref);
         IndexGroup<IndexField> group = getGroup(ref);
         if (field == null && group == null) {
@@ -154,7 +209,7 @@ public class FacetIndexDescriptor extends IndexDescriptor<IndexField> {
             fieldNames.add(fieldRef.getName());
         }
         return new FacetStructure(name, facetID, fieldNames.toArray(new String[
-                fieldNames.size()]), defaultTags, maxTags, sort, sortLocale);
+                fieldNames.size()]), defaultTags, maxTags, sortLocale, sort);
     }
 
     /**
@@ -167,16 +222,19 @@ public class FacetIndexDescriptor extends IndexDescriptor<IndexField> {
         return facets;
     }
 
-    private XPath createXPath() {
-        log.trace("Creating XPath for FacetIndexDescriptor");
-        DefaultNamespaceContext nsCon = new DefaultNamespaceContext();
-        nsCon.setNameSpace(DESCRIPTOR_NAMESPACE,
-                           DESCRIPTOR_NAMESPACE_PREFIX);
-        nsCon.setNameSpace(FACET_NAMESPACE,
-                           FACET_NAMESPACE_PREFIX);
-        XPathFactory factory = XPathFactory.newInstance();
-        XPath xPath = factory.newXPath();
-        xPath.setNamespaceContext(nsCon);
-        return xPath;
+    private XPath getXPath() {
+        if (facetXPath == null) {
+            log.trace("Creating XPath for FacetIndexDescriptor");
+            DefaultNamespaceContext nsCon = new DefaultNamespaceContext();
+            nsCon.setNameSpace(DESCRIPTOR_NAMESPACE,
+                               DESCRIPTOR_NAMESPACE_PREFIX);
+            nsCon.setNameSpace(FACET_NAMESPACE,
+                               FACET_NAMESPACE_PREFIX);
+            XPathFactory factory = XPathFactory.newInstance();
+            facetXPath = factory.newXPath();
+            facetXPath.setNamespaceContext(nsCon);
+
+        }
+        return facetXPath;
     }
 }

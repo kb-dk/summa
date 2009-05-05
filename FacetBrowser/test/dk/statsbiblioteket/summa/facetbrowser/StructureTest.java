@@ -2,6 +2,8 @@ package dk.statsbiblioteket.summa.facetbrowser;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
+import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.XProperties;
@@ -10,6 +12,7 @@ import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -109,8 +112,21 @@ public class StructureTest extends TestCase {
         assertEquals("locale shuld be as expected", "de", full.getLocale());
     }
 
-    public void testIndexDescriptorSetup() {
-//        URL descLocation = Resolver.getURL()
+    public void testIndexDescriptorSetup() throws IOException {
+        URL descLocation = Resolver.getURL("data/TestIndexDescriptor.xml");
+        Configuration conf = Configuration.newMemoryBased();
+        Configuration descSub =
+                conf.createSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR);
+        descSub.set(
+                IndexDescriptor.CONF_ABSOLUTE_LOCATION, descLocation.getFile());
+        Structure structure = new Structure(conf);
+
+        assertEquals("The number of facets should be correct",
+                     2, structure.getFacetNames().size());
+        assertEquals("The name of the second facet should be correct",
+                     "a", structure.getFacetNames().get(0));
+        assertEquals("The number of fields in the 'a'-facet should be correct",
+                     2, structure.getFacet("a").getFields().length);
     }
 
     public void testGetFacets() throws Exception {

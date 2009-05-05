@@ -25,10 +25,10 @@ package dk.statsbiblioteket.summa.common.index;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
+import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.util.ParseUtil;
 import dk.statsbiblioteket.summa.common.util.ResourceListener;
 import dk.statsbiblioteket.summa.common.xml.DefaultNamespaceContext;
-import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -384,7 +384,9 @@ public abstract class IndexDescriptor<F extends IndexField> implements
     public synchronized Document parse(String xml) throws ParseException {
         //noinspection DuplicateStringLiteralInspection
         log.trace("parse called");
-
+        if (xml == null) {
+            throw new IllegalArgumentException("The xml for parse was null");
+        }                           
         Document document = parseXMLToDocument(xml);
 
         parseDefaultLanguage(document);
