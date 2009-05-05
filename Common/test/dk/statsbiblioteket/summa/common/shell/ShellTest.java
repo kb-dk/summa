@@ -36,6 +36,7 @@ import java.io.PushbackReader;
 import java.io.StringReader;
 
 import junit.framework.TestCase;
+import jline.ConsoleReader;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -48,8 +49,7 @@ public class ShellTest extends TestCase {
     public void setUp () throws Exception {        
         ctx = new ShellContext () {
                 private Stack<String> lineBuffer = new Stack<String>();
-                private BufferedReader lineIn =  new BufferedReader(
-                                           new InputStreamReader(System.in), 1);
+                private ConsoleReader lineIn =  createConsoleReader();
                 private String lastError = null;
 
                 public void error(String msg) {
@@ -96,6 +96,15 @@ public class ShellTest extends TestCase {
             };
 
         core = new Core (ctx, true);
+    }
+
+    private static ConsoleReader createConsoleReader() {
+        try {
+            return new ConsoleReader();
+        } catch (IOException e) {
+            throw new RuntimeException("Unnable to create ConsoleReader: "
+                                       + e.getMessage(), e);
+        }
     }
 
     public void tearDown () throws Exception {

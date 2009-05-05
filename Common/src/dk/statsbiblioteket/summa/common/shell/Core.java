@@ -42,6 +42,7 @@ import dk.statsbiblioteket.summa.common.shell.commands.Trace;
 import dk.statsbiblioteket.summa.common.shell.commands.Exec;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import jline.ConsoleReader;
 
 /**
  * A generic shell driver.
@@ -82,9 +83,8 @@ public class Core {
             this.shellCtx = new ShellContext () {
 
                 private Stack<String> lineBuffer = new Stack<String>();
-                private BufferedReader lineIn =  new BufferedReader(
-                                           new InputStreamReader(System.in), 1);
                 private String lastError = null;
+                private ConsoleReader lineIn =  createConsoleReader();
 
                 public void error(String msg) {
                     lineBuffer.clear();
@@ -136,6 +136,15 @@ public class Core {
             installCommand(new Quit());
             installCommand(new Trace());
             installCommand(new Exec());
+        }
+    }
+
+    private static ConsoleReader createConsoleReader() {
+        try {
+            return new ConsoleReader();
+        } catch (IOException e) {
+            throw new RuntimeException("Unnable to create ConsoleReader: "
+                                       + e.getMessage(), e);
         }
     }
 

@@ -23,6 +23,7 @@
     <orderEntry type="module" module-name="Support" />
     <orderEntry type="module" module-name="FacetBrowser" />
     <orderEntry type="library" name="lucene-core" level="project" />
+    <orderEntry type="library" name="jline" level="project" />
     <orderEntryProperties />
   </component>
 </module>
