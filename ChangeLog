@@ -1,6 +1,492 @@
-2009-04-28 15:15  mke
+2009-05-05 16:02  mke
 
-	* [r1388] ChangeLog, NEWS,
+	* [r1435] build.properties, ChangeLog, NEWS:
+
+	  Release Summa 1.4.2
+
+2009-05-05 13:41  mke
+
+	* [r1434] Index/Index.iml, Samples/Summix/config/indexer.xml,
+	  Samples/Summix/config/searcher.xml:
+	  
+	  Use new fancy facets-in-indexdescriptor for Summix' searcher and
+	  indexer
+
+2009-05-05 13:30  mke
+
+	* [r1433] Samples/Summix/bin/all.sh:
+	  
+	  Also start the 'suggest' service in the all.sh script in Summix
+
+2009-05-05 13:29  mke
+
+	* [r1432] Control/test/data/oai/oai_IndexDescriptor.xml,
+	  Control/test/test-facet-index-1/config/configuration.xml,
+	  Control/test/test-facet-search-1/config/configuration.xml,
+	  Control/test/test-index-fagref/config/configuration.xml,
+	  Control/test/test-index-oai/config/configuration.xml:
+	  
+	  Use new and fancy-schmancy facet-in-indexdescriptor configuration
+
+2009-05-05 12:53  mke
+
+	* [r1431]
+	  Control/src/dk/statsbiblioteket/summa/control/server/ControlCore.java:
+	  
+	  Bugfix: Don't allow starting clients that are already running
+
+2009-05-05 12:43  toke
+
+	* [r1430]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/api/FacetIndexDescriptorSample.xml:
+	  
+	  Documentation: The sample FacetIndexDescriptor did not
+	  demonstrate APLHA-sorting
+
+2009-05-05 12:38  mke
+
+	* [r1429]
+	  Control/src/dk/statsbiblioteket/summa/control/api/ControlConnection.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/shell/StartCommand.java:
+	  
+	  Bugfix: In the 'start' command of control-shell don't try to
+	  start a client if it is already running
+
+2009-05-05 11:47  toke
+
+	* [r1428]
+	  Common/src/dk/statsbiblioteket/summa/common/index/IndexDescriptor.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/LuceneIndexUtils.java,
+	  Control/test/data/search/FacetTest_IndexConfiguration.xml,
+	  Control/test/data/search/FacetTest_SearchConfiguration.xml,
+	  Control/test/data/search/SearchTest_IndexDescriptor.xml,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/AutoDiscoverTest.java,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/FacetTest.java,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/IndexTest.java,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/MultipleSourcesTest.java,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/OAITest.java,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/ParentChildTest.java,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/ScaleTest.java,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/SearchTest.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/Structure.java,
+	  FacetBrowser/test/dk/statsbiblioteket/summa/facetbrowser/StructureTest.java,
+	  Index/src/dk/statsbiblioteket/summa/index/IndexControllerImpl.java,
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/DocumentCreator.java,
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/StreamingDocumentCreator.java,
+	  Index/test/dk/statsbiblioteket/summa/index/lucene/DocumentCreatorTest.java,
+	  Search/src/dk/statsbiblioteket/summa/search/SearchNodeFactory.java,
+	  Search/src/dk/statsbiblioteket/summa/search/SummaSearcherImpl.java:
+	  
+	  Bugfix: Some bugs in the facet-setup-in-index-descriptor
+	  handling.
+	  Feature: Made the SummaSearcher and the IndexController accept
+	  index-descriptor setup in the configuration root, copying the
+	  setup to search nodes and index manipulators
+
+2009-05-05 09:46  toke
+
+	* [r1427]
+	  Common/src/dk/statsbiblioteket/summa/common/index/IndexDescriptor.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/FacetIndexDescriptor.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/FacetStructure.java,
+	  FacetBrowser/test/data/TestIndexDescriptor.xml,
+	  FacetBrowser/test/dk/statsbiblioteket/summa/facetbrowser/StructureTest.java:
+	  
+	  Feature: Made the Facet browser accept Facet setup in the
+	  IndexDescriptor
+
+2009-05-05 08:53  mke
+
+	* [r1426]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/storage/JStorage.java,
+	  Common/test/configuration.js,
+	  Common/test/dk/statsbiblioteket/summa/common/configuration/JStorageTest.java:
+	  
+	  All unit tests in JStorage are now passing
+
+2009-05-05 08:32  nig
+
+	* [r1425] Index/config/targets/horizon/horizon_author.xsl:
+	  
+	  Tilføjet 6 udeukkende danske forfatter-beskrivelser
+
+2009-05-05 08:31  mke
+
+	* [r1424] Common/Common.iml, Common/build.xml,
+	  Common/src/dk/statsbiblioteket/summa/common/shell/Core.java,
+	  Common/test/dk/statsbiblioteket/summa/common/shell/ShellTest.java,
+	  Control/Control.iml, Control/build.xml, Summa.ipr,
+	  build.properties:
+	  
+	  Include the JLine command line helper library
+	  
+	  Feature: Add line-edit support to all shells (control-shell and
+	  client-shell primarily)
+	  
+	  Feature: Add history navigation to all shells
+
+2009-05-05 07:40  toke
+
+	* [r1423]
+	  Common/src/dk/statsbiblioteket/summa/common/index/IndexDescriptor.xsd,
+	  Common/src/dk/statsbiblioteket/summa/common/index/IndexField.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/LuceneIndexDescriptor.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/LuceneIndexField.java:
+	  
+	  Tweak: The attribute "tokenized" for field in the index
+	  descriptor was changed to "analyzed"
+
+2009-05-05 07:39  toke
+
+	* [r1422] Control/test/data/auto/setup/IndexDescriptor.xml,
+	  Control/test/data/fagref/fagref_IndexDescriptor.xml,
+	  Control/test/data/iterative/IterativeTest_IndexDescriptor.xml,
+	  Control/test/data/multiple/index_descriptor.xml,
+	  Control/test/data/oai/oai_IndexDescriptor.xml,
+	  Control/test/data/scale/scale_index_descriptor.xml,
+	  Control/test/data/search/SearchTest_IndexDescriptor.xml,
+	  FacetBrowser/test/data/TestIndexDescriptor.xml,
+	  Index/test/data/fagref/fagref_IndexDescriptor.xml,
+	  Support/test/data/fagref/fagref_IndexDescriptor.xml:
+	  
+	  Bugfix: The index descriptors used for testing had the attribute
+	  "index" on fields. The correct attribute is "indexed".
+
+2009-05-05 07:30  mke
+
+	* [r1421] lib/apidocs/jline-apidocs-0.9.94.zip,
+	  lib/jline-0.9.94.jar, lib/license/jline-license.txt:
+	  
+	  Import jline libs, docs, and license for future use in the shells
+
+2009-05-04 13:38  nig
+
+	* [r1420] Index/config/targets/horizon/horizon_author.xsl:
+	  
+	  Format-aendringer til danMARC2 tilfojet marc/horizon-poster.
+
+2009-05-04 13:37  toke
+
+	* [r1419]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/FacetIndexDescriptor.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/Structure.java,
+	  FacetBrowser/test/dk/statsbiblioteket/summa/facetbrowser/StructureTest.java:
+	  
+	  More work on FacetIndexDescriptor - not finished yet
+
+2009-05-04 13:08  mke
+
+	* [r1418]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/storage/JStorage.java,
+	  Common/test/dk/statsbiblioteket/summa/common/configuration/ConfigurationStorageTestCase.java,
+	  Common/test/dk/statsbiblioteket/summa/common/configuration/JStorageTest.java:
+	  
+	  Add some unit tests that display som bugs in the way that
+	  JStorage handles sub storages
+
+2009-05-04 12:50  mke
+
+	* [r1417]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/storage/JStorage.java,
+	  Common/test/dk/statsbiblioteket/summa/common/configuration/JStorageTest.java:
+	  
+	  Iteration and getting substorages of a JStorage seems to be
+	  working on the surface now (many bugs still expected though)
+
+2009-05-04 12:18  mke
+
+	* [r1416]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/storage/JStorage.java,
+	  Common/test/dk/statsbiblioteket/summa/common/configuration/JStorageTest.java:
+	  
+	  JStorage is still not fully working, but we are getting there
+
+2009-05-04 12:14  toke
+
+	* [r1415]
+	  Common/src/dk/statsbiblioteket/summa/common/index/IndexDescriptor.java,
+	  Common/src/dk/statsbiblioteket/summa/common/index/IndexField.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/LuceneIndexDescriptor.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/FacetIndexDescriptor.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/FacetStructure.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/Structure.java,
+	  Index/src/dk/statsbiblioteket/summa/index/IndexManipulator.java:
+	  
+	  Refactoring: Changed the base field initialization for
+	  IndexDescriptor to be more generic. This is done in preparation
+	  of the introduction of the FacetIndexDescriptor
+
+2009-05-04 11:46  nig
+
+	* [r1414] Index/config/targets/horizon/horizon_identificers.xsl,
+	  Index/config/targets/horizon/horizon_index.xsl,
+	  Index/config/targets/horizon/horizon_notes.xsl,
+	  Index/config/targets/horizon/horizon_subject.xsl:
+	  
+	  Format-aendringer til danMARC2 tilfojet marc/horizon-poster
+
+2009-05-04 11:42  toke
+
+	* [r1413]
+	  Common/attic/src/dk/statsbiblioteket/summa/common/lucene/index/FieldType.java[CPY],
+	  Common/attic/src/dk/statsbiblioteket/summa/common/lucene/index/IndexDefaults.java[CPY],
+	  Common/attic/src/dk/statsbiblioteket/summa/common/lucene/index/OldIndexField.java[CPY],
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/index/FieldType.java[DEL],
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/index/IndexDefaults.java[DEL],
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/index/OldIndexField.java[DEL]:
+	  
+	  Cleanup: Moved some unused classes to attic
+
+2009-05-01 13:31  mke
+
+	* [r1412]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/storage/JStorage.java:
+	  
+	  Properly support .size()
+
+2009-05-01 13:26  mke
+
+	* [r1411]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/Configuration.java,
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/storage/JStorage.java,
+	  Common/test/dk/statsbiblioteket/summa/common/configuration/ConfigurableTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/configuration/JStorageTest.java:
+	  
+	  Add hooks to Configuration for loading .js files - WARNING not
+	  fully functional
+	  
+	  Add more tests to JStorage, some are failing
+
+2009-05-01 13:19  nig
+
+	* [r1410] Index/config/targets/horizon/horizon_title.xsl:
+	  
+	  Formataendringernyt titel felt 242
+
+2009-05-01 13:02  mke
+
+	* [r1409]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/Configuration.java,
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/storage/JStorage.java,
+	  Common/test/configuration.js,
+	  Common/test/dk/statsbiblioteket/summa/common/configuration/ConfigurationStorageTestCase.java,
+	  Common/test/dk/statsbiblioteket/summa/common/configuration/JStorageTest.java:
+	  
+	  In JStorage: If the looked up value is a closure then execute it
+	  and return the closure's return value
+	  
+	  Bugfix: Make Configuration more forgiving when parsing ints and
+	  longs. Namely fractnional numbers are now allowed, and will be
+	  rounded down to the nearest integer
+	  
+	  Sanitize messages from ConfigurationStorageTestCase
+
+2009-05-01 12:16  mke
+
+	* [r1408]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/storage/JStorage.java,
+	  Common/test/dk/statsbiblioteket/summa/common/configuration/JStorageTest.java:
+	  
+	  Initial stab at a Javascript ConfigurationStorage. VERY MICH WIP!
+	  It currently lacks unit tests and the ability to read and write
+	  out configurations (only a memory based model so far).
+	  
+	  Sanitize messages in ConfigurationStorageTestCase
+
+2009-05-01 11:33  nig
+
+	* [r1407] Index/config/targets/horizon/horizon_author.xsl:
+	  
+	  Formataendringer forfatterbeskrivelser
+
+2009-04-30 14:34  toke
+
+	* [r1406]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/Structure.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/api/FacetIndexDescriptor.xsd,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/api/FacetIndexDescriptorSample.xml[CPY]:
+	  
+	  Feature: Started work on an IndexDescriptor-specified Facet
+	  structure
+
+2009-04-30 12:56  mke
+
+	* [r1405]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/ClearBaseFilter.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/filter/ClearBaseFilterTest.java:
+	  
+	  Implement a ClearBaseFilter with unit tests
+
+2009-04-30 12:52  toke
+
+	* [r1404]
+	  Common/src/dk/statsbiblioteket/summa/common/index/IndexDescriptor.xsd,
+	  Support/src/dk/statsbiblioteket/summa/support/api/SuggestResponse.xsd,
+	  Support/src/dk/statsbiblioteket/summa/support/api/SuggestResponseSample.xml:
+	  
+	  Tweaks: Small corrections to schemas and XML samples
+
+2009-04-30 10:47  mke
+
+	* [r1403]
+	  Control/src/dk/statsbiblioteket/summa/control/client/Client.java:
+	  
+	  Bugfix: Correct handling of crashed or recovering services. We
+	  waited for the wrong status codes (or didn't wait at all)
+
+2009-04-30 09:56  mke
+
+	* [r1402]
+	  Control/src/dk/statsbiblioteket/summa/control/api/ClientConnection.java,
+	  Control/src/dk/statsbiblioteket/summa/control/client/Client.java,
+	  Control/src/dk/statsbiblioteket/summa/control/client/shell/DeployCommand.java,
+	  Control/src/dk/statsbiblioteket/summa/control/client/shell/RemoveServiceCommand.java,
+	  Control/src/dk/statsbiblioteket/summa/control/client/shell/RestartServiceCommand.java:
+	  
+	  Add an --upgrade switch to the deploy command
+	  
+	  Bugfix: Client could get stuck in an infinite loop when removing
+	  a service with the same instanceid for the second time
+	  
+	  Doc updates on ClientConnection
+
+2009-04-30 08:37  mke
+
+	* [r1401]
+	  Control/src/dk/statsbiblioteket/summa/control/api/ServiceConnectionFactory.java,
+	  Control/src/dk/statsbiblioteket/summa/control/api/StatusMonitor.java,
+	  Control/src/dk/statsbiblioteket/summa/control/client/shell/RestartServiceCommand.java,
+	  Control/src/dk/statsbiblioteket/summa/control/client/shell/StartServiceCommand.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/ClientManager.java:
+	  
+	  Much needed butification of the whole start/restart setup for
+	  handling services over a ClientConnection. This also introduces
+	  the ServiceConnectionFactory which can be used as a
+	  ConnectionFactory for creating Service connection via a
+	  ClientConnection
+	  
+	  Use blocking StatusMonitors in ClientShell's start and restart
+	  commands
+	  
+	  This whole commit paves the way for an 'upgrade' command to be
+	  added to the ClientShell
+
+2009-04-30 08:32  mke
+
+	* [r1400]
+	  Control/src/dk/statsbiblioteket/summa/control/server/ControlCore.java:
+	  
+	  Don't crash the ControlCore if it fails to parse client configs
+	  at startup
+
+2009-04-30 08:31  toke
+
+	* [r1399]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/Configuration.java:
+	  
+	  Logging: Slightly better debug in Confoguration
+
+2009-04-30 08:29  toke
+
+	* [r1398] Common/test/data/plainPath/oldconf.xml[CPY],
+	  Common/test/data/special#%Path/oldconf.xml,
+	  Common/test/dk/statsbiblioteket/summa/common/configuration/ConfigurationTest.java:
+	  
+	  Testing: Added test for proper resolving of old style properties
+	  in paths with special characters
+
+2009-04-30 08:25  toke
+
+	* [r1397] Web/resources/showrecord.jsp:
+	  
+	  Tweak: Better debug in the sample website whan a Record could not
+	  be resolved
+
+2009-04-30 08:13  toke
+
+	* [r1396] Web/src/dk/statsbiblioteket/gwsc/WebServices.java:
+	  
+	  Bugfix: WebServices depended on Common
+
+2009-04-30 08:10  toke
+
+	* [r1395]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/Resolver.java,
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/storage/FileStorage.java,
+	  Common/test/data/plainPath,
+	  Common/test/data/plainPath/simpleconf.xml,
+	  Common/test/data/special#%Path,
+	  Common/test/data/special#%Path/simpleconf.xml,
+	  Common/test/dk/statsbiblioteket/summa/common/configuration/ConfigurationTest.java,
+	  Control/src/dk/statsbiblioteket/summa/control/bundle/URLRepository.java,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/AutoDiscoverTest.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/LuceneSearchNode.java,
+	  Web/src/dk/statsbiblioteket/gwsc/WebServices.java:
+	  
+	  Bugfix: Whereever URL.getFile() was used, the code did not work
+	  when using paths with non-trivial characters, such as space and #
+
+2009-04-29 22:49  tokerefind
+
+	* [r1394] Index/Index.iml:
+	  
+	  Lowered log-level from WARN to DEBUG on unknown attributes
+
+2009-04-29 11:12  nig
+
+	* [r1393] Index/config/targets/dpp/dpp_short_format.xsl,
+	  Index/config/targets/dub/dub_short_format.xsl,
+	  Index/config/targets/dub/dub_title.xsl:
+	  
+	  Fjernet "hvide firkanter"
+	  (&#238;&#8364;&#402;&#238;&#8364;&#8222;) fra titel i dup, og
+	  shortformat i dup og dbb
+
+2009-04-29 11:03  toke
+
+	* [r1392] Index/config/targets/folkebib,
+	  Index/config/targets/folkebib/andre.xsl,
+	  Index/config/targets/folkebib/cl.xsl,
+	  Index/config/targets/folkebib/em.xsl,
+	  Index/config/targets/folkebib/fo.xsl,
+	  Index/config/targets/folkebib/index.xsl,
+	  Index/config/targets/folkebib/kodede.xsl,
+	  Index/config/targets/folkebib/lcl.xsl,
+	  Index/config/targets/folkebib/lem.xsl,
+	  Index/config/targets/folkebib/lfo.xsl,
+	  Index/config/targets/folkebib/lma.xsl,
+	  Index/config/targets/folkebib/lmo.xsl,
+	  Index/config/targets/folkebib/lnm.xsl,
+	  Index/config/targets/folkebib/lrt.xsl,
+	  Index/config/targets/folkebib/lti.xsl,
+	  Index/config/targets/folkebib/lts.xsl,
+	  Index/config/targets/folkebib/lvp.xsl,
+	  Index/config/targets/folkebib/ma.xsl,
+	  Index/config/targets/folkebib/nr.xsl,
+	  Index/config/targets/folkebib/publicering.xsl,
+	  Index/config/targets/folkebib/rt.xsl,
+	  Index/config/targets/folkebib/short_format.xsl,
+	  Index/config/targets/folkebib/sort.xsl,
+	  Index/config/targets/folkebib/ti.xsl,
+	  Index/config/targets/folkebib/vp.xsl:
+	  
+	  Copied folkebib-XSLTs to XSLT samples
+
+2009-04-28 21:56  tokerefind
+
+	* [r1391] Samples/Summix/bin/suggest-tool.bat:
+	  
+	  Added a Windows-varian of the suggest tool
+
+2009-04-28 13:43  toke
+
+	* [r1390] Samples/Summix/bin/summa-searcher.sh:
+	  
+	  Removed faulty last line that gave an error on exit
+
+2009-04-28 13:14  mke
+
+	* [r1388] ChangeLog, NEWS:
 	  
 	  Release Summa 1.4.1
 
