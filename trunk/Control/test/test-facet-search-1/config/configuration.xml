@@ -50,6 +50,17 @@
             <key>summa.search.aggregator.sequential</key>
             <value class="boolean">true</value>
         </entry>
+
+        <entry>
+            <key>summa.index.descriptorsetup</key>
+            <value class="xproperties">
+                <entry>
+                    <key>summa.common.indexdescriptor.absolutelocation</key>
+                    <value class="string">/tmp/summatest/data/oai/oai_IndexDescriptor.xml</value>
+                </entry>
+            </value>
+        </entry>
+
         <entry>
             <key>summa.search.nodes</key>
             <value class="list">
@@ -58,15 +69,7 @@
                         <key>summa.search.node.class</key>
                         <value class="string">dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode</value>
                     </entry>
-                    <entry>
-                        <key>summa.index.descriptorsetup</key>
-                        <value class="xproperties">
-                            <entry>
-                                <key>summa.common.indexdescriptor.absolutelocation</key>
-                                <value class="string">/tmp/summatest/data/oai/oai_IndexDescriptor.xml</value>
-                            </entry>
-                        </value>
-                    </entry>
+
                     <entry>
                         <key>summa.search.collectdocids</key>
                         <value class="string">true</value>
@@ -141,50 +144,8 @@
                             dk.statsbiblioteket.summa.facetbrowser.FacetSearchNode
                         </value>
                     </entry>
-
-                    <!-- Default facets to return when searching -->
-                    <entry>
-                        <key>summa.facet.facets</key>
-                        <value class="list">
-                            <xproperties>
-                                <entry>
-                                    <key>summa.facet.name</key>
-                                    <value class="string">author</value>
-                                </entry>
-                                <entry>
-                                    <key>summa.facet.fields</key>
-                                    <value class="list">
-                                        <item class="string">author_normalised</item>
-                                    </value>
-                                </entry>
-                            </xproperties>
-                            <xproperties>
-                                <entry>
-                                    <key>summa.facet.name</key>
-                                    <value class="string">title</value>
-                                </entry>
-                                <entry>
-                                    <key>summa.facet.fields</key>
-                                    <value class="list">
-                                        <item class="string">main_titel</item>
-                                    </value>
-                                </entry>
-                            </xproperties>
-                            <xproperties>
-                                <entry>
-                                    <key>summa.facet.name</key>
-                                    <value class="string">subject</value>
-                                </entry>
-                                <entry>
-                                    <key>summa.facet.fields</key>
-                                    <value class="list">
-                                        <item class="string">lsubject</item>
-                                    </value>
-                                </entry>
-                            </xproperties>
-                        </value>
-                    </entry>
                 </xproperties>
+
             </value>
         </entry>
     </xproperties>

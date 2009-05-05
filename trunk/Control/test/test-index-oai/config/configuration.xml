@@ -142,6 +142,17 @@
                                     <key>summa.index.consolidateonclose</key>
                                     <value class="boolean">true</value>
                                 </entry>
+
+                                <entry>
+                                    <key>summa.index.descriptorsetup</key>
+                                    <value class="xproperties">
+                                        <entry>
+                                            <key>summa.common.indexdescriptor.absolutelocation</key>
+                                            <value class="string">/tmp/summatest/data/oai/oai_IndexDescriptor.xml</value>
+                                        </entry>
+                                    </value>
+                                </entry>
+
                                 <entry>
                                     <key>summa.index.manipulators</key>
                                     <value class="list">
@@ -151,16 +162,8 @@
                                                 <key>summa.index.manipulatorclass</key>
                                                 <value class="string">dk.statsbiblioteket.summa.index.lucene.LuceneManipulator</value>
                                             </entry>
-                                            <entry>
-                                                <key>summa.index.descriptorsetup</key>
-                                                <value class="xproperties">
-                                                    <entry>
-                                                        <key>summa.common.indexdescriptor.absolutelocation</key>
-                                                        <value class="string">/tmp/summatest/data/oai/oai_IndexDescriptor.xml</value>
-                                                    </entry>
-                                                </value>
-                                            </entry>
                                         </xproperties>
+
                                     </value>
                                 </entry>
                             </xproperties>

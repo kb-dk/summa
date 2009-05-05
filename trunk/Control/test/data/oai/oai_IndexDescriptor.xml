@@ -68,6 +68,15 @@
         <field ref="title"/>
     </lu:moreLikethisFields>
 
+    <!-- Used by the facetbrowser module -->
+    <fa:facets xmlns:fa="http://statsbiblioteket.dk/summa/2009/FacetIndexDescriptor">
+
+        <!-- Fields as well as groups can be referenced by ref -->
+        <fa:facet ref="au"/>
+        <fa:facet ref="ti"/>
+        <fa:facet ref="su"/>
+    </fa:facets>
+
 </IndexDescriptor>
 
 
