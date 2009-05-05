@@ -24,7 +24,6 @@ import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
-import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.Record;
@@ -288,7 +287,7 @@ public class ParentChildTest extends NoExitTestCase {
         indexConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS).get(5).
 //                getSubConfiguration("DocumentCreator").
-                getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR).
+                getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
                     indexDescriptorLocation);
 
@@ -298,7 +297,7 @@ public class ParentChildTest extends NoExitTestCase {
                 getSubConfigurations(IndexControllerImpl.CONF_MANIPULATORS).
                 get(0).
 //                getSubConfiguration("LuceneUpdater").
-                getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR).
+                getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
                     indexDescriptorLocation);
         return indexConf;

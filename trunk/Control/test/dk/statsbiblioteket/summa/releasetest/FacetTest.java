@@ -22,19 +22,16 @@
  */
 package dk.statsbiblioteket.summa.releasetest;
 
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
-import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
-import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.search.IndexWatcher;
-import dk.statsbiblioteket.summa.search.SearchNodeFactory;
 import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageIterator;
-import dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -44,7 +41,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.rmi.RemoteException;
-import java.util.List;
 import java.util.Arrays;
 import java.util.Iterator;
 
@@ -91,6 +87,10 @@ public class FacetTest extends NoExitTestCase {
                 "data/search/FacetTest_SearchConfiguration.xml");
         assertNotNull("The Facet configuration should not be empty",
                       searcherConf);
+        searcherConf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
+                set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
+                     descriptorLocation.getFile());
+                /*
         List<Configuration> subSearcherConfs =
                 searcherConf.getSubConfigurations(SearchNodeFactory.CONF_NODES);
         for (Configuration subSearcherConf: subSearcherConfs) {
@@ -98,7 +98,7 @@ public class FacetTest extends NoExitTestCase {
                     SearchNodeFactory.CONF_NODE_CLASS).equals(
                     LuceneSearchNode.class.getName())) {
                 Configuration descConf = subSearcherConf.getSubConfiguration(
-                        LuceneIndexUtils.CONF_DESCRIPTOR);
+                        IndexDescriptor.CONF_DESCRIPTOR);
                 log.debug("Updating the location of the IndexDescriptor to "
                           + descriptorLocation.getFile());
                 assertTrue("The descriptorlocation should be present",
@@ -107,7 +107,7 @@ public class FacetTest extends NoExitTestCase {
                 descConf.set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
                              descriptorLocation.getFile());
             }
-        }
+        }         */
         searcherConf.set(IndexWatcher.CONF_INDEX_WATCHER_INDEX_ROOT,
                          SearchTest.INDEX_ROOT.toString());
         return searcherConf;

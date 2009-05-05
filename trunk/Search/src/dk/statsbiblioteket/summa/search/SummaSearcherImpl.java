@@ -48,6 +48,10 @@ import java.util.concurrent.atomic.AtomicLong;
  * {@link dk.statsbiblioteket.summa.search.api.SummaSearcher},
  * {@link IndexWatcher}, {@link SearchNodeLoadBalancer} and
  * {@link LuceneIndexUtils} needs to be specified in the configuration.
+ * </p><p>
+ * It is recommended to include setup of an IndexDescriptor in the configuration
+ * for the SummaSearcher as it will be copied to the configuration for the
+ * underlying SearchNodes. See IndexDescriptor#CONF_DESCRIPTOR.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -122,8 +126,8 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
 
         searchQueue = new ChangingSemaphore(searchQueueMaxSize, true);
         log.trace("Constructing search node");
-        searchNode = SearchNodeFactory.createSearchNode(conf,
-                                                        SearchNodeDummy.class);
+        searchNode = SearchNodeFactory.createSearchNode(
+                conf, SearchNodeDummy.class);
 
         // Ready for open
         String staticRoot =

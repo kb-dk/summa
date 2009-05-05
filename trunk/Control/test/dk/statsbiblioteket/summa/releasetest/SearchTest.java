@@ -29,7 +29,6 @@ import dk.statsbiblioteket.summa.common.filter.FilterControl;
 import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.index.IndexException;
-import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.common.util.Security;
 import dk.statsbiblioteket.summa.control.service.FilterService;
@@ -177,7 +176,7 @@ public class SearchTest extends NoExitTestCase {
                 "data/search/SearchTest_SearchConfiguration.xml");
         assertNotNull("The configuration should not be empty",
                       searcherConf);
-        searcherConf.getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR).
+        searcherConf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
                     descriptorLocation.getFile());
         searcherConf.set(IndexWatcher.CONF_INDEX_WATCHER_INDEX_ROOT,

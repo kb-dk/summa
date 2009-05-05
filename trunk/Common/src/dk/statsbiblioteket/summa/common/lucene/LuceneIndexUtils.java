@@ -29,6 +29,7 @@ import java.util.Iterator;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.search.Query;
@@ -52,11 +53,6 @@ public class LuceneIndexUtils {
     private static Log log = LogFactory.getLog(LuceneIndexUtils.class);
 
     /**
-     * The property-key for the substorage containing the setup for the
-     * LuceneIndexDescriptor.
-     */
-    public static final String CONF_DESCRIPTOR = "summa.index.descriptorsetup";
-    /**
      * The subfolder in the index root containing the lucene index.
      * This will be appended to {@link #indexRoot}.
      */
@@ -75,11 +71,12 @@ public class LuceneIndexUtils {
     public static final String META_DELETE_DOCID = "Index_DocID_Delete";
 
     /**
-     * Get the sub-properties {@link #CONF_DESCRIPTOR} and create a descriptor
-     * based on that. If the sub-properties does not exist, the default
-     * descriptor is created.
+     * Get the sub-properties {@link IndexDescriptor#CONF_DESCRIPTOR} and create
+     * a descriptor based on that. If the sub-properties does not exist, the
+     * default descriptor is created.
      * @param conf a configuration with the setup for descriptor stored as a
-     *             sub-configuration with the key {@link #CONF_DESCRIPTOR}.
+     *             sub-configuration with the key
+     *             {@link IndexDescriptor#CONF_DESCRIPTOR}.
      * @return a descriptor usable for indexing (and querying).
      * @throws Configurable.ConfigurationException if there was an error with
      *                                             the configuration.
@@ -88,10 +85,11 @@ public class LuceneIndexUtils {
                                            Configurable.ConfigurationException {
         Configuration descConf = null;
         try {
-            descConf = conf.getSubConfiguration(CONF_DESCRIPTOR);
+            descConf =
+                    conf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR);
         } catch (IOException e) {
             //noinspection DuplicateStringLiteralInspection
-            log.error("Exception requesting '" + CONF_DESCRIPTOR
+            log.error("Exception requesting '" + IndexDescriptor.CONF_DESCRIPTOR
                       + "' from properties", e);
         } catch (UnsupportedOperationException e) {
             //noinspection DuplicateStringLiteralInspection
@@ -101,7 +99,8 @@ public class LuceneIndexUtils {
         }
         LuceneIndexDescriptor descriptor;
         if (descConf == null) {
-            log.warn("No '" + CONF_DESCRIPTOR + "' specified in properties. "
+            log.warn("No '" + IndexDescriptor.CONF_DESCRIPTOR
+                     + "' specified in properties. "
                      + "Using default LuceneIndexDescriptor");
             descriptor = new LuceneIndexDescriptor();
         } else {

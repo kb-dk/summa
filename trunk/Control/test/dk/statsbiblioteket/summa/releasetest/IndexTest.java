@@ -22,34 +22,34 @@
  */
 package dk.statsbiblioteket.summa.releasetest;
 
+import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
+import dk.statsbiblioteket.summa.common.filter.Filter;
+import dk.statsbiblioteket.summa.common.filter.FilterControl;
+import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
+import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
+import dk.statsbiblioteket.summa.common.unittest.LuceneTestHelper;
+import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
+import dk.statsbiblioteket.summa.control.api.Status;
+import dk.statsbiblioteket.summa.control.service.FilterService;
+import dk.statsbiblioteket.summa.index.IndexControllerImpl;
+import dk.statsbiblioteket.summa.index.XMLTransformer;
+import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.api.StorageFactory;
+import dk.statsbiblioteket.summa.storage.api.StorageIterator;
+import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.Streams;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import java.io.File;
 import java.net.URL;
 import java.rmi.RemoteException;
-import java.util.List;
 import java.util.Iterator;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Streams;
-import dk.statsbiblioteket.util.Files;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.configuration.Resolver;
-import dk.statsbiblioteket.summa.common.filter.FilterControl;
-import dk.statsbiblioteket.summa.common.filter.Filter;
-import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
-import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
-import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
-import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
-import dk.statsbiblioteket.summa.common.unittest.LuceneTestHelper;
-import dk.statsbiblioteket.summa.control.service.FilterService;
-import dk.statsbiblioteket.summa.control.api.Status;
-import dk.statsbiblioteket.summa.storage.api.StorageFactory;
-import dk.statsbiblioteket.summa.storage.api.Storage;
-import dk.statsbiblioteket.summa.storage.api.StorageIterator;
-import dk.statsbiblioteket.summa.index.IndexControllerImpl;
-import dk.statsbiblioteket.summa.index.XMLTransformer;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.util.List;
 
 /*
  * IMPORTANT: Due to problems with releasing JDBC, the tests cannot be run
@@ -301,18 +301,18 @@ public class IndexTest extends NoExitTestCase {
         chain.getSubConfigurations(FilterSequence.CONF_FILTERS).get(3).
 //        chain.getSubConfiguration("DocumentCreator").
                 getSubConfiguration(
-                LuceneIndexUtils.CONF_DESCRIPTOR).
+                IndexDescriptor.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
                     descriptorLocation.getFile());
         chain.getSubConfigurations(FilterSequence.CONF_FILTERS).get(4).
 //        chain.getSubConfiguration("IndexUpdate").
                 set(IndexControllerImpl.CONF_INDEX_ROOT_LOCATION,
                     SearchTest.INDEX_ROOT.toString());
+
+        // Index Descriptor
         chain.getSubConfigurations(FilterSequence.CONF_FILTERS).get(4).
 //        chain.getSubConfiguration("IndexUpdate").
-        getSubConfigurations(IndexControllerImpl.CONF_MANIPULATORS).get(0).
-//                getSubConfiguration("LuceneUpdater").
-                getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR).
+        getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
                     descriptorLocation.getFile());
         FilterService indexService = new FilterService(conf);

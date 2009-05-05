@@ -25,7 +25,6 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
 import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
-import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory;
 import dk.statsbiblioteket.summa.control.api.Service;
@@ -207,14 +206,14 @@ public class AutoDiscoverTest extends TestCase {
         conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS).get(3).
 //                getSubConfiguration("DocumentCreator").
-                getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR).
+                getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION, INDEX_DESCRIPTOR);
         conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS).get(4).
                 getSubConfigurations(IndexControllerImpl.CONF_MANIPULATORS).get(0).
 //                getSubConfiguration("IndexUpdate").
 //                getSubConfiguration("LuceneUpdater").
-                getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR).
+                getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION, INDEX_DESCRIPTOR);
         conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS).get(4).
@@ -361,7 +360,7 @@ public class AutoDiscoverTest extends TestCase {
         conf.set(DatabaseStorage.CONF_LOCATION, new File(TEST_DIR, "storage"));
         conf.set(IndexWatcher.CONF_INDEX_WATCHER_INDEX_ROOT, INDEX_ROOT);
         conf.getSubConfigurations(SearchNodeFactory.CONF_NODES).get(0).
-                getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR).
+                getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION, INDEX_DESCRIPTOR);
         return new SearchService(conf);
     }

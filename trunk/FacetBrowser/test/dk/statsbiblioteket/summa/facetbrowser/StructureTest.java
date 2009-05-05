@@ -3,7 +3,6 @@ package dk.statsbiblioteket.summa.facetbrowser;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
-import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.XProperties;
@@ -116,7 +115,7 @@ public class StructureTest extends TestCase {
         URL descLocation = Resolver.getURL("data/TestIndexDescriptor.xml");
         Configuration conf = Configuration.newMemoryBased();
         Configuration descSub =
-                conf.createSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR);
+                conf.createSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR);
         descSub.set(
                 IndexDescriptor.CONF_ABSOLUTE_LOCATION, descLocation.getFile());
         Structure structure = new Structure(conf);

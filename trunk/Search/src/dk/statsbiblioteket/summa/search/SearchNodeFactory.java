@@ -22,17 +22,17 @@
  */
 package dk.statsbiblioteket.summa.search;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.rmi.RemoteException;
-import java.io.IOException;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
-import dk.statsbiblioteket.summa.search.SearchNode;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Constructs a tree of SearchNodes from properties. It is expected that
@@ -129,8 +129,13 @@ public class SearchNodeFactory {
      * {@link #CONF_NODES}. The CONF_NODES-property must contain a list of
      * properties, each one containing at least {@link #CONF_NODE_CLASS}.
      * @param conf the configuration for the SearchNodes.
+     * </p><p>
+     * If index descriptor setup is present in the configuration, it will be
+     * copied to all sub search nodes.
      * @return a list of SearchNodes based on the configuration.
      * @throws RemoteException if the nodes could not be created.
+     * @see {@link IndexDescriptor#CONF_DESCRIPTOR}.
+     * @see {@link IndexDescriptor#copySetupToSubConfigurations}.
      */
     // TODO: Better JavaDoc
     public static List<SearchNode> createSearchNodes(Configuration conf) throws
@@ -143,6 +148,7 @@ public class SearchNodeFactory {
                     "Could not extract a list of XProperties for SearchNodes "
                     + "from configuration with key '%s'", CONF_NODES), e);
         }
+        IndexDescriptor.copySetupToSubConfigurations(conf, nodeConfs);
         List<SearchNode> nodes =
                 new ArrayList<SearchNode>(nodeConfs.size());
         for (Configuration nodeConf: nodeConfs) {

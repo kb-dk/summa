@@ -21,7 +21,7 @@
         <field name="token" indexed="true" inFreeText="true" required="true"/>
         <!-- TODO: Consider compression of shortformat -->
         <field name="shortformat" parent="stored" indexed="false" inFreeText="false" required="true"/>
-        <field name="author_person" parent="token" multiValued="true" queryBoost="10"/>
+        <field name="author_person" parent="verbatim" multiValued="true" queryBoost="10"/>
         <field name="main_titel" parent="token" queryBoost="10"/>
         <field name="lsu_oai" parent="keyword" multiValued="false" queryBoost="10"/>
         <field name="no" parent="token" queryBoost="7"/>
@@ -37,6 +37,11 @@
         <field ref="su"/>
         <field ref="lma"/>
     </defaultSearchFields>
+
+    <facets xmlns="http://statsbiblioteket.dk/summa/2009/FacetIndexDescriptor">
+        <facet ref="author_person" name="author"/>
+        <facet ref="sort_title" name="title"/>
+    </facets>
 
 </IndexDescriptor>
 <!--

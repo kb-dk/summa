@@ -42,21 +42,21 @@
             <value class="boolean">true</value>
         </entry>
         <entry>
+            <key>summa.index.descriptorsetup</key>
+            <value class="xproperties">
+                <entry>
+                    <key>summa.common.indexdescriptor.absolutelocation</key>
+                    <value class="string">/tmp/summatest/data/search/SearchTest_IndexDescriptor.xml</value>
+                </entry>
+            </value>
+        </entry>
+        <entry>
             <key>summa.search.nodes</key>
             <value class="list">
                 <xproperties>
                     <entry>
                         <key>summa.search.node.class</key>
                         <value class="string">dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode</value>
-                    </entry>
-                    <entry>
-                        <key>summa.index.descriptorsetup</key>
-                        <value class="xproperties">
-                            <entry>
-                                <key>summa.common.indexdescriptor.absolutelocation</key>
-                                <value class="string">/tmp/summatest/data/search/SearchTest_IndexDescriptor.xml</value>
-                            </entry>
-                        </value>
                     </entry>
                     <entry>
                         <key>summa.search.collectdocids</key>
@@ -125,35 +125,6 @@
                         </value>
                     </entry>
 
-                    <entry>
-                        <key>summa.facet.facets</key>
-                        <value class="list">
-                            <xproperties>
-                                <entry>
-                                    <key>summa.facet.name</key>
-                                    <value class="string">author</value>
-                                </entry>
-                                <entry>
-                                    <key>summa.facet.fields</key>
-                                    <value class="list">
-                                        <item class="string">author_person</item>
-                                    </value>
-                                </entry>
-                            </xproperties>
-                            <xproperties>
-                                <entry>
-                                    <key>summa.facet.name</key>
-                                    <value class="string">title</value>
-                                </entry>
-                                <entry>
-                                    <key>summa.facet.fields</key>
-                                    <value class="list">
-                                        <item class="string">sort_title</item>
-                                    </value>
-                                </entry>
-                            </xproperties>
-                        </value>
-                    </entry>
                 </xproperties>
             </value>
         </entry>

@@ -27,7 +27,6 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
 import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
-import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.ingest.source.RecordGenerator;
 import dk.statsbiblioteket.summa.index.XMLTransformer;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
@@ -127,7 +126,7 @@ public class ScaleTest extends NoExitTestCase {
         String descriptorLocation = Resolver.getURL(
                 "data/scale/scale_index_descriptor.xml").getFile();
         log.debug("Descriptor location: " + descriptorLocation);
-        filters.get(3).getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR).
+        filters.get(3).getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION, descriptorLocation);
 
         // Index - general
@@ -137,7 +136,7 @@ public class ScaleTest extends NoExitTestCase {
         // Index - Lucene
         filters.get(4).getSubConfigurations(
                 IndexControllerImpl.CONF_MANIPULATORS).get(0).
-                getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR).set(
+                getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).set(
                 IndexDescriptor.CONF_ABSOLUTE_LOCATION, descriptorLocation);
 
         return conf;

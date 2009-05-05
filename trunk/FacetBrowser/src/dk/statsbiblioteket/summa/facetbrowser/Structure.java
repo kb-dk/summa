@@ -24,7 +24,7 @@ package dk.statsbiblioteket.summa.facetbrowser;
 
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
+import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
 
@@ -50,11 +50,11 @@ public class Structure implements Configurable, Serializable {
      * each holding the setup for a single Facet.
      * </p><p>
      * Either this property or
-     * {@link LuceneIndexUtils#CONF_DESCRIPTOR} must be specified.
+     * {@link IndexDescriptor#CONF_DESCRIPTOR} must be specified.
      * If both properties are specified, the descriptor takes precedence.
      * See the FacetIndexDescriptor.xsd for how to setup the facets.
      * @see {@link FacetStructure}.
-     * @deprecated Specify {@link LuceneIndexUtils#CONF_DESCRIPTOR} instead and
+     * @deprecated Specify {@link IndexDescriptor#CONF_DESCRIPTOR} instead and
      *             set up the facet structure in an IndexDescriptor.
      */
     public static final String CONF_FACETS = "summa.facet.facets";
@@ -81,14 +81,14 @@ public class Structure implements Configurable, Serializable {
     public Structure(Configuration conf) {
         log.debug("Constructing Structure from configuration");
 
-        if (conf.valueExists(LuceneIndexUtils.CONF_DESCRIPTOR)) {
+        if (conf.valueExists(IndexDescriptor.CONF_DESCRIPTOR)) {
             defineFacetsFromDescriptor(conf);
         } else if (conf.valueExists(CONF_FACETS)) {
             defineFacetsFromConfiguration(conf);
         } else {
             throw new ConfigurationException(String.format(
                     "Either %s or %s must be specified",
-                    LuceneIndexUtils.CONF_DESCRIPTOR, CONF_FACETS));
+                    IndexDescriptor.CONF_DESCRIPTOR, CONF_FACETS));
         }
 
         freezeFacets();
@@ -99,11 +99,11 @@ public class Structure implements Configurable, Serializable {
         Configuration descriptorConf;
         try {
             descriptorConf =
-                    conf.getSubConfiguration(LuceneIndexUtils.CONF_DESCRIPTOR);
+                    conf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR);
         } catch (IOException e) {
             throw new ConfigurationException(String.format(
                     "Unable to extract sub configuration %s",
-                    LuceneIndexUtils.CONF_DESCRIPTOR));
+                    IndexDescriptor.CONF_DESCRIPTOR));
         }
         try {
             descriptor = new FacetIndexDescriptor(descriptorConf);

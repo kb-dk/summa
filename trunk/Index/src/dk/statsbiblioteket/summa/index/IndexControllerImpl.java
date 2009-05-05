@@ -29,6 +29,7 @@ import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.index.IndexCommon;
+import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.util.StateThread;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Profiler;
@@ -46,6 +47,10 @@ import java.util.List;
  * for IndexManipulators, which contains a timer that calls commit and
  * consolidate at configurable intervals. It is also a standard ObjectFilter,
  * so further chaining is possible.
+ * </p><p>
+ * It is recommended to include setup of an IndexDescriptor in the configuration
+ * for the IndexController as it will be copied to the configuration for the
+ * underlying Indexmanipulators. See {@link IndexDescriptor#CONF_DESCRIPTOR}.
  */
 // TODO: Mark update on eof, meta-key-value-pattern
 // TODO: Consider write-lock
@@ -238,6 +243,8 @@ public class IndexControllerImpl extends StateThread implements
                     "Could not get sub-configurations for key "
                     + CONF_MANIPULATORS);
         }
+        IndexDescriptor.copySetupToSubConfigurations(conf, manipulatorConfs);
+
         log.trace("Extracting basic setup");
         commitTimeout =
                 conf.getInt(CONF_COMMIT_TIMEOUT, commitTimeout);
