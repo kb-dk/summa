@@ -17,6 +17,7 @@ var config = {
             "summa.test.boolean" : true
         }
     ],
-    "summa.test.closure" : function(){ return ++closureInc }
+    "summa.test.closure" : function(){ return ++closureInc },
+    "summa.test.listofstrings" : ["one", "two", "three"]
 
 }

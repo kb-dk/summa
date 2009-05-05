@@ -149,7 +149,7 @@ public class JStorage implements ConfigurationStorage {
         eval(config+"['"+key+"'] = '" + value.toString() + "'");
     }
 
-    public Serializable get(String key) throws IOException {
+    public String get(String key) throws IOException {
         engine.put("__ext_storage", this);
 
         String query =
@@ -157,8 +157,12 @@ public class JStorage implements ConfigurationStorage {
                 "if( typeof(val) == 'function' )                     \n" +
                 "    val = val()                                     \n" +
                 "else if ( typeof(val) == 'object' && val != null) { \n" +
-                "    if (val instanceof Array)                       \n" +
-                "        val = __ext_storage.getSubStorages('KEY')   \n" +
+                "    if (val instanceof Array) {                     \n" +
+                "        if (val.length > 0 && typeof(val[0]) == 'string')\n" +
+                "           val = val.join(', ')                     \n" +
+                "        else                                        \n" +
+                "            val = __ext_storage.getSubStorages('KEY')\n" +
+                "    }                                               \n" +
                 "    else                                            \n" +
                 "        val = __ext_storage.getSubStorage('KEY')    \n" +
                 "}                                                   \n" +
@@ -189,8 +193,12 @@ public class JStorage implements ConfigurationStorage {
               "  if ( typeof(val) == 'function' )                         \n" +
               "      __ext_map.put(key, val.toString())                   \n" +
               "  else if ( typeof(val) == 'object' && val != null) {      \n" +
-              "      if ( val instanceof Array )                          \n" +
-              "          __ext_map.put(key, __ext_storage.getSubStorages(key)) \n" +
+              "      if ( val instanceof Array ) {                        \n" +
+              "          if (val.length > 0 && typeof(val[0]) == 'string')\n" +
+              "              __ext_map.put(key, val.join(', '))           \n" +
+              "           else                                            \n" +
+              "              __ext_map.put(key, __ext_storage.getSubStorages(key))\n" +
+              "      }                                                    \n" +
               "      else                                                 \n" +
               "          __ext_map.put(key, __ext_storage.getSubStorage(key))\n" +
               "  }                                                        \n" +

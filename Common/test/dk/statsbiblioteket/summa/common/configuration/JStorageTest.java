@@ -90,6 +90,12 @@ public class JStorageTest extends ConfigurationStorageTestCase {
         assertEquals(true, asBoolean(subs.get(1).get("summa.test.boolean")));
     }
 
+    public void testListOfStrings() throws Exception {
+        JStorage js = new JStorage("configuration.js");
+        String vals = js.get("summa.test.listofstrings");
+        assertEquals("one, two, three", vals);
+    }
+
     public static boolean asBoolean(Serializable s) {
         return (boolean) Boolean.parseBoolean(s.toString());
     }
