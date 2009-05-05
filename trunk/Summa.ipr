@@ -688,6 +688,15 @@
         <root url="jar://$PROJECT_DIR$/lib/src/lucene-backports-2.4.0-src.zip!/lucene-backports-2.4/src" />
       </SOURCES>
     </library>
+    <library name="jline">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/lib/jline-0.9.94.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$PROJECT_DIR$/lib/apidocs/jline-apidocs-0.9.94.zip!/" />
+      </JAVADOC>
+      <SOURCES />
+    </library>
   </component>
 </project>
 
