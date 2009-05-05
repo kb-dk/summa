@@ -1,4 +1,47 @@
 =======================
+2009-05-05: Summa 1.4.2
+=======================
+
+ * Move all facet configuration inside the index descriptor. This massively
+   simplifies the configuration of the actual searcher and indexer services (SB)
+
+ * Autostart the suggest service with the all.sh script in Summix (SB)
+
+ * The SummaSearcher and the IndexController accept index-descriptor
+   setup in the configuration root, copying the setup to search nodes
+   and index manipulators (SB)
+
+ * Use JLine to enable inline editing in the shells (client and control). This
+   also bring history navigation and editing (SB)
+
+ * Implement a fire-once filter; ClearBaseFilter, that clears a given set of
+   bases the first time it receives a payload (SB)
+
+ * Rework the starting/stopping/monitoring code in the client and control
+   shells which should give mucg more usable feedback now, as well as not
+   swallowing the terminal's prompt after some commands complete (SB)
+
+ * Add Windows variant of the suggest-tool in Summix (Refind)
+
+ * Add an --upgrade switch to the deploy command in the client-shell (SB)
+
+ * Bugfix: Don't allw starting of clients that are already running (fixed both
+           control-shell and in the ControlCore itself) (SB)
+
+ * Bugfix: Client could get stuck in an infinite loop when removing
+           a service with the same instanceid for the second time (SB)
+
+ * Bugfix: Don't crash the ControlCore if it fails to parse client configs
+           at startup (SB)
+
+ * Bugfix: Whereever URL.getFile() was used, the code did not work
+           when using paths with non-trivial characters, such as
+           space and # (SB)
+
+ * Experimental: Add a JStorage backend to the configuration system, reading
+                 the config data from a Javascript file (SB)
+
+=======================
 2009-04-28: Summa 1.4.1
 =======================
 
