@@ -41,7 +41,7 @@
     <fa:facets xmlns:fa="http://statsbiblioteket.dk/summa/2009/FacetIndexDescriptor">
 
         <!-- Fields as well as groups can be referenced by ref -->
-        <fa:facet ref="freetext" name="Big_bag" maxTags="200" defaultTags="20" sort="POPULARITY" sortLocale="da"/>
+        <fa:facet ref="freetext" name="Big_bag" maxTags="200" defaultTags="20" sort="ALPHA" sortLocale="da"/>
         <fa:facet ref="ti" sort="ALPHA"/>
         <fa:facet ref="author"/>
     </fa:facets>
