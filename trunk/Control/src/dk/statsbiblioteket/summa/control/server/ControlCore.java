@@ -255,6 +255,12 @@ public class ControlCore extends UnicastRemoteObject
                                                 + instanceId + "'");
         }
 
+        if (isClientRunning(instanceId)) {
+            setStatusIdle();
+            log.debug("Client " + instanceId + "already running. "
+                      + "Aborting start");
+        }
+
         log.info ("Preparing to start client '"
                   + instanceId
                   + "' with deployment configuration:\n" + conf.dumpString());
@@ -319,6 +325,21 @@ public class ControlCore extends UnicastRemoteObject
             setStatusIdle();
         }
 
+    }
+
+    private boolean isClientRunning(String instanceId) {
+        try {
+            ClientConnection client = getClient(instanceId);
+
+            if (client != null) {
+                log.debug("Client is already running");
+                return true;
+            }
+        } catch (InvalidClientStateException e){
+            return false;
+        }
+
+        return false;
     }
 
     /**
