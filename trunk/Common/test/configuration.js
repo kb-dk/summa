@@ -8,7 +8,7 @@ var config = {
     "summa.test.int" : 27,
     "summa.test.boolean" : true,
     "summa.test.nested" : {
-        "summa.test.int" : 27
+        "summa.test.subint" : 27
     },
     "summa.test.nestedlist" : [
         {

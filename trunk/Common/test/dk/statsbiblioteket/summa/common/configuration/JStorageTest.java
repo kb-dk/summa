@@ -46,13 +46,21 @@ public class JStorageTest extends ConfigurationStorageTestCase {
         assertEquals(3, conf.getInt("summa.test.closure"));
     }
 
-    public void testNested() throws Exception {
+    public void testNewNested() throws Exception {
         JStorage sto = new JStorage();
         assertEquals(0, sto.size());
 
         JStorage sub = sto.createSubStorage("summa.sub");
 
         assertEquals(0, sub.size());
+    }
+
+    public void testLoadNested() throws Exception {
+        JStorage sto = new JStorage("configuration.js");
+        JStorage sub = sto.getSubStorage("summa.test.nested");
+
+        assertEquals(1, sub.size());
+        assertEquals(27, asInt(sub.get("summa.test.subint")));
     }
 
     public void testIteration() throws Exception {
@@ -66,14 +74,27 @@ public class JStorageTest extends ConfigurationStorageTestCase {
         }
     }
 
-    public void testSubStorages() throws Exception {
+    public void testLoadSubStorages() throws Exception {
         JStorage js = new JStorage("configuration.js");
         JStorage sub = js.getSubStorage("summa.test.nested");
         List<ConfigurationStorage> subs =
                                      js.getSubStorages("summa.test.nestedlist");
 
         assertEquals(1, sub.size());
-        assertEquals(2, subs.size());
+        assertEquals(27, asInt(sub.get("summa.test.subint")));
 
+        assertEquals(2, subs.size());
+        assertEquals(1, subs.get(0).size());
+        assertEquals(1, subs.get(1).size());
+        assertEquals(27, asInt(subs.get(0).get("summa.test.int")));
+        assertEquals(true, asBoolean(subs.get(1).get("summa.test.boolean")));
+    }
+
+    public static boolean asBoolean(Serializable s) {
+        return (boolean) Boolean.parseBoolean(s.toString());
+    }
+
+    public static int asInt(Serializable s) {
+        return (int)Double.parseDouble(s.toString());
     }
 }
