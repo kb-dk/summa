@@ -97,6 +97,12 @@ public class JStorage implements ConfigurationStorage {
         if (createNew) {
             eval(config + " = {}");
         }
+
+        if (Boolean.parseBoolean(eval(config + " == null"))) {
+            throw new RuntimeException("Can not create sub storage of a "
+                                       + "non-existing sub configuration: "
+                                       + config);
+        }
     }
 
     private void init() {
@@ -111,7 +117,7 @@ public class JStorage implements ConfigurationStorage {
         /* Install __ext_size() method on all objects */
         eval(
         "Object.prototype.__ext_size = function () {     \n" +
-        "  var len = this.length ? --this.length : -1;   \n" +
+        "  var len = 0;                                  \n" +
         "  for (var k in this) {                         \n" +
         "      if ( k.substr(0,6) != '__ext_' )          \n" +
         "          len++;                                \n" +
@@ -240,13 +246,14 @@ public class JStorage implements ConfigurationStorage {
     }
 
     public List<ConfigurationStorage> getSubStorages(String key) throws IOException {
-        int count = evalInt(config + "['" + key + "'].__ext_size()");
-        JStorage container = getSubStorage(key);
+        String subConf = config + "['" + key + "']";
+        int count = evalInt(subConf + ".__ext_size()");
         List<ConfigurationStorage> storages =
                                      new ArrayList<ConfigurationStorage>();
-
+        
         for (int i = 0; i < count; i++) {
-            storages.add(container.getSubStorage("" + i));
+            storages.add(new JStorage(engine, engineManager,
+                            subConf + "[" +i+ "]", false));
         }
 
         return storages;
@@ -298,4 +305,39 @@ public class JStorage implements ConfigurationStorage {
         String val = eval(s);
         return (int)Double.parseDouble(val == null ? "0" : val);
     }
+
+    public static void main (String[] args) {
+        if (args.length == 0) {
+            System.err.println("You must specify a .js resource to load!");
+            System.exit(1);
+        } else {
+            System.out.println("Welcome to the interactive JStorage shell. "
+                               + "Type 'quit' to exit");
+        }
+
+        try {
+            JStorage js = new JStorage(args[0]);
+            BufferedReader in = new BufferedReader(
+                                           new InputStreamReader(System.in));
+            String cmd = "";
+            while (true) {
+                System.out.print("> ");
+                System.out.flush();
+                cmd = in.readLine();
+                if ("quit".equals(cmd)) {
+                    break;
+                } else {
+                    try {
+                        js.eval(cmd);
+                    } catch (Exception e) {
+                        System.err.println("Error: " + e.getMessage());
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(2);
+        }
+    }
+
 }
