@@ -103,6 +103,15 @@ public class XMLSplitterParserTarget {
                 XMLSplitterFilter.CONF_PRESERVE_NAMESPACES, preserveNamespaces);
         requireValid = configuration.getBoolean(
                 XMLSplitterFilter.CONF_REQUIRE_VALID, requireValid);
+        log.debug(String.format(
+                "Created XMLSplitterParserTaget with idPrefix='%s', " 
+                + "idPostfix='%s', idNamespace='%s', collapsePrefix=%b, "
+                + "collapsePostfix=%b, recordElement='%s', idElement='%s', "
+                + "idTag='%s', base='%s', preserveNamespaces=%b, "
+                + "requireValid=%b",
+                idPrefix, idPostfix, idNamespace, collapsePrefix,
+                collapsePostfix, recordElement, idElement, idTag, base,
+                preserveNamespaces, requireValid));
     }
 
     /**
