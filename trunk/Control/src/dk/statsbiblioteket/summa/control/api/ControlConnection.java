@@ -52,7 +52,8 @@ public interface ControlConnection extends Monitorable {
 
     /**
      * <p>Create a connection to a {@link Client}. If the client is deployed
-     * but not running, this method will return {@code null}.</p>
+     * but not running, this method will throw an
+     * {@link InvalidClientStateException}.</p>
      *
      * <p>If the client is not deployed a {@link NoSuchServiceException} will
      * be thrown.</p>
