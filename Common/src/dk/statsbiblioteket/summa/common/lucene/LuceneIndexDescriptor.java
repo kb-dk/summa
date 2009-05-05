@@ -261,17 +261,17 @@ public class LuceneIndexDescriptor
         LuceneIndexField field = new LuceneIndexField(name);
         if (index.equals(Field.Index.NO)) {
             field.setDoIndex(false);
-            field.setTokenize(false);
+            field.setAnalyze(false);
         } else if (index.equals(Field.Index.NO_NORMS)) {
             throw new UnsupportedOperationException(
                     "Storing with no norms is not supported. Offending field "
                     + "has name '" + name + "'");
         } else if (index.equals(Field.Index.TOKENIZED)) {
             field.setDoIndex(true);
-            field.setTokenize(true);
+            field.setAnalyze(true);
         } else if (index.equals(Field.Index.UN_TOKENIZED)) {
             field.setDoIndex(true);
-            field.setTokenize(false);
+            field.setAnalyze(false);
         }
         if (store.equals(Field.Store.COMPRESS)) {
             field.setDoStore(true);
