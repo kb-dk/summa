@@ -18,7 +18,7 @@
 
     <fields>
         <!-- TODO: Check how defaultType="token" works -->
-        <field name="token" index="true" inFreeText="true" required="true"/>
+        <field name="token" indexed="true" inFreeText="true" required="true"/>
         <!-- TODO: Consider compression of shortformat -->
         <field name="shortformat" parent="stored" indexed="false" inFreeText="false" required="true"/>
         <field name="author_person" parent="token" multiValued="true" queryBoost="10"/>
@@ -28,7 +28,7 @@
         <field name="ma_long" parent="token" multiValued="true"/>
         <field name="lma_long" parent="keyword"/>
         <field name="sort_title" parent="keyword" sortLocale="da"/>
-        <field name="onlyindex" indexed="true" tokenized="false" stored="false"/>
+        <field name="onlyindex" indexed="true" analyzed="false" stored="false"/>
         <field name="onlystore" indexed="false" stored="true"/>
     </fields>
 

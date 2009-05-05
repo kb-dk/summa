@@ -9,12 +9,12 @@
     </groups>
 
     <fields>
-        <field name="author" index="true" parent="token" multiValued="true" inFreeText="true" required="true" queryBoost="2"/>
-        <field name="author_normalised" multiValued="true" stored="true" index="true" inFreeText="false" required="false"/>
+        <field name="author" indexed="true" parent="token" multiValued="true" inFreeText="true" required="true" queryBoost="2"/>
+        <field name="author_normalised" multiValued="true" stored="true" indexed="true" inFreeText="false" required="false"/>
         <field name="shortformat" parent="stored" indexed="false" inFreeText="false" required="true"/>
-        <field name="genre" parent="keyword" index="true" inFreeText="true" required="false"/>
-        <field name="title" index="true" parent="token" inFreeText="true" required="true" queryBoost="2"/>
-        <field name="variable" index="true" parent="token" inFreeText="false" required="false"/>
+        <field name="genre" parent="keyword" indexed="true" inFreeText="true" required="false"/>
+        <field name="title" indexed="true" parent="token" inFreeText="true" required="true" queryBoost="2"/>
+        <field name="variable" indexed="true" parent="token" inFreeText="false" required="false"/>
     </fields>
 
     <defaultSearchFields>

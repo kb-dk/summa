@@ -18,7 +18,7 @@
 
     <fields>
         <!-- TODO: Check how defaultType="token" works -->
-        <field name="token" index="true" inFreeText="true" required="true"/>
+        <field name="token" indexed="true" inFreeText="true" required="true"/>
         <!-- TODO: Consider compression of shortformat -->
         <field name="shortformat" parent="stored" indexed="false" inFreeText="false" required="true"/>
         <field name="author_person" parent="token" multiValued="true" queryBoost="10"/>
