@@ -51,7 +51,7 @@ public class SummaQueryParser {
      */
     public static final String CONF_QUERY_TIME_FIELD_BOOSTS =
             "summa.common.queryparser.querytimefieldboosts";
-    public static final boolean DEFAULT_QUERY_TIME_FIELD_BOOSTS = false;
+    public static final boolean DEFAULT_QUERY_TIME_FIELD_BOOSTS = true;
     private boolean supportQueryTimeBoosts = DEFAULT_QUERY_TIME_FIELD_BOOSTS;
 
 //    private static final String START_GROUP = "(";
@@ -163,7 +163,9 @@ public class SummaQueryParser {
                             LuceneIndexDescriptor descriptor) {
         log.debug("Creating query parser with configuration and descriptor");
         init(descriptor);
+        log.trace("Determining query time boosts");
         extractSetup(conf);
+        log.trace("Finished setup");
     }
 
     private void extractSetup(Configuration conf) {
