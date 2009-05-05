@@ -12,6 +12,7 @@ STORAGE="bin/summa-storage.sh config/storage.xml"
 INGEST="bin/summa-filter.sh config/ingest.xml"
 INDEX="bin/summa-filter.sh config/indexer.xml"
 SEARCHER="bin/summa-searcher.sh config/searcher.xml"
+SUGGEST="bin/summa-searcher.sh config/suggest.xml"
 
 pushd "$(dirname $0)/.." > /dev/null
 
@@ -59,6 +60,7 @@ function all_good() {
 }
 
 detach storage "$STORAGE"
+detach suggest "$SUGGEST"
 await ingest "$INGEST"
 await index "$INDEX"
 detach searcher "$SEARCHER"
