@@ -216,7 +216,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
         log.trace("Setting max boolean clauses to " + maxBooleanClauses);
         BooleanQuery.setMaxClauseCount(maxBooleanClauses);
         descriptor = LuceneIndexUtils.getDescriptor(conf);
-        parser = new SummaQueryParser(descriptor);
+        parser = new SummaQueryParser(conf, descriptor);
 
         // MoreLikeThis
         if (!conf.valueExists(CONF_MORELIKETHIS_CONF)) {
