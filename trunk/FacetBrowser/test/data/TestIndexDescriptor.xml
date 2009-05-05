@@ -4,7 +4,7 @@
     <groups>
         <group name="a">
             <field ref="author"/>
-            <field ref="author_person"/>
+            <field ref="author_normalised"/>
         </group>
     </groups>
 
@@ -16,6 +16,11 @@
         <field name="title" indexed="true" parent="token" inFreeText="true" required="true" queryBoost="2"/>
         <field name="variable" indexed="true" parent="token" inFreeText="false" required="false"/>
     </fields>
+    
+    <facets xmlns="http://statsbiblioteket.dk/summa/2009/FacetIndexDescriptor">
+        <facet ref="a"/>
+        <facet ref="genre" defaultTags="12" maxTags="13" name="foo" sort="ALPHA" sortLocale="de"/>
+    </facets>
 
     <defaultSearchFields>
         <field ref="freetext"/>

@@ -24,6 +24,7 @@ package dk.statsbiblioteket.summa.facetbrowser;
 
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
 
@@ -255,7 +256,13 @@ public class FacetStructure implements Serializable {
     public Integer getFacetID() {
         return id;
     }
+
+    @Override
+    public String toString() {
+        return String.format(
+                "FacetStructure(id=%s, name='%s', fields='%s', defaultTags=%s, "
+                + "maxTags=%d, sortType=%s, sortLocale='%s')",
+                id, name, Strings.join(fields, ", "), wantedTags, maxTags,
+                sortType, locale);
+    }
 }
-
-
-
