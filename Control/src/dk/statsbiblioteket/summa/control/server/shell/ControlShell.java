@@ -40,6 +40,7 @@ public class ControlShell {
         shell.installCommand(new DeployCommand(connManager, rmiAddress));
         shell.installCommand(new RepositoryCommand(connManager, rmiAddress));
         shell.installCommand(new StartCommand(connManager, rmiAddress));
+        shell.installCommand(new StopCommand(connManager, rmiAddress));
         shell.installCommand(new ClientsCommand(connManager, rmiAddress));
         shell.installCommand(new StatusCommand(connManager, rmiAddress));
         shell.installCommand(new ControlCommand(connManager, rmiAddress));
