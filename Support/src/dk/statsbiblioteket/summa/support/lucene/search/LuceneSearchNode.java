@@ -25,6 +25,7 @@ package dk.statsbiblioteket.summa.support.lucene.search;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
+import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.index.IndexException;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
@@ -64,7 +65,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Lucene-specific search node.
  *
- * IMPORTANT: This class is far from finished and is to be moved to another module
+ * IMPORTANT: This class is be moved to another module.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -184,6 +185,8 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
 
     @SuppressWarnings({"FieldCanBeLocal"})
     private LuceneIndexDescriptor descriptor;
+    private Configuration conf;
+    private boolean loadDescriptorFromIndex;
     private SummaQueryParser parser;
     private IndexSearcher searcher;
     private String location = null;
@@ -211,12 +214,28 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
     public LuceneSearchNode(Configuration conf) throws RemoteException {
         super(conf);
         log.info("Constructing LuceneSearchNode");
+        this.conf = conf;
         maxBooleanClauses =
                 conf.getInt(CONF_MAX_BOOLEAN_CLAUSES, maxBooleanClauses);
         log.trace("Setting max boolean clauses to " + maxBooleanClauses);
         BooleanQuery.setMaxClauseCount(maxBooleanClauses);
-        descriptor = LuceneIndexUtils.getDescriptor(conf);
-        parser = new SummaQueryParser(conf, descriptor);
+        // TODO: Add override-switch to state where to get the descriptor
+        loadDescriptorFromIndex = !conf.valueExists(
+                IndexDescriptor.CONF_DESCRIPTOR);
+        if (loadDescriptorFromIndex) {
+            log.debug("No explicit IndexDescriptor-setup defined. The index "
+                      + "description will be loaded from the index-folder upon "
+                      + "calls to open");
+        } else {
+            log.info(String.format(
+                    "The property %s was defined, so the IndexDescriptor will "
+                    + "not be taken from the index-folder. Note that this makes"
+                    + " it hard to coordinate major updates to the "
+                    + "IndexDescriptor in a production system",
+                    IndexDescriptor.CONF_DESCRIPTOR));
+            descriptor = LuceneIndexUtils.getDescriptor(conf);
+            parser = new SummaQueryParser(conf, descriptor);
+        }
 
         // MoreLikeThis
         if (!conf.valueExists(CONF_MORELIKETHIS_CONF)) {
@@ -296,6 +315,9 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                     // TODO: Consider if the exception should be eaten
                     "Could not resolve file from location '%s'", location));
         }
+        if (loadDescriptorFromIndex) {
+            openDescriptor(location);
+        }
         try {
             searcher = new IndexSearcher(IndexReader.open(
                     FSDirectory.getDirectory(
@@ -320,6 +342,20 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                     "Unable to determine searcher.maxDoc for searcher opened at"
                     + " location '%s'", location), e);
         }
+    }
+
+    private void openDescriptor(String location) throws RemoteException {
+        log.trace("Opening descriptor from '" + location + "'");
+        URL urlLocation = Resolver.getURL(
+                location + "/" + IndexDescriptor.DESCRIPTOR_FILENAME);
+        try {
+            descriptor = new LuceneIndexDescriptor(urlLocation);
+        } catch (IOException e) {
+            throw new RemoteException(String.format(
+                    "Unable to create LuceneIndexDescriptor from '%s'",
+                    urlLocation), e);
+        }
+        parser = new SummaQueryParser(conf, descriptor);
     }
 
     private void createMoreLikeThis() {
@@ -453,7 +489,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                                                             ParseException {
         if (!mlt_enabled
             || !request.containsKey(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID)) {
-            return query == null ? null : parser.parse(query);
+            return query == null ? null : getParser().parse(query);
         }
         if (moreLikeThis == null) {
             throw new RemoteException(
@@ -501,7 +537,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
 
     private Filter parseFilter(String filter) throws ParseException {
         return filter == null || "".equals(filter) ? null :
-               new QueryWrapperFilter(parser.parse(filter));
+               new QueryWrapperFilter(getParser().parse(filter));
     }
 
     private DocumentResponse fullSearch(Request request,
@@ -697,5 +733,14 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
      */
     public int getDocCount() throws IOException {
         return searcher == null ? -1 : searcher.maxDoc();
+    }
+
+    protected SummaQueryParser getParser() {
+        if (parser == null) {
+            throw new IllegalStateException(
+                    "The parser has not been initialized. This indicates that "
+                    + "the IndexDescriptor has not been resolved");
+        }
+        return parser;
     }
 }

@@ -39,6 +39,7 @@ import javax.xml.xpath.XPathFactory;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.*;
+import java.net.URL;
 
 /**
  * Extracts Facet-setup from IndexDescriptor-XML.
@@ -63,6 +64,10 @@ public class FacetIndexDescriptor extends IndexDescriptor<IndexField> {
     private final static String FACET_EXPR = FACET_NAMESPACE_PREFIX + ":facet";
 
     private XPath facetXPath = null;
+
+    public FacetIndexDescriptor(URL absoluteLocation) throws IOException {
+        super(absoluteLocation);
+    }
 
     public FacetIndexDescriptor(Configuration configuration) throws IOException{
         super(configuration);

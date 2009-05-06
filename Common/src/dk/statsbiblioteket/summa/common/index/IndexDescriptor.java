@@ -127,6 +127,11 @@ public abstract class IndexDescriptor<F extends IndexField> implements
      */
     public static final String CONF_DESCRIPTOR = "summa.index.descriptorsetup";
 
+    /**
+     * If the IndexDescriptor is to be stored, this is the default file name.
+     */
+    public static final String DESCRIPTOR_FILENAME = "IndexDescriptor.xml";
+
     public static enum OPERATOR {and, or}
 
     public static final String KEYWORD = "keyword";

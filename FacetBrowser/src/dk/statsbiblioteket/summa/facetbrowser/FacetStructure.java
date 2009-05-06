@@ -41,14 +41,6 @@ import java.util.Locale;
 public class FacetStructure implements Serializable {
     private static volatile Logger log = Logger.getLogger(Structure.class);
 
-    private String name;
-    private String[] fields;
-    private int maxTags = DEFAULT_TAGS_MAX;
-    private int wantedTags = DEFAULT_TAGS_WANTED;
-    private String locale = null;
-    private String sortType = DEFAULT_FACET_SORT_TYPE;
-    private Integer id = null;
-
     /**
      * The returned Tags should be sorted in order with the most popular Tags
      * first. Popularity translates directly to the number of occurences.
@@ -104,6 +96,14 @@ public class FacetStructure implements Serializable {
      * This property is optional. Default is null.
      */
     public static final String CONF_FACET_LOCALE = "summa.facet.locale";
+
+    private String name;
+    private String[] fields;
+    private int maxTags = DEFAULT_TAGS_MAX;
+    private int wantedTags = DEFAULT_TAGS_WANTED;
+    private String locale = null;
+    private String sortType = DEFAULT_FACET_SORT_TYPE;
+    private Integer id = null;
 
     public FacetStructure(String name, int id, String[] fields,
                           int wantedTags, int maxTags,
@@ -220,6 +220,11 @@ public class FacetStructure implements Serializable {
     public int getMaxTags() {
         return maxTags;
     }
+
+    public void setMaxTags(int maxTags) {
+        this.maxTags = maxTags;
+    }
+
     public String getSortType() {
         return sortType;
     }
@@ -264,5 +269,16 @@ public class FacetStructure implements Serializable {
                 + "maxTags=%d, sortType=%s, sortLocale='%s')",
                 id, name, Strings.join(fields, ", "), wantedTags, maxTags,
                 sortType, locale);
+    }
+
+    /**
+     * Absorb secondary characteristica from other. Secondary attributes are
+     * all attributes except name, fields and sortLocale.
+     * @param other the FacetStructure to absorb characteristica from.
+     */
+    public void absorb(FacetStructure other) {
+        this.setSortType(other.getSortType());
+        this.setWantedTags(other.getWantedTags());
+        this.setMaxTags(other.getMaxTags());
     }
 }
