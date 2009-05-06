@@ -292,6 +292,27 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                 }
             }
         }
+        log.info("Retracting remote interfaces");
+
+        try {
+            RemoteHelper.unExportRemoteInterface(id, registryPort);
+        } catch (IOException e) {
+            log.error("Failed to unexport RMI interface: " + e.getMessage(), e);
+        }
+
+        try {
+            RemoteHelper.unExportMBean(this);
+        } catch (Exception e) {
+            String msg = "Failed to unregister MBean. Going on anyway. "
+                         + "Error was: " + e.getMessage();
+            if (log.isTraceEnabled()) {
+                log.warn (msg, e);
+            } else {
+                log.warn(msg);
+            }
+        }
+
+
         setStatus(Status.CODE.stopped, "All services down. Stopping JVM in "
                   + DeferredSystemExit.DEFAULT_DELAY/1000 + "s",
                   Logging.LogLevel.WARN);
