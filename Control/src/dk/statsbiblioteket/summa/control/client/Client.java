@@ -280,12 +280,13 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                   Logging.LogLevel.INFO);
         for (String serviceId : serviceMan) {
             try {
-                log.trace("Trying to kill service " + serviceId);
+                log.debug("Trying to kill service '" + serviceId + "'");
                 connCtx = serviceMan.get(serviceId);
                 connCtx.getConnection().kill();
-                log.debug("Service " + serviceId + " kill");
+                log.info("Service '" + serviceId + "' killed");
             } catch (Exception e) {
-                log.error("Could not kill service " + serviceId);
+                log.error("Could not kill service '" + serviceId + "': "
+                          + e.getMessage(), e);
             } finally {
                 if (connCtx != null) {
                     connCtx.unref();
