@@ -4,6 +4,7 @@ import dk.statsbiblioteket.summa.common.configuration.storage.JStorage;
 
 import java.util.Map;
 import java.util.List;
+import java.util.Arrays;
 import java.io.Serializable;
 
 /**
@@ -92,12 +93,55 @@ public class JStorageTest extends ConfigurationStorageTestCase {
 
     public void testListOfStrings() throws Exception {
         JStorage js = new JStorage("configuration.js");
-        String vals = js.get("summa.test.listofstrings");
-        assertEquals("one, two, three", vals);
+        List vals = (List)js.get("summa.test.listofstrings");
+        assertEquals(Arrays.asList("one", "two", "three"), vals);
+    }
+
+    public void testToString() throws Exception {
+        JStorage js = new JStorage();
+
+        // Empty storage
+        assertEquals("config = {\n}", js.toString());
+
+        // Storage with a single string
+        js = new JStorage();
+        js.put("foo", "bar");
+        assertEquals("config = {\n  foo = \"bar\"\n}", js.toString());
+
+        // Storage with a list of strings
+        js = new JStorage();
+        js.put("foo", (Serializable)Arrays.asList("one", "two"));
+        assertEquals("config = {\n  foo = [\"one\", \"two\"]\n}", js.toString());
+
+        // Storage with a single sub storage
+        js = new JStorage();
+        JStorage sub = js.createSubStorage("foo");
+        sub.put("bar" , 27);
+        assertEquals("config = {\n  foo = {\n    bar = 27.0\n  }\n}",
+                     js.toString());
+
+        System.out.println("--------------");
+        js = new JStorage("configuration.js");
+        System.out.println(js.toString());
+        System.out.println("--------------");
+    }
+
+    public void testSimpleTypes() throws Exception {
+        JStorage js = new JStorage();
+
+        js.put("foo", 27);
+        assertTrue("27 should turn into a Double, but was: "
+                   + js.get("foo").getClass().getName(),
+                   js.get("foo") instanceof Double);
+
+        js.put("bar", true);
+        assertTrue("true should turn into a Boolean, but was: "
+                   + js.get("bar").getClass().getName(),
+                   js.get("bar") instanceof Boolean);
     }
 
     public static boolean asBoolean(Serializable s) {
-        return (boolean) Boolean.parseBoolean(s.toString());
+        return Boolean.parseBoolean(s.toString());
     }
 
     public static int asInt(Serializable s) {

@@ -3,6 +3,7 @@ package dk.statsbiblioteket.summa.common.configuration.storage;
 import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorageException;
+import dk.statsbiblioteket.util.Strings;
 
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptEngine;
@@ -98,7 +99,7 @@ public class JStorage implements ConfigurationStorage {
             eval(config + " = {}");
         }
 
-        if (Boolean.parseBoolean(eval(config + " == null"))) {
+        if (Boolean.parseBoolean(eval(config + " == null").toString())) {
             throw new RuntimeException("Can not create sub storage of a "
                                        + "non-existing sub configuration: "
                                        + config);
@@ -143,13 +144,38 @@ public class JStorage implements ConfigurationStorage {
         "    return s;                              \n" +
         "}"
         );
+
+        /* Create a Java ArrayList out of a JS list */
+        eval(
+        "function __ext_new_list(list) {               \n" +
+        "    var result = new java.util.ArrayList()    \n" +
+        "    for (var elt in list) {                   \n" +
+        "        if (elt.toString().substr(0,6) != '__ext_')\n" +
+        "            result.add(list[elt].toString())  \n" +
+        "    }                                         \n" +
+        "    return result                             \n" +
+        "}                                             \n"
+        );
     }
 
     public void put(String key, Serializable value) throws IOException {
-        eval(config+"['"+key+"'] = '" + value.toString() + "'");
+        if (value instanceof List) {
+            List list = (List)value;
+            if (list.isEmpty()) {
+                eval(config+"['"+key+"'] = []");
+            } else if (list.get(0) instanceof String) {
+                eval(config+"['"+key+"'] = "+ asStringList(list));
+            } else {
+                eval(config+"['"+key+"'] = "+ asRawList(list));
+            }
+        } else if (value instanceof String) {
+            eval(config+"['"+key+"'] = '" + value.toString() + "'");
+        } else {
+            eval(config+"['"+key+"'] = " + value.toString());
+        }
     }
 
-    public String get(String key) throws IOException {
+    public Serializable get(String key) throws IOException {
         engine.put("__ext_storage", this);
 
         String query =
@@ -159,7 +185,7 @@ public class JStorage implements ConfigurationStorage {
                 "else if ( typeof(val) == 'object' && val != null) { \n" +
                 "    if (val instanceof Array) {                     \n" +
                 "        if (val.length > 0 && typeof(val[0]) == 'string')\n" +
-                "           val = val.join(', ')                     \n" +
+                "           val = __ext_new_list(val)                \n" +
                 "        else                                        \n" +
                 "            val = __ext_storage.getSubStorages('KEY')\n" +
                 "    }                                               \n" +
@@ -169,7 +195,8 @@ public class JStorage implements ConfigurationStorage {
                 "val                                                 \n";
 
         try {
-            return  eval(query.replace("KEY", key).replace("CONFIG", config));
+            return  (Serializable)
+                      eval(query.replace("KEY", key).replace("CONFIG", config));
         } finally {
             engine.put("__ext_storage", null);
         }
@@ -195,13 +222,15 @@ public class JStorage implements ConfigurationStorage {
               "  else if ( typeof(val) == 'object' && val != null) {      \n" +
               "      if ( val instanceof Array ) {                        \n" +
               "          if (val.length > 0 && typeof(val[0]) == 'string')\n" +
-              "              __ext_map.put(key, val.join(', '))           \n" +
+              "              __ext_map.put(key, __ext_new_list(val))      \n" +
               "           else                                            \n" +
               "              __ext_map.put(key, __ext_storage.getSubStorages(key))\n" +
               "      }                                                    \n" +
               "      else                                                 \n" +
               "          __ext_map.put(key, __ext_storage.getSubStorage(key))\n" +
               "  }                                                        \n" +
+              "  else if (typeof(val) == 'number' || typeof(val) == 'boolean')\n" +
+              "      __ext_map.put(key, val)                              \n" +
               "  else                                                     \n" +
               "      __ext_map.put(key, val.toString())                   \n" +
               "}                                                          \n").
@@ -220,7 +249,7 @@ public class JStorage implements ConfigurationStorage {
     }
 
     public int size() throws IOException {
-        return (int) Double.parseDouble(eval(config+".__ext_size()"));
+        return (int) Double.parseDouble(eval(config+".__ext_size()").toString());
     }
 
     public boolean supportsSubStorage() throws IOException {
@@ -273,11 +302,11 @@ public class JStorage implements ConfigurationStorage {
      * @param s the script to evaluate
      * @return the exit value of the script converted to a string
      */
-    public String eval(String s) {
+    public Object eval(String s) {
         try {
             Object val = engine.eval(s);
             if (val != null) {
-                return val.toString();
+                return val;
             }
             return null;
         } catch (ScriptException e) {
@@ -286,11 +315,11 @@ public class JStorage implements ConfigurationStorage {
         }
     }
 
-    public String eval(Reader in) {
+    public Object eval(Reader in) {
         try {
             Object val = engine.eval(in);
             if (val != null) {
-                return val.toString();
+                return val;
             }
             return null;
         } catch (ScriptException e) {
@@ -310,7 +339,7 @@ public class JStorage implements ConfigurationStorage {
      *         script returns {@code null}
      */
     private int evalInt(String s) {
-        String val = eval(s);
+        String val = eval(s).toString();
         return (int)Double.parseDouble(val == null ? "0" : val);
     }
 
@@ -348,4 +377,155 @@ public class JStorage implements ConfigurationStorage {
         }
     }
 
+    private String asStringList(List list) {
+        StringBuilder b = new StringBuilder();
+
+        b.append("[");
+
+        for (Object o : list) {
+
+            if (b.length() > 1) {
+                b.append (", ");
+            }
+
+            if (o == null) {
+                b.append("null");
+            } else {
+                b.append("'").append(o.toString()).append("'");
+            }
+
+        }
+
+        b.append("]");
+
+        return b.toString();
+    }
+
+    private String asRawList(List list) {
+        StringBuilder b = new StringBuilder();
+
+        b.append("[");
+
+        for (Object o : list) {
+
+            if (b.length() > 1) {
+                b.append (", ");
+            }
+
+            if (o == null) {
+                b.append("null");
+            } else {
+                b.append(o.toString());
+            }
+
+        }
+
+        b.append("]");
+
+        return b.toString();
+    }
+
+    public String toString () {
+        StringBuilder buf = new StringBuilder();
+        buf.append("config = {\n");
+        serialize("  ", buf);
+        buf.append("}");
+        return buf.toString();
+    }
+
+    private String indent(String prefix, String subject) {
+        return subject.replace("\n", "\n"+prefix);
+    }
+
+    /**
+     * Write this JStorage (without config header) to the StringBuilder and
+     * return the StringBuilder again
+     * @param prefix
+     * @param buf
+     * @return
+     */
+    protected StringBuilder serialize(String prefix, StringBuilder buf) {
+        try {
+            Iterator<Map.Entry<String,Serializable>> iter = iterator();
+
+            while (iter.hasNext()) {
+                Map.Entry<String,Serializable> entry = iter.next();
+                Serializable val = entry.getValue();
+                String key = entry.getKey();
+
+                if (val instanceof String) {
+                    buf.append(prefix)
+                        .append(key)
+                        .append(" = \"")
+                        .append(indent(prefix, val.toString()))
+                        .append("\"");
+                } else if (val instanceof Double || val instanceof Boolean) {
+                    buf.append(prefix)
+                        .append(key)
+                        .append(" = ")
+                        .append(indent(prefix, val.toString()));
+                } else if (val instanceof JStorage) {
+                    buf.append(prefix)
+                        .append(key)
+                        .append(" = ")
+                        .append("{\n")
+                        .append(((JStorage)val).serialize(prefix + "  ", buf))
+                        .append(prefix)
+                        .append("}");
+                } else if (val instanceof List) {
+                    List list = (List)val;
+
+                    buf.append(prefix)
+                       .append(key)
+                       .append(" = ");
+
+                    if (list.isEmpty()) {
+                        buf.append("[]");
+                    } else if (list.get(0) instanceof String) {
+                        buf.append("[");
+                        for (int i = 0; i < list.size(); i++) {
+                            if (i > 0) {
+                                buf.append(", ");
+                            }
+                            buf.append("\"")
+                               .append(list.get(i).toString())
+                               .append("\"");
+                        }
+                        buf.append("]");
+                    } else if (list.get(0) instanceof JStorage) {
+                        buf.append("[\n");
+                        for (int i = 0; i < list.size(); i++) {
+                            if (i > 0) {
+                                buf.append(", ");
+                            }
+                            buf.append("{\n")
+                               .append(prefix)
+                               .append(
+                                    ((JStorage)list.get(i))
+                                            .serialize(prefix+"  ", buf))
+                               .append("}");
+                        }
+
+                        buf.append("]");
+                    }
+                } else {
+                    buf.append("Unable to serialize: ")
+                       .append(val)
+                       .append(" (")
+                       .append(val.getClass().getName())
+                       .append(")");
+                }
+
+                buf.append("\n");
+            }
+
+        } catch (IOException e) {
+            buf.append("JStorage serialization error: ")
+               .append(e.getMessage())
+               .append("\n")
+               .append(Strings.getStackTrace(e));
+        }
+
+        return buf;
+    }
 }
