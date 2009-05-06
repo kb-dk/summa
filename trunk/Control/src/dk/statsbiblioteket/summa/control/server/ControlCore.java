@@ -261,6 +261,14 @@ public class ControlCore extends UnicastRemoteObject
                       + "Aborting start");
         }
 
+        File bdlFile = repoManager.getBundle(bundleId);
+        if (bdlFile == null) {
+            log.warn("Unable to find bundle file for " + instanceId
+                     + ". Aborting start");
+            throw new ClientDeploymentException("Bundle file for " + instanceId
+                                                + " not found in repository");
+        }
+
         log.info ("Preparing to start client '"
                   + instanceId
                   + "' with deployment configuration:\n" + conf.dumpString());
@@ -272,7 +280,7 @@ public class ControlCore extends UnicastRemoteObject
                   bundleId);
 
         conf.set (ClientDeployer.CONF_DEPLOYER_BUNDLE_FILE,
-                  repoManager.getBundle(bundleId).getAbsolutePath());
+                  bdlFile.getAbsolutePath());
 
         log.debug ("Modified deployment configuration:\n" + conf.dumpString());
 
