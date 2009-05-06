@@ -64,7 +64,7 @@ public class StartServiceCommand extends RemoteCommand<ClientConnection> {
         ctx.prompt ("Starting service '" + pkgId + "' "
                     + (confLocation != null ?
                                  " with configuration " + confLocation
-                               : " with no configuration ")
+                               : " with default configuration ")
                     + "... ");
 
         ClientConnection client = getConnection(clientAddress);
