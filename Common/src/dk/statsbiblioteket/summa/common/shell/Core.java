@@ -126,6 +126,7 @@ public class Core {
 
                 public void prompt (String prompt) {
                     System.out.print(prompt);
+                    System.out.flush();
                 }
             };
 

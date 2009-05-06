@@ -24,7 +24,8 @@ public class FeedbackFactory {
      */
     public static Feedback createFeedback (Configuration conf) {
          log.debug("Creating deployer feedback from class: "
-                  + conf.getString(ClientDeployer.CONF_DEPLOYER_FEEDBACK));
+                  + conf.getString(ClientDeployer.CONF_DEPLOYER_FEEDBACK,
+                                   VoidFeedback.class.getSimpleName()));
         Class<? extends Feedback> feedbackClass =
                            conf.getClass(ClientDeployer.CONF_DEPLOYER_FEEDBACK,
                                          Feedback.class,

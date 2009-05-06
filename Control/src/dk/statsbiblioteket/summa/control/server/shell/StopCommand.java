@@ -61,7 +61,10 @@ public class StopCommand extends Command {
         ConnectionContext<ControlConnection> connCtx = null;
 
         try {
-            log.trace("Stopping client '" + instanceId +"'");
+            String msg = "Stopping client '" + instanceId +"' ... ";
+            log.debug(msg);
+            ctx.prompt(msg);
+
             connCtx = cm.get(controlAddress);
             if (connCtx == null) {
                 ctx.error("Failed to connect to Control server at '"
