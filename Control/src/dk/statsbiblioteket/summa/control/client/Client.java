@@ -276,16 +276,16 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
     public void stop() {
         ConnectionContext<Service> connCtx = null;
 
-        setStatus(Status.CODE.stopping, "Stopping all services",
+        setStatus(Status.CODE.stopping, "Killing all services",
                   Logging.LogLevel.INFO);
         for (String serviceId : serviceMan) {
             try {
-                log.trace("Trying to stop service " + serviceId);
+                log.trace("Trying to kill service " + serviceId);
                 connCtx = serviceMan.get(serviceId);
-                connCtx.getConnection().stop();
-                log.debug("Service " + serviceId + " was stopped");
+                connCtx.getConnection().kill();
+                log.debug("Service " + serviceId + " kill");
             } catch (Exception e) {
-                log.error("Could not stop service " + serviceId);
+                log.error("Could not kill service " + serviceId);
             } finally {
                 if (connCtx != null) {
                     connCtx.unref();
