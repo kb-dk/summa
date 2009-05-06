@@ -31,6 +31,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.api.ControlConnection;
 import dk.statsbiblioteket.summa.control.client.Client;
+import dk.statsbiblioteket.summa.control.ClientConnectionFactory;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
 import dk.statsbiblioteket.util.rpc.ConnectionFactory;
@@ -56,76 +57,6 @@ public class ClientShell {
     private ClientConnection client;
     private Core shell;
 
-    /**
-     * Helper class exposing a ConnectionFactory that establish ClientConnection
-     * objects by proxying through a ControlConnection.
-     * <p/>
-     * The key point is that this class only need the client id and not the
-     * whole RMI address to look up a client
-     */
-    private static class ClientProxyConnectionFactory
-                                 extends ConnectionFactory<ClientConnection> {
-        private ShellContext ctx;
-        private ConnectionFactory<ControlConnection> controlConnFact;
-        private String controlAddress;
-
-        public ClientProxyConnectionFactory (Configuration conf,
-                                             ShellContext ctx) {
-            this.ctx = ctx;
-            controlConnFact =
-                         new GenericConnectionFactory<ControlConnection>(conf);
-            controlAddress = conf.getString(ConnectionConsumer.CONF_RPC_TARGET,
-                                            "//localhost:27000/summa-control");
-        }
-
-        public ClientConnection createConnection(String connectionId) {
-            ctx.debug("Looking up Control server at " + controlAddress + " ... ");
-            ControlConnection control =
-                               controlConnFact.createConnection(controlAddress);
-
-            if (control == null) {
-                ctx.error("No connection to Control");
-                return null;
-            } else {
-                try {
-                    ctx.debug("Control reports "
-                             + control.getStatus().toString());
-                } catch (IOException e) {
-                    // Yeah we eat the stack trace. Shoot me
-                    ctx.error("Connection error: " + e.getMessage());
-                    return null;
-                }
-            }
-
-            ctx.debug("Looking up client '"
-                       + connectionId + "' via Control server ... ");
-            try {
-                ClientConnection client = control.getClient(connectionId);
-
-                if (client == null) {
-                    ctx.error("No connection to Client '" + connectionId + "'");
-                    return null;
-                }
-
-                ctx.debug("Client reports " + client.getStatus().toString());
-
-                // Do a 'noia check that the client ids match up
-                String clientId = client.getId();
-                if (!connectionId.equals(clientId)) {
-                    ctx.warn("Client reports id '" + clientId
-                             + "'. Expected '" + connectionId + "'");
-                }
-
-                return client;
-
-            } catch (IOException e) {
-                // Yeah we eat the stack trace (again). Shoot me
-                ctx.error("Connection error: " + e.getMessage());
-                return null;
-            }
-        }
-    }
-
     public ClientShell (String target) throws Exception {
         shell = new Core ();
         shell.setPrompt ("client-shell> ");
@@ -141,8 +72,8 @@ public class ClientShell {
         if (target.startsWith("//")) {
             connFact = new GenericConnectionFactory<ClientConnection>(conf);
         } else {
-            connFact = new ClientProxyConnectionFactory(conf,
-                                                       shell.getShellContext());
+            connFact = new ClientConnectionFactory(conf,
+                                                   shell.getShellContext());
         }
 
         connManager = new ConnectionManager<ClientConnection>(connFact);

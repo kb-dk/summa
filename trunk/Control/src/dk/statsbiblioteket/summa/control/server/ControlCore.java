@@ -451,7 +451,7 @@ public class ControlCore extends UnicastRemoteObject
     private void setStatus (Status.CODE code, String msg,
                             Logging.LogLevel level) {
         status = new Status(code, msg);
-        Logging.log (this +" status: "+ status, log, level);
+        Logging.log ("Status: "+ status, log, level);
     }
 
     private void setStatusIdle () {

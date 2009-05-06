@@ -8,6 +8,7 @@ import dk.statsbiblioteket.summa.control.api.*;
 import dk.statsbiblioteket.summa.control.api.feedback.rmi.RemoteConsoleFeedback;
 import dk.statsbiblioteket.summa.control.api.feedback.rmi.RemoteFeedback;
 import dk.statsbiblioteket.summa.control.server.ControlUtils;
+import dk.statsbiblioteket.summa.control.ClientConnectionFactory;
 import dk.statsbiblioteket.util.rpc.ConnectionContext;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 import org.apache.commons.logging.Log;
@@ -29,7 +30,7 @@ public class StartCommand extends Command {
                          String controlAddress) {
         super ("start", "Start a client instance");
 
-        setUsage("start <client-instance-id>");
+        setUsage("start <client>");
 
         installOption ("t", "transport", true, "Which deployment transport to"
                                              + " use. Allowed values are 'ssh'."
@@ -77,39 +78,40 @@ public class StartCommand extends Command {
                         ClientDeployer.CONF_INSTANCE_ID,
                         instanceId,
                         ClientDeployer.CONF_DEPLOYER_CLASS,
-                        transport,
-                        ClientDeployer.CONF_DEPLOYER_FEEDBACK,
-                        "dk.statsbiblioteket.summa.control.api.feedback.rmi.RemoteFeedbackClient",
-                        RemoteFeedback.CONF_REGISTRY_HOST,
-                        hostname);
+                        transport);
 
         log.trace("Configuration initialized");
         /* Connect to the Control and send the deployment request */
         ctx.prompt ("Starting client '" + instanceId + "' using "
                     + "transport '" + transport + "'... ");
         ConnectionContext<ControlConnection> connCtx = null;
-        RemoteConsoleFeedback remoteConsole = null;
+
         try {
-            log.trace("Creating remote console");
-            remoteConsole = Configuration.create(RemoteConsoleFeedback.class,
-                                                 conf);
-            log.trace("Calling get on ConnectionManager with " + controlAddress);
+            log.trace("Looking up a Control connection on: " + controlAddress);
             connCtx = cm.get(controlAddress);
             if (connCtx == null) {
                 ctx.error("Failed to connect to Control server at '"
                            + controlAddress + "'");
                 return;
             }
-            log.trace("Calling getConnection on connCtx");
+
             ControlConnection control = connCtx.getConnection();
-            log.trace("Starting client");
+            log.debug("Starting client '" + instanceId + "'");
             control.startClient(conf);
+
+            // Wait for the service to leave the not_instantiated status
+            StatusMonitor mon = new StatusMonitor(
+                                     new ClientConnectionFactory(controlAddress,
+                                                                 ctx),
+                                     instanceId, 5, ctx,
+                                     Status.CODE.not_instantiated);
+
+            // Block until the Client's state leaves not_instantiated
+            mon.run();
+
             log.trace("All OK");
-            ctx.info("OK");
+            ctx.info("OK: " + mon.getLastStatus());
         } finally {
-            if (remoteConsole != null) {
-                remoteConsole.close();
-            }
             if (connCtx != null) {
                 cm.release (connCtx);
             }
