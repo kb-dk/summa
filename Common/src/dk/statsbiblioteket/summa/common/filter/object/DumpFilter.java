@@ -64,10 +64,39 @@ public class DumpFilter extends ObjectFilterImpl {
             "summa.dumpfilter.dumpnonrecord";
     public static final boolean DEFAULT_DUMP_NONRECORDS = true;
 
+    /**
+     * The maximum number of Records to dump. Aafter this number is reached,
+     * no more dumps will be made.
+     * </p><p>
+     * Optional. The default is 500. Setting this to -1 means infinite dumps.
+     */
+    public static final String CONF_MAXDUMPS =
+            "summa.dumpfilter.maxdumps";
+    public static final int DEFAULT_MAXDUMPS = 500;
+
+    /**
+     * If the dumper has not received any Payloads for this number of ms,
+     * the max dumps counter is reset to 0. The intendedscenario is a
+     * watching ingester or indexer which starts with a huge amount of Payloads,
+     * then has a period of inactivity followed by a new batch.
+     * </p><p>
+     * Optional. The default is 60,000 (1 minute). Setting this to -1 disables
+     * the reset og the max dumps counter.
+     */
+    public static final String CONF_RESET_MAXDUMPS_MS =
+            "summa.dumpfilter.reset.maxdumps.ms";
+    public static final int DEFAULT_RESET_MAXDUMPS_MS = 60 * 1000;
+
     private File output;
     private Pattern basePattern;
     private Pattern idPattern;
     private boolean dumpNonRecords = DEFAULT_DUMP_NONRECORDS;
+    private int maxDumps = DEFAULT_MAXDUMPS;
+    private int resetReceivedDumpsMS = DEFAULT_RESET_MAXDUMPS_MS;
+    // TODO: Implement this
+
+    private long payloadsReceivedSinceReset = 0;
+    private long lastPayloadReceivedTimestamp = 0;
 
     public DumpFilter(Configuration conf) {
         super(conf);
@@ -75,8 +104,8 @@ public class DumpFilter extends ObjectFilterImpl {
         String outputStr = conf.getString(CONF_OUTPUTFOLDER, null);
         if (outputStr == null) {
             //noinspection DuplicateStringLiteralInspection
-            output = new File(new File(System.getProperty("java.io.tmpdir")),
-                                       "payloads");
+            output = new File(new File(
+                    System.getProperty("java.io.tmpdir")), "payloads");
         } else {
             output = new File(outputStr);
         }
@@ -88,15 +117,20 @@ public class DumpFilter extends ObjectFilterImpl {
                 Pattern.compile(conf.getString(CONF_BASEEXP, DEFAULT_BASEEXP));
         idPattern = Pattern.compile(conf.getString(CONF_IDEXP, DEFAULT_IDEXP));
         dumpNonRecords = conf.getBoolean(CONF_DUMP_NONRECORDS, dumpNonRecords);
+        maxDumps = conf.getInt(CONF_MAXDUMPS, maxDumps);
+        resetReceivedDumpsMS =
+                conf.getInt(CONF_RESET_MAXDUMPS_MS, resetReceivedDumpsMS);
         log.info(String.format(
-                "Created DumpFilter with base='%s', id='%s', dumpNonRecords=%b",
+                "Created DumpFilter with base='%s', id='%s', dumpNonRecords=%b,"
+                + " maxDumps=%d, resetMaxDumpsMS=%d",
                 conf.getString(CONF_BASEEXP, DEFAULT_BASEEXP),
                 conf.getString(CONF_IDEXP, DEFAULT_IDEXP),
-                dumpNonRecords));
+                dumpNonRecords, maxDumps, resetReceivedDumpsMS));
     }
 
     @Override
     protected boolean processPayload(Payload payload) throws PayloadException {
+        payloadsReceivedSinceReset++;
         if (payload.getRecord() == null && dumpNonRecords) {
             dump(payload);
         } else if (basePattern.matcher(payload.getRecord().getBase()).matches()
