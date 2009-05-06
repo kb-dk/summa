@@ -67,7 +67,7 @@ public class FacetTest extends NoExitTestCase {
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
-        cleanup();
+//        cleanup();
     }
 
     private void cleanup() throws Exception {

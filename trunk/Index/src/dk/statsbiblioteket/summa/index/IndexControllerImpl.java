@@ -50,7 +50,15 @@ import java.util.List;
  * </p><p>
  * It is recommended to include setup of an IndexDescriptor in the configuration
  * for the IndexController as it will be copied to the configuration for the
- * underlying Indexmanipulators. See {@link IndexDescriptor#CONF_DESCRIPTOR}.
+ * underlying IndexManipulators. See {@link IndexDescriptor#CONF_DESCRIPTOR}.
+ * </p><p>
+ * Specifying the setup for the IndexDescriptor also means that the manipulator
+ * {@link DescriptorManipulator} will be appended to the list of manipulators,
+ * thus ensuring that descriptor-XML is stored in the index-folder.
+ * </p><p>
+ * When a commit is called, a copy of the IndexDescriptor will be stored
+ * together with the index. This version of the IndexDescriptor is noramlly
+ * used by the searchers.
  */
 // TODO: Mark update on eof, meta-key-value-pattern
 // TODO: Consider write-lock
@@ -277,7 +285,16 @@ public class IndexControllerImpl extends StateThread implements
             log.trace("Manipulator created");
             manipulators.add(manipulator);
         }
-        log.debug("Manipulators created, opening index");
+        log.debug("Manipulators created");
+
+        if (!conf.valueExists(IndexDescriptor.CONF_DESCRIPTOR)) {
+            log.info(String.format(
+                    "No setup %s for IndexDescriptor specified. No descriptor-"
+                    + "XML will be stored with the index",
+                    IndexDescriptor.CONF_DESCRIPTOR));
+        } else {
+            manipulators.add(new DescriptorManipulator(conf));
+        }
 
         profiler = new Profiler();
         profiler.setBpsSpan(PROFILER_SPAN);

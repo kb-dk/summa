@@ -22,12 +22,12 @@
  */
 package dk.statsbiblioteket.summa.search;
 
-import java.rmi.RemoteException;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
+import dk.statsbiblioteket.util.qa.QAInfo;
+
+import java.rmi.RemoteException;
 
 /**
  * Nodes are the actual searchers under a SummaSearcher. Nodes are controlled
@@ -37,8 +37,10 @@ import dk.statsbiblioteket.summa.search.api.ResponseCollection;
  * SearchNodes uses the Composite-pattern to achieve sequence, parallelism and
  * controlling open/close.
  * </p><p>
- * Note: It is highly recommended to use the {@link dk.statsbiblioteket.summa.search.SearchNodeImpl} as it
+ * Note: It is highly recommended to use the
+ * {@link dk.statsbiblioteket.summa.search.SearchNodeImpl} as it
  * keeps track of running searches when open and close is called.
+ * The SearchNodeImpl also keeps track of the IndexDescriptor.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,

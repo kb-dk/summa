@@ -22,13 +22,13 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
-import java.net.URL;
-import java.io.IOException;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
+import java.net.URL;
 
 /**
  * Periodically fetches the content of a given URL and calls
@@ -89,13 +89,18 @@ public abstract class ResourceListener implements Runnable {
         try {
             newContent = Resolver.getUTF8Content(location);
         } catch (IOException e) {
-            lastException = new IOException("Exception fetching '" + location
-                                            + "'", e);
+            lastException = new IOException(String.format(
+                    "Exception fetching '%s'", location), e);
             return false;
+        }
+        if (newContent == null) {
+            log.debug("No content could be recolved from '" + location + "'");
         }
         try {
             if (oldContent == null || !oldContent.equals(newContent)) {
-                log.debug("performCheck got new content");
+                log.debug("performCheck got new content of size "
+                          + (newContent == null ? "null" : 
+                             newContent.length()));
                 oldContent = newContent;
                 resourceChanged(newContent);
                 log.trace("resourceChanged called successfully");
