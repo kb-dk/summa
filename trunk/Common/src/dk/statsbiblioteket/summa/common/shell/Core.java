@@ -360,7 +360,10 @@ public class Core {
     }
 
     private void printCommands () {
-        for (Command cmd : commands.values()) {
+        SortedSet<String> sortedCommands =
+                                       new TreeSet<String>(commands.keySet());
+        for (String cmdName : sortedCommands) {
+            Command cmd = commands.get(cmdName);
             shellCtx.info("\t" + cmd.getName() + "\t" + cmd.getDescription());
         }
     }
