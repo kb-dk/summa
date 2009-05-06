@@ -28,7 +28,7 @@ import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 /**
  * A controller for manipulating indexes. An index is a representation of
  * data in searcheable form and will normally include an Luxene index. In
- * addition it will normally include a SearchDescriptor and Facet information.
+ * addition it will normally include an IndexDescriptor and Facet information.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
