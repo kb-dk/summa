@@ -28,7 +28,7 @@ public class FeedbackFactory {
         Class<? extends Feedback> feedbackClass =
                            conf.getClass(ClientDeployer.CONF_DEPLOYER_FEEDBACK,
                                          Feedback.class,
-                                         ConsoleFeedback.class);
+                                         VoidFeedback.class);
         Feedback feedback = Configuration.create(feedbackClass, conf);
 
         return feedback;
