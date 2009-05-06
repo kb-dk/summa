@@ -25,11 +25,13 @@ package dk.statsbiblioteket.summa.facetbrowser;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.URL;
 import java.util.*;
 
 /**
@@ -65,9 +67,6 @@ public class Structure implements Configurable, Serializable {
      */
     private Map<String, FacetStructure> facets;
 
-    // TODO: Add support for changing definition of facets
-    private FacetIndexDescriptor descriptor;
-
     /**
      * Constructs a new Structure and empty Structure, ready to be filled with
      * FacetStructures.
@@ -95,19 +94,53 @@ public class Structure implements Configurable, Serializable {
         log.trace("Finished constructing Structure from configuration");
     }
 
+    public Structure(URL descriptorLocation) {
+        if (descriptorLocation == null) {
+            throw new IllegalArgumentException(
+                    "Got null as descriptor URL in constructor");
+        }
+        log.debug(String.format(
+                "Constructing Structure from IndexDescriptor at location '%s'",
+                descriptorLocation));
+        try {
+            FacetIndexDescriptor descriptor =
+                    new FacetIndexDescriptor(descriptorLocation);
+            facets = descriptor.getFacets();
+            descriptor.close();
+            freezeFacets();
+        } catch (IOException e) {
+            throw new ConfigurationException(String.format(
+                    "Unable to construct facet structure from location '%s'",
+                    descriptorLocation), e);
+        }
+    }
+
+    /**
+     * Checks whether the Facet Structure can be derived from the configuration.
+     * @param conf is the potential holder of setup-information for Structure.
+     * @return true if a Structure can be created based on conf.
+     */
+    public static boolean isSetupDefinedInConfiguration(Configuration conf) {
+        return (conf.valueExists(IndexDescriptor.CONF_DESCRIPTOR)
+                || conf.valueExists(CONF_FACETS));
+    }
+
     private void defineFacetsFromDescriptor(Configuration conf) {
         Configuration descriptorConf;
         try {
             descriptorConf =
                     conf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR);
         } catch (IOException e) {
+            //noinspection DuplicateStringLiteralInspection
             throw new ConfigurationException(String.format(
                     "Unable to extract sub configuration %s",
                     IndexDescriptor.CONF_DESCRIPTOR));
         }
         try {
-            descriptor = new FacetIndexDescriptor(descriptorConf);
+            FacetIndexDescriptor descriptor =
+                    new FacetIndexDescriptor(descriptorConf);
             facets = descriptor.getFacets();
+            descriptor.close();
         } catch (IOException e) {
             throw new ConfigurationException(
                     "Unable to extract facet structure from configuration", e);
@@ -216,11 +249,11 @@ public class Structure implements Configurable, Serializable {
     }
 
     /**
-     * @return a map from Facet-names to maximum tags.
+     * @return a map from Facet-names to maximum tags. The order is significant.
      */
     public HashMap<String, Integer> getMaxTags() {
         HashMap<String, Integer> map =
-                new HashMap<String, Integer>(facets.size());
+                new LinkedHashMap<String, Integer>(facets.size());
         for (Map.Entry<String, FacetStructure> entry: facets.entrySet()) {
             map.put(entry.getValue().getName(), entry.getValue().getMaxTags());
         }
@@ -228,11 +261,11 @@ public class Structure implements Configurable, Serializable {
     }
 
     /**
-     * @return a map from Facet-names to Facet-ids.
+     * @return a map from Facet-names to Facet-ids. The order is significant.
      */
     public HashMap<String, Integer> getFacetIDs() {
         HashMap<String, Integer> map =
-                new HashMap<String, Integer>(facets.size());
+                new LinkedHashMap<String, Integer>(facets.size());
         for (Map.Entry<String, FacetStructure> entry: facets.entrySet()) {
             map.put(entry.getValue().getName(), entry.getValue().getFacetID());
         }
@@ -241,13 +274,91 @@ public class Structure implements Configurable, Serializable {
 
     public HashMap<String, String[]> getFacetFields() {
         HashMap<String, String[]> map =
-                new HashMap<String, String[]>(facets.size());
+                new LinkedHashMap<String, String[]>(facets.size());
         for (Map.Entry<String, FacetStructure> entry: facets.entrySet()) {
             map.put(entry.getValue().getName(), entry.getValue().getFields());
         }
         return map;
     }
+
+    /**
+     * If possible, absorb the other Structure into this. Absorption is possible
+     * if the Facets in this and other are the same, including order, fields
+     * and sortLocale.
+     * </p><p>
+     * Absorption transfers all secondary parameters, such af maxTags and
+     * similar into this structure, essentially allowing for on-the-fly tweaks.
+     * @param other the Structure to absorb into this.
+     * @return true if other was successfully absorbed into this.
+     */
+    public boolean absorb(Structure other) {
+        if (!canAbsorb(other)) {
+            return false;
+        }
+        Iterator<Map.Entry<String, FacetStructure>> thisEntries =
+                this.getFacets().entrySet().iterator();
+        Iterator<Map.Entry<String, FacetStructure>> otherEntries =
+                other.getFacets().entrySet().iterator();
+        while (thisEntries.hasNext()) {
+            thisEntries.next().getValue().absorb(
+                    otherEntries.next().getValue());
+
+        }
+        return true;
+    }
+
+    /**
+     * Compares the facet names, fields and sort locale for equality with
+     * significant ordering. If These attributes matches, true is returned.
+     * @param other the Structure to compare against.
+     * @return true if facet names, fields and sort locale are the same.
+     */
+    public boolean canAbsorb(Structure other) {
+        Map<String, FacetStructure> thisFacets = getFacets();
+        Map<String, FacetStructure> otherFacets = other.getFacets();
+        if (thisFacets.size() != otherFacets.size()) {
+            log.debug("absorb(): The number of facets differed");
+            return false;
+        }
+        Iterator<Map.Entry<String, FacetStructure>> thisEntries =
+                thisFacets.entrySet().iterator();
+        Iterator<Map.Entry<String, FacetStructure>> otherEntries =
+                otherFacets.entrySet().iterator();
+        int counter = 0;
+        while (thisEntries.hasNext()) {
+            FacetStructure thisFacet = thisEntries.next().getValue();
+            FacetStructure otherFacet = otherEntries.next().getValue();
+
+            if (!thisFacet.getName().equals(otherFacet.getName())) {
+                log.debug(String.format(
+                        "absorb(): The facets at position %d (counting from 0)"
+                        + " did not have the same name: '%s' vs. '%s'",
+                        counter, thisFacet.getName(), otherFacet.getName()));
+                return false;
+            }
+            if (!Strings.join(thisFacet.getFields(), ", ").equals(
+                    Strings.join(otherFacet.getFields(), ", "))) {
+                log.debug(String.format(
+                        "absorb(): The fields for facet '%s' were not the "
+                        + "same: '%s' vs. '%s'",
+                        thisFacet.getName(),
+                        Strings.join(thisFacet.getFields(), ", "),
+                        Strings.join(otherFacet.getFields(), ", ")));
+                return false;
+            }
+            if ((thisFacet.getLocale() == null
+                 && otherFacet.getLocale() != null)
+                || (thisFacet.getLocale() != null &&
+                    !thisFacet.getLocale().equals(otherFacet.getLocale()))) {
+                log.debug(String.format(
+                        "absorb(): The sortLocales for facet '%s' were not the "
+                        + "same: '%s' vs. '%s'",
+                        thisFacet.getName(),
+                        thisFacet.getLocale(), otherFacet.getLocale()));
+            }
+            counter++;
+        }
+        log.trace("Facet names, fields and sort-locale matches");
+        return true;
+    }
 }
-
-
-

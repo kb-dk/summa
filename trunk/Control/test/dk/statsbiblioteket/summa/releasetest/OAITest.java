@@ -24,21 +24,20 @@ package dk.statsbiblioteket.summa.releasetest;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
-import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
-import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
 import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
-import dk.statsbiblioteket.summa.control.service.StorageService;
-import dk.statsbiblioteket.summa.control.service.FilterService;
-import dk.statsbiblioteket.summa.control.service.SearchService;
+import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
+import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.control.api.Service;
 import dk.statsbiblioteket.summa.control.api.Status;
-import dk.statsbiblioteket.summa.ingest.stream.FileReader;
-import dk.statsbiblioteket.summa.index.XMLTransformer;
+import dk.statsbiblioteket.summa.control.service.FilterService;
+import dk.statsbiblioteket.summa.control.service.SearchService;
+import dk.statsbiblioteket.summa.control.service.StorageService;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
-import dk.statsbiblioteket.summa.search.SearchNodeFactory;
-import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.index.XMLTransformer;
+import dk.statsbiblioteket.summa.ingest.stream.FileReader;
 import dk.statsbiblioteket.util.Profiler;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -119,9 +118,7 @@ public class OAITest extends NoExitTestCase {
                 "test-facet-search-1/config/configuration.xml").
                 getFile());
         searchConf.set(Service.CONF_SERVICE_ID, "SearchService");
-        searchConf.getSubConfigurations(SearchNodeFactory.CONF_NODES).
-                get(0).
-                getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
+        searchConf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
                 set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
                     indexDescriptorLocation);
         SearchService search = new SearchService(searchConf);

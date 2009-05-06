@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -45,8 +45,6 @@ import java.io.IOException;
         author = "te")
 public class DescriptorManipulator implements IndexManipulator {
     private static Log log = LogFactory.getLog(DescriptorManipulator.class);
-
-    public static final String DESCRIPTOR_FILENAME = "IndexDescriptor.xml";
 
     private File indexRoot = null;
     private StoringIndexDescriptor descriptor = null;
@@ -111,7 +109,8 @@ public class DescriptorManipulator implements IndexManipulator {
                     + "IndexDescriptor to '%s'", indexRoot));
             return;
         }
-        File descFile = new File(indexRoot, DESCRIPTOR_FILENAME);
+        File descFile =
+                new File(indexRoot, IndexDescriptor.DESCRIPTOR_FILENAME);
         if (descFile.exists()) {
             log.debug("Removing existing IndexDescriptor at '"
                       + descFile + "'");
