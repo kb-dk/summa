@@ -45,7 +45,7 @@ public interface Configurable {
     public class ConfigurationException extends RuntimeException {
 
         public ConfigurationException (Throwable cause) {
-            super (cause);
+            super (getCauseMessage(cause));
         }
 
         public ConfigurationException (String message) {
@@ -56,8 +56,22 @@ public interface Configurable {
             super (message, cause);
         }
 
-    }
+        private static String getCauseMessage(Throwable t) {
+            // If there is no message, or if the exception has its message set
+            // to its class name (InvocationTargetException I am looking
+            // at you!), we try and find a better message
+            if (t.getMessage() == null
+                || "".equals(t.getMessage())
+                || t.getClass().getName().equals(t.getMessage())) {
+                if (t.getCause() != null) {
+                    return getCauseMessage(t.getCause());
+                }
+            }
 
+            return (t.getMessage() == null || "".equals(t.getMessage())) ?
+                    "Unknwon cause" : t.getMessage();
+        }
+    }
 }
 
 
