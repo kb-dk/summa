@@ -25,7 +25,7 @@ h1 {
     float: left;
     clear: both;
     background-color: #ff9933;
-    width: 35em;
+    width: 50em;
     padding-bottom: 1em;
 }
 
@@ -168,6 +168,26 @@ h1 {
     width: 24em;
     padding-left: 0.5em;
     padding-right: 0.5em;
+}
+
+.searchResultItemExpandedQuery {
+    clear: left;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+}
+
+.searchResultItemExpandedQuery span.expandedQueryText {
+    font-family: monospace;
+    font-size: smaller;
+}
+
+.searchResultItemExplanation {
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+}
+
+.searchResultItemExplanation pre {
+    font-size: smaller;
 }
 
 .searchResultItemImage {

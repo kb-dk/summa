@@ -112,7 +112,7 @@
 <div class="searchBoxContainer" id="searchBoxContainer">
     <div class="searchBox" id="searchBox">
         <form action="index.jsp" class="searchBoxTweak" id="fpSearch">
-            <input type="text" name="query" id="q" value="<%= form_query %>" />
+            <input type="text" name="query" size="80" id="q" value="<%= form_query %>" />
             <input type="submit" value="Search" />
             <input type="hidden" name="usersearch" value="true" />
         </form>

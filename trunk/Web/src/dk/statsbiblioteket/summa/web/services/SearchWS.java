@@ -42,6 +42,8 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 /**
  * A class containing methods meant to be exposed as a web service
@@ -163,13 +165,14 @@ public class SearchWS {
         ResponseCollection res;
 
         Request req = new Request();
-        req.put(SuggestKeys.SEARCH_UPDATE_QUERY, query);
+        req.put(SuggestKeys.SEARCH_UPDATE_QUERY, cleanQuery(query));
         req.put(SuggestKeys.SEARCH_UPDATE_HITCOUNT, hitCount);
 
         try {
             getSuggestClient().search(req);
         } catch (IOException e) {
-            log.warn("Error committing query '" + query + "' with hitCount '" + hitCount + "'");
+            log.warn("Error committing query '" + cleanQuery(query)
+                     + "' with hitCount '" + hitCount + "'");
         }
     }
 
@@ -255,9 +258,18 @@ public class SearchWS {
         return simpleSearchSorted(query, numberOfRecords, startIndex, DocumentKeys.SORT_ON_SCORE, false);
     }
 
+    public static final Pattern PROCESSING_OPTIONS =
+            Pattern.compile("\\<\\:(.*)\\:\\>(.*)");
     /**
      * A simple way to query the index wile being able to specify which field to sort by and whether the sorting
      * should be reversed.
+     * </p><p>
+     * Processing-options can be specified at the start of the query prepended
+     * by '<:' and appended by ':>', divided by spaces. As of now, the only
+     * possible option is 'explain', which turns on explanation of the result.
+     * This increases processing time, so do not turn it on as default.
+     * example: "<:explain:>foo" will explain why the documents matching foo
+     * was selected.
      * @param query The query to perform.
      * @param numberOfRecords The maximum number of records to return.
      * @param startIndex Where to start returning records from (used to implement paging).
@@ -266,11 +278,42 @@ public class SearchWS {
      * @return An XML string containing the result or an error description.
      */
     public String simpleSearchSorted(String query, int numberOfRecords, int startIndex, String sortKey, boolean reverse) {
+        log.debug(String.format(
+                "simpleSearchSorted(query='%s', numberOfRecords=%d, "
+                + "startIndex=%d, sortKey='%s', reverse=%b) entered",
+                query, numberOfRecords, startIndex, sortKey, reverse));
+
         String retXML;
-
         ResponseCollection res;
-
         Request req = new Request();
+        // Handle processing options
+        String[] options = extractOptions(query);
+        try {
+            if (options != null) {
+                log.debug("simpleSearchSorted received "
+                          + options.length + " options");
+                for (String option: options) {
+                    if ("explain".equals(option)) {
+                        log.debug("Turning on explain for query '"
+                                  + query + "'");
+                        req.put(DocumentKeys.SEARCH_EXPLAIN, true);
+                        continue;
+                    }
+                    log.debug(String.format(
+                            "Got unknown processing option '%s' in query '%s'",
+                            option, query));
+                }
+            } else {
+                log.trace("No processing options for query '%s'");
+            }
+        } catch (Exception e) {
+            log.warn(String.format(
+                    "Exception while extracting processing options from query "
+                    + "'%s'. Options are skipped and the query left unchanged",
+                    query));
+        }
+        query = cleanQuery(query);
+
         req.put(DocumentKeys.SEARCH_QUERY, query);
         req.put(DocumentKeys.SEARCH_MAX_RECORDS, numberOfRecords);
         req.put(DocumentKeys.SEARCH_START_INDEX, startIndex);
@@ -295,12 +338,29 @@ public class SearchWS {
         return retXML;
     }
 
+    private String cleanQuery(String queryString) {
+        Matcher optionsMatcher = PROCESSING_OPTIONS.matcher(queryString);
+        if (optionsMatcher.matches()) {
+            return optionsMatcher.group(2);
+        }
+        return queryString;
+    }
+
+    private String[] extractOptions(String query) {
+        Matcher optionsMatcher = PROCESSING_OPTIONS.matcher(query);
+        if (optionsMatcher.matches()) {
+            return optionsMatcher.group(1).split(" +");
+        }
+        return null;
+    }
+
     /**
      * A simple way to query the facet browser.
      * @param query The query to perform.
      * @return An XML string containing the facet result or an error description.
      */
     public String simpleFacet(String query) {
+        query = cleanQuery(query);
         String retXML;
 
         ResponseCollection res;

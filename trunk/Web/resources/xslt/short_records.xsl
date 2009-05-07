@@ -57,15 +57,31 @@
 
                 <xsl:for-each select="record">
                     <xsl:for-each select="field[@name='shortformat']">
-
                         <xsl:for-each select="shortrecord/RDF/Description">
                             <xsl:call-template name="showfields-classic" />
                         </xsl:for-each>
+                    </xsl:for-each>
 
+                    <xsl:for-each select="field[@name='summa:explain']">
+                        <xsl:call-template name="explain" />
                     </xsl:for-each>
                 </xsl:for-each>
             </xsl:otherwise>
         </xsl:choose>
+    </xsl:template>
+
+    <xsl:template name="explain">
+        <div class="searchResultItemCommon searchResultItemExpandedQuery">
+            <p>Expanded query: <span class="expandedQueryText">
+                <xsl:value-of select="explanation/expandedquery"/>
+            </span></p>
+        </div>
+        <div class="searchResultItemCommon searchResultItemExplanation">
+            <p>Score:</p>
+            <pre>
+                <xsl:value-of select="explanation/score"/>
+            </pre>
+        </div>
     </xsl:template>
 
     <xsl:template name="showfields-classic">
