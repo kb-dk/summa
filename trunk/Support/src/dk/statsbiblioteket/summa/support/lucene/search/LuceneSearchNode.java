@@ -295,6 +295,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
     public void managedOpen(String location) throws RemoteException {
         log.debug("Open called for location '" + location
                   + "'. Appending /" + LuceneIndexUtils.LUCENE_FOLDER);
+        String baseLocation = location;
         if (location == null || "".equals(location)) {
             log.warn("open(null) called, no index available");
             return;
@@ -316,7 +317,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                     "Could not resolve file from location '%s'", location));
         }
         if (loadDescriptorFromIndex) {
-            openDescriptor(location);
+            openDescriptor(baseLocation);
         }
         try {
             searcher = new IndexSearcher(IndexReader.open(
@@ -352,8 +353,9 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
             descriptor = new LuceneIndexDescriptor(urlLocation);
         } catch (IOException e) {
             throw new RemoteException(String.format(
-                    "Unable to create LuceneIndexDescriptor from '%s'",
-                    urlLocation), e);
+                    "Unable to create LuceneIndexDescriptor from location '%s' "
+                    + "resolved to URL '%s'",
+                    location, urlLocation), e);
         }
         parser = new SummaQueryParser(conf, descriptor);
     }
@@ -489,6 +491,8 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                                                             ParseException {
         if (!mlt_enabled
             || !request.containsKey(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID)) {
+            log.debug("parseQuery(...): Returning plain query instead of "
+                      + "MoreLikeThis");
             return query == null ? null : getParser().parse(query);
         }
         if (moreLikeThis == null) {
@@ -497,10 +501,31 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                     + " opened)");
         }
 
-        String recordID = request.getString(
-                LuceneKeys.SEARCH_MORELIKETHIS_RECORDID);
+        log.debug("Performing MoreLikeThis query parsing from request");
+        String recordID;
+        try {
+            recordID = request.getString(
+                    LuceneKeys.SEARCH_MORELIKETHIS_RECORDID, null);
+            if (recordID == null) {
+                log.warn(String.format(
+                        "Got null when requesting String for key '%s'. This "
+                        + "fails sanity-checking. Switching to plain query",
+                        LuceneKeys.SEARCH_MORELIKETHIS_RECORDID));
+                return query == null ? null : getParser().parse(query);
+
+            }
+        } catch (final Exception e) {
+            throw new ParseException(
+                    String.format("Exception while requesting String for '%s' "
+                                  + "with default value null", 
+                                  LuceneKeys.SEARCH_MORELIKETHIS_RECORDID)) {
+                {
+                    initCause(e);
+                }
+            };
+        }
         log.trace("constructing MoreLikeThis query for '" + recordID + "'");
-        if (recordID == null || "".equals(recordID)) {
+        if ("".equals(recordID)) {
             throw new ParseException(String.format(
                     "RecordID invalid. Expected something, got '%s'",
                     recordID));

@@ -22,21 +22,22 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser;
 
-import java.io.IOException;
-import java.io.File;
-import java.rmi.RemoteException;
-
-import dk.statsbiblioteket.summa.index.IndexManipulator;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.facetbrowser.build.Builder;
+import dk.statsbiblioteket.summa.facetbrowser.build.BuilderFactory;
 import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMap;
 import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMapFactory;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandlerFactory;
-import dk.statsbiblioteket.summa.facetbrowser.build.Builder;
-import dk.statsbiblioteket.summa.facetbrowser.build.BuilderFactory;
+import dk.statsbiblioteket.summa.index.IndexManipulator;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
+
+import java.io.File;
+import java.io.IOException;
+import java.rmi.RemoteException;
 
 /**
  * To be used under the Summa Index-framework. This manipulator maintains a
@@ -120,8 +121,9 @@ public class FacetManipulator implements IndexManipulator {
                 BuilderFactory.getBuilder(conf, structure, coreMap, tagHandler);
         log.info(String.format(
                 "FacetManipulator(clearTagsOnClear=%b, clearTagsOnConsolidate=%"
-                + "b, skipFacetOnUpdate=%b) created",
-                clearTagsOnClear, clearTagsOnConsolidate, skipFacetOnUpdate));
+                + "b, skipFacetOnUpdate=%b) created with facets %s",
+                clearTagsOnClear, clearTagsOnConsolidate, skipFacetOnUpdate,
+                Strings.join(structure.getFacetNames(), ", ")));
     }
 
     public void clear() throws IOException {
@@ -149,8 +151,8 @@ public class FacetManipulator implements IndexManipulator {
 
     // TODO: Auto-rebuild on missing facets
     public void open(File indexRoot) throws IOException {
-        //noinspection DuplicateStringLiteralInspection
-        log.debug("open(" + indexRoot + ") called");
+        log.debug(String.format(
+                "Facetmanipulator.open(%s) called", indexRoot));
         if (indexRoot == null) {
             log.debug("open(null) called, which is equivalent to close()");
             close();

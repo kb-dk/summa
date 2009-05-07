@@ -22,18 +22,16 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorageException;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorageException;
+
+import java.io.Serializable;
+import java.io.StringWriter;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * A wrapper of a Map which provides convenience-methods for accessing specific
@@ -271,7 +269,26 @@ public class ConvenientMap extends HashMap<String, Serializable> {
         return result;
     }
 
+    /**
+     * @param verbose if true a full dump of the content of the map is returned.
+     * @return a human-readable description of the map.
+     */
+    public String toString(boolean verbose) {
+        if (!verbose) {
+            return super.toString();
+        }
+        StringWriter sw = new StringWriter(1000);
+        sw.append("ConvenientMap(");
+        boolean later = false;
+        for (Map.Entry<String, Serializable> entries: entrySet()) {
+            if (!later) {
+                sw.append(", ");
+                later = true;
+            }
+            sw.append(entries.getKey()).append("=");
+            sw.append(entries.getValue().toString());
+        }
+        sw.append(")");
+        return sw.toString();
+    }
 }
-
-
-

@@ -46,6 +46,7 @@ import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
 import dk.statsbiblioteket.util.Profiler;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
 
@@ -111,8 +112,8 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
                     + " makes it hard to coordinate major updates to "
                     + "the IndexDescriptor in a production system",
                     IndexDescriptor.CONF_DESCRIPTOR, Structure.CONF_FACETS));
-            structure = new Structure(conf);
-            initStructures();
+            Structure structure = new Structure(conf);
+            initStructures(structure);
         }
         log.trace("FacetSearchNode constructed. Awaiting open");
     }
@@ -145,23 +146,29 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
                     "Only minor facet changes detected in the IndexDescriptor "
                     + "from '%s'. Major re-initialization skipped",
                     urlLocation));
+            return;
         }
         log.debug(String.format("Performing major initialization based on '%s'",
                                 urlLocation));
-        structure = newStructure;
-        initStructures();
+        initStructures(newStructure);
+        if (log.isDebugEnabled()) {
+            log.debug(String.format(
+                    "Facets after updateDescription(%s): %s", 
+                    location, Strings.join(structure.getFacetNames(), ", ")));
+        }
     }
 
-    private void initStructures() throws RemoteException {
+    private void initStructures(Structure newStructure) throws RemoteException {
         lock.writeLock().lock();
         try {
             long startTime = System.currentTimeMillis();
+            structure = newStructure;
             if (facetMap != null) {
                 log.debug("Closing existing facet map");
                 facetMap.close();
             }
-            TagHandler tagHandler =
-                    TagHandlerFactory.getTagHandler(conf, structure, true);
+            TagHandler tagHandler = TagHandlerFactory.getTagHandler(
+                    conf, structure, true);
             CoreMap coreMap = CoreMapFactory.getCoreMap(conf, structure);
             facetMap = new FacetMap(structure, coreMap, tagHandler, true);
             browsers = new ArrayBlockingQueue<BrowserThread>(
