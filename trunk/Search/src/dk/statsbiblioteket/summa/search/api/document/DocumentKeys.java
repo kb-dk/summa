@@ -95,6 +95,20 @@ public interface DocumentKeys {
             "search.document.collectdocids";
 
     /**
+     * Boolean ("true" or "false"). Optional. Default is false.
+     * </p><p>
+     * If true, explain how the searcher arrived at the result. This is
+     * potentially a computationally intensive operation and should only
+     * be used for testing and development.
+     * </p><p>
+     * Explanations are returned as the field "summa:explain" as part of the
+     * DocumentResponse.Record.
+     */
+    public static final String SEARCH_EXPLAIN = "search.document.explain";
+
+    public static final String EXPLAIN_RESPONSE_FIELD = "summa:explain";
+
+    /**
      * The special sortKey signifying that sorting should be done on score,
      * thus making the search return records in order of relevance.
      */

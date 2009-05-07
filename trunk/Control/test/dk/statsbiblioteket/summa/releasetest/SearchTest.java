@@ -350,7 +350,5 @@ public class SearchTest extends NoExitTestCase {
         }
         storage.close();
     }
+
 }
-
-
-
