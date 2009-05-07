@@ -96,6 +96,21 @@ public class SSHDeployerTest extends TestCase {
         } catch (Exception e) {
             // Expected behaviour
         }
+
+        // It should work fine with a good config however
+        Configuration conf = makeConfiguration();
+        SSHDeployer depl = new SSHDeployer(conf);
+        assertNotNull(depl);
+
+        // Try with a malformed port def
+        try {
+            conf.set(SSHDeployer.CONF_DEPLOYER_TARGET, "localhost:asdmfhg");
+            depl = new SSHDeployer(conf);
+            fail("The deployer should throw an exception when given a malformed"
+                 + " target def");
+        } catch (Exception e) {
+            System.out.println("Got exception as expected: " + e.getMessage());
+        }
     }
 
     private Configuration makeConfiguration() {

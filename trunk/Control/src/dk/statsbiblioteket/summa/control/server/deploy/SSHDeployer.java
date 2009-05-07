@@ -97,9 +97,8 @@ public class SSHDeployer implements ClientDeployer {
         try {
             port = Integer.parseInt(tokens[1]);
         } catch (NumberFormatException e) {
-            log.warn(String.format(
-                    "Unable to parse '%s' as a port. Treating '%s' as the full "
-                    + "login", tokens[1], login));
+            throw new ConfigurationException("Malformed port definition: "
+                                             + tokens[1]);
         }
         login = tokens[0];
         log.debug("removePortFromLogin got login '" + login
