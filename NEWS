@@ -1,4 +1,48 @@
 =======================
+2009-05-07: Summa 1.4.3
+=======================
+
+ * Introduced a DescriptorManipulator that ensures that a copy of the
+   IndexDescriptor-XML is stored in the index-folder
+
+ * Make the search nodes (notably LuceneSearchNode and FacetSearchNode)
+   capable of fetching IndexDescriptor from the index-folder. This is used
+   in conjuction with the indexer copying the index descriptor over to the
+   index folder on commit and consolidates.
+   With this in place the searcher should be able to react on changing index
+   descriptors without restarting the searcher
+
+ * Sort commands alphabetically when listing commands inside a shell
+
+ * Add a 'stop' command to the control-shell which can be used to stop
+   a client instance
+
+ * Factor out a ClientConnectionFactory that can be used to instantiate
+   ClientConnections via a ControlConnection
+
+ * Bugfix: The wrong initializer for SummaQueryParser was used, so
+	       it was not possible to specify query time boosts (SB)
+
+ * Bugfix: Properly unexport remote interfaces when we kill a Client
+	       with the 'kill' command from the client-shell. Not doing this
+	       caused some wierd RMI hangs and "connection refused" messages
+
+ * Bugfix: Properly shut doen client and any services when Client
+           receives a stop() command
+
+ * Bugfix: Properly detect if someone wipes the bundle repo under a
+           running ControlCore
+
+ * Bugfix: Throw a NoRouteToHostException if the StorageWrietClient can not
+	       connect to the storage
+
+ * Bugfix: Better error handling on malformed port definitions in SSHDeployer
+
+ * Experimental: The JStorage configuration backend is still experimental,
+                 but has received some love and is well on its way for
+                 production readyness (SB)
+
+=======================
 2009-05-05: Summa 1.4.2
 =======================
 
