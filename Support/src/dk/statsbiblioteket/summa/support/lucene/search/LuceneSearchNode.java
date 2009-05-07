@@ -39,6 +39,7 @@ import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.summa.search.document.DocumentSearcherImpl;
 import dk.statsbiblioteket.summa.support.api.LuceneKeys;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.document.Document;
@@ -183,6 +184,17 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
     public static final String CONF_MORELIKETHIS_STOPWORDS =
             "summa.support.lucene.morelikethis.stopwords";
 
+    /**
+     * If true, an explanation for the inclusion of a document in the search
+     * result is provided, unless it is explicitely disabled in the query.
+     * Note that the calculation of an explanation is computationally heavy,
+     * so this should only be disabled for testing purposes.
+     * </p><p>
+     * Optional. Default is false;
+     */
+    public static final String CONF_EXPLAIN = "summa.support.lucene.explain";
+    public static final boolean DEFAULT_EXPLAIN = false;
+
     @SuppressWarnings({"FieldCanBeLocal"})
     private LuceneIndexDescriptor descriptor;
     private Configuration conf;
@@ -192,6 +204,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
     private String location = null;
     private static final long WARMUP_MAX_HITS = 50;
     private static final int COLLECTOR_REQUEST_TIMEOUT = 20 * 1000;
+    private boolean explain = DEFAULT_EXPLAIN;
 
     private boolean mlt_enabled = DEFAULT_MORELIKETHIS_ENABLED;
     private Integer mlt_minTermFreq = null;
@@ -277,6 +290,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
         if (stopWords != null) {
             mlt_stopWords = new HashSet<String>(stopWords);
         }
+        explain = conf.getBoolean(CONF_EXPLAIN, explain);
         log.debug(String.format(
                 "Finished setting up MoreLikeThis with enabled=%s, "
                 + "minTermFreq=%s, minDocFreq=%s, minWordLength=%s, "
@@ -587,6 +601,18 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                     new HashSet<String>(Arrays.asList(fields)),
                     new HashSet(5));
 
+
+            if (request.getBoolean(DocumentKeys.SEARCH_EXPLAIN, explain)
+                    && (Arrays.binarySearch(
+                    fields, DocumentKeys.EXPLAIN_RESPONSE_FIELD) < 0)) {
+                log.debug("Turning on explain for '" + query + "'");
+                String[] newFields = new String[fields.length + 1];
+                System.arraycopy(fields, 0, newFields, 0, fields.length);
+                newFields[newFields.length - 1] =
+                        DocumentKeys.EXPLAIN_RESPONSE_FIELD;
+                fields = newFields;
+            }
+
             DocumentResponse result =
                     new DocumentResponse(filter, query, startIndex, maxRecords,
                                      sortKey, reverseSort, fields, 0,
@@ -611,6 +637,19 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                 for (int fieldIndex = 0; fieldIndex < fields.length;
                      fieldIndex++) {
                     String field = fields[fieldIndex];
+                    if (field.equals(DocumentKeys.EXPLAIN_RESPONSE_FIELD)) {
+                        String explanation =
+                                explain(request, luceneQuery, scoreDoc.doc);
+                        if (log.isDebugEnabled()) {
+                            log.debug("Appending explanation:\n" + explanation);
+                        }
+                        if (explanation != null) {
+                            record.addField(new DocumentResponse.Field(
+                                    DocumentKeys.EXPLAIN_RESPONSE_FIELD,
+                                    explanation, false));
+                        }
+                        continue;
+                    }
                     Field iField = doc.getField(field);
                     if (iField == null || iField.stringValue() == null ||
                         "".equals(iField.stringValue())) {
@@ -650,6 +689,23 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
         } catch (Throwable t) {
             throw new RemoteException(String.format(
                     "Exception during search for query '%s'", query), t);
+        }
+    }
+
+    private String explain(Request request, Query query, int docID) {
+        if (!request.getBoolean(DocumentKeys.SEARCH_EXPLAIN, explain)) {
+            return null;
+        }
+        try {
+            return String.format(
+                    "<explanation>\n<expandedquery>%s</expandedquery>\n"
+                    + "<score>%s</score></explanation>",
+                    XMLUtil.encode(LuceneIndexUtils.queryToString(query)),
+                    XMLUtil.encode(searcher.explain(query, docID).toString()));
+        } catch (IOException e) {
+            return String.format(
+                    "Unable to return explanation for the inclusion of doc #%d"
+                    + " in the search result due to %s", docID, e.getMessage());
         }
     }
 

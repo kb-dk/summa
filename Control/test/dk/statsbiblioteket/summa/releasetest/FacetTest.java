@@ -26,10 +26,13 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
+import dk.statsbiblioteket.summa.common.index.IndexException;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.search.IndexWatcher;
 import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
+import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.util.Files;
@@ -332,6 +335,28 @@ public class FacetTest extends NoExitTestCase {
                   + searcher.search(SearchTest.simpleRequest("fagekspert")).
                 toXML());
 
+        searcher.close();                                                        c
+        storage.close();
+    }
+
+    public void testExplain() throws Exception {
+        Configuration conf = getSearcherConfiguration();
+        SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
+        Storage storage = SearchTest.startStorage();
+        SearchTest.ingest(new File(
+                Resolver.getURL("data/search/input/part1").getFile()));
+        SearchTest.ingest(new File(
+                Resolver.getURL("data/search/input/part2").getFile()));
+        updateIndex();
+        searcher.checkIndex();
+        SearchTest.verifySearch(searcher, "Gurli", 1); // Just checking
+
+        Request request = new Request();
+        request.put(DocumentKeys.SEARCH_QUERY, "Gurli");
+        request.put(DocumentKeys.SEARCH_EXPLAIN, true);
+        log.debug("Sample output from explain search: "
+                  + searcher.search(request).toXML());
+
         searcher.close();
         storage.close();
     }
@@ -348,6 +373,3 @@ public class FacetTest extends NoExitTestCase {
         IndexTest.updateIndex(indexConf);
     }
 }
-
-
-
