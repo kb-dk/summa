@@ -1,2 +1,16 @@
+Summa README
+------------
 
-See INSTALLATION for installation instructions.
+Summa is an open source search engine developed by the
+State and University Library of Denmark. It is released
+under the GNU LGPL v 2.1.
+
+Homepage: http://wiki.statsbiblioteket.dk/summa
+SVN: https://gforge.statsbiblioteket.dk/svn/summa
+
+Contact:
+For getting involved with Summa development er asking general questions about
+Summa please go to: https://gforge.statsbiblioteket.dk/projects/summa/ and sign
+up for the 'summa-devel' mailing list.
+
+
