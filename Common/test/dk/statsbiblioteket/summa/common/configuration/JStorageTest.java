@@ -120,6 +120,23 @@ public class JStorageTest extends ConfigurationStorageTestCase {
         assertEquals("config = {\n  foo = {\n    bar = 27.0\n  }\n}",
                      js.toString());
 
+        // Storage with a list of two sub storages
+        js = new JStorage();
+        List<ConfigurationStorage> subs = js.createSubStorages("foo", 2);
+        assertEquals(2, subs.size());
+        subs.get(0).put("bar" , 27);
+        subs.get(1).put("bar" , false);
+        assertEquals(
+        "config = {\n" +
+        "  foo = [\n" +
+        "    {\n" +
+        "      bar = 27.0\n" +
+        "    }, {\n" +
+        "      bar = false\n" +
+        "    }\n" +
+        "  ]\n" +
+        "}", js.toString());
+
         System.out.println("--------------");
         js = new JStorage("configuration.js");
         System.out.println(js.toString());

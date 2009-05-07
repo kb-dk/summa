@@ -427,7 +427,7 @@ public class JStorage implements ConfigurationStorage {
 
     public String toString () {
         StringBuilder buf = new StringBuilder();
-        buf.append("config = {\n");
+        buf.append(config + " = {\n");
         serialize("  ", buf);
         buf.append("}");
         return buf.toString();
@@ -468,8 +468,8 @@ public class JStorage implements ConfigurationStorage {
                     buf.append(prefix)
                         .append(key)
                         .append(" = ")
-                        .append("{\n")
-                        .append(((JStorage)val).serialize(prefix + "  ", buf))
+                        .append("{\n");
+                        ((JStorage)val).serialize(prefix + "  ", buf)
                         .append(prefix)
                         .append("}");
                 } else if (val instanceof List) {
@@ -497,16 +497,20 @@ public class JStorage implements ConfigurationStorage {
                         for (int i = 0; i < list.size(); i++) {
                             if (i > 0) {
                                 buf.append(", ");
+                            } else {
+                                buf.append(prefix);
+                                buf.append("  ");
                             }
                             buf.append("{\n")
+                               .append(prefix);
+                            ((JStorage)list.get(i)).serialize(prefix+"  ", buf)
                                .append(prefix)
-                               .append(
-                                    ((JStorage)list.get(i))
-                                            .serialize(prefix+"  ", buf))
+                               .append("  ")
                                .append("}");
                         }
-
-                        buf.append("]");
+                        buf.append("\n")
+                           .append(prefix)
+                           .append("]");
                     }
                 } else {
                     buf.append("Unable to serialize: ")
