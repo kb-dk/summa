@@ -7,6 +7,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.IOException;
 import java.util.List;
+import java.net.NoRouteToHostException;
 
 /**
  * A helper class utilizing a stateless connection to a storage service exposing
@@ -47,6 +48,11 @@ public class StorageWriterClient extends ConnectionConsumer<WritableStorage>
     public void flush(Record record) throws IOException {
         WritableStorage storage = getConnection();
 
+        if (storage == null) {
+            throw new NoRouteToHostException("Unable to connect to "
+                                             + getVendorId());
+        }
+
         try {
             storage.flush (record);
         } catch (Throwable t) {
@@ -61,6 +67,11 @@ public class StorageWriterClient extends ConnectionConsumer<WritableStorage>
     public void flushAll(List<Record> records) throws IOException {
         WritableStorage storage = getConnection();
 
+        if (storage == null) {
+            throw new NoRouteToHostException("Unable to connect to "
+                                             + getVendorId());
+        }
+        
         try {
             storage.flushAll (records);
         } catch (Throwable t) {
@@ -73,7 +84,12 @@ public class StorageWriterClient extends ConnectionConsumer<WritableStorage>
     }
 
     public void clearBase(String base) throws IOException {
-         WritableStorage storage = getConnection();
+        WritableStorage storage = getConnection();
+
+        if (storage == null) {
+            throw new NoRouteToHostException("Unable to connect to "
+                                             + getVendorId());
+        }
 
         try {
             storage.clearBase (base);
@@ -88,6 +104,11 @@ public class StorageWriterClient extends ConnectionConsumer<WritableStorage>
 
     public void close() throws IOException {
         WritableStorage storage = getConnection();
+
+        if (storage == null) {
+            throw new NoRouteToHostException("Unable to connect to "
+                                             + getVendorId());
+        }
 
         try {
             storage.close ();
