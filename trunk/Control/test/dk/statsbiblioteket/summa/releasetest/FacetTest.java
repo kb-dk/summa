@@ -26,16 +26,16 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
-import dk.statsbiblioteket.summa.common.index.IndexException;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 import dk.statsbiblioteket.summa.search.IndexWatcher;
 import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
-import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageIterator;
 import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -44,8 +44,12 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Tests a ingest => storage => index => search chain with facets.
@@ -335,7 +339,7 @@ public class FacetTest extends NoExitTestCase {
                   + searcher.search(SearchTest.simpleRequest("fagekspert")).
                 toXML());
 
-        searcher.close();                                                        c
+        searcher.close();
         storage.close();
     }
 
@@ -359,6 +363,48 @@ public class FacetTest extends NoExitTestCase {
 
         searcher.close();
         storage.close();
+    }
+
+    public void testSort() throws Exception {
+        Configuration conf = getSearcherConfiguration();
+        SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
+        Storage storage = SearchTest.startStorage();
+        SearchTest.ingest(new File(
+                Resolver.getURL("data/search/input/part1").getFile()));
+        SearchTest.ingest(new File(
+                Resolver.getURL("data/search/input/part2").getFile()));
+        updateIndex();
+        searcher.checkIndex();
+
+        Request request = new Request();
+        request.put(DocumentKeys.SEARCH_QUERY, "fagekspert");
+        request.put(DocumentKeys.SEARCH_SORTKEY, "sort_title");
+        String first =
+                Strings.join(getIDs(searcher.search(request).toXML()), ", ");
+        log.debug("IDs from sort_title sort: " + first);
+
+        request.put(DocumentKeys.SEARCH_REVERSE, true);
+        String second =
+                Strings.join(getIDs(searcher.search(request).toXML()), ", ");
+        log.debug("IDs from sort_title reverse: " + second);
+
+
+        assertFalse(String.format(
+                "The first IDs '%s' should be in reverse order of the second "
+                + "IDs '%s'", first, second), first.equals(second));
+        searcher.close();
+        storage.close();
+    }
+
+    private Pattern idPattern =
+            Pattern.compile("fagref\\:[a-z]+\\@example\\.com");
+    private List<String> getIDs(String xml) {
+        Matcher matcher = idPattern.matcher(xml);
+        List<String> matches = new ArrayList<String>(10);
+        while (matcher.find()) {
+            matches.add(matcher.group(0));
+        }
+        return matches;
     }
 
     public void testFacetBuild() throws Exception {

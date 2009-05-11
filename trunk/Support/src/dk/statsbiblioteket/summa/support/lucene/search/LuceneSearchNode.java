@@ -66,7 +66,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Lucene-specific search node.
  *
- * IMPORTANT: This class is be moved to another module.
+ * IMPORTANT: This class is to be moved to another module.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -503,8 +503,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
     private Query parseQuery(Request request, String query) throws
                                                             RemoteException,
                                                             ParseException {
-        if (!mlt_enabled
-            || !request.containsKey(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID)) {
+        if (!isMoreLikeThisRequest(request)) {
             log.debug("parseQuery(...): Returning plain query instead of "
                       + "MoreLikeThis");
             return query == null ? null : getParser().parse(query);
@@ -574,6 +573,11 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
         return moreLikeThisQuery;
     }
 
+    private boolean isMoreLikeThisRequest(Request request) {
+        return mlt_enabled &&
+               request.containsKey(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID);
+    }
+
     private Filter parseFilter(String filter) throws ParseException {
         return filter == null || "".equals(filter) ? null :
                new QueryWrapperFilter(getParser().parse(filter));
@@ -585,12 +589,13 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
             boolean reverseSort, String[] fields, String[] fallbacks,
             boolean doLog) throws RemoteException {
         long startTime = System.currentTimeMillis();
+        boolean mlt_request = isMoreLikeThisRequest(request);
         try {
             // MoreLikeThis needs an extra in max to compensate for self-match
             TopFieldDocs topDocs = searcher.search(
                     luceneQuery, luceneFilter,
-                    (int)(startIndex + maxRecords + (mlt_enabled ? 1 : 0)),
-                    Sort.RELEVANCE);
+                    (int)(startIndex + maxRecords + (mlt_request ? 1 : 0)),
+                    mlt_request || sortKey == null  || sortKey.equals(DocumentKeys.SORT_ON_SCORE) ? Sort.RELEVANCE : new Sort(sortKey, reverseSort));
 
             if (log.isTraceEnabled()) {
                 log.trace("Got " + topDocs.totalHits + " hits for query "
