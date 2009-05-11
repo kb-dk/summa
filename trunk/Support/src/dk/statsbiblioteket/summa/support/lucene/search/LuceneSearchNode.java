@@ -38,6 +38,7 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.summa.search.document.DocumentSearcherImpl;
 import dk.statsbiblioteket.summa.support.api.LuceneKeys;
+import dk.statsbiblioteket.summa.support.lucene.search.sort.SortPool;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.logging.Log;
@@ -197,6 +198,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
 
     @SuppressWarnings({"FieldCanBeLocal"})
     private LuceneIndexDescriptor descriptor;
+    private SortPool sortPool; // Toed to the descriptor
     private Configuration conf;
     private boolean loadDescriptorFromIndex;
     private SummaQueryParser parser;
@@ -246,8 +248,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                     + " it hard to coordinate major updates to the "
                     + "IndexDescriptor in a production system",
                     IndexDescriptor.CONF_DESCRIPTOR));
-            descriptor = LuceneIndexUtils.getDescriptor(conf);
-            parser = new SummaQueryParser(conf, descriptor);
+            setDescriptor(LuceneIndexUtils.getDescriptor(conf));
         }
 
         // MoreLikeThis
@@ -364,13 +365,18 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
         URL urlLocation = Resolver.getURL(
                 location + "/" + IndexDescriptor.DESCRIPTOR_FILENAME);
         try {
-            descriptor = new LuceneIndexDescriptor(urlLocation);
+            setDescriptor(new LuceneIndexDescriptor(urlLocation));
         } catch (IOException e) {
             throw new RemoteException(String.format(
                     "Unable to create LuceneIndexDescriptor from location '%s' "
                     + "resolved to URL '%s'",
                     location, urlLocation), e);
         }
+    }
+
+    private void setDescriptor(LuceneIndexDescriptor descriptor) {
+        this.descriptor = descriptor;
+        sortPool = new SortPool(descriptor);
         parser = new SummaQueryParser(conf, descriptor);
     }
 
@@ -595,7 +601,9 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
             TopFieldDocs topDocs = searcher.search(
                     luceneQuery, luceneFilter,
                     (int)(startIndex + maxRecords + (mlt_request ? 1 : 0)),
-                    mlt_request || sortKey == null  || sortKey.equals(DocumentKeys.SORT_ON_SCORE) ? Sort.RELEVANCE : new Sort(sortKey, reverseSort));
+                    mlt_request || sortKey == null
+                    || sortKey.equals(DocumentKeys.SORT_ON_SCORE)
+                    ? Sort.RELEVANCE : sortPool.getSort(sortKey, reverseSort));
 
             if (log.isTraceEnabled()) {
                 log.trace("Got " + topDocs.totalHits + " hits for query "
