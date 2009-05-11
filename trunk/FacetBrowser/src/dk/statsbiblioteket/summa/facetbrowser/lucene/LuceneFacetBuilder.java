@@ -397,9 +397,12 @@ public class LuceneFacetBuilder extends BuilderImpl {
                     if (term == null || !fieldName.equals(term.field())) {
                         break;
                     }
+                    if (term.text() == null || "".equals(term.text())) {
+                        continue; // Skip blank tags
+                    }
                     TermDocs termDocs = ir.termDocs(term);
                     if (termDocs == null) {
-                        break;
+                        continue;
                     }
                     int docCount;
                     while ((docCount = termDocs.read(docBuffer, freqBuffer))
