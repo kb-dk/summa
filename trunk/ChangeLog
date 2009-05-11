@@ -1,3 +1,119 @@
+2009-05-11 13:30  mke
+
+	* [r1465] build.xml, ChangeLog, NEWS
+
+	Release Summa 1.4.3
+
+2009-05-11 10:49  mke
+
+	* [r1464]
+	  Control/test/test-facet-search-1/config/configuration.xml,
+	  Samples/Summix/config/searcher.xml:
+	  
+	  Make the sample bundle test-facet-search-1 and the Summix
+	  searcher pick up the IndexDescriptor from the index location
+
+2009-05-11 10:06  toke
+
+	* [r1463] Common/data/LegacyToSummaDocumentXML.xslt:
+	  
+	  Tweak: Removed field-boost from legacy handling
+
+2009-05-11 08:05  toke
+
+	* [r1462]
+	  Control/test/dk/statsbiblioteket/summa/releasetest/FacetTest.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/LuceneSearchNode.java:
+	  
+	  Bugfix: Sorted search did not work at all. A dumb sort
+	  (non-collator sorted) was introduced until the right sort is
+	  implemented
+
+2009-05-11 07:58  mke
+
+	* [r1461] ChangeLog, Control/build.xml,
+	  Control/config/.server.policy[DEL],
+	  Control/config/server.policy[CPY],
+	  Control/scripts/client-shell.sh, Control/scripts/client.sh,
+	  Control/scripts/configuration-server.sh,
+	  Control/scripts/control-shell.sh, Control/scripts/control.sh,
+	  Control/scripts/search-tool.sh, Control/scripts/service-shell.sh,
+	  Control/scripts/storage-tool.sh,
+	  Control/test/dk/statsbiblioteket/summa/performance/bin/performance.sh,
+	  Samples/Summix/bin/search-tool.bat,
+	  Samples/Summix/bin/search-tool.sh,
+	  Samples/Summix/bin/storage-tool.bat,
+	  Samples/Summix/bin/storage-tool.sh:
+	  
+	  JStorage serialization looking really good now. Nested configs
+	  and lists thereof are working ok
+
+2009-05-07 22:28  tokerefind
+
+	* [r1460]
+	  Control/test/dk/statsbiblioteket/summa/releasetest/FacetTest.java,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/SearchTest.java,
+	  Search/src/dk/statsbiblioteket/summa/search/api/document/DocumentKeys.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/LuceneSearchNode.java,
+	  Web/test/dk, Web/test/dk/statsbiblioteket,
+	  Web/test/dk/statsbiblioteket/summa,
+	  Web/test/dk/statsbiblioteket/summa/web,
+	  Web/test/dk/statsbiblioteket/summa/web/services,
+	  Web/test/dk/statsbiblioteket/summa/web/services/SearchWSTest.java:
+	  
+	  Added support for explanations for document matched on search
+
+2009-05-07 22:25  tokerefind
+
+	* [r1459] Web/resources/css/project.css, Web/resources/index.jsp,
+	  Web/resources/xslt/short_records.xsl,
+	  Web/src/dk/statsbiblioteket/summa/web/services/SearchWS.java:
+	  
+	  Tweaked the demo website for proper output of explanation for
+	  document matches
+
+2009-05-07 13:13  mke
+
+	* [r1458]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/storage/JStorage.java,
+	  Common/test/dk/statsbiblioteket/summa/common/configuration/JStorageTest.java:
+	  
+	  JStorage serialization looking really good now. Nested configs
+	  and lists thereof are working ok
+
+2009-05-07 13:06  toke
+
+	* [r1457]
+	  Common/src/dk/statsbiblioteket/summa/common/util/ConvenientMap.java,
+	  Control/test/data/descriptor,
+	  Control/test/data/descriptor/CopyDescriptor_SearchConfiguration.xml,
+	  Control/test/data/descriptor/DescriptorTest_IndexDescriptor.xml[CPY],
+	  Control/test/data/descriptor/DescriptorTest_IndexDescriptorExtra.xml,
+	  Control/test/data/descriptor/DescriptorTest_IndexFullConfiguration.xml,
+	  Control/test/data/descriptor/DescriptorTest_IndexUpdateConfiguration.xml[CPY],
+	  Control/test/data/descriptor/StaticDescriptor_SearchConfiguration.xml,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/DescriptorTest.java[CPY],
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/FacetManipulator.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/FacetSearchNode.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/LuceneSearchNode.java:
+	  
+	  Testing: Defining the facets in the IndexDescriptor and letting
+	  the IndexDescriptor follow the index is tested now.
+	  Bugfix: A blocking error in the FacetSearchNode for the scenario
+	  above was fixed
+
+2009-05-07 12:42  mke
+
+	* [r1456] build.properties:
+	  
+	  Bump version to 1.4.2-rc prepping for 1.4.3
+
+2009-05-07 12:38  mke
+
+	* [r1455] NEWS:
+	  
+	  Start writing the NEWS entries for 1.4.3 (which is NOT out yet)
+
 2009-05-07 11:08  mke
 
 	* [r1454]
