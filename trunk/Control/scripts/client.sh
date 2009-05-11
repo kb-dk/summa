@@ -50,7 +50,7 @@ CONFIGURATION=configuration-server.xml
 PRINT_CONFIG=true
 #JAVA_HOME=/usr/lib/jvm/java
 JVM_OPTS="-server -Xmx64m -Dsumma.configuration=$CONFIGURATION" -Dsumma.control.client.id=$CLIENT_ID
-SECURITY_POLICY="$DEPLOY/config/.server.policy"
+SECURITY_POLICY="$DEPLOY/config/server.policy"
 ENABLE_JMX=true
 
 JMX_PORT=8469

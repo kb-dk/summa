@@ -13,7 +13,7 @@ popd
 
 set MAINCLASS=dk.statsbiblioteket.summa.storage.api.tools.StorageTool
 set DEFAULT_CONFIGURATION=%DEPLOY%/config/storage-tool.configuration.xml 
-set SECURITY_POLICY="%DEPLOY%/config/.server.policy"
+set SECURITY_POLICY="%DEPLOY%/config/server.policy"
 call %DEPLOY%\bin\generic_start.bat %*%
 
 endlocal

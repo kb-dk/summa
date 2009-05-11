@@ -426,7 +426,7 @@
             <zipfileset prefix="${prefix}/config" file="${basedir}/config/control.configuration.xml"/>
             <zipfileset prefix="${prefix}/config" file="${basedir}/config/search-tool.configuration.xml"/>
             <zipfileset prefix="${prefix}/config" file="${basedir}/config/storage-tool.configuration.xml"/>
-            <zipfileset prefix="${prefix}/config" file="${basedir}/config/.server.policy"/>
+            <zipfileset prefix="${prefix}/config" file="${basedir}/config/server.policy"/>
 
             <zipfileset dir="${basedir}/config/jmx" prefix="${prefix}/config/jmx" filemode="600">
                 <include name="jmx.password"/>
