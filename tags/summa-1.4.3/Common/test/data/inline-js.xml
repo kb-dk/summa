@@ -1,0 +1,14 @@
+<xproperties>
+<xproperties>
+    <entry>
+        <key>filter.name</key>
+        <value class="string">InlineJavascriptTest</value>
+    </entry>
+    <entry>
+        <key>filter.script.inline</key>
+        <value class="string"><![CDATA[
+                payload.getRecord().setId('inlineJavascript');
+        ]]></value>
+    </entry>
+</xproperties>
+</xproperties>

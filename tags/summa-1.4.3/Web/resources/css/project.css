@@ -1,0 +1,429 @@
+body {
+    font-family: Arial, sans-serif;
+    font-size: 80%;
+
+    margin: 0;
+}
+
+h1 {
+    font-size: 1.2em;
+    padding: 0px;
+    margin: 0px;
+    margin-top: .7em;
+    margin-bottom: 1em;
+}
+
+
+
+.searchBoxTweak {
+    padding: .7em;
+    padding-bottom: 0;
+    margin: 0px;
+}
+
+.searchBox {
+    float: left;
+    clear: both;
+    background-color: #ff9933;
+    width: 50em;
+    padding-bottom: 1em;
+}
+
+.searchBoxContainer {
+    float: left;
+    margin: 1em 0 0 0;
+    border: 1px solid #bbb;
+    width: 60em;
+}
+
+
+
+
+
+.clusterRight {
+    float: left;
+    width: 14em;
+    margin-top: 3em;
+    border: 1px solid #eee;
+
+    padding-left: 1em;
+}
+
+.clusterLeft {
+    float: left;
+
+    width: 60.1em;
+    padding-right: 2em;
+}
+
+.clusterOverview {
+    background-color: #eee;
+    margin: 0 0 1em 0;
+}
+
+.clusterOverviewSelected {
+    border: 3px solid #ff9933;
+    border-left: 10px solid #ff9933;
+    border-right: 0;
+
+    margin-left: -20px;
+    padding: 1em 0 1em 1em;
+    background-color: white;
+}
+
+.clusterOverviewItem {
+    background-color: #fff;
+    padding-left: 1em;
+}
+
+
+.clusterMenu {
+    cursor: pointer;
+    text-decoration: underline;
+    color: #666;
+    font-size: .9em;
+    font-weight: bold;
+    margin-bottom: .5em;
+}
+
+.expand {
+    background-image: url( "/simplesumma/gfx/navigation/collaps.gif" );
+    background-repeat: no-repeat;
+    background-position: 0 40%;
+    padding-left: .8em;
+
+}
+
+.collaps {
+    background-image: url( "/simplesumma/gfx/navigation/expand.gif" );
+    background-repeat: no-repeat;
+    background-position: 0 60%;
+    padding-left: .8em;
+
+}
+
+
+
+
+
+.searchResult {
+    border-top: 1px solid #dddddd;
+    border-bottom: 0px;
+    width: 100%;
+    margin-top: 5px;
+    float: left;
+}
+
+.searchResultHeading {
+    background-color: #dddddd;
+    color: #666666;
+    padding: 1px;
+    padding-left: 5px;
+    margin-top: 10px;
+    margin-bottom: 0px;
+    clear: both;
+    float: left;
+    width: 100%;
+    font-weight: bold;
+}
+
+.searchResultItem {
+    width: 100%;
+    float: left;
+    border-bottom: 1px solid #ddd;
+    padding: .2em 0 .2em 0;
+}
+
+.searchResultItemSelected {
+    width: 100%;
+    float: left;
+    padding: .2em 0 .2em 0;
+    border-bottom: 1px solid #bbb;
+    background-color: #eee;
+}
+
+.searchResultItemCommon {
+
+    margin-top: 0px;
+    margin-bottom: 0px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    float: left;
+}
+
+.searchResultItemHeader {
+    padding: .3em 0 .1em 0;
+    float: left;
+    width: 100%;
+    border-bottom: 1px solid;
+
+}
+
+.searchResultItemAuthor {
+    width: 15em;
+    float: left;
+}
+
+.searchResultItemTitle {
+    width: 24em;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+}
+
+.searchResultItemExpandedQuery {
+    clear: left;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+}
+
+.searchResultItemExpandedQuery span.expandedQueryText {
+    font-family: monospace;
+    font-size: smaller;
+}
+
+.searchResultItemExplanation {
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+}
+
+.searchResultItemExplanation pre {
+    font-size: smaller;
+}
+
+.searchResultItemImage {
+    width: 350px;
+}
+
+.searchResultItemYear {
+    width: 4em;
+    float: left;
+    overflow: hidden;
+}
+
+.searchResultItemStatus {
+
+    width: 4.5em;
+    float: left;
+}
+
+.searchResultItemType {
+    width: 7em;
+    float: left;
+}
+
+.searchResultItemSelect {
+    width: 4.1em;
+
+    float: left;
+    text-align: right;
+}
+
+
+.shortNavigation {
+    margin: 0.5em 0 0.5em 0;
+    float: left;
+}
+
+
+
+/** loan stati **/
+
+.itemAvailability {
+    font-size: 11px;
+    color: #ffffff;
+    padding: 0px 2px 0px 2px;
+    margin-top: .2em;
+}
+
+.itemAvailabilitySplit {
+    font-size: 11px;
+    color: #ffffff;
+}
+
+.available {
+    background-color: #316450;
+}
+
+.out {
+    background-color: #ff5533;
+}
+
+.notAvailable {
+    background-color: purple;
+}
+
+.statusNotAvailable {
+    background-color: dimgray;
+}
+
+.unknowLib, .hasPendingRequests, .allItemsMissing, .allItemsMissingOrLost {
+    background-color: crimson;
+}
+
+.dontKnowYet {
+    background-color: lime;
+}
+
+.multiVolume {
+    background-color: goldenrod;
+
+}
+
+.unknown {
+    background-color: gray;
+}
+
+.readingRoom {
+    background-color: darkcyan;
+}
+
+.special {
+    background-color: #ff5533;
+}
+
+.eperiodical {
+    background-color: olivedrab;
+}
+
+.periodical {
+    background-color: indianred;
+    background-color: olivedrab;;
+}
+
+.statusText {
+    background-color: #ddd;
+}
+
+.retrieving {
+    background-color: #bbb;
+    font-size: 80%;
+    text-decoration: blink;
+}
+
+.retro {
+    background-color: #ff5533;
+}
+
+.freeDownload {
+    background-color: teal;
+
+}
+
+.mediaRoom {
+    background-color: firebrick;
+
+}
+
+.licensedDownload {
+    background-color: yellowgreen;
+}
+
+.example {
+    font-size: 100%
+}
+
+.exampleCloseLink {
+    padding-left: 1em;
+    color: white;
+}
+
+.karens {
+    background-color: darkkhaki;
+}
+
+.retroReadingRoom {
+    background-color: #ff5533;
+}
+
+.instituteOnly {
+    background-color: darkmagenta;
+}
+
+.natBibTapeArchive {
+    background-color: indianred;
+}
+
+.referenceWork {
+    background-color: indigo;
+
+}
+
+.copyStatusCommon {
+    width: 4.5em;
+    clear: both;
+    margin: 0 1em 0.5em 0;
+}
+
+.copyStatusMultiVolume {
+    width: 4.5em;
+    clear: both;
+    margin-right: 1em;
+}
+
+.copyStatus {
+
+    color: darkred;
+
+}
+longMarcResultItemContainer {
+    float: left;
+}
+
+.longMarcResultItemCommon {
+    padding: 0.2em 0.2em 0.2em 0;
+    margin-top: .2em;
+    margin-bottom: .2em;
+    float: left;
+    width: 8em;
+}
+
+.longMarcResultItemText {
+    width: 32em;
+    float: left;
+}
+
+.longMarcResultItemLabel {
+    clear: both;
+}
+
+.longMarcResultItemTitle {
+    padding: 3px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    float: left;
+}
+
+div.autocomplete {
+    position: absolute;
+    width: 250px;
+    background-color: white;
+    border: 1px solid #888;
+    margin: 0px;
+    padding: 0px;
+}
+
+div.autocomplete ul {
+    list-style-type: none;
+    margin: 0px;
+    padding: 0px;
+}
+
+div.autocomplete ul li.selected {
+    background-color: #ddd;
+}
+
+div.autocomplete ul li {
+    list-style-type: none;
+    display: block;
+    margin: 0;
+    padding-left: .2em;
+    cursor: pointer;
+}
+
+
+﻿
+.autocomplete-w1 { background:url(img/shadow.png) no-repeat bottom right; position:absolute; top:0px; left:0px; margin:8px 0 0 6px; /* IE6 fix: */ _background:none; _margin:0; }
+.autocomplete { border:1px solid #999; background:#FFF; cursor:default; text-align:left; max-height:350px; overflow:auto; margin:-6px 6px 6px -6px; /* IE6 specific: */ _height:350px;  _margin:0; _overflow-x:hidden; }
+.autocomplete .selected { background:#F0F0F0; }
+.autocomplete div { padding:2px 5px; white-space:nowrap; }
+.autocomplete strong { font-weight:normal; color:#3399FF; }
