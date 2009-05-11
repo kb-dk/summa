@@ -43,11 +43,12 @@
                 <xsl:attribute name="name">
                     <xsl:value-of select="@Index:name" />
                 </xsl:attribute>
-                <xsl:for-each select="@Index:boostFactor">
+<!--                <xsl:for-each select="@Index:boostFactor">
                     <xsl:attribute name="boost">
                         <xsl:value-of select="." />
                     </xsl:attribute>
                 </xsl:for-each>
+                -->
                 <xsl:choose>
                     <xsl:when test="@Index:name='shortformat'">
                         <xsl:text disable-output-escaping="yes">&lt;![CDATA[</xsl:text>
