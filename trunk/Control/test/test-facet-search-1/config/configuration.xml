@@ -52,16 +52,6 @@
         </entry>
 
         <entry>
-            <key>summa.index.descriptorsetup</key>
-            <value class="xproperties">
-                <entry>
-                    <key>summa.common.indexdescriptor.absolutelocation</key>
-                    <value class="string">/tmp/summatest/data/oai/oai_IndexDescriptor.xml</value>
-                </entry>
-            </value>
-        </entry>
-
-        <entry>
             <key>summa.search.nodes</key>
             <value class="list">
                 <xproperties>
