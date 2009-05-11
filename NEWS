@@ -1,42 +1,61 @@
 =======================
-2009-05-07: Summa 1.4.3
+2009-05-11: Summa 1.4.3
 =======================
 
  * Introduced a DescriptorManipulator that ensures that a copy of the
-   IndexDescriptor-XML is stored in the index-folder
+   IndexDescriptor-XML is stored in the index-folder (SB)
 
  * Make the search nodes (notably LuceneSearchNode and FacetSearchNode)
    capable of fetching IndexDescriptor from the index-folder. This is used
    in conjuction with the indexer copying the index descriptor over to the
    index folder on commit and consolidates.
    With this in place the searcher should be able to react on changing index
-   descriptors without restarting the searcher
+   descriptors without restarting the searcher (SB)
 
- * Sort commands alphabetically when listing commands inside a shell
+ * Sort commands alphabetically when listing commands inside a shell (SB)
 
  * Add a 'stop' command to the control-shell which can be used to stop
-   a client instance
+   a client instance (SB)
 
  * Factor out a ClientConnectionFactory that can be used to instantiate
-   ClientConnections via a ControlConnection
+   ClientConnections via a ControlConnection (SB)
+
+ * Bring back field based sorting of search results. This is just a prelimary
+   of what will come. Correct collator based sorting is not supported yet, but
+   is slated for Summa 1.4.4. On the very long run we are designing a highly
+   optimized sorting mechanism based on the facetting framework (SB)
+
+ * You can now prepend queries with a boost() parameter to control query time
+   boosting. The format i boost(<<field|group>^<float>> [...]). Fx boosting
+   all hits in the 'ti' group by 0.1 and all hits in the 'au' field by 10:
+   boost(ti^0.1 au^10) (SB)
+
+ * You can now prefix queries with '<:explain:>' and the response from the
+   search engine will contain the details of the ranking calculation. This
+   is very handy for tweaking the ranking algorith by adjusting boosts in the
+   IndexDescriptor or in-query (Refind)
+
+ * Strip boosts from the documents in the legacy XSLT, they where not applied
+   correctly (SB)
 
  * Bugfix: The wrong initializer for SummaQueryParser was used, so
 	       it was not possible to specify query time boosts (SB)
 
  * Bugfix: Properly unexport remote interfaces when we kill a Client
 	       with the 'kill' command from the client-shell. Not doing this
-	       caused some wierd RMI hangs and "connection refused" messages
+	       caused some wierd RMI hangs and "connection refused" messages (SB)
 
  * Bugfix: Properly shut doen client and any services when Client
-           receives a stop() command
+           receives a stop() command (SB)
 
  * Bugfix: Properly detect if someone wipes the bundle repo under a
-           running ControlCore
+           running ControlCore (SB)
 
  * Bugfix: Throw a NoRouteToHostException if the StorageWrietClient can not
-	       connect to the storage
+	       connect to the storage (SB)
 
- * Bugfix: Better error handling on malformed port definitions in SSHDeployer
+ * Bugfix: Better error handling on malformed port definitions in
+           SSHDeployer (SB)
 
  * Experimental: The JStorage configuration backend is still experimental,
                  but has received some love and is well on its way for
