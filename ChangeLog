@@ -1,7 +1,190 @@
-2009-05-05 16:02  mke
+2009-05-07 11:08  mke
 
-	* [r1435] build.properties, ChangeLog, NEWS:
+	* [r1454]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/Configurable.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/deploy/SSHDeployer.java,
+	  Control/test/dk/statsbiblioteket/summa/control/server/deploy/SSHDeployerTest.java:
+	  
+	  Bugfix: Better error handling on malformed port definitions in
+	  SSHDeployer
+	  
+	  Tweak: Fetch the root cause message in
+	  Configurable.ConfigurationException if there is no message
+	  specified in the constructor
 
+2009-05-07 10:32  mke
+
+	* [r1453] README:
+	  
+	  Write something useful in the README
+
+2009-05-07 10:16  mke
+
+	* [r1452]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/StorageWriterClient.java:
+	  
+	  Throw a NoRouteToHostException if the storage client can not
+	  connect to the storage
+
+2009-05-06 19:50  tokerefind
+
+	* [r1451]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/DumpFilter.java:
+	  
+	  Started tweaking the DumpFilter to have limits on the amount of
+	  dumps. Not finished
+
+2009-05-06 15:00  toke
+
+	* [r1450]
+	  Common/src/dk/statsbiblioteket/summa/common/index/IndexDescriptor.java,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/OAITest.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/FacetIndexDescriptor.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/FacetSearchNode.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/FacetStructure.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/Structure.java,
+	  Index/src/dk/statsbiblioteket/summa/index/DescriptorManipulator.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/LuceneSearchNode.java:
+	  
+	  Feature: Made the LuceneSearchNode and the FacetSearchNode
+	  capable of fetching IndexDescriptor from the index-folder. Only
+	  light testing so far, som don't use it in production
+
+2009-05-06 14:04  mke
+
+	* [r1449]
+	  Control/src/dk/statsbiblioteket/summa/control/server/ControlCore.java:
+	  
+	  Bugfix: Properly detect if someone wipes the bundle repo under a
+	  running ControlCore
+
+2009-05-06 13:51  mke
+
+	* [r1448]
+	  Control/src/dk/statsbiblioteket/summa/control/client/shell/StartServiceCommand.java:
+	  
+	  Tweak: Better wording when starting a service without a config
+
+2009-05-06 13:25  mke
+
+	* [r1447]
+	  Common/src/dk/statsbiblioteket/summa/common/shell/Core.java,
+	  Control/src/dk/statsbiblioteket/summa/control/ClientConnectionFactory.java,
+	  Control/src/dk/statsbiblioteket/summa/control/api/feedback/FeedbackFactory.java,
+	  Control/src/dk/statsbiblioteket/summa/control/client/shell/ClientShell.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/ControlCore.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/shell/StartCommand.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/shell/StopCommand.java:
+	  
+	  Tweak: Lots of polish in the way Clients are started and stopped
+	  from the shell. Factor out a ClientConnectionFactory that can be
+	  used to instantiate ClientConnections via a ControlConnection
+	  
+	  Bugfix: Make sure we always flush stdout in the default
+	  connection context of the shell Core
+
+2009-05-06 12:21  mke
+
+	* [r1446]
+	  Common/src/dk/statsbiblioteket/summa/common/shell/Core.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/shell/ControlShell.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/shell/StopCommand.java:
+	  
+	  Feature: Sort commands alphabetically when listint commands
+	  inside a shell
+	  
+	  Feature: Add a 'stop' command to the control-shell which can be
+	  used to stop a client instance
+
+2009-05-06 12:07  mke
+
+	* [r1445]
+	  Control/src/dk/statsbiblioteket/summa/control/api/feedback/FeedbackFactory.java:
+	  
+	  Use VoidFeedback as default Feedback impl if none is found in
+	  FeedbackFactory
+
+2009-05-06 11:47  mke
+
+	* [r1444]
+	  Control/src/dk/statsbiblioteket/summa/control/client/Client.java:
+	  
+	  Tweak: Prettify logging and improve exception handling when
+	  shutting down a client
+
+2009-05-06 11:42  mke
+
+	* [r1443]
+	  Control/src/dk/statsbiblioteket/summa/control/client/Client.java:
+	  
+	  Bugfix: Properly shut doen client and any services when Client
+	  receives a stop() command
+
+2009-05-06 09:27  toke
+
+	* [r1442]
+	  Common/src/dk/statsbiblioteket/summa/common/util/ResourceListener.java,
+	  Common/test/log4j.xml,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/FacetTest.java,
+	  Index/src/dk/statsbiblioteket/summa/index/DescriptorManipulator.java,
+	  Index/src/dk/statsbiblioteket/summa/index/IndexController.java,
+	  Index/src/dk/statsbiblioteket/summa/index/IndexControllerImpl.java,
+	  Index/src/dk/statsbiblioteket/summa/index/StoringIndexDescriptor.java,
+	  Search/src/dk/statsbiblioteket/summa/search/SearchNode.java:
+	  
+	  Feature: Introduced a DescriptorManipulator that ensures that a
+	  copy of the IndexDescriptor-XML is stored in the index-folder
+
+2009-05-06 09:03  mke
+
+	* [r1441]
+	  Control/src/dk/statsbiblioteket/summa/control/client/Client.java:
+	  
+	  Bugfix: Properly unexport remote interfaces when we kill a Client
+	  with the 'kill' command from the client-shell
+
+2009-05-06 07:55  mke
+
+	* [r1440]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/storage/JStorage.java,
+	  Common/test/dk/statsbiblioteket/summa/common/configuration/JStorageTest.java:
+	  
+	  JStorage serialization almost complete. One unit tests is still
+	  failing. After that we can start testing if we can bootstrap .js
+	  files
+
+2009-05-05 21:28  tokerefind
+
+	* [r1439]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/MARCParser.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/XMLSplitterParserTarget.java:
+	  
+	  Logging: Added detailed setup-feedback to XMLSplitterParserTarget
+	  Logging: Changes log level for unexpected attributes from WARN to
+	  DEBUG in MARCParser
+
+2009-05-05 16:12  mke
+
+	* [r1438]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/storage/JStorage.java,
+	  Common/test/configuration.js,
+	  Common/test/dk/statsbiblioteket/summa/common/configuration/JStorageTest.java:
+	  
+	  handle lists of strings
+
+2009-05-05 14:58  toke
+
+	* [r1437]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/search/SummaQueryParser.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/LuceneSearchNode.java:
+	  
+	  Bugfix: The wrong initializer for SummaQueryParser was used, so
+	  it was not possible to specify query time boosts
+
+2009-05-05 14:04  mke
+
+	* [r1435] ChangeLog, NEWS, build.properties:
+	  
 	  Release Summa 1.4.2
 
 2009-05-05 13:41  mke

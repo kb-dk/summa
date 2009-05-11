@@ -46,7 +46,7 @@ MAINCLASS=dk.statsbiblioteket.summa.performance.SearchPerformance
 PRINT_CONFIG=
 #JAVA_HOME=/usr/lib/jvm/java
 #JVM_OPTS="$JVM_OPTS -Xmx1024m $CONFIGURATION"
-#SECURITY_POLICY="$DEPLOY/config/.server.policy"
+#SECURITY_POLICY="$DEPLOY/config/server.policy"
 #ENABLE_JMX=true
 
 #JMX_PORT=8469

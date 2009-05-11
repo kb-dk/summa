@@ -52,7 +52,7 @@ MAINCLASS=dk.statsbiblioteket.summa.search.api.tools.SearchTool
 PRINT_CONFIG=
 #JAVA_HOME=/usr/lib/jvm/java
 JVM_OPTS="$JVM_OPTS -Xmx64m $CONFIGURATION"
-SECURITY_POLICY="$DEPLOY/config/.server.policy"
+SECURITY_POLICY="$DEPLOY/config/server.policy"
 #ENABLE_JMX=true
 
 #JMX_PORT=8469
