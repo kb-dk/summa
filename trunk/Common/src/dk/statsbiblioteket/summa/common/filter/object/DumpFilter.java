@@ -130,13 +130,29 @@ public class DumpFilter extends ObjectFilterImpl {
 
     @Override
     protected boolean processPayload(Payload payload) throws PayloadException {
+        if (resetReceivedDumpsMS != -1
+            && (System.currentTimeMillis() - lastPayloadReceivedTimestamp) >
+               resetReceivedDumpsMS) {
+            payloadsReceivedSinceReset = 0;
+        }
         payloadsReceivedSinceReset++;
+        lastPayloadReceivedTimestamp = System.currentTimeMillis();
+        if (maxDumps != -1 && payloadsReceivedSinceReset > maxDumps) {
+            //noinspection DuplicateStringLiteralInspection
+            Logging.logProcess("DumpFilter",
+                               "Not dumping as received payloads since reset "
+                               + payloadsReceivedSinceReset
+                               + " was > than max dumps " + maxDumps,
+                               Logging.LogLevel.TRACE, payload);
+            return true;
+        }
         if (payload.getRecord() == null && dumpNonRecords) {
             dump(payload);
         } else if (basePattern.matcher(payload.getRecord().getBase()).matches()
             && idPattern.matcher(payload.getRecord().getId()).matches()) {
             dump(payload);
         } else {
+            //noinspection DuplicateStringLiteralInspection
             Logging.logProcess("DumpFilter", "Not dumping",
                                Logging.LogLevel.TRACE, payload);
         }
