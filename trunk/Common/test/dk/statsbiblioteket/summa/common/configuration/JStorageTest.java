@@ -1,11 +1,13 @@
 package dk.statsbiblioteket.summa.common.configuration;
 
 import dk.statsbiblioteket.summa.common.configuration.storage.JStorage;
+import dk.statsbiblioteket.util.Strings;
 
 import java.util.Map;
 import java.util.List;
 import java.util.Arrays;
 import java.io.Serializable;
+import java.io.StringReader;
 
 /**
  *
@@ -106,18 +108,25 @@ public class JStorageTest extends ConfigurationStorageTestCase {
         // Storage with a single string
         js = new JStorage();
         js.put("foo", "bar");
-        assertEquals("config = {\n  foo = \"bar\"\n}", js.toString());
+        assertEquals("config = {\n  foo : \"bar\"\n}", js.toString());
+
+        // Storage with two booleans
+        js = new JStorage();
+        js.put("boolTrue", true);
+        js.put("boolFalse", false);
+        assertEquals("config = {\n  boolFalse : false,\n  boolTrue : true\n}",
+                     js.toString());
 
         // Storage with a list of strings
         js = new JStorage();
         js.put("foo", (Serializable)Arrays.asList("one", "two"));
-        assertEquals("config = {\n  foo = [\"one\", \"two\"]\n}", js.toString());
+        assertEquals("config = {\n  foo : [\"one\", \"two\"]\n}", js.toString());
 
         // Storage with a single sub storage
         js = new JStorage();
         JStorage sub = js.createSubStorage("foo");
         sub.put("bar" , 27);
-        assertEquals("config = {\n  foo = {\n    bar = 27.0\n  }\n}",
+        assertEquals("config = {\n  foo : {\n    bar : 27.0\n  }\n}",
                      js.toString());
 
         // Storage with a list of two sub storages
@@ -128,11 +137,11 @@ public class JStorageTest extends ConfigurationStorageTestCase {
         subs.get(1).put("bar" , false);
         assertEquals(
         "config = {\n" +
-        "  foo = [\n" +
+        "  foo : [\n" +
         "    {\n" +
-        "      bar = 27.0\n" +
+        "      bar : 27.0\n" +
         "    }, {\n" +
-        "      bar = false\n" +
+        "      bar : false\n" +
         "    }\n" +
         "  ]\n" +
         "}", js.toString());
@@ -155,6 +164,69 @@ public class JStorageTest extends ConfigurationStorageTestCase {
         assertTrue("true should turn into a Boolean, but was: "
                    + js.get("bar").getClass().getName(),
                    js.get("bar") instanceof Boolean);
+    }
+
+    public void testSimpleStream() throws Exception {
+        String script =
+                "config = {\n" +
+                "  foo : 27.0\n" +
+                "}";
+        JStorage js = new JStorage(new StringReader(script));
+
+        assertEquals(1, js.size());
+        assertEquals(27, asInt(js.get("foo")));
+    }
+
+    public void testBootstrap() {
+        JStorage orig = new JStorage();
+
+        try {
+            // Test empty storage
+            assertBootstrap(orig);
+
+            orig = new JStorage();
+            orig.put("foo", 27);
+            assertBootstrap(orig);
+
+            orig = new JStorage();
+            orig.put("bool", true);
+            assertBootstrap(orig);
+
+            orig = new JStorage();
+            orig.put("bool", true);
+            orig.put("myint", 128);
+            assertBootstrap(orig);
+
+            orig = new JStorage();
+            orig.put("bool", true);
+            orig.put("myint", 128);
+            orig.put("mylist", (Serializable)Arrays.asList("one", "two"));
+            assertBootstrap(orig);
+
+            orig = new JStorage();
+            orig.put("bool", true);
+            orig.put("myint", 128);
+            orig.put("mylist", (Serializable)Arrays.asList("one", "two"));
+            orig.createSubStorage("emptysub");
+            assertBootstrap(orig);
+
+            orig = new JStorage();
+            orig.put("bool", true);
+            orig.put("myint", 128);
+            orig.put("mylist", (Serializable)Arrays.asList("one", "two"));
+            orig.createSubStorage("mysub").put("subint", 27);
+            assertBootstrap(orig);
+        } catch (Exception e) {
+            fail("Error bootstrapping:\n" + orig.toString()
+                 + "\nError was: " + Strings.getStackTrace(e));
+        }
+    }
+
+    public static void assertBootstrap(JStorage test) {
+        JStorage clone = new JStorage(new StringReader(test.toString()));
+
+        assertEquals(test.toString(), clone.toString());
+        assertEquals(test, clone);
     }
 
     public static boolean asBoolean(Serializable s) {
