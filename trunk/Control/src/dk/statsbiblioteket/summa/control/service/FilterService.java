@@ -211,6 +211,14 @@ public class FilterService extends ServiceBase implements FilterChainHandler {
 
     public void stop() throws RemoteException {
         log.trace("Recieved request to stop FilterControl service");
+
+        if (filterControl == null) {
+            setStatus(Status.CODE.stopped,
+                      "No internal filter control, nothing to stop",
+                      Logging.LogLevel.INFO);
+            return;
+        }
+
         if (!filterControl.isRunning()) {
             log.warn("Attempting to stop FilterControl when not started");
             return;
