@@ -456,18 +456,18 @@ public class JStorage implements ConfigurationStorage {
                 if (val instanceof String) {
                     buf.append(prefix)
                         .append(key)
-                        .append(" = \"")
+                        .append(" : \"")
                         .append(indent(prefix, val.toString()))
                         .append("\"");
                 } else if (val instanceof Double || val instanceof Boolean) {
                     buf.append(prefix)
                         .append(key)
-                        .append(" = ")
+                        .append(" : ")
                         .append(indent(prefix, val.toString()));
                 } else if (val instanceof JStorage) {
                     buf.append(prefix)
                         .append(key)
-                        .append(" = ")
+                        .append(" : ")
                         .append("{\n");
                         ((JStorage)val).serialize(prefix + "  ", buf)
                         .append(prefix)
@@ -477,7 +477,7 @@ public class JStorage implements ConfigurationStorage {
 
                     buf.append(prefix)
                        .append(key)
-                       .append(" = ");
+                       .append(" : ");
 
                     if (list.isEmpty()) {
                         buf.append("[]");
@@ -520,6 +520,10 @@ public class JStorage implements ConfigurationStorage {
                        .append(")");
                 }
 
+                if (iter.hasNext()) {
+                    buf.append(",");
+                }
+
                 buf.append("\n");
             }
 
@@ -531,5 +535,34 @@ public class JStorage implements ConfigurationStorage {
         }
 
         return buf;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof JStorage)) {
+            return false;
+        } else if (this == o) {
+            return true;
+        }
+
+        JStorage other = (JStorage)o;
+
+        try {
+            if (size() != other.size()) {
+                return false;
+            }
+
+            Iterator<Map.Entry<String,Serializable>> iter = iterator();
+            while (iter.hasNext()) {
+                Map.Entry<String,Serializable> entry = iter.next();
+                if (!entry.getValue().equals(other.get(entry.getKey()))) {
+                    return false;
+                }
+            }
+        } catch (IOException e) {
+            return false;
+        }
+
+        return true;
     }
 }
