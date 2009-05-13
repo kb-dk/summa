@@ -204,6 +204,18 @@ public class Structure implements Configurable, Serializable {
     }
 
     /**
+     * @return the facets that makes up the Structure.
+     */
+    public List<FacetStructure> getFacetList() {
+        List<FacetStructure> result =
+                new ArrayList<FacetStructure>(facets.size());
+        for (Map.Entry<String, FacetStructure> entry: facets.entrySet()) {
+            result.add(entry.getValue());
+        }
+        return result;
+    }
+
+    /**
      * @param facetName the name of the wanted FacetStructure.
      * @return the wanted FacetStructure or null if the structure is
      *         non-existing.
@@ -360,5 +372,40 @@ public class Structure implements Configurable, Serializable {
         }
         log.trace("Facet names, fields and sort-locale matches");
         return true;
+    }
+
+    public String toString(boolean verbose) {
+        if (!verbose) {
+            return toString();
+        }
+        return String.format("Structure(%s)",
+                             join(getFacetList(), ", "));
+    }
+
+    // TODO: Should be Strings.join, but it fails?
+    private String join (Collection c, String delimiter) {
+        if (c == null) {
+            throw new NullPointerException("Collection argument is null");
+        } else if (delimiter == null) {
+            throw new NullPointerException("Delimiter argument is null");
+        }
+
+        StringBuilder b = new StringBuilder();
+
+        for (Object o : c) {
+            if (b.length() == 0) {
+                b.append(o == null ? "" : o.toString());
+            } else {
+                b.append (delimiter);
+                b.append(o == null ? "" : o.toString());
+            }
+        }
+
+        return b.toString();
+    }
+
+    @Override
+    public String toString() {
+        return "Structure(" + facets.size() + " facets)";
     }
 }

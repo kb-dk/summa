@@ -191,7 +191,7 @@ public class TagCounterArray implements TagCounter, Runnable {
             author = "te",
             comment = "There is a potential for throwing tons of exceptions." +
                       "Consider throwing only the first in each run")
-    public void increment(int facetID, int tagID) {
+    public void increment(final int facetID, final int tagID) {
         try {
             tags[facetID][tagID]++;
         } catch (ArrayIndexOutOfBoundsException e) {
@@ -250,9 +250,9 @@ public class TagCounterArray implements TagCounter, Runnable {
     public synchronized FacetResult getFirst(Structure requestStructure) {
         lock.lock();
         log.trace("getFirst called");
+        long startTime = System.currentTimeMillis();
         if (requestStructure == null) {
-            log.trace("getFirst: Specified requestStructure was null, using "
-                      + "default structure");
+            throw new NullPointerException("Request Structure was null");
         }
 //        System.out.println("GetFirst called: " + this);
         try {
@@ -274,7 +274,8 @@ public class TagCounterArray implements TagCounter, Runnable {
                                       tagHandler.getFacetSize(facetID),
                                       result, facetName);
                 } else {
-                    if (!FacetStructure.SORT_POPULARITY.equals(facet.getSortType())){
+                    if (!FacetStructure.SORT_POPULARITY.equals(
+                            facet.getSortType())){
                         log.warn(String.format(
                                 "Unknown sort-order '%s' in getFirst, using %s",
                                 facet.getSortType(),
@@ -285,25 +286,29 @@ public class TagCounterArray implements TagCounter, Runnable {
                                            result, facetID);
                 }
             }
+            log.debug("Completed getFirst in "
+                      + (System.currentTimeMillis() - startTime) + "ms");
             return result;
+        } catch (Exception e) {
+            throw new RuntimeException("Unhandled exception in getFirst", e);
         } finally {
             lock.unlock();
         }
     }
 
-    private void addFirstTagsPopularity(int maxTags, int[] counterList,
-                                        int counterLength,
-                                        FacetResultLocal result,
-                                        int facetID) {
-        if (log.isTraceEnabled()) {
-            log.trace(String.format(
+    private void addFirstTagsPopularity(
+            final int maxTags, final int[] counterList, final int counterLength,
+            FacetResultLocal result, final int facetID) {
+        if (log.isDebugEnabled()) {
+            log.debug(String.format(
                     "addFirstTagsPopularity(maxTags %d, counterList.length %d, "
                     + "counterLength %d, result, facetID %d) called",
                     maxTags, counterList.length, counterLength, facetID));
         }
         int minPop = 0;
+        /* Pair(ID, count) */
         //noinspection unchecked
-        FlexiblePair<Integer, Integer>[] popResult =
+        final FlexiblePair<Integer, Integer>[] popResult =
                 (FlexiblePair<Integer, Integer>[])new FlexiblePair[maxTags+1];
         int tagCount = 0;
         // TODO: Check for 1-off error in counterlength
@@ -321,21 +326,18 @@ public class TagCounterArray implements TagCounter, Runnable {
                 } else {
                     /* We're know that popResult[maxTags] will be
                  * pushed out of the array, so we reuse it. */
-                    FlexiblePair<Integer, Integer> newPair =
-                            popResult[maxTags];
+                    FlexiblePair<Integer, Integer> newPair = popResult[maxTags];
                     newPair.setKey(i);
                     newPair.setValue(currentPop);
                     /* Binary search probably has too much overhead.
-                 */
+                     * We just find the lowest count by iteration */
                     for (int p = 0 ; p <= maxTags ; p++) {
                        // for (int p = 0 ; p < maxTags+1 ; p++) {
                        // if (popResult[p].compareTo(newPair) > 0) {
-                        if (popResult[p].getValue() <
-                            currentPop) {
+                        if (popResult[p].getValue() < currentPop) {
                             /* Insertion point found, make room */
-                            System.arraycopy(popResult, p,
-                                             popResult,
-                                             p+1, maxTags-p);
+                            System.arraycopy(
+                                    popResult, p, popResult, p+1, maxTags-p);
                             popResult[p] = newPair;
                             break;
                         }
@@ -347,6 +349,8 @@ public class TagCounterArray implements TagCounter, Runnable {
             }
         }
         int sTags = Math.min(maxTags, tagCount);
+        // Final sort in case maxTags was not met
+        Arrays.sort(popResult, 0, sTags);
         ArrayList<FlexiblePair<Integer, Integer>> niceList =
                 new ArrayList<FlexiblePair<Integer,
                                            Integer>>(sTags);
