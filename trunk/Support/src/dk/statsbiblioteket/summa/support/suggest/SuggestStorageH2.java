@@ -102,8 +102,11 @@ public class SuggestStorageH2 implements SuggestStorage {
     private void createSchema() throws SQLException {
         Statement s = connection.createStatement();
         s.execute("create table suggest("
-                  + "query varchar(250), query_count int, hit_count int)");
-        s.execute("create index suggest_query ON suggest(query)");
+                  + "query varchar(250), "
+                  + "querylower varchar(250), "
+                  + "query_count int, "
+                  + "hit_count int)");
+        s.execute("create index suggest_query ON suggest(querylower)");
         s.execute("create index suggest_query_count ON suggest(query_count)");
         s.execute("create index suggest_query_count_desc ON "
                   + "suggest(query_count desc)");
@@ -130,9 +133,9 @@ public class SuggestStorageH2 implements SuggestStorage {
         try {
             long startTime = System.nanoTime();
             PreparedStatement psExists = connection.prepareStatement(
-                "SELECT query, query_count, hit_count FROM suggest WHERE query "
-                + "LIKE '" + prefix.toLowerCase() + "%' ORDER BY query_count "
-                + "DESC");
+                "SELECT query, query_count, hit_count FROM suggest WHERE "
+                + "querylower LIKE '" + prefix.toLowerCase()
+                + "%' ORDER BY query_count DESC");
             ResultSet rs = psExists.executeQuery();
             SuggestResponse response = new SuggestResponse(prefix, maxResults);
             int current = 0;
@@ -196,10 +199,11 @@ public class SuggestStorageH2 implements SuggestStorage {
                                                                   SQLException {
 
         PreparedStatement psInsert = connection.prepareStatement(
-                "INSERT INTO suggest VALUES (?, ?, ?)");
-        psInsert.setString(1, query.toLowerCase());
-        psInsert.setInt(2, queryCount);
-        psInsert.setLong(3, hits);
+                "INSERT INTO suggest VALUES (?, ?, ?, ?)");
+        psInsert.setString(1, query);
+        psInsert.setString(2, query.toLowerCase());
+        psInsert.setInt(3, queryCount);
+        psInsert.setLong(4, hits);
         psInsert.executeUpdate();
     }
 
@@ -208,7 +212,7 @@ public class SuggestStorageH2 implements SuggestStorage {
 
         PreparedStatement psQuery = connection.prepareStatement(
                 "SELECT query_count FROM suggest WHERE query=?");
-        psQuery.setString(1, query.toLowerCase());
+        psQuery.setString(1, query);
         ResultSet rs = psQuery.executeQuery();
         try {
             while (rs.next()) {
@@ -224,8 +228,9 @@ public class SuggestStorageH2 implements SuggestStorage {
 
     private void deleteSuggestion(String query) throws SQLException {
         log.debug("Removing suggestion '" + query + "'");
-        PreparedStatement psExists = connection.prepareStatement(SELECT_QUERY);
-        psExists.setString(1, query.toLowerCase());
+        PreparedStatement psExists =
+                connection.prepareStatement(SELECT_QUERY);
+        psExists.setString(1, query);
         ResultSet rs = psExists.executeQuery();
         try {
             while (rs.next()) {
@@ -239,7 +244,7 @@ public class SuggestStorageH2 implements SuggestStorage {
     private boolean existsInDb(String query) throws SQLException {
         log.trace("existsInDb called with '" + query + "'");
         PreparedStatement psExists = connection.prepareStatement(SELECT_QUERY);
-        psExists.setString(1, query.toLowerCase());
+        psExists.setString(1, query);
         ResultSet rs = psExists.executeQuery();
         try {
             return rs.next();
@@ -254,7 +259,7 @@ public class SuggestStorageH2 implements SuggestStorage {
                 "UPDATE suggest SET query_count=?, hit_count=? WHERE query=?");
         psUpdate.setInt(1, queryCount);
         psUpdate.setLong(2, hits);
-        psUpdate.setString(3, query.toLowerCase());
+        psUpdate.setString(3, query);
         psUpdate.executeUpdate();
     }
 }

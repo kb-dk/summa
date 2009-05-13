@@ -50,17 +50,27 @@ public class SuggestSearcherTest extends TestCase {
     public void testAddAndGet() throws Exception {
         put("Foo Fighters", 87);
         put("Foo Bars", 123);
-        assertGet("Foo", "queryCount=\"1\">foo fighters");
+        assertGet("Foo", "queryCount=\"1\">Foo Fighters");
         put("Foo Fighters", 87);
-        assertGet("Foo", "queryCount=\"2\">foo fighters");
+        assertGet("Foo", "queryCount=\"2\">Foo Fighters");
+    }
+
+    public void testCaseSensitiveness() throws Exception {
+        put("Foo Fighters", 87);
+        put("Foo Bars", 123);
+        assertGet("Foo", "queryCount=\"1\">Foo Fighters");
+        assertGet("foo", "queryCount=\"1\">Foo Fighters");
+        put("Foo fighters", 87);
+        assertGet("Foo", "queryCount=\"1\">Foo Fighters");
+        assertGet("Foo", "queryCount=\"1\">Foo fighters");
     }
 
     public void testAddWithQueryCount() throws Exception {
         put("Foo Fighters", 87);
         put("Foo Bars", 123);
-        assertGet("Foo", "queryCount=\"1\">foo fighters");
+        assertGet("Foo", "queryCount=\"1\">Foo Fighters");
         put("Foo Fighters", 87, 100);
-        assertGet("Foo", "queryCount=\"100\">foo fighters");
+        assertGet("Foo", "queryCount=\"100\">Foo Fighters");
     }
 
     public void testPersistence() throws Exception {
@@ -70,7 +80,7 @@ public class SuggestSearcherTest extends TestCase {
         searcher.close();
         searcher = getSearcher();
 
-        assertGet("Foo", "queryCount=\"1\">foo fighters");
+        assertGet("Foo", "queryCount=\"1\">Foo Fighters");
     }
 
     public void testPerformance() throws Exception {
@@ -92,9 +102,9 @@ public class SuggestSearcherTest extends TestCase {
 
         Profiler getProfiler = new Profiler(GETTERS);
         for (int i = 0 ; i < GETTERS ; i++) {
-            assertGet("Foo", "foo");
+            assertGet("Foo", "Foo");
             getProfiler.beat();
-            assertGet("B", "bar");
+            assertGet("B", "Bar");
             getProfiler.beat();
         }
         log.info(updates);
@@ -137,6 +147,4 @@ public class SuggestSearcherTest extends TestCase {
         request.put(SuggestKeys.SEARCH_UPDATE_QUERYCOUNT, queryCount);
         searcher.search(request);
     }
-
-
 }
