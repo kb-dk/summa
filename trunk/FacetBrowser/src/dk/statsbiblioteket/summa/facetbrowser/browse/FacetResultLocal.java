@@ -63,11 +63,13 @@ public class FacetResultLocal extends FacetResultImpl<Integer> {
         this.tagHandler = tagHandler;
     }
 
+    @Override
     protected int compareTags(FlexiblePair<Integer, Integer> o1,
                               FlexiblePair<Integer, Integer> o2) {
         return o1.compareTo(o2);
     }
 
+    @Override
     protected String getQueryString(String facet, Integer tag) {
         FacetStructure fc = structure.getFacet(facet);
         if (fc == null) {
@@ -75,7 +77,7 @@ public class FacetResultLocal extends FacetResultImpl<Integer> {
                     "The requested facet '%s' was not present in the structure",
                     facet));
         }
-        if (fc.getFields() == null || fc.getFields().length == 1) {
+        if (fc.getFields() == null || fc.getFields().length == 0) {
             throw new IllegalStateException(String.format(
                     "No fields specified in facet structure '%s'",
                     fc.getName()));
@@ -103,6 +105,7 @@ public class FacetResultLocal extends FacetResultImpl<Integer> {
         return sw.toString();
     }
 
+    @Override
     protected String getTagString(String facet, Integer tag) {
         return resolveTagString(structure.getFacet(facet), tag);
     }

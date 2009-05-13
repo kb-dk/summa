@@ -149,6 +149,10 @@ public class FacetIndexDescriptor extends IndexDescriptor<IndexField> {
         for (int id = 0 ; id < facetNodes.getLength(); id++) {
             FacetStructure facet = parseFacet(facetNodes.item(id), id);
             facets.put(facet.getName(), facet);
+            if (log.isDebugEnabled()) {
+                log.debug("Extracted facet-structure from IndexDescriptor: " 
+                          + facet);
+            }
         }
         this.facets = facets;
         return dom;

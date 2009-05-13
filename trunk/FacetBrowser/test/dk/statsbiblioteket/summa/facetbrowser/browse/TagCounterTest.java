@@ -32,6 +32,7 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.apache.lucene.index.IndexReader;
+import org.apache.log4j.Logger;
 
 import java.util.Random;
 import java.io.IOException;
@@ -48,6 +49,8 @@ import java.io.IOException;
         author = "te")
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class TagCounterTest extends TestCase {
+    private static Logger log = Logger.getLogger(TagCounterTest.class);
+
     IndexReader reader;
 
     public TagCounterTest(String name) {
@@ -86,6 +89,7 @@ public class TagCounterTest extends TestCase {
         }
         //throw new UnsupportedOperationException("Update this to new API");
         FacetResult first = tc.getFirst(bo.getStructure());
+        log.info(first.toXML());
         assertTrue("The result should be something",
                    !"".equals(first.toXML()));
     }

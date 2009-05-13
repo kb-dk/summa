@@ -109,11 +109,15 @@ public class FacetStructure implements Serializable {
                           int wantedTags, int maxTags,
                           String locale, String sortType) {
         log.trace("Creating FacetStructure for '" + name + "'");
+        if (fields == null || fields.length == 0) {
+            throw new IllegalArgumentException(String.format(
+                    "constructor: No fields specified in facet '%s'", name));
+        }
         this.id = id;
         this.name = name;
         setFields(fields);
-        setWantedTags(wantedTags);
         this.maxTags = maxTags;
+        setWantedTags(wantedTags);
         setLocale(locale);
         setSortType(sortType == null ? this.sortType : sortType);
     }
@@ -127,8 +131,13 @@ public class FacetStructure implements Serializable {
             } else {
                 setFields(name);
             }
+            if (fields == null || fields.length == 0) {
+                throw new IllegalArgumentException(String.format(
+                        "Configuration-constructor: No fields specified in "
+                        + "facet '%s'", name));
+            }
             maxTags = conf.getInt(CONF_FACET_TAGS_MAX, maxTags);
-            wantedTags = conf.getInt(CONF_FACET_TAGS_WANTED, wantedTags);
+            setWantedTags(conf.getInt(CONF_FACET_TAGS_WANTED, wantedTags));
             if (conf.valueExists(CONF_FACET_LOCALE)) {
                 setLocale(conf.getString(CONF_FACET_LOCALE));
             }

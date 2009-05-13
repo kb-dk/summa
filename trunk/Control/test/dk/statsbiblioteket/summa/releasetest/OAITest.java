@@ -36,6 +36,10 @@ import dk.statsbiblioteket.summa.control.service.StorageService;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import dk.statsbiblioteket.summa.index.XMLTransformer;
 import dk.statsbiblioteket.summa.ingest.stream.FileReader;
+import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.SummaSearcher;
+import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
+import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -109,21 +113,50 @@ public class OAITest extends NoExitTestCase {
         storage.stop();
     }
 
+    public void testDump() throws Exception {
+        StorageService storage = getStorageService();
+
+        FilterService ingest = performOAIIngest();
+        performOAIIndex();
+
+        SummaSearcher search = getSearch();
+
+        Request request = new Request();
+        request.put(DocumentKeys.SEARCH_QUERY, "oai");
+        log.info("Result of test-search for 'oai':\n"
+                 + search.search(request).toXML());
+
+        ingest.stop();
+        search.close();
+        storage.stop();
+    }
+
     public static SearchService getSearchService() throws IOException {
-        log.info("Starting search");
-        String indexDescriptorLocation = new File(
-                ReleaseTestCommon.DATA_ROOT,
-                "oai/oai_IndexDescriptor.xml").toString();
+        log.info("Starting search service");
+//        String indexDescriptorLocation = new File(
+//                ReleaseTestCommon.DATA_ROOT,
+//                "oai/oai_IndexDescriptor.xml").toString();
         Configuration searchConf = Configuration.load(Resolver.getURL(
                 "test-facet-search-1/config/configuration.xml").
                 getFile());
         searchConf.set(Service.CONF_SERVICE_ID, "SearchService");
-        searchConf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
-                set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
-                    indexDescriptorLocation);
+//        searchConf.getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
+//                set(IndexDescriptor.CONF_ABSOLUTE_LOCATION,
+//                    indexDescriptorLocation);
         SearchService search = new SearchService(searchConf);
         search.start();
         return search;
+    }
+
+    public static SummaSearcher getSearch() throws IOException {
+        log.info("Starting search");
+//        String indexDescriptorLocation = new File(
+//                ReleaseTestCommon.DATA_ROOT,
+//                "oai/oai_IndexDescriptor.xml").toString();
+        Configuration searchConf = Configuration.load(Resolver.getURL(
+                "test-facet-search-1/config/configuration.xml").
+                getFile());
+        return new SummaSearcherImpl(searchConf);
     }
 
     public static void performOAIIndex() throws IOException,
@@ -153,8 +186,8 @@ public class OAITest extends NoExitTestCase {
                     indexDescriptorLocation);
         indexConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS).get(4).
-                getSubConfigurations(IndexControllerImpl.CONF_MANIPULATORS).
-                get(0).
+//                getSubConfigurations(IndexControllerImpl.CONF_MANIPULATORS).
+//                get(0).
 //                getSubConfiguration("IndexUpdate").
 //                getSubConfiguration("LuceneUpdater").
                 getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).

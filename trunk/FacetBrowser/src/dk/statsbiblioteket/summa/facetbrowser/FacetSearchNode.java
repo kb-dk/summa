@@ -265,6 +265,9 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
         try {
             FacetRequest facetRequest =
                     new FacetRequest(docIDs, facets, structure);
+            if (log.isDebugEnabled()) {
+                log.debug("Got facet-request " + facetRequest.toString(false));
+            }
             log.trace("Requesting BrowserThread");
             BrowserThread browserThread;
             try {

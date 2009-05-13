@@ -1,4 +1,4 @@
-/* $Id$
+    /* $Id$
  * $Revision$
  * $Date$
  * $Author$
@@ -74,9 +74,12 @@ public class FacetRequest extends Structure {
         }
         log.debug("Parsing '" + wantedFacets + "'");
         try {
+            // foo(23), bar, zoo(12 ALPHA)
             String[] tokens = wantedFacets.split(" *, *");
             for (String facetToken: tokens) {
+                // zoo(12 ALPHA)
                 String[] subTokens = facetToken.split("\\(", 2);
+                // zoo
                 FacetStructure fc = defaults.getFacets().get(subTokens[0]);
                 if (fc == null) {
                     log.warn(String.format(
@@ -86,6 +89,7 @@ public class FacetRequest extends Structure {
                     continue;
                 }
                 if (subTokens.length == 1) {
+                    // Just zoo
                     getFacets().put(fc.getName(), fc);
                     continue;
                 }
@@ -129,7 +133,5 @@ public class FacetRequest extends Structure {
     public DocIDCollector getDocIDs() {
         return docIDs;
     }
+
 }
-
-
-

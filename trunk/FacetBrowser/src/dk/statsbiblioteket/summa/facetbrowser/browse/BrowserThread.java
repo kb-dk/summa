@@ -157,17 +157,18 @@ public class BrowserThread implements Runnable {
             }
             log.trace("run: Extracting result by calling tagCounter.getFirst");
             result = tagCounter.getFirst(request);
+            log.trace("Getfirst completed successfully");
+//            log.info("***" + result.toXML());
             try {
                 tagCounter.reset(); // Clean-up
             } catch (Exception e) {
                 log.error("Could not start clean up for the tagCounter: "
                           + e.getMessage(), e);
             }
+        } catch (Exception e) {
+            log.warn("Unhandled exception while extracting first tags", e);
         } finally {
             lock.unlock();
         }
     }
 }
-
-
-
