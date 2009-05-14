@@ -50,7 +50,7 @@ import javax.naming.NamingException;
 public class StorageWS {
     private Log log;
 
-    StorageReaderClient storage;
+    static StorageReaderClient storage;
     Configuration conf;
 
     public StorageWS() {
