@@ -34,7 +34,7 @@ public class SearchClient extends ConnectionConsumer<SummaSearcher>
     public SearchClient (Configuration conf) {
         super (conf);
         log.debug(String.format(
-                "Created SearchClien with %s=%s",
+                "Created SearchClient with %s=%s",
                 ConnectionConsumer.CONF_RPC_TARGET,
                 conf.getString(ConnectionConsumer.CONF_RPC_TARGET)));
     }

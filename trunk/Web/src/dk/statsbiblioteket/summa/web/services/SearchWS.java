@@ -54,7 +54,8 @@ import java.util.regex.Matcher;
 public class SearchWS {
     private Log log;
 
-    SearchClient searcher;
+    static SearchClient searcher;
+    static SearchClient suggester;
     Configuration conf;
 
     public SearchWS() {
@@ -81,14 +82,14 @@ public class SearchWS {
      * @return A SearchClient to be used for Suggest.
      */
     private synchronized SearchClient getSuggestClient() {
-        if (searcher == null) {
+        if (suggester == null) {
             try {
-                searcher = new SearchClient(getConfiguration().getSubConfiguration("summa.web.suggest"));
+                suggester = new SearchClient(getConfiguration().getSubConfiguration("summa.web.suggest"));
             } catch (IOException e) {
                 log.error("Failed to load subConfiguration for suggest.", e);
             }
         }
-        return searcher;
+        return suggester;
     }
 
     /**
