@@ -190,7 +190,7 @@
         <ant dir="Support" inheritall="false" target=".jar"/>
         <ant dir="FacetBrowser" inheritall="false" target=".jar"/>
         <ant dir="Control" inheritall="false" target=".jar"/>
-        <!--<ant dir="Web" inheritall="false" target=".jar"/>-->
+        <ant dir="Web" inheritall="false" target=".jar"/>
         <ant dir="Workflow" inheritall="false" target=".jar"/>
     </target>
 
