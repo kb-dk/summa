@@ -301,9 +301,9 @@ public class IndexControllerImpl extends StateThread implements
         try {
             open(indexLocation, createNewIndex);
         } catch (IOException e) {
-            throw new ConfigurationException("Could not open index at '"
-                                             + indexLocation.getPath() + "'",
-                                             e);
+            throw new ConfigurationException(
+                    "Could not open index at '" + indexLocation.getPath() + "'",
+                    e);
         }
         log.debug("Index opened, starting Watchdog");
         start();
