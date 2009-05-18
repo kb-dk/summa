@@ -59,8 +59,10 @@ public interface ShellContext {
     public void debug (String msg);
 
     /**
-     * Read a line of input.
-     * @return the next line of input
+     * Read a line of input. If the input stream has been closed this method
+     * returns {@code null}.
+     * @return the next line of input or {@code null} if the input stream has
+     *         been closed
      */
     public String readLine ();
 
