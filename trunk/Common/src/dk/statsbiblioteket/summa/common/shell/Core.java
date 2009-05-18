@@ -69,12 +69,15 @@ public class Core {
      *                            found in the
      *                            {@link dk.statsbiblioteket.summa.common.shell.commands}
      *                            package.
+     * @param debug if {@code true} debug messages will be printed to the
+     *              created shell context if {@code shellCtx} is {@code null}
      */
-    public Core (ShellContext shellCtx, boolean withDefaultCommands) {
+    public Core (ShellContext shellCtx,
+                 final boolean withDefaultCommands, final boolean debug) {
         cliParser = new PosixParser();
         commands = new HashMap<String,Command>();
         lastTrace = null;
-        header = "Summa Generic Shell $Id: Core.java,v 1.7 2007/10/04 13:28:20 te Exp $";
+        header = "Summa Generic Shell v@summa.api.version@";
         prompt = "summa-shell> ";
 
         if (shellCtx != null) {
@@ -85,6 +88,7 @@ public class Core {
                 private Stack<String> lineBuffer = new Stack<String>();
                 private String lastError = null;
                 private ConsoleReader lineIn =  createConsoleReader();
+                private boolean enableDebug = debug;
 
                 public void error(String msg) {
                     lineBuffer.clear();
@@ -101,7 +105,9 @@ public class Core {
                 }
 
                 public void debug(String msg) {
-                    System.out.println ("[DEBUG] " + msg);
+                    if (enableDebug) {
+                        System.out.println ("[DEBUG] " + msg);
+                    }
                 }
 
                 public String readLine() {
@@ -159,7 +165,7 @@ public class Core {
      *                            package.
      */
     public Core(boolean withDefaultCommands) {
-        this (null, withDefaultCommands);
+        this (null, withDefaultCommands, false);
     }
 
     /**
