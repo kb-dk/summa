@@ -1,11 +1,13 @@
 package dk.statsbiblioteket.summa.control.server.shell;
 
 import dk.statsbiblioteket.summa.control.api.*;
+import dk.statsbiblioteket.summa.control.bundle.BundleSpecBuilder;
 import dk.statsbiblioteket.summa.common.shell.RemoteCommand;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 
 import java.io.IOException;
+import java.io.ByteArrayInputStream;
 import java.util.List;
 
 /**
@@ -24,6 +26,8 @@ public class ServicesCommand extends RemoteCommand<ControlConnection> {
 
         setUsage("services [options] <clientId> [clientId]");
         installOption("s", "status", false, "Print the status of each service");
+        installOption("b", "bundle", false,
+                      "Print the bundle id of each service");
 
         this.controlAddress = controlAddress;
     }
@@ -32,6 +36,15 @@ public class ServicesCommand extends RemoteCommand<ControlConnection> {
         ControlConnection control = getConnection(controlAddress);
 
         String[] clients = getArguments();
+
+        String header = "\tClient/Service";
+        if (hasOption("bundle")) {
+            header += "\tBundle";
+        }
+        if (hasOption("status")) {
+            header += "\tStatus";
+        }
+        ctx.info(header);
 
         try {
             if (clients.length == 0) {
@@ -70,14 +83,26 @@ public class ServicesCommand extends RemoteCommand<ControlConnection> {
         for (String serviceId : services) {
             msg = "\t" + clientId + "/" + serviceId;
 
+            if (hasOption("bundle")) {
+                String bdl;
+                try {
+                    String bdlSpec = client.getBundleSpec(serviceId);
+                    BundleSpecBuilder spec = BundleSpecBuilder.open(
+                            new ByteArrayInputStream(bdlSpec.getBytes()));
+                    bdl = spec.getBundleId();
+                } catch (Exception e) {
+                    bdl = "Unknown";
+                }
+                msg += "\t" + bdl;
+            }
             if (hasOption("status")) {
                 try {
                     Service service = client.getServiceConnection(serviceId);
-                    msg += ": " + service.getStatus().toString();
+                    msg += "\t" + service.getStatus().toString();
                 } catch (InvalidServiceStateException e){
-                    msg += ": Not running";
+                    msg += "\tNot running";
                 } catch (NoSuchServiceException e) {
-                    msg += ": No such service '" + serviceId + "'";
+                    msg += "\tNo such service '" + serviceId + "'";
                 }
             }
             
