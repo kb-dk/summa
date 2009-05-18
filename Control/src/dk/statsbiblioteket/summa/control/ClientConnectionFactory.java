@@ -4,6 +4,7 @@ import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.api.ControlConnection;
 import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
+import dk.statsbiblioteket.summa.common.shell.VoidShellContext;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.rpc.GenericConnectionFactory;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
@@ -33,7 +34,7 @@ public class ClientConnectionFactory
 
     public ClientConnectionFactory (Configuration conf,
                                     ShellContext ctx) {
-        this.ctx = ctx;
+        this.ctx = ctx != null ? ctx : new VoidShellContext();
         controlConnFact =
                 new GenericConnectionFactory<ControlConnection>(conf);
         controlAddress = conf.getString(ConnectionConsumer.CONF_RPC_TARGET,
@@ -42,7 +43,7 @@ public class ClientConnectionFactory
 
     public ClientConnectionFactory (String controlAddress,
                                     ShellContext ctx) {
-        this.ctx = ctx;
+        this.ctx = ctx != null ? ctx : new VoidShellContext();
         controlConnFact =
                 new GenericConnectionFactory<ControlConnection>(
                                                 Configuration.newMemoryBased());
