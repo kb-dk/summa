@@ -47,6 +47,8 @@ public class StartServiceCommand extends RemoteCommand<ClientConnection> {
 
         installOption("c", "configuration", true, "Location of configuration. "
                                                   + "Url, file, or RMI server");
+        installOption("w", "wait", false, "Wait for the service to stop before "
+                                          + "returning from this command");
     }
 
     public void invoke(ShellContext ctx) throws Exception {
@@ -96,9 +98,42 @@ public class StartServiceCommand extends RemoteCommand<ClientConnection> {
             releaseConnection();
         }
 
-        log.debug("End invoke for " + baseMeta);
-        ctx.info(mon.getLastStatus() == null ?
-                 "Timed out" : mon.getLastStatus().toString());
+        if (mon.getLastStatus() == null) {
+            ctx.warn("Timed out");
+            log.info("End invoke for " + baseMeta + ", timed out");
+            return;
+        } else {
+            ctx.info(mon.getLastStatus().toString());
+        }
+
+        if (hasOption("wait")) {
+            ctx.prompt("Waiting for '" + pkgId + "' to stop ... ");
+
+            // Wait for not_instantiated, stopped, or crashed
+            Status.CODE[] ignoreStatuses = new Status.CODE[]{
+                    Status.CODE.constructed,
+                    Status.CODE.idle,
+                    Status.CODE.recovering,
+                    Status.CODE.running,
+                    Status.CODE.startingUp,
+                    Status.CODE.stopping
+            };
+
+            int timeout = 60*60*24; // 24h
+            mon = new StatusMonitor(
+                                     new ServiceConnectionFactory(clientAddress,
+                                                                  client),
+                                     pkgId, timeout, null, ignoreStatuses);
+            mon.run();
+
+            if (mon.getLastStatus() == null) {
+                ctx.warn("Timed out");
+                log.info("End invoke for " + baseMeta + ", timed out when " +
+                         "waiting for stop");
+            } else {
+                ctx.info(mon.getLastStatus().toString());
+            }
+        }
     }
 }
 
