@@ -645,7 +645,7 @@
                 <xsl:for-each select="mc:subfield[@code='a']">
                     <xsl:value-of select="."/>
                 </xsl:for-each>
-                 <xsl:for-each select="mc:subfield[@code='2']">
+                <xsl:for-each select="mc:subfield[@code='2']">
                     <xsl:text>,&#32; </xsl:text>
                     <xsl:value-of select="."/>
                 </xsl:for-each>
