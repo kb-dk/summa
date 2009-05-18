@@ -44,7 +44,7 @@ MAINJAR=@summa.ilib.control@
 MAINCLASS=dk.statsbiblioteket.summa.control.client.shell.ClientShell
 CONFIGURATION=configuration-server.xml
 #LIBDIRS=lib
-PRINT_CONFIG=true
+PRINT_CONFIG=
 #JAVA_HOME=/usr/lib/jvm/java
 JVM_OPTS="-server -Xmx64m -Dsumma.configuration=$CONFIGURATION"
 SECURITY_POLICY="$DEPLOY/config/server.policy"
