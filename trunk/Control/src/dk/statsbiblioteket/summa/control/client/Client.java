@@ -75,6 +75,21 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
     public static final String CONF_SERVICE_TIMEOUT =
             "summa.control.client.servicetimeout";
 
+    /**
+     * If this property is {@code true} a backup will be stored when
+     * removing services via the {@link #removeService(String)} method.
+     * The backup is stored in the service's {@code artifacts} directory.
+     * <p/>
+     * The default value is {@code false}
+     */
+    public static final String CONF_STORE_ARTIFACTS =
+            "summa.control.client.storeartifacts";
+
+    /**
+     * Default value for {@link #CONF_STORE_ARTIFACTS} property
+     */
+    public static final boolean DEFAULT_STORE_ARTIFACTS = false;
+
     private Status status;
     private BundleRepository repository;
     private BundleLoader loader;
@@ -87,6 +102,7 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
     private String artifactPath; // Removed service packages
     private String persistentPath;
     private int serviceTimeout;
+    private boolean storeArtifacts;
 
 
     // RMI-related data
@@ -113,12 +129,13 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
 
         Security.checkSecurityManager();
 
-        registryHost = conf.getString(CONF_REGISTRY_HOST,
-                                               "localhost");
-        registryPort = conf.getInt(CONF_REGISTRY_PORT, 27000);
+        registryHost = conf.getString(CONF_REGISTRY_HOST, "localhost");
+        registryPort = conf.getInt(CONF_REGISTRY_PORT, DEFAULT_REGISTRY_PORT);
         clientId = System.getProperty(CONF_CLIENT_ID);
-        clientPort = conf.getInt(CONF_CLIENT_PORT, 27002);
+        clientPort = conf.getInt(CONF_CLIENT_PORT, DEFAULT_CLIENT_PORT);
         id = clientId;
+        storeArtifacts = conf.getBoolean(CONF_STORE_ARTIFACTS,
+                                         DEFAULT_STORE_ARTIFACTS);
 
         if (clientId == null) {
             throw new BadConfigurationException("System property '" + CONF_CLIENT_ID
@@ -1069,19 +1086,32 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
             log.info("Service '" + id + "', not running. Good to remove");
         }
 
-        /* Find an available file name in the artifacts dir */
-        int availNum = 1;
-        artifactPkgPath = artifactPath +File.separator
-                               + pkgFile.getName() + ".old.0";
-        while (new File (artifactPkgPath).exists()) {
-            artifactPkgPath =  artifactPath +File.separator
-                               + pkgFile.getName() + ".old." + availNum;
-            availNum++;
+        if (storeArtifacts) {
+            /* Find an available file name in the artifacts dir */
+            int availNum = 1;
+            artifactPkgPath = artifactPath +File.separator
+                              + pkgFile.getName() + ".old.0";
+            while (new File (artifactPkgPath).exists()) {
+                artifactPkgPath =  artifactPath +File.separator
+                                   + pkgFile.getName() + ".old." + availNum;
+                availNum++;
+            }
+
+            log.info("Removing service '" + id + "', backup kept as: "
+                     + artifactPkgPath);
+            pkgFile.renameTo(new File(artifactPkgPath));
+        } else {
+            /* We are not configured to store artifacts,
+             * simply delete the service */
+            try {
+                log.info("Removed service '" + id + "' without backup");
+                Files.delete(pkgFile);
+            } catch (IOException e) {
+                throw new ServiceDeploymentException("Failed to delete service"
+                                                     + " dir " + pkgFile, e);
+            }
         }
 
-        log.info("Service '" + id + "' removed. Backup kept as: "
-                 + artifactPkgPath);
-        pkgFile.renameTo(new File(artifactPkgPath));
     }
 
     /**
