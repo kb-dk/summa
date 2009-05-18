@@ -43,6 +43,7 @@ public class ControlShell {
         shell.installCommand(new StopCommand(connManager, rmiAddress));
         shell.installCommand(new ClientsCommand(connManager, rmiAddress));
         shell.installCommand(new StatusCommand(connManager, rmiAddress));
+        shell.installCommand(new ServicesCommand(connManager, rmiAddress));
         shell.installCommand(new ControlCommand(connManager, rmiAddress));
     }
 
