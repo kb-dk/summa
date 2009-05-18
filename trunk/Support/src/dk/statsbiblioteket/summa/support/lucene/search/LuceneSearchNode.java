@@ -633,7 +633,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
             // TODO: What about longs for startIndex and maxRecords?
             for (int i = (int)startIndex ;
                  i < topDocs.scoreDocs.length
-                 && i < (int)(startIndex + maxRecords+ (mlt_enabled ? 1 : 0));
+                 && i < (int)(startIndex + maxRecords + (mlt_request ? 1 : 0));
                  i++) {
                 ScoreDoc scoreDoc = topDocs.scoreDocs[i];
                 // TODO: Get a service id and the sort value
