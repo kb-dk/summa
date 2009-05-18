@@ -29,6 +29,7 @@ public class StatusMonitor implements Runnable {
     private Monitorable _mon;
     private String connectionId;
     private int timeout;
+    private int tick;
     private ShellContext ctx;
     private List<Status.CODE> ignoreStatuses;
     private ConnectionContext<? extends Monitorable> connCtx;
@@ -143,7 +144,7 @@ public class StatusMonitor implements Runnable {
             lastStatus = new Status(Status.CODE.crashed, msg);
         }
 
-        for (int tick = 0; tick < timeout; tick++) {
+        for (tick = 0; tick < timeout; tick++) {
 
             try {
                 Thread.sleep (1000);
@@ -227,6 +228,18 @@ public class StatusMonitor implements Runnable {
      */
     public Status getLastStatus() {
         return lastStatus;
+    }
+
+    /**
+     * Check if the monitor has timed out. The monitor is timed out if the
+     * {@code run()} method has completed and the last checked status was
+     * one of the invalid states.
+     * @return {@code true} if the {@code run()} method has completed and
+     *         the last status checked was in the list of ignored states
+     */
+    public boolean isTimedOut() {
+        return (tick >= timeout)
+               && ignoreStatuses.contains(lastStatus.getCode());
     }
 
     private void updateStatus() throws IOException {

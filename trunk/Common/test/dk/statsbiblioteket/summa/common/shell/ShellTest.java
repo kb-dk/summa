@@ -95,7 +95,7 @@ public class ShellTest extends TestCase {
                 }
             };
 
-        core = new Core (ctx, true);
+        core = new Core (ctx, true, true);
     }
 
     private static ConsoleReader createConsoleReader() {
@@ -301,7 +301,7 @@ public class ShellTest extends TestCase {
 
     public void testNonInteractiveQuit () throws Exception {
         String script = "quit";
-        Core core = new Core (ctx, true);
+        Core core = new Core (ctx, true, true);
         int exitCode = core.run(new Script(script));
         
         assertEquals("Issuing the script '" + script
@@ -310,7 +310,7 @@ public class ShellTest extends TestCase {
 
     public void testNonInteractiveHelpQuit () throws Exception {
         String script = "help;quit";
-        Core core = new Core (ctx, true);
+        Core core = new Core (ctx, true, true);
         int exitCode = core.run(new Script(script));
 
         assertEquals("Issuing the script '" + script
@@ -319,7 +319,7 @@ public class ShellTest extends TestCase {
 
     public void testNonInteractiveBadCommand () throws Exception {
         String script = "baaazooo -w --pretty; help; quit";
-        Core core = new Core (ctx, true);
+        Core core = new Core (ctx, true, true);
         int exitCode = core.run(new Script(script));
 
         assertEquals("Issuing the script '" + script
@@ -328,7 +328,7 @@ public class ShellTest extends TestCase {
 
     public void testNonInteractiveBadSwitch () throws Exception {
         String script = "help -boogawoo; help; quit";
-        Core core = new Core (ctx, true);
+        Core core = new Core (ctx, true, true);
         int exitCode = core.run(new Script(script));
 
         assertEquals("Issuing the script '" + script
@@ -344,7 +344,7 @@ public class ShellTest extends TestCase {
             System.exit(1);
         }
 
-        Core core = new Core (test.ctx, true);
+        Core core = new Core (test.ctx, true, true);
         int exitCode = core.run(null);
 
         System.exit(exitCode);
