@@ -100,6 +100,7 @@ public class ClientShell {
         shell.installCommand(new RestartServiceCommand(connManager, target));
         shell.installCommand(new RemoveServiceCommand(connManager, target));
         shell.installCommand(new SpecCommand(connManager, target));
+        shell.installCommand(new WaitCommand(connManager, target));
     }
 
     /**
