@@ -116,7 +116,11 @@ public class Core {
                     }
 
                     try {
-                        return lineIn.readLine().trim();
+                        String line = lineIn.readLine();
+                        if (line != null) {
+                            return line.trim();
+                        }
+                        return null;
                     } catch (IOException e) {
                         throw new RuntimeException("Failed to read input", e);
                     }
@@ -215,6 +219,13 @@ public class Core {
 
         /* This call will block until we have input */
         cmdString = shellCtx.readLine();
+
+        /* Check if the input stream has been closed an exit the shell if so */
+        if (cmdString == null) {
+            throw new AbortNotification("Input steam closed", 0);
+        }
+
+        /* Ignore empty commands, and re-print the prompt */
         if ("".equals(cmdString)) {
             return;
         }
