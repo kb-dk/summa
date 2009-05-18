@@ -8,6 +8,7 @@ import dk.statsbiblioteket.util.rpc.ConnectionFactory;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
+import dk.statsbiblioteket.summa.common.shell.VoidShellContext;
 import dk.statsbiblioteket.summa.control.api.feedback.FeedbackShellContext;
 import dk.statsbiblioteket.summa.control.api.feedback.Feedback;
 
@@ -66,7 +67,7 @@ public class StatusMonitor implements Runnable {
         this.connMgr = connMgr;
         this.connectionId = connectionId;
         this.timeout = timeout;
-        this.ctx = ctx;
+        this.ctx = ctx != null ? ctx : new VoidShellContext();
         this.ignoreStatuses = Arrays.asList(ignoreStatuses);
 
         log.trace ("Created StatusMonitor with timeout " + timeout  + ", ignoring"
@@ -80,7 +81,7 @@ public class StatusMonitor implements Runnable {
                           Status.CODE... ignoreStatuses) {
         this._mon = mon;
         this.timeout = timeout;
-        this.ctx = ctx;
+        this.ctx = ctx != null ? ctx : new VoidShellContext();
         this.ignoreStatuses = Arrays.asList(ignoreStatuses);
 
         log.trace ("Created StatusMonitor with static connection and timeout "
@@ -97,7 +98,7 @@ public class StatusMonitor implements Runnable {
         this.connFact = connFact;
         this.connectionId = connectionId;
         this.timeout = timeout;
-        this.ctx = ctx;
+        this.ctx = ctx != null ? ctx : new VoidShellContext();
         this.ignoreStatuses = Arrays.asList(ignoreStatuses);
 
         // Configure the connection factory so we can uphold our timig promises
