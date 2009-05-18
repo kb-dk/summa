@@ -129,7 +129,7 @@
                     <xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.ISBN.isbnNorm(.)"/>
                 </Index:field>
             </xsl:for-each>
-             <xsl:for-each select="mc:datafield[@tag='526']/mc:subfield[@code='r']">
+            <xsl:for-each select="mc:datafield[@tag='526']/mc:subfield[@code='r']">
                 <Index:field Index:name="isbn" Index:navn="ib" Index:type="number" Index:boostFactor="10">
                     <xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.ISBN.isbnNorm(.)"/>
                 </Index:field>
