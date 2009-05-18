@@ -72,8 +72,7 @@ public class ClientShell {
         if (target.startsWith("//")) {
             connFact = new GenericConnectionFactory<ClientConnection>(conf);
         } else {
-            connFact = new ClientConnectionFactory(conf,
-                                                   shell.getShellContext());
+            connFact = new ClientConnectionFactory(conf, null);
         }
 
         connManager = new ConnectionManager<ClientConnection>(connFact);
