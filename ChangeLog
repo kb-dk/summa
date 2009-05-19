@@ -1,8 +1,374 @@
-2009-05-11 13:30  mke
+2009-05-19 13:10  mke
 
-	* [r1465] build.xml, ChangeLog, NEWS
+	* [r1505] ChangeLog, build.properties:
 
-	Release Summa 1.4.3
+	  Release Summa 1.4.4
+
+
+2009-05-19 13:04  mke
+
+	* [r1504] NEWS:
+	  
+	  Start preparing NEWS file for 1.4.4
+
+2009-05-19 12:53  toke
+
+	* [r1503] Web/config/storage/configuration.xml,
+	  Web/src/dk/statsbiblioteket/summa/web/services/StorageWS.java:
+	  
+	  Update: Updated StorageWS to support not escaping content on
+	  getRecord
+
+2009-05-19 12:50  toke
+
+	* [r1502] Common/src/dk/statsbiblioteket/summa/common/Record.xsd,
+	  Common/src/dk/statsbiblioteket/summa/common/util/RecordUtil.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/RecordUtilTest.java,
+	  Common/test/log4j.xml,
+	  Web/src/dk/statsbiblioteket/summa/web/services/StorageWS.java:
+	  
+	  Update: The RecordUtil is now capable of not entity-encoding in
+	  content if so configured
+
+2009-05-19 12:47  nig
+
+	* [r1501] Index/config/targets/horizon/horizon_author.xsl:
+	  
+	  Justeret forfatterbeskrivelser. praefikset "dk" fjernet i horizon
+	  (eks: dkani -> ani )
+
+2009-05-19 12:17  mke
+
+	* [r1500]
+	  Control/src/dk/statsbiblioteket/summa/control/server/shell/ServicesCommand.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/shell/StatusCommand.java:
+	  
+	  Add formatted output of the 'status' command on control shell
+	  
+	  Column name tweaks in status command
+
+2009-05-19 11:59  mke
+
+	* [r1499]
+	  Control/src/dk/statsbiblioteket/summa/control/client/shell/StatusCommand.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/shell/ServicesCommand.java:
+	  
+	  Feature: Make the 'services' command in control shell use the new
+	  Layout helper and add a -f/--formatted switch
+
+2009-05-19 11:35  mke
+
+	* [r1498]
+	  Control/src/dk/statsbiblioteket/summa/control/client/shell/ServicesCommand.java,
+	  Control/src/dk/statsbiblioteket/summa/control/client/shell/StatusCommand.java:
+	  
+	  Always display the same number of columns in formatted modes of
+	  'services' and 'status' commands of client shell
+
+2009-05-19 11:22  mke
+
+	* [r1497]
+	  Common/src/dk/statsbiblioteket/summa/common/shell/Layout.java,
+	  Common/test/dk/statsbiblioteket/summa/common/shell/LayoutTest.java,
+	  Control/src/dk/statsbiblioteket/summa/control/client/shell/ServicesCommand.java:
+	  
+	  Start using the new Layout class in the 'services' command of
+	  client shell
+
+2009-05-19 10:50  mke
+
+	* [r1496]
+	  Common/src/dk/statsbiblioteket/summa/common/shell/Layout.java,
+	  Common/test/dk/statsbiblioteket/summa/common/shell/LayoutTest.java:
+	  
+	  New helper class: Simple tabular layout for textual data,
+	  common.shell.Layout
+
+2009-05-19 08:59  mke
+
+	* [r1495]
+	  Control/src/dk/statsbiblioteket/summa/control/service/StorageService.java:
+	  
+	  Bugfix: Don't set the state to 'running' when the StorageService
+	  has completed statup, but use the 'idle' state (as everything
+	  else also does) instead
+
+2009-05-19 08:27  mke
+
+	* [r1494] Control/config/control.configuration.xml,
+	  Control/src/dk/statsbiblioteket/summa/control/api/ClientConnection.java,
+	  Control/src/dk/statsbiblioteket/summa/control/client/Client.java,
+	  Control/src/dk/statsbiblioteket/summa/control/client/ServiceManager.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/ControlCore.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/ControlUtils.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/deploy/SSHDeployer.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/shell/DeployCommand.java,
+	  Control/test/test-client-1/config/configuration.xml:
+	  
+	  Make it possible to install clients under another base path than
+	  ~/summa-control. The easiest way to achieve this is by setting
+	  the summa.control.client.basepath property on the control server.
+	  This is useful if one wants to completely separate the client and
+	  service data from the control/repo/bundle data.
+
+2009-05-18 11:54  mke
+
+	* [r1493]
+	  Control/src/dk/statsbiblioteket/summa/control/server/shell/ServicesCommand.java:
+	  
+	  Feature: Add a -b and --bundle switch to the 'services' command
+	  in control shell
+
+2009-05-18 11:35  nig
+
+	* [r1492] Index/config/targets/aleph/aleph_identifiers.xsl,
+	  Index/config/targets/aleph/aleph_index.xsl,
+	  Index/config/targets/aleph/aleph_notes.xsl:
+	  
+	  De sidste format ændringer til Aleph
+
+2009-05-18 11:34  nig
+
+	* [r1491] Index/config/targets/aleph/aleph_identifiers.xsl,
+	  Index/config/targets/aleph/aleph_index.xsl,
+	  Index/config/targets/aleph/aleph_notes.xsl:
+	  
+	  De sidste format ændringer til Aleph
+
+2009-05-18 10:18  mke
+
+	* [r1490]
+	  Control/src/dk/statsbiblioteket/summa/control/ClientConnectionFactory.java,
+	  Control/src/dk/statsbiblioteket/summa/control/client/shell/ClientShell.java,
+	  Control/src/dk/statsbiblioteket/summa/control/client/shell/ServicesCommand.java:
+	  
+	  Feature: Add a -b and --bundle switch to the 'services' command
+	  in client shell
+	  
+	  Tweak: Don't output (seemingly) random dots from client shell
+	  (they where there because the underlying ClientConnectionFactory
+	  printed them to the shell context to indicate progress)
+
+2009-05-18 09:34  mke
+
+	* [r1489]
+	  Control/src/dk/statsbiblioteket/summa/control/client/Client.java:
+	  
+	  Make it configurable whether the Client keeps old services in the
+	  artifacts/ dir after it has removed a service. The relevant
+	  property is summa.control.client.storeartifacts
+
+2009-05-18 08:47  mke
+
+	* [r1488]
+	  Common/test/dk/statsbiblioteket/summa/common/shell/ShellTest.java,
+	  Control/src/dk/statsbiblioteket/summa/control/api/StatusMonitor.java,
+	  Control/src/dk/statsbiblioteket/summa/control/client/shell/ClientShell.java,
+	  Control/src/dk/statsbiblioteket/summa/control/client/shell/WaitCommand.java:
+	  
+	  Feature: Implement a 'wait' command on the client shell
+	  
+	  Tweak: Add StatusMonitor.isTimedOut() method
+	  
+	  Buildfix: ShellTest used outdated constructors for its shell
+	  Cores
+
+2009-05-18 08:00  toke
+
+	* [r1487]
+	  Index/src/dk/statsbiblioteket/summa/index/IndexControllerImpl.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/LuceneSearchNode.java:
+	  
+	  Bugfix: The LuceneSearchNode returned one hit more than requested
+
+2009-05-18 07:48  mke
+
+	* [r1486]
+	  Control/src/dk/statsbiblioteket/summa/control/api/StatusMonitor.java,
+	  Control/src/dk/statsbiblioteket/summa/control/client/shell/StartServiceCommand.java:
+	  
+	  Feature: Add -w and --wait to the 'start' command in the Client
+	  shell
+	  
+	  Bugfix: Fall back to a VoidShellContext in case a StatusMonitor
+	  is created with a null shell context
+
+2009-05-18 07:29  mke
+
+	* [r1485]
+	  Control/src/dk/statsbiblioteket/summa/control/server/shell/ControlShell.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/shell/ServicesCommand.java:
+	  
+	  Add command to list services deployed on a client directly from
+	  the Control shell, optionally printing the status of each service
+
+2009-05-18 07:07  mke
+
+	* [r1484]
+	  Control/src/dk/statsbiblioteket/summa/control/server/shell/StatusCommand.java:
+	  
+	  Feature: Allow fetching status of deployed services from the
+	  Control shell. Just pass clientId/serviceId to the status command
+	  in the Control shell
+
+2009-05-18 06:47  mke
+
+	* [r1483]
+	  Common/src/dk/statsbiblioteket/summa/common/shell/Core.java,
+	  Common/src/dk/statsbiblioteket/summa/common/shell/ShellContext.java:
+	  
+	  Bugfix: Make the shell Core exit when the input stream is closed.
+	  This way one can pipe commands into the shell with standard unix
+	  pipes as well as exit the shell with Ctrl-d
+
+2009-05-18 06:36  mke
+
+	* [r1482] Control/scripts/client-shell.sh,
+	  Control/scripts/control-shell.sh:
+	  
+	  Tweak: Don't spew debug info from the shell scripts starting up
+	  Control- or Client shells
+
+2009-05-18 06:30  mke
+
+	* [r1481]
+	  Common/src/dk/statsbiblioteket/summa/common/shell/Core.java:
+	  
+	  Tweak: Don't print debug messages by default in the shell
+	  
+	  Tweak: Print the correct Summa version number when starting a
+	  shell instead of some outdated CVS-mumbo-jumbo
+
+2009-05-14 09:34  toke
+
+	* [r1480]
+	  Search/src/dk/statsbiblioteket/summa/search/api/SearchClient.java,
+	  Web/src/dk/statsbiblioteket/summa/web/services/SearchWS.java,
+	  Web/src/dk/statsbiblioteket/summa/web/services/StorageWS.java:
+	  
+	  Bugfix: The web services leaked connections to search, suggest
+	  and storage
+
+2009-05-14 09:11  nig
+
+	* [r1479] Index/config/targets/aleph/aleph_author.xsl:
+	  
+	  Forfatter beskrivelser jf format beskrivelser
+
+2009-05-14 09:10  nig
+
+	* [r1478] Index/config/targets/horizon/horizon_author.xsl:
+	  
+	  Optimeret koden til forfatter beskrivelser
+
+2009-05-14 08:14  mke
+
+	* [r1477] build.xml:
+	  
+	  Enable compilation of the Web module in the global .jar target
+
+2009-05-13 14:55  toke
+
+	* [r1476]
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorageH2.java,
+	  Support/test/dk/statsbiblioteket/summa/support/suggest/SuggestSearcherTest.java:
+	  
+	  Feature: Made MoreLikeThis case sensitive for results but kept it
+	  case-insensitive for query. This closes bug #1659
+
+2009-05-13 13:35  toke
+
+	* [r1475]
+	  Control/test/dk/statsbiblioteket/summa/releasetest/OAITest.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/FacetIndexDescriptor.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/FacetSearchNode.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/FacetStructure.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/Structure.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/browse/BrowserThread.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/browse/FacetRequest.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/browse/FacetResultLocal.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/browse/TagCounterArray.java,
+	  FacetBrowser/test/dk/statsbiblioteket/summa/facetbrowser/browse/TagCounterTest.java:
+	  
+	  Bugfix: The FacetBrowser did not sort Tags correctly for facets
+	  with one field or with less tags than the requested maximum
+
+2009-05-13 11:27  nig
+
+	* [r1474] Index/config/targets/horizon/horizon_author.xsl:
+	  
+	  Ændret codefelt 8 til codefelt 9 (forfatter beskrivelser)
+
+2009-05-13 11:15  nig
+
+	* [r1473] Index/config/targets/aleph/aleph_identifiers.xsl,
+	  Index/config/targets/aleph/aleph_material.xsl,
+	  Index/config/targets/aleph/aleph_notes.xsl,
+	  Index/config/targets/aleph/aleph_title.xsl:
+	  
+	  formataendringer til aleph
+
+2009-05-12 19:53  tokerefind
+
+	* [r1472]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/DumpFilter.java:
+	  
+	  Introduced maxDumps to the DumpFilter so it does not create two
+	  gazillion files when processing a gazillion Payloads
+
+2009-05-12 13:08  nig
+
+	* [r1471] Index/config/targets/horizon/horizon_material.xsl:
+	  
+	  Tilføjet 008 d skon/faglitteratur
+
+2009-05-12 11:13  mke
+
+	* [r1470]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/storage/JStorage.java,
+	  Common/test/dk/statsbiblioteket/summa/common/configuration/JStorageTest.java:
+	  
+	  Make JStorage.toString() output valid Javascript (it used '='
+	  inside associative arrays when ':' should have been used)
+	  
+	  JStorage now actually bootstraps and this is tested intensively
+	  in JStorageTest
+
+2009-05-12 07:56  mke
+
+	* [r1469]
+	  Control/src/dk/statsbiblioteket/summa/control/service/FilterService.java:
+	  
+	  Bugfix: In FilterService fix possible NPE in stop() if the
+	  internal FilterControl fails to instantiate
+
+2009-05-11 13:23  toke
+
+	* [r1468]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/lucene/LuceneFacetBuilder.java:
+	  
+	  Bugfix: Under certaing circumstances an empty Tag could be added
+
+2009-05-11 12:12  toke
+
+	* [r1467]
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/LuceneSearchNode.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/LocalStaticSortComparator.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/SortFactory.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/SortPool.java:
+	  
+	  Feature: Ported a Lucene sorter that uses cached collator and
+	  index-based sorting from Stable Summa to head. This should
+	  provide a speed-increase for sorted searches along with less
+	  memory consumption (thill not ideal though. For that we need to
+	  hack the faceting system)
+
+2009-05-11 11:38  mke
+
+	* [r1465] ChangeLog, NEWS, build.properties:
+	  
+	  Release Summa 1.4.3
 
 2009-05-11 10:49  mke
 
