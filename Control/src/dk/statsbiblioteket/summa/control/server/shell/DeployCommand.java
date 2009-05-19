@@ -42,7 +42,7 @@ public class DeployCommand extends Command {
         installOption ("b", "basepath", true,
                        "What basepath to use for the client installation "
                        + "relative to the client user's home directory. "
-                       + "Default is 'summa-control'");
+                       + "Default is determined by the Control server");
 
         installOption ("c", "configuration", true,
                        "Url, RMI address or file path where the client can"
@@ -79,16 +79,13 @@ public class DeployCommand extends Command {
         String transport = getOption("t") != null ? getOption("t") : "ssh";
         transport = ControlUtils.getDeployerClassName(transport);
 
-        String basePath =
-                getOption("b") != null ? getOption("b") : "summa-control";
+        String basePath = getOption("b");
         String confLocation = getOption("c"); // This is allowed to be unset
                                     // - see ClientDeployer#CONF_CLIENT_CONF
 
         /* Set up a configuration for the deployment request */
         Configuration conf =
                 Configuration.newMemoryBased(
-                        ClientDeployer.CONF_BASEPATH,
-                        basePath,
                         ClientDeployer.CONF_DEPLOYER_BUNDLE,
                         bundleId,
                         ClientDeployer.CONF_INSTANCE_ID,
@@ -103,8 +100,11 @@ public class DeployCommand extends Command {
                         hostname);
 
         if (confLocation != null){
- 	    conf.set(ClientDeployer.CONF_CLIENT_CONF, confLocation);
-        }        
+ 	        conf.set(ClientDeployer.CONF_CLIENT_CONF, confLocation);
+        }
+        if (basePath != null) {
+            conf.set(ClientDeployer.CONF_BASEPATH, basePath);
+        }
 
         log.trace ("Created deployment config:\n" + conf.dumpString());
 

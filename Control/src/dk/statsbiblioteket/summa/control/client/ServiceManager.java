@@ -35,7 +35,7 @@ public class ServiceManager extends ConnectionManager<Service>
      * {@link ConnectionFactory} to use for creating service connections.
      */
     public static final String CONF_CONNECTION_FACTORY =
-                                               GenericConnectionFactory.CONF_FACTORY;
+                                          GenericConnectionFactory.CONF_FACTORY;
     private String clientId;
     private String basePath;
     private String servicePath;
@@ -44,22 +44,18 @@ public class ServiceManager extends ConnectionManager<Service>
     public ServiceManager (Configuration conf) {
         super (getConnectionFactory(conf));
 
-        registryPort = conf.getInt(Client.CONF_REGISTRY_PORT, 27000);
+        registryPort = conf.getInt(Client.CONF_REGISTRY_PORT,
+                                   Client.DEFAULT_REGISTRY_PORT);
         clientId = System.getProperty(Client.CONF_CLIENT_ID);
 
         if (clientId == null) {
             throw new BadConfigurationException("System property '"
-                                                + Client.CONF_CLIENT_ID + "' not set");
+                                                + Client.CONF_CLIENT_ID
+                                                + "' not set");
         }
 
-        basePath = System.getProperty("user.home") + File.separator
-                                     + conf.getString(
-                                               Client.CONF_CLIENT_BASEPATH,
-                                               "summa-control")
-                                     + File.separator + clientId;
-
+        basePath = System.getProperty("user.dir");
         servicePath = basePath + File.separator + "services";
-
     }
 
     @Override
@@ -130,7 +126,6 @@ public class ServiceManager extends ConnectionManager<Service>
             log.warn ("Failed to read bundle file for " + serviceId, e);
             return null;
         }
-
     }
 
     public List<String> getServices () {

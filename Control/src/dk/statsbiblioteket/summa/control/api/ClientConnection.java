@@ -49,9 +49,8 @@ public interface ClientConnection extends Monitorable {
      * */
     public static final String CONF_CLIENT_ID = "summa.control.client.id";
 
-    /** <p>Property defining the relative path under which the client
-     * should install itself. The path is relative to the system property
-     * {@code user.home} of the client's jvm</p>
+    /** <p>Property defining the absolute path under which the client
+     * should install itself.</p>
      *
      * <p>The client will install itself under
      * {@code <summa.control.client.basepath>/<summa.control.client.id>}.</p>

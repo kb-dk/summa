@@ -142,11 +142,17 @@ public class Client extends UnicastRemoteObject implements ClientMBean {
                                                 + "' not set");
         }
 
-        basePath = System.getProperty("user.home") + File.separator
-                                     + conf.getString(
-                                      CONF_CLIENT_BASEPATH, "summa-control")
-                                     + File.separator + clientId;
-        log.debug ("Client '" + id + "' using basePath '" + basePath + "'");
+        basePath = System.getProperty("user.dir");
+        if (clientId.equals(new File(basePath).getName())) {
+            // Good, client id and parent dir match as it should
+            log.debug ("Client '" + id + "' using basePath '" + basePath + "'");
+        } else {
+            String msg = "Client id and working directory mismatch. Id is "
+                         + clientId + " and working directory is "
+                         + new File(basePath);
+            log.fatal(msg);
+            throw new ConfigurationException(msg);
+        }
 
         tmpPath = basePath + File.separator + "tmp";
         servicePath = basePath + File.separator + "services";
