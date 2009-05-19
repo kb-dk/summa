@@ -1,0 +1,19 @@
+<xproperties>
+    <xproperties>
+        <entry>
+            <key>seven</key>
+            <value class="int">7</value>
+        </entry>
+        <entry>
+            <key>submarine</key>
+            <value class="xproperties">
+                <entry>
+                    <key>eight</key>
+                    <value class="int">8</value>
+                </entry>
+            </value>
+        </entry>
+    </xproperties>
+</xproperties>
+
+

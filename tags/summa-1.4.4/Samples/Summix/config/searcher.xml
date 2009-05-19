@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Setup for LuceneSearcher -->
+<xproperties>
+    <xproperties>
+        <!-- Core class to use for the search engine -->
+        <entry>
+            <key>summa.searcher.class</key>
+            <value class="string">dk.statsbiblioteket.summa.search.rmi.RMISearcherProxy</value>
+        </entry>
+
+        <!-- What backend class to support the RMI proxy-->
+        <entry>
+            <key>summa.searcher.rmi.backend</key>
+            <value class="string">dk.statsbiblioteket.summa.search.SummaSearcherImpl</value>
+        </entry>
+
+        <!-- The internal searcher node used by the SummaSearcherImpl.
+             We need an aggregator because we have to go through the
+             LuceneSearchNode and the FacetSearchNode -->
+        <entry>
+            <key>summa.search.node.class</key>
+            <value class="string">dk.statsbiblioteket.summa.search.SearchNodeAggregator</value>
+        </entry>
+
+        <!-- IndexWatcher -->
+        <entry>
+            <key>summa.indexwatcher.checkinterval</key>
+            <value class="int">1000</value>
+        </entry>
+        <entry>
+            <key>summa.indexwatcher.indexroot</key>
+            <value class="string">index</value>
+        </entry>
+        <entry>
+            <key>summa.indexwatcher.minretention</key>
+            <!-- Very aggressive value - probably too low for production -->
+            <value class="int">1000</value>
+        </entry>
+        <entry>
+            <key>summa.search.searcheravailability.timeout</key>
+            <value class="int">5000</value>
+        </entry>
+
+        <entry>
+            <key>summa.search.aggregator.sequential</key>
+            <value class="boolean">true</value>
+        </entry>
+
+        <entry>
+            <key>summa.search.nodes</key>
+            <value class="list">
+                <xproperties>
+                    <entry>
+                        <key>summa.search.node.class</key>
+                        <value class="string">dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode</value>
+                    </entry>
+
+                    <!-- MoreLikeThis configuration
+                         This setup is *hyper sensitive* and picks up way too
+                         much, tweak to own liking -->
+                    <entry>
+                        <key>summa.support.lucene.morelikethis.configuration</key>
+                        <value class="xproperties">
+                            <entry>
+                                <key>summa.support.lucene.morelikethis.maxnumtokensparsed</key>
+                                <value class="int">5000</value>
+                            </entry>
+                            <entry>
+                                <key>summa.support.lucene.morelikethis.maxqueryterms</key>
+                                <value class="int">5000</value>
+                            </entry>
+                            <entry>
+                                <key>summa.support.lucene.morelikethis.maxwordlength</key>
+                                <value class="int">5000</value>
+                            </entry>
+                            <entry>
+                                <key>summa.support.lucene.morelikethis.mindocfreq</key>
+                                <value class="int">0</value>
+                            </entry>
+                            <entry>
+                                <key>summa.support.lucene.morelikethis.mintermfreq</key>
+                                <value class="int">0</value>
+                            </entry>
+                            <entry>
+                                <key>summa.support.lucene.morelikethis.minwordlength</key>
+                                <value class="int">0</value>
+                            </entry>
+                        </value>
+                    </entry>
+
+                    <entry>
+                        <key>summa.search.collectdocids</key>
+                        <value class="string">true</value>
+                    </entry>
+
+                    <entry>
+                        <key>search.clauses.max</key>
+                        <value class="int">20000</value>
+                    </entry>
+                    <entry>
+                        <key>summa.search.resultfields</key>
+                        <value class="string-array">
+                            <string>main_titel</string>
+                            <string>lsubject</string>
+                            <string>lsu_oai</string>
+                            <string>author_normalised</string>
+                            <string>recordID</string>
+                            <string>shortformat</string>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>summa.search.fallbackvalues</key>
+                        <value class="string-array">
+                            <string>NoTitle</string>
+                            <string>NoSubject</string>
+                            <string>NoOAI</string>
+                            <string>NoAuthor</string>
+                            <string>NoID</string>
+                            <string>NoShortformat</string>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>summa.search.nonescapedfields</key>
+                        <value class="string-array">
+                            <string>shortformat</string>
+                        </value>
+                    </entry>
+                    <!--        <entry>
+                        <key>summa.search.warmup.data</key>
+                        <value class="string">/tmp/warmup...</value>
+                    </entry>-->
+                    <entry>
+                        <key>summa.search.warmup.maxtime</key>
+                        <value class="string">10000</value>
+                    </entry>
+                    <entry>
+                        <key>summa.search.maxrecords</key>
+                        <value class="int">10002</value>
+                    </entry>
+                    <entry>
+                        <key>summa.search.number-of-searchers</key>
+                        <value class="int">2</value>
+                    </entry>
+                    <entry>
+                        <key>summa.search.numberofconcurrentsearches</key>
+                        <value class="int">4</value>
+                    </entry>
+                    <entry>
+                        <key>summa.search.searchqueue.maxsize</key>
+                        <value class="int">50</value>
+                    </entry>
+                    <entry>
+                        <key>summa.search.searcheravailability.timeout</key>
+                        <value class="int">5000</value>
+                    </entry>
+                </xproperties>
+
+                <xproperties>
+                    <entry>
+                        <key>summa.search.node.class</key>
+                        <value class="string">
+                            dk.statsbiblioteket.summa.facetbrowser.FacetSearchNode
+                        </value>
+                    </entry>
+                </xproperties>
+
+            </value>
+        </entry>
+    </xproperties>
+</xproperties>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mdcs>
+  <id>urn:dk:statsbiblioteket:commercials:movie-666</id>
+  <type>2</type>
+  <title>
+    <mainTitle>Captain Planet Saves the World... Again...</mainTitle>
+    <alternativeTitle/>
+  </title>
+  <subject>
+    <productName>Captain Planet Shampoo</productName>
+    <keyword>2000-2009</keyword>
+    <restrictedTerm id="">Diverse<childTerm id="">Diverse</childTerm>
+</restrictedTerm>
+  </subject>
+  <description>Captain Planet once again saves the world. This time by getting rid of dandruff.</description>
+  <contributor role="Producent">Gi</contributor>
+  <contributor role="Tekniske arbejder">Kwame</contributor>
+  <contributor role="Bureau">Hanna-Barbera</contributor>
+  <censor>
+    <date/>
+  </censor>
+  <premiereDate>2008-12-02</premiereDate>
+  <extent>
+    <postSensor/>
+    <digitalDistribution>15</digitalDistribution>
+  </extent>
+  <originalVersion>
+    <tape/>
+    <positionIn/>
+  </originalVersion>
+</mdcs>
