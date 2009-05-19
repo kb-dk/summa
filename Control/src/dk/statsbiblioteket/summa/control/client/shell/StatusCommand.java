@@ -25,6 +25,7 @@ package dk.statsbiblioteket.summa.control.client.shell;
 import dk.statsbiblioteket.summa.common.shell.Command;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.common.shell.RemoteCommand;
+import dk.statsbiblioteket.summa.common.shell.Layout;
 import dk.statsbiblioteket.summa.control.api.*;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 
@@ -41,6 +42,11 @@ public class StatusCommand extends RemoteCommand<ClientConnection> {
               "status of deployed services",
               connMgr);
 
+        installOption("f", "formatted", false, "Strictly formatted output for" +
+                                               "machine parsing. Line format " +
+                                               "is: " +
+                                               "'serviceId | statusCode | message'");
+
         setUsage("status [service_id]...");
 
         this.clientAddress = clientAddress;
@@ -48,6 +54,15 @@ public class StatusCommand extends RemoteCommand<ClientConnection> {
 
     public void invoke(ShellContext ctx) throws Exception {
         ClientConnection client = getConnection(clientAddress);
+        Layout layout = new Layout("Service");
+
+        if (hasOption("formatted")) {
+            layout.appendColumns("StatusCode", "Message");
+            layout.setPrintHeaders(false);
+            layout.setDelimiter(" | ");
+        } else {
+            layout.appendColumns("Message");
+        }
 
         String[] services = getArguments();
 
@@ -56,18 +71,26 @@ public class StatusCommand extends RemoteCommand<ClientConnection> {
                 Status status = client.getStatus();
                 ctx.info("Client status: " + status.toString());
             } else {
-                ctx.info ("Status of services:");
                 for (String service : services) {
-                    String status;
+                    String statusCode;
+                    String msg;
                     try {
-                        status = "" + client.getServiceStatus(service);
+                        Status status = client.getServiceStatus(service);
+                        statusCode = status.getCode().toString();
+                        msg = "" + status;
                     } catch (InvalidServiceStateException e) {
-                        status = "Not running";
+                        statusCode = Status.CODE.not_instantiated.toString();
+                        msg = "Not running";
                     } catch (NoSuchServiceException e) {
-                        status = "No such service";
+                        statusCode = Status.CODE.not_instantiated.toString();
+                        msg = "No such service";
                     }
-                    ctx.info("\t" + service + ": " + status);
+                    layout.appendRow("Service", service,
+                                     "StatusCode", statusCode,
+                                     "Message", msg);
                 }
+
+                ctx.info(layout.toString());
             }
         } finally {
             releaseConnection();
