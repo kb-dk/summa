@@ -1,4 +1,77 @@
 =======================
+2009-05-19: Summa 1.4.4
+=======================
+
+ * Critical Bugfix: The web services leaked connections to search, suggest
+                    and storage
+
+ * Ported a Lucene sorter that uses cached collator and
+   index-based sorting from Stable Summa to head. This should
+   provide a speed-increase for sorted searches along with less
+   memory consumption (thill not ideal though. For that we need to
+   hack the faceting system)
+
+ * The Javascript configuration backend, JStorage, is now marked as stable,
+   although it has not seen extensive real-world tests
+
+ * Lots of polish to the client/control shells:
+
+    - Don't print debug messages by default in the shell
+
+    - Print the correct Summa version number when starting a
+	  shell instead of some outdated CVS-mumbo-jumbo
+
+	- Make the shell Core exit when the input stream is closed.
+	  This way one can pipe commands into the shell with standard unix
+	  pipes as well as exit the shell with Ctrl-d
+
+	- Allow fetching status of deployed services from the
+	  Control shell. Just pass clientId/serviceId to the status command
+
+	- Add command to list services deployed on a client directly from
+	  the Control shell, optionally printing the status of each service
+
+	- Add a -f/--format switch to 'services' and 'status' commands on client-
+	  and control shells. With this switch enabled they print out in a canonical
+	  machine parseable format
+
+	- Add -w and --wait to the 'start' command in the Client
+	  shell and implement a 'wait' command as well
+
+	- Add a -b and --bundle switch to the 'services' command
+	  in client- and control shells
+
+ * Make it configurable whether the Client keeps old services in the
+   artifacts/ dir after it has removed a service. The relevant
+   property is summa.control.client.storeartifacts
+
+ * Make it possible to install clients under another base path than
+   ~/summa-control. The easiest way to achieve this is by setting
+   the summa.control.client.basepath property on the control server.
+   This is useful if one wants to completely separate the client and
+   service data from the control/repo/bundle data.
+
+ * Bugfix: Made MoreLikeThis case sensitive for results but kept it
+           case-insensitive for query. This closes bug #1659
+
+ * Bugfix: Under certaing circumstances an empty Tag could be added in the
+           facetting system
+
+ * Bugfix: In FilterService fix possible NPE in stop() if the
+           internal FilterControl fails to instantiate
+
+ * Bugfix: The FacetBrowser did not sort Tags correctly for facets
+           with one field or with less tags than the requested maximum
+
+ * Buildfix: Enable compilation of the Web module in the global .jar target
+
+ * Bugfix: The LuceneSearchNode returned one hit more than requested
+
+ * Bugfix: Don't set the state to 'running' when the StorageService
+           has completed statup, but use the 'idle' state (as everything
+           else also does) instead
+
+=======================
 2009-05-11: Summa 1.4.3
 =======================
 
