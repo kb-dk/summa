@@ -36,8 +36,8 @@ public class Layout {
 
                 int oldWidth = columnWidths.containsKey(data[i]) ?
                                                   columnWidths.get(data[i]) : 0;
-                columnWidths.put(data[i],
-                                 Math.max(oldWidth, data[i+1].length()));
+                int valueLength = data[i+1] != null ? data[i+1].length() : 0;
+                columnWidths.put(data[i], Math.max(oldWidth, valueLength));
             }
 
             rows.add(row);
@@ -77,7 +77,7 @@ public class Layout {
     }
 
     public Layout(List<String> columns) {
-        this.columns = columns;
+        this.columns = new ArrayList<String>(columns);
         printHeaders = true;
         model = new Model();
         delimiter = " ";
@@ -89,6 +89,24 @@ public class Layout {
 
     public void setPrintHeaders(boolean printHeaders) {
         this.printHeaders = printHeaders;
+    }
+
+    public void setDelimiter (String delim) {
+        this.delimiter = delim;
+    }
+
+    public void setColumns(String... columns) {
+        setColumns(Arrays.asList(columns));
+    }
+
+    public void setColumns(List<String> columns) {
+        this.columns = new ArrayList<String>(columns);
+    }
+
+    public void appendColumns(String... cols) {
+        for (String col : cols) {
+            columns.add(col);
+        }
     }
 
     public Model getModel() {
@@ -123,6 +141,19 @@ public class Layout {
         }
 
         return buf;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder buf = new StringBuilder();
+        try {
+            print(buf);
+        } catch (IOException e) {
+            buf.append("Error: ");
+            buf.append(e.getMessage());
+        }
+
+        return buf.toString();
     }
 
     private int getColumnWidth(String col) {
