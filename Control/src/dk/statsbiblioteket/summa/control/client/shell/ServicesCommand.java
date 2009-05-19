@@ -3,6 +3,7 @@ package dk.statsbiblioteket.summa.control.client.shell;
 import dk.statsbiblioteket.summa.common.shell.Command;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
 import dk.statsbiblioteket.summa.common.shell.RemoteCommand;
+import dk.statsbiblioteket.summa.common.shell.Layout;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
 import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.control.api.InvalidServiceStateException;
@@ -32,56 +33,70 @@ public class ServicesCommand extends RemoteCommand<ClientConnection> {
                       "Include service status for each service");
         installOption("b", "bundle", false,
                       "Display bundle version for each service");
+        installOption("f", "formatted", false, "Strictly formatted output for" +
+                                               "machine parsing");
 
     }
 
     public void invoke(ShellContext ctx) throws Exception {
         ClientConnection client = getConnection(clientAddress);
 
+        Layout layout = new Layout("Service");
+
         try {
             List<String> services = client.getServices();
             boolean listStatus = hasOption("status");
             boolean listBundle = hasOption("bundle");
 
-            String header = "\tService";
+            if (hasOption("formatted")) {
+                layout.setPrintHeaders(false);
+                layout.setDelimiter(" | ");
+            }
+
             if (listBundle) {
-                header += "\t" + "Bundle";
+                layout.appendColumns("Bundle");
             }
             if (listStatus) {
-                header += "\t" + "Status";
+                layout.appendColumns("StatusCode","Message");
             }
-            ctx.info (header);
 
             /* List services sorted alphabetically */
             SortedSet<String> sortedServices = new TreeSet<String>(services);
             for (String service : sortedServices) {
-                String msg = "\t" + service;
+                String bundleId = null, statusCode = null, statusString = null;
                 if (listBundle) {
-                    String bdl;
                     try {
                         String bdlSpec = client.getBundleSpec(service);
                         BundleSpecBuilder spec = BundleSpecBuilder.open(
                                   new ByteArrayInputStream(bdlSpec.getBytes()));
-                        bdl = spec.getBundleId();
+                        bundleId = spec.getBundleId();
                     } catch (Exception e) {
-                        bdl = "Unknown";
+                        bundleId = "Unknown";
                     }
-                    msg += "  " + bdl;
                 }
+
                 if (listStatus) {
-                    String status;
                     try {
-                         status = "" + client.getServiceStatus(service);
+                        Status status = client.getServiceStatus(service);
+                        statusString = "" + status;
+                        statusCode = status.getCode().toString();
                     } catch (InvalidServiceStateException e) {
-                        status = "Not running";
+                        statusString = "Not running";
+                        statusCode = Status.CODE.not_instantiated.toString();
                     } catch (Exception e) {
-                        status = "Error connecting: " + e.getMessage();
+                        statusString = "Connection error";
+                        statusCode = Status.CODE.crashed.toString();
                         client.reportError(service);
                     }
-                    msg += "  " + status;
                 }
-                ctx.info(msg);
+
+                layout.appendRow("Service", service,
+                                 "Bundle", bundleId,
+                                 "StatusCode", statusCode,
+                                 "Message", statusString);
+
             }
+            ctx.info(layout.toString());
         } finally {
             releaseConnection();
         }
