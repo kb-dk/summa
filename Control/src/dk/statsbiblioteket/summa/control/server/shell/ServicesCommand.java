@@ -46,12 +46,12 @@ public class ServicesCommand extends RemoteCommand<ControlConnection> {
         boolean formatted = hasOption("formatted");
 
         if (formatted) {
-            layout.appendColumns("ClientService", "Bundle",
+            layout.appendColumns("Client/Service", "Bundle",
                                  "StatusCode", "Message");
             layout.setPrintHeaders(false);
             layout.setDelimiter(" | ");
         } else {
-            layout.appendColumns("ClientService");
+            layout.appendColumns("Client/Service");
             if (listBundles) {
                 layout.appendColumns("Bundle");
             }
@@ -89,7 +89,7 @@ public class ServicesCommand extends RemoteCommand<ControlConnection> {
         }
 
         if (services == null) {
-            layout.appendRow("ClientService", clientId,
+            layout.appendRow("Client/Service", clientId,
                              "Message", msg);
             return;
         }
@@ -123,7 +123,7 @@ public class ServicesCommand extends RemoteCommand<ControlConnection> {
                 }
             }
             
-            layout.appendRow("ClientService", clientService,
+            layout.appendRow("Client/Service", clientService,
                              "Bundle", bundleId,
                              "StatusCode", statusCode,
                              "Message", msg);
