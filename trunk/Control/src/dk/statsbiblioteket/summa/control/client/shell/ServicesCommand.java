@@ -34,7 +34,8 @@ public class ServicesCommand extends RemoteCommand<ClientConnection> {
         installOption("b", "bundle", false,
                       "Display bundle version for each service");
         installOption("f", "formatted", false, "Strictly formatted output for" +
-                                               "machine parsing");
+                                               "machine parsing. Format is: " +
+                                               "'serviceId | bundleId | statusCode | message'");
 
     }
 
@@ -51,19 +52,21 @@ public class ServicesCommand extends RemoteCommand<ClientConnection> {
             if (hasOption("formatted")) {
                 layout.setPrintHeaders(false);
                 layout.setDelimiter(" | ");
-            }
-
-            if (listBundle) {
-                layout.appendColumns("Bundle");
-            }
-            if (listStatus) {
-                layout.appendColumns("StatusCode","Message");
+                // Always show all rows in strict format
+                layout.appendColumns("Bundle", "StatusCode","Message");
+            } else {
+                if (listBundle) {
+                    layout.appendColumns("Bundle");
+                }
+                if (listStatus) {
+                    layout.appendColumns("StatusCode","Message");
+                }
             }
 
             /* List services sorted alphabetically */
             SortedSet<String> sortedServices = new TreeSet<String>(services);
             for (String service : sortedServices) {
-                String bundleId = null, statusCode = null, statusString = null;
+                String bundleId = "", statusCode = "", statusString = "";
                 if (listBundle) {
                     try {
                         String bdlSpec = client.getBundleSpec(service);
