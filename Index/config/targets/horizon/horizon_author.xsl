@@ -530,22 +530,23 @@
         <xsl:if test="$func_code = 'wdc'">
             <xsl:text>Træskærer</xsl:text>
         </xsl:if>
-        <xsl:if test="$func_code = 'dkani'">
+        <!-- Fra følgende forfatterbeskrivelser er præfikset "dk" fjernet i horizon (eks: dkani -> ani ) -->
+        <xsl:if test="$func_code = 'ani'">
             <xsl:text>Ansvarlig institution</xsl:text>
         </xsl:if>
-        <xsl:if test="$func_code = 'dkbea'">
+        <xsl:if test="$func_code = 'bea'">
             <xsl:text>Bearbejder</xsl:text>
         </xsl:if>
-        <xsl:if test="$func_code = 'dkdes'">
+        <xsl:if test="$func_code = 'des'">
             <xsl:text>Designer</xsl:text>
         </xsl:if>
-        <xsl:if test="$func_code = 'dkind'">
+        <xsl:if test="$func_code = 'ind'">
             <xsl:text>Indlæser</xsl:text>
         </xsl:if>
-        <xsl:if test="$func_code = 'dkmed'">
+        <xsl:if test="$func_code = 'med'">
             <xsl:text>Medforfatter</xsl:text>
         </xsl:if>
-        <xsl:if test="$func_code = 'dkref'">
+        <xsl:if test="$func_code = 'ref'">
             <xsl:text>Referent</xsl:text>
         </xsl:if>
     </xsl:template>
