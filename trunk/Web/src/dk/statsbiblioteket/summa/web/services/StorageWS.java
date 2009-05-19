@@ -53,6 +53,7 @@ public class StorageWS {
 
     static StorageReaderClient storage;
     Configuration conf;
+    static boolean escapeContent = RecordUtil.DEFAULT_ESCAPE_CONTENT;
 
     public StorageWS() {
         log = LogFactory.getLog(StorageWS.class);
@@ -65,6 +66,8 @@ public class StorageWS {
     private synchronized StorageReaderClient getStorageClient() {
         if (storage == null) {
             Configuration conf = getConfiguration();
+            escapeContent = conf.getBoolean(
+                    RecordUtil.CONF_ESCAPE_CONTENT, escapeContent);
             storage = new StorageReaderClient(conf);
         }
         return storage;
@@ -140,7 +143,7 @@ public class StorageWS {
                     MarcMultiVolumeMerger merger = new MarcMultiVolumeMerger(getConfiguration());
                     retXML = merger.getLegacyMergedXML(record);
                 } else {
-                    retXML = RecordUtil.toXML(record);
+                    retXML = RecordUtil.toXML(record, escapeContent);
                 }
             }
         } catch (IOException e) {
