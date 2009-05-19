@@ -25,6 +25,7 @@ package dk.statsbiblioteket.summa.web.services;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.legacy.MarcMultiVolumeMerger;
 import dk.statsbiblioteket.summa.common.util.RecordUtil;
+import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.storage.api.StorageReaderClient;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
@@ -63,7 +64,8 @@ public class StorageWS {
      */
     private synchronized StorageReaderClient getStorageClient() {
         if (storage == null) {
-            storage = new StorageReaderClient(getConfiguration());
+            Configuration conf = getConfiguration();
+            storage = new StorageReaderClient(conf);
         }
         return storage;
     }
