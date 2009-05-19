@@ -4,6 +4,7 @@ import dk.statsbiblioteket.summa.control.api.*;
 import dk.statsbiblioteket.summa.control.bundle.BundleSpecBuilder;
 import dk.statsbiblioteket.summa.common.shell.RemoteCommand;
 import dk.statsbiblioteket.summa.common.shell.ShellContext;
+import dk.statsbiblioteket.summa.common.shell.Layout;
 import dk.statsbiblioteket.util.rpc.ConnectionManager;
 
 import java.io.IOException;
@@ -28,41 +29,55 @@ public class ServicesCommand extends RemoteCommand<ControlConnection> {
         installOption("s", "status", false, "Print the status of each service");
         installOption("b", "bundle", false,
                       "Print the bundle id of each service");
+        installOption("f", "formatted", false, "Print strictly formatted output"
+                                               + " for machine parsing. The "
+                                               + "format is: "
+                                               + "'client/service | bundle | statusCode | message'");
 
         this.controlAddress = controlAddress;
     }
 
     public void invoke(ShellContext ctx) throws Exception {
         ControlConnection control = getConnection(controlAddress);
-
+        Layout layout = new Layout();
         String[] clients = getArguments();
+        boolean listBundles = hasOption("bundle");
+        boolean listStatus = hasOption("status");
+        boolean formatted = hasOption("formatted");
 
-        String header = "\tClient/Service";
-        if (hasOption("bundle")) {
-            header += "\tBundle";
+        if (formatted) {
+            layout.appendColumns("ClientService", "Bundle",
+                                 "StatusCode", "Message");
+            layout.setPrintHeaders(false);
+            layout.setDelimiter(" | ");
+        } else {
+            layout.appendColumns("ClientService");
+            if (listBundles) {
+                layout.appendColumns("Bundle");
+            }
+            if (listStatus) {
+                layout.appendColumns("Message");
+            }
         }
-        if (hasOption("status")) {
-            header += "\tStatus";
-        }
-        ctx.info(header);
 
         try {
             if (clients.length == 0) {
                 ctx.error("No arguments. Please give at least one client id");
             } else {
                 for (String clientId : clients) {
-                    printServices(ctx, control, clientId);
+                    listServices(layout, control, clientId);
                 }
+                ctx.info(layout.toString());
             }
         } finally {
             releaseConnection();
         }
     }
 
-    private void printServices(ShellContext ctx, ControlConnection control,
-                                    String clientId) throws IOException {
+    private void listServices(Layout layout, ControlConnection control,
+                              String clientId)            throws IOException {
 
-        String msg = null;
+        String msg = "";
         List<String> services = null;
         ClientConnection client = null;
 
@@ -70,44 +85,48 @@ public class ServicesCommand extends RemoteCommand<ControlConnection> {
             client = control.getClient(clientId);
             services = client.getServices();
         } catch (InvalidClientStateException e) {
-            msg = "\t" + clientId + ": Not running";
-        } catch (NoSuchClientException e) {
-            msg = "\t" + clientId + ": No such client";
+            msg = "Not running";
         }
 
         if (services == null) {
-            ctx.info(msg);
+            layout.appendRow("ClientService", clientId,
+                             "Message", msg);
             return;
         }
 
         for (String serviceId : services) {
-            msg = "\t" + clientId + "/" + serviceId;
-
+            String clientService = clientId + "/" + serviceId;
+            String bundleId = "", statusCode = "";
+            msg = "";
             if (hasOption("bundle")) {
-                String bdl;
                 try {
                     String bdlSpec = client.getBundleSpec(serviceId);
                     BundleSpecBuilder spec = BundleSpecBuilder.open(
                             new ByteArrayInputStream(bdlSpec.getBytes()));
-                    bdl = spec.getBundleId();
+                    bundleId = spec.getBundleId();
                 } catch (Exception e) {
-                    bdl = "Unknown";
+                    bundleId = "Unknown";
                 }
-                msg += "\t" + bdl;
             }
             if (hasOption("status")) {
                 try {
                     Service service = client.getServiceConnection(serviceId);
-                    msg += "\t" + service.getStatus().toString();
+                    Status status = service.getStatus();
+                    statusCode = status.getCode().toString();
+                    msg = status.toString();
                 } catch (InvalidServiceStateException e){
-                    msg += "\tNot running";
+                    statusCode = Status.CODE.not_instantiated.toString();
+                    msg = "Not running";
                 } catch (NoSuchServiceException e) {
-                    msg += "\tNo such service '" + serviceId + "'";
+                    statusCode = Status.CODE.not_instantiated.toString();
+                    msg = "No such service";
                 }
             }
             
-            ctx.info(msg);
+            layout.appendRow("ClientService", clientService,
+                             "Bundle", bundleId,
+                             "StatusCode", statusCode,
+                             "Message", msg);
         }
-
     }
 }

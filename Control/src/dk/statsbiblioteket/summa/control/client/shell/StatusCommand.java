@@ -57,6 +57,7 @@ public class StatusCommand extends RemoteCommand<ClientConnection> {
         Layout layout = new Layout("Service");
 
         if (hasOption("formatted")) {
+            // Always show all columns in formatted mode
             layout.appendColumns("StatusCode", "Message");
             layout.setPrintHeaders(false);
             layout.setDelimiter(" | ");
