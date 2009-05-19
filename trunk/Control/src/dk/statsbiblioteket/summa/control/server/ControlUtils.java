@@ -2,9 +2,12 @@ package dk.statsbiblioteket.summa.control.server;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.common.configuration.ConfigurationStorage;
 import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
 import dk.statsbiblioteket.summa.control.api.bundle.BundleRepository;
 import dk.statsbiblioteket.summa.control.api.BadConfigurationException;
+import dk.statsbiblioteket.summa.control.api.ClientConnection;
+import dk.statsbiblioteket.summa.control.api.ControlConnection;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -48,6 +51,42 @@ public class ControlUtils {
         log.trace ("Calculated control base dir '" + baseDir + "'");
         return baseDir;
     }    
+
+    /**
+     * <p>Work out what default base dir to deploy clients to. This is
+     * extracted from the {@link ClientConnection#CONF_CLIENT_BASEPATH}
+     * property.</p>
+     *
+     * Note that system properties enclosed in <code>${}</code> will <i>not</i>
+     * be escaped. This way one can pass the property into a remote
+     * configuration and have it magically work.
+     *
+     * @param conf configuration to extract the properties from
+     * @return base directory for installation, without system properties
+     *         escaped
+     */
+    public static String getClientBasePath (Configuration conf) {
+        // We want the string without any ${}s escaped, so we fecth it directly
+        // from the underlying configuration storage
+        ConfigurationStorage storage = conf.getStorage();
+        String basePath = null;
+
+        try {
+            basePath = (String)
+                             storage.get(ControlCore.CONF_CLIENT_BASE_DIR);
+        } catch (IOException e) {
+            log.warn("Error reading default client base path from config: "
+                     + e.getMessage(), e);
+        }
+
+        if (basePath == null) {
+            basePath = "${user.home}" + File.separator + "summa-control";
+        }
+
+
+        log.trace ("Calculated default client base dir '" + basePath + "'");
+        return basePath;
+    }
 
     /**
      * <p>Get the directory used to store incoming bundles uploaded by the

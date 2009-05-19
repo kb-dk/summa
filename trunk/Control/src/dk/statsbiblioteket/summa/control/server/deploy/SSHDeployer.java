@@ -308,8 +308,8 @@ public class SSHDeployer implements ClientDeployer {
         log.trace("Getting BundleStub from BundleSpecBuilder");
         BundleStub stub = builder.getStub();
 
-        log.trace("Adding properties to command line");
         /* Add properties to the command line as we are obliged to */
+        log.trace("Adding properties to command line");        
         stub.addSystemProperty(ClientConnection.CONF_CLIENT_ID,
                                clientId);
 

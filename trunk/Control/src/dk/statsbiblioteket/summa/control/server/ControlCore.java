@@ -54,9 +54,22 @@ public class ControlCore extends UnicastRemoteObject
      */
     public static final String CONF_CONTROL_BASE_DIR = "summa.control.core.dir";
 
+    /**
+     * Configuration property defining the default base directory in which
+     * to install clients if the deployment configuration doesn't specify it.
+     * <p/>
+     * Note that system properties enclosed in <code>${}</code> <i>will be
+     * escaped on the client side</i> of the connection.
+     * </p>
+     * The default value is <code>${user.home}/summa-control</code>.  
+     */
+    public static final String CONF_CLIENT_BASE_DIR =
+                                          ClientConnection.CONF_CLIENT_BASEPATH;
+
     private static final Log log = LogFactory.getLog (ControlCore.class);
 
     private File baseDir;
+    private String defaultClientBasePath;
     private Status status;
     private ClientManager clientManager;
     private RepositoryManager repoManager;
@@ -73,6 +86,7 @@ public class ControlCore extends UnicastRemoteObject
         confManager = new ConfigurationManager(conf);
 
         baseDir = ControlUtils.getControlBaseDir(conf);
+        defaultClientBasePath = ControlUtils.getClientBasePath(conf);
         log.debug ("Using base dir '" + baseDir + "'");
 
         BundleUtils.prepareCodeBase(conf, repoManager.getRepository(),
@@ -186,6 +200,17 @@ public class ControlCore extends UnicastRemoteObject
         setStatusRunning ("Deploying client");
 
         validateClientConf(conf);
+
+        if (!conf.valueExists(ClientConnection.CONF_CLIENT_BASEPATH)) {
+            log.debug("No client base path set, using default: "
+                      + defaultClientBasePath);
+            conf.set(ClientConnection.CONF_CLIENT_BASEPATH,
+                     defaultClientBasePath);
+        } else {
+            log.debug("Using client base path override: "
+                      + conf.getString(ClientConnection.CONF_CLIENT_BASEPATH));
+        }
+
         log.info ("Preparing to deploy client with deployer config: \n"
                    + conf.dumpString());
 
@@ -240,7 +265,10 @@ public class ControlCore extends UnicastRemoteObject
         setStatusRunning("Starting client");
 
         String instanceId = conf.getString(ClientDeployer.CONF_INSTANCE_ID);
-        String bundleId = clientManager.getBundleId(instanceId);
+        Configuration deployConf =
+                               clientManager.getDeployConfiguration(instanceId);
+        String bundleId = deployConf.getString(
+                                           ClientDeployer.CONF_DEPLOYER_BUNDLE);
         log.trace("startClient: got bundleId '" + bundleId + "'");
 
         if (bundleId == null) {
@@ -281,6 +309,9 @@ public class ControlCore extends UnicastRemoteObject
 
         conf.set (ClientDeployer.CONF_DEPLOYER_BUNDLE_FILE,
                   bdlFile.getAbsolutePath());
+
+        conf.set(ClientDeployer.CONF_BASEPATH,
+                 deployConf.get(ClientDeployer.CONF_BASEPATH));
 
         log.debug ("Modified deployment configuration:\n" + conf.dumpString());
 

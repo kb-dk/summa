@@ -7,6 +7,7 @@
 -->
 <properties>
 
+    <!--<entry key="summa.control.client.basepath">${user.home}/summa-sites</entry>-->
     <!-- The RMI communications port of the client -->
     <!-- <entry key="summa.control.client.service.port">27069</entry> -->
 
