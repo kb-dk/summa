@@ -81,7 +81,7 @@ public class StorageService extends ServiceBase {
                                                    "start", "Already running");
         }
 
-        setStatus(Status.CODE.startingUp, "Starting StorageServiceThread",
+        setStatus(Status.CODE.startingUp, "Creating storage backend",
                   Logging.LogLevel.INFO);
         log.info ("StorageService started");
         log.debug("Creating Storage instance");
@@ -89,7 +89,7 @@ public class StorageService extends ServiceBase {
             storage = StorageFactory.createStorage(conf);
         } catch (IOException t) {
             setStatus(Status.CODE.crashed,
-                      "Crashed due to RemoteException when requesting storage",
+                      "Crashed due to IOException when requesting storage",
                       Logging.LogLevel.FATAL, t);
             throw new RemoteException("Crashed during startup", t);
         } catch (Throwable t) {
@@ -100,7 +100,7 @@ public class StorageService extends ServiceBase {
             throw new RemoteException("Crashed with throwable during startup",
                                       t);
         }
-        setStatusRunning("The Storage service is running");
+        setStatusIdle();
     }
 
     public void stop() throws RemoteException {
