@@ -21,7 +21,7 @@
 
     <xsd:complexType name="record">
         <xsd:all>
-            <xsd:element name="content"  type="xsd:string"             minOccurs="1" maxOccurs="1"/>
+            <xsd:element name="content"  type="summa:content"          minOccurs="1" maxOccurs="1"/>
             <xsd:element name="parents"  type="summa:recordCollection" minOccurs="0" maxOccurs="1"/>
             <xsd:element name="children" type="summa:recordCollection" minOccurs="0" maxOccurs="1"/>
             <xsd:element name="meta"     type="summa:meta"             minOccurs="0" maxOccurs="1"/>
@@ -33,6 +33,23 @@
         <xsd:attribute name="indexable" type="xsd:boolean"  use="required"/>
         <xsd:attribute name="ctime"     type="xsd:dateTime" use="required"/>
         <xsd:attribute name="mtime"     type="xsd:dateTime" use="required"/>
+    </xsd:complexType>
+
+    <xsd:complexType name="content">
+        <xsd:annotation>
+            <xsd:documentation xml:lang="en">
+                The content for the Record. This can be either xml or string.
+                xml is inlined verbatim while string is entity-escaped.
+                This attribute exists only to help XML-parsers decode the
+                content and is not part of the Record-object.
+                Default is string.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:simpleContent>
+            <xsd:extension base="xsd:string">
+                <xsd:attribute name="type" type="xsd:string" use="optional"/>
+            </xsd:extension>
+        </xsd:simpleContent>
     </xsd:complexType>
 
     <xsd:complexType name="meta">
