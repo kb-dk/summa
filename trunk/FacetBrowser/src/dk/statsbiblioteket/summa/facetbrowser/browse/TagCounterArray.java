@@ -265,12 +265,12 @@ public class TagCounterArray implements TagCounter, Runnable {
                     requestStructure.getFacets().entrySet()) {
                 FacetStructure facet = facetEntry.getValue();
                 int facetID = facet.getFacetID();
-                int maxTags = facet.getMaxTags();
+                int wantedTags = facet.getWantedTags();
                 String facetName = facet.getName();
 //                System.out.println("Before getFirst" + this);
                 int[] counterList = tags[facetID];
                 if (FacetStructure.SORT_ALPHA.equals(facet.getSortType())) {
-                    addFirstTagsAlpha(maxTags, counterList,
+                    addFirstTagsAlpha(wantedTags, counterList,
                                       tagHandler.getFacetSize(facetID),
                                       result, facetName);
                 } else {
@@ -281,7 +281,7 @@ public class TagCounterArray implements TagCounter, Runnable {
                                 facet.getSortType(),
                                 FacetStructure.SORT_POPULARITY));
                     }
-                    addFirstTagsPopularity(maxTags, counterList,
+                    addFirstTagsPopularity(wantedTags, counterList,
                                            tagHandler.getFacetSize(facetID),
                                            result, facetID);
                 }
