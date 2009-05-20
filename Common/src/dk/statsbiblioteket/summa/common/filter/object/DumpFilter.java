@@ -72,7 +72,7 @@ public class DumpFilter extends ObjectFilterImpl {
      */
     public static final String CONF_MAXDUMPS =
             "summa.dumpfilter.maxdumps";
-    public static final int DEFAULT_MAXDUMPS = 500;
+    public static final int DEFAULT_MAXDUMPS = 50;
 
     /**
      * If the dumper has not received any Payloads for this number of ms,
