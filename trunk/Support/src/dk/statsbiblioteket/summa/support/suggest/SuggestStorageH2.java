@@ -155,7 +155,7 @@ public class SuggestStorageH2 implements SuggestStorage {
         } catch (SQLException e) {
             throw new IOException(
                     "Unable to get suggestion for '" + prefix + "', "
-                    + maxResults);
+                    + maxResults, e);
         }
 
     }
