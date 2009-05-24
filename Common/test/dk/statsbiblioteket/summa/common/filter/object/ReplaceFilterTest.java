@@ -6,14 +6,16 @@ import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.util.ReaderInputStream;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import dk.statsbiblioteket.util.Streams;
+import dk.statsbiblioteket.util.reader.ReplaceFactory;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.io.ByteArrayInputStream;
-import java.io.StringWriter;
-import java.io.ByteArrayOutputStream;
+import java.util.HashMap;
+import java.util.Map;
+import java.io.*;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -70,6 +72,63 @@ public class ReplaceFilterTest extends TestCase {
         assertReplace("Second match", "ab", "abxyz", conf);
         assertReplace("No match", "kaboom", "kaboom", conf);
         assertReplace("Empty input", "", "", conf);
+    }
+
+    public void testShortTarget() throws Exception {
+        testRemoval("abc");
+    }
+
+    public void testMediumTarget() throws Exception {
+        testRemoval("abcdefghijk");
+    }
+
+    public void testStringReplacer() throws Exception {
+        String target = "abcdefghijk";
+        Map<String, String> rules = new HashMap<String, String>(1);
+        rules.put(target, "");
+        ReplaceFactory factory = new ReplaceFactory(rules);
+        InputStream source =
+                new ByteArrayInputStream((target + "foo").getBytes("utf-8"));
+        Reader sourceReader = new InputStreamReader(source, "utf-8");
+        InputStream processed = new ReaderInputStream(
+                factory.getReplacer(sourceReader), "utf-8");
+        ByteArrayOutputStream out = new ByteArrayOutputStream(100);
+        Streams.pipe(processed, out);
+        assertEquals("The result of the removal should be correct",
+                     "foo", new String(out.toByteArray(), "utf-8"));
+    }
+
+    public void testLongTarget() throws Exception {
+        testRemoval("abcdefghijklmnopqrstuvwxyz");
+    }
+
+    public void testJavascriptRemoval() throws Exception {
+        String[] targets = new String[] {
+                "<script",
+                "<script language",
+                "<script language=\"jav",
+                "<script language=\"javascript\">function openwidnowb(linkname)"
+                + "{window.open (linkname,\"_blank\",\"resizable=yes,location=1"
+                + ",status=1,scrollbars=1\");} </script><script language=\"java"
+                + "script\">function openwidnowb(linkname){window.open (linknam"
+                + "e,\"_blank\",\"resizable=yes,location=1,status=1,scrollbars="
+                + "1\");} </script>"
+        };
+        for (String target: targets) {
+            testRemoval(target);
+        }
+    }
+    public void testRemoval(String target) throws Exception {
+        Configuration conf = Configuration.newMemoryBased();
+        List<Configuration> rules =
+                conf.createSubConfigurations(ReplaceFilter.CONF_RULES, 1);
+        rules.get(0).set(ReplaceFilter.CONF_RULE_TARGET, target);
+        rules.get(0).set(ReplaceFilter.CONF_RULE_REPLACEMENT, "");
+        assertEquals("The target should be stored properly", target,
+                     conf.getSubConfigurations(ReplaceFilter.CONF_RULES).get(0).
+                             getString(ReplaceFilter.CONF_RULE_TARGET));
+        assertReplace("JavaScript should be removed",
+                      "plain", target + "plain", conf);
     }
 
     /* Checks both content and stream replacement */
