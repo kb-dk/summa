@@ -73,6 +73,17 @@ public class ReaderInputStreamTest extends TestCase {
         }
     }
 
+    public void testLength() throws Exception {
+        int MAX = 500;
+        for (int length = 0 ; length < MAX ; length++) {
+            StringWriter sw = new StringWriter(length);
+            for (int i = 0 ; i < length ; i++) {
+                sw.append("A");
+            }
+            assertConvert("Test of length " + length, sw.toString());
+        }
+    }
+
     public void testAll() throws Exception {
         int PART = 30;
         char c = 0;

@@ -208,6 +208,12 @@ public class ReplaceFilter extends ObjectFilterImpl {
                             CONF_RULES, CONF_RULE_TARGET,
                             CONF_RULE_REPLACEMENT, count));
                 }
+                if (log.isTraceEnabled()) {
+                    log.trace(String.format(
+                            "Adding rule with target '%s' and replacement '%s'",
+                            ruleConf.getString(CONF_RULE_TARGET),
+                            ruleConf.getString(CONF_RULE_REPLACEMENT)));
+                }
                 rules.put(ruleConf.getString(CONF_RULE_TARGET),
                           ruleConf.getString(CONF_RULE_REPLACEMENT));
                 count++;
