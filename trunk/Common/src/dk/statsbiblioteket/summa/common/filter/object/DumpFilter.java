@@ -9,12 +9,11 @@ import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.Logging;
+import dk.statsbiblioteket.summa.common.util.CopyingInputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.StringWriter;
+import java.io.*;
 import java.util.regex.Pattern;
 import java.util.Calendar;
 
@@ -65,6 +64,18 @@ public class DumpFilter extends ObjectFilterImpl {
     public static final boolean DEFAULT_DUMP_NONRECORDS = true;
 
     /**
+     * If true, the content of streams in Payloads are dumped. The dumping
+     * normally takes place when the stream is read. However, if close is called
+     * before the input stream is emptied, the rest of the bytes from the
+     * input stream will be copied to the output file.
+     * </p><p>
+     * Optional. Default is false;
+     */
+    public static final String CONF_DUMP_STREAMS =
+            "summa.dumpfilter.dumpstreams";
+    public static final boolean DEFAULT_DUMP_STREAMS = false;
+
+    /**
      * The maximum number of Records to dump. Aafter this number is reached,
      * no more dumps will be made.
      * </p><p>
@@ -91,6 +102,7 @@ public class DumpFilter extends ObjectFilterImpl {
     private Pattern basePattern;
     private Pattern idPattern;
     private boolean dumpNonRecords = DEFAULT_DUMP_NONRECORDS;
+    private boolean dumpStreams = DEFAULT_DUMP_STREAMS;
     private int maxDumps = DEFAULT_MAXDUMPS;
     private int resetReceivedDumpsMS = DEFAULT_RESET_MAXDUMPS_MS;
     // TODO: Implement this
@@ -117,6 +129,7 @@ public class DumpFilter extends ObjectFilterImpl {
                 Pattern.compile(conf.getString(CONF_BASEEXP, DEFAULT_BASEEXP));
         idPattern = Pattern.compile(conf.getString(CONF_IDEXP, DEFAULT_IDEXP));
         dumpNonRecords = conf.getBoolean(CONF_DUMP_NONRECORDS, dumpNonRecords);
+        dumpStreams = conf.getBoolean(CONF_DUMP_STREAMS, dumpStreams);
         maxDumps = conf.getInt(CONF_MAXDUMPS, maxDumps);
         resetReceivedDumpsMS =
                 conf.getInt(CONF_RESET_MAXDUMPS_MS, resetReceivedDumpsMS);
@@ -175,6 +188,28 @@ public class DumpFilter extends ObjectFilterImpl {
             throw new PayloadException(
                     "Unable to dump content", e, payload);
         }
+        if (!dumpStreams || payload.getStream() == null) {
+            return;
+        }
+        log.trace("Wrapping " + payload + " stream in dumping stream");
+        wrapStream(payload);
+    }
+
+    private void wrapStream(Payload payload) {
+        //noinspection DuplicateStringLiteralInspection
+        File outFile = new File(output, getFileName(payload) + ".stream");
+        OutputStream out;
+        try {
+
+            out = new FileOutputStream(outFile);
+        } catch (FileNotFoundException e) {
+            log.warn(String.format(
+                    "Unable to create an output stream for %s with name '%s'",
+                    payload, outFile));
+            return;
+        }
+        payload.setStream(new CopyingInputStream(
+                payload.getStream(), out, true));
     }
 
     private Pattern safePattern = Pattern.compile("[a-zA-Z0-9\\-\\_\\.]");
@@ -200,5 +235,3 @@ public class DumpFilter extends ObjectFilterImpl {
         return actual;
     }
 }
-
-

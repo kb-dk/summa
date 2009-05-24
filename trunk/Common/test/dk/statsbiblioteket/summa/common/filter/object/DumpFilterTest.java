@@ -12,8 +12,10 @@ import dk.statsbiblioteket.util.Files;
 import java.io.File;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.FilenameFilter;
 import java.util.List;
 import java.util.Arrays;
+import java.util.Calendar;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -60,7 +62,8 @@ public class DumpFilterTest extends TestCase {
 
     public void testDumper() throws Exception {
         Configuration conf = Configuration.newMemoryBased(
-                DumpFilter.CONF_OUTPUTFOLDER, OUT.getAbsolutePath());
+                DumpFilter.CONF_OUTPUTFOLDER, OUT.getAbsolutePath(),
+                DumpFilter.CONF_DUMP_STREAMS, true);
         List<Payload> payloads = Arrays.asList(
                 new Payload(new ByteArrayInputStream(new byte[10])),
                 new Payload(new Record("¤%&&:id-flam87:", "mybase",
@@ -77,12 +80,32 @@ public class DumpFilterTest extends TestCase {
         }
         assertEquals("The number of processed Payloads should match", 2, count);
         assertEquals("The number of created files should match",
-                     3, OUT.listFiles().length);
+                     4, OUT.listFiles().length);
         File ec = new File(OUT, "_____id-flam87_.content");
         File em = new File(OUT, "_____id-flam87_.meta");
         assertTrue("The expected content-file '" + ec + "' should be present",
                    ec.exists());
         assertTrue("The expected meta-file '" + em + "' should be present",
                    em.exists());
+
+        Calendar calendar = Calendar.getInstance();
+        final String noIDPrefix = String.format("%1$tF_", calendar);
+        File[] noIDFiles = OUT.listFiles(new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                return name.startsWith(noIDPrefix);
+            }
+        });
+        assertEquals("the number of files with no ID should be correct",
+                     2, noIDFiles.length);
+        boolean foundStream = false;
+        for (File noIDFile: noIDFiles) {
+            assertTrue(String.format(
+                    "The no ID file '%s' should have length > 0", noIDFile),
+                       noIDFile.length() > 0);
+            foundStream |= noIDFile.toString().endsWith(".stream");
+        }
+        assertTrue("One of the noID-files should end with .stream",
+                   foundStream);
     }
+
 }
