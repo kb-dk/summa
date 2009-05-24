@@ -59,7 +59,7 @@ public class CopyingInputStream extends InputStream {
     // Not strictly needed, but it's an easy speed-optimization
     @Override
     public int read(byte b[], int off, int len) throws IOException {
-        int readLength = super.read(b, off, len);
+        int readLength = in.read(b, off, len);
         if (readLength == -1) {
             log.debug("EOF reached in read(buffer, offset, length), closing "
                       + "output stream");
