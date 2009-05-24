@@ -15,15 +15,13 @@ import java.io.ByteArrayInputStream;
 import java.io.StringWriter;
 import java.io.ByteArrayOutputStream;
 
-/**
- * ReplaceFilter Tester.
- *
- * @author <Authors name>
- * @since <pre>05/24/2009</pre>
- * @version 1.0
- */
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class ReplaceFilterTest extends TestCase {
+    private static Log log = LogFactory.getLog(ReplaceFilterTest.class);
+
     public ReplaceFilterTest(String name) {
         super(name);
     }
@@ -48,8 +46,33 @@ public class ReplaceFilterTest extends TestCase {
                 ReplaceFilter.CONF_PATTERN_REPLACEMENT, "bc"
         );
         assertReplace("Double a to bc", "bca", "aaa", conf);
+        assertReplace("No match abc", "abc", "abc", conf);
+        assertReplace("Two times double a to bc", "bcbc", "aaaa", conf);
+
+        conf = Configuration.newMemoryBased(
+                ReplaceFilter.CONF_PATTERN_REGEXP, "a{2}(.)b(.)",
+                ReplaceFilter.CONF_PATTERN_REPLACEMENT, "$1-$2"
+        );
+        assertReplace("Group replacement", "zX-Yz", "zaaXbYz", conf);
     }
 
+    public void testPlainReplace() throws Exception {
+        Configuration conf = Configuration.newMemoryBased();
+        List<Configuration> rules =
+                conf.createSubConfigurations(ReplaceFilter.CONF_RULES, 2);
+        rules.get(0).set(ReplaceFilter.CONF_RULE_TARGET, "abc");
+        rules.get(0).set(ReplaceFilter.CONF_RULE_REPLACEMENT, "cba");
+        rules.get(1).set(ReplaceFilter.CONF_RULE_TARGET, "xyz");
+        rules.get(1).set(ReplaceFilter.CONF_RULE_REPLACEMENT, "");
+
+        assertReplace("Clean match", "cba", "abcxyz", conf);
+        assertReplace("First match", "zcbazyfoo", "zabczyfoo", conf);
+        assertReplace("Second match", "ab", "abxyz", conf);
+        assertReplace("No match", "kaboom", "kaboom", conf);
+        assertReplace("Empty input", "", "", conf);
+    }
+
+    /* Checks both content and stream replacement */
     private void assertReplace(String message, String expected, String input,
                                Configuration conf) throws Exception {
         List<Payload> payloads = new ArrayList<Payload>(3);
@@ -66,19 +89,23 @@ public class ReplaceFilterTest extends TestCase {
 
         List<Payload> processed = new ArrayList<Payload>(payloads.size());
         for (int i = 0 ; i < 3 ; i++) {
+            log.debug("Extracting Payload #" + i);
             assertTrue("The ReplaceFilter should have a next for Payload #" + i,
                        replaceFilter.hasNext());
             processed.add(replaceFilter.next());
         }
 
+        log.debug("Checking record");
         assertEquals(message + " record content only should match",
                      expected, processed.get(0).getRecord().getContentAsUTF8());
 
+        log.debug("Checking stream");
         ByteArrayOutputStream bo = new ByteArrayOutputStream(100);
         Streams.pipe(processed.get(1).getStream(), bo);
         assertEquals(message + " stream only should match",
                      expected, bo.toString("utf-8"));
 
+        log.debug("Checking record & stream");
         bo = new ByteArrayOutputStream(100);
         Streams.pipe(processed.get(2).getStream(), bo);
         assertEquals(message + " stream from stream and record should match",
