@@ -55,7 +55,7 @@
     </appender>  -->
 
 
-    <logger name="dk.statsbiblioteket.summa.common.util">
+    <logger name="dk.statsbiblioteket.summa.common.filter.object">
         <level value="trace" />
         <appender-ref ref="CONSOLE" />
     </logger>
