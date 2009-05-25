@@ -106,6 +106,9 @@ public class MultipleSourcesTest extends NoExitTestCase {
     public void testETSSFull() throws Exception {
         testFull(Arrays.asList("etss"));
     }
+    public void testCSAFull() throws Exception {
+        testFull(Arrays.asList("csa"));
+    }
     public void testReklameFull() throws Exception {
         testFull(Arrays.asList("reklamefilm"));
     }
@@ -388,8 +391,8 @@ public class MultipleSourcesTest extends NoExitTestCase {
 
         indexConf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS).get(4).
-                getSubConfigurations(IndexControllerImpl.CONF_MANIPULATORS).
-                get(0).
+//                getSubConfigurations(IndexControllerImpl.CONF_MANIPULATORS).
+//                get(0).
 //                getSubConfiguration("IndexUpdate").
 //                getSubConfiguration("LuceneUpdater").
                 getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).

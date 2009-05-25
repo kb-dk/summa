@@ -61,6 +61,13 @@
         <field ref="lma"/>
         <field ref="id"/>
     </defaultSearchFields>
+
+    <facets xmlns="http://statsbiblioteket.dk/summa/2009/FacetIndexDescriptor">
+        <facet ref="author_normalised" name="author"/>
+        <facet ref="main_titel" name="title"/>
+        <facet ref="lsubject" name="subject"/>
+    </facets>
+
 </IndexDescriptor>
 
 
