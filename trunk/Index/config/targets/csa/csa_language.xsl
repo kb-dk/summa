@@ -5,6 +5,8 @@
 		xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
 		xmlns:xalan="http://xml.apache.org/xalan"
 		xmlns:java="http://xml.apache.org/xalan/java"
+		xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/"
+		xmlns:dc="http://purl.org/dc/elements/1.1/"
         exclude-result-prefixes="java xs xalan xsl oai_dc dc"
 		version="1.0">
 	<xsl:output version="1.0" encoding="UTF-8" indent="yes" method="xml"/>
