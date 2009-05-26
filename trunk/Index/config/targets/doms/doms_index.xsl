@@ -447,13 +447,8 @@
             <!-- ÅRBOEGER -->
 
             <xsl:otherwise>
-                <xsl:for-each select="d:digitalObjectBundle/foxml:digitalObject">
-                    <xsl:if test="position()=1">
-                        <xsl:value-of select="@PID" />
-                    </xsl:if>
-                </xsl:for-each>
                 <Index:document Index:defaultBoost="1" Index:defaultType="token" Index:defaultFreetext="true" Index:defaultSuggest="false"
-                                Index:defaultGroup="false" Index:langAutogroup="true" Index:resolver="doms" Index:id="{foxml:digitalObjectBundle/foxml:digitalObject/@PID}">
+                                Index:defaultGroup="false" Index:langAutogroup="true" Index:resolver="doms" Index:id="{d:digitalObjectBundle/foxml:digitalObject/@PID}">
                     <Index:fields>
                         <xsl:for-each select="d:digitalObjectBundle">
                             <!-- Short format -->
