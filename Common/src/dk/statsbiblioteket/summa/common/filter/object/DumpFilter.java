@@ -107,7 +107,7 @@ public class DumpFilter extends ObjectFilterImpl {
     private int resetReceivedDumpsMS = DEFAULT_RESET_MAXDUMPS_MS;
     // TODO: Implement this
 
-    private long payloadsReceivedSinceReset = 0;
+    private long payloadsDumpedSinceReset = 0;
     private long lastPayloadReceivedTimestamp = 0;
 
     public DumpFilter(Configuration conf) {
@@ -146,23 +146,24 @@ public class DumpFilter extends ObjectFilterImpl {
         if (resetReceivedDumpsMS != -1
             && (System.currentTimeMillis() - lastPayloadReceivedTimestamp) >
                resetReceivedDumpsMS) {
-            payloadsReceivedSinceReset = 0;
+            payloadsDumpedSinceReset = 0;
         }
-        payloadsReceivedSinceReset++;
         lastPayloadReceivedTimestamp = System.currentTimeMillis();
-        if (maxDumps != -1 && payloadsReceivedSinceReset > maxDumps) {
+        if (maxDumps != -1 && payloadsDumpedSinceReset > maxDumps) {
             //noinspection DuplicateStringLiteralInspection
             Logging.logProcess("DumpFilter",
                                "Not dumping as received payloads since reset "
-                               + payloadsReceivedSinceReset
+                               + payloadsDumpedSinceReset
                                + " was > than max dumps " + maxDumps,
                                Logging.LogLevel.TRACE, payload);
             return true;
         }
         if (payload.getRecord() == null && dumpNonRecords) {
+            payloadsDumpedSinceReset++;
             dump(payload);
         } else if (basePattern.matcher(payload.getRecord().getBase()).matches()
             && idPattern.matcher(payload.getRecord().getId()).matches()) {
+            payloadsDumpedSinceReset++;
             dump(payload);
         } else {
             //noinspection DuplicateStringLiteralInspection
