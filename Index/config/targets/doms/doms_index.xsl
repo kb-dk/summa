@@ -30,10 +30,10 @@
 
     <xsl:template match="oai:metadata">
         <xsl:choose>
-            <!--- DANSKE AVISER -->
-            <xsl:when test="substring(d:digitalObjectBundle/foxml:digitalObject/@PID,0,9)='doms:dda'">
+            <!--- DANSKE AVISER Papers-->
+            <xsl:when test="substring(d:digitalObjectBundle/foxml:digitalObject/@PID,0,15)='doms:dda_paper'">
                 <Index:document Index:defaultBoost="1" Index:defaultType="token" Index:defaultFreetext="true" Index:defaultSuggest="false"
-                                Index:defaultGroup="false" Index:langAutogroup="true" Index:resolver="doms" Index:id="{foxml:digitalObjectBundle/foxml:digitalObject/@PID}">
+                                Index:defaultGroup="false" Index:langAutogroup="true" Index:resolver="doms" Index:id="{d:digitalObjectBundle/foxml:digitalObject/@PID}">
                     <Index:fields>
                         <xsl:for-each select="d:digitalObjectBundle">
                             <!-- Short format -->
@@ -43,7 +43,7 @@
                                     <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
                                         <rdf:Description rdf:about="{foxml:digitalObject/@PID}">
                                             <dc:title><xsl:value-of select="foxml:digitalObject[position()=1]/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:title"/></dc:title>
-                                            <!--                  <dc:creator><xsl:value-of select="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:creator"/></dc:creator> -->
+                                            <dc:creator><xsl:value-of select="foxml:digitalObject/foxml:datastream/foxml:datastreamVersion/foxml:xmlContent/oai_dc:dc/dc:creator"/></dc:creator> 
                                             <xsl:choose>
                                                 <xsl:when test="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dcterms:issued">
                                                     <!-- TODO: Check format of date -->
@@ -78,6 +78,9 @@
                                                         <xsl:when test="starts-with(foxml:digitalObject/@PID, 'doms:aarbog')">
                                                             <dc:type xml:lang="da">Digital &#xE5;rbog</dc:type>
                                                         </xsl:when>
+                                                        <xsl:when test="starts-with(foxml:digitalObject/@PID, 'doms:paper')">
+                                                            <dc:type xml:lang="da">De Danske Aviser</dc:type>
+                                                        </xsl:when>
                                                         <xsl:otherwise>
                                                             <dc:type xml:lang="da">Netdokument</dc:type>
                                                         </xsl:otherwise>
@@ -102,6 +105,9 @@
                                                         <xsl:when test="starts-with(foxml:digitalObject/@PID, 'doms:aarbog')">
                                                             <dc:type xml:lang="en">Digital Yearbook</dc:type>
                                                         </xsl:when>
+                                                        <xsl:when test="starts-with(foxml:digitalObject/@PID, 'doms:paper')">
+                                                            <dc:type xml:lang="en">The Danish Papers</dc:type>
+                                                        </xsl:when>
                                                         <xsl:otherwise>
                                                             <dc:type xml:lang="en">Net document</dc:type>
                                                         </xsl:otherwise>
@@ -111,37 +117,7 @@
 
                                             <!--TODO: Must be PID in storage-->
                                             <dc:identifier>
-                                                <!--    <xsl:value-of select="foxml:digitalObject/@PID"/>       -->
-                                                <!-- En masse string gymnastik for at hente en ID ud der har 3 cifrer og referer til den tilhørende pages PID-->
-                                                <xsl:for-each select="foxml:digitalObject/foxml:datastream">
-                                                    <xsl:if test="substring(../@PID,0,15)='doms:dda_paper'">
-                                                        <xsl:if test="@ID = 'RELS-EXT'">
-                                                                <xsl:variable name="idString">
-                                                                    <xsl:value-of select="substring(foxml:datastreamVersion/foxml:xmlContent/rdf:RDF/rdf:Description/doms:firstPage/@rdf:resource,0,36)"/>
-                                                                </xsl:variable>
-                                                                <xsl:variable name="idNumber">
-                                                                    <xsl:value-of select="substring(foxml:datastreamVersion/foxml:xmlContent/rdf:RDF/rdf:Description/doms:firstPage/@rdf:resource,36)"/>
-                                                                </xsl:variable>
-                                                                <xsl:choose>
-                                                                    <xsl:when test="$idNumber&lt;10">
-                                                                        <xsl:value-of select="$idString"/>
-                                                                        <xsl:text>00</xsl:text>
-                                                                        <xsl:value-of select="$idNumber"/>
-                                                                    </xsl:when>
-                                                                    <xsl:when test="$idNumber&lt;100">
-                                                                        <xsl:value-of select="$idString"/>
-                                                                        <xsl:text>0</xsl:text>
-                                                                        <xsl:value-of select="$idNumber"/>
-                                                                    </xsl:when>
-                                                                    <xsl:otherwise>
-                                                                        <xsl:value-of select="$idString"/>
-                                                                        <xsl:value-of select="$idNumber"/>
-                                                                    </xsl:otherwise>
-                                                                </xsl:choose>
-                                                        </xsl:if>
-                                                    </xsl:if>
-                                                </xsl:for-each>
-
+                                                <xsl:value-of select="foxml:digitalObject/@PID"/>
                                             </dc:identifier>
 
                                         </rdf:Description>
@@ -286,7 +262,7 @@
                             -->
 
                             <!-- Author normalised -->
-                            <xsl:for-each select="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:creator">
+                            <xsl:for-each select="foxml:digitalObject/foxml:datastream/foxml:datastreamVersion/foxml:xmlContent/oai_dc:dc/dc:creator">
                                 <Index:field Index:repeat="true" Index:name="author_normalised" Index:navn="lfo" Index:type="keyword" Index:boostFactor="10">
                                     <!-- TODO: Normalising is probably better defined elsewhere. -->
                                     <xsl:value-of select="translate(normalize-space(.), 'ABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅÁÉÍÓÚÝÑÄÖÜ½§!#¤%/()=?`+£${[]}|^~*,.-;:_\&quot;&amp;&lt;&gt;', 'abcdefghijklmnopqrstuvwxyzæøåáéíóúýñäöü')" />
@@ -403,52 +379,28 @@
                                 </Index:field>
                             </xsl:for-each>
 
-                            <!-- Identifier for coresponding page -->
-                            <xsl:for-each select="foxml:digitalObject/foxml:datastream">
-                                <xsl:if test="substring(../@PID,0,15)='doms:dda_paper'">
-                                    <xsl:if test="@ID = 'RELS-EXT'">
-                                        <Index:field>
-                                            <xsl:variable name="idString">
-                                                <xsl:value-of select="substring(foxml:datastreamVersion/foxml:xmlContent/rdf:RDF/rdf:Description/doms:firstPage/@rdf:resource,0,36)"/>
-                                            </xsl:variable>
-                                            <xsl:variable name="idNumber">
-                                                <xsl:value-of select="substring(foxml:datastreamVersion/foxml:xmlContent/rdf:RDF/rdf:Description/doms:firstPage/@rdf:resource,36)"/>
-                                            </xsl:variable>
-                                            <xsl:choose>
-                                                <xsl:when test="$idNumber&lt;10">
-                                                    <xsl:value-of select="$idString"/>
-                                                    <xsl:text>00</xsl:text>
-                                                    <xsl:value-of select="$idNumber"/>
-                                                </xsl:when>
-                                                <xsl:when test="$idNumber&lt;100">
-                                                    <xsl:value-of select="$idString"/>
-                                                    <xsl:text>0</xsl:text>
-                                                    <xsl:value-of select="$idNumber"/>
-                                                </xsl:when>
-                                                <xsl:otherwise>
-                                                    <xsl:value-of select="$idString"/>
-                                                    <xsl:value-of select="$idNumber"/>
-                                                </xsl:otherwise>
-                                            </xsl:choose>
-                                        </Index:field>
-                                    </xsl:if>
-                                </xsl:if>
-                            </xsl:for-each>
-
-
-
-
                             <!-- Potential fields: author_descr, barcode, barcode_normalised, cluster, collection, collection_normalised, format, ip, l_call, lip, llang, location, location_normalised, lso, no, openUrl, original_language, other, place, pu, series_normalised, year -->
                         </xsl:for-each>
                     </Index:fields>
                 </Index:document>
             </xsl:when>
 
+
+            <!--- DANSKE AVISER Papers-->
+            <xsl:when test="substring(d:digitalObjectBundle/foxml:digitalObject/@PID,0,14)='doms:dda_page'">
+                <xsl:text>Hest</xsl:text>
+            </xsl:when>
+
             <!-- ÅRBOEGER -->
 
             <xsl:otherwise>
+                <xsl:for-each select="d:digitalObjectBundle/foxml:digitalObject">
+                    <xsl:if test="position()=1">
+                        <xsl:value-of select="@PID" />
+                    </xsl:if>
+                </xsl:for-each>
                 <Index:document Index:defaultBoost="1" Index:defaultType="token" Index:defaultFreetext="true" Index:defaultSuggest="false"
-                                Index:defaultGroup="false" Index:langAutogroup="true" Index:resolver="doms" Index:id="{d:digitalObjectBundle/foxml:digitalObject/@PID}">
+                                Index:defaultGroup="false" Index:langAutogroup="true" Index:resolver="doms" Index:id="{foxml:digitalObjectBundle/foxml:digitalObject/@PID}">
                     <Index:fields>
                         <xsl:for-each select="d:digitalObjectBundle">
                             <!-- Short format -->
