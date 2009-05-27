@@ -43,7 +43,12 @@
                                     <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
                                         <rdf:Description rdf:about="{foxml:digitalObject/@PID}">
                                             <dc:title><xsl:value-of select="foxml:digitalObject[position()=1]/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:title"/></dc:title>
-                                            <dc:creator><xsl:value-of select="foxml:digitalObject/foxml:datastream/foxml:datastreamVersion/foxml:xmlContent/oai_dc:dc/dc:creator"/></dc:creator> 
+
+                                            <dc:creator>
+                                                <xsl:value-of select="substring-after(foxml:digitalObject/foxml:datastream/foxml:datastreamVersion/foxml:xmlContent/oai_dc:dc/dc:creator,', ')"/>
+                                                <xsl:value-of select="substring-before(foxml:digitalObject/foxml:datastream/foxml:datastreamVersion/foxml:xmlContent/oai_dc:dc/dc:creator,',')"/>
+                                            </dc:creator>
+
                                             <xsl:choose>
                                                 <xsl:when test="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dcterms:issued">
                                                     <!-- TODO: Check format of date -->
@@ -78,7 +83,7 @@
                                                         <xsl:when test="starts-with(foxml:digitalObject/@PID, 'doms:aarbog')">
                                                             <dc:type xml:lang="da">Digital &#xE5;rbog</dc:type>
                                                         </xsl:when>
-                                                        <xsl:when test="starts-with(foxml:digitalObject/@PID, 'doms:paper')">
+                                                        <xsl:when test="starts-with(foxml:digitalObject/@PID, 'doms:dda_paper')">
                                                             <dc:type xml:lang="da">De Danske Aviser</dc:type>
                                                         </xsl:when>
                                                         <xsl:otherwise>
@@ -105,7 +110,7 @@
                                                         <xsl:when test="starts-with(foxml:digitalObject/@PID, 'doms:aarbog')">
                                                             <dc:type xml:lang="en">Digital Yearbook</dc:type>
                                                         </xsl:when>
-                                                        <xsl:when test="starts-with(foxml:digitalObject/@PID, 'doms:paper')">
+                                                        <xsl:when test="starts-with(foxml:digitalObject/@PID, 'doms:dda_paper')">
                                                             <dc:type xml:lang="en">The Danish Papers</dc:type>
                                                         </xsl:when>
                                                         <xsl:otherwise>
