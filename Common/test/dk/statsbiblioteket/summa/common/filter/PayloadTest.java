@@ -1,6 +1,7 @@
 package dk.statsbiblioteket.summa.common.filter;
 
 import java.util.Random;
+import java.io.UnsupportedEncodingException;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
@@ -85,7 +86,45 @@ public class PayloadTest extends TestCase {
     public static Test suite() {
         return new TestSuite(PayloadTest.class);
     }
+
+    public void testIDFix() throws Exception {
+        String inContent =
+                "<rec id=\"1\">\n"
+                + "<ti><CI>Myid</CI></ti>\n"
+                + "<auths><au>Art, David C</au></auths>\n"
+                + "<an>200516850</an>\n"
+                + "</rec>";
+        Payload payload = new Payload(new Record(
+                "csa_something_other", "csa", inContent.getBytes("utf-8")));
+        payload.getData().put(
+                Payload.ORIGIN, "/home/example/data/csa/ssa/csu/hello.xml");
+        String id = payload.getRecord().getId();
+        String origin = (String)payload.getData(Payload.ORIGIN);
+        if (origin == null) {
+            // Panic
+        } else {
+            String[] originSubs = origin.split("/|\\\\");
+            String subCSA = originSubs[originSubs.length-2].split("/")[0];
+            String[] idTokens = id.split("_", 2);
+            String newID = idTokens[0] + "_" + subCSA + "_" + idTokens[1];
+            payload.getRecord().setId(newID);
+            payload.getData().put("recordID", newID);
+
+            String content = payload.getRecord().getContentAsUTF8();
+            content = content.replace("<an>", "<an>" + subCSA + "_");
+            content = content.replace("<CI>", "<CI>" + subCSA + "_");
+            payload.getRecord().setContent(content.getBytes("utf-8"), true);
+        }
+        String expected = "csa_csu_something_other";
+        assertEquals("The ID should be as expected",
+                     expected, payload.getRecord().getId());
+        String expectedContent =
+                "<rec id=\"1\">\n"
+                + "<ti><CI>csu_Myid</CI></ti>\n"
+                + "<auths><au>Art, David C</au></auths>\n"
+                + "<an>csu_200516850</an>\n"
+                + "</rec>";
+        assertEquals("The content should be as expected",
+                     expectedContent, payload.getRecord().getContentAsUTF8());
+    }
 }
-
-
-
