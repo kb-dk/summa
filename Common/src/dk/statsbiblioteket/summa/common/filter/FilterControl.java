@@ -30,6 +30,7 @@ import java.util.List;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.StateThread;
+import dk.statsbiblioteket.summa.common.util.LoggingExceptionHandler;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -217,6 +218,9 @@ public class FilterControl extends StateThread implements Configurable,
      * @param args ignored
      */
     public static void main(String[] args) {
+        Thread.setDefaultUncaughtExceptionHandler(
+                                              new LoggingExceptionHandler(log));
+
         Configuration conf = Configuration.getSystemConfiguration(true);
 
 

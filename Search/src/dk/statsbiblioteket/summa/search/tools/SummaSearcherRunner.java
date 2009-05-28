@@ -3,6 +3,7 @@ package dk.statsbiblioteket.summa.search.tools;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.util.LoggingExceptionHandler;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.SummaSearcherFactory;
 
@@ -21,6 +22,10 @@ public class SummaSearcherRunner {
      */
     public static void main (String[] args) {
         Log log = LogFactory.getLog(SummaSearcherRunner.class);
+
+        Thread.setDefaultUncaughtExceptionHandler(
+                                              new LoggingExceptionHandler(log));
+
         Configuration conf = Configuration.getSystemConfiguration(true);
 
         log.info("Creating search engine");

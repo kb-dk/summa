@@ -3,6 +3,7 @@ package dk.statsbiblioteket.summa.storage.tools;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.util.LoggingExceptionHandler;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -25,6 +26,10 @@ public class StorageRunner {
      */
     public static void main (String[] args) {
         Log log = LogFactory.getLog(StorageRunner.class);
+
+        Thread.setDefaultUncaughtExceptionHandler(
+                                              new LoggingExceptionHandler(log));
+
         Configuration conf = Configuration.getSystemConfiguration(true);        
 
         log.info("Creating storage instance");
