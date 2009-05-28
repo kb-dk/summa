@@ -708,6 +708,9 @@ public class IndexControllerImpl extends StateThread implements
                 log.error("IOException while calling close() from close(true)",
                           e);
             }
+        } else {
+            log.warn("Unclean shutdown, index will not be"
+                     + " committed or consolidated");
         }
     }
 
