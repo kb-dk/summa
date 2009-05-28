@@ -138,7 +138,6 @@ public class RecordTest extends TestCase {
 
         assertFalse(r1_1.equals(r2));
         assertFalse(r1_2.equals(r2));
-
-
     }
+    
 }
