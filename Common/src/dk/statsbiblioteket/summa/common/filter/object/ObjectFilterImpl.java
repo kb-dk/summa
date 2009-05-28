@@ -92,6 +92,10 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
                 //noinspection UnusedAssignment
                 processedPayload = null;
                 continue;
+            } catch (Throwable t) {
+                /* Woops, this means major trouble */
+                log.fatal("Unexpected error: " + t.getMessage(), t);
+                throw new Error("Unexpected error: " + t.getMessage(), t);
             }
             long spendTime = System.nanoTime() - startTime;
             totalTimeNS += spendTime;
