@@ -13,6 +13,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.StateThread;
 import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.Profiler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -39,6 +40,9 @@ public class FilterPump extends StateThread implements Configurable {
     private FilterSequence sequence;
 
     private String chainName = DEFAULT_CHAIN_NAME;
+    private static final int DEBUG_FEEDBACK = 100;
+    private static final int INFO_FEEDBACK = 10000;
+
 
     long objectCounter = 0;
     long streamBytesCounter = 0;
@@ -65,15 +69,23 @@ public class FilterPump extends StateThread implements Configurable {
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     protected void runMethod() {
         log.debug("Running FilterChain '" + chainName + "'");
+        Profiler profiler = new Profiler();
+        profiler.setBpsSpan(1000);
         try {
-            long pumpActions = 0;
+            long startTime;
             while (getStatus() == STATUS.running) {
-                pumpActions++;
+                startTime = System.nanoTime();
                 if (!sequence.pump()) {
-                    log.info(String.format("Finished pumping '%s' %d times",
-                                           chainName, pumpActions));
+                    profiler.beat();
+                    log.info(String.format(
+                            "Finished pumping '%s' %d times in %s, overall "
+                            + "average speed was %s pumps/sec",
+                            chainName, profiler.getBeats(),
+                            profiler.getSpendTime(), profiler.getBps(false)));
                     break;
                 }
+                profiler.beat();
+                logStatistics(profiler, startTime);
             }
         } catch (IOException e) {
             String error = "IOException caught running FilterPump";
@@ -95,13 +107,39 @@ public class FilterPump extends StateThread implements Configurable {
         close(true);
     }
 
+    private void logStatistics(Profiler profiler, long startTime) {
+        if (!(log.isTraceEnabled()
+              || (log.isDebugEnabled()
+                  && profiler.getBeats() % DEBUG_FEEDBACK == 0)
+              || (log.isInfoEnabled()
+                  && profiler.getBeats() % INFO_FEEDBACK == 0))) {
+            return;
+        }
+        String ms =
+                Double.toString((System.nanoTime() - startTime) / 1000000.0);
+        String message = String.format(
+                "%d pumps performed in %s, average speed for the last %d pumps"
+                + " was %s pumps/sec, overall average was %s pumps/sec, last"
+                + " pump took %s ms",
+                profiler.getBeats(), profiler.getSpendTime(),
+                profiler.getBpsSpan(), profiler.getBps(true),
+                profiler.getBps(false), ms);
+        if (profiler.getBeats() % INFO_FEEDBACK == 0) {
+            log.info(message);
+        } else if (profiler.getBeats() % DEBUG_FEEDBACK == 0) {
+            log.debug(message); 
+        } else {
+            log.trace(message);
+        }
+    }
+
     @Override
     public void stop() {
         log.info("Stopping filter pump " + getChainName());
         super.stop();
 
         sequence.close(true);
-        log.info("Filter pump " + getChainName() +" stopped");
+        log.info(String.format("Filter pump %s stopped", getChainName()));
     }
 
     private void close(boolean success) {
