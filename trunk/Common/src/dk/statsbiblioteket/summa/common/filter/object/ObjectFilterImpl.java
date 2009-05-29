@@ -28,6 +28,7 @@ import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Logging;
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -93,18 +94,34 @@ public abstract class ObjectFilterImpl implements ObjectFilter {
                 processedPayload = null;
                 continue;
             } catch (Throwable t) {
-                /* Woops, this means major trouble */
-                log.fatal("Unexpected error: " + t.getMessage(), t);
-                throw new Error("Unexpected error: " + t.getMessage(), t);
+                /* Woops, this means major trouble, we dump everything we have */
+                String msg = "Unexpected error on payload "
+                             + processedPayload.toString();
+                String content = "";
+                Record rec = processedPayload.getRecord();
+                if (rec != null) {
+                    msg += ", enclosed record : "
+                           + rec.toString(true);
+                    content = "\n" + "Record content:\n"
+                              + rec.getContentAsUTF8();
+                } else {
+                    msg += ", no enclosed record";
+                }
+                log.fatal(msg + content, t);
+                throw new Error(msg, t);
             }
+
             long spendTime = System.nanoTime() - startTime;
             totalTimeNS += spendTime;
             payloadCount++;
             String ms = Double.toString((spendTime / 1000000.0));
             if (log.isTraceEnabled()) {
                 //noinspection DuplicateStringLiteralInspection
-                log.trace("Processed " + processedPayload + " (#" + payloadCount
-                          + " in " + ms + " ms using " + this);
+                log.trace("Processed " + processedPayload + ", #" + payloadCount
+                          + ", in " + ms + " ms using " + this);
+            } else if (log.isDebugEnabled()) {
+                log.debug("Processed " + processedPayload + ", #" + payloadCount
+                          + ", in " + ms + " ms");
             }
             Logging.logProcess(name,
                                "processPayload #" + payloadCount
