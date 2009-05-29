@@ -227,6 +227,7 @@ public class RecordUtil {
                 out.writeStartElement(ELEMENT);
                 out.writeAttribute(KEY, entry.getKey());
                 out.writeCharacters(entry.getValue());
+                out.writeEndElement();
             }
             out.writeCharacters("\n");
             out.writeEndElement();
