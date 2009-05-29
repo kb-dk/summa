@@ -75,6 +75,7 @@
                 <available file="${summa.lib.jline}"/>
                 <available file="${summa.lib.lucene}"/>
                 <available file="${summa.lib.lucene.backports}"/>
+                <available file="${summa.lib.tika}"/>
             </and>
         </condition>
         <antcall target="${newTask}"/>
@@ -110,6 +111,7 @@
         <copy file="${basedir}/../${summa.lib.lucene.backports}" tofile="${summa.lib.lucene.backports}"/>
         <copy file="${basedir}/../${summa.lib.junit}" tofile="${summa.lib.junit}"/>
         <copy file="${basedir}/../${summa.lib.jline}" tofile="${summa.lib.jline}"/>
+        <copy file="${basedir}/../${summa.lib.tika}" tofile="${summa.lib.tika}"/>
     </target>
 
 
