@@ -20,6 +20,7 @@
     <orderEntry type="library" name="lucene-core" level="project" />
     <orderEntry type="library" name="lucene-backports" level="project" />
     <orderEntry type="library" name="jline" level="project" />
+    <orderEntry type="library" name="tika" level="project" />
     <orderEntryProperties />
   </component>
 </module>
