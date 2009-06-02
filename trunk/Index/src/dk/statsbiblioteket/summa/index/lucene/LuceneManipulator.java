@@ -27,6 +27,7 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.index.IndexManipulator;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -318,6 +319,7 @@ public class LuceneManipulator implements IndexManipulator {
         //noinspection DuplicateStringLiteralInspection
         log.debug("Deleting '" + id + "'");
         checkWriter();
+
         if (idMapper.containsKey(id)) {
             payload.getData().put(LuceneIndexUtils.META_DELETE_DOCID,
                                   idMapper.get(id));
@@ -330,8 +332,10 @@ public class LuceneManipulator implements IndexManipulator {
             // deltions are stored in a HashMap
             writer.commit();
         } else {
-            log.info("Delete requested for " + payload + ", but it was not "
-                     + "present in the index");
+            Logging.logProcess(
+                    "LuceneManipulator", "Delete requested, but the Record was "
+                                         + "not present in the index",
+                    Logging.LogLevel.DEBUG, payload);
         }
     }
 
