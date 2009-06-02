@@ -52,7 +52,7 @@ public class CoreMapBuilder extends CoreMap32 {
     private static final int DEFAULT_SIZE = 10000;
 
     /**
-     * Simple mapping from docID to facet/tag pairs.
+     * Simple mapping from docID to facet/tag pairs: map[docID] -> value[].
      */
     private int[][] map = new int[DEFAULT_SIZE][];
     private int mapSize = 0;
@@ -94,6 +94,7 @@ public class CoreMapBuilder extends CoreMap32 {
         return reducedResult;
     }
 
+    @Override
     public void add(int docID, int facetID, int[] tagIDs) {
         if (tagIDs.length == 0) {
             return;
@@ -129,8 +130,9 @@ public class CoreMapBuilder extends CoreMap32 {
     }
 
     @Override
-    public void setValues(int docID, int[] values) {
+    public int setValues(int docID, int[] values) {
         map[docID] = values;
+        return 0; // No value-shifting is ever done in this map
     }
 
     @Override
