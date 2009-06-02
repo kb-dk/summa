@@ -161,6 +161,14 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
                          3, last.getData(LuceneIndexUtils.META_ADD_DOCID));
         }
 
+        {
+            Payload falseDelete = getPayload("d", true);
+            manipulator.update(falseDelete);
+            assertNull("The ID for a deletion of a non-existing Record should "
+                       + "be null", falseDelete.getData(
+                    LuceneIndexUtils.META_DELETE_DOCID));
+        }
+
         manipulator.close();
         logIndex();
         String[] expected = new String[]{"a", "b", "c"};
