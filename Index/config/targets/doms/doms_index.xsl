@@ -221,6 +221,9 @@
                                         <xsl:when test="starts-with(foxml:digitalObject/@PID, 'doms:aarbog')">
                                             <xsl:value-of select="'digitalaarbog'" />
                                         </xsl:when>
+                                        <xsl:when test="starts-with(foxml:digitalObject/@PID, 'doms:dda_paper')">
+                                            <xsl:value-of select="'dedanskeaviser'" />
+                                        </xsl:when>
                                         <xsl:otherwise>
                                             <xsl:value-of select="'netdokument'" />
                                         </xsl:otherwise>
@@ -231,7 +234,7 @@
                             <!-- Material type group -->
                             <Index:group Index:name="ma" Index:navn="ma" Index:suggest="true">
                                 <Index:field Index:repeat="true" Index:name="ma_long" Index:navn="ma_lang" Index:type="keyword">
-                                    <xsl:value-of select="xe" />
+                                    <xsl:value-of select="'xe'" />
                                 </Index:field>
                             </Index:group>
 
@@ -245,11 +248,6 @@
                             </Index:field>
 
                             <!-- FreeText -->
-                            <xsl:for-each select="foxml:digitalObject/foxml:datastream/foxml:datastreamVersion/foxml:xmlContent/oai_dc:dc/dc:description">
-                                <Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token">
-                                    <xsl:value-of select="." />
-                                </Index:field>
-                            </xsl:for-each>
                             <xsl:for-each select="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:abstract">
                                 <Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token">
                                     <xsl:value-of select="." />
@@ -258,6 +256,21 @@
                             <xsl:for-each select="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:tableOfContents">
                                 <Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token">
                                     <xsl:value-of select="." />
+                                </Index:field>
+                            </xsl:for-each>
+                            <xsl:for-each select="foxml:digitalObject/foxml:datastream/foxml:datastreamVersion/foxml:xmlContent/oai:danskeaviser/oai:titles/oai:text">
+                                <Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token" Index:boostFactor="2">
+                                    <xsl:value-of select="."/>
+                                </Index:field>
+                            </xsl:for-each>
+                            <xsl:for-each select="foxml:digitalObject/foxml:datastream/foxml:datastreamVersion/foxml:xmlContent/oai_dc:dc/dc:description">
+                                <Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token" Index:boostFactor="2">
+                                    <xsl:value-of select="."/>
+                                </Index:field>
+                            </xsl:for-each>
+                            <xsl:for-each select="foxml:digitalObject/foxml:datastream/foxml:datastreamVersion/foxml:xmlContent/oai:danskeaviser/oai:text/oai:txt">
+                                <Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token" Index:boostFactor="2">
+                                    <xsl:value-of select="."/>
                                 </Index:field>
                             </xsl:for-each>
                             <!--
@@ -364,23 +377,6 @@
                             <xsl:for-each select="foxml:digitalObject/foxml:datastream[@ID='DomsDC']/foxml:datastreamVersion/foxml:xmlContent/dcterms:qualifieddc/dc:medium">
                                 <Index:field Index:name="format" Index:navn="format" Index:type="token" Index:boostFactor="1">
                                     <xsl:value-of select="." />
-                                </Index:field>
-                            </xsl:for-each>
-
-                            <!-- Free Text -->
-                            <xsl:for-each select="foxml:digitalObject/foxml:datastream/foxml:datastreamVersion/foxml:xmlContent/danskeaviser/titles/text">
-                                <Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token" Index:boostFactor="2">
-                                    <xsl:value-of select="."/>
-                                </Index:field>
-                            </xsl:for-each>
-                            <xsl:for-each select="foxml:digitalObject/foxml:datastream/foxml:datastreamVersion/foxml:xmlContent/oai_dc:dc/dc:description">
-                                <Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token" Index:boostFactor="2">
-                                    <xsl:value-of select="."/>
-                                </Index:field>
-                            </xsl:for-each>
-                            <xsl:for-each select="foxml:digitalObject/foxml:datastream/foxml:datastreamVersion/foxml:xmlContent/danskeaviser/text/txt">
-                                <Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token" Index:boostFactor="2">
-                                    <xsl:value-of select="."/>
                                 </Index:field>
                             </xsl:for-each>
 
