@@ -21,6 +21,7 @@ package dk.statsbiblioteket.summa.facetbrowser.core.map;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.util.ArrayUtil;
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
 
 import org.apache.log4j.Logger;
@@ -122,8 +123,10 @@ public abstract class CoreMap32 extends CoreMapImpl {
      * No sanity-checks are done to the values.
      * @param docID  a document ID.
      * @param values the values to assign to the ID.
+     * @return the number of positions that the values were shiftet if the
+     *         implementation keeps the values as a long list.
      */
-    public abstract void setValues(int docID, int[] values);
+    public abstract int setValues(int docID, int[] values);
 
     /**
      * Gets the values for the given document ID.
@@ -131,4 +134,40 @@ public abstract class CoreMap32 extends CoreMapImpl {
      * @return the values from the docID or the empty list if no values exist.
      */
     public abstract int[] getValues(int docID);
+
+    /**
+     * Adds the given tags in the given facet to the given docID.
+     * @param docID   the ID of a document. This needs to be
+     * 0 or <= (the largest existing document-id + 1).
+     * @param facetID the ID for a facet.
+     * @param tagIDs an array of IDs for tags belonging to the given facet.
+     */
+    public void add(int docID, int facetID, int[] tagIDs) {
+        if (facetID >= structure.getFacets().size()) {
+            throw new IllegalArgumentException(String.format(
+                    "This core map only allows %d facets. The ID for the facet "
+                    + "in add was %d", FACET_LIMIT, facetID));
+        }
+
+        if (log.isTraceEnabled()) {
+            log.trace(String.format("add(%d, %d, %d tagIDs) called",
+                                    docID, facetID, tagIDs.length));
+        }
+
+        if (tagIDs.length == 0) { // No new tags, so we just exit
+            log.trace("No tags specified for doc #" + docID
+                      + " and facet #" + facetID);
+            return;
+        }
+
+
+        /* Get the existing values for the docID and add the new values */
+        int[] newValues = ArrayUtil.mergeArrays(
+                getValues(docID), calculateValues(facetID, tagIDs),
+                true, SORT_VALUES);
+
+        /* Make room in values for the new data and change the index to reflect
+           the new gap-size */
+        setValues(docID, newValues);
+    }
 }

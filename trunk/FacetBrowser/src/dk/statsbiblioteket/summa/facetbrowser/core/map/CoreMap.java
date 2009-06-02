@@ -66,8 +66,18 @@ public interface CoreMap {
      */
     public static final String VALUES_FILE = "coremap.dat";
 
+    /**
+     * The number of bits used to represent the facet ID.
+     */
     public static final int PERSISTENT_FACET_BITS = 32;
+    /**
+     * The number of bits the value should be right-shifted to get the facet ID
+     * from a value.
+     */
     public static final int PERSISTENT_FACET_SHIFT = 64 - PERSISTENT_FACET_BITS;
+    /**
+     * The mask to AND a value with to get the tag ID.
+     */
     public static final long PERSISTENT_TAG_MASK =
          0xFFFFFFFFFFFFFFFFL << PERSISTENT_FACET_BITS >>> PERSISTENT_FACET_BITS;
     /**
@@ -87,6 +97,7 @@ public interface CoreMap {
      * not to the concrete document-facet-tag mappings. Opening persistent
      * files with a version higher than expected will throw an Exception.
      */
+    @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public static final String META_VERSION = "version";
 
     /**

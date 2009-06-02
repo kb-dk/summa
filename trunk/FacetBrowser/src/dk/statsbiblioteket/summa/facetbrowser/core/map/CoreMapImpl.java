@@ -37,7 +37,7 @@ import java.util.Map;
 /**
  * Generic implementation of some methods for CoreMap. The generic methods
  * expects the implementation to mimic the persistent structures internally.
- * If this is not the case, implementations are better of by overriding the
+ * If this is not the case, implementations are better off by overriding the
  * default store-related methods.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -86,6 +86,12 @@ public abstract class CoreMapImpl implements CoreMap {
         xp.store(new FileOutputStream(metaFile), null);
     }
 
+    /**
+     * Enrich the meta data for the persistent facet/tag structure.
+     * Implementations should provide statistics and other useful information
+     * here. 
+     * @param meta meta data for the facet/tag structure.
+     */
     protected void enrichMetaBeforeStore(XProperties meta) {
 
     }
@@ -210,8 +216,11 @@ public abstract class CoreMapImpl implements CoreMap {
     }
 
     /**
-     * Callback for {@link #openValues}. It is highly recommended for
-     * implementing classes to use the methods
+     * Callback for {@link #openValues}. Puts the facet/tag-pair defined by the
+     * value at position in the array of values. Note that this implies an
+     * underlying structure that can reflect the persistent format.
+     * </p><p>
+     * It is highly recommended forimplementing classes to use the methods
      * {@link #persistentValueToFacetID} and {@link #persistentValueToTagID}
      * to extract facetIDs and tagIDs from values.
      * @param position the position of the value in the values array/list.
@@ -227,6 +236,7 @@ public abstract class CoreMapImpl implements CoreMap {
      * @throws java.io.IOException if the index could not be stored.
      */
     protected void storeIndex(int[] index, int length) throws IOException {
+        //noinspection DuplicateStringLiteralInspection
         log.trace("Storing " + length + " index data to '"
                   + getPersistenceFile(INDEX_FILE) + "'");
         File tmpIndex = new File(getPersistenceFile(
