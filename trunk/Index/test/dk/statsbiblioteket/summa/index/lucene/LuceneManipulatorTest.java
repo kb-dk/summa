@@ -118,17 +118,52 @@ public class LuceneManipulatorTest extends TestCase implements ObjectFilter {
 
     public void testDeletionsIndex() throws Exception {
         LuceneManipulator manipulator = openIndex(2);
-        String[] expected = new String[]{"a", "b", "c"};
 
-        manipulator.update(getPayload("b", false));
-        manipulator.update(getPayload("a", false));
-        manipulator.update(getPayload("b", true));
-        manipulator.update(getPayload("b", true));
-        manipulator.update(getPayload("b", false));
-        manipulator.update(getPayload("c", false));
+        {
+            Payload payloadB = getPayload("b", false);
+            manipulator.update(payloadB);
+            assertEquals("The ID for the first Payload should be correct",
+                         0, payloadB.getData(LuceneIndexUtils.META_ADD_DOCID));
+        }
+
+        {
+            Payload payloadA = getPayload("a", false);
+            manipulator.update(payloadA);
+            assertEquals("The ID for the second Payload should be correct",
+                         1, payloadA.getData(LuceneIndexUtils.META_ADD_DOCID));
+        }
+
+        {
+            Payload deleted = getPayload("b", true);
+            manipulator.update(deleted);
+            assertEquals("The ID for the deleted Payload should be correct",
+                        0, deleted.getData(LuceneIndexUtils.META_DELETE_DOCID));
+        }
+
+        {
+            Payload deleted2 = getPayload("b", true);
+            manipulator.update(deleted2);
+            assertEquals("The ID for the redeleted Payload should be unchanged",
+                       0, deleted2.getData(LuceneIndexUtils.META_DELETE_DOCID));
+        }
+
+        {
+            Payload reAdd = getPayload("b", false);
+            manipulator.update(reAdd);
+            assertEquals("The ID for the readded Payload should be correct",
+                         2, reAdd.getData(LuceneIndexUtils.META_ADD_DOCID));
+        }
+
+        {
+            Payload last = getPayload("c", false);
+            manipulator.update(last);
+            assertEquals("The ID for the last Payload should be correct",
+                         3, last.getData(LuceneIndexUtils.META_ADD_DOCID));
+        }
 
         manipulator.close();
         logIndex();
+        String[] expected = new String[]{"a", "b", "c"};
         LuceneTestHelper.verifyContent(
                 new File(location, LuceneIndexUtils.LUCENE_FOLDER), expected);
     }
