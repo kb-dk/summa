@@ -17,9 +17,10 @@ import org.apache.commons.logging.LogFactory;
  * language supported by the Java runtime. The prime example here would be
  * Javascript.
  * <p/>
- * The scripting environment has three global varibles injected into the global
+ * The scripting environment has four global varibles injected into the global
  * scope. These are;
- * {@code payload}, {@code allowPayload}, and {@code feedbackMessage}.
+ * {@code payload}, {@code allowPayload}, {@code feedbackMessage},
+ * and {@code log}.
  * <p/>
  * The {@code payload} variable holds the raw {@link Payload} object to be
  * processed. The two other variables {@code allowPayload} and
@@ -35,8 +36,27 @@ import org.apache.commons.logging.LogFactory;
  * optionally be set to a string which will be printed in the log when the
  * script completes.
  * <p/>
+ * Finally the {@code log} variable is a handle to a Commons Logging {@code Log}
+ * instance.
+ * <p/>
+ * <h3>Available Script Engines</h3>
  * You can find a list of supported scripting languages at
  * <a href="https://scripting.dev.java.net/">scripting.dev.java.net</a>.
+ * <p/>
+ * <h3>Example</h3>
+ * Discard all payloads with ids starting with {@code illegal} and sleep 1s
+ * if the payload id starts with {@code sleepy}:
+ * <pre>
+ *    var id = payload.getId();
+ *
+ *    if (id.startswith("illegal")) {
+ *        feedbackMessage = "Illegal id prefix";
+ *        allowPayload = false;
+ *    } else if (id.startswith("sleepy")) {
+ *        // Sleepy payloads are still allowed to pass through
+ *       java.lang.Thread.sleep(1000);
+ *    }
+ * </pre>
  */
 public class ScriptFilter extends ObjectFilterImpl {
 
@@ -248,6 +268,7 @@ public class ScriptFilter extends ObjectFilterImpl {
         engine.put("payload", payload);
         engine.put("allowPayload", Boolean.TRUE);
         engine.put("feedbackMessage", null);
+        engine.put("log", log);
 
         if (compiledScript != null) {
             log.debug("Processing " + payload.getId()

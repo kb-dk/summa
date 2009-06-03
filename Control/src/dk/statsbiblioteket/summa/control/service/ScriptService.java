@@ -5,6 +5,7 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.control.api.Status;
 import dk.statsbiblioteket.summa.control.api.InvalidServiceStateException;
+import dk.statsbiblioteket.summa.control.api.Service;
 import dk.statsbiblioteket.summa.control.api.ClientConnection;
 
 import javax.script.*;
@@ -17,7 +18,36 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- *
+ * A {@link Service} implementation delegating all work to an underlying
+ * {@link ScriptEngine}. Scripts can either be inlined in the configuration
+ * by setting the {@link #CONF_SCRIPT_INLINE} property to contain the entire
+ * script, or by setting the script as an external resource via the
+ * {@link #CONF_SCRIPT_URL} property.
+ * <p/>
+ * The default scripting language is Javascript, but this can be tweaked to any
+ * script engine supported by the runtime by setting the
+ * {@link #CONF_SCRIPT_LANG} property.
+ * <p/>
+ * The scripting environment has two variables injected into it, namely
+ * {@code stopped} and {@code log}.
+ * <p/>
+ * The boolean value {@code stopped} indicates whether the script should stop
+ * executing and is usually checked in a looping condition.
+ * <p/>
+ * The {@code log} variable is a reference to a Commons Logging {@code Log}
+ * instance.
+ * <p/>
+ * <h3>Available Script Engines<h3/>
+ * You can find a list of supported scripting languages at
+ * <a href="https://scripting.dev.java.net/">scripting.dev.java.net</a>.
+ * <p/>
+ * <h3>Example</h3>
+ * <pre>
+ *     while (!stopped) {
+ *         log.debug("Wee another iteration!");
+ *         java.lang.Thread.sleep(1000);
+ *     }
+ * </pre>
  */
 public class ScriptService extends ServiceBase {
 
@@ -246,7 +276,9 @@ public class ScriptService extends ServiceBase {
         public void run() {
             long time = System.nanoTime();
 
+            // Set up environment
             engine.put("stopped", false);
+            engine.put("log", log);
 
             if (compiledScript != null) {
                 log.debug("Running compiled script");
