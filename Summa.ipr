@@ -577,10 +577,10 @@
     </library>
     <library name="derby">
       <CLASSES>
-        <root url="jar://$PROJECT_DIR$/lib/derby-10.4.2.0.jar!/" />
+        <root url="jar://$PROJECT_DIR$/lib/derby-10.5.1.1.jar!/" />
       </CLASSES>
       <JAVADOC>
-        <root url="jar://$PROJECT_DIR$/lib/apidocs/derby-10.4.2.0-apidocs.zip!/" />
+        <root url="jar://$PROJECT_DIR$/lib/apidocs/derby-10.5.1.1-apidocs.zip!/" />
       </JAVADOC>
       <SOURCES />
     </library>
