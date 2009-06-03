@@ -74,6 +74,7 @@ public class ScriptServiceTest extends TestCase {
         service = createScriptService(ScriptService.CONF_SCRIPT_INLINE,
                                       "while (!stopped) {             \n" +
                                       "  java.lang.Thread.sleep(100); \n" +
+                                      "  log.debug(\"Weeee - again!\");" +
                                       "}");
         doTestBlockingScript(service);
     }
