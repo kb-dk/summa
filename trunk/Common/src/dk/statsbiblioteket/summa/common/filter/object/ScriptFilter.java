@@ -2,6 +2,7 @@ package dk.statsbiblioteket.summa.common.filter.object;
 
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 
 import javax.script.*;
 import java.io.*;
@@ -211,7 +212,16 @@ public class ScriptFilter extends ObjectFilterImpl {
             try {
                 log.info("Reading script from "
                          + conf.getString(CONF_SCRIPT_URL));
-                URL url = new URL(conf.getString(CONF_SCRIPT_URL));
+                URL url = Resolver.getURL(conf.getString(CONF_SCRIPT_URL));
+
+                if (url == null) {
+                    throw new ConfigurationException(
+                                             "Unable to locate script: "
+                                             + conf.getString(CONF_SCRIPT_URL));
+                } else {
+                    log.debug("Script resolved to: " + url);
+                }
+
                 return url.openStream();
             } catch (MalformedURLException e) {
                 throw new ConfigurationException("Malformed URL in "
