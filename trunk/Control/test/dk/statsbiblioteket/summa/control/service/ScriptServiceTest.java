@@ -37,6 +37,7 @@ public class ScriptServiceTest extends TestCase {
         assertNotSame(Status.CODE.crashed, service.getStatus().getCode());
 
         service.stop();
+        Thread.sleep(400); // Give a little bit o' grace time to change state
         assertEquals(Status.CODE.stopped, service.getStatus().getCode());
     }
 
@@ -49,6 +50,7 @@ public class ScriptServiceTest extends TestCase {
         assertNotSame(Status.CODE.crashed, service.getStatus().getCode());
 
         service.stop();
+        Thread.sleep(400); // Give a little bit o' grace time to change state
         assertEquals(Status.CODE.stopped, service.getStatus().getCode());
     }
 
@@ -56,7 +58,7 @@ public class ScriptServiceTest extends TestCase {
                                                              throws Exception {
         assertEquals(Status.CODE.constructed, service.getStatus().getCode());
         service.start();
-        Thread.sleep(50); // Let us sleep past the intermediate 'running' state
+        Thread.sleep(200); // Let us sleep past the intermediate 'running' state
         assertEquals(Status.CODE.idle, service.getStatus().getCode());
 
         // Assert that the scrip indeed seems to be blocking
@@ -64,6 +66,7 @@ public class ScriptServiceTest extends TestCase {
         assertEquals(Status.CODE.idle, service.getStatus().getCode());
 
         service.stop();
+        Thread.sleep(400); // Give a little bit o' grace time to change state
         assertEquals(Status.CODE.stopped, service.getStatus().getCode());
     }
 

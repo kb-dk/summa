@@ -159,8 +159,6 @@ public class ScriptService extends ServiceBase {
         setStatus(Status.CODE.stopping, "Stopping script",
                   Logging.LogLevel.INFO);
         scriptRunner.stop();
-        setStatus(Status.CODE.stopped, "Script stopped",
-                  Logging.LogLevel.INFO);
     }
 
 
@@ -211,16 +209,16 @@ public class ScriptService extends ServiceBase {
 
         private Thread thread;
 
-        public void runInThread() {
+        public synchronized void runInThread() {
             thread = new Thread(this, "ScriptRunner");
             thread.start();
         }
 
-        public boolean isRunning() {
+        public synchronized boolean isRunning() {
             return thread != null;
         }
 
-        public void stop() {
+        public synchronized void stop() {
             engine.put("stopped", true);
             if (thread == null) {
                 thread.interrupt();
@@ -232,6 +230,9 @@ public class ScriptService extends ServiceBase {
                 }
             }
             thread = null;
+            setStatus(Status.CODE.stopped,
+                      "Script stopped" ,
+                      Logging.LogLevel.INFO);
         }
 
         public void run() {
@@ -267,7 +268,7 @@ public class ScriptService extends ServiceBase {
 
             // Calc processing time in ns
             time = System.nanoTime() - time;
-            log.debug("Script returned after " + time/1000000D + "ms");
+            log.debug("Script exited after " + time/1000000D + "ms");
         }
     }
 }
