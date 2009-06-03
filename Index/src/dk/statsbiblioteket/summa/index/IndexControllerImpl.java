@@ -187,6 +187,16 @@ public class IndexControllerImpl extends StateThread implements
             "summa.index.consolidateonclose";
     public static final boolean DEFAULT_CONSOLIDATE_ON_CLOSE = false;
 
+    /**
+     * If true, consolidate is colled upon close, even if no documents has been
+     * added since the last consolidate.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_FORCE_CONSOLIDATE_ON_CLOSE =
+            "summa.index.forceconsolidateonclose";
+    public static final boolean DEFAULT_FORCE_CONSOLIDATE_ON_CLOSE = false;
+
     private static final int PROFILER_SPAN = 1000;
 
     /* The indexRoot is the main root. Indexes will always be in sub-folders */
@@ -202,6 +212,8 @@ public class IndexControllerImpl extends StateThread implements
     private int consolidateMaxDocuments = DEFAULT_CONSOLIDATE_MAX_DOCUMENTS;
     private int consolidateMaxCommits =   DEFAULT_CONSOLIDATE_MAX_COMMITS;
     private boolean consolidateOnClose =  DEFAULT_CONSOLIDATE_ON_CLOSE;
+    private boolean forceConsolidateOnClose =
+            DEFAULT_FORCE_CONSOLIDATE_ON_CLOSE;
 
     private long lastCommit =                  System.currentTimeMillis();
     private long updatesSinceLastCommit =      0;
@@ -266,14 +278,17 @@ public class IndexControllerImpl extends StateThread implements
                conf.getInt(CONF_CONSOLIDATE_MAX_COMMITS, consolidateMaxCommits);
         boolean createNewIndex = conf.getBoolean(CONF_CREATE_NEW_INDEX,
                                                  DEFAULT_CREATE_NEW_INDEX);
-        consolidateOnClose = conf.getBoolean(CONF_CONSOLIDATE_ON_CLOSE,
-                                             DEFAULT_CONSOLIDATE_ON_CLOSE);
+        consolidateOnClose = conf.getBoolean(
+                CONF_CONSOLIDATE_ON_CLOSE, DEFAULT_CONSOLIDATE_ON_CLOSE);
+        forceConsolidateOnClose = conf.getBoolean(
+                CONF_FORCE_CONSOLIDATE_ON_CLOSE, forceConsolidateOnClose);
         log.debug("Basic setup: commitTimeout: " + commitTimeout
                   + " ms, commitMaxDocuments: " + commitMaxDocuments
                   + ", consolidateTimeout: " + consolidateTimeout + " ms, "
                   + ", consolidateMaxDocuments: " + consolidateMaxDocuments
                   + ", consolidateMaxCommits: " + consolidateMaxCommits
-                  + ", consolidateOnClose: " + consolidateOnClose);
+                  + ", consolidateOnClose: " + consolidateOnClose
+                  + ", forceConsolidateOnClose: " + forceConsolidateOnClose);
 
         //noinspection DuplicateStringLiteralInspection
         log.trace("Creating " + manipulatorConfs.size() + " manipulators");
@@ -591,7 +606,7 @@ public class IndexControllerImpl extends StateThread implements
     public synchronized void consolidate() throws IOException {
         long startTime = System.currentTimeMillis();
         log.info("consolidate started");
-        if (updatesSinceLastConsolidate == 0) {
+        if (updatesSinceLastConsolidate == 0 && !forceConsolidateOnClose) {
             log.trace("No updates since last Consolidate");
             lastConsolidate = System.currentTimeMillis();
             lastCommit = System.currentTimeMillis(); // Consolidate includes commit
@@ -642,11 +657,12 @@ public class IndexControllerImpl extends StateThread implements
             return;
         }
         indexIsOpen = false;
-        if (consolidateOnClose && updatesSinceLastConsolidate > 0) {
+        if ((consolidateOnClose && updatesSinceLastConsolidate > 0) ||
+            forceConsolidateOnClose) {
             log.debug("Calling consolidate because of close. "
                       + updatesSinceLastConsolidate
                       + " updates since last consolidate");
-            consolidate(); // TODO: Always do this upon close?
+            consolidate();
         } else {
             log.debug("Calling commit from close with " + updatesSinceLastCommit
                       + " updates since last commit");
@@ -708,9 +724,6 @@ public class IndexControllerImpl extends StateThread implements
                 log.error("IOException while calling close() from close(true)",
                           e);
             }
-        } else {
-            log.warn("Unclean shutdown, index will not be"
-                     + " committed or consolidated");
         }
     }
 
