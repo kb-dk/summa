@@ -48,6 +48,14 @@ public class StorageTest extends TestCase {
                 testDBRoot + File.separator + dbPrefix + (storageCounter++)
         );
 
+        // Derby Config
+        /*Configuration conf = Configuration.newMemoryBased(
+                Storage.CONF_CLASS,
+                DerbyStorage.class,
+                DatabaseStorage.CONF_LOCATION,
+                testDBRoot + File.separator + dbPrefix + (storageCounter++)
+        );*/
+
         // Postgres Config
         /*Configuration conf = Configuration.newMemoryBased(
                 Storage.CONF_CLASS,
@@ -91,6 +99,9 @@ public class StorageTest extends TestCase {
         if (storage instanceof DatabaseStorage) {
             ((DatabaseStorage)storage).destroyDatabase();
         }
+        /* We get spurious errors where the connection to the db isn't ready
+         * when running the unit tests in batch mode */
+        Thread.sleep(200);
 
         storage.close();
         /* We get spurious errors where the connection to the db isn't ready

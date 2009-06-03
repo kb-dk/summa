@@ -579,7 +579,7 @@ getco     */
      * Set up a prepared statement and return an opaque handle to it.
      * <p/>
      * A copy of the {@link PreparedStatement} can be retrieved by calling
-     * {@link #getStatement}. PreparedStatements <i>must</i> be
+     * {@link #getManagedStatement}. PreparedStatements <i>must</i> be
      * closed by invoking the {@link PreparedStatement#close} method when the
      * client is done using them. This should typically be done in a
      * <code>finally</code> clause to make sure statements
@@ -608,8 +608,8 @@ getco     */
      *               {@link #prepareStatement(String)}
      * @return a prepared statement that <i>must</i> be closed by the caller
      */
-    protected abstract PreparedStatement getStatement(StatementHandle handle)
-                                                            throws SQLException;
+    protected abstract PreparedStatement getManagedStatement(
+                                 StatementHandle handle) throws SQLException;
 
     /**
      * Not all database backends return real
@@ -673,7 +673,7 @@ getco     */
      * For many databases a legal implementation of this method would simply
      * return:<br/>
      * <pre>
-     *   sql + " LIMIT ?"
+     *   sql + " LIMIT " + getPageSize()
      * </pre>
      * <p/>
      * The default implementation of this method throws an
@@ -1023,7 +1023,7 @@ getco     */
      * {@link UniqueTimestampGenerator}, ie. it is <i>not</i> a normal system
      * time in milliseconds.
      * <p/>
-     * The returned ResultSetCursor <i>must</i> be closed by the called to
+     * The returned ResultSetCursor <i>must</i> be closed by the caller to
      * avoid leaking connections and locking up the storage
      *
      * @param mtimeTimestamp a timestamp as returned by a
@@ -1042,9 +1042,9 @@ getco     */
 
         try {
             if (base == null) {
-                stmt = getStatement(stmtGetModifiedAfterAll);
+                stmt = getManagedStatement(stmtGetModifiedAfterAll);
             } else {
-                stmt = getStatement(stmtGetModifiedAfter);
+                stmt = getManagedStatement(stmtGetModifiedAfter);
             }
         } catch (SQLException e) {
             throw new IOException("Failed to get prepared statement "
@@ -1117,11 +1117,6 @@ getco     */
         if (base == null) {
             try {
                 stmt.setLong(1, mtimeTimestamp);
-
-                if (usePagingModel) {
-                    stmt.setInt(2, pageSize);
-                }
-
             } catch (SQLException e) {
                 throw new IOException(String.format(
                         "Could not prepare stmtGetModifiedAfterAll with time"
@@ -1136,11 +1131,6 @@ getco     */
         try {
             stmt.setString(1, base);
             stmt.setLong(2, mtimeTimestamp);
-
-            if (usePagingModel) {
-                stmt.setInt(3, pageSize);
-            }
-
         } catch (SQLException e) {
             throw new IOException("Could not prepare stmtGetModifiedAfter "
                                       + "with base '" + base + "' and time "
@@ -2003,20 +1993,14 @@ getco     */
         /* Set a check mark in the hasRelations column */
         log.debug("Marking " + id + " as having relations");
         try {
-            stmt = getStatement(stmtMarkHasRelations);
+            stmt = conn.prepareStatement(stmtMarkHasRelations.getSql());
             stmt.setString(1, id);
             stmt.executeUpdate();
         } catch (SQLException e) {
             log.warn("Failed to mark " + id + " as having relations: "
                      + e.getMessage(), e);
         } finally {
-            try {
-                if (stmt != null) {
-                    stmt.close();
-                }
-            } catch (SQLException e) {
-                log.warn("Failed to close statement: " + e.getMessage(), e);
-            }
+            closeStatement(stmt);
         }
     }
 

@@ -46,47 +46,9 @@ public class H2Storage extends DatabaseStorage implements Configurable {
     private boolean forceNew = false;
 
     private JdbcDataSource dataSource;
-    private H2ConnectionPool pool;
+    private MiniConnectionPoolManager pool;
     private long numFlushes;
 
-    /**
-     * We need to create a custom connection pool because H2 doesn't support
-     * StatementEventListeners
-     */
-    private static class H2ConnectionPool extends MiniConnectionPoolManager {
-
-        public H2ConnectionPool(ConnectionPoolDataSource dataSource,
-                                int maxConnections) {
-            super(dataSource, maxConnections);
-        }
-
-        public H2ConnectionPool(ConnectionPoolDataSource dataSource,
-                                int maxConnections, int timeout) {
-            super(dataSource, maxConnections, timeout);
-        }
-
-        @Override
-        public PreparedStatement getStatement(StatementHandle handle)
-                throws SQLException {
-
-            PooledConnection pconn = getPooledConnection();
-            Connection conn = pconn.getConnection();
-
-            if (log.isTraceEnabled()) {
-                log.trace("Getting statement for handle " + handle
-                          + " on connection " + pconn.hashCode());
-            }
-
-            // We prepare a new statement on each invocation.
-            // This might look insane but the JDBC _should_ be caching the
-            // statements for us
-            PreparedStatement stmt = conn.prepareStatement(handle.getSql());
-
-            // We wrap the statement in a special class that closes the
-            // underlying connection when the statement is closed
-            return new ManagedStatement(stmt);
-        }
-    }
 
     public H2Storage(Configuration conf) throws IOException {
         super(conf);
@@ -194,7 +156,7 @@ public class H2Storage extends DatabaseStorage implements Configurable {
             dataSource.setPassword(password);
         }
 
-        pool = new H2ConnectionPool(dataSource, maxConnections);
+        pool = new MiniConnectionPoolManager(dataSource, maxConnections);
 
         log.info("Connected to database at '" + location + "'");
 
@@ -292,9 +254,9 @@ public class H2Storage extends DatabaseStorage implements Configurable {
     }
 
     @Override
-    protected PreparedStatement getStatement(StatementHandle handle)
+    protected PreparedStatement getManagedStatement(StatementHandle handle)
                                                            throws SQLException {
-        return pool.getStatement(handle);
+        return pool.getManagedStatement(handle);
     }
 
     @Override
@@ -358,7 +320,7 @@ public class H2Storage extends DatabaseStorage implements Configurable {
 
     @Override
     public String getPagingStatement(String sql) {
-        return sql + " LIMIT ?";
+        return sql + " LIMIT " + getPageSize();
     }
 
 
