@@ -185,7 +185,15 @@ public class ScriptService extends ServiceBase {
                 log.info("Reading script from "
                          + conf.getString(CONF_SCRIPT_URL));
                 URL url = Resolver.getURL(conf.getString(CONF_SCRIPT_URL));
-                log.debug("Script URL resolved to: " + url);
+
+                if (url == null) {
+                    throw new ConfigurationException(
+                                             "Unable to locate script: "
+                                             + conf.getString(CONF_SCRIPT_URL));
+                } else {
+                    log.debug("Script resolved to: " + url);
+                }
+
                 return url.openStream();
             } catch (MalformedURLException e) {
                 throw new ConfigurationException(
