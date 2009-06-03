@@ -28,6 +28,7 @@ package dk.statsbiblioteket.summa.common.pool;
 
 import dk.statsbiblioteket.summa.common.util.ListSorter;
 import dk.statsbiblioteket.summa.common.util.IndirectLongSorter;
+import dk.statsbiblioteket.summa.common.util.ArrayUtil;
 import dk.statsbiblioteket.summa.common.pool.SortedPoolImpl;
 import dk.statsbiblioteket.summa.common.pool.ValueConverter;
 import dk.statsbiblioteket.util.LineReader;
@@ -56,6 +57,7 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
     private Log log = LogFactory.getLog(DiskPool.class);
     private static final int DEFAULT_SIZE = 1000;
     private static final int MAX_INCREMENT = 1000000;
+    private static final double GROWTH_FACTOR = 2.0;
 
     private ListSorter sorter;
     private IndirectLongSorter<E> mergeSorter;
@@ -155,7 +157,8 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
             indexes = loadIndex();
             valueCount = indexes.length;
             log.trace("Index loaded with indexes.length " + indexes.length);
-            expandIfNeeded();
+            indexes = ArrayUtil.makeRoom(
+                    indexes, size(), GROWTH_FACTOR, MAX_INCREMENT, 1);
         }
         connectToValues();
         return !forceNew;
@@ -321,7 +324,8 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
         log.trace("Adding '" + value + "' to the pool at index " + insertPos);
 
         /* Check that there is enough room */
-        expandIfNeeded();
+        indexes = ArrayUtil.makeRoom(indexes, Math.max(insertPos, size()),
+                                     GROWTH_FACTOR, MAX_INCREMENT, 1);
         /* Make room */
         if (insertPos < size()) {
             log.trace("Shuffling part of the index array to make room for add");
@@ -336,17 +340,6 @@ public class DiskPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
                            */
         valueCount++;
 //        log.debug("After add: " + values.getFile() + ": " + values.getFile().length() + " bytes"); // TODO: Remove
-    }
-
-    protected void expandIfNeeded() {
-        if (size() >= indexes.length - 1) {
-            int newSize = Math.min(size() + MAX_INCREMENT, size() * 2);
-            log.debug("Expanding internal arrays of indexes to length "
-                      + newSize);
-            long[] newIndexes = new long[newSize];
-            System.arraycopy(indexes, 0, newIndexes, 0, size());
-            indexes = newIndexes;
-        }
     }
 
     @Override

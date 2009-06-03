@@ -208,6 +208,16 @@ public abstract class StringPoolSuperTest extends TestCase {
         assertEquals("Position of unknown check", -1, pool.indexOf("x"));
     }
 
+    public void testModifyWithJumps() throws Exception {
+        testModifyWithJumps(getPool());
+    }
+
+    public static void testModifyWithJumps(SortedPool<String> pool)
+            throws Exception {
+        pool.add("Foo");
+        pool.add(20000, "Bar");
+    }
+
     private SortedPool<String> samplePool() throws Exception {
         SortedPool<String> pool = getPool();
         pool.insert("Flim");
