@@ -95,4 +95,13 @@ public class ArrayUtilTest extends TestCase {
     public static Test suite() {
         return new TestSuite(ArrayUtilTest.class);
     }
+
+    public void testMakeRoom() throws Exception {
+        int[] foo = new int[10];
+        foo[9] = 87;
+        int[] foo2 = ArrayUtil.makeRoom(foo, 10, 1.2, 100, 1);
+        assertEquals("The length should be adjusted properly",
+                     12, foo2.length);
+        assertEquals("Content should be preserved", 87, foo2[9]);
+    }
 }

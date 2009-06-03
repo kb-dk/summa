@@ -102,5 +102,59 @@ public class ArrayUtil {
         }
     }
 
+    /**
+     * Make sure that the array is capable of accepting a value at insertPos.
+     * If the array is not large enough, it is expanded and the content copied
+     * and returned.
+     * @param anArray      the array that should have its length checked.
+     * @param insertPos    the position for the potential insert.
+     * @param growthFactor the factor to multiply with insertPos to get the new
+     *                     length. If insertPos is 0, the length will be max of
+     *                     1 and headRoom.
+     * @param maxIncrement the maximum extra length to add above insertPos.
+     * @param headRoom     the room that should be available above insertPos.
+     * @return if no expansion occurs anArray will be returned, else the new
+     *         array will be returned.
+     */
+    public static int[] makeRoom(int[] anArray, int insertPos,
+                                 double growthFactor, int maxIncrement,
+                                 int headRoom) {
+        if (!(insertPos >= anArray.length - headRoom)) {
+            return anArray;
+        }
+        int newSize = Math.max(insertPos + (headRoom == 0 ? 1 : headRoom),
+                               Math.min(insertPos + 1 + maxIncrement,
+                                        (int)(insertPos * growthFactor)));
+        int[] newArray = new int[newSize];
+        System.arraycopy(anArray, 0, newArray, 0, anArray.length);
+        return newArray;
+    }
 
+    /**
+     * Make sure that the array is capable of accepting a value at insertPos.
+     * If the array is not large enough, it is expanded and the content copied
+     * and returned.
+     * @param anArray      the array that should have its length checked.
+     * @param insertPos    the position for the potential insert.
+     * @param growthFactor the factor to multiply with insertPos to get the new
+     *                     length. If insertPos is 0, the length will be max of
+     *                     1 and headRoom.
+     * @param maxIncrement the maximum extra length to add above insertPos.
+     * @param headRoom     the room that should be available above insertPos.
+     * @return if no expansion occurs anArray will be returned, else the new
+     *         array will be returned.
+     */
+    public static long[] makeRoom(long[] anArray, int insertPos,
+                                 double growthFactor, int maxIncrement,
+                                 int headRoom) {
+        if (!(insertPos >= anArray.length - headRoom)) {
+            return anArray;
+        }
+        int newSize = Math.max(insertPos + (headRoom == 0 ? 1 : headRoom),
+                               Math.min(insertPos + 1 + maxIncrement,
+                                        (int)(insertPos * growthFactor)));
+        long[] newArray = new long[newSize];
+        System.arraycopy(anArray, 0, newArray, 0, anArray.length);
+        return newArray;
+    }
 }

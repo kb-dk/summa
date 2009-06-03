@@ -29,8 +29,7 @@ package dk.statsbiblioteket.summa.common.pool;
 import dk.statsbiblioteket.util.LineReader;
 import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.pool.SortedPoolImpl;
-import dk.statsbiblioteket.summa.common.pool.ValueConverter;
+import dk.statsbiblioteket.summa.common.util.ArrayUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -115,12 +114,14 @@ public class MemoryPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
         store(location, poolName);
     }
 
+    @Override
     protected void sort() {
         Collections.sort(this, this); // Works fine for memory-based
     }
 
     /* List interface delegations */
 
+    @Override
     public E remove(int position) {
         E e = values.remove(position);
         //noinspection DuplicateStringLiteralInspection
@@ -128,29 +129,36 @@ public class MemoryPool<E extends Comparable<E>> extends SortedPoolImpl<E> {
         return e;
     }
 
+    @Override
     public E get(int position) {
         // No trace here, as it needs to be FAST
         return values.get(position);
     }
 
+    @Override
     public int size() {
         return values.size();
     }
 
+    @Override
     public void clear() {
         values.clear();
     }
 
+    @Override
     public void add(int index, E element) {
         //noinspection DuplicateStringLiteralInspection
         log.trace("Adding '" + element + "' at position " + index);
+        while (index > values.size()) {
+            values.add(null);
+        }
         values.add(index, element);
     }
 
+    @Override
     public E set(int index, E element) {
         return values.set(index, element);
     }
-
 }
 
 
