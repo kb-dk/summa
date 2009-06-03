@@ -48,7 +48,6 @@ public class MiniConnectionPoolManager {
     private Stack<PooledConnection>        recycledConnections;
     private int                            activeConnections;
     private PoolConnectionEventListener    poolConnectionEventListener;
-    private PoolStatementEventListener     statementEventListener;
     private boolean                        isDisposed;
 
     /**
@@ -146,7 +145,6 @@ public class MiniConnectionPoolManager {
         recycledConnections = new Stack<PooledConnection>();
 
         poolConnectionEventListener = new PoolConnectionEventListener();
-        statementEventListener = new PoolStatementEventListener();
 
         log.debug("Created for source " + dataSource.getClass()
                   + " and max connections " + maxConnections
@@ -185,8 +183,22 @@ public class MiniConnectionPoolManager {
         return new StatementHandle(sql);
     }
 
-    public PreparedStatement getStatement(StatementHandle handle)
-                                                            throws SQLException{
+    /**
+     * Return a statement with an underlying pooled connection that will
+     * automatically be closed when the statement is closed. This means that
+     * it is very important that the caller closes the returned statement to
+     * avoid connection leaks. It is highly recommended to close the statement
+     * in a {@code finally} clause.
+     *
+     * @param handle a handle to a statement as returned by
+     *               {@link #prepareStatement(String)}
+     * @return A prepared statement for {@code handle} that will automatically
+     *         return its underlying connection to the pool when the statement
+     *         is closed
+     * @throws SQLException if there is an error preparing the statement
+     */
+    public PreparedStatement getManagedStatement(StatementHandle handle)
+            throws SQLException{
         PooledConnection pconn = getPooledConnection();
         Connection conn = pconn.getConnection();
 
@@ -195,16 +207,16 @@ public class MiniConnectionPoolManager {
                       + " on connection " + pconn.hashCode());
         }
 
-        // We prepare a new statement on each invocation. This might look insane
-        // but the JDBC _should_ be caching the statements for us
-        // (Derby does this at least)
+        // We prepare a new statement on each invocation.
+        // This might look insane but the JDBC _should_ be caching the
+        // statements for us
         PreparedStatement stmt = conn.prepareStatement(handle.getSql());
 
-        // Set our selves up for closing the connection when
-        // the statement is closed
-        pconn.addStatementEventListener(statementEventListener);
-
-        return stmt;
+        // We wrap the statement in a special class that closes the
+        // underlying connection when the statement is closed,
+        // JDBC has a StatementEventListener API but it is generally badly
+        // supported and unreliable
+        return new ManagedStatement(stmt);
     }
 
     /**
@@ -416,8 +428,10 @@ public class MiniConnectionPoolManager {
     /**
      * The purpose of this listener is to close the parent connection
      * when a prepared statement is closed.
+     * NOTE: We use a ManagedStatement instead of this technique, the callbacks
+     *       a generally unreliable in H2 and Derby
      */
-    private class PoolStatementEventListener implements StatementEventListener {
+    /*private class PoolStatementEventListener implements StatementEventListener {
 
         public void statementClosed(StatementEvent event) {
             PooledConnection pconn = (PooledConnection)event.getSource();
@@ -446,7 +460,7 @@ public class MiniConnectionPoolManager {
                      + "Error was: " + event.getSQLException().getMessage(),
                      event.getSQLException());
         }
-    }
+    }*/
 
     /**
      * Returns the number of active (open) connections of this pool.

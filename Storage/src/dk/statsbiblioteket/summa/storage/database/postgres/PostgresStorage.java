@@ -56,7 +56,7 @@ public class PostgresStorage extends DatabaseStorage implements Configurable {
         }
 
         @Override
-        public PreparedStatement getStatement(StatementHandle handle)
+        public PreparedStatement getManagedStatement(StatementHandle handle)
                 throws SQLException {
 
             PooledConnection pconn = getPooledConnection();
@@ -180,9 +180,9 @@ public class PostgresStorage extends DatabaseStorage implements Configurable {
     }
 
     @Override
-    protected PreparedStatement getStatement(StatementHandle handle)
+    protected PreparedStatement getManagedStatement(StatementHandle handle)
                                                             throws SQLException{
-        return pool.getStatement(handle);
+        return pool.getManagedStatement(handle);
     }
 
     @Override

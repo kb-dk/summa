@@ -39,6 +39,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager;
+import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager.StatementHandle;
 import dk.statsbiblioteket.summa.storage.StorageUtils;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
@@ -164,6 +165,7 @@ public class DerbyStorage extends DatabaseStorage implements Configurable {
             dataSource.setPassword(password);
         }
 
+        //pool = new H2Storage.H2ConnectionPool(dataSource, maxConnections);
         pool = new MiniConnectionPoolManager(dataSource, maxConnections);
 
 
@@ -186,9 +188,9 @@ public class DerbyStorage extends DatabaseStorage implements Configurable {
     }
 
     @Override
-    protected PreparedStatement getStatement(StatementHandle handle)
+    protected PreparedStatement getManagedStatement(StatementHandle handle)
                                                             throws SQLException{
-        return pool.getStatement(handle);
+        return pool.getManagedStatement(handle);
     }
 
     @Override
@@ -239,6 +241,26 @@ public class DerbyStorage extends DatabaseStorage implements Configurable {
             touchRecord(parent.getId(), conn);
             touchParents(parent.getId(), options, conn);
         }
+    }
+
+    // Derby is very bad at large result sets
+    @Override
+    public boolean usePagingResultSets() {
+        return true;
+    }
+
+    // Genrally Java embedded DBs are bad at JOINs over tables with many rows,
+    // however Derby's internal connection handling is too random, so we need
+    // to do the JOINs
+    @Override
+    public boolean useLazyRelationLookups() {
+        return false;
+    }
+
+    @Override
+    public String getPagingStatement(String sql) {
+        // You gotta love this minimalistic syntax :-S
+        return sql + " FETCH NEXT " + getPageSize() + " ROWS ONLY";
     }
 }
 
