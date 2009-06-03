@@ -144,6 +144,10 @@
                                     <value class="int">1000</value>
                                 </entry>
                                 <entry>
+                                    <key>summa.index.forceconsolidateonclose</key>
+                                    <value class="boolean">true</value>
+                                </entry>
+                                <entry>
                                     <key>summa.index.descriptorsetup</key>
                                     <value class="xproperties">
                                         <entry>

@@ -84,7 +84,7 @@ public class FacetTest extends NoExitTestCase {
         }
     }
 
-    private Configuration getSearcherConfiguration() throws IOException {
+    public static Configuration getSearcherConfiguration() throws IOException {
         URL descriptorLocation = Resolver.getURL(
                 "data/search/SearchTest_IndexDescriptor.xml");
         assertNotNull("The descriptor location should not be null",
@@ -172,8 +172,8 @@ public class FacetTest extends NoExitTestCase {
         storage.close();
     }
 
-    private void verifyFacetResult(SummaSearcher searcher,
-                                   String query) throws IOException {
+    public static  void verifyFacetResult(SummaSearcher searcher,
+                                          String query) throws IOException {
         String res = searcher.search(SearchTest.simpleRequest(query)).toXML();
         if (!res.contains("<facet name=\"author\">")) {
             fail("Search for '" + query
