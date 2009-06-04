@@ -1,0 +1,1013 @@
+<?xml version="1.0"?>
+<project default="all" name="Control" basedir=".">
+
+    <!--
+       PROPERTIES
+    -->
+
+    <property file="${basedir}/../build.properties"/>
+
+    <!-- Project properties -->
+    <property name="project.name" value="summa-control"/>
+    <property name="project.version" value="${summa.version}"/>
+    <property name="release" value="${project.name}-${project.version}"/>
+    <property name="release.jar" value="${release}.jar"/>
+    <property name="release.api" value="${project.name}-api-${project.version}"/>
+    <property name="release.api.jar" value="${release.api}.jar"/>
+    <property name="release.bundles" value="${project.name}-test-bundles-${project.version}"/>
+    <property name="release.bundles.zip" value="${release.bundles}.zip"/>
+    <property name="bundleTool.release.jar" value="summa-bundletool-${project.version}.jar"/>
+
+    <!-- Persistent directories -->
+    <property name="src.dir" value="${basedir}/src"/>
+    <property name="test.src.dir" value="${basedir}/test"/>
+    <property name="config.dir" value="${basedir}/config"/>
+
+    <!-- Temporary files and directories -->
+    <property name="build.dir" value="${basedir}/${summa.classes.dir}"/>
+    <property name="test.build.dir" value="${basedir}/${summa.test.classes.dir}"/>
+    <property name="doc.dir" value="${basedir}/${summa.apidocs.dir}"/>
+    <property name="lib.dir" value="${basedir}/lib"/>
+    <property name="dist.dir" value="${basedir}/${summa.dist.dir}"/>
+    <property name="tmp.dir" value="${basedir}/tmp"/>
+
+    <tstamp>
+        <format property="build.time" pattern="MM/dd/yyyy HH:mm"/>
+    </tstamp>
+
+    <!-- Path definitions -->
+    <path id="lib.path">
+        <fileset dir="${lib.dir}">
+            <include name="**/*.jar"/>
+            <exclude name="junit*"/>
+        </fileset>
+    </path>
+
+    <path id="test.lib.path">
+        <path refid="lib.path" />
+        <pathelement location="${build.dir}" />
+        <pathelement location="${test.build.dir}" />
+        <pathelement location="${ant.home}/lib/ant-junit.jar"/>
+        <pathelement location="${test.src.dir}"/>
+        <pathelement location="${summa.lib.junit}"/>
+    </path>
+    
+    <!-- Internal project dependencies -->
+    <path id="lib.internal">    
+        <pathelement location="../Common/${summa.classes.dir}"/>
+        <pathelement location="../Storage/${summa.classes.dir}"/>
+        <pathelement location="../Ingest/${summa.classes.dir}"/>
+        <pathelement location="../Index/${summa.classes.dir}"/>
+        <pathelement location="../Search/${summa.classes.dir}"/>
+        <pathelement location="../Support/${summa.classes.dir}"/>
+        <pathelement location="../FacetBrowser/${summa.classes.dir}"/>
+    </path>
+    
+    <!-- lib.files : set by the .checkDepends target -->
+
+    <!--
+       TARGETS
+    -->
+
+    <target name=".phony"><!-- Dummy target --></target>
+
+    <target name=".compileCommon">
+        <ant inheritAll="false" dir="../Common" target="compile"/>
+    </target>
+
+    <target name=".releaseCommon">
+        <ant inheritAll="false" dir="../Common" target="release"/>
+    </target>
+
+    <target name=".compileStorage">
+        <ant inheritAll="false" dir="../Storage" target="compile"/>
+    </target>
+
+    <target name=".releaseStorage">
+        <ant inheritAll="false" dir="../Storage" target="release"/>
+    </target>
+
+    <target name=".compileIngest">
+        <ant inheritAll="false" dir="../Ingest" target="compile"/>
+    </target>
+
+    <target name=".releaseIngest">
+        <ant inheritAll="false" dir="../Ingest" target="release"/>
+    </target>
+
+    <target name=".compileIndex">
+        <ant inheritAll="false" dir="../Index" target="compile"/>
+    </target>
+
+    <target name=".releaseIndex">
+        <ant inheritAll="false" dir="../Index" target="release"/>
+    </target>
+
+    <target name=".compileSearch">
+        <ant inheritAll="false" dir="../Search" target="compile"/>
+    </target>
+
+    <target name=".releaseSearch">
+        <ant inheritAll="false" dir="../Search" target="release"/>
+    </target>
+
+    <target name=".compileSupport">
+        <ant inheritAll="false" dir="../Support" target="compile"/>
+    </target>
+
+    <target name=".releaseSupport">
+        <ant inheritAll="false" dir="../Support" target="release"/>
+    </target>
+
+    <target name=".compileFacetBrowser">
+        <ant inheritAll="false" dir="../FacetBrowser" target="compile"/>
+    </target>
+
+    <target name=".releaseFacetBrowser">
+        <ant inheritAll="false" dir="../FacetBrowser" target="release"/>
+    </target>
+
+    <target name="depends">
+        <!-- Check global dependencies -->
+        <ant inheritall="false" dir=".." target="depends"/>
+
+        <!-- If libs/ does not exist, call getLibs target -->
+        <echo message="Checking for libs/"/>
+        <condition property="newTask" value=".phony" else=".getLibs">
+            <and>
+                <available file="${summa.lib.log4j}"/>
+                <available file="${summa.lib.commons-logging}"/>
+                <available file="${summa.lib.commons-cli}"/>
+                <available file="${summa.lib.junit}"/>
+                <available file="${summa.lib.jline}"/>
+                <available file="${summa.lib.sbutil}"/>
+                <available file="${summa.lib.lucene}"/>
+                <available file="${summa.lib.lucene.queries}"/>
+            </and>
+        </condition>
+        <antcall target="${newTask}"/>
+
+        <!-- Check that Common is compiled -->
+        <echo message="Checking whether Common is compiled"/>
+        <condition property="compileCommonTask" value=".phony" else=".compileCommon">
+            <available file="../Common/${summa.classes.dir}"/>
+        </condition>
+        <antcall target="${compileCommonTask}"/>
+
+        <!-- Check that Storage is compiled -->
+        <echo message="Checking whether Storage is compiled"/>
+        <condition property="compileStorageTask" value=".phony" else=".compileStorage">
+            <available file="../Storage/${summa.classes.dir}"/>
+        </condition>
+        <antcall target="${compileStorageTask}"/>
+
+        <!-- Check that Ingest is compiled -->
+        <echo message="Checking whether Ingest is compiled"/>
+        <condition property="compileIngestTask" value=".phony" else=".compileIngest">
+            <available file="../Ingest/${summa.classes.dir}"/>
+        </condition>
+        <antcall target="${compileIngestTask}"/>
+
+        <!-- Check that Index is compiled -->
+        <echo message="Checking whether Index is compiled"/>
+        <condition property="compileIndexTask" value=".phony" else=".compileIndex">
+            <available file="../Index/${summa.classes.dir}"/>
+        </condition>
+        <antcall target="${compileIndexTask}"/>
+
+        <!-- Check that Search is compiled -->
+        <echo message="Checking whether Search is compiled"/>
+        <condition property="compileSearchTask" value=".phony" else=".compileSearch">
+            <available file="../Search/${summa.classes.dir}"/>
+        </condition>
+        <antcall target="${compileSearchTask}"/>
+
+        <!-- Check that Support is compiled -->
+        <echo message="Checking whether Support is compiled"/>
+        <condition property="compileSupportTask" value=".phony" else=".compileSupport">
+            <available file="../Support/${summa.classes.dir}"/>
+        </condition>
+        <antcall target="${compileSupportTask}"/>
+
+        <!-- Check that FacetBrowser is compiled -->
+        <echo message="Checking whether FacetBrowser is compiled"/>
+        <condition property="compileFacetBrowserTask" value=".phony" else=".compileFacetBrowser">
+            <available file="../FacetBrowser/${summa.classes.dir}"/>
+        </condition>
+        <antcall target="${compileSupportTask}"/>
+
+        <!-- Store space-separated list of lib-filenames in lib.files -->
+        <pathconvert refid="lib.path" property="lib.files" pathsep=" ">
+            <map from="${lib.dir}/" to=""/>
+        </pathconvert>
+    </target>
+
+    <target name=".release.depends" depends="depends">
+        <!-- Check that Common release is compiled -->
+        <condition property="releaseCommonTask" value=".phony" else=".releaseCommon">
+            <available file="../${summa.ilib.common}"/>
+        </condition>
+        <antcall target="${releaseCommonTask}"/>
+
+        <!-- Check that Storage release is compiled -->
+        <condition property="releaseStorageTask" value=".phony" else=".releaseStorage">
+            <available file="../${summa.ilib.storage}"/>
+        </condition>
+        <antcall target="${releaseStorageTask}"/>
+
+        <!-- Check that Ingest release is compiled -->
+        <condition property="releaseIngestTask" value=".phony" else=".releaseIngest">
+            <available file="../${summa.ilib.ingest}"/>
+        </condition>
+        <antcall target="${releaseIngestTask}"/>
+
+        <!-- Check that Index release is compiled -->
+        <condition property="releaseIndexTask" value=".phony" else=".releaseIndex">
+            <available file="../${summa.ilib.index}"/>
+        </condition>
+        <antcall target="${releaseIndexTask}"/>
+
+        <!-- Check that Search release is compiled -->
+        <condition property="releaseSearchTask" value=".phony" else=".releaseSearch">
+            <available file="../${summa.ilib.search}"/>
+        </condition>
+        <antcall target="${releaseSearchTask}"/>
+
+        <!-- Check that Support release is compiled -->
+        <condition property="releaseSupportTask" value=".phony" else=".releaseSupport">
+            <available file="../${summa.ilib.support}"/>
+        </condition>
+        <antcall target="${releaseSupportTask}"/>
+
+        <!-- Check that FacetBrowser release is compiled -->
+        <condition property="releaseFacetBrowserTask" value=".phony" else=".releaseFacetBrowser">
+            <available file="../${summa.ilib.facetbrowser}"/>
+        </condition>
+        <antcall target="${releaseFacetBrowserTask}"/>
+    </target>
+
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+        <delete dir="${test.build.dir}"/>
+        <delete dir="${tmp.dir}"/>
+        <delete file="${release.jar}"/>
+        <delete file="${release.api.jar}"/>
+    </target>
+
+    <target name="distclean" depends="clean">
+        <delete dir="${dist.dir}"/>
+        <delete dir="${lib.dir}"/>
+        <delete dir="${doc.dir}"/>
+    </target>
+
+    <target name=".getLibs">
+        <delete dir="${lib.dir}"/>
+        <mkdir dir="${lib.dir}"/>
+        <copy file="${basedir}/../${summa.lib.log4j}" tofile="${summa.lib.log4j}"/>
+        <copy file="${basedir}/../${summa.lib.commons-logging}" tofile="${summa.lib.commons-logging}"/>
+        <copy file="${basedir}/../${summa.lib.commons-cli}" tofile="${summa.lib.commons-cli}"/>
+        <copy file="${basedir}/../${summa.lib.junit}" tofile="${summa.lib.junit}"/>
+        <copy file="${basedir}/../${summa.lib.jline}" tofile="${summa.lib.jline}"/>
+        <copy file="${basedir}/../${summa.lib.sbutil}" tofile="${summa.lib.sbutil}"/>
+        <copy file="${basedir}/../${summa.lib.lucene}" tofile="${summa.lib.lucene}"/>
+        <copy file="${basedir}/../${summa.lib.lucene.queries}" tofile="${summa.lib.lucene.queries}"/>
+    </target>
+
+
+    <target name="compile" depends="depends">
+        <mkdir dir="${build.dir}"/>
+        <javac srcdir="${src.dir}" destdir="${build.dir}" encoding="UTF-8"
+               compiler="${summa.compiler}" optimize="${summa.compiler.optimize}"
+               debug="${summa.compiler.debug}">
+            <classpath refid="lib.path"/>
+            <classpath refid="lib.internal"/>            
+        </javac>
+    </target>
+
+    <target name="test.compile" depends="compile">
+        <mkdir dir="${test.build.dir}"/>
+        <javac srcdir="${test.src.dir}" destdir="${test.build.dir}" encoding="UTF-8"
+               compiler="${summa.compiler}" optimize="${summa.compiler.optimize}"
+               debug="on">
+            <classpath refid="lib.path"/>
+            <classpath refid="test.lib.path"/>
+            <classpath refid="lib.internal"/>
+        </javac>
+    </target>
+
+    <target name="doc" depends="compile">
+        <mkdir dir="${doc.dir}"/>
+        <javadoc
+                packagenames="dk.statsbiblioteket.summa.*"
+                destdir="${doc.dir}"
+                author="true"
+                version="true"
+                access="private"
+                windowtitle="Summa Distributed Computing Environment (Dice)"
+                additionalparam="-breakiterator">
+
+            <classpath refid="lib.path"/>
+            <classpath refid="lib.internal"/>
+
+            <packageset dir="${src.dir}">
+                <include name="dk/statsbiblioteket/summa/**"/>
+            </packageset>
+        </javadoc>
+
+    </target>
+
+    <target name=".jar" depends="compile">
+        <jar basedir="${build.dir}" compress="true" jarfile="${release.jar}"/>
+        <jar basedir="${build.dir}" compress="true" jarfile="${release.api.jar}"
+             includes="dk/statsbiblioteket/summa/control/api/**/*"/>
+        <mkdir dir="${dist.dir}/summa-control-${summa.version}/"/>
+        <copy todir="${dist.dir}/summa-control-${summa.version}/">
+            <fileset dir="." includes="${release.jar}"/>
+            <fileset dir="." includes="${release.api.jar}"/>
+        </copy>
+    </target>
+
+    <target name=".scripts" depends=".release.depends">
+        <mkdir dir="${dist.dir}/bin"/>
+        <copy todir="${dist.dir}/bin">
+            <fileset dir="scripts" includes="**/*"/>
+        </copy>
+        <replace value="!not found!" propertyfile="../build.properties"
+                 dir="${dist.dir}/bin">
+            <replacefilter
+                token="@summa.ilib.common@" 
+                value="lib/summa-common-${summa.version}.jar"/>
+            <replacefilter
+                token="@summa.ilib.control@"
+                value="${release.jar}"/>
+            <replacefilter
+                token="@summa.ilib.search@"
+                value="lib/summa-search-${summa.version}.jar"/>
+        </replace>
+    </target>
+
+    <target name=".release.bundles" depends="depends, .release.depends, .jar, .test-client-1.bundle, .test-storage-1.bundle, .test-ingest-oai.bundle, .test-facet-index-1.bundle, .test-facet-search-1.bundle, .test-index-oai.bundle, .test-search-1.bundle">
+        <mkdir dir="${dist.dir}"/>
+        <zip destfile="${dist.dir}/${release.bundles.zip}">
+            <zipfileset prefix="${release.bundles}" dir="${dist.dir}">
+                <include name="*.bundle"/>
+            </zipfileset>
+            <zipfileset prefix="${release.bundles}" dir="${test.src.dir}">
+                <include name="*data/**/*"/>
+            </zipfileset>
+        </zip>
+    </target>
+
+    <target name=".release.bundleTool" depends="compile, .releaseCommon">
+        <delete dir="${tmp.dir}"/>
+        <mkdir dir="${tmp.dir}"/>
+
+        <mkdir dir="${dist.dir}"/>
+
+        <!-- Prepare libs for bundling -->
+        <unzip dest="${tmp.dir}">
+            <fileset dir="lib">
+                <include name="*.jar"/>
+                <exclude name="junit*.jar"/>
+            </fileset>
+            <fileset dir="${basedir}/..">
+                <include name="${summa.ilib.common}"/>
+            </fileset>
+        </unzip>
+
+        <!-- Prepare class files -->
+        <copy todir="${tmp.dir}">
+            <fileset dir="${build.dir}"
+                 includes="dk/statsbiblioteket/summa/**/*"/>
+        </copy>
+
+        <copy file="${config.dir}/log4j.xml" todir="${tmp.dir}"/>
+
+        <!-- Roll the .jar -->
+        <jar basedir="${tmp.dir}" compress="true"
+             jarfile="${dist.dir}/${bundleTool.release.jar}" includes="**/*">
+            <manifest>
+                <attribute name="Main-Class"
+                   value="dk.statsbiblioteket.summa.control.bundle.BundleTool"/>
+            </manifest>
+        </jar>
+    </target>
+
+    <target name="release" depends="distclean, depends, .scripts, .release.depends,.jar, doc">
+
+        <mkdir dir="${dist.dir}"/>
+        
+        <property name="prefix" value="${release}"/>
+
+        <replaceregexp match="\$Id[^\$]*\$" replace="${project.name}-${project.version} - build date ${build.time}">
+            <fileset dir="${doc.dir}" includes="**/*"/>
+         </replaceregexp>
+
+        <zip destfile="${dist.dir}/${release}.zip">
+
+            <zipfileset prefix="${prefix}" file="${release.jar}"/>
+            <zipfileset prefix="${prefix}" file="${release.api.jar}"/>
+            
+            <zipfileset prefix="${prefix}" file="${basedir}/../${summa.license}"/>
+
+            <zipfileset prefix="${prefix}/lib" dir="${lib.dir}" includes="${lib.files}"/>
+            <zipfileset prefix="${prefix}/lib" file="../${summa.ilib.common}"/>
+            <zipfileset prefix="${prefix}/lib" file="../${summa.ilib.storage}"/>
+            <zipfileset prefix="${prefix}/lib" file="../${summa.ilib.storage.api}"/>
+            <zipfileset prefix="${prefix}/lib" file="../${summa.ilib.ingest}"/>
+            <zipfileset prefix="${prefix}/lib" file="../${summa.ilib.index}"/>
+            <zipfileset prefix="${prefix}/lib" file="../${summa.ilib.search}"/>
+            <zipfileset prefix="${prefix}/lib" file="../${summa.ilib.search.api}"/>
+            <zipfileset prefix="${prefix}/lib" file="../${summa.ilib.support}"/>
+            <zipfileset prefix="${prefix}/lib" file="../${summa.ilib.support.api}"/>
+
+            <zipfileset prefix="${prefix}/config" file="${basedir}/config/log4j.xml"/>
+            <zipfileset prefix="${prefix}/config" file="${basedir}/config/configuration-server.xml"/>
+            <zipfileset prefix="${prefix}/config" file="${basedir}/config/control.configuration.xml"/>
+            <zipfileset prefix="${prefix}/config" file="${basedir}/config/search-tool.configuration.xml"/>
+            <zipfileset prefix="${prefix}/config" file="${basedir}/config/storage-tool.configuration.xml"/>
+            <zipfileset prefix="${prefix}/config" file="${basedir}/config/server.policy"/>
+
+            <zipfileset dir="${basedir}/config/jmx" prefix="${prefix}/config/jmx" filemode="600">
+                <include name="jmx.password"/>
+                <include name="jmxremote.access"/>
+            </zipfileset>
+                                                                                
+            <zipfileset dir="${dist.dir}/bin" prefix="${prefix}/bin" filemode="755">
+                <include name="*"/>
+            </zipfileset>
+
+            <zipfileset dir="${doc.dir}" prefix="${prefix}/${summa.apidocs.dir}">
+                <include name="**/*"/>
+            </zipfileset>
+        </zip>
+    </target>
+
+    <target name=".test-data">
+        <delete dir="${dist.dir}/data"/>
+        <mkdir dir="${dist.dir}/data"/>
+        <copy todir="${dist.dir}/data">
+            <fileset dir="${test.src.dir}/data" includes="**/**"/>
+        </copy>
+    </target>
+
+    <target name=".test-search-1.bundle" depends=".jar, test.compile">
+        <mkdir dir="${tmp.dir}"/>
+
+        <!-- Create jar file for test service -->
+        <jar basedir="${test.build.dir}" compress="true" jarfile="${tmp.dir}/test.jar"/>
+
+        <!-- Roll service bundle -->
+        <copy todir="${tmp.dir}">
+            <fileset dir="${test.src.dir}" includes="**/*.xml"/>
+        </copy>
+        <replace value="!not found!" propertyfile="../build.properties"
+                 dir="${tmp.dir}">
+            <replacefilter
+                token="@project.version@"
+                value="lib/summa-common-${summa.version}.jar"/>
+            <replacefilter
+                token="@release.jar@"
+                value="${release.jar}"/>
+            <replacefilter
+                token="@summa.version@"
+                value="${summa.version}"/>
+        </replace>
+
+        <zip destfile="${dist.dir}/test-search-1.bundle">
+
+            <zipfileset file="${tmp.dir}/test-search-1/service.xml"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.common}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.search}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.search.api}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.support}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.support.api}"/>
+            <zipfileset prefix="lib" file="${summa.lib.commons-logging}"/>
+            <zipfileset prefix="lib" file="${summa.lib.log4j}"/>
+            <zipfileset prefix="lib" file="${summa.lib.sbutil}"/>
+            <zipfileset prefix="lib" file="${summa.lib.lucene}"/>
+            <zipfileset prefix="lib" file="${summa.lib.lucene.queries}"/>
+            <zipfileset prefix="lib" file="${release.jar}"/>
+
+            <zipfileset prefix="config" file="${test.src.dir}/test-search-1/config/configuration.xml"/>
+            <zipfileset prefix="config" file="${basedir}/config/log4j.xml"/>
+
+            <zipfileset dir="${test.src.dir}/test-search-1/config" prefix="config" filemode="600">
+                <include name="jmx.password"/>
+                <include name="jmx.access"/>
+                <include name="policy"/>
+            </zipfileset>
+
+        </zip>
+
+        <delete dir="${tmp.dir}"/>
+    </target>
+
+    <target name=".test-facet-index-1.bundle" depends=".jar, test.compile">
+        <mkdir dir="${tmp.dir}"/>
+
+        <!-- Create jar file for test service -->
+        <jar basedir="${test.build.dir}" compress="true" jarfile="${tmp.dir}/test.jar"/>
+
+        <!-- Roll service bundle -->
+        <copy todir="${tmp.dir}">
+            <fileset dir="${test.src.dir}" includes="**/*.xml"/>
+        </copy>
+        <replace value="!not found!" propertyfile="../build.properties"
+                 dir="${tmp.dir}">
+            <replacefilter
+                token="@project.version@"
+                value="lib/summa-common-${summa.version}.jar"/>
+            <replacefilter
+                token="@release.jar@"
+                value="${release.jar}"/>
+            <replacefilter
+                token="@summa.version@"
+                value="${summa.version}"/>
+        </replace>
+
+        <zip destfile="${dist.dir}/test-facet-index-1.bundle">
+
+            <zipfileset file="${tmp.dir}/test-facet-index-1/service.xml"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.common}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.storage.api}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.index}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.support}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.support.api}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.facetbrowser}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.facetbrowser.api}"/>
+            <zipfileset prefix="lib" file="${summa.lib.commons-logging}"/>
+            <zipfileset prefix="lib" file="${summa.lib.log4j}"/>
+            <zipfileset prefix="lib" file="${summa.lib.sbutil}"/>
+            <zipfileset prefix="lib" file="${summa.lib.lucene}"/>
+            <zipfileset prefix="lib" file="${release.jar}"/>
+
+            <zipfileset prefix="config" file="${test.src.dir}/test-facet-index-1/config/configuration.xml"/>
+            <zipfileset prefix="config" file="${basedir}/config/log4j.xml"/>
+
+            <zipfileset dir="${test.src.dir}/test-facet-index-1/config" prefix="config" filemode="600">
+                <include name="jmx.password"/>
+                <include name="jmx.access"/>
+                <include name="policy"/>
+            </zipfileset>
+
+        </zip>
+
+        <delete dir="${tmp.dir}"/>
+    </target>
+
+    <target name=".test-facet-search-1.bundle" depends=".jar, test.compile">
+        <mkdir dir="${tmp.dir}"/>
+
+        <!-- Create jar file for test service -->
+        <jar basedir="${test.build.dir}" compress="true" jarfile="${tmp.dir}/test.jar"/>
+
+        <!-- Roll service bundle -->
+        <copy todir="${tmp.dir}">
+            <fileset dir="${test.src.dir}" includes="**/*.xml"/>
+        </copy>
+        <replace value="!not found!" propertyfile="../build.properties"
+                 dir="${tmp.dir}">
+            <replacefilter
+                token="@project.version@"
+                value="lib/summa-common-${summa.version}.jar"/>
+            <replacefilter
+                token="@release.jar@"
+                value="${release.jar}"/>
+            <replacefilter
+                token="@summa.version@"
+                value="${summa.version}"/>
+        </replace>
+
+        <zip destfile="${dist.dir}/test-facet-search-1.bundle">
+
+            <zipfileset file="${tmp.dir}/test-facet-search-1/service.xml"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.common}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.search}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.search.api}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.support}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.support.api}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.facetbrowser}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.facetbrowser.api}"/>
+            <zipfileset prefix="lib" file="${summa.lib.commons-logging}"/>
+            <zipfileset prefix="lib" file="${summa.lib.log4j}"/>
+            <zipfileset prefix="lib" file="${summa.lib.sbutil}"/>
+            <zipfileset prefix="lib" file="${summa.lib.lucene}"/>
+            <zipfileset prefix="lib" file="${summa.lib.lucene.queries}"/>
+            <zipfileset prefix="lib" file="${release.jar}"/>
+
+            <zipfileset prefix="config" file="${test.src.dir}/test-facet-search-1/config/configuration.xml"/>
+            <zipfileset prefix="config" file="${basedir}/config/log4j.xml"/>
+
+            <zipfileset dir="${test.src.dir}/test-facet-search-1/config" prefix="config" filemode="600">
+                <include name="jmx.password"/>
+                <include name="jmx.access"/>
+                <include name="policy"/>
+            </zipfileset>
+
+        </zip>
+
+        <delete dir="${tmp.dir}"/>
+    </target>
+
+    <target name=".test-ingest-1.bundle" depends=".jar, test.compile">
+        <mkdir dir="${tmp.dir}"/>
+
+        <!-- Create jar file for test service -->
+        <jar basedir="${test.build.dir}" compress="true" jarfile="${tmp.dir}/test-ingest-service-${summa.version}.jar"/>
+
+        <!-- Roll service bundle -->
+        <copy todir="${tmp.dir}">
+            <fileset dir="${test.src.dir}" includes="**/*.xml"/>
+        </copy>
+        <replace value="!not found!" propertyfile="../build.properties"
+                 dir="${tmp.dir}">
+            <replacefilter
+                token="@project.version@"
+                value="lib/summa-common-${summa.version}.jar"/>
+            <replacefilter
+                token="@release.jar@"
+                value="${release.jar}"/>
+            <replacefilter
+                token="@summa.version@"
+                value="${summa.version}"/>
+        </replace>
+
+        <zip destfile="${dist.dir}/test-ingest-1.bundle">
+
+            <zipfileset file="${tmp.dir}/test-ingest-service-${summa.version}.jar"/>
+
+            <zipfileset file="${tmp.dir}/test-ingest-1/service.xml"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.common}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.storage.api}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.ingest}"/>
+            <zipfileset prefix="lib" file="${summa.lib.commons-logging}"/>
+            <zipfileset prefix="lib" file="${summa.lib.log4j}"/>
+            <zipfileset prefix="lib" file="${summa.lib.sbutil}"/>
+            <zipfileset prefix="lib" file="${release.jar}"/>
+
+            <zipfileset prefix="config" file="${test.src.dir}/test-ingest-1/config/configuration.xml"/>
+            <zipfileset prefix="config" file="${basedir}/config/log4j.xml"/>
+
+            <zipfileset dir="${test.src.dir}/test-ingest-1/config" prefix="config" filemode="600">
+                <include name="jmx.password"/>
+                <include name="jmx.access"/>
+                <include name="policy"/>
+            </zipfileset>
+
+        </zip>
+
+        <delete dir="${tmp.dir}"/>
+    </target>
+
+    <target name=".test-ingest-fagref.bundle" depends=".jar, test.compile">
+        <mkdir dir="${tmp.dir}"/>
+
+        <!-- Create jar file for test service -->
+        <jar basedir="${test.build.dir}" compress="true" jarfile="${tmp.dir}/test-ingest-fagref-service-${summa.version}.jar"/>
+
+        <!-- Roll service bundle -->
+        <copy todir="${tmp.dir}">
+            <fileset dir="${test.src.dir}" includes="**/*.xml"/>
+        </copy>
+        <replace value="!not found!" propertyfile="../build.properties"
+                 dir="${tmp.dir}">
+            <replacefilter
+                token="@project.version@"
+                value="lib/summa-common-${summa.version}.jar"/>
+            <replacefilter
+                token="@release.jar@"
+                value="${release.jar}"/>
+            <replacefilter
+                token="@summa.version@"
+                value="${summa.version}"/>
+        </replace>
+
+        <zip destfile="${dist.dir}/test-ingest-fagref.bundle">
+
+            <zipfileset file="${tmp.dir}/test-ingest-fagref-service-${summa.version}.jar"/>
+
+            <zipfileset file="${tmp.dir}/test-ingest-fagref/service.xml"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.common}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.storage.api}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.ingest}"/>
+            <zipfileset prefix="lib" file="${summa.lib.commons-logging}"/>
+            <zipfileset prefix="lib" file="${summa.lib.log4j}"/>
+            <zipfileset prefix="lib" file="${summa.lib.sbutil}"/>
+            <zipfileset prefix="lib" file="${release.jar}"/>
+
+            <zipfileset prefix="config" file="${test.src.dir}/test-ingest-fagref/config/configuration.xml"/>
+            <zipfileset prefix="config" file="${basedir}/config/log4j.xml"/>
+
+            <zipfileset dir="${test.src.dir}/test-ingest-fagref/config" prefix="config" filemode="600">
+                <include name="jmx.password"/>
+                <include name="jmx.access"/>
+                <include name="policy"/>
+            </zipfileset>
+
+        </zip>
+
+        <delete dir="${tmp.dir}"/>
+    </target>
+
+    <target name=".test-ingest-oai.bundle" depends=".jar, test.compile">
+        <mkdir dir="${tmp.dir}"/>
+
+        <!-- Create jar file for test service -->
+        <jar basedir="${test.build.dir}" compress="true" jarfile="${tmp.dir}/test-ingest-oai-service-${summa.version}.jar"/>
+
+        <!-- Roll service bundle -->
+        <copy todir="${tmp.dir}">
+            <fileset dir="${test.src.dir}" includes="**/*.xml"/>
+        </copy>
+        <replace value="!not found!" propertyfile="../build.properties"
+                 dir="${tmp.dir}">
+            <replacefilter
+                token="@project.version@"
+                value="lib/summa-common-${summa.version}.jar"/>
+            <replacefilter
+                token="@release.jar@"
+                value="${release.jar}"/>
+            <replacefilter
+                token="@summa.version@"
+                value="${summa.version}"/>
+        </replace>
+
+        <zip destfile="${dist.dir}/test-ingest-oai.bundle">
+
+            <zipfileset file="${tmp.dir}/test-ingest-oai-service-${summa.version}.jar"/>
+
+            <zipfileset file="${tmp.dir}/test-ingest-oai/service.xml"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.common}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.storage.api}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.ingest}"/>
+            <zipfileset prefix="lib" file="${summa.lib.commons-logging}"/>
+            <zipfileset prefix="lib" file="${summa.lib.log4j}"/>
+            <zipfileset prefix="lib" file="${summa.lib.sbutil}"/>
+            <zipfileset prefix="lib" file="${release.jar}"/>
+
+            <zipfileset prefix="config" file="${test.src.dir}/test-ingest-oai/config/configuration.xml"/>
+            <zipfileset prefix="config" file="${basedir}/config/log4j.xml"/>
+
+            <zipfileset dir="${test.src.dir}/test-ingest-oai/config" prefix="config" filemode="600">
+                <include name="jmx.password"/>
+                <include name="jmx.access"/>
+                <include name="policy"/>
+            </zipfileset>
+
+        </zip>
+
+        <delete dir="${tmp.dir}"/>
+    </target>
+
+    <target name=".test-index-fagref.bundle" depends=".jar, test.compile">
+        <mkdir dir="${tmp.dir}"/>
+
+        <!-- Create jar file for test service -->
+        <jar basedir="${test.build.dir}" compress="true" jarfile="${tmp.dir}/test-index-fagref-service-${summa.version}.jar"/>
+
+        <!-- Roll service bundle -->
+        <copy todir="${tmp.dir}">
+            <fileset dir="${test.src.dir}" includes="**/*.xml"/>
+        </copy>
+        <replace value="!not found!" propertyfile="../build.properties"
+                 dir="${tmp.dir}">
+            <replacefilter
+                token="@project.version@"
+                value="lib/summa-common-${summa.version}.jar"/>
+            <replacefilter
+                token="@release.jar@"
+                value="${release.jar}"/>
+            <replacefilter
+                token="@summa.version@"
+                value="${summa.version}"/>
+        </replace>
+
+        <zip destfile="${dist.dir}/test-index-fagref.bundle">
+
+            <zipfileset file="${tmp.dir}/test-index-fagref-service-${summa.version}.jar"/>
+
+            <zipfileset file="${tmp.dir}/test-index-fagref/service.xml"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.common}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.storage.api}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.index}"/>
+            <zipfileset prefix="lib" file="${summa.lib.commons-logging}"/>
+            <zipfileset prefix="lib" file="${summa.lib.log4j}"/>
+            <zipfileset prefix="lib" file="${summa.lib.sbutil}"/>
+            <zipfileset prefix="lib" file="${summa.lib.lucene}"/>
+            <zipfileset prefix="lib" file="${release.jar}"/>
+
+            <zipfileset prefix="config" file="${test.src.dir}/test-index-fagref/config/configuration.xml"/>
+            <zipfileset prefix="config" file="${basedir}/config/log4j.xml"/>
+
+            <zipfileset dir="${test.src.dir}/test-index-fagref/config" prefix="config" filemode="600">
+                <include name="jmx.password"/>
+                <include name="jmx.access"/>
+                <include name="policy"/>
+            </zipfileset>
+
+        </zip>
+
+        <delete dir="${tmp.dir}"/>
+    </target>
+
+    <target name=".test-index-oai.bundle" depends=".jar, test.compile">
+        <mkdir dir="${tmp.dir}"/>
+
+        <!-- Create jar file for test service -->
+        <jar basedir="${test.build.dir}" compress="true" jarfile="${tmp.dir}/test-index-oai-service-${summa.version}.jar"/>
+
+        <!-- Roll service bundle -->
+        <copy todir="${tmp.dir}">
+            <fileset dir="${test.src.dir}" includes="**/*.xml"/>
+        </copy>
+        <replace value="!not found!" propertyfile="../build.properties"
+                 dir="${tmp.dir}">
+            <replacefilter
+                token="@project.version@"
+                value="lib/summa-common-${summa.version}.jar"/>
+            <replacefilter
+                token="@release.jar@"
+                value="${release.jar}"/>
+            <replacefilter
+                token="@summa.version@"
+                value="${summa.version}"/>
+        </replace>
+
+        <zip destfile="${dist.dir}/test-index-oai.bundle">
+
+            <zipfileset file="${tmp.dir}/test-index-oai-service-${summa.version}.jar"/>
+
+            <zipfileset file="${tmp.dir}/test-index-oai/service.xml"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.common}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.storage.api}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.index}"/>
+            <zipfileset prefix="lib" file="${summa.lib.commons-logging}"/>
+            <zipfileset prefix="lib" file="${summa.lib.log4j}"/>
+            <zipfileset prefix="lib" file="${summa.lib.sbutil}"/>
+            <zipfileset prefix="lib" file="${summa.lib.lucene}"/>
+            <zipfileset prefix="lib" file="${release.jar}"/>
+
+            <zipfileset prefix="config" file="${test.src.dir}/test-index-oai/config/configuration.xml"/>
+            <zipfileset prefix="config" file="${basedir}/config/log4j.xml"/>
+
+            <zipfileset dir="${test.src.dir}/test-index-oai/config" prefix="config" filemode="600">
+                <include name="jmx.password"/>
+                <include name="jmx.access"/>
+                <include name="policy"/>
+            </zipfileset>
+
+        </zip>
+
+        <delete dir="${tmp.dir}"/>
+    </target>
+
+    <target name=".test-storage-1.bundle" depends=".jar, compile">
+        <mkdir dir="${tmp.dir}"/>
+
+        <!-- Create jar file for Storage service -->
+        <jar basedir="${build.dir}" compress="true" jarfile="${tmp.dir}/storage-service-${summa.version}.jar"/>
+
+        <!-- Roll service bundle -->
+        <copy todir="${tmp.dir}">
+            <fileset dir="${test.src.dir}" includes="**/*.xml"/>
+        </copy>
+        <replace value="!not found!" propertyfile="../build.properties"
+                 dir="${tmp.dir}">
+            <replacefilter
+                token="@project.version@"
+                value="lib/summa-common-${summa.version}.jar"/>
+            <replacefilter
+                token="@release.jar@"
+                value="${release.jar}"/>
+            <replacefilter
+                token="@summa.version@"
+                value="${summa.version}"/>
+        </replace>
+
+        <zip destfile="${dist.dir}/test-storage-1.bundle">
+
+            <zipfileset file="${tmp.dir}/storage-service-${summa.version}.jar"/>
+
+            <zipfileset file="${tmp.dir}/test-storage-1/service.xml"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.common}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.storage}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.storage.api}"/>
+            <zipfileset prefix="lib" file="${summa.lib.commons-logging}"/>
+            <zipfileset prefix="lib" file="${summa.lib.log4j}"/>
+            <zipfileset prefix="lib" file="${basedir}/../${summa.lib.derby}"/>
+            <zipfileset prefix="lib" file="${basedir}/../${summa.lib.h2}"/>
+            <zipfileset prefix="lib" file="${basedir}/../${summa.lib.postgres}"/>
+            <zipfileset prefix="lib" file="${summa.lib.sbutil}"/>
+            <zipfileset prefix="lib" file="${release.jar}"/>
+
+            <zipfileset prefix="config" file="${tmp.dir}/test-storage-1/config/configuration.xml"/>
+            <zipfileset prefix="config" file="${basedir}/config/log4j.xml"/>
+
+            <zipfileset dir="${test.src.dir}/test-storage-1/config" prefix="config" filemode="600">
+                <include name="jmx.password"/>
+                <include name="jmx.access"/>
+                <include name="policy"/>
+            </zipfileset>
+
+        </zip>
+
+        <!--<delete dir="${tmp.dir}"/>-->
+    </target>
+
+    <target name=".test-client-1.bundle" depends=".jar, test.compile">
+        <mkdir dir="${tmp.dir}"/>
+
+        <!-- Roll client bundle -->
+        <copy todir="${tmp.dir}">
+            <fileset dir="${test.src.dir}" includes="**/*.xml"/>
+        </copy>
+        <replace value="!not found!" propertyfile="../build.properties"
+                 dir="${tmp.dir}">
+            <replacefilter
+                token="@project.version@"
+                value="lib/summa-common-${summa.version}.jar"/>
+            <replacefilter
+                token="@release.jar@"
+                value="${release.jar}"/>
+            <replacefilter
+                token="@summa.version@"
+                value="${summa.version}"/>
+        </replace>
+
+        <zip destfile="${dist.dir}/test-client-1.bundle">
+
+            <zipfileset file="${tmp.dir}/test-client-1/client.xml"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.common}"/>
+            <!-- We shouldn't have to include these -->
+            <zipfileset prefix="lib" file="../${summa.ilib.storage}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.ingest}"/>
+            <!-- End of shouldn't -->
+            <zipfileset prefix="lib" file="${summa.lib.commons-logging}"/>
+            <zipfileset prefix="lib" file="${summa.lib.log4j}"/>
+            <zipfileset prefix="lib" file="${summa.lib.sbutil}"/>
+            <zipfileset prefix="lib" file="${release.jar}"/>
+            <zipfileset prefix="lib" file="${release.api.jar}"/>
+            
+            <zipfileset prefix="config" file="${test.src.dir}/test-client-1/config/configuration.xml"/>
+            <zipfileset prefix="config" file="${basedir}/config/log4j.xml"/>
+
+            <zipfileset dir="${test.src.dir}/test-client-1/config" prefix="config" filemode="600">
+                <include name="jmx.password"/>
+                <include name="jmx.access"/>
+                <include name="policy"/>
+            </zipfileset>
+
+        </zip>
+
+        <delete dir="${tmp.dir}"/>
+    </target>
+
+    <target name="all" depends="release, .release.bundles, .release.bundleTool"/>
+
+    <target name="performance" depends=".jar, test.compile">
+        <property name="performance.dir" value="${basedir}/test/dk/statsbiblioteket/summa/performance"/>
+
+        <mkdir dir="${tmp.dir}"/>
+
+        <!-- Create jar file for test service -->
+        <jar basedir="${test.build.dir}" compress="true" jarfile="${tmp.dir}/summa-control-test-${summa.version}.jar"/>
+
+        <!-- Roll service bundle -->
+        <copy todir="${tmp.dir}">
+            <fileset file="${performance.dir}/bin/performance.sh"/>
+        </copy>
+
+        <replace file="${tmp.dir}/performance.sh"
+                 token="%control-test-jar%"
+                 value="summa-control-test-${summa.version}.jar"/>
+
+        <zip destfile="${dist.dir}/summa-search-performance-${summa.version}.zip">
+
+            <zipfileset prefix="lib" file="../${summa.ilib.common}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.storage.api}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.index}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.support}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.support.api}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.facetbrowser}"/>
+            <zipfileset prefix="lib" file="../${summa.ilib.facetbrowser.api}"/>
+            <zipfileset prefix="lib" file="${summa.lib.commons-logging}"/>
+            <zipfileset prefix="lib" file="${summa.lib.log4j}"/>
+            <zipfileset prefix="lib" file="${summa.lib.sbutil}"/>
+            <zipfileset prefix="lib" file="${summa.lib.lucene}"/>
+            <zipfileset prefix="lib" file="${summa.lib.lucene.queries}"/>
+            <zipfileset prefix="lib" file="${release.jar}"/>
+
+            <zipfileset prefix="bin" file="${tmp.dir}/performance.sh" filemode="755"/>
+            <zipfileset prefix="config" file="${performance.dir}/config/log4j.xml"/>
+            <zipfileset file="${performance.dir}/config/SearchPerformance.xml"/>
+            <zipfileset file="${tmp.dir}/summa-control-test-${summa.version}.jar"/>
+
+        </zip>
+
+        <delete dir="${tmp.dir}"/>
+    </target>
+
+</project>
+
+

@@ -1,0 +1,230 @@
+<?xml version="1.0"?>
+
+<project default="release" name="Summa" basedir=".">
+
+    <property file="${basedir}/build.properties"/>
+    
+    <property name="dist.dir" value="${basedir}/dist"/>
+    <property name="doc.dir" value="${basedir}/${summa.doc.dir}"/>
+    <property name="apidocs.dir" value="${basedir}/${summa.apidocs.dir}"/>
+    <property name="lib.dir" value="${basedir}/lib"/>
+    <property name="tmp.dir" value="${basedir}/tmp"/>
+    
+    <tstamp>
+        <format property="build.time" pattern="MM/dd/yyyy HH:mm"/>
+    </tstamp>
+
+    <!-- Ensure we have global libs and correct Java and Ant version -->
+    <target name="depends">
+        <echo message="Checking Java compiler version is 1.6"/>
+        <condition property="hasJava">
+            <equals arg1="${summa.compiler.version}" arg2="${ant.java.version}"/>
+        </condition>
+        <fail unless="hasJava"
+              message="Currently Summa only compiles with Java ${summa.compiler.version}. Found Java ${ant.java.version}"/>
+        
+        <echo message="Checking Ant version is atleast ${summa.ant.version}"/>
+        <condition property="hasAnt">
+            <antversion atleast="${summa.ant.version}"/>
+        </condition>
+        <fail unless="hasAnt"
+              message="Currently Summa only compiles with Ant ${summa.ant.version}. Found Ant ${ant.version}"/>
+    
+        <echo message="Checking versions of 3rd party libraries"/>
+        <condition property="hasLibs">
+            <and>
+                <available file="${summa.lib.lucene}"/>
+                <available file="${summa.lib.lucene.queries}"/>
+                <available file="${summa.lib.log4j}"/>
+                <available file="${summa.lib.commons-logging}"/>
+                <available file="${summa.lib.commons-cli}"/>
+                <available file="${summa.lib.junit}"/>
+                <available file="${summa.lib.sbutil}"/>
+                <available file="${summa.lib.derby}"/>
+                <available file="${summa.lib.postgres}"/>
+                <available file="${summa.lib.h2}"/>
+            </and>
+        </condition>
+        <fail unless="hasLibs" message="Some the required libs seem to be missing. Please check the contents of the `lib´ directory against the summa.lib.* properties listed in the `build.properties´ file"/>
+    </target>
+
+    <!--
+        Default target. Compile all modules.
+        The module listing here takes module dependencies into account.
+        Bad ordering may prolong compilation (but not break it)
+    -->
+    <target name="all" depends="depends">
+        <ant dir="Common" inheritall="false"/>
+        <ant dir="Storage" inheritall="false"/>
+        <ant dir="Ingest" inheritall="false"/>
+        <ant dir="Index" inheritall="false"/>
+        <ant dir="Search" inheritall="false"/>
+        <ant dir="Support" inheritall="false"/>
+        <ant dir="FacetBrowser" inheritall="false"/>
+        <ant dir="Control" inheritall="false"/>
+        <ant dir="Web" inheritall="false"/>
+        <ant dir="Workflow" inheritall="false"/>
+        <ant dir="Samples" inheritall="false"/>
+        
+        <!-- Legacy modules not build : -->
+        <!-- <ant dir="Dice" inheritall="false"/> -->
+        <!-- <ant dir="ClusterExtractor" inheritall="false "/> -->
+    </target>
+
+    <!-- Build documentation for all modules -->  
+    <target name="doc">
+        <mkdir dir="${apidocs.dir}"/>        
+        <javadoc packagenames="dk.statsbiblioteket.*"
+                destdir="${apidocs.dir}" author="true"
+                version="true" access="private" windowtitle="Summa Documentation - ${summa.version}"
+                additionalparam="-breakiterator">
+            <classpath>
+                <fileset dir="${basedir}">
+                    <include name="*/lib/**/*.jar"/>
+                </fileset>
+            </classpath>
+            <packageset dir="${basedir}/Common/src">
+                <include name="dk/statsbiblioteket/**/*"/>
+            </packageset>
+            <packageset dir="${basedir}/Storage/src">
+                <include name="dk/statsbiblioteket/**/*"/>
+            </packageset>
+            <packageset dir="${basedir}/Ingest/src">
+                <include name="dk/statsbiblioteket/**/*"/>
+            </packageset>
+            <packageset dir="${basedir}/Index/src">
+                <include name="dk/statsbiblioteket/**/*"/>
+            </packageset>
+            <packageset dir="${basedir}/Search/src">
+                <include name="dk/statsbiblioteket/**/*"/>
+            </packageset>
+            <packageset dir="${basedir}/Support/src">
+                <include name="dk/statsbiblioteket/**/*"/>
+            </packageset>
+            <packageset dir="${basedir}/FacetBrowser/src">
+                <include name="dk/statsbiblioteket/**/*"/>
+            </packageset>
+            <packageset dir="${basedir}/Control/src">
+                <include name="dk/statsbiblioteket/**/*"/>
+            </packageset>
+            <packageset dir="${basedir}/Web/src">
+                <include name="dk/statsbiblioteket/**/*"/>
+            </packageset>
+            <packageset dir="${basedir}/Workflow/src">
+                <include name="dk/statsbiblioteket/**/*"/>
+            </packageset>
+            <!-- Legacy modules not build : -->
+            <!-- <packageset dir="${basedir}/ClusterExtractor/src">
+                <include name="dk/statsbiblioteket/**/*"/>
+            </packageset> -->
+            <!-- <packageset dir="${basedir}/Dice/src">
+                <include name="dk/statsbiblioteket/**/*"/>
+            </packageset>-->
+        </javadoc>
+    </target>
+
+    <!-- Delete all files not in CVS -->
+    <target name="clean">
+        <echo message="Cleaning modules"/>
+        <ant dir="Common" inheritall="false" target="clean"/>
+        <ant dir="Storage" inheritall="false" target="clean"/>
+        <ant dir="Ingest" inheritall="false" target="clean"/>
+        <ant dir="Index" inheritall="false" target="clean"/>
+        <ant dir="Search" inheritall="false" target="clean"/>
+        <ant dir="Support" inheritall="false" target="clean"/>
+        <ant dir="FacetBrowser" inheritall="false" target="clean"/>
+        <ant dir="Control" inheritall="false" target="clean"/>
+        <ant dir="Web" inheritall="false" target="clean"/>
+        <ant dir="Workflow" inheritall="false" target="clean"/>
+        <ant dir="Samples" inheritall="false" target="clean"/>
+        <delete dir="${dist.dir}" />
+
+        <!-- Legacy modules not built: -->
+        <!-- <ant dir="Dice" inheritall="false" target="clean"/> -->
+        <!-- <ant dir="ClusterExtractor" inheritall="false" target="clean"/>-->        
+    </target>
+
+    <!-- Delete all files not in CVS -->
+    <target name="distclean">
+        <echo message="Dist-cleaning modules"/>
+        <ant dir="Common" inheritall="false" target="distclean"/>
+        <ant dir="Storage" inheritall="false" target="distclean"/>
+        <ant dir="Ingest" inheritall="false" target="distclean"/>
+        <ant dir="Index" inheritall="false" target="distclean"/>
+        <ant dir="Search" inheritall="false" target="distclean"/>
+        <ant dir="Support" inheritall="false" target="distclean"/>
+        <ant dir="FacetBrowser" inheritall="false" target="distclean"/>
+        <ant dir="Control" inheritall="false" target="distclean"/>
+        <ant dir="Web" inheritall="false" target="distclean"/>
+        <ant dir="Workflow" inheritall="false" target="distclean"/>
+        <ant dir="Samples" inheritall="false" target="distclean"/>
+
+        <echo message="Cleaning test artifacts"/>
+        <delete includeemptydirs="true">
+            <fileset dir="${basedir}">
+                <include name="test_db*/**/*"/>
+                <include name="test_db*"/>
+                <include name="xconfiguration*.xml"/>
+                <include name="log"/>
+                <include name="*.log"/>
+            </fileset>
+        </delete>
+
+        <!-- Legacy modules not built: -->
+        <!-- <ant dir="Dice" inheritall="false" target="distclean"/> -->
+        <!-- <ant dir="ClusterExtractor" inheritall="false" target="distclean"/>-->
+
+        <echo message="Deleting dist files"/>
+        <delete dir="${dist.dir}" />
+        <delete dir="${summa.apidocs.dir}" />
+    </target>
+
+    <!-- Compile all project jar files -->
+    <target name=".jar">
+        <echo message="Compiling all jar files"/>
+        <ant dir="Common" inheritall="false" target=".jar"/>
+        <ant dir="Storage" inheritall="false" target=".jar"/>
+        <ant dir="Ingest" inheritall="false" target=".jar"/>
+        <ant dir="Index" inheritall="false" target=".jar"/>
+        <ant dir="Search" inheritall="false" target=".jar"/>
+        <ant dir="Support" inheritall="false" target=".jar"/>
+        <ant dir="FacetBrowser" inheritall="false" target=".jar"/>
+        <ant dir="Control" inheritall="false" target=".jar"/>
+        <ant dir="Web" inheritall="false" target=".jar"/>
+        <ant dir="Workflow" inheritall="false" target=".jar"/>
+    </target>
+
+    <!-- Wrap up a tarball ready for distribution -->
+    <target name="release" depends="depends, distclean, all, doc">
+        <property name="release.tmp.dir" value="${dist.dir}/summa-${summa.version}.tmp" />
+        <property name="release.file" value="${dist.dir}/summa-${summa.version}.zip" />
+        
+        <delete file="${release.file}" />
+        <delete dir="${release.tmp.dir}" />
+        
+        <mkdir dir="${release.tmp.dir}"/>
+        <copy todir="${release.tmp.dir}" flatten="true">
+            <fileset dir="${basedir}">
+                <include name="**/dist/*.tgz"/>
+                <include name="**/dist/*.tar.gz"/>
+                <include name="**/dist/*.zip"/>
+                <include name="**/dist/*.jar"/>
+                <include name="**/dist/*.war"/>
+                <include name="${summa.license}"/>
+            </fileset>
+         </copy>
+         <copy todir="${release.tmp.dir}/${summa.doc.dir}">
+            <fileset dir ="${doc.dir}" includes="**/*"/>
+         </copy>
+
+         <replaceregexp match="\$Id[^\$]*\$" replace="${summa.version} - ${build.time}">
+            <fileset dir="${release.tmp.dir}/doc" includes="**/*"/>
+         </replaceregexp>
+         
+         <zip destfile="${release.file}">
+            <zipfileset dir="${release.tmp.dir}" includes="**/*" prefix="summa-${summa.version}"/>
+        </zip>
+        <delete dir="${release.tmp.dir}" />
+    </target>
+
+</project>
