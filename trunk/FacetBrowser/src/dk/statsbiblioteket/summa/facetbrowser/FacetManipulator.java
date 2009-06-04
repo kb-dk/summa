@@ -71,12 +71,32 @@ public class FacetManipulator implements IndexManipulator {
     /**
      * If true, both the mapping from docID=>Tag and the Tags themselves are
      * cleared when a consolidate is called. If false, only the mapping is
-     * cleared. Clearing Tags means that non-used Tags are removed at the cost
-     * of increased consolidate-time.
+     * cleared. A full facet-rebuild is fairly fast (~10 minutes for
+     * 8 million records for the corpus at Statsbiblioteket).
+     * </p><p>
+     * Optional. Default is true.
      */
     public static final String CONF_CLEAR_TAGS_ON_CONSOLIDATE =
             "summa.facet.cleartagsonconsolidate";
-    public static final boolean DEFAULT_CLEAR_TAGS_ON_CONSOLIDATE = false;
+    public static final boolean DEFAULT_CLEAR_TAGS_ON_CONSOLIDATE = true;
+
+    /**
+     * If true, both the mapping from docID=>Tag and the Tags themselves are
+     * cleared when a commit is called and {@link #CONF_SKIP_FACET_ON_UPDATE}
+     * is true. If false, only the mapping is cleared.
+     * </p><p>
+     * If commits are very frequent, {@link #CONF_SKIP_FACET_ON_UPDATE} should
+     * be false and clear tags on commit is irrelevant. If there is a fairly
+     * long time between commits (10,000+, depending on hardware), clear tags
+     * on commit as well as {@link #CONF_SKIP_FACET_ON_UPDATE} should be true.
+     * If there is a shorter time between commits, clear tags on commit should
+     * be false and {@link #CONF_SKIP_FACET_ON_UPDATE} true. 
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_CLEAR_TAGS_ON_COMMIT =
+            "summa.facet.cleartagsoncommite";
+    public static final boolean DEFAULT_CLEAR_TAGS_ON_COMMIT = true;
 
     /**
      * If true, the facet structure isn't updated when {@link #update} is
@@ -95,6 +115,7 @@ public class FacetManipulator implements IndexManipulator {
     protected boolean clearTagsOnClear = DEFAULT_CLEAR_TAGS_ON_CLEAR;
     protected boolean clearTagsOnConsolidate =
             DEFAULT_CLEAR_TAGS_ON_CONSOLIDATE;
+    protected boolean clearTagsOnCommit = DEFAULT_CLEAR_TAGS_ON_COMMIT;
     protected boolean skipFacetOnUpdate = false;
 
     /**
@@ -107,12 +128,13 @@ public class FacetManipulator implements IndexManipulator {
         log.info("Constructing FacetManipulator");
         clearTagsOnClear = conf.getBoolean(CONF_CLEAR_TAGS_ON_CLEAR,
                                            DEFAULT_CLEAR_TAGS_ON_CLEAR);
-        clearTagsOnConsolidate =
-                conf.getBoolean(CONF_CLEAR_TAGS_ON_CONSOLIDATE,
-                                DEFAULT_CLEAR_TAGS_ON_CONSOLIDATE);
-        skipFacetOnUpdate =
-                conf.getBoolean(CONF_SKIP_FACET_ON_UPDATE,
-                                DEFAULT_SKIP_FACET_ON_UPDATE);
+        clearTagsOnConsolidate = conf.getBoolean(
+                CONF_CLEAR_TAGS_ON_CONSOLIDATE,
+                DEFAULT_CLEAR_TAGS_ON_CONSOLIDATE);
+        clearTagsOnCommit = conf.getBoolean(
+                CONF_CLEAR_TAGS_ON_COMMIT, DEFAULT_CLEAR_TAGS_ON_COMMIT);
+        skipFacetOnUpdate = conf.getBoolean(
+                CONF_SKIP_FACET_ON_UPDATE, DEFAULT_SKIP_FACET_ON_UPDATE);
         Structure structure = new Structure(conf);
         TagHandler tagHandler =
                 TagHandlerFactory.getTagHandler(conf, structure, false);
@@ -138,7 +160,7 @@ public class FacetManipulator implements IndexManipulator {
         if (skipFacetOnUpdate) {
             log.debug("Rebuilding facet structure as "
                       + CONF_SKIP_FACET_ON_UPDATE + " is true");
-            builder.build(true);
+            builder.build(!clearTagsOnCommit);
         }
         builder.store();
     }
