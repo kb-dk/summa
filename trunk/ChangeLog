@@ -1,9 +1,389 @@
-2009-05-19 13:10  mke
+2009-06-04 09:20  mke
+
+	* [r1547] build.properties, ChangeLog:
+
+	  Release Summa 1.4.5
+
+2009-06-04 09:13  mke
+
+	* [r1546] NEWS:
+	  
+	  Prepare NEWS file for Summa 1.4.5
+
+2009-06-04 08:41  toke
+
+	* [r1545]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/FacetManipulator.java:
+	  
+	  Tweak: Make clearTagsOnConsolidate default to true as it speeds
+	  up facet building tremendously for larger indexes
+
+2009-06-03 14:53  toke
+
+	* [r1544] Common/scripts/indexDumper.sh,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/IndexDumper.java[CPY]:
+	  
+	  Feature: Created a small utility for dumping the content of
+	  stored fields in a Lucene index
+
+2009-06-03 13:07  mke
+
+	* [r1543]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/ScriptFilter.java,
+	  Control/src/dk/statsbiblioteket/summa/control/service/ScriptService.java,
+	  Control/test/dk/statsbiblioteket/summa/control/service/ScriptServiceTest.java:
+	  
+	  Feature: Inject a 'log' variable into the scripting enviroments
+	  for ScriptFilter and ScriptService
+	  
+	  Document ScriptService and ScriptFilter with examples
+
+2009-06-03 12:23  mke
+
+	* [r1542]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/ScriptFilter.java,
+	  Control/src/dk/statsbiblioteket/summa/control/service/ScriptService.java:
+	  
+	  Use the Resolver class to locate the scripts for ScriptFilter and
+	  ScriptService and add checks to assert that we do indeed locate
+	  the script
+
+2009-06-03 12:20  mke
+
+	* [r1541]
+	  Control/src/dk/statsbiblioteket/summa/control/service/ScriptService.java,
+	  Control/test/dk/statsbiblioteket/summa/control/service/ScriptServiceTest.java:
+	  
+	  Fix nasty race condition where the JVM did not sync up the
+	  private service state variable
+
+2009-06-03 12:03  mke
+
+	* [r1540]
+	  Control/src/dk/statsbiblioteket/summa/control/service/ScriptService.java,
+	  Control/test/dk/statsbiblioteket/summa/control/service/ScriptServiceTest.java,
+	  Control/test/script-service-test.js:
+	  
+	  Feature: Include a ScriptService service class
+
+2009-06-03 09:31  toke
+
+	* [r1539]
+	  Control/test/data/search/FacetTest_IndexConfiguration.xml,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/FacetTest.java,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/RebuildFacetsTest.java,
+	  Index/src/dk/statsbiblioteket/summa/index/IndexControllerImpl.java:
+	  
+	  Feature: Added optional forceConsolidateOnClose to the
+	  IndexController
+	  Testing: Added tests for forceConsolidateOnClose
+	  Testing: Added tests for facet rebuilding
+
+2009-06-03 09:22  mke
+
+	* [r1538]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/MiniConnectionPoolManager.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/derby/DerbyStorage.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/h2/H2Storage.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/postgres/PostgresStorage.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/StorageTest.java,
+	  Storage/test/log4j.xml:
+	  
+	  Bugfix: Make DerbyStorage work again, this fixes #1595
+	  "DerbyStorage broken in 1.3.0"
+	  
+	  This bugfix had some collateral effects:
+	  - DerbyStorage now uses a client side paging model, speed tests
+	  has yet to be performed
+	  - H2Storage's internal MiniConnectionPoolManager subclass has
+	  been merged back into the general MiniConnectionPoolManager, this
+	  means that MCPM no longer uses StatementEventListeners as they
+	  have proven unreliable in many JDBC drivers
+	  - The method DatabaseStorage.getStatement() has been renamed to
+	  getManagedStatement() to underline how its used
+	  - The sql statements for paged queries are no longer using '?'
+	  wildcard substitution, but the DatabaseStorage.getPagingStatement
+	  directly inserts the page range
+
+2009-06-03 07:46  toke
+
+	* [r1537]
+	  Common/src/dk/statsbiblioteket/summa/common/pool/DiskPool.java,
+	  Common/src/dk/statsbiblioteket/summa/common/pool/MemoryPool.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/ArrayUtil.java,
+	  Common/test/dk/statsbiblioteket/summa/common/pool/StringPoolSuperTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/ArrayUtilTest.java:
+	  
+	  Bugfix: The Pools did not accept adds with position above their
+	  size
+
+2009-06-03 07:23  mke
+
+	* [r1536] Summa.ipr, build.properties,
+	  lib/apidocs/derby-10.4.2.0-apidocs.zip[DEL],
+	  lib/apidocs/derby-10.5.1.1-apidocs.zip,
+	  lib/derby-10.4.2.0.jar[DEL], lib/derby-10.5.1.1.jar,
+	  lib/license/derby-10.4.2.0-license.zip[DEL],
+	  lib/license/derby-license.zip[CPY]:
+	  
+	  Update to Derby 10.5.1.1 - important for Summa this new Derby
+	  release supports query range limiting with OFFSET/FETCH see
+	  http://blogs.sun.com/kah/entry/derby_10_5_preview_fetch. This can
+	  be used to implement client side paging which has proved to be a
+	  massive optimization on the H2Storage backend
+
+2009-06-02 14:17  toke
+
+	* [r1535] Control/test/log4j.xml,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/map/CoreMap.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/map/CoreMap32.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/map/CoreMapBitStuffed.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/map/CoreMapBuilder.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/map/CoreMapImpl.java:
+	  
+	  Cleanup and refactoring of the CoreMap system in preparation of
+	  adding persistence support to the CoreMapBuilder
+
+2009-06-02 13:23  toke
+
+	* [r1534]
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/LuceneManipulator.java,
+	  Index/test/dk/statsbiblioteket/summa/index/lucene/LuceneManipulatorTest.java,
+	  Index/test/log4j.xml:
+	  
+	  Tweaks: Minor tweaks to LuceneManipulator and corresponding unit
+	  test
+
+2009-06-02 12:55  nig
+
+	* [r1533] Index/config/targets/doms/doms_index.xsl:
+	  
+	  fikset namespace problem ved freetext
+
+2009-06-02 12:41  toke
+
+	* [r1532]
+	  Index/test/dk/statsbiblioteket/summa/index/lucene/LuceneManipulatorTest.java:
+	  
+	  Testing: Made the LuceneManipulatorTest test for IDs on additions
+	  and deletions
+
+2009-05-29 21:01  mke_refind
+
+	* [r1531]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/StdOutFilter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/RecordUtil.java:
+	  
+	  Feature: New filter that dumps records (either raw content, or in
+	  an XML envelope) to stdout (StdOutFilter)
+	  
+	  Bugfix: RecordUtil.toXML() did not close <element> tags in the
+	  <meta> section
+
+2009-05-29 12:35  mke
+
+	* [r1530] Common/Common.iml, Common/build.xml,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/TikaFilter.java,
+	  Summa.ipr, build.properties, lib/apidocs/tika-0.3-apidocs.zip,
+	  lib/tika-0.3.jar:
+	  
+	  Include a *COMPLETELY UNTESTED* Tika filter. This means that we
+	  theoretically can crawl hard drives by hooking it up to a bog
+	  standard FileReader filter. Interesting stuff to follow...
+
+2009-05-29 10:46  mke
+
+	* [r1529]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/ObjectFilterImpl.java:
+	  
+	  Very verbose logging on fatal errors detected by ObjectFilterImpl
+	  (log Payload and full Record content)
+	  
+	  Log profiling information about ObjectFilterImpl's
+	  processPayload() method on debug level
+
+2009-05-29 09:37  toke
+
+	* [r1528]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/FilterPump.java:
+	  
+	  Debug: Bettet feedback for FilterPump
+
+2009-05-28 13:31  mke
+
+	* [r1527]
+	  Index/src/dk/statsbiblioteket/summa/index/IndexControllerImpl.java:
+	  
+	  Log a warning on unclean shutdown (that is close(false))
+
+2009-05-28 13:30  toke
+
+	* [r1526]
+	  Common/test/dk/statsbiblioteket/summa/common/RecordTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/PayloadTest.java:
+	  
+	  Testing: Minor tests for tweaking of IDs for Records and Payloads
+
+2009-05-28 13:15  mke
+
+	* [r1525]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/ObjectFilterImpl.java:
+	  
+	  Bugfix: Catch and log throwables in ObjectFilterImpl's
+	  processPayload() call - big nasty XML documents can cause
+	  StackOverflowError from the XSLT processor
+
+2009-05-28 11:53  mke
+
+	* [r1524] Summa.ipr, build.properties,
+	  lib/apidocs/sbutil-0.4.4-apidocs.zip[DEL],
+	  lib/apidocs/sbutil-0.4.5-apidocs.zip, lib/sbutil-0.4.4.jar[DEL],
+	  lib/sbutil-0.4.5.jar, lib/src/sbutil-0.4.4-src.zip[DEL],
+	  lib/src/sbutil-0.4.5-src.zip:
+	  
+	  Bump SBUtil from 0.4.4 to 0.4.5
+
+2009-05-28 09:00  mke
+
+	* [r1523]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/FilterControl.java,
+	  Search/src/dk/statsbiblioteket/summa/search/tools/SummaSearcherRunner.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/tools/StorageRunner.java:
+	  
+	  Install uncaught-exception-handlers on the main classes,
+	  FilterControl, SummaSearcherRunner, and StorageRunner
+
+2009-05-27 10:23  nig
+
+	* [r1522] Index/config/targets/doms/doms_index.xsl:
+	  
+	  Tilfoejet Danske Aviser til DOMS xslt'en (skitse)
+
+2009-05-27 09:33  nig
+
+	* [r1521] Index/config/targets/doms/doms_index.xsl:
+	  
+	  Tilfoejet Danske Aviser til DOMS xslt'en (grov skitse)
+
+2009-05-26 09:38  toke
+
+	* [r1520]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/DumpFilter.java:
+	  
+	  Bugfix: The counter in the dumper always increased on received
+	  Payload. It now only updates on dumps
+
+2009-05-26 08:26  toke
+
+	* [r1519] Index/config/targets/doms/doms_index.xsl:
+	  
+	  Bugfix: The DOMS-XSLT had a small namespace-bug
+
+2009-05-25 14:46  nig
+
+	* [r1518] Index/config/targets/doms/doms_index.xsl:
+	  
+	  Tilfoejet Danske Aviser til DOMS xslt'en
+
+2009-05-25 13:40  toke
+
+	* [r1517] Index/config/targets/csa/csa_index.xsl,
+	  Index/config/targets/csa/csa_language.xsl:
+	  
+	  Fixed namespace errors in CSA XSLTs
+
+2009-05-25 12:47  toke
+
+	* [r1516] Control/test/data/multiple/index_configuration.xml,
+	  Control/test/data/multiple/index_descriptor.xml,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/MultipleSourcesTest.java,
+	  Control/test/log4j.xml, lib/sbutil-0.4.4.jar:
+	  
+	  Testing: Updated MultipleSourcestest to run with the new
+	  Indexdescriptor setup
+
+2009-05-24 21:26  toke
+
+	* [r1515]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/ReplaceFilter.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/ReplaceFilterTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/ReaderInputStreamTest.java:
+	  
+	  Testing: Unit-tests to locate a bug in the replace framework from
+	  SBUtil
+
+2009-05-24 15:36  tokerefind
+
+	* [r1514]
+	  Common/src/dk/statsbiblioteket/summa/common/util/CopyingInputStream.java:
+	  
+	  Bugfix: CopyingOutputStream closed the output stream prematurely
+
+2009-05-24 15:17  tokerefind
+
+	* [r1513]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/DumpFilter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/CopyingInputStream.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/DumpFilterTest.java,
+	  Common/test/log4j.xml:
+	  
+	  Enhanced DumpFilter with stream-dumping capabilities
+
+2009-05-24 13:28  tokerefind
+
+	* [r1512]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/ReplaceFilter.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/ReplaceFilterTest.java,
+	  Common/test/log4j.xml:
+	  
+	  Tested and bugfixed the ReplaceFilter, which is now ready for use
+
+2009-05-24 01:36  tokerefind
+
+	* [r1511]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/ReplaceFilter.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/ReplaceFilterTest.java:
+	  
+	  Added first (not-quite-functioning) version of ReplaceFilter
+
+2009-05-22 18:28  tokerefind
+
+	* [r1510]
+	  Common/src/dk/statsbiblioteket/summa/common/util/ReaderInputStream.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/ReaderInputStreamTest.java:
+	  
+	  Added ReaderInputStream
+
+2009-05-21 21:26  tokerefind
+
+	* [r1509]
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorageH2.java:
+	  
+	  Made SuggestStorage give better errors
+
+2009-05-20 13:01  toke
+
+	* [r1508]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/DumpFilter.java:
+	  
+	  Tweak: DumpFilter dumped 500 records as default. This was
+	  downgraded to 50 to avoid flooding
+
+2009-05-20 12:34  toke
+
+	* [r1507]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/browse/TagCounterArray.java:
+	  
+	  Bugfix: The maxTags in the FacetScructure configuration was used
+	  as wantedTags when doing faceting, resulting in 200 tags/facet
+	  for the default setup
+
+2009-05-19 13:11  mke
 
 	* [r1505] ChangeLog, build.properties:
-
-	  Release Summa 1.4.4
-
+	  
+	  Start preparing NEWS file for 1.4.4
 
 2009-05-19 13:04  mke
 
