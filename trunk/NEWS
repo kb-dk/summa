@@ -1,4 +1,57 @@
 =======================
+2009-06-04: Summa 1.4.5
+=======================
+
+ * Bump SBUtil dependency to 0.4.5 (SB)
+
+ * Bump internal Derby dep. to the new 10.5.1.1 hotness. This brings in
+   client side paging via LIMIT/FETCH clauses which has been much awaited (SB)
+
+ * Add a TikaFilter that extracts metadata from crawled files and converts them
+   to an intermediate XHTML structure. This can be used as the base for a
+   hard disk indexer (SB)
+
+ * A new filter, ReplaceFilter, that can replace substrings in Records or
+   streams (Refind)
+
+ * New filter, StdOutFilter, that drops Records (or optionally only their
+   content) to stdout (Refind)
+
+ * Added optional forceConsolidateOnClose to the IndexController (SB)
+
+ * Include a ScriptService service class that launches an inlined or external
+   script (anything supported by Java's ScriptEngine API) wrapped behind
+   a Service interface (SB)
+
+ * Inject a 'log' variable into ScriptFilter that can be used to access the
+   common-logging logger of the filter (SB)
+
+ * Make clearTagsOnConsolidate default to true as it speeds up facet building
+   tremendously for larger indexes (SB)
+
+ * Bugfix: It was not possible to dertermine the payload ids of failed payloads
+           from ObjectFilterImpls (which means most filters) when the process
+           threw a non-Exception throwable. These cases are now logged very
+           verbosely because they often hide very nasty bugs (OOM etc) (SB)
+
+ * Bugfix: The maxTags in the FacetScructure configuration was used
+           as wantedTags when doing faceting, resulting in 200 tags/facet
+           for the default setup (SB)
+
+ * Bugix: Exceptions from FilterControl, SummaSearcherRunner, and
+          StorageRunner's main() methods could be dropped. Install
+          uncaught exception handlers that logs any top level exceptions (SB)
+
+ * Bugfix: RecordUtil.toXML() did not close <element> tags in the
+           <meta> section (Refind)
+
+ * Bugfix: The {Memory,Disk}Pools did not accept adds with position
+           above their size (SB)
+
+ * Bugfix: DerbyStorage works again now (and is probably a lot faster than
+           before, but this is yet to be tested) (SB)
+
+=======================
 2009-05-19: Summa 1.4.4
 =======================
 
