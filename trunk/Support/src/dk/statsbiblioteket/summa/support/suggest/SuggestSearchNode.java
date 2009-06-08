@@ -32,6 +32,7 @@ import org.apache.commons.logging.LogFactory;
 import java.io.File;
 import java.io.IOException;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 
 /**
  * A suggest-search is a low overhead Search meant for interactive use.
@@ -176,6 +177,7 @@ public class SuggestSearchNode extends SearchNodeImpl {
                     SuggestKeys.SEARCH_UPDATE_QUERY, query,
                     SuggestKeys.SEARCH_UPDATE_HITCOUNT);
             log.warn(msg);
+            //noinspection DuplicateStringLiteralInspection
             responses.add(new SuggestResponse(
                 "Error: " + msg, 0));
             return;
@@ -228,5 +230,28 @@ public class SuggestSearchNode extends SearchNodeImpl {
     @Override
     protected void managedWarmup(String request) {
         log.debug("Warmup is not necessary for Suggest");
+    }
+
+    /**
+     * Wrapper for {@link SuggestStorage#listSuggestions}.
+     * @param start the position from which to start extraction.
+     * @param max   the maximum number of suggestions to extract.
+     * @return a list of suggestions. Each suggest-entry if represented as
+     *        {@code query\thits\tqueryCount} where {@code \t} is tab.
+     * @throws IOException if the suggestions could not be extracted.
+     */
+    public ArrayList<String> listSuggestions(int start, int max) throws
+                                                                 IOException {
+        return storage.listSuggestions(start, max);
+    }
+
+    /**
+     * Wrapper for {@link SuggestStorage#addSuggestions}.
+     * @param suggestions a list of suggestions.
+     * @throws IOException if the suggestions could not be added.
+     */
+    public void addSuggestions(ArrayList<String> suggestions) throws
+                                                              IOException {
+        storage.addSuggestions(suggestions);
     }
 }
