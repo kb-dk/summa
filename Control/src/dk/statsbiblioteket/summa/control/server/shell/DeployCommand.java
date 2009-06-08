@@ -28,6 +28,7 @@ public class DeployCommand extends Command {
     private ConnectionManager<ControlConnection> cm;
     private String controlAddress;
     private String hostname;
+    private Configuration systemConf;
 
     public DeployCommand(ConnectionManager<ControlConnection> cm,
                          String controlAddress) {
@@ -52,6 +53,7 @@ public class DeployCommand extends Command {
         this.cm = cm;
         this.controlAddress = controlAddress;
         hostname = RemoteHelper.getHostname();
+        systemConf = Configuration.getSystemConfiguration(true);
     }
 
     public void invoke(ShellContext ctx) throws Exception {
@@ -93,11 +95,29 @@ public class DeployCommand extends Command {
                         ClientDeployer.CONF_DEPLOYER_CLASS,
                         transport,
                         ClientDeployer.CONF_DEPLOYER_TARGET,
-                        target,
-                        ClientDeployer.CONF_DEPLOYER_FEEDBACK,
-                "dk.statsbiblioteket.summa.control.api.feedback.rmi.RemoteFeedbackClient",
-                        RemoteFeedback.CONF_REGISTRY_HOST,
-                        hostname);
+                        target);
+
+        /* Check if we should configure a (remote) Feedback */
+        RemoteConsoleFeedback remoteConsole = null;
+        if (systemConf.valueExists(ClientDeployer.CONF_DEPLOYER_FEEDBACK)) {
+            conf.set(ClientDeployer.CONF_DEPLOYER_FEEDBACK,
+                     systemConf.getString(ClientDeployer.CONF_DEPLOYER_FEEDBACK));
+            conf.set(RemoteFeedback.CONF_REGISTRY_HOST,
+                     RemoteHelper.getHostname());
+            conf.set(RemoteFeedback.CONF_REGISTRY_PORT,
+                     systemConf.getInt(RemoteFeedback.CONF_REGISTRY_PORT,
+                                       27000));
+            conf.set(RemoteFeedback.CONF_SERVICE_NAME,
+                     systemConf.getString(RemoteFeedback.CONF_SERVICE_NAME,
+                                          "remoteConsole"));
+
+            // FIXME: This is a hack - we shouldn't always create a
+            // remote console, but otherwise the config would need to specify
+            // both client- and server side feedback classes
+            log.trace("invoke: Creating remoteConsole");
+            remoteConsole = Configuration.create(RemoteConsoleFeedback.class,
+                                                 conf);
+        }
 
         if (confLocation != null){
  	        conf.set(ClientDeployer.CONF_CLIENT_CONF, confLocation);
@@ -112,11 +132,7 @@ public class DeployCommand extends Command {
         ctx.prompt ("Deploying '" + instanceId + "' on '" + target + "' using "
                     + "transport '" + transport + "'... ");
         ConnectionContext<ControlConnection> connCtx = null;
-        RemoteConsoleFeedback remoteConsole = null;
         try {
-            log.trace("invoke: Creating remoteConsole");
-            remoteConsole = Configuration.create(RemoteConsoleFeedback.class,
-                                                 conf);
             log.trace("invoke: Getting connCtx for controlAddress '"
                       + controlAddress + "'");
             connCtx = cm.get (controlAddress);
