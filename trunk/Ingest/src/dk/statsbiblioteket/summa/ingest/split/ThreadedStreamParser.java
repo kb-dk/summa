@@ -68,17 +68,17 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
     public static final int DEFAULT_QUEUE_TIMEOUT = Integer.MAX_VALUE;
 
     private static final long HASNEXT_SLEEP = 50; // Sleep-ms between polls
-    private static final Record interruptor =
-            new Record("dummyID", "dummyStreamBase", new byte[0]);
+    private static final Payload interruptor =
+            new Payload(new Record("dummyID", "dummyStreamBase", new byte[0]));
 
     private int queueTimeout = DEFAULT_QUEUE_TIMEOUT;
-    protected ArrayBlockingQueue<Record> queue;
+    private ArrayBlockingQueue<Payload> queue;
     protected Payload sourcePayload;
     protected boolean running = false;
     private boolean finished = false; // Totally finished
 
     public ThreadedStreamParser(Configuration conf) {
-        queue = new ArrayBlockingQueue<Record>(
+        queue = new ArrayBlockingQueue<Payload>(
                 conf.getInt(CONF_QUEUE_SIZE, DEFAULT_QUEUE_SIZE));
         queueTimeout = conf.getInt(CONF_QUEUE_TIMEOUT, queueTimeout);
         log.debug("Constructed ThreadedStreamParser with queue-size "
@@ -135,13 +135,13 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
 
             log.trace("hasNext(): Calling peek on queue of size 0 and running " 
                       + running);
-            Record record = queue.peek();
-            log.trace("hasNext(): Peek finished with Record " + record);
-            if (record != null) {
+            Payload payload = queue.peek();
+            log.trace("hasNext(): Peek finished with  " + payload);
+            if (payload != null) {
                 log.trace("hasNext(): queue.size() > 0, returning " 
-                          + (record != interruptor));
+                          + (payload != interruptor));
                 //noinspection ObjectEquality
-                return record != interruptor;
+                return payload != interruptor;
             }
 
             try {
@@ -174,31 +174,55 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
             try {
                 log.trace("next: Polling for Record with timeout of "
                           + queueTimeout + " ms");
-                Record record = queue.poll(queueTimeout, TimeUnit.MILLISECONDS);
-                if (record == null) {
+                Payload payload = queue.poll(queueTimeout, TimeUnit.MILLISECONDS);
+                if (payload == null) {
                     throw new NoSuchElementException(String.format(
                             "Waited more than %d ms for Record and got none",
                             queueTimeout));
                 }
                 //noinspection ObjectEquality
-                if (record == interruptor) { // Hack
+                if (payload == interruptor) { // Hack
                     throw new NoSuchElementException(
                             "Parsing interrupted, no more elements");
                 }
                 log.trace("Got record. Constructing and returning Payload");
-                Payload newPayload = sourcePayload.clone();
-                newPayload.setRecord(record);
-                newPayload.setStream(null); // To avoid premature close
-                if (record.getId() != null) {
-                    newPayload.setID(record.getId());
-                }
-                postProcess(newPayload);
-                return newPayload;
+                postProcess(payload);
+                return payload;
             } catch (InterruptedException e) {
                 log.warn("Interrupted while waiting for Record. Retrying");
             }
         }
         throw new NoSuchElementException("Expected more Records, but got none");
+    }
+
+    /**
+     * Add the generated Record to the queue by creating a Payload around it.
+     * @param record the newly generated Record to add to the out queue.
+     */
+    protected void addToQueue(Record record) {
+        if (log.isTraceEnabled()) {
+            log.trace(String.format(
+                    "Wrapping Record %s as Payload and adding it to the queue",
+                    record));
+        }
+        Payload newPayload = sourcePayload.clone();
+        newPayload.setRecord(record);
+        newPayload.setStream(null); // To avoid premature close
+        if (record.getId() != null) {
+            newPayload.setID(record.getId());
+        }
+        queue.add(newPayload);
+    }
+
+    /**
+     * Add the generated Payload to the queue.
+     * @param payload the payload to add to the queue.
+     */
+    protected void addToQueue(Payload payload) {
+        if (log.isTraceEnabled()) {
+            log.trace(String.format("Adding %s to queue", payload));
+        }
+        queue.add(payload);
     }
 
     /**
@@ -259,6 +283,8 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
      * is handled gracefully by logging an appropriate error and skipping
      * to the next available Stream.
      * @throws Exception if the sourcePayload could not be parsed properly.
+     * @see {@link #addToQueue(dk.statsbiblioteket.summa.common.Record)}.
+     * @see {@link #addToQueue(dk.statsbiblioteket.summa.common.filter.Payload)}.
      */
     protected abstract void protectedRun() throws Exception;
 }
