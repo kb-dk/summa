@@ -22,6 +22,7 @@ package dk.statsbiblioteket.summa.support.suggest;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.support.api.SuggestResponse;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.Strings;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.h2.jdbcx.JdbcDataSource;
@@ -29,6 +30,8 @@ import org.h2.jdbcx.JdbcDataSource;
 import java.io.File;
 import java.io.IOException;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  *
@@ -42,6 +45,14 @@ public class SuggestStorageH2 implements SuggestStorage {
     public static final String DB_FILE = "suggest_h2storage";
     private static final String SELECT_QUERY =
             "SELECT query FROM suggest WHERE query=?";
+    private static final String INSERT_STATEMENT =
+            "INSERT INTO suggest VALUES (?, ?, ?, ?)";
+
+    /**
+     * The maximum number of suggestions to return from {@link #listSuggestions}
+     * regardless of the stated maximum in the method-call.
+     */
+    public static final int MAX_SUGGESTIONS = 100000;
 
     private File location = null;
     private Connection connection;
@@ -133,9 +144,9 @@ public class SuggestStorageH2 implements SuggestStorage {
         try {
             long startTime = System.nanoTime();
             PreparedStatement psExists = connection.prepareStatement(
-                "SELECT query, query_count, hit_count FROM suggest WHERE "
-                + "querylower LIKE '" + prefix.toLowerCase()
-                + "%' ORDER BY query_count DESC");
+                    "SELECT query, query_count, hit_count FROM suggest WHERE "
+                    + "querylower LIKE '" + prefix.toLowerCase()
+                    + "%' ORDER BY query_count DESC");
             ResultSet rs = psExists.executeQuery();
             SuggestResponse response = new SuggestResponse(prefix, maxResults);
             int current = 0;
@@ -187,7 +198,7 @@ public class SuggestStorageH2 implements SuggestStorage {
                 return;
             }
             log.trace("New query '" + query + "' with hits " + hits);
-            insertIntoDb(query, hits, 1);
+            insertIntoDb(query, hits, queryCount == -1 ? 1 : queryCount);
         } catch (SQLException e) {
             throw new IOException(String.format(
                     "Unable to complete addSuggestion(%s, %d, %d)",
@@ -196,10 +207,10 @@ public class SuggestStorageH2 implements SuggestStorage {
     }
 
     private void insertIntoDb(String query, int hits, int queryCount) throws
-                                                                  SQLException {
+                                                                      SQLException {
 
         PreparedStatement psInsert = connection.prepareStatement(
-                "INSERT INTO suggest VALUES (?, ?, ?, ?)");
+                INSERT_STATEMENT);
         psInsert.setString(1, query);
         psInsert.setString(2, query.toLowerCase());
         psInsert.setInt(3, queryCount);
@@ -261,5 +272,141 @@ public class SuggestStorageH2 implements SuggestStorage {
         psUpdate.setLong(2, hits);
         psUpdate.setString(3, query);
         psUpdate.executeUpdate();
+    }
+
+    public ArrayList<String> listSuggestions(int start, int max) throws
+                                                                 IOException {
+        log.debug(String.format("listsuggestions(%d, %d) called", start, max));
+        ResultSet rs = null;
+        try {
+            PreparedStatement psExists = connection.prepareStatement(
+                    "SELECT query, query_count, hit_count FROM suggest");
+            rs = psExists.executeQuery();
+
+            max = Math.min(max, MAX_SUGGESTIONS);
+            ArrayList<String> suggestions = new ArrayList<String>(max);
+
+            if (!rs.next()) {
+                return suggestions;
+            }
+
+            int current = 0;
+            while (current < start && current++ < start + max) {
+                if (!rs.next()) {
+                    log.debug("Out of suggestions before start was reached");
+                    return suggestions;
+                }
+            }
+
+            while (current++ < start + max) {
+                suggestions.add(rs.getString(1) + "\t" + rs.getInt(3) + "\t"
+                                + rs.getLong(2));
+                if (!rs.next()) {
+                    log.debug("No more suggestions. Got " + suggestions.size());
+                    return suggestions;
+                }
+            }
+
+            log.debug(String.format("Got all %d suggestions, as requested",
+                                    suggestions.size()));
+            return suggestions;
+        } catch (SQLException e) {
+            throw new IOException(String.format(
+                    "SQLException while dumping a maximum of %d suggestions, "
+                    + "starting at %d", max, start), e);
+        } finally {
+            if (rs != null) {
+                try {
+                    rs.close();
+                } catch (SQLException e) {
+                    log.warn(String.format("Exception while closing Resultset "
+                                           + "in listSuggestions(%d, %d)",
+                                           start, max));
+                }
+            }
+        }
+    }
+
+    public void addSuggestions(ArrayList<String> suggestions) throws
+                                                                   IOException {
+        log.debug(String.format("addsuggestion called with %d suggestions",
+                                suggestions.size()));
+
+        PreparedStatement psInsert;
+        try {
+            psInsert = connection.prepareStatement(INSERT_STATEMENT);
+        } catch (SQLException e) {
+            throw new IOException(String.format(
+                    "SQLException while preparing statement '%s'",
+                    INSERT_STATEMENT), e);
+        }
+
+        try {
+            connection.setAutoCommit(false);
+        } catch (SQLException e) {
+            throw new IOException(
+                    "SQLException while setting autoCommit to false", e);
+        }
+
+        try {
+            for (String suggestion: suggestions) {
+                if (suggestion == null || "".equals(suggestion)) {
+                    continue;
+                }
+                String[] tokens = suggestion.split("\t");
+                if (tokens.length > 3) { // Compensate for tabs in the query
+                    tokens[0] = Strings.join(
+                            Arrays.asList(tokens).subList(0, tokens.length-2),
+                            "\t");
+                    tokens[1] = tokens[tokens.length - 2];
+                    tokens[2] = tokens[tokens.length - 1];
+                }
+                String query = tokens[0];
+                long hits = 1;
+                int queryCount = 1;
+                try {
+                    if (tokens.length > 1) {
+                        hits = Long.valueOf(tokens[1]);
+                    }
+                } catch (NumberFormatException e) {
+                    log.warn(String.format(
+                            "NumberFormatException for hits with '%s'",
+                            tokens[1]));
+                }
+                try {
+                    if (tokens.length > 2) {
+                        queryCount = Integer.valueOf(tokens[2]);
+                    }
+                } catch (NumberFormatException e) {
+                    log.warn(String.format(
+                            "NumberFormatException for querycount with '%s'",
+                            tokens[2]));
+                }
+                try {
+                    psInsert.setString(1, query);
+                    psInsert.setString(2, query.toLowerCase());
+                    psInsert.setInt(3, queryCount);
+                    psInsert.setLong(4, hits);
+                    psInsert.executeUpdate();
+                } catch (SQLException e) {
+                    log.warn(String.format(
+                            "SQLException while inserting query '%s'"
+                            + " with %d hits and %d queryCount",
+                            query, hits, queryCount), e);
+                }
+            }
+            log.trace(String.format("Finished adding %d suggestions. "
+                                    + "Committing", suggestions.size()));
+            connection.commit();
+        } catch (SQLException e) {
+            throw new IOException("SQLException adding suggestions", e);
+        } finally {
+            try {
+                connection.setAutoCommit(true);
+            } catch (SQLException e) {
+                log.error("SQLException setting autoCommit to true. Suggest "
+                          + "might not be able to get updates", e);
+            }
+        }
     }
 }
