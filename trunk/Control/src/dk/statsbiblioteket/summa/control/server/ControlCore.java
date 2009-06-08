@@ -451,14 +451,7 @@ public class ControlCore extends UnicastRemoteObject
             throw new BadConfigurationException("Required property: "
                                                 + ClientDeployer.CONF_DEPLOYER_TARGET
                                                 + " not set ");
-        }
-
-        try { conf.getString(ClientDeployer.CONF_DEPLOYER_FEEDBACK); }
-        catch (NullPointerException e) {
-            throw new BadConfigurationException("Required property: "
-                                                + ClientDeployer.CONF_DEPLOYER_FEEDBACK
-                                                + " not set ");
-        }
+        }        
     }
 
     public List<String> getClients() {
