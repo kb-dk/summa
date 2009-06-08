@@ -25,6 +25,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * Interface for the storage responsible for persistence
@@ -79,4 +80,28 @@ public abstract interface SuggestStorage extends Configurable {
      */
     void addSuggestion(String query, int hits, int queryCount) throws
                                                                IOException;
+
+    /**
+     * Extracts max stored suggestions from the underlying storage from start.
+     * This is typically used for dumping the suggest data.
+     * @param start the position from which to start extraction.
+     * @param max   the maximum number of suggestions to extract.
+     * @return a list of suggestions. Each suggest-entry if represented as
+     *        {@code query\thits\tqueryCount} where {@code \t} is tab.
+     * @throws IOException if the suggestions could not be extracted.
+     */
+    ArrayList<String> listSuggestions(int start, int max) throws IOException;
+
+    /**
+     * Batch-add suggestions to the underlying storage. This is typically used
+     * for initial population.
+     * </p><p>
+     * The input format is the format of the data exported by
+     * {@link #listSuggestions}. It is possible to leave out both queryCount and
+     * hits, although it is highly recommended to provide hits. If no hits are
+     * stated, the value 1 is used.
+     * @param suggestions a list of suggestions.
+     * @throws IOException if the suggestions could not be added.
+     */
+    void addSuggestions(ArrayList<String> suggestions) throws IOException;
 }
