@@ -114,7 +114,7 @@ public class XMLSplitterParser extends ThreadedStreamParser {
      * @param record the Record to insert.
      */
     void queueRecord(Record record) {
-        try {
+//        try {
             if (log.isTraceEnabled()) {
                 //noinspection DuplicateStringLiteralInspection
                 log.trace(String.format(
@@ -122,10 +122,10 @@ public class XMLSplitterParser extends ThreadedStreamParser {
                         (System.nanoTime() - lastRecordStart) / 1000000.0,
                         record));
             }
-            queue.put(record);
+            addToQueue(record);
             lastRecordStart = System.nanoTime();
-        } catch (InterruptedException e) {
-            throw new RuntimeException("Interrupted while adding to queue", e);
-        }
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException("Interrupted while adding to queue", e);
+//        }
     }
 }

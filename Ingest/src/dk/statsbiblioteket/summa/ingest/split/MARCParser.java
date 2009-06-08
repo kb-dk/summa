@@ -203,7 +203,7 @@ public abstract class MARCParser extends ThreadedStreamParser {
                         if (running) {
                             Record record = makeRecord(content.toString());
                             if (record != null) {
-                                queue.put(record);
+                                addToQueue(record);
                             }
                         }
                         return;
