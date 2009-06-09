@@ -22,7 +22,6 @@
  */
 package dk.statsbiblioteket.summa.ingest.split;
 
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.NoSuchElementException;
 
@@ -32,6 +31,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.filter.PayloadQueue;
 
 /**
  * Helper implementation of StreamParser that handles the bookkeeping of
@@ -51,11 +51,20 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
     /**
      * The maximum queue size, counted in number of Records.
      * </p><p>
-     * Optional. Default is 10.
+     * Optional. Default is 100.
      */
     public static final String CONF_QUEUE_SIZE =
             "summa.ingest.stream.threadedstreamparser.queue.size";
     public static final int DEFAULT_QUEUE_SIZE = 100;
+
+    /**
+     * The maximum queue size, counted in bytes.
+     * </p><p>
+     * Optional. Default is 5 MB.
+     */
+    public static final String CONF_QUEUE_BYTESIZE =
+            "summa.ingest.stream.threadedstreamparser.queue.bytesize";
+    public static final int DEFAULT_QUEUE_BYTESIZE = 5*1000*1000; // 5 MB
 
     /**
      * The maximum number of milliseconds to wait for data when hasNext(),
@@ -72,14 +81,15 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
             new Payload(new Record("dummyID", "dummyStreamBase", new byte[0]));
 
     private int queueTimeout = DEFAULT_QUEUE_TIMEOUT;
-    private ArrayBlockingQueue<Payload> queue;
+    private PayloadQueue queue;
     protected Payload sourcePayload;
     protected boolean running = false;
     private boolean finished = false; // Totally finished
 
     public ThreadedStreamParser(Configuration conf) {
-        queue = new ArrayBlockingQueue<Payload>(
-                conf.getInt(CONF_QUEUE_SIZE, DEFAULT_QUEUE_SIZE));
+        queue = new PayloadQueue(
+                conf.getInt(CONF_QUEUE_SIZE, DEFAULT_QUEUE_SIZE),
+                conf.getInt(CONF_QUEUE_BYTESIZE, DEFAULT_QUEUE_BYTESIZE));
         queueTimeout = conf.getInt(CONF_QUEUE_TIMEOUT, queueTimeout);
         log.debug("Constructed ThreadedStreamParser with queue-size "
                   + queue.remainingCapacity() + " and queue timeout "
@@ -174,7 +184,8 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
             try {
                 log.trace("next: Polling for Record with timeout of "
                           + queueTimeout + " ms");
-                Payload payload = queue.poll(queueTimeout, TimeUnit.MILLISECONDS);
+                Payload payload = queue.poll(
+                        queueTimeout, TimeUnit.MILLISECONDS);
                 if (payload == null) {
                     throw new NoSuchElementException(String.format(
                             "Waited more than %d ms for Record and got none",
