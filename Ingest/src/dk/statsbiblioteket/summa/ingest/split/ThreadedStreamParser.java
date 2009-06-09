@@ -158,7 +158,7 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
             try {
                 // Sleeping in a high throughput filter chain is very bad;
                 // we log this as a warning.
-                log.warn("Buffer underrun, consider increasing "
+                log.debug("No Buffer underrun, consider increasing "
                          + CONF_QUEUE_SIZE + " of " + getClass()
                          + " in the configuration");
                 Thread.sleep(HASNEXT_SLEEP); // Ugly
