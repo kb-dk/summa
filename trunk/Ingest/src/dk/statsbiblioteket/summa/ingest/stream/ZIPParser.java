@@ -145,8 +145,10 @@ public class ZIPParser extends ThreadedStreamParser {
 
         @Override
         public void close() throws IOException {
-            zip.closeEntry();
-            closed = true;
+            if (!closed) {
+                zip.closeEntry();
+                closed = true;
+            }
             synchronized (waiter) {
                 waiter.notifyAll();
             }
