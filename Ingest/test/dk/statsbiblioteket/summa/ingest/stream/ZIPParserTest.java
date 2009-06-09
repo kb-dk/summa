@@ -24,12 +24,10 @@ import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
-import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import dk.statsbiblioteket.summa.ingest.split.StreamController;
 
-import java.io.ByteArrayInputStream;
 import java.util.Arrays;
 import java.util.List;
 
@@ -56,6 +54,15 @@ public class ZIPParserTest extends TestCase {
 
     public static Test suite() {
         return new TestSuite(ZIPParserTest.class);
+    }
+
+    // TODO: Test timeout with missing close
+
+    // Provokes race condition
+    public void testRepeatedBasics() throws Exception {
+        for (int i = 0 ; i < 10 ; i++) {
+            testBasics();
+        }
     }
 
     public void testBasics() throws Exception {
