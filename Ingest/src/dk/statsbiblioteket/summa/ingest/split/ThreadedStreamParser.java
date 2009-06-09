@@ -24,6 +24,7 @@ package dk.statsbiblioteket.summa.ingest.split;
 
 import java.util.concurrent.TimeUnit;
 import java.util.NoSuchElementException;
+import java.io.InputStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -223,6 +224,15 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
             newPayload.setID(record.getId());
         }
         queue.add(newPayload);
+    }
+
+    /**
+     * Add the generated InputStream to the queue by creating a Payload around
+     * it.
+     * @param stream the newly generated strean to add to the out queue.
+     */
+    protected void addToQueue(InputStream stream) {
+        queue.add(new Payload(stream));
     }
 
     /**
