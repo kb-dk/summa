@@ -68,7 +68,7 @@ public class PullParserTest extends TestCase {
         puller.close(true);
     }
 
-    private String getStreamContent(Payload payload) throws IOException {
+    public static String getStreamContent(Payload payload) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Streams.pipe(payload.getStream(), out);
         return out.toString("utf-8");

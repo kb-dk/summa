@@ -89,37 +89,43 @@ public class ZIPParser extends ThreadedStreamParser {
         ZipInputStream zip = new ZipInputStream(sourcePayload.getStream());
         ZipEntry entry;
         int matching = 0;
-        while ((entry = zip.getNextEntry()) != null) {
+        while ((entry = zip.getNextEntry()) != null && running) {
             log.trace("Got entry, checking for compliance");
-            if (filePattern.matcher(entry.getName()).matches()) {
-                log.trace("Entry matched. Adding to queue and waiting for "
-                          + "close");
-                matching++;
-                ZipEntryInputStream zipStream = new ZipEntryInputStream(zip);
-                Payload payload = new Payload(zipStream);
-                payload.getData().put(Payload.ORIGIN, entry.getName());
-                addToQueue(payload);
-                long startTime = System.currentTimeMillis();
-                try {
+            if (!filePattern.matcher(entry.getName()).matches()) {
+                log.trace(entry.getName() + " not matched. Skipping");
+                continue;
+            }
+            log.trace("Entry " + entry.getName() + " matched. Adding to queue "
+                      + "and waiting for close");
+            matching++;
+            ZipEntryInputStream zipStream = new ZipEntryInputStream(zip);
+            Payload payload = new Payload(zipStream);
+            payload.getData().put(Payload.ORIGIN, entry.getName());
+            addToQueue(payload);
+            long startTime = System.currentTimeMillis();
+            try {
+                synchronized (zipStream.waiter) {
                     zipStream.waiter.wait(processingTimeout);
-                } catch (InterruptedException e) {
-                    log.warn(String.format(
-                            "Interrupted while waiting for entry %s from %s",
-                            entry.getName(), sourcePayload));
                 }
-                if (System.currentTimeMillis() - startTime >=
-                    processingTimeout) {
-                    Logging.logProcess("ZIPParser", String.format(
-                            "Timeout occured while waiting for the processing "
-                            + "of %s. The entry will be skipped",
-                            entry.getName()),
-                                       Logging.LogLevel.DEBUG, sourcePayload);
-                }
-                if (!zipStream.isClosed()) {
-                    zipStream.close();
-                }
+            } catch (InterruptedException e) {
+                log.warn(String.format(
+                        "Interrupted while waiting for entry %s from %s",
+                        entry.getName(), sourcePayload));
+            }
+            if (System.currentTimeMillis() - startTime >=
+                processingTimeout) {
+                Logging.logProcess("ZIPParser", String.format(
+                        "Timeout occured while waiting for the processing "
+                        + "of %s. The entry will be skipped",
+                        entry.getName()),
+                                   Logging.LogLevel.DEBUG, sourcePayload);
+            }
+            if (!zipStream.isClosed()) {
+                zipStream.close();
             }
         }
+        zip.close();
+        // TODO: Check if Payload should be closed here
         log.debug(String.format("Processed %d ZIP entries from %s",
                                 matching, sourcePayload));
     }
@@ -130,7 +136,7 @@ public class ZIPParser extends ThreadedStreamParser {
      */
     private class ZipEntryInputStream extends InputStream {
         private ZipInputStream zip;
-        public Object waiter = new Object();
+        public final Object waiter = new Object();
         private boolean closed = false;
 
         private ZipEntryInputStream(ZipInputStream zip) {
@@ -141,7 +147,9 @@ public class ZIPParser extends ThreadedStreamParser {
         public void close() throws IOException {
             zip.closeEntry();
             closed = true;
-            waiter.notifyAll();
+            synchronized (waiter) {
+                waiter.notifyAll();
+            }
         }
 
         /**

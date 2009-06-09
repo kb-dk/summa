@@ -134,6 +134,7 @@
       <entry name="*_4" />
       <entry name="*.data" />
       <entry name="*.dat" />
+      <entry name="*.zip" />
       <entry name="*" />
     </wildcardResourcePatterns>
   </component>
