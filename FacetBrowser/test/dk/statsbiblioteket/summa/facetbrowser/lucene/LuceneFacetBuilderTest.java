@@ -38,6 +38,7 @@ import dk.statsbiblioteket.summa.facetbrowser.core.FacetCore;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Profiler;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -145,6 +146,31 @@ public class LuceneFacetBuilderTest extends TestCase {
         log.debug("Updated with payload, checking for change");
         assertEquals("The coreMap should contain tagIDs for the added document",
                      1, builder.getCoreMap().get(0, titleID).length);
+        builder.store();
+        builder.close();
+    }
+
+    public void testDuplicateReduction() throws Exception {
+        LuceneFacetBuilder builder = getBuilder();
+        int titleID = builder.getStructure().getFacets().
+                get(IndexBuilder.TITLE).getFacetID();
+
+        log.debug("Got builder, checking for emptiness");
+        assertEquals("The coreMap should contain nothing to start with",
+                     0, builder.getCoreMap().getDocCount());
+        log.debug("Updating with payload");
+        Payload payload = makePayload("foo", 0);
+        Document doc = (Document)payload.getData(Payload.LUCENE_DOCUMENT);
+        doc.add(new Field(IndexBuilder.TITLE, "foobar",
+                          Field.Store.YES, Field.Index.TOKENIZED,
+                          Field.TermVector.WITH_POSITIONS_OFFSETS));
+        doc.add(new Field(IndexBuilder.TITLE, "foobar", // Yes, again
+                          Field.Store.YES, Field.Index.TOKENIZED,
+                          Field.TermVector.WITH_POSITIONS_OFFSETS));
+        builder.update(payload);
+        log.debug("Updated with payload, checking for change");
+        assertEquals("The coreMap should contain tagIDs for the added document",
+                     2, builder.getCoreMap().get(0, titleID).length);
         builder.store();
         builder.close();
     }
