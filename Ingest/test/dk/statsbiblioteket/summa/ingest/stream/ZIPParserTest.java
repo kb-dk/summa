@@ -30,6 +30,8 @@ import dk.statsbiblioteket.summa.ingest.split.StreamController;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.ArrayList;
+import java.io.IOException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -72,9 +74,9 @@ public class ZIPParserTest extends TestCase {
 
         PayloadFeederHelper feeder = new PayloadFeederHelper(
                 Arrays.asList(new Payload(Resolver.getURL(
-                        "data/pull/myzip.zip").openStream()),
+                        "data/zip/myzip.zip").openStream()),
                               new Payload(Resolver.getURL(
-                        "data/pull/myzip2.zip").openStream())));
+                        "data/zip/myzip2.zip").openStream())));
         unzipper.setSource(feeder);
 
         assertTrue("The unzipper should have at least one element",
@@ -82,6 +84,31 @@ public class ZIPParserTest extends TestCase {
 
         List<String> expected = Arrays.asList(
                 "foo", "flam", "kaboom", "zoo", "zoo2");
+        assertUnzipContent(unzipper, expected);
+    }
+
+    public void testScale() throws Exception {
+        Configuration conf = Configuration.newMemoryBased();
+        conf.set(StreamController.CONF_PARSER, ZIPParser.class);
+        StreamController unzipper = new StreamController(conf);
+
+        PayloadFeederHelper feeder = new PayloadFeederHelper(
+                Arrays.asList(new Payload(Resolver.getURL(
+                        "data/zip/large200.zip").openStream())));
+        unzipper.setSource(feeder);
+
+        assertTrue("The unzipper should have at least one element",
+                   unzipper.hasNext());
+
+        List<String> expected = new ArrayList<String>(200);
+        for (int i = 0 ; i < 200 ; i++) {
+            expected.add("sample" + i);
+        }
+        assertUnzipContent(unzipper, expected);
+    }
+
+    private void assertUnzipContent(StreamController unzipper,
+                                    List<String> expected) throws IOException {
         int received = 0;
         while (unzipper.hasNext()) {
             Payload payload = unzipper.next();
@@ -93,7 +120,7 @@ public class ZIPParserTest extends TestCase {
                                origin;
             entryName = entryName.substring(0, entryName.lastIndexOf("."));
             assertEquals("The entry name should match the content",
-                         entryName, 
+                         entryName,
                          PullParserTest.getStreamContent(payload).trim());
             payload.close();
         }
