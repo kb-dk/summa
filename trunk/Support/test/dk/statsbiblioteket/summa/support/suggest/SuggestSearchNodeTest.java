@@ -95,17 +95,30 @@ public class SuggestSearchNodeTest extends TestCase {
         assertGet(node, "Foo", "hits=\"10\" queryCount=\"2\">foo");
         assertGet(node, "bar", "hits=\"7\" queryCount=\"1\">bar");
         assertGet(node, "zoo", "hits=\"1\" queryCount=\"1\">zoo");
+        node.close();
     }
 
     public void testAddWithQueryCount() throws Exception {
         SuggestSearchNode node = new SuggestSearchNode(
-                Configuration.newMemoryBased());
+                Configuration.newMemoryBased(
+                        SuggestSearchNode.CONF_LOWERCASE_QUERIES, false));
         node.open(storageRoot.toString());
         put(node, "Foo Fighters", 87);
         put(node, "Foo Bars", 123);
         assertGet(node, "Foo", "queryCount=\"1\">Foo Fighters");
         put(node, "Foo Fighters", 87, 100);
         assertGet(node, "Foo", "queryCount=\"100\">Foo Fighters");
+        node.close();
+    }
+
+    public void testLowercase() throws Exception {
+        SuggestSearchNode node = new SuggestSearchNode(
+                Configuration.newMemoryBased(
+                        SuggestSearchNode.CONF_LOWERCASE_QUERIES, true));
+        node.open(storageRoot.toString());
+        put(node, "Foo Fighters", 87, 12);
+        put(node, "Foo fighters", 123);
+        assertGet(node, "Foo", "queryCount=\"13\">foo fighters");
         node.close();
     }
 

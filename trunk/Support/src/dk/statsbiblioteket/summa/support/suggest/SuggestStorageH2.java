@@ -32,6 +32,8 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
 
 /**
  *
@@ -45,6 +47,8 @@ public class SuggestStorageH2 implements SuggestStorage {
     public static final String DB_FILE = "suggest_h2storage";
     private static final String SELECT_QUERY =
             "SELECT query FROM suggest WHERE query=?";
+    private static final String SELECT_LOWERCASE_QUERY =
+            "SELECT query FROM suggest WHERE querylower=?";
     private static final String INSERT_STATEMENT =
             "INSERT INTO suggest VALUES (?, ?, ?, ?)";
 
@@ -57,10 +61,18 @@ public class SuggestStorageH2 implements SuggestStorage {
     private File location = null;
     private Connection connection;
     private boolean closed = true;
+    private boolean lowercaseQueries =
+            SuggestSearchNode.DEFAULT_LOWERCASE_QUERIES;
+    private Locale lowercaseLocale;
 
     @SuppressWarnings({"UnusedDeclaration"})
     public SuggestStorageH2(Configuration conf) {
         log.debug("Creating SuggestStorageH2");
+        lowercaseQueries = conf.getBoolean(
+                SuggestSearchNode.CONF_LOWERCASE_QUERIES, lowercaseQueries);
+        lowercaseLocale = new Locale(conf.getString(
+                SuggestSearchNode.CONF_LOWERCASE_LOCALE,
+                SuggestSearchNode.DEFAULT_LOWERCASE_LOCALE));
     }
 
     public synchronized void open(File location) throws IOException {
@@ -145,20 +157,28 @@ public class SuggestStorageH2 implements SuggestStorage {
             long startTime = System.nanoTime();
             PreparedStatement psExists = connection.prepareStatement(
                     "SELECT query, query_count, hit_count FROM suggest WHERE "
-                    + "querylower LIKE '" + prefix.toLowerCase()
+                    + "querylower LIKE '" + prefix.toLowerCase(lowercaseLocale)
                     + "%' ORDER BY query_count DESC");
             ResultSet rs = psExists.executeQuery();
-            SuggestResponse response = new SuggestResponse(prefix, maxResults);
+            List<BuildSuggestTripel> suggestions =
+                    new ArrayList<BuildSuggestTripel>(maxResults); 
             int current = 0;
             try {
-                while (rs.next() && current++ < maxResults) {
-                    response.addSuggestion(
-                            rs.getString(1), rs.getInt(3), rs.getInt(2));
+                while (rs.next() && suggestions.size() < maxResults) {
+                    updateResponse(suggestions, rs.getString(1), rs.getLong(3),
+                                   rs.getInt(2));
                 }
                 //noinspection DuplicateStringLiteralInspection
                 log.debug("getSuggestion(" + prefix + ", " + maxResults
                           + ") -> " + current + " suggestions in "
                           + (System.nanoTime() - startTime) / 1000000D + "ms");
+                SuggestResponse response = new SuggestResponse(
+                        prefix, suggestions.size());
+                for (BuildSuggestTripel bst: suggestions) {
+                    // TODO: Update SuggestResponse to long for hits
+                    response.addSuggestion(bst.getQuery(), (int)bst.getHits(),
+                                           bst.getQueryCount());
+                }
                 return response;
             } finally {
                 rs.close();
@@ -169,6 +189,21 @@ public class SuggestStorageH2 implements SuggestStorage {
                     + maxResults, e);
         }
 
+    }
+
+    private void updateResponse(List<BuildSuggestTripel> suggestions,
+                                String query, long hits, int queryCount) {
+        if (lowercaseQueries) {
+            query = query.toLowerCase(lowercaseLocale);
+            for (BuildSuggestTripel bst: suggestions) {
+                if (bst.getQuery().equals(query)) {
+                    bst.setHits(Math.max(bst.getHits(), hits));
+                    bst.setQueryCount(bst.getQueryCount() + queryCount);
+                    return;
+                }
+            }
+        }
+        suggestions.add(new BuildSuggestTripel(query, (int)hits, queryCount));
     }
 
     public void addSuggestion(String query, int hits) throws IOException {
@@ -190,6 +225,7 @@ public class SuggestStorageH2 implements SuggestStorage {
         }
         try {
             if (existsInDb(query)) {
+                // TODO: Consider updating hits for queries matching lowercase
                 if (queryCount == -1) {
                     updateDb(query, hits, getQueryCount(query) + 1);
                 } else {
@@ -212,7 +248,7 @@ public class SuggestStorageH2 implements SuggestStorage {
         PreparedStatement psInsert = connection.prepareStatement(
                 INSERT_STATEMENT);
         psInsert.setString(1, query);
-        psInsert.setString(2, query.toLowerCase());
+        psInsert.setString(2, query.toLowerCase(lowercaseLocale));
         psInsert.setInt(3, queryCount);
         psInsert.setLong(4, hits);
         psInsert.executeUpdate();
@@ -237,11 +273,12 @@ public class SuggestStorageH2 implements SuggestStorage {
         return retval;
     }
 
+    // Deletes all suggestions, no matter the case
     private void deleteSuggestion(String query) throws SQLException {
         log.debug("Removing suggestion '" + query + "'");
         PreparedStatement psExists =
-                connection.prepareStatement(SELECT_QUERY);
-        psExists.setString(1, query);
+                connection.prepareStatement(SELECT_LOWERCASE_QUERY);
+        psExists.setString(1, query.toLowerCase(lowercaseLocale));
         ResultSet rs = psExists.executeQuery();
         try {
             while (rs.next()) {
@@ -384,7 +421,7 @@ public class SuggestStorageH2 implements SuggestStorage {
                 }
                 try {
                     psInsert.setString(1, query);
-                    psInsert.setString(2, query.toLowerCase());
+                    psInsert.setString(2, query.toLowerCase(lowercaseLocale));
                     psInsert.setInt(3, queryCount);
                     psInsert.setLong(4, hits);
                     psInsert.executeUpdate();
@@ -409,4 +446,37 @@ public class SuggestStorageH2 implements SuggestStorage {
             }
         }
     }
+
+    private static class BuildSuggestTripel {
+        private String query;
+        private long hits;
+        private int queryCount;
+
+        public BuildSuggestTripel(String query, int hits, int queryCount) {
+            this.query = query;
+            this.hits = hits;
+            this.queryCount = queryCount;
+        }
+
+        public String getQuery() {
+            return query;
+        }
+
+        public long getHits() {
+            return hits;
+        }
+
+        public void setHits(long hits) {
+            this.hits = hits;
+        }
+
+        public int getQueryCount() {
+            return queryCount;
+        }
+
+        public void setQueryCount(int queryCount) {
+            this.queryCount = queryCount;
+        }
+    }
+
 }
