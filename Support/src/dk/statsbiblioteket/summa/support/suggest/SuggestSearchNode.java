@@ -90,6 +90,20 @@ public class SuggestSearchNode extends SearchNodeImpl {
     public static final int DEFAULT_DEFAULT_MAX_RESULTS = 10;
 
     /**
+     * If true, all results are lowercased. In case of equal results (e.g. "Foo"
+     * and "fOO" both being lowercased to "foo"), the highest number of hits is
+     * returned together with the sum of the queryCounts.
+     * </p><p>
+     * This setting does not affect the addition of queries, so it is possible
+     * to switch back and forth between the two behaviours.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_LOWERCASE_QUERIES =
+            "summa.support.suggest.lowercasequeries";
+    public static final boolean DEFAULT_LOWERCASE_QUERIES = true;
+
+    /**
      * The class for the back-end storage for suggest.
      * </p><p>
      * Optional. Default is
@@ -99,6 +113,15 @@ public class SuggestSearchNode extends SearchNodeImpl {
                                                 "summa.support.suggest.storage";
     public static final Class<? extends SuggestStorage> DEFAULT_STORAGE =
                                                          SuggestStorageH2.class;
+
+    /**
+     * The locale to use when lowercasing queries.
+     * </p><p>
+     * Optional. Default is "da" (Danish).
+     */
+    public static final String CONF_LOWERCASE_LOCALE =
+            "summa.support.suggest.lowercaselocale";
+    public static final String DEFAULT_LOWERCASE_LOCALE = "da";
 
     public static final String SUGGEST_FOLDER = "suggest";
 
@@ -113,10 +136,9 @@ public class SuggestSearchNode extends SearchNodeImpl {
                 CONF_DEFAULT_MAX_RESULTS, defaultMaxResults);
 
         Class<? extends SuggestStorage> storageClass;
-        storageClass = Configuration.getClass(CONF_STORAGE_CLASS,
-                                              SuggestStorage.class,
-                                              DEFAULT_STORAGE,
-                                              conf);
+        storageClass = Configuration.getClass(
+                CONF_STORAGE_CLASS, SuggestStorage.class, DEFAULT_STORAGE,
+                conf);
 
         storage = Configuration.create(storageClass, conf);
         log.info(String.format("Created SuggestSearchNode with maxResults=%d, "
