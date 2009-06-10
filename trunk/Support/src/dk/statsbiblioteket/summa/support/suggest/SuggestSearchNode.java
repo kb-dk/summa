@@ -115,7 +115,9 @@ public class SuggestSearchNode extends SearchNodeImpl {
                                                          SuggestStorageH2.class;
 
     /**
-     * The locale to use when lowercasing queries.
+     * The locale to use when lowercasing queries. This relevant both for
+     * case-sensitive and case-insensitive operation as lowercasing is used
+     * for lookup no matter the operation-mode.
      * </p><p>
      * Optional. Default is "da" (Danish).
      */
@@ -123,6 +125,9 @@ public class SuggestSearchNode extends SearchNodeImpl {
             "summa.support.suggest.lowercaselocale";
     public static final String DEFAULT_LOWERCASE_LOCALE = "da";
 
+    /**
+     * The folder name for the sub-index created by Suggest.
+     */
     public static final String SUGGEST_FOLDER = "suggest";
 
     private int maxResults = DEFAULT_MAX_RESULTS;
