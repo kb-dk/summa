@@ -1,6 +1,7 @@
 package dk.statsbiblioteket.summa.common.filter.object;
 
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 
@@ -141,8 +142,10 @@ public class RegexFilter extends AbstractDiscardFilter {
             Record r = payload.getRecord();
 
             if (r == null) {
-                log.warn("Payload without record, can not check record base. "
-                         + "Discarding payload");
+                Logging.logProcess(this.getClass().getSimpleName(),
+                        "Payload without record, can not check "
+                        +"record base. Discarding payload",
+                        Logging.LogLevel.WARN, payload);
                 return true;
             }
 
@@ -157,8 +160,10 @@ public class RegexFilter extends AbstractDiscardFilter {
             Record r = payload.getRecord();
 
             if (r == null) {
-                log.warn("Payload without record, can not check record base. "
-                         + "Discarding payload");
+                Logging.logProcess(this.getClass().getSimpleName(),
+                        "Payload without record, can not check "
+                        +"record content. Discarding payload",
+                        Logging.LogLevel.WARN, payload);
                 return true;
             }
 
