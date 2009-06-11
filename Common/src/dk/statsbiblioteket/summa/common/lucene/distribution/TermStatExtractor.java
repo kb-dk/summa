@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -26,6 +26,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.TermEnum;
+import org.apache.lucene.store.FSDirectory;
 
 import java.io.*;
 import java.util.List;
@@ -37,6 +38,9 @@ import java.util.ArrayList;
  * The format of the output-file is {@code field:text\tfrequency\n} where
  * line-breaks in text are escaped with \n and frequency is written with
  * {@code Integer.toString()}.
+ * </p><p>
+ * When configuring the TermStatExtractor, consider specifying
+ * {@link TermStat#CONF_MEMORYBASED}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -59,39 +63,44 @@ public class TermStatExtractor {
     public static final int DEFAULT_MAXOPENSOURCES = 100;
 
     private int maxOpenSources = DEFAULT_MAXOPENSOURCES;
+    private Configuration termStatConf;
 
     public TermStatExtractor(Configuration conf) {
         maxOpenSources = conf.getInt(CONF_MAXOPENSOURCES, maxOpenSources);
+        termStatConf = conf;
     }
 
     /**
      * Iterates through all terms in the IndexReader and dumps the docFreq of
      * the terms to the destination.
-     * @param ir          an IndexReader for a Lucene index.
+     * @param index       the location of a Lucene index.
      * @param destination where to store the Term-statistics.
      * @throws IOException if extraction failed due to an I/O error.
      */
-    public void dumpStats(IndexReader ir, File destination) throws IOException {
+    public void dumpStats(File index, File destination) throws IOException {
         //noinspection DuplicateStringLiteralInspection
-        log.debug("dumpStats(..., " + destination + ") called");
+        log.debug(String.format("dumpStats(%s, %s) called",
+                                index, destination));
+        IndexReader ir = IndexReader.open(
+                FSDirectory.getDirectory(index, null));
         Profiler profiler = new Profiler();
-        Writer out = new BufferedWriter(new OutputStreamWriter(
-                new FileOutputStream(destination, false), "utf-8"));
+        TermStat stats = new TermStat(termStatConf);
+        stats.create(destination);
         TermEnum terms = ir.terms();
         while (terms.next()) {
-            out.write(terms.term().field());
-            out.write(":");
-            out.write(terms.term().text().replace("\n", "\\n"));
-            out.write("\t");
-            out.write(Integer.toString(terms.docFreq()));
-            out.write("\n");
+            stats.dirtyAdd(new TermEntry(
+                    terms.term().field() + ":" + terms.term().text(),
+                    terms.docFreq()));
             profiler.beat();
         }
-        out.close();
-        log.info(String.format("Finished extracting %d  docFreq's in %s. "
-                               + "Average extraction speed: %s docFreq's/sec",
-                               profiler.getBeats(), profiler.getSpendTime(),
-                               profiler.getBps(false)));
+        stats.store();
+        stats.close();
+        ir.close();
+        log.info(String.format(
+                "Finished extracting %d terms with docFreqs in %s. "
+                + "Average extraction speed: %s docFreq's/sec",
+                profiler.getBeats(), profiler.getSpendTime(),
+                profiler.getBps(false)));
     }
 
     /**
@@ -105,187 +114,80 @@ public class TermStatExtractor {
      */
     public void mergeStats(List<File> sources, File destination) throws
                                                                    IOException {
-        if (sources.size() <= maxOpenSources) {
-            doMerge(sources, destination);
-        } else {
-            File tempDest = File.createTempFile(
-                    "merge_", null, destination.getParentFile());
-            doMerge(sources.subList(0, maxOpenSources), tempDest);
-            List<File> pending = new ArrayList<File>(sources.size());
-            pending.addAll(sources.subList(maxOpenSources, sources.size()));
-            pending.add(tempDest);
-            mergeStats(pending, destination);
-            tempDest.delete();
-        }
+
+        // TODO: Split on maxOpenSources or the merger will die on ~500 sources
+        doMerge(sources, destination);
     }
 
     // TODO: Make the merger more robust with regard to errors in the sources
-    private void doMerge(List<File> fileSources, File destination) throws
-                                                                   IOException {
+    private void doMerge(List<File> fileSources, File destinationFile)
+                                                            throws IOException {
         Profiler profiler = new Profiler();
-        List<PeekReader> sources =
-                new ArrayList<PeekReader>(fileSources.size());
-        for (File source: fileSources) {
+        TermStat destination = new TermStat(termStatConf);
+        destination.create(destinationFile);
+
+        List<TermStat> sources = new ArrayList<TermStat>(fileSources.size());
+        for (File fileSource: fileSources) {
+            log.trace("Opening the source '" + fileSource + "'");
             try {
-                log.trace("Opening the source '" + source + "'");
-                PeekReader in = new PeekReader(source);
-                sources.add(in);
-            } catch (IOException e) {
-                log.error(String.format(
-                        "Error: Unable to open the source-file '%s'. The file"
-                        + " will be ignored for merging", source), e);
-            }
-        }
-        Writer out = new BufferedWriter(new OutputStreamWriter(
-                new FileOutputStream(destination, false), "utf-8"));
-        while(fileSources.size() > 0) {
-            // Find the first term in Unicode-order
-            PeekReader first = null;
-            for (PeekReader source: sources) {
-                if ("".equals(source.peek())) { // Skip blanks
-                    source.readLine();
+                TermStat source = new TermStat(termStatConf);
+                source.open(fileSource, true);
+                if (source.size() == 0) {
+                    log.debug("the source " + fileSource + " did not contain "
+                              + "any terms. Skipping source");
+                    source.close();
                     continue;
                 }
-                if (source.peek() != null
-                    && (first == null
-                        || source.peekTerm().compareTo(first.peekTerm()) < 0)) {
-                     first = source;
+                sources.add(source);
+            } catch (Exception e) {
+                log.warn(String.format(
+                        "Unable to open TermStat with source '%s'. "
+                        + "Skipping source", fileSource), e);
+            }
+        }
+        log.debug(fileSources.size() + " sources opened. Beginning merge");
+        while(sources.size() > 0) {
+            // Find the first term in Unicode-order
+            TermStat first = null;
+            for (TermStat candidate : sources) {
+                if (first == null ||
+                    candidate.get(candidate.position).getTerm().compareTo(
+                            first.get(first.position).getTerm()) < 0) {
+                    first = candidate;
                 }
             }
-            if (first == null) { // No more terms
-                break;
-            }
-            // Sum it up and remove empty
-            int sum = 0;
-            String term = first.peekTerm();
-            for (int i = sources.size() - 1 ; i >= 0 ; i++) {
-                PeekReader source = sources.get(i);
-                String sourceTerm = source.peekTerm();
-                if (sourceTerm != null && sourceTerm.equals(term)) {
-                    sum += source.peekDocFreq();
-                    source.readLine();
-                }
-                // Remove depleted
-                if (source.peek() == null) {
-                    sources.remove(sources.size()-1);
+
+            // Sum the term counts and remove empty
+            TermEntry firstEntry = first.get(first.position);
+            int sum = 0; //firstEntry.getCount();
+            String term = firstEntry.getTerm();
+            for (int i = sources.size() - 1 ; i >= 0 ; i--) {
+                TermStat current = sources.get(i);
+                String currentTerm = current.get(current.position).getTerm();
+                if (currentTerm.equals(term)) {
+                    sum += current.get(current.position).getCount();
+                    current.position++;
+                    // Remove depleted
+                    if (current.position == current.size()) {
+                        current.close();
+                        sources.remove(i);
+                    }
                 }
             }
             if (log.isTraceEnabled()) {
                 log.trace("Summed docFreq for '" + term + "' is " + sum);
             }
-            out.write(term);
-            out.write("\t");
-            out.write(Integer.toString(sum));
-            out.write("\n");
+            destination.dirtyAdd(new TermEntry(term, sum));
             profiler.beat();
         }
-        out.close();
+        log.debug("Finished merging. Cleaning up...");
+        destination.cleanup();
+        log.debug("Cleanup finished. Storing...");
+        destination.store();
+        log.debug("Finished storing");
+        destination.close();
         log.debug(String.format(
                 "Finished merging %d sources to '%s' in %s",
-                sources.size(), destination, profiler.getSpendTime()));
-    }
-
-    /**
-     * Simple Reader-wrapper that auto-closes on EOF and allows for peeking the
-     * next term without advancing in the file. Do not use this outside of
-     * TermStatsextractor as it is not a full implementation - only the
-     * overridden methods are guaranteed to work!
-     */
-    private class PeekReader extends BufferedReader {
-        private File source;
-        private String nextLine = null;
-        private boolean eofReached = false;
-
-        public PeekReader(File source) throws IOException {
-            super(new InputStreamReader(new FileInputStream(source), "utf-8"));
-            this.source = source;
-        }
-
-        @Override
-        public String readLine() throws IOException {
-            if (nextLine != null) {
-                String result = nextLine;
-                nextLine = null;
-                return result;
-            }
-            if (eofReached) {
-                return null;
-            }
-            String result = super.readLine();
-            if (result == null) {
-                close();
-            }
-            return result;
-        }
-
-        /**
-         * Extracts the next line without advancing in the file.
-         * @return the next line in the file or null if EOF has been reached.
-         * @throws IOException if the line could not be read.
-         */
-        public String peek() throws IOException {
-            if (nextLine != null) {
-                return nextLine;
-            }
-            if (eofReached) {
-                return null;
-            }
-            nextLine = readLine();
-            return nextLine;
-        }
-
-        /**
-         * @return the next term (without docFreq), null if EOF.
-         * @throws IOException if the term could not be extracted.
-         */
-        public String peekTerm() throws IOException {
-            if (peek() == null) {
-                return null;
-            }
-            if ("".equals(nextLine)) {
-                return "";
-            }
-            int pos = peek().lastIndexOf("\t");
-            if (pos == -1) {
-                throw new IOException("Unable to locate docFreq-divider for '"
-                                      + nextLine + "'");
-            }
-            return nextLine.substring(0, pos);
-        }
-
-        /**
-         * @return the docFreq for the current term, null if EOF and 0 if the
-         *         term is the empty String.
-         * @throws IOException if the docFreq could not be extracted.
-         */
-        public Integer peekDocFreq() throws IOException {
-            if (peek() == null) {
-                return null;
-            }
-            if ("".equals(nextLine)) {
-                return 0; // Is this acceptable?
-            }
-            int pos = peek().lastIndexOf("\t");
-            if (pos == -1) {
-                throw new IOException("Unable to determine docFreq for '"
-                                      + nextLine + "'");
-            }
-            try {
-                return Integer.parseInt(nextLine.substring(pos + 1));
-            } catch (Exception e) {
-                throw new IOException("Unable to parse docFreq for '"
-                                      + nextLine + "'", e);
-            }
-        }
-
-        @Override
-        public void close() throws IOException {
-            if (eofReached) {
-                return;
-            }
-            log.trace(String.format("Closing '%s'", source));
-            eofReached = true;
-            super.close();
-        }
+                fileSources.size(), destination, profiler.getSpendTime()));
     }
 }
