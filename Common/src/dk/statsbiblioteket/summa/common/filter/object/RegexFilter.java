@@ -13,7 +13,8 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * An {@link ObjectFilter} that can black- or white list payloads based on
- * their ids, record base- and/or content.
+ * their ids, record base- and/or content. It can be configured to check lists
+ * of regular expressions against any of these three properties.
  */
 public class RegexFilter extends AbstractDiscardFilter {
 
@@ -48,10 +49,12 @@ public class RegexFilter extends AbstractDiscardFilter {
 
     /**
      * Optional property defining whether this filter {@code inclusive}
-     * or {@code exclusive}. If the filter is {@code inclusive} only payloads
-     * matching the given regular expressions pass the filter.
-     * If it is {@code exclusive} records matching the regular expressions
-     * are discarded.
+     * or {@code exclusive}.
+     * <p/>
+     * If the filter is {@code inclusive} payloads
+     * matching any of the the given regular expressions pass the filter.
+     * If it is {@code exclusive} records matching any of the regular
+     * expressions are discarded.
      * <p/>
      * The values allowed for this property are the strings {@code inclusive}
      * and {@code exclusive}. The default value is {@code exclusive}.
