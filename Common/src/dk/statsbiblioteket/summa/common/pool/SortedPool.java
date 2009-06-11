@@ -63,6 +63,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 public interface SortedPool<E extends Comparable<E>> extends List<E>,
                                                           RandomAccess {
     public static final String VALUES_POSTFIX = ".dat";
+    @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public static final String INDEX_POSTFIX = ".index";
 
     /**
@@ -156,7 +157,7 @@ public interface SortedPool<E extends Comparable<E>> extends List<E>,
 
     /**
      * Ensures that the state of the pool is consistent. Used after a
-     * series of calls to {@link #add}. Note that this method will most
+     * series of calls to {@link #dirtyAdd}. Note that this method will most
      * probably change the position of the values.
      */
     public void cleanup();
