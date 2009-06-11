@@ -57,13 +57,11 @@ public abstract class AbstractDiscardFilter extends ObjectFilterImpl {
         if (discard) {
             Logging.logProcess(
                     getName() + "#" + this.getClass().getSimpleName(),
-                    "Discarding due to unwanted relatives (pun intended)",
-                    Logging.LogLevel.TRACE, payload);
+                    "Discarding", Logging.LogLevel.DEBUG, payload);
         } else {
             Logging.logProcess(
                     getName() + this.getClass().getSimpleName(),
-                    "No offending relatives: Payload not discarded",
-                    Logging.LogLevel.TRACE, payload);
+                    "Payload not discarded", Logging.LogLevel.TRACE, payload);
         }
         return !discard;
     }
