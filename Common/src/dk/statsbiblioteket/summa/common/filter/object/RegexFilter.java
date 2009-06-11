@@ -3,9 +3,10 @@ package dk.statsbiblioteket.summa.common.filter.object;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.util.Strings;
 
 import java.util.regex.Pattern;
+import java.util.List;
+import java.util.ArrayList;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -19,26 +20,31 @@ public class RegexFilter extends AbstractDiscardFilter {
     private static final Log log = LogFactory.getLog(RegexFilter.class);
 
     /**
-     * Optional property defining the regular expression applied to
-     * payload ids. 
+     * Optional property defining a list regular expressions applied to
+     * payload ids. Whether or not the payload is discarded is decided
+     * based upon the {@link #CONF_MODE} property.
      */
-    public static final String CONF_ID_REGEX = "summa.regexfilter.idpattern";
+    public static final String CONF_ID_REGEX = "summa.regexfilter.idpatterns";
 
     /**
-     * Optional property defining the regular expression applied to
+     * Optional property defining a list of regular expressions applied to
      * the {@link Record} base. Defining this property implies that
-     * all filtered payloads must include a {@code Record}.
+     * all filtered payloads must include a {@code Record}. Whether or not the
+     * payload is discarded is decided based upon the {@link #CONF_MODE}
+     * property.
      */
     public static final String CONF_BASE_REGEX =
-                                          "summa.regexfilter.basepattern";
+                                          "summa.regexfilter.basepatterns";
 
     /**
-     * Optional property defining the regular expression applied to
+     * Optional property defining a list of regular expressions applied to
      * the {@link Record} content. Defining this property implies that
-     * all filtered payloads must include a {@code Record}.
+     * all filtered payloads must include a {@code Record}. Whether or not the
+     * payload is discarded is decided based upon the {@link #CONF_MODE}
+     * property.
      */
     public static final String CONF_CONTENT_REGEX =
-                                            "summa.regexfilter.contentpattern";
+                                            "summa.regexfilter.contentpatterns";
 
     /**
      * Optional property defining whether this filter {@code inclusive}
@@ -55,35 +61,47 @@ public class RegexFilter extends AbstractDiscardFilter {
     public static final String DEFAULT_MODE = "exclusive";
 
     private boolean isInclusive;
-    private Pattern idPattern;
-    private Pattern basePattern;
-    private Pattern contentPattern;
+    private List<Pattern> idPatterns;
+    private List<Pattern> basePatterns;
+    private List<Pattern> contentPatterns;
 
     public RegexFilter(Configuration conf) {
         super(conf);
 
         isInclusive = parseIsInclusive(conf);
 
-        String idRegex = conf.getString(CONF_ID_REGEX, null);
-        String baseRegex = conf.getString(CONF_BASE_REGEX, null);
-        String contentRegex = conf.getString(CONF_CONTENT_REGEX, null);
+        List<String> idRegex = conf.getStrings(CONF_ID_REGEX,
+                                               (List<String>)null);
+        List<String> baseRegex = conf.getStrings(CONF_BASE_REGEX,
+                                                 (List<String>)null);
+        List<String> contentRegex = conf.getStrings(CONF_CONTENT_REGEX,
+                                                    (List<String>)null);
 
         if (idRegex != null) {
-            log.debug("Compiling id filter regex: " + idRegex);
-            idPattern = Pattern.compile(idRegex);
+            idPatterns = new ArrayList<Pattern>(idRegex.size());
+            for (String regex : idRegex) {
+                log.debug("Compiling id filter regex: " + regex);
+                idPatterns.add(Pattern.compile(regex));
+            }
         }
 
         if (baseRegex != null) {
-            log.debug("Compiling base filter regex: " + baseRegex);
-            basePattern = Pattern.compile(baseRegex);
+            basePatterns = new ArrayList<Pattern>(baseRegex.size());
+            for (String regex : baseRegex) {
+                log.debug("Compiling base filter regex: " + regex);
+                basePatterns.add(Pattern.compile(regex));
+            }
         }
 
         if (contentRegex != null) {
-            log.debug("Compiling content filter regex: " + contentRegex);
-            contentPattern = Pattern.compile(contentRegex);
+            contentPatterns = new ArrayList<Pattern>(contentRegex.size());
+            for (String regex : contentRegex) {
+                log.debug("Compiling content filter regex: " + regex);
+                contentPatterns.add(Pattern.compile(regex));
+            }
         }
 
-        if (idPattern == null && basePattern == null && contentPattern == null){
+        if (idPatterns == null && basePatterns == null && contentPatterns == null){
             log.warn("No patterns configured, everything will be "
                      + (isInclusive ? "discarded" : "accepted")
                      + ". Set the properties "
@@ -108,18 +126,15 @@ public class RegexFilter extends AbstractDiscardFilter {
     }
 
     protected boolean checkDiscard(Payload payload) {
-        // If we are inclusive only payloads matching our conditions should
-        // pass the filter. It seems that non conditions are configured,
-        // so apply the default policy on all payloads
-        boolean discard = isInclusive;
-
-        if (idPattern != null) {
-            discard =
-                     idPattern.matcher(payload.getId()).matches() ^ isInclusive;
-            if (discard) return true; 
+        if (idPatterns != null) {
+            for (Pattern p : idPatterns) {
+                if (p.matcher(payload.getId()).matches()) {
+                    return !isInclusive;
+                }
+            }
         }
 
-        if (basePattern != null) {
+        if (basePatterns != null) {
             Record r = payload.getRecord();
 
             if (r == null) {
@@ -128,11 +143,14 @@ public class RegexFilter extends AbstractDiscardFilter {
                 return true;
             }
 
-            discard = basePattern.matcher(r.getBase()).matches() ^ isInclusive;
-            if (discard) return true;
+            for (Pattern p : basePatterns) {
+                if (p.matcher(r.getBase()).matches()) {
+                    return !isInclusive;
+                }
+            }
         }
 
-        if (contentPattern != null) {
+        if (contentPatterns != null) {
             Record r = payload.getRecord();
 
             if (r == null) {
@@ -141,15 +159,21 @@ public class RegexFilter extends AbstractDiscardFilter {
                 return true;
             }
 
-            discard =
-              contentPattern.matcher(r.getContentAsUTF8()).matches() ^ isInclusive;
-            if (discard) return true;
+            for (Pattern p : contentPatterns) {
+                if (p.matcher(r.getContentAsUTF8()).matches()) {
+                    return !isInclusive;
+                }
+            }
         }
 
 
         if (log.isTraceEnabled()) {
             log.trace("No regular expressions configured");
         }
-        return discard;
+
+        // If we are inclusive only payloads matching our conditions should
+        // pass the filter. It seems that non conditions are configured,
+        // so apply the default policy on all payloads
+        return isInclusive;
     }
 }

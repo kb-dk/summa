@@ -34,7 +34,6 @@ public class ScriptFilterTest extends TestCase {
         buf.setSource(filter);
 
         return buf;
-
     }
 
     public void testRenameRecordIdJS() throws Exception {
