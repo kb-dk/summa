@@ -73,6 +73,14 @@ public class ConfigurationTest extends TestCase {
                      "2768", l.get(0));
     }
 
+    public void testGetStringsSingleAgain() throws Exception {
+        Configuration conf = Configuration.newMemoryBased("foo", "bar");
+        List<String> l = conf.getStrings ("foo");
+        assertEquals("getStrings on a value without ','s should have size 1",
+                     1, l.size());
+        assertEquals("bar", l.get(0));
+    }
+
     public void testGetStringsMany() throws Exception {
         Configuration conf = new Configuration(new MemoryStorage());
         conf.set ("foobar", "foo, bar,baz"); // Intentially no space before baz
