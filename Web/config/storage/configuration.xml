@@ -5,7 +5,7 @@
 <properties>
 
     <entry key="summa.rpc.vendor">//localhost:28000/summa-storage</entry>
-    <!--<entry key="summa.common.recordutil.escapecontent">false</entry>-->
+    <entry key="summa.common.recordutil.escapecontent">false</entry>
 
 </properties>
 
