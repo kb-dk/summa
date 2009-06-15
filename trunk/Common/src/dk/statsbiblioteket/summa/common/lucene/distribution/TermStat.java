@@ -225,14 +225,14 @@ public class TermStat {
     }
 
     /**
-     * Returns the term count or 0 if the term is not present.
+     * Returns the number of times the term occur.
      * @param term the (@code field:value} to resolve the count for.
-     * @return the count for the given term og 0 of the term does not exist.
+     * @return the count for the given term or -1 if the term does not exist.
      */
     public int getTermCount(String term) {
         TermEntry te = entryPool.get().setTerm(term);
         int pos = indexOf(te);
-        return pos == -1 ? 0 : get(pos).getCount();
+        return pos == -1 ? -1 : get(pos).getCount();
     }
     
     /**

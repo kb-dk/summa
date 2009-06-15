@@ -39,6 +39,8 @@ import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.summa.search.document.DocumentSearcherImpl;
 import dk.statsbiblioteket.summa.support.api.LuceneKeys;
 import dk.statsbiblioteket.summa.support.lucene.search.sort.SortPool;
+import dk.statsbiblioteket.summa.support.lucene.TermProviderImpl;
+import dk.statsbiblioteket.summa.support.lucene.SummaIndexReader;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.logging.Log;
@@ -66,8 +68,9 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Lucene-specific search node.
- *
- * IMPORTANT: This class is to be moved to another module.
+ * </p><p>
+ * Besides the properties given in this class, the properties for
+ * {@link SummaIndexReader} should be defined.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -196,6 +199,16 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
     public static final String CONF_EXPLAIN = "summa.support.lucene.explain";
     public static final boolean DEFAULT_EXPLAIN = false;
 
+    /**
+     * If true, distributed term stats are enabled.
+     * </p><p>
+     * Optional. Default is false.
+     * @see {@link SummaIndexReader}.
+     */
+    public static final String CONF_USE_TERMSTATS =
+            "summa.support.lucene.usetermstats";
+    public static final boolean DEFAULT_USE_TERMSTATS = false;
+
     @SuppressWarnings({"FieldCanBeLocal"})
     private LuceneIndexDescriptor descriptor;
     private SortPool sortPool; // Toed to the descriptor
@@ -209,14 +222,15 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
     private boolean explain = DEFAULT_EXPLAIN;
 
     private boolean mlt_enabled = DEFAULT_MORELIKETHIS_ENABLED;
-    private Integer mlt_minTermFreq = null;
-    private Integer mlt_minDocFrew = null;
+    private Integer mlt_minTermFreq =   null;
+    private Integer mlt_minDocFrew =    null;
     private Integer mlt_minWordLength = null;
     private Integer mlt_maxWordLength = null;
     private Integer mlt_maxQueryTerms = null;
     private Integer mlt_maxNumTokensParsed = null;
     private Set<String> mlt_stopWords = null;
     private MoreLikeThis moreLikeThis = null;
+    private TermProviderImpl termProvider = null;
 
     /**
      * Constructs a Lucene search node from the given configuration. This
@@ -292,6 +306,10 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
             mlt_stopWords = new HashSet<String>(stopWords);
         }
         explain = conf.getBoolean(CONF_EXPLAIN, explain);
+        if (conf.getBoolean(CONF_USE_TERMSTATS, DEFAULT_USE_TERMSTATS)) {
+            log.debug("Enabling distributes term stats");
+            termProvider = new TermProviderImpl(conf);
+        }
         log.debug(String.format(
                 "Finished setting up MoreLikeThis with enabled=%s, "
                 + "minTermFreq=%s, minDocFreq=%s, minWordLength=%s, "
@@ -335,10 +353,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
             openDescriptor(baseLocation);
         }
         try {
-            searcher = new IndexSearcher(IndexReader.open(
-                    FSDirectory.getDirectory(
-                            Resolver.urlToFile(urlLocation).getAbsolutePath()),
-                    true));
+            searcher = new IndexSearcher(getIndexreader(urlLocation));
             log.debug("Opened Lucene searcher for " + urlLocation
                       + " with maxDoc " + searcher.maxDoc());
             createMoreLikeThis();
@@ -358,6 +373,13 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                     "Unable to determine searcher.maxDoc for searcher opened at"
                     + " location '%s'", location), e);
         }
+    }
+
+    private IndexReader getIndexreader(URL location) throws IOException {
+        IndexReader reader = IndexReader.open(FSDirectory.getDirectory(
+                Resolver.urlToFile(location).getAbsolutePath()), true);
+        return termProvider == null ? reader :
+               new SummaIndexReader(reader, termProvider);
     }
 
     private void openDescriptor(String location) throws RemoteException {

@@ -175,7 +175,7 @@ public class IndexConnector {
         switch (INDEXTYPE.multiIndex.getEnum(iTypeS)) {
             case singleIndex:
                 log.info("Constructing Summa reader for '" + linksS + "'");
-                return new SummaIndexReader(IndexReader.open(linksS));
+                return IndexReader.open(linksS);
             case multiIndex:
                 IndexReader[] subReaders = new IndexReader[indexKeys.size()];
                 int pos = 0;
