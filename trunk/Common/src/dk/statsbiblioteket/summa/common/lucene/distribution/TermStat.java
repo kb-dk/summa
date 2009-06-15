@@ -20,17 +20,23 @@
 package dk.statsbiblioteket.summa.common.lucene.distribution;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.xml.DOM;
 import dk.statsbiblioteket.summa.common.pool.SortedPool;
 import dk.statsbiblioteket.summa.common.pool.MemoryPool;
 import dk.statsbiblioteket.summa.common.pool.DiskPool;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.util.FactoryPool;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.w3c.dom.Document;
 
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 
 /**
  * Persistent structure for TermStats from an index. This is basically a list
@@ -61,6 +67,8 @@ public class TermStat {
     private SortedPool<TermEntry> termCounts;
     private boolean memoryBased = DEFAULT_MEMORYBASED;
     private FactoryPool<TermEntry> entryPool;
+    private long docCount = 0;
+    private String source = "No source defined";
 
     public TermStat(Configuration conf) {
         memoryBased = conf.getBoolean(CONF_MEMORYBASED, memoryBased);
@@ -95,12 +103,40 @@ public class TermStat {
             throw new FileNotFoundException("Unable to locate " + location);
         }
         return termCounts.open(
-                location, TERMSTAT_PERSISTENT_NAME, readOnly, false);
+                location, TERMSTAT_PERSISTENT_NAME, readOnly, false) &&
+                openMeta();
+    }
+
+    private boolean openMeta() {
+        try {
+            String meta = Resolver.getUTF8Content(
+                    getMetaFile().toURI().toURL());
+            Document dom = DOM.stringToDOM(meta, false);
+            docCount = Long.parseLong(DOM.selectString(
+                    dom,"termstatmeta/doccount"));
+            source = DOM.selectString(dom, "termstatmeta/source");
+            log.debug(String.format(
+                    "Extracted docCount %d and source '%s' from '%s'",
+                    docCount, source, getMetaFile()));
+            return true;
+        } catch (Exception e) {
+            log.error(String.format(
+                    "Unable to open '%s' which holds the docCount. Count will "
+                    + "be set to 0, which will lead to wonky ranking",
+                    getMetaFile()), e);
+            return false;
+        }
+    }
+
+    private File getMetaFile() {
+        return termCounts.getPoolPersistenceFile("meta");
     }
 
     /**
      * Create a persistent structure at the given location, making it ready for
      * updates.
+     * </p><p>
+     * It is recommended to call {@link #setSource(String)} after this.
      * @param location where the TermStats should be stored.
      * @return true if the creation succeded.
      * @throws IOException if the structure could not be created.
@@ -117,6 +153,38 @@ public class TermStat {
      */
     public void store() throws IOException {
         termCounts.store();
+        storeMeta();
+    }
+
+    private void storeMeta() throws IOException {
+        log.debug("StoreMeta called, storing in '" + getMetaFile() + "'");
+        XMLOutputFactory xmlFactory = XMLOutputFactory.newInstance();
+        FileOutputStream fileOut = new FileOutputStream(getMetaFile());
+        XMLStreamWriter xmlOut;
+        try {
+            xmlOut = xmlFactory.createXMLStreamWriter(fileOut, "utf-8");
+            xmlOut.writeStartDocument();
+            xmlOut.writeStartElement("termstatmeta");
+            xmlOut.writeStartElement("doccount");
+            xmlOut.writeCharacters(Long.toString(getDocCount()));
+            if (getDocCount() == 0) {
+                log.warn(String.format(
+                        "docCount for source '%s' was 0. Unless the index has "
+                        + "no terms, this is normally an error", getSource()));
+            }
+            xmlOut.writeEndElement();
+            //noinspection DuplicateStringLiteralInspection
+            xmlOut.writeStartElement("source");
+            xmlOut.writeCharacters(getSource());
+            xmlOut.writeEndElement();
+            xmlOut.writeEndDocument();
+            xmlOut.close();
+            fileOut.close();
+            log.debug("StoreMeta completed for '" + getMetaFile() + "'");
+        } catch (Exception e) {
+            throw new IOException("Unable to write meta to '"
+                                  + getMetaFile() + "'", e);
+        }
     }
 
     /**
@@ -186,4 +254,42 @@ public class TermStat {
      * Convenience pointer for inter-package use (primarily merging).
      */
     int position = 0;
+
+    /**
+     * @return the number of documents in the (potentially virtual) index that
+     *         this represents.
+     */
+    public long getDocCount() {
+        return docCount;
+    }
+
+    /**
+     * @param docCount the number of documents in the index.
+     */
+    public void setDocCount(long docCount) {
+        this.docCount = docCount;
+    }
+
+    /**
+     * The source is meant for feedback and debugging only. No guarantees are
+     * given as to how it is constructed.
+     * @return the source of the data.
+     */
+    public String getSource() {
+        return source;
+    }
+
+    /**
+     * @param source the source for these data.
+     */
+    public void setSource(String source) {
+        this.source = source;
+    }
+
+    @Override
+    public String toString() {
+        return "TermStat(docs " + getDocCount()
+               + ", source '" + getSource()
+               + "', terms " + size() + ")";
+    }
 }

@@ -93,6 +93,8 @@ public class TermStatExtractor {
                     terms.docFreq()));
             profiler.beat();
         }
+        stats.setDocCount(ir.maxDoc());
+        stats.setSource(index.toString());
         stats.store();
         stats.close();
         ir.close();
@@ -145,7 +147,11 @@ public class TermStatExtractor {
                         + "Skipping source", fileSource), e);
             }
         }
-        log.debug(fileSources.size() + " sources opened. Beginning merge");
+        log.debug(fileSources.size() + " sources opened. Calculating stats");
+
+        updateMergeStats(sources, destination);
+
+        log.debug("Beginning merge");
         while(sources.size() > 0) {
             // Find the first term in Unicode-order
             TermStat first = null;
@@ -189,5 +195,20 @@ public class TermStatExtractor {
         log.debug(String.format(
                 "Finished merging %d sources to '%s' in %s",
                 fileSources.size(), destination, profiler.getSpendTime()));
+    }
+
+    private void updateMergeStats(List<TermStat> sources, TermStat destination) {
+        long docCount = 0;
+        StringWriter sw = new StringWriter(sources.size() * 50);
+        sw.append("merge(");
+        boolean firstS = true;
+        for (TermStat source: sources) {
+            docCount += source.getDocCount();
+            sw.append(firstS ? "" : ", ").append(source.getSource());
+            firstS = false;
+        }
+        sw.append(")");
+        destination.setDocCount(docCount);
+        destination.setSource(sw.toString());
     }
 }
