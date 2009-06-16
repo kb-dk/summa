@@ -62,6 +62,7 @@ public class Payload {
 
     private InputStream stream = null;
     private Record record = null;
+    private boolean closed = false;
 
     /**
      * Data for the Payload, such as stream-origin. Used for filter-specific
@@ -238,6 +239,11 @@ public class Payload {
      *       close(success) on the Filter.
      */
     public void close() {
+        if (closed) {
+            log.trace("close(): Already closed. Ignoring request");
+            return;
+        }
+        closed = true;
         Logging.logProcess(this.getClass().getSimpleName(),
                            "Closing payload",
                            Logging.LogLevel.TRACE, this);
@@ -246,7 +252,7 @@ public class Payload {
                 log.debug("Closing embedded stream for " + this);
                 stream.close();
             } catch (IOException e) {
-                log.error("Exception closing stream", e);
+                log.error("Exception closing embedded strean for " + this, e);
             }
         }
     }
