@@ -100,7 +100,10 @@ public class ZIPParser extends ThreadedStreamParser {
             matching++;
             ZipEntryInputStream zipStream = new ZipEntryInputStream(zip);
             Payload payload = new Payload(zipStream);
-            payload.getData().put(Payload.ORIGIN, entry.getName());
+            payload.getData().put(
+                    Payload.ORIGIN,
+                    "ZIP(" + sourcePayload.getData(Payload.ORIGIN) + ")/"   
+                    + entry.getName());
             addToQueue(payload);
             long startTime = System.currentTimeMillis();
             try {
@@ -130,6 +133,7 @@ public class ZIPParser extends ThreadedStreamParser {
                                 matching, sourcePayload));
     }
 
+    private static Log entryLog = LogFactory.getLog(ZipEntryInputStream.class);
     /**
      * An encapsulation of a ZipInputStream that notifies the attribute waiter
      * upon close and changes close-behaviour to closeEntry.
@@ -141,11 +145,13 @@ public class ZIPParser extends ThreadedStreamParser {
 
         private ZipEntryInputStream(ZipInputStream zip) {
             this.zip = zip;
+            log.trace("Wrapping ZipInputStream");
         }
 
         @Override
         public void close() throws IOException {
             if (!closed) {
+                entryLog.trace("Closing ZipInputStream");
                 zip.closeEntry();
                 closed = true;
             }
@@ -232,6 +238,5 @@ public class ZIPParser extends ThreadedStreamParser {
             checkClose();
             return zip.skip(n);
         }
-
     }
 }
