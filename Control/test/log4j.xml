@@ -66,8 +66,8 @@
         <appender-ref ref="CONSOLE" />
     </logger>
 
-    <logger name="dk.statsbiblioteket.summa.common.filter">
-        <level value="trace" />
+    <logger name="dk.statsbiblioteket.summa.releasetest.StorageTest">
+        <level value="debug" />
         <appender-ref ref="CONSOLE" />
     </logger>
 
