@@ -283,6 +283,7 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
                     "Exception caught from protectedRun of %s with origin '%s'."
                     + " Stopping processing", 
                     sourcePayload, sourcePayload.getData(Payload.ORIGIN)), e);
+            sourcePayload.close();
         }
         if (log.isDebugEnabled()) {
             log.debug("run: Finished processing " + sourcePayload);
