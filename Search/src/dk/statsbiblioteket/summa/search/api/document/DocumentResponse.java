@@ -268,7 +268,7 @@ public class DocumentResponse implements Response, DocumentKeys {
     private static class ScoreComparator implements Comparator<Record>,
                                                    Serializable {
         public int compare(Record o1, Record o2) {
-            float diff = o1.getScore() - o2.getScore();
+            float diff = o2.getScore() - o1.getScore();
             return diff < 0 ? -1 : diff > 0 ? 1 : 0;
         }
     }
