@@ -1,4 +1,43 @@
 =======================
+2009-15-04: Summa 1.4.6
+=======================
+
+ * New default: The storage web service will longer XML-escape the embedded
+   record contents. To control this behavior set the property
+   summa.common.recordutil.escapecontent to true or false (SB)
+
+ * Include a RegexFilter that can black- or white list Payloads based on
+   regex matching on their, id, base, and/or content (SB)
+
+ * Add a new backend for the ThreadedStreamParser filter, called ZIPParser.
+   This can be used as a filter for extracting Payloads from a zip stream (SB)
+
+ * Changed the threadedStreamParser to use PayloadQueue which allows for
+   limit on queue-size based on memory usage
+
+ * Enhanced Suggest to allow for switching between case-sensitive and
+   case-insensitive operation (SB)
+
+ * Added listSuggestions and addSuggestions to Suggest to prepare for
+   export and import of bulk lists of suggestions (SB)
+
+ * Experimental: Extraction and merging of Lucene index term statistics. This
+   is intended to be used in the upcoming "distributed ranking on a
+   sharded index" (SB)
+ 
+ * Bugfix: The threadedStreamParser did not close Payloads on
+           exceptions (Refind)
+
+ * Bugfix: The PayloadQueue failed when queueing Payloads without Records
+           with a fixed ceiling on memory usage (SB)
+
+ * Bugfix: The H2 suggest storage did not store queryCount for
+           new suggestions (SB)
+
+ * Bugfix: Don't hardcode port 27000 and remote console in the DeployCommand
+           on ControlShell
+
+=======================
 2009-06-04: Summa 1.4.5
 =======================
 
