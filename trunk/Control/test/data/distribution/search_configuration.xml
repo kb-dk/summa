@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Setup for LuceneSearcher -->
+<xproperties>
+    <xproperties>
+        <entry>
+            <key>summa.control.service.port</key>
+            <value class="int">2783</value>
+        </entry>
+        <entry>
+            <key>summa.control.service.registry.port</key>
+            <value class="int">27000</value>
+        </entry>
+        <entry>
+            <key>summa.control.service.id</key>
+            <value class="string">Search</value>
+        </entry>
+       <entry>
+            <key>summa.search.node.class</key>
+            <value class="string">dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode</value>
+        </entry>
+
+        <entry>
+            <key>summa.indexwatcher.indexroot</key>
+            <value class="string">/tmp/summatest/index</value>
+        </entry>
+
+        <entry>
+            <key>summa.search.resultfields</key>
+            <value class="string-array">
+                <string>recordID</string>
+                <string>multi_token</string>
+                <string>single_token</string>
+                <string>multi_verbatim</string>
+                <string>single_verbatim</string>
+            </value>
+        </entry>
+    </xproperties>
+</xproperties>
+
+
