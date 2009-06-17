@@ -77,6 +77,21 @@ public class DistributedTermStatsTest extends NoExitTestCase {
     public static final File DESCRIPTOR = Resolver.getFile(
             "data/distribution/index_descriptor.xml");
 
+    public void testDistributesTermStats() throws Exception {
+        // TODO: Implement this
+
+        /*
+        1. Create 3 searchers as in testBasicDistribution
+        2. Extract individual term stats
+        3. Merge the term stats
+        4. Create 3 searchers that uses the merged termstats
+        5. Search for "bar1 bar2", which should give foo1 and foo2 in that order
+        6. Increase docCount for bar1 to a gazillion
+        7. Perform search for bar1 and bar2, which should give foo2 + foo1
+        8. Profit
+         */
+    }
+
     public void testBasicDistribution() throws Exception {
         List<Pair<String, List<Pair<String, String>>>> corpus =
         new ArrayList<Pair<String, List<Pair<String, String>>>>(3);
@@ -92,7 +107,7 @@ public class DistributedTermStatsTest extends NoExitTestCase {
         corpus.add(new Pair<String, List<Pair<String, String>>>(
                 "foo2", Arrays.asList(
                 new Pair<String, String>("multi_token", "bar1"),
-                new Pair<String, String>("multi_token", "bar2 bar2 bar2"),
+                new Pair<String, String>("multi_token", "bar2 bar2"),
                 new Pair<String, String>("multi_token", "bar3"))));
         createIndex(DESCRIPTOR, new File(INDEX_ROOT, "index_2"), corpus);
 
