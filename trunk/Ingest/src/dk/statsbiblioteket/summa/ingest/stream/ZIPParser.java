@@ -102,7 +102,7 @@ public class ZIPParser extends ThreadedStreamParser {
             Payload payload = new Payload(zipStream);
             payload.getData().put(
                     Payload.ORIGIN,
-                    "ZIP(" + sourcePayload.getData(Payload.ORIGIN) + ")/"   
+                    sourcePayload.getData(Payload.ORIGIN) + "!"
                     + entry.getName());
             addToQueue(payload);
             long startTime = System.currentTimeMillis();
