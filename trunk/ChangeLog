@@ -1,7 +1,296 @@
-2009-06-04 09:20  mke
+2009-06-16 19:09  tokerefind
 
-	* [r1547] build.properties, ChangeLog:
+	* [r1576]
+	  Control/test/dk/statsbiblioteket/summa/releasetest/StorageTest.java,
+	  Control/test/log4j.xml:
+	  
+	  Added scale-test to the Storage releasetest to experiment with
+	  memory usage (64MB seems to be quite enough for "normal"
+	  operation)
 
+2009-06-16 09:37  tokerefind
+
+	* [r1575]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/ThreadedStreamParser.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/ZIPParser.java:
+	  
+	  Bugfix: The threadedStreamParser did not close Payloads on
+	  exceptions
+	  Logging: Added trace-logs and verbose ORIGIN to ZIPParser
+
+2009-06-16 09:24  tokerefind
+
+	* [r1574]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/Payload.java:
+	  
+	  Added check for multiple calls to close in Payload
+
+2009-06-16 08:00  nig
+
+	* [r1573] Index/config/targets/tictoc/tictoc_author.xsl,
+	  Index/config/targets/tictoc/tictoc_date.xsl,
+	  Index/config/targets/tictoc/tictoc_identifiers.xsl,
+	  Index/config/targets/tictoc/tictoc_index.xsl,
+	  Index/config/targets/tictoc/tictoc_ma.xsl,
+	  Index/config/targets/tictoc/tictoc_notes.xsl,
+	  Index/config/targets/tictoc/tictoc_shortformat.xsl,
+	  Index/config/targets/tictoc/tictoc_title.xsl:
+	  
+	  Nyt target med RRS-feeds fra tictoc (ikke afsluttet endnu)
+
+2009-06-15 13:20  nig
+
+	* [r1572] Index/config/targets/tictoc,
+	  Index/config/targets/tictoc/tictoc_index.xsl:
+	  
+	  Nyt target med RRS-feeds fra tictoc
+
+2009-06-15 13:13  toke
+
+	* [r1571]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/distribution/TermStat.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/index/DistributedIndexStatCreator.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/index/IndexConnector.java,
+	  Common/src/dk/statsbiblioteket/summa/support,
+	  Common/src/dk/statsbiblioteket/summa/support/lucene,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/SummaIndexReader.java[CPY],
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/TermProvider.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/TermProviderImpl.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/LuceneSearchNode.java:
+	  
+	  Feature: enabled usage of distributes term stats in the
+	  LuceneSearchNode. Needs heavy unit-testing
+
+2009-06-15 10:30  toke
+
+	* [r1570]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/distribution/TermStat.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/distribution/TermStatExtractor.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/distribution/TermStatTest.java:
+	  
+	  Enhancement: Made the TermStat framework support docCount and
+	  persistence of source
+
+2009-06-12 09:47  mke
+
+	* [r1569] Web/config/storage/configuration.xml:
+	  
+	  New default: Don't escape record content from the storage web
+	  service
+
+2009-06-11 13:40  toke
+
+	* [r1568]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/distribution/TermEntry.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/distribution/TermStat.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/distribution/TermStatExtractor.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/distribution/TermValueConverter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/FactoryPool.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/distribution,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/distribution/TermStatExtractorTest.java,
+	  Common/test/log4j.xml:
+	  
+	  Feature: Added code for extracting and merging of term statistics
+	  from Lucene indexes. The is unit-tested, but integration with the
+	  Summa system (Searcher et al) has not been done yet
+
+2009-06-11 11:07  mke
+
+	* [r1567]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/RegexFilter.java:
+	  
+	  Log unexpected payloads to the process log as discussed with Toke
+
+2009-06-11 10:59  mke
+
+	* [r1566]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/RegexFilter.java:
+	  
+	  Update docs for RegexFilter to reflect what it actually does
+
+2009-06-11 10:56  mke
+
+	* [r1565]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/RegexFilter.java,
+	  Common/test/dk/statsbiblioteket/summa/common/configuration/ConfigurationTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/RegexFilterTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/ScriptFilterTest.java:
+	  
+	  Feature: Make RegexFilter uses lists of regexes
+	  
+	  Add small bonus test case to ConfigurationTest
+
+2009-06-11 09:33  mke
+
+	* [r1564]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/AbstractDiscardFilter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/RegexFilter.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/RegexFilterTest.java:
+	  
+	  Feature: Add a new ObjectFilter, RegexFilter, that can
+	  black/white list payloads based on their id, base, and/or content
+	  
+	  Bugfix: AbstractDiscardFilter logged something about "relations"
+	  and parent/child stuff. This aws probably a left over from before
+	  it was extracted as base class from DiscardRelativesFilter
+
+2009-06-11 08:56  toke
+
+	* [r1563]
+	  Common/src/dk/statsbiblioteket/summa/common/pool/SortedPool.java:
+	  
+	  JavaDoc: Fixed incorrect description of cleanup()
+
+2009-06-10 15:04  toke
+
+	* [r1562]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/distribution/TermStat.java:
+	  
+	  Working: Skeleton TermStat created in preparation of distributed
+	  term stats
+
+2009-06-10 14:09  toke
+
+	* [r1561]
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestSearchNode.java:
+	  
+	  Documentation: Slight additions to JavaDoc for SuggestSearchNode
+
+2009-06-10 14:06  toke
+
+	* [r1560]
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestSearchNode.java,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorageH2.java,
+	  Support/test/dk/statsbiblioteket/summa/support/suggest/SuggestSearchNodeTest.java:
+	  
+	  feature: Enhanced Suggest to allow for switching between
+	  case-sensitive and case-insensitive operation
+
+2009-06-10 12:43  toke
+
+	* [r1559]
+	  FacetBrowser/test/dk/statsbiblioteket/summa/facetbrowser/lucene/LuceneFacetBuilderTest.java:
+	  
+	  Testing: Added check for reduction of duplicate tags in the same
+	  document
+
+2009-06-10 09:51  toke
+
+	* [r1558]
+	  Ingest/test/data/pull/subfolder/nousableentriessub/bomba.txt[DEL],
+	  Ingest/test/data/pull/subfolder/subsub/kaboom.xml[DEL],
+	  Ingest/test/data/zip[CPY], Ingest/test/data/zip/large200.zip,
+	  Ingest/test/data/zip/makesample.tcl,
+	  Ingest/test/dk/statsbiblioteket/summa/ingest/stream/ZIPParserTest.java:
+	  
+	  Testing: Scale-test for the ZIPParser
+
+2009-06-09 15:06  toke
+
+	* [r1557]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/ZIPParser.java,
+	  Ingest/test/dk/statsbiblioteket/summa/ingest/stream/ZIPParserTest.java:
+	  
+	  Bugfix: The race-condition in the ZIPParser occured on multiple
+	  close-calls. The bug has been fixed by a check for already closed
+	  ZIP entries
+
+2009-06-09 15:00  toke
+
+	* [r1556]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/ThreadedStreamParser.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/ZIPHandler.java[DEL],
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/ZIPParser.java,
+	  Ingest/test/data/pull, Ingest/test/data/pull/README,
+	  Ingest/test/data/pull/flam.xml, Ingest/test/data/pull/foo.xml,
+	  Ingest/test/data/pull/myzip.zip,
+	  Ingest/test/data/pull/myzip2.zip,
+	  Ingest/test/data/pull/subfolder,
+	  Ingest/test/data/pull/subfolder/bar.dat,
+	  Ingest/test/data/pull/subfolder/emptysub,
+	  Ingest/test/data/pull/subfolder/nousableentriessub,
+	  Ingest/test/data/pull/subfolder/nousableentriessub/bomba.txt,
+	  Ingest/test/data/pull/subfolder/subsub,
+	  Ingest/test/data/pull/subfolder/subsub/kaboom.xml,
+	  Ingest/test/data/pull/subfolder/zoo.xml,
+	  Ingest/test/data/pull/subfolder/zoo2.xml,
+	  Ingest/test/dk/statsbiblioteket/summa/ingest/stream/PullParserTest.java,
+	  Ingest/test/dk/statsbiblioteket/summa/ingest/stream/ZIPParserTest.java,
+	  Summa.ipr:
+	  
+	  Testing: Unit-test for ZIPParser. There appears to be a
+	  race-conditions for close
+
+2009-06-09 14:22  toke
+
+	* [r1555]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/PayloadQueue.java:
+	  
+	  Bugfix: The PayloadQueue failed when queueing Payloads without
+	  Records with a fixed ceiling on memory usage
+
+2009-06-09 13:44  toke
+
+	* [r1554]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/ThreadedStreamParser.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/ZIPParser.java[CPY]:
+	  
+	  Addition: Finished forst version of ZIPParser, completely
+	  untested yet
+
+2009-06-09 13:10  toke
+
+	* [r1553]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/ThreadedStreamParser.java:
+	  
+	  Enhancement: Changed the threadedStreamParser to use PayloadQueue
+	  which allows for limit on queue-size based on memory usage
+
+2009-06-08 20:50  toke
+
+	* [r1552] Ingest/Ingest.iml,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/MARCParser.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/ThreadedStreamParser.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/XMLSplitterParser.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/PullParser.java,
+	  Ingest/test/dk/statsbiblioteket/summa/ingest/stream/PullParserTest.java:
+	  
+	  Refactoring: Extended ThreadedStreamParser to accept generated
+	  Payloads along with generated Records
+	  New: Created PullParser to retrieve external resources as Streams
+
+2009-06-08 12:58  toke
+
+	* [r1551]
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestSearchNode.java,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorage.java,
+	  Support/test/dk/statsbiblioteket/summa/support/suggest/SuggestSearchNodeTest.java:
+	  
+	  Enhancement: Added listSuggestions and addSuggestions to Suggest
+	  to prepare for export and import of bulk lists of suggestions
+
+2009-06-08 12:19  toke
+
+	* [r1550]
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorageH2.java:
+	  
+	  Bugfix: The H2 suggest storage did not store queryCount for new
+	  suggestions
+
+2009-06-08 11:03  mke
+
+	* [r1549]
+	  Control/src/dk/statsbiblioteket/summa/control/server/ControlCore.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/shell/DeployCommand.java:
+	  
+	  Bugfix: Don't hardcode port 27000 and remote console in the
+	  DeployCommand on ControlShell. Closes #1685 "DeployCommand in
+	  ControlShell hardcodes port 27000"
+
+2009-06-04 09:19  mke
+
+	* [r1547] ChangeLog, build.properties:
+	  
 	  Release Summa 1.4.5
 
 2009-06-04 09:13  mke
