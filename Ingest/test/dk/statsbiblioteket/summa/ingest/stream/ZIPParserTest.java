@@ -115,13 +115,20 @@ public class ZIPParserTest extends TestCase {
             received++;
             String origin = payload.getData(Payload.ORIGIN).toString();
             log.debug("Received Payload with origin " + origin);
-            String entryName = origin.contains("/") ?
-                               origin.substring(origin.lastIndexOf("/") + 1) :
-                               origin;
+
+            // Trim the an origin like 'foo/bar.zip!baz/myfile.xml'
+            // down to 'myfile'
+            String entryName = origin.contains("!") ?
+                         origin.substring(origin.lastIndexOf("!") + 1) : origin;
+            entryName = entryName.contains("/") ?
+                 entryName.substring(entryName.lastIndexOf("/")+ 1) : entryName;
             entryName = entryName.substring(0, entryName.lastIndexOf("."));
+
             assertEquals("The entry name should match the content",
                          entryName,
                          PullParserTest.getStreamContent(payload).trim());
+            assertTrue("Entry name " + entryName + "not found among "
+                       + "expected entries", expected.contains(entryName));
             payload.close();
         }
         assertEquals("The number of processed Payloads should be correct",
