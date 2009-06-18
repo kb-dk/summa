@@ -61,6 +61,19 @@ class JavaMetaProp :
 		return self._doc
 		
 	def set_doc (self, doc):
+		"""Set the doc string for this property, escaping javadoc refs within
+		   the class scope"""
+		prop_refs = re.findall(r"\{@link #CONF_([^\}]*)\}", doc)
+		for prop_name in prop_refs:
+			try:
+				prop = self._parent_class.get_prop(prop_name,
+												   search_parents=True)
+				doc = doc.replace("{@link #CONF_%s}" % prop_name,
+								  prop.get_name())
+			except:
+				doc = doc.replace("{@link #CONF_%s}" % prop_name, prop_name)
+				print >> sys.stderr, "WARN: Failed to resolve %s in docstring for %s"\
+									% (prop_name, self)
 		self._doc = doc
 		
 	def set_codename (self, codename):
@@ -72,16 +85,16 @@ class JavaMetaProp :
 	def __str__ (self):
 		s = "%s, codename %s" % (self._name, self._codename)
 		if self._default != None:
-			s = s + ", default is %s:\n%s" % (self._default, self._doc)
+			s = s + ", default is %s" % self._default
 		else:
-			s = s + ", no default:\n%s" % self._doc
+			s = s + ", no default"
 		return s 
 
 class JavaMetaClass :
 	def __init__ (self, name, package):
 		self._name = name
 		self._package = package
-		self._props = {} # name -> JavaMetaProp mapping
+		self._props = {} # name and codename -> JavaMetaProp mapping
 		self._children = {} # full_name -> JavaMetaClass map
 		self._parents = {} # full_name -> JavaMetaClass map
 		self._inh_decl = None #  the 'extends Foo implements Bar' part of the class declaration
@@ -89,10 +102,26 @@ class JavaMetaClass :
 	
 	def add_prop (self, prop):
 		self._props[prop.get_name()] = prop
+		self._props[prop.get_codename()] = prop
 	
-	def get_prop (self, name):
-		return self._props[name]
-	
+	def get_prop (self, name, search_parents=False):
+		"""
+		Look up a JavaMetaProp by its name or codename, optionally recursing
+		upwards in the class hierarchy to find it
+		"""
+		if not search_parents:
+			return self._props[name]
+		else:
+			if name in self._props:
+				return self._props[name]
+			if self._parents:
+				for parent in self._parents:
+					try:
+						return parent.get_prop(name, search_parents=True)
+					except KeyError:
+						pass
+		raise KeyError("No such property '%s' on class '%s'"\
+							% (name, self.full_name()))
 	def iter_props (self):
 		return self._props.itervalues()
 	
@@ -456,6 +485,8 @@ MOIN_PROP_TEMPLATE = \
 """
 {{{         Name: }}} '''%(name)s'''
 
+{{{    Code name: }}} {{{%(codename)s}}}
+
 {{{      Default: }}} %(default)s
 
 ''Description:'' %(desc)s
@@ -509,6 +540,7 @@ class MoinFormatter (Formatter) :
 		for prop in meta_class.iter_props():
 			prop_dict = {
 				"name"    : prop.get_name(),
+				"codename": prop.get_codename(),
 				"default" : prop.get_default(),
 				"desc"    : prop.get_doc()
 			}
@@ -530,8 +562,9 @@ class MoinFormatter (Formatter) :
 		string = re.sub(r"<i>([^<]*)</i>", r"''\1''", string)
 		string = re.sub(r"<b>([^<]*)</b>", r"'''\1'''", string)
 		string = re.sub(r"\{@code ([^\}]*)\}", r"{{{\1}}}", string)
-		string = re.sub(r"<p></p>", "\n", string)
-		string = re.sub(r"<p\s*/>", "\n", string)
+		string = re.sub(r"<p></p>", "\n . ", string)
+		string = re.sub(r"</p><p>", "\n . ", string)
+		string = re.sub(r"<p\s*/>", "\n . ", string)
 		string = re.sub(r"<br\s*/>", "\n", string)
 		#string = re.sub(r"<[^>]>[^<]+</[^>]>", r"\1", string)
 		return string
