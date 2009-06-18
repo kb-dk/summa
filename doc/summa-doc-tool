@@ -94,7 +94,8 @@ class JavaMetaClass :
 	def __init__ (self, name, package):
 		self._name = name
 		self._package = package
-		self._props = {} # name and codename -> JavaMetaProp mapping
+		self._props = {} # name, codename -> JavaMetaProp mapping
+		self._unique_props = {} # name -> JavaMetaProp mapping
 		self._children = {} # full_name -> JavaMetaClass map
 		self._parents = {} # full_name -> JavaMetaClass map
 		self._inh_decl = None #  the 'extends Foo implements Bar' part of the class declaration
@@ -103,6 +104,7 @@ class JavaMetaClass :
 	def add_prop (self, prop):
 		self._props[prop.get_name()] = prop
 		self._props[prop.get_codename()] = prop
+		self._unique_props[prop.get_codename()] = prop
 	
 	def get_prop (self, name, search_parents=False):
 		"""
@@ -123,10 +125,10 @@ class JavaMetaClass :
 		raise KeyError("No such property '%s' on class '%s'"\
 							% (name, self.full_name()))
 	def iter_props (self):
-		return self._props.itervalues()
+		return self._unique_props.itervalues()
 	
 	def num_props (self):
-		return len(self._props)
+		return len(self._unique_props)
 	
 	def full_name (self):
 		return self._package + '.' + self._name
@@ -489,7 +491,7 @@ MOIN_PROP_TEMPLATE = \
 
 {{{      Default: }}} %(default)s
 
-''Description:'' %(desc)s
+{{{  Description: }}} %(desc)s
 """
 
 MOIN_ROOT_CLASS_TEMPLATE = \
@@ -536,7 +538,7 @@ class MoinFormatter (Formatter) :
 			return ""						
 		
 		result = MOIN_CHILD_CLASS_TEMPLATE % class_dict		
-				
+		
 		for prop in meta_class.iter_props():
 			prop_dict = {
 				"name"    : prop.get_name(),
@@ -562,6 +564,7 @@ class MoinFormatter (Formatter) :
 		string = re.sub(r"<i>([^<]*)</i>", r"''\1''", string)
 		string = re.sub(r"<b>([^<]*)</b>", r"'''\1'''", string)
 		string = re.sub(r"\{@code ([^\}]*)\}", r"{{{\1}}}", string)
+		string = re.sub(r"<code>([^<]*)</code>", r"{{{\1}}}", string)
 		string = re.sub(r"<p></p>", "\n . ", string)
 		string = re.sub(r"</p><p>", "\n . ", string)
 		string = re.sub(r"<p\s*/>", "\n . ", string)
