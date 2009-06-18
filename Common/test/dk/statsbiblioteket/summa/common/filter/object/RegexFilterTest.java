@@ -250,4 +250,31 @@ public class RegexFilterTest extends TestCase {
         assertEquals("good1", buf.get(0).getRecord().getId());
         assertEquals("good2", buf.get(1).getRecord().getId());
     }
+
+    public void testTwoOddIdsFiltersExclusive() throws Exception {
+        // The dots in these regexes are part of the id's and should
+        // strictly speaking be escaped, but in this test we are lazy...
+        Configuration conf = Configuration.newMemoryBased(
+                RegexFilter.CONF_ID_REGEX,
+                "oai:doaj-articles:b37e5a0253e3ca1090ee7b6268050a44, " +
+                "oai:pangaea.de:doi:10.1594/PANGAEA.712421"
+        );
+        filter = new RegexFilter(conf);
+
+        PayloadBufferFilter buf = prepareFilterChain(
+                filter,
+                new Record("good1", "base1", "content 1".getBytes()),
+                new Record("oai:doaj-articles:b37e5a0253e3ca1090ee7b6268050a44",
+                           "base1", "content 2".getBytes()),
+                new Record("oai:pangaea.de:doi:10.1594/PANGAEA.712421",
+                           "base1", "content 3".getBytes()),
+                new Record("good2", "base1", "content 4".getBytes()));
+
+        // Flush the filter chain
+        while (buf.pump()){;}
+
+        assertEquals(2, buf.size());
+        assertEquals("good1", buf.get(0).getRecord().getId());
+        assertEquals("good2", buf.get(1).getRecord().getId());
+    }
 }
