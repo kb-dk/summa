@@ -6,6 +6,7 @@ import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 
 import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -65,9 +66,9 @@ public class RegexFilter extends AbstractDiscardFilter {
     public static final String DEFAULT_MODE = "exclusive";
 
     private boolean isInclusive;
-    private List<Pattern> idPatterns;
-    private List<Pattern> basePatterns;
-    private List<Pattern> contentPatterns;
+    private List<Matcher> idMatchers;
+    private List<Matcher> baseMatchers;
+    private List<Matcher> contentMatchers;
 
     public RegexFilter(Configuration conf) {
         super(conf);
@@ -82,30 +83,30 @@ public class RegexFilter extends AbstractDiscardFilter {
                                                     (List<String>)null);
 
         if (idRegex != null) {
-            idPatterns = new ArrayList<Pattern>(idRegex.size());
+            idMatchers = new ArrayList<Matcher>(idRegex.size());
             for (String regex : idRegex) {
                 log.debug("Compiling id filter regex: " + regex);
-                idPatterns.add(Pattern.compile(regex));
+                idMatchers.add(Pattern.compile(regex).matcher(""));
             }
         }
 
         if (baseRegex != null) {
-            basePatterns = new ArrayList<Pattern>(baseRegex.size());
+            baseMatchers = new ArrayList<Matcher>(baseRegex.size());
             for (String regex : baseRegex) {
                 log.debug("Compiling base filter regex: " + regex);
-                basePatterns.add(Pattern.compile(regex));
+                baseMatchers.add(Pattern.compile(regex).matcher(""));
             }
         }
 
         if (contentRegex != null) {
-            contentPatterns = new ArrayList<Pattern>(contentRegex.size());
+            contentMatchers = new ArrayList<Matcher>(contentRegex.size());
             for (String regex : contentRegex) {
                 log.debug("Compiling content filter regex: " + regex);
-                contentPatterns.add(Pattern.compile(regex));
+                contentMatchers.add(Pattern.compile(regex).matcher(""));
             }
         }
 
-        if (idPatterns == null && basePatterns == null && contentPatterns == null){
+        if (idMatchers == null && baseMatchers == null && contentMatchers == null){
             log.warn("No patterns configured, everything will be "
                      + (isInclusive ? "discarded" : "accepted")
                      + ". Set the properties "
@@ -130,15 +131,15 @@ public class RegexFilter extends AbstractDiscardFilter {
     }
 
     protected boolean checkDiscard(Payload payload) {
-        if (idPatterns != null) {
-            for (Pattern p : idPatterns) {
-                if (p.matcher(payload.getId()).matches()) {
+        if (idMatchers != null) {
+            for (Matcher m : idMatchers) {
+                if (m.reset(payload.getId()).matches()) {
                     return !isInclusive;
                 }
             }
         }
 
-        if (basePatterns != null) {
+        if (baseMatchers != null) {
             Record r = payload.getRecord();
 
             if (r == null) {
@@ -149,14 +150,14 @@ public class RegexFilter extends AbstractDiscardFilter {
                 return true;
             }
 
-            for (Pattern p : basePatterns) {
-                if (p.matcher(r.getBase()).matches()) {
+            for (Matcher m : baseMatchers) {
+                if (m.reset(r.getBase()).matches()) {
                     return !isInclusive;
                 }
             }
         }
 
-        if (contentPatterns != null) {
+        if (contentMatchers != null) {
             Record r = payload.getRecord();
 
             if (r == null) {
@@ -167,8 +168,8 @@ public class RegexFilter extends AbstractDiscardFilter {
                 return true;
             }
 
-            for (Pattern p : contentPatterns) {
-                if (p.matcher(r.getContentAsUTF8()).matches()) {
+            for (Matcher m : contentMatchers) {
+                if (m.reset(r.getContentAsUTF8()).matches()) {
                     return !isInclusive;
                 }
             }
