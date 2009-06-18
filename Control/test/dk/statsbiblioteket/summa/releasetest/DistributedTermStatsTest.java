@@ -29,10 +29,15 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
+import dk.statsbiblioteket.summa.common.index.IndexCommon;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexField;
+import dk.statsbiblioteket.summa.common.lucene.distribution.TermStatExtractor;
+import dk.statsbiblioteket.summa.common.lucene.distribution.TermStat;
+import dk.statsbiblioteket.summa.common.lucene.distribution.TermEntry;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.pool.SortedPool;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.api.Request;
@@ -42,6 +47,7 @@ import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
 import dk.statsbiblioteket.summa.search.IndexWatcher;
 import dk.statsbiblioteket.summa.search.SummaSearcherAggregator;
 import dk.statsbiblioteket.summa.search.rmi.RMISearcherProxy;
+import dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -54,6 +60,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.lang.reflect.Method;
+import java.lang.reflect.InvocationTargetException;
+import java.security.Policy;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -77,48 +86,103 @@ public class DistributedTermStatsTest extends NoExitTestCase {
     public static final File DESCRIPTOR = Resolver.getFile(
             "data/distribution/index_descriptor.xml");
 
-    public void testDistributesTermStats() throws Exception {
-        // TODO: Implement this
+    public void testDistributedTermStats() throws Exception {
+        List<File> indexLocations = createThreeIndexes();
+        File mergedLocation = extractStats(
+                extendFiles(indexLocations, "lucene"));
+        log.info("Merged stats at '" + mergedLocation + "'/currentdate");
 
-        /*
-        1. Create 3 searchers as in testBasicDistribution
-        2. Extract individual term stats
-        3. Merge the term stats
-        4. Create 3 searchers that uses the merged termstats
-        5. Search for "bar1 bar2", which should give foo1 and foo2 in that order
-        6. Increase docCount for bar1 to a gazillion
-        7. Perform search for bar1 and bar2, which should give foo2 + foo1
-        8. Profit
-         */
+        List<SummaSearcher> searchers = createSearchers(
+                mergedLocation.getParentFile(),
+                Arrays.asList(new File(INDEX_ROOT, "index_1"),
+                              new File(INDEX_ROOT, "index_2"),
+                              new File(INDEX_ROOT, "index_3")));
+        SummaSearcher aggregator = createAggregator(searchers);
+        assertResult("The aggregator should return results in expected order",
+                     aggregator, "bar1 bar2",
+                     Arrays.asList("foo3", "foo2", "foo1"));
+        String oldResult = search(aggregator, "bar1 bar2");
+        log.info("old search result:\n" + oldResult);
+        aggregator.close();
+        close(searchers);
+
+        TermStat termStat = new TermStat(Configuration.newMemoryBased());
+        termStat.open(mergedLocation, false);
+        assertEquals("The count for bar2 should be correct",
+                     4, termStat.getTermCount("multi_token:bar2"));
+        updateCount(termStat, "multi_token:bar2", 10); // bar2 is now common
+        assertEquals("The count for bar2 should be updated",
+                     10, termStat.getTermCount("multi_token:bar2"));
+        termStat.store();
+
+        searchers = createSearchers(
+                mergedLocation.getParentFile(),
+                Arrays.asList(new File(INDEX_ROOT, "index_1"),
+                              new File(INDEX_ROOT, "index_2"),
+                              new File(INDEX_ROOT, "index_3")));
+        aggregator = createAggregator(searchers);
+        String newResult = search(aggregator, "bar1 bar2");
+        assertFalse("The old result and the new result should differ",
+                    oldResult.replaceAll(
+                            "searchTime=\\\"[0-9]+\\\"", "").
+                            equals(newResult.replaceAll(
+                            "searchTime=\\\"[0-9]+\\\"", "")));
+        assertResult("The new termstats should change the order",
+                     aggregator, "bar1 bar2",
+                     Arrays.asList("foo3", "foo1", "foo2"));
+        aggregator.close();
+        close(searchers);
+    }
+
+    private void updateCount(TermStat termStat, String term, int count)
+                                                              throws Exception {
+        Method method = TermStat.class.getDeclaredMethod("getTermCounts");
+        method.setAccessible(true);
+        Object result = method.invoke(termStat);
+        //noinspection unchecked
+        SortedPool<TermEntry> pool = (SortedPool<TermEntry>)result;
+        TermEntry te = new TermEntry(term, count);
+        pool.remove(pool.indexOf(te));
+        pool.add(te);
+    }
+
+    private List<File> extendFiles(List<File> indexLocations, String subdir) {
+        for (int i = 0 ; i < indexLocations.size() ; i++) {
+            indexLocations.set(i, new File(indexLocations.get(i), subdir));
+        }
+        return indexLocations;
+    }
+
+    private File extractStats(List<File> indexLocations) throws IOException {
+        Configuration conf = Configuration.newMemoryBased();
+        TermStatExtractor extractor = new TermStatExtractor(conf);
+        List<File> statLocations = new ArrayList<File>(indexLocations.size());
+        for (File indexLocation: indexLocations) {
+            File dumpLocation = new File(indexLocation.getParent(),
+                                         TermStat.TERMSTAT_PERSISTENT_NAME);
+            extractor.dumpStats(indexLocation, dumpLocation);
+            statLocations.add(dumpLocation);
+            log.debug(String.format("Extracted stats from '%s' to '%s'",
+                                    indexLocation, dumpLocation));
+        }
+        File mergedRoot = new File(
+                indexLocations.get(0).getParentFile().
+                        getParentFile().getParentFile(),
+                TermStat.TERMSTAT_PERSISTENT_NAME);
+        File concreteMerge = new File(mergedRoot, IndexCommon.getTimestamp());
+        extractor.mergeStats(statLocations, concreteMerge);
+
+        // Version
+        Files.saveString(Long.toString(System.currentTimeMillis()),
+                         new File(concreteMerge, IndexCommon.VERSION_FILE));
+
+        log.debug(String.format("Merged %d stat sources into '%s'",
+                                statLocations.size(), concreteMerge));
+        return concreteMerge;
     }
 
     public void testBasicDistribution() throws Exception {
-        List<Pair<String, List<Pair<String, String>>>> corpus =
-        new ArrayList<Pair<String, List<Pair<String, String>>>>(3);
-
-        corpus.add(new Pair<String, List<Pair<String, String>>>(
-                "foo1", Arrays.asList(
-                new Pair<String, String>("multi_token", "bar1 bar1 bar1"),
-                new Pair<String, String>("multi_token", "bar2"),
-                new Pair<String, String>("multi_token", "bar3"))));
-        createIndex(DESCRIPTOR, new File(INDEX_ROOT, "index_1"), corpus);
-
-        corpus.clear();
-        corpus.add(new Pair<String, List<Pair<String, String>>>(
-                "foo2", Arrays.asList(
-                new Pair<String, String>("multi_token", "bar1"),
-                new Pair<String, String>("multi_token", "bar2 bar2"),
-                new Pair<String, String>("multi_token", "bar3"))));
-        createIndex(DESCRIPTOR, new File(INDEX_ROOT, "index_2"), corpus);
-
-        corpus.clear();
-        corpus.add(new Pair<String, List<Pair<String, String>>>(
-                "foo3", Arrays.asList(
-                new Pair<String, String>("multi_token", "bar1"),
-                new Pair<String, String>("multi_token", "bar2"),
-                new Pair<String, String>("multi_token", "bar3 bar3 bar3"))));
-        createIndex(DESCRIPTOR, new File(INDEX_ROOT, "index_3"), corpus);
-
+        createThreeIndexes();
         List<SummaSearcher> searchers = createSearchers(
                 Arrays.asList(new File(INDEX_ROOT, "index_1"),
                               new File(INDEX_ROOT, "index_2"),
@@ -139,9 +203,54 @@ public class DistributedTermStatsTest extends NoExitTestCase {
         }
 
         assertResult("The aggregator should return results in expected order",
-                     aggregator, "bar1", Arrays.asList("foo1", "foo2", "foo3"));
+                     aggregator, "bar1", Arrays.asList("foo3", "foo1", "foo2"));
+        assertResult("The aggregator should return results in expected order "
+                     + "for multi search",
+                     aggregator, "bar1 bar2 bar3",
+                     Arrays.asList("foo3", "foo2", "foo1"));
         aggregator.close();
         close(searchers);
+    }
+
+    private List<File> createThreeIndexes() throws IOException {
+        List<Pair<String, List<Pair<String, String>>>> corpus =
+        new ArrayList<Pair<String, List<Pair<String, String>>>>(10);
+        ArrayList<File> locations = new ArrayList<File>(corpus.size());
+
+        corpus.add(new Pair<String, List<Pair<String, String>>>(
+                "foo1", Arrays.asList(
+                new Pair<String, String>("multi_token", "bar1 bar1 bar1"),
+                new Pair<String, String>("multi_token", "bar2"),
+                new Pair<String, String>("multi_token", "bar3"))));
+        locations.add(createIndex(DESCRIPTOR, new File(INDEX_ROOT, "index_1"), 
+                                  corpus));
+
+        corpus.clear();
+        corpus.add(new Pair<String, List<Pair<String, String>>>(
+                "foo2", Arrays.asList(
+                new Pair<String, String>("multi_token", "bar1"),
+                new Pair<String, String>("multi_token", "bar2 bar2"),
+                new Pair<String, String>("multi_token", "bar3"))));
+        locations.add(createIndex(DESCRIPTOR, new File(INDEX_ROOT, "index_2"),
+                                  corpus));
+
+        corpus.clear();
+        corpus.add(new Pair<String, List<Pair<String, String>>>(
+                "foo3", Arrays.asList(
+                new Pair<String, String>("multi_token", "bar1"),
+                new Pair<String, String>("multi_token", "bar2"),
+                new Pair<String, String>("multi_token", "bar3 bar3 bar3"))));
+        corpus.add(new Pair<String, List<Pair<String, String>>>(
+                "skewer_bar2", Arrays.asList( // Makes bar2 more common
+                new Pair<String, String>("multi_token", "bar2"))));
+        for (int i = 0 ; i < 100 ; i++) { // Let's create some documents
+            corpus.add(new Pair<String, List<Pair<String, String>>>(
+                    "filler" + i, Arrays.asList(
+                    new Pair<String, String>("multi_token", "pingo"))));
+        }
+        locations.add(createIndex(DESCRIPTOR, new File(INDEX_ROOT, "index_3"),
+                                  corpus));
+        return locations;
     }
 
     /* Internal testing of the helpers for this release test below */
@@ -217,16 +326,18 @@ public class DistributedTermStatsTest extends NoExitTestCase {
             int pos = result.indexOf(String.format(
                     "<field name=\"recordID\">%s</field>", recordID));
             if (pos == -1) {
-                fail(String.format("%s. The id '%s' could not be located in the"
-                                   + " result for query '%s'",
-                                   message, recordID, query));
+                fail(String.format(
+                        "%s. The id '%s' could not be located in the result for"
+                        + " query '%s'. The result was:\n%s",
+                        message, recordID, query, result));
             }
             if (pos < lastPos) {
                 fail(String.format(
                         "%s. The id '%s' was found at position %d, which is "
                         + "less than position %d from the previous id '%s' in "
-                        + "query '%s'",
-                        message, recordID, pos, lastPos, lastID, query));
+                        + "query '%s'. The result was:\n%s",
+                        message, recordID, pos, lastPos, lastID, query,
+                        result));
             }
             lastPos = pos;
             lastID = recordID;
@@ -265,19 +376,32 @@ public class DistributedTermStatsTest extends NoExitTestCase {
         return new SummaSearcherAggregator(conf);
     }
 
+    public static List<SummaSearcher> createSearchers(List<File> locations)
+            throws IOException {
+        return createSearchers(null, locations);
+    }
+
     /**
      * Create searchers for the given indexes. The searchers will have the names
      * "searcher_#", where # goes from 0 to locations.size()-1.
+     * @param termStatLocation the location of the term stats. This can be null
+     *        in which case distributes term stats will not be used.
      * @param locations paths to index folders.
      * @return a list of searcher opened for the locations.
      * @throws IOException if a searcher could not be created.
      */
-    public static List<SummaSearcher> createSearchers(
+    public static List<SummaSearcher> createSearchers(File termStatLocation,
             List<File> locations) throws IOException {
         List<SummaSearcher> searchers = new ArrayList<SummaSearcher>(
                 locations.size());
         Configuration conf = Configuration.load(
                 "data/distribution/search_configuration.xml");
+        if (termStatLocation != null) {
+            conf.getSubConfiguration(
+                    LuceneSearchNode.CONF_TERMSTAT_CONFIGURATION).set(
+                    IndexWatcher.CONF_INDEX_WATCHER_INDEX_ROOT, 
+                    termStatLocation.getAbsolutePath());
+        }
         int id = 0;
         for (File location: locations) {
             conf.set(IndexWatcher.CONF_INDEX_WATCHER_INDEX_ROOT, location);

@@ -14,14 +14,30 @@
             <key>summa.control.service.id</key>
             <value class="string">Search</value>
         </entry>
-       <entry>
-            <key>summa.search.node.class</key>
-            <value class="string">dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode</value>
-        </entry>
+        <entry>
+             <key>summa.search.node.class</key>
+             <value class="string">dk.statsbiblioteket.summa.support.lucene.search.LuceneSearchNode</value>
+         </entry>
+
+        <entry>
+             <key>summa.support.lucene.explain</key>
+             <value class="boolean">true</value>
+         </entry>
+
+        <entry>
+             <key>summa.support.lucene.termstatconfiguration</key>
+             <value class="xproperties">
+                 <entry>
+                     <key>summa.indexwatcher.indexroot</key>
+                     <value class="string">[termstatroot]</value>
+                 </entry>
+             </value>
+         </entry>
+
 
         <entry>
             <key>summa.indexwatcher.indexroot</key>
-            <value class="string">/tmp/summatest/index</value>
+            <value class="string">[indexroot]</value>
         </entry>
 
         <entry>

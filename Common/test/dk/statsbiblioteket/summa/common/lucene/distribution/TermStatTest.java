@@ -24,9 +24,11 @@ import junit.framework.TestSuite;
 import junit.framework.TestCase;
 
 import java.io.File;
+import java.lang.reflect.Method;
 
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.pool.SortedPool;
 
 public class TermStatTest extends TestCase {
     public TermStatTest(String name) {
@@ -83,4 +85,19 @@ public class TermStatTest extends TestCase {
         assertEquals("The updated count for bar should be correct",
                      12, ts.getTermCount("bar"));
     }
+
+    public void testProtectedAccess() throws Exception {
+        Configuration conf = Configuration.newMemoryBased();
+        TermStat ts = new TermStat(conf);
+        ts.create(TMP);
+
+        //noinspection DuplicateStringLiteralInspection
+        Method method = TermStat.class.getDeclaredMethod("getTermCounts");
+
+        method.setAccessible(true);
+        Object result = method.invoke(ts);
+        //noinspection unchecked
+        SortedPool<TermEntry> pool = (SortedPool<TermEntry>)result;
+    }
+
 }

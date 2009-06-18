@@ -102,6 +102,8 @@ public class TermStat {
         if (!location.exists()) {
             throw new FileNotFoundException("Unable to locate " + location);
         }
+        log.info(String.format("Opening TermStats at '%s' with readonly==%b",
+                               location, readOnly));
         return termCounts.open(
                 location, TERMSTAT_PERSISTENT_NAME, readOnly, false) &&
                 openMeta();
@@ -129,7 +131,7 @@ public class TermStat {
     }
 
     private File getMetaFile() {
-        return termCounts.getPoolPersistenceFile("meta");
+        return termCounts.getPoolPersistenceFile(".meta");
     }
 
     /**
