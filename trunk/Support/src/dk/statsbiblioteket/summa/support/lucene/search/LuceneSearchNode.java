@@ -200,14 +200,21 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
     public static final boolean DEFAULT_EXPLAIN = false;
 
     /**
-     * If true, distributed term stats are enabled.
+     * The sub-configuration used for the distributed term stat setup.
+     * If the configuration is present, distributed term stats will be enabled.
+     * As there are no mandatory properties for the distributed term stats,
+     * the configuration does not need to contain anything. However, it is
+     * recommended to review the properties for SummaIndexreader and
+     * TermProviderImpl.
      * </p><p>
-     * Optional. Default is false.
+     * The constructor for {@link TermProviderImpl} uses this sub configuration.
+     * </p><p>
+     * Optional.
      * @see {@link SummaIndexReader}.
+     * @see {@link TermProviderImpl}.
      */
-    public static final String CONF_USE_TERMSTATS =
-            "summa.support.lucene.usetermstats";
-    public static final boolean DEFAULT_USE_TERMSTATS = false;
+    public static final String CONF_TERMSTAT_CONFIGURATION =
+            "summa.support.lucene.termstatconfiguration";
 
     @SuppressWarnings({"FieldCanBeLocal"})
     private LuceneIndexDescriptor descriptor;
@@ -266,6 +273,28 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
         }
 
         // MoreLikeThis
+        setupMoreLikeThis(conf);
+
+        explain = conf.getBoolean(CONF_EXPLAIN, explain);
+
+        if (conf.valueExists(CONF_TERMSTAT_CONFIGURATION)) {
+            log.debug("Enabling distributed term stats");
+            try {
+                termProvider = new TermProviderImpl(
+                        conf.getSubConfiguration(CONF_TERMSTAT_CONFIGURATION));
+            } catch (IOException e) {
+                throw new ConfigurationException(String.format(
+                        "Exception extracting sub-configuration '%s'",
+                        CONF_TERMSTAT_CONFIGURATION), e);
+            }
+        } else {
+            log.debug(String.format("The property '%s' was not present, so no "
+                                    + "distributed term stats will be used",
+                                    CONF_TERMSTAT_CONFIGURATION));
+        }
+    }
+
+    private void setupMoreLikeThis(Configuration conf) {
         if (!conf.valueExists(CONF_MORELIKETHIS_CONF)) {
             log.debug("No MoreLikeThis configuration present, skipping with "
                       + "MoreLikeThis.enabled == " + mlt_enabled);
@@ -304,11 +333,6 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                 CONF_MORELIKETHIS_STOPWORDS, (List<String>)null);
         if (stopWords != null) {
             mlt_stopWords = new HashSet<String>(stopWords);
-        }
-        explain = conf.getBoolean(CONF_EXPLAIN, explain);
-        if (conf.getBoolean(CONF_USE_TERMSTATS, DEFAULT_USE_TERMSTATS)) {
-            log.debug("Enabling distributes term stats");
-            termProvider = new TermProviderImpl(conf);
         }
         log.debug(String.format(
                 "Finished setting up MoreLikeThis with enabled=%s, "
@@ -733,8 +757,8 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
         }
         try {
             return String.format(
-                    "<explanation>\n<expandedquery>%s</expandedquery>\n"
-                    + "<score>%s</score></explanation>",
+                    "    <explanation>\n<expandedquery>%s</expandedquery>\n"
+                    + "    <score>%s</score></explanation>",
                     XMLUtil.encode(LuceneIndexUtils.queryToString(query)),
                     XMLUtil.encode(searcher.explain(query, docID).toString()));
         } catch (IOException e) {

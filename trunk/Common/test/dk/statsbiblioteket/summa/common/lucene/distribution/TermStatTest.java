@@ -65,4 +65,22 @@ public class TermStatTest extends TestCase {
         assertEquals("The docCount should match", 87, ts.getDocCount());
         assertEquals("The source should match", "foo", ts.getSource());
     }
+
+    public void testReplace() throws Exception {
+        Configuration conf = Configuration.newMemoryBased();
+        TermStat ts = new TermStat(conf);
+        ts.create(TMP);
+        ts.dirtyAdd(new TermEntry("foo", 87));
+        ts.dirtyAdd(new TermEntry("bar", 10));
+        ts.cleanup();
+        assertEquals("The initial count for bar should be correct",
+                     10, ts.getTermCount("bar"));
+
+        ts.getTermCounts().remove(ts.getTermCounts().indexOf(
+                new TermEntry("bar", 0)));
+        ts.dirtyAdd(new TermEntry("bar", 12));
+        ts.cleanup();
+        assertEquals("The updated count for bar should be correct",
+                     12, ts.getTermCount("bar"));
+    }
 }

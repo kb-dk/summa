@@ -292,4 +292,11 @@ public class TermStat {
                + ", source '" + getSource()
                + "', terms " + size() + ")";
     }
+
+    /**
+     * @return the underlying TermEntry pool.
+     */
+    protected SortedPool<TermEntry> getTermCounts() {
+        return termCounts;
+    }
 }
