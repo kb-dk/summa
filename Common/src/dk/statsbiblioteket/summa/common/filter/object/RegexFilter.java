@@ -27,7 +27,7 @@ public class RegexFilter extends AbstractDiscardFilter {
      * payload ids. Whether or not the payload is discarded is decided
      * based upon the {@link #CONF_MODE} property.
      */
-    public static final String CONF_ID_REGEX = "summa.regexfilter.idpatterns";
+    public static final String CONF_ID_REGEX = "summa.record.idpatterns";
 
     /**
      * Optional property defining a list of regular expressions applied to
@@ -37,7 +37,7 @@ public class RegexFilter extends AbstractDiscardFilter {
      * property.
      */
     public static final String CONF_BASE_REGEX =
-                                          "summa.regexfilter.basepatterns";
+                                              "summa.record.basepatterns";
 
     /**
      * Optional property defining a list of regular expressions applied to
@@ -47,7 +47,7 @@ public class RegexFilter extends AbstractDiscardFilter {
      * property.
      */
     public static final String CONF_CONTENT_REGEX =
-                                            "summa.regexfilter.contentpatterns";
+                                            "summa.record.contentpatterns";
 
     /**
      * Optional property defining whether this filter {@code inclusive}
@@ -61,7 +61,7 @@ public class RegexFilter extends AbstractDiscardFilter {
      * The values allowed for this property are the strings {@code inclusive}
      * and {@code exclusive}. The default value is {@code exclusive}.
      */
-    public static final String CONF_MODE = "summa.regexfilter.mode";
+    public static final String CONF_MODE = "summa.record.patternmode";
 
     public static final String DEFAULT_MODE = "exclusive";
 
