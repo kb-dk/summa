@@ -571,12 +571,125 @@ class MoinFormatter (Formatter) :
 		string = re.sub(r"<br\s*/>", "\n", string)
 		#string = re.sub(r"<[^>]>[^<]+</[^>]>", r"\1", string)
 		return string
+
+HTML_HEADER = \
+"""
+<html>
+  <head>
+    <!-- %(stamp)s -->
+    <title>%(header)s</title>
+    <link rel="stylesheet" type="text/css" charset="utf-8" media="all" href="summa-properties.css">
+  </head>
+  
+  <body>
+    <h1>%(header)s</h1>
+    <p/>  
+"""
+
+HTML_FOOTER = \
+"""
+  </body>
+</html>
+"""
+
+HTML_PROP_TEMPLATE = \
+"""
+<p class="property">
+<table class="property">
+  <tr class="propname">
+    <td class="propkey">Name</td><td class="propvalue">%(name)s</td>
+  </tr>
+  <tr class="propcodename">
+    <td class="propkey">Code name</td><td class="propvalue">%(codename)s</td>
+  </tr>
+  <tr class="propdefault">
+    <td class="propkey">Default</td><td class="propvalue">%(default)s</td>
+  </tr>
+  <tr class="propdescription">
+    <td class="propkey">Description</td><td class="propvalue">%(desc)s</td>
+  </tr>
+</table>
+</p>
+"""
+
+HTML_ROOT_CLASS_TEMPLATE = \
+"""
+<span id="%(class)s"></span>
+<h2 class="rootclass">%(class)s</h2>
+"""
+
+HTML_CHILD_CLASS_TEMPLATE = \
+"""
+<span id="%(class)s"></span>
+<h3 class="childclass">%(class)s</h3><p class="classlink">(<a href="#%(class)s">link</a>)</p>
+"""
+
+class HtmlFormatter (Formatter) :
+	def __init__ (self, repo, parent_filter=None):
+		Formatter.__init__ (self, repo, parent_filter)		
+	
+	def format (self, repo):
+		if self.get_parent_filter() == None:
+			header_dict = { "header" : "Summa Property Documentation" }
+		else:
+			header_dict = { "header" : "Summa Properties for %ss" % self._short_filter_name()}
+			
+		header_dict["stamp"] = "Generated on %s, with the command\n##\n## %s" % \
+		                       (datetime.now(), " ".join(sys.argv))
+			
+		result = HTML_HEADER % header_dict
+		roots = list(repo.iter_classes())
+		roots.sort(lambda x, y : cmp (x.full_name(), y.full_name()))
+		
+		for meta_class in roots:
+			result += self.format_class (meta_class)
+			
+		return result
+			
+	def format_class (self, meta_class, format_children=True):
+		if not self.should_display (meta_class):
+			return ""
+				
+		class_dict = { "class" : meta_class.full_name() }		
+		
+		# If no props and no children, don't doc the class
+		if len(meta_class.get_children()) == 0 and \
+		   meta_class.num_props() == 0 :
+			return ""						
+		
+		result = HTML_CHILD_CLASS_TEMPLATE % class_dict		
+		
+		for prop in meta_class.iter_props():
+			prop_dict = {
+				"name"    : prop.get_name(),
+				"codename": prop.get_codename(),
+				"default" : prop.get_default(),
+				"desc"    : prop.get_doc()
+			}
+			result += HTML_PROP_TEMPLATE % prop_dict
+		
+		#if format_children:
+		#	children = meta_class.get_all_children()
+		#	children.sort (lambda x, y : cmp (x.full_name(), y.full_name()))
+		#	for child in children:
+		#		result += self.format_class(child, format_children=False)
+		
+		return self._javadoc2html(result)
+	
+	def _short_filter_name (self):
+		pf = self.get_parent_filter()
+		return pf[pf.rfind(".")+1 : ]
+	
+	def _javadoc2html (self, string):
+		string = re.sub(r"\{@code ([^\}]*)\}", r"<code>\1</code>", string)
+		return string
 	
 FORMATTERS = {
 	"term"    : TermFormatter,
 	"moin"    : MoinFormatter,
 	"default" : TermFormatter,
 	"class"   : ClassFormatter,
+	"html"    : HtmlFormatter,
 }
 		
 if __name__ == "__main__" :
