@@ -63,6 +63,18 @@ public class SummaIndexReader extends FilterIndexReader {
         return num == -1 ? super.numDocs() : num;
     }
 
+    /**
+     * Note: The explain and the JavaDocs for Lucene states that numDocs is
+     *       used for valculating idf. In reality, maxDoc is called.
+     * @return numDocs + 1 from termProvider or maxDoc is no term stats are
+     *         present.
+     */
+    @Override
+    public int maxDoc() {
+        int num = termProvider.numDocs() + 1;
+        return num == 0 ? super.maxDoc() : num;
+    }
+
     @Override
     public int docFreq(Term t) throws IOException {
         int freq;
