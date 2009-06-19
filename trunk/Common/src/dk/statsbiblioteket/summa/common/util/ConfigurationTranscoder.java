@@ -13,7 +13,13 @@ import dk.statsbiblioteket.summa.common.configuration.storage.JStorage;
 public class ConfigurationTranscoder {
 
     public static void main(String[] args) {
-        Configuration from = Configuration.getSystemConfiguration(false);
+        if (args.length != 1) {
+            System.err.println("Please provide exactly one configuration"
+                               + " to transcode");
+            System.exit(-1);
+        }
+        
+        Configuration from = Configuration.load(args[0]);
         Configuration to = new Configuration(new JStorage());
         to.importConfiguration(from);
         System.out.println(to.getStorage().toString());
