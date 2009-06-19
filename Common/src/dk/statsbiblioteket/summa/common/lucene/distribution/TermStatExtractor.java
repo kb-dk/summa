@@ -48,6 +48,9 @@ import java.util.ArrayList;
 public class TermStatExtractor {
     private static Log log = LogFactory.getLog(TermStatExtractor.class);
 
+    // TODO: Optimize space by discarding all terms with count 1 in the merger
+    // When the count for a term is requested, "not found" should be taken as 1
+
     /**
      * The maximum number of sources to open at the same time in
      * {@link #mergeStats}. If the number of sources exceeds this, the merging
@@ -68,6 +71,57 @@ public class TermStatExtractor {
     public TermStatExtractor(Configuration conf) {
         maxOpenSources = conf.getInt(CONF_MAXOPENSOURCES, maxOpenSources);
         termStatConf = conf;
+    }
+    private TermStatExtractor() {
+        this(Configuration.newMemoryBased());
+    }
+
+    public static void main(String[] args) throws IOException {
+        if (args.length < 3) {
+            usage();
+            return;
+        }
+        if ("-e".equals((args[0]))) {
+            if (args.length != 3) {
+                System.err.println("Extraction takes only 2 arguments");
+                usage();
+            } else {
+                System.out.println(String.format(
+                        "Extracting term stats fron index at '%s' to '%s'",
+                        args[1], args[2]));
+                long startTime = System.currentTimeMillis();
+                new TermStatExtractor().dumpStats(
+                        new File(args[1]), new File(args[2]));
+                System.out.println(String.format(
+                        "Finished term stat extraction in %d seconds",
+                        (System.currentTimeMillis() - startTime) / 1000));
+            }
+        } else if ("-m".equals((args[0]))) {
+            List<File> sources = new ArrayList<File>(args.length-2);
+            for (int i = 1 ; i < args.length - 1 ; i++) {
+                sources.add(new File(args[i]));
+            }
+            File dest = new File(args[args.length-1]);
+            System.out.println(String.format("Merging %d sources into '%s'",
+                                             sources.size(), dest));
+            long startTime = System.currentTimeMillis();
+            new TermStatExtractor().mergeStats(sources, dest);
+            System.out.println(String.format(
+                    "Finished term stat merging in %d seconds",
+                    (System.currentTimeMillis() - startTime) / 1000));
+        } else {
+            usage();
+        }
+    }
+
+    public static void usage() {
+        System.out.println(
+                "Usage:\n"
+                + "TermStatExtractor [-e index destination]\n"
+                + "TermStatExtractor [-m termstats* destination]\n\n"
+                + "-e: Extract termstats from index and store the stats at "
+                + "destination\n"
+                + "-m: Merge termstats into destination");
     }
 
     /**
