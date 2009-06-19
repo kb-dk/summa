@@ -103,30 +103,30 @@ public class JStorageTest extends ConfigurationStorageTestCase {
         JStorage js = new JStorage();
 
         // Empty storage
-        assertEquals("config = {\n}", js.toString());
+        assertEquals("var config = {\n}", js.toString());
 
         // Storage with a single string
         js = new JStorage();
         js.put("foo", "bar");
-        assertEquals("config = {\n  foo : \"bar\"\n}", js.toString());
+        assertEquals("var config = {\n  'foo' : \"bar\"\n}", js.toString());
 
         // Storage with two booleans
         js = new JStorage();
         js.put("boolTrue", true);
         js.put("boolFalse", false);
-        assertEquals("config = {\n  boolFalse : false,\n  boolTrue : true\n}",
+        assertEquals("var config = {\n  'boolFalse' : false,\n  'boolTrue' : true\n}",
                      js.toString());
 
         // Storage with a list of strings
         js = new JStorage();
         js.put("foo", (Serializable)Arrays.asList("one", "two"));
-        assertEquals("config = {\n  foo : [\"one\", \"two\"]\n}", js.toString());
+        assertEquals("var config = {\n  'foo' : [\"one\", \"two\"]\n}", js.toString());
 
         // Storage with a single sub storage
         js = new JStorage();
         JStorage sub = js.createSubStorage("foo");
         sub.put("bar" , 27);
-        assertEquals("config = {\n  foo : {\n    bar : 27.0\n  }\n}",
+        assertEquals("var config = {\n  'foo' : {\n    'bar' : 27.0\n  }\n}",
                      js.toString());
 
         // Storage with a list of two sub storages
@@ -136,12 +136,12 @@ public class JStorageTest extends ConfigurationStorageTestCase {
         subs.get(0).put("bar" , 27);
         subs.get(1).put("bar" , false);
         assertEquals(
-        "config = {\n" +
-        "  foo : [\n" +
+        "var config = {\n" +
+        "  'foo' : [\n" +
         "    {\n" +
-        "      bar : 27.0\n" +
+        "      'bar' : 27.0\n" +
         "    }, {\n" +
-        "      bar : false\n" +
+        "      'bar' : false\n" +
         "    }\n" +
         "  ]\n" +
         "}", js.toString());
