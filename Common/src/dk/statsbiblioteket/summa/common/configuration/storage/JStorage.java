@@ -159,20 +159,7 @@ public class JStorage implements ConfigurationStorage {
     }
 
     public void put(String key, Serializable value) throws IOException {
-        if (value instanceof List) {
-            List list = (List)value;
-            if (list.isEmpty()) {
-                eval(config+"['"+key+"'] = []");
-            } else if (list.get(0) instanceof String) {
-                eval(config+"['"+key+"'] = "+ asStringList(list));
-            } else {
-                eval(config+"['"+key+"'] = "+ asRawList(list));
-            }
-        } else if (value instanceof String) {
-            eval(config+"['"+key+"'] = '" + value.toString() + "'");
-        } else {
-            eval(config+"['"+key+"'] = " + value.toString());
-        }
+        eval(config+"['"+key+"'] = "+ parseObject(value));
     }
 
     public Serializable get(String key) throws IOException {
@@ -377,23 +364,16 @@ public class JStorage implements ConfigurationStorage {
         }
     }
 
-    private String asStringList(List list) {
+    private String parseList(List list) {
         StringBuilder b = new StringBuilder();
 
         b.append("[");
 
         for (Object o : list) {
-
             if (b.length() > 1) {
                 b.append (", ");
             }
-
-            if (o == null) {
-                b.append("null");
-            } else {
-                b.append("'").append(o.toString()).append("'");
-            }
-
+            b.append(parseObject(o));
         }
 
         b.append("]");
@@ -401,33 +381,45 @@ public class JStorage implements ConfigurationStorage {
         return b.toString();
     }
 
-    private String asRawList(List list) {
+    private String parseMap(Map<String,Serializable> map) {
         StringBuilder b = new StringBuilder();
 
-        b.append("[");
+        b.append("{");
 
-        for (Object o : list) {
+        for (Map.Entry<String,Serializable> e : map.entrySet()) {
+            String key = e.getKey();
+            Serializable val = e.getValue();
 
             if (b.length() > 1) {
                 b.append (", ");
             }
 
-            if (o == null) {
-                b.append("null");
-            } else {
-                b.append(o.toString());
-            }
-
+            b.append("'").append(key).append("'").append(" : ");
+            b.append(parseObject(val));
         }
 
-        b.append("]");
+        b.append("}");
 
         return b.toString();
+    }
+
+    private String parseObject(Object o) {
+        if (o == null) {
+            return "null";
+        } else if (o instanceof String){
+            return "'" + o + "'";
+        } else if (o instanceof List) {
+            return parseList((List)o);
+        } else if (o instanceof Map) {
+             return parseMap((Map<String,Serializable>)o);
+        } else {
+            return o.toString();
+        }
     }
 
     public String toString () {
         StringBuilder buf = new StringBuilder();
-        buf.append(config + " = {\n");
+        buf.append("var ").append(config).append(" = {\n");
         serialize("  ", buf);
         buf.append("}");
         return buf.toString();
@@ -455,18 +447,18 @@ public class JStorage implements ConfigurationStorage {
 
                 if (val instanceof String) {
                     buf.append(prefix)
-                        .append(key)
+                        .append("'").append(key).append("'")
                         .append(" : \"")
                         .append(indent(prefix, val.toString()))
                         .append("\"");
                 } else if (val instanceof Double || val instanceof Boolean) {
                     buf.append(prefix)
-                        .append(key)
+                        .append("'").append(key).append("'")
                         .append(" : ")
                         .append(indent(prefix, val.toString()));
                 } else if (val instanceof JStorage) {
                     buf.append(prefix)
-                        .append(key)
+                        .append("'").append(key).append("'")
                         .append(" : ")
                         .append("{\n");
                         ((JStorage)val).serialize(prefix + "  ", buf)
@@ -476,7 +468,7 @@ public class JStorage implements ConfigurationStorage {
                     List list = (List)val;
 
                     buf.append(prefix)
-                       .append(key)
+                       .append("'").append(key).append("'")
                        .append(" : ");
 
                     if (list.isEmpty()) {
@@ -496,14 +488,12 @@ public class JStorage implements ConfigurationStorage {
                         buf.append("[\n");
                         for (int i = 0; i < list.size(); i++) {
                             if (i > 0) {
-                                buf.append(", ");
+                                buf.append(", {\n");
                             } else {
-                                buf.append(prefix);
-                                buf.append("  ");
+                                buf.append(prefix)
+                                   .append("  {\n");
                             }
-                            buf.append("{\n")
-                               .append(prefix);
-                            ((JStorage)list.get(i)).serialize(prefix+"  ", buf)
+                            ((JStorage)list.get(i)).serialize(prefix+"    ", buf)
                                .append(prefix)
                                .append("  ")
                                .append("}");
