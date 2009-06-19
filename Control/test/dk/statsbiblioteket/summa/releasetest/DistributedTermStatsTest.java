@@ -61,8 +61,6 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.lang.reflect.Method;
-import java.lang.reflect.InvocationTargetException;
-import java.security.Policy;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -100,7 +98,7 @@ public class DistributedTermStatsTest extends NoExitTestCase {
         SummaSearcher aggregator = createAggregator(searchers);
         assertResult("The aggregator should return results in expected order",
                      aggregator, "bar1 bar2",
-                     Arrays.asList("foo3", "foo2", "foo1"));
+                     Arrays.asList("foo1", "foo2", "foo3"));
         String oldResult = search(aggregator, "bar1 bar2");
         log.info("old search result:\n" + oldResult);
         aggregator.close();
@@ -110,9 +108,9 @@ public class DistributedTermStatsTest extends NoExitTestCase {
         termStat.open(mergedLocation, false);
         assertEquals("The count for bar2 should be correct",
                      4, termStat.getTermCount("multi_token:bar2"));
-        updateCount(termStat, "multi_token:bar2", 10); // bar2 is now common
+        updateCount(termStat, "multi_token:bar1", 50); // bar2 is now common
         assertEquals("The count for bar2 should be updated",
-                     10, termStat.getTermCount("multi_token:bar2"));
+                     50, termStat.getTermCount("multi_token:bar1"));
         termStat.store();
 
         searchers = createSearchers(
@@ -122,6 +120,7 @@ public class DistributedTermStatsTest extends NoExitTestCase {
                               new File(INDEX_ROOT, "index_3")));
         aggregator = createAggregator(searchers);
         String newResult = search(aggregator, "bar1 bar2");
+        log.info("New search result:\n" + newResult);
         assertFalse("The old result and the new result should differ",
                     oldResult.replaceAll(
                             "searchTime=\\\"[0-9]+\\\"", "").
@@ -129,7 +128,7 @@ public class DistributedTermStatsTest extends NoExitTestCase {
                             "searchTime=\\\"[0-9]+\\\"", "")));
         assertResult("The new termstats should change the order",
                      aggregator, "bar1 bar2",
-                     Arrays.asList("foo3", "foo1", "foo2"));
+                     Arrays.asList("foo2", "foo1", "foo3"));
         aggregator.close();
         close(searchers);
     }
