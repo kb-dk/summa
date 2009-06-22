@@ -40,6 +40,21 @@ import java.net.URL;
  * Transform arbitrary XML in Payload.Record.content using XSLT. This is
  * normally used to convert source-specific XML to SummaDocumentXML (ready
  * for further transformation to a Lucene Document object by CreateDocument).
+ * </p><p>
+ * Note that the XMLTransformer uses the JVM's default Transformer for
+ * processing of XSLTs. One common problem with XSLT-processing is infinite or
+ * just very deep recursion, e.g. for processing of a list of names. For a
+ * standard Java 1.6 setup from Sun, this can lead to a StackOverflowError
+ * in the JVM.
+ * </p><p>
+ * The problem with Errors is that the state of the virtual machine is not
+ * guaranteed to be stable when an Error has been thrown. If an Error occurs,
+ * the offending Payload is logget at FATAL level and further processing is
+ * terminated. If such a controlled crash occurs, it is recommended that the
+ * offending records be removed from the workflow. One easy way of doing this is
+ * to insert a
+ * {@link dk.statsbiblioteket.summa.common.filter.object.RegexFilter} in front
+ * of the XMLTransformer with a regexp that matches the id of the Payload.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
