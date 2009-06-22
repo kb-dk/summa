@@ -25,9 +25,9 @@
     <xsl:output version="1.0" encoding="UTF-8" indent="yes" method="xml"/>
     <xsl:template match="/">
         <Index:document Index:defaultBoost="1" Index:defaultType="token" Index:defaultFreetext="true" Index:defaultSuggest="false"
-                        Index:defaultGroup="false" Index:langAutogroup="true" Index:resolver="horizon">
+                        Index:defaultGroup="false" Index:langAutogroup="true" Index:resolver="ebog">
             <xsl:attribute name="Index:id">
-                <xsl:value-of select="mc:record/mc:datafield[@tag='994']/mc:subfield[@code='z']" />
+                <xsl:value-of select="mc:record/mc:datafield[@tag='001']/mc:subfield[@code='a']" />
             </xsl:attribute>
 
             <xsl:for-each select="mc:record">
