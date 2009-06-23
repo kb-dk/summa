@@ -156,6 +156,11 @@ public class FacetTest extends NoExitTestCase {
         Storage storage = SearchTest.startStorage();
         SearchTest.ingest(new File(
                 Resolver.getURL("data/search/input/part1").getFile()));
+        Record hansRecord = storage.getRecord("fagref:hj@example.com", null);
+        assertTrue(hansRecord != null);
+        assertEquals("The Records-count should be correct after first ingest",
+                     1, countRecords(storage, "fagref"));
+
         updateIndex();
         log.debug("Index updated. Creating searcher");
         SummaSearcherImpl searcher =
@@ -185,6 +190,11 @@ public class FacetTest extends NoExitTestCase {
         Storage storage = SearchTest.startStorage();
         SearchTest.ingest(new File(
                 Resolver.getURL("data/search/input/part2").getFile()));
+        Record gurliRecord = storage.getRecord("fagref:gm@example.com", null);
+        assertTrue(gurliRecord != null);
+        assertEquals("The Records-count should be correct after first ingest",
+                     2, countRecords(storage, "fagref"));
+
         updateIndex();
         log.debug("Index updated. Creating searcher");
         SummaSearcherImpl searcher =
@@ -263,6 +273,11 @@ public class FacetTest extends NoExitTestCase {
                 Resolver.getURL("data/search/input/part2").getFile()));
         assertEquals("The Records-count should be correct after second ingest",
                      3, countRecords(storage, "fagref"));
+
+        Record hansRecord = storage.getRecord("fagref:hj@example.com", null);
+        assertTrue(hansRecord != null);
+        Record gurliRecord = storage.getRecord("fagref:gm@example.com", null);
+        assertTrue(gurliRecord != null);
 
         updateIndex();
         Thread.sleep(5000); // Why do we need to do this?
