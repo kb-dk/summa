@@ -1,3 +1,272 @@
+2009-06-23 14:00  mke
+
+	* [r1643]
+	  build.properties, ChangeLog, NEWS:
+
+	  Release Summa 1.4.6
+
+2009-06-23 11:23  mke
+
+	* [r1603]
+	  Control/test/dk/statsbiblioteket/summa/releasetest/FacetTest.java:
+	  
+	  Additional sanity checks in the FacetTest unit tests, there seems
+	  to be a hitherto undiscovered race condition somewhere in the
+	  StateThread/FilterControl/FilterService interactions. This will
+	  sadly not be fixed in Summa 1.4.6
+
+2009-06-23 11:19  nig
+
+	* [r1602] Index/config/targets/ebog/ebog_short_format.xsl:
+	  
+	  Fikset identifier for at få et link i shortformat til
+	  materialetypen
+
+2009-06-23 09:40  mke
+
+	* [r1601] gplmigrater.py:
+	  
+	  Import a script we eventually will use for the LGPL->Apache 2.0
+	  migration
+
+2009-06-23 08:46  mke
+
+	* [r1600]
+	  Common/test/dk/statsbiblioteket/summa/common/configuration/RemoteStorageTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/ReaderInputStreamTest.java:
+	  
+	  Add comments to ReaderInputStreamTest about why we fail
+	  
+	  Fix RemoteStorageTest.testConfigurationInstantiation() - this
+	  eact idiom does not make sense on RemoteStorages
+
+2009-06-22 11:05  nig
+
+	* [r1599] Index/config/targets/ebog/ebog_index.xsl:
+	  
+	  Rettet ID felt til 001 - a
+
+2009-06-22 10:36  toke
+
+	* [r1598]
+	  Index/src/dk/statsbiblioteket/summa/index/XMLTransformer.java:
+	  
+	  JavaDoc: Explained about XSLT recursion problems in
+	  XMLTransformer
+
+2009-06-22 09:36  nig
+
+	* [r1597] Index/config/targets/ebog,
+	  Index/config/targets/ebog/ebog_author.xsl,
+	  Index/config/targets/ebog/ebog_classification.xsl,
+	  Index/config/targets/ebog/ebog_identificers.xsl,
+	  Index/config/targets/ebog/ebog_index.xsl,
+	  Index/config/targets/ebog/ebog_lcl.xsl,
+	  Index/config/targets/ebog/ebog_lma.xsl,
+	  Index/config/targets/ebog/ebog_material.xsl,
+	  Index/config/targets/ebog/ebog_notes.xsl,
+	  Index/config/targets/ebog/ebog_other.xsl,
+	  Index/config/targets/ebog/ebog_publisher.xsl,
+	  Index/config/targets/ebog/ebog_relations.xsl,
+	  Index/config/targets/ebog/ebog_short_format.xsl,
+	  Index/config/targets/ebog/ebog_subject.xsl,
+	  Index/config/targets/ebog/ebog_title.xsl:
+	  
+	  Nyt target ebog. Foreløbig en direkte kopi af horizon
+
+2009-06-19 14:28  toke
+
+	* [r1596] Common/scripts/termStats.sh[CPY],
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/distribution/TermStatExtractor.java:
+	  
+	  Util: Added script for calling TermStatExtractor and extended
+	  TermStatExtractor to include a usable main method
+
+2009-06-19 13:00  mke
+
+	* [r1595]
+	  Common/test/dk/statsbiblioteket/summa/common/configuration/JStorageTest.java:
+	  
+	  Fix test cases to expect the new (corrected) layout of the output
+	  js in JStorageTest
+
+2009-06-19 12:56  mke
+
+	* [r1594]
+	  Common/src/dk/statsbiblioteket/summa/common/util/ConfigurationTranscoder.java:
+	  
+	  Make the ConfigurationTranscoder pick up the location of the
+	  input configuration as the first argument
+
+2009-06-19 12:02  mke
+
+	* [r1593]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/storage/JStorage.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/ConfigurationTranscoder.java:
+	  
+	  Bugfix: Fix indentation of nested sub config when serializing a
+	  JStorage
+	  
+	  Bugfix: Actually output valid Javascript when serializing a
+	  JStorage
+	  
+	  New: Add a very simple transcoding application xprops->jstorage
+
+2009-06-19 11:46  toke
+
+	* [r1592]
+	  Control/test/dk/statsbiblioteket/summa/releasetest/DistributedTermStatsTest.java:
+	  
+	  Testing: God the unit-test working so that distributed term stats
+	  and the effect hereof is tested
+
+2009-06-19 09:34  toke
+
+	* [r1591]
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/SummaIndexReader.java:
+	  
+	  Bugfix: The summaIndexreader did not override maxDoc
+
+2009-06-19 08:29  mke
+
+	* [r1590] doc/summa-doc-tool, doc/summa-properties.css:
+	  
+	  Add a 'html' output option to summa-doc-tool
+	  
+	  Include a default style sheet for the HTML output of
+	  summa-doc-tool
+
+2009-06-18 13:41  toke
+
+	* [r1589]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/distribution/TermStat.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/distribution/TermStatTest.java,
+	  Control/test/data/distribution/search_configuration.xml,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/DistributedTermStatsTest.java:
+	  
+	  Testing: More work on the distributed term stats tests. Not
+	  finished
+	  Bugfix: Misc. bugfixes for the distributed term stats, but as DTS
+	  is not production-level yet, they should be considered normal
+	  development
+
+2009-06-18 11:03  toke
+
+	* [r1588]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/distribution/TermStat.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/distribution/TermStatTest.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/LuceneSearchNode.java:
+	  
+	  Testing: Checked indirect update of TermStats (used by other
+	  tests)
+
+2009-06-18 09:48  mke
+
+	* [r1587] doc/summa-doc-tool:
+	  
+	  Fix regression with dupes appearing in the summa-doc-tool output
+	  
+	  Properly format <code/> blocks in summa-doc-tool's Moin output
+	  (using {{{}}})
+	  
+	  In summa-doc-tool, format the description element of the Moin
+	  output just as the other property fields (it was the only one
+	  being italic before)
+
+2009-06-18 09:27  mke
+
+	* [r1586] doc/summa-doc-tool:
+	  
+	  Make summa-doc-tool resolve local property references in the
+	  javadoc, eg. {@link #CONF_FOO} is resolved to "summa.module.foo"
+	  if CONF_FOO is defined as "summa.module.foo" in the class
+	  
+	  Bugfix: in summa-doc-tool properly escape paragraph tags in the
+	  Moin output (using '\n . ')
+
+2009-06-18 08:41  mke
+
+	* [r1585]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/RegexFilter.java:
+	  
+	  Rename the properties of RegexFilter to generic
+	  summa.record.*pattern to facilitate moving the record/payload
+	  matching to a utility class at a later point, RecordUtil?
+
+2009-06-18 07:10  mke
+
+	* [r1584]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/RegexFilter.java:
+	  
+	  Optimization: In the RegexFilter we allocated a new Matcher on
+	  each check. Now instead store the matcher objects an
+	  .reset(string) them on each check
+
+2009-06-18 06:59  mke
+
+	* [r1583]
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/RegexFilterTest.java:
+	  
+	  Add a unit test for RegexFilter that tests regexes on some odd
+	  OAI identifiers
+
+2009-06-17 14:43  toke
+
+	* [r1582]
+	  Control/test/dk/statsbiblioteket/summa/releasetest/DistributedTermStatsTest.java:
+	  
+	  Testing: Added skeleton for distributed term stats test
+
+2009-06-17 14:38  toke
+
+	* [r1581]
+	  Search/src/dk/statsbiblioteket/summa/search/api/document/DocumentResponse.java:
+	  
+	  Bugfix: The documentResponse sorted in reverse order when doing
+	  relevance-based sort
+
+2009-06-17 14:33  toke
+
+	* [r1580]
+	  Control/test/dk/statsbiblioteket/summa/releasetest/DistributedTermStatsTest.java:
+	  
+	  Testing: First "real" test of the aggregator implemented,
+	  pointing out that it does not sort properly
+
+2009-06-17 12:03  toke
+
+	* [r1579]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/index/SummaIndexReader.java[DEL],
+	  Common/src/dk/statsbiblioteket/summa/support[DEL],
+	  Control/test/data/distribution,
+	  Control/test/data/distribution/index_configuration.xml[CPY],
+	  Control/test/data/distribution/index_descriptor.xml[CPY],
+	  Control/test/data/distribution/search_configuration.xml[CPY],
+	  Control/test/dk/statsbiblioteket/summa/releasetest/DistributedTermStatsTest.java[CPY]:
+	  
+	  Testing: First part of a framework for testing distributed
+	  searches with term stats was introduced
+
+2009-06-17 09:39  mke
+
+	* [r1578] ChangeLog, NEWS:
+	  
+	  Update NEWS and ChangeLog in preparation for Summa 1.4.6 (which
+	  is due friday or monday)
+
+2009-06-17 09:38  mke
+
+	* [r1577] Ingest/Ingest.iml,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/ThreadedStreamParser.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/ZIPParser.java,
+	  Ingest/test/dk/statsbiblioteket/summa/ingest/stream/ZIPParserTest.java:
+	  
+	  Fix stream origin in ZIPParser to use
+	  path/to/zipfile.zip!entry/filename.xml notation
+	  
+	  Add a comment in ThreadedStreamParser about why we don't close
+	  the payload in a 'finally' clause
+
 2009-06-16 19:09  tokerefind
 
 	* [r1576]
