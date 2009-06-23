@@ -736,11 +736,9 @@
                             </xsl:choose>
                         </xsl:for-each> -->
                         <xsl:for-each select="mc:datafield[@tag='856']/mc:subfield[@code='u']">
-                            <xsl:if test="contains(../mc:datafield[@tag='009']/mc:subfield[@code='g'],'xe')">
                                 <dc:identifier>
                                     <xsl:value-of select="."/>
                                 </dc:identifier>
-                            </xsl:if>
                         </xsl:for-each>
 
                         <dc:format>
