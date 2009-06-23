@@ -131,7 +131,7 @@
                         </xsl:for-each>
                         <xsl:for-each select="mc:datafield[@tag='110']">
                             <dc:creator>
-                               <xsl:if test="mc:subfield[@code='a'or @code='s' or @code='e' or @code='c' or @code='i' or @code='k' or @code='j']">
+                                <xsl:if test="mc:subfield[@code='a'or @code='s' or @code='e' or @code='c' or @code='i' or @code='k' or @code='j']">
                                     <xsl:for-each select="mc:subfield[@code='a'or @code='s' or @code='e' or @code='c' or @code='i' or @code='k' or @code='j']">
                                         <xsl:choose>
                                             <xsl:when test="position()=1">
@@ -139,37 +139,37 @@
                                             </xsl:when>
                                             <xsl:otherwise>
 
-                                        <xsl:choose>
-                                            <xsl:when test="@code='a'">
-                                                <xsl:value-of select="."/>
-                                            </xsl:when>
-                                            <xsl:when test="@code='s'">
-                                                <xsl:value-of select="."/>
-                                            </xsl:when>
-                                            <xsl:when test="@code='e'">
-                                                <xsl:text>&#32;(</xsl:text>
-                                                <xsl:value-of select="."/>
-                                                <xsl:text>)</xsl:text>
-                                            </xsl:when>
-                                            <xsl:when test="@code='c'">
-                                                <xsl:if test="position()&gt;1">
-                                                    <xsl:text>.&#32;</xsl:text>
-                                                </xsl:if>
-                                                <xsl:value-of select="."/>
-                                            </xsl:when>
-                                            <xsl:when test="@code='i'">
-                                                <xsl:text>;&#32;</xsl:text>
-                                                <xsl:value-of select="."/>
-                                            </xsl:when>
-                                            <xsl:when test="@code='k'">
-                                                <xsl:text>,&#32;</xsl:text>
-                                                <xsl:value-of select="."/>
-                                            </xsl:when>
-                                            <xsl:when test="@code='j'">
-                                                <xsl:text>,&#32;</xsl:text>
-                                                <xsl:value-of select="."/>
-                                            </xsl:when>
-                                        </xsl:choose>
+                                                <xsl:choose>
+                                                    <xsl:when test="@code='a'">
+                                                        <xsl:value-of select="."/>
+                                                    </xsl:when>
+                                                    <xsl:when test="@code='s'">
+                                                        <xsl:value-of select="."/>
+                                                    </xsl:when>
+                                                    <xsl:when test="@code='e'">
+                                                        <xsl:text>&#32;(</xsl:text>
+                                                        <xsl:value-of select="."/>
+                                                        <xsl:text>)</xsl:text>
+                                                    </xsl:when>
+                                                    <xsl:when test="@code='c'">
+                                                        <xsl:if test="position()&gt;1">
+                                                            <xsl:text>.&#32;</xsl:text>
+                                                        </xsl:if>
+                                                        <xsl:value-of select="."/>
+                                                    </xsl:when>
+                                                    <xsl:when test="@code='i'">
+                                                        <xsl:text>;&#32;</xsl:text>
+                                                        <xsl:value-of select="."/>
+                                                    </xsl:when>
+                                                    <xsl:when test="@code='k'">
+                                                        <xsl:text>,&#32;</xsl:text>
+                                                        <xsl:value-of select="."/>
+                                                    </xsl:when>
+                                                    <xsl:when test="@code='j'">
+                                                        <xsl:text>,&#32;</xsl:text>
+                                                        <xsl:value-of select="."/>
+                                                    </xsl:when>
+                                                </xsl:choose>
 
                                             </xsl:otherwise>
                                         </xsl:choose>
@@ -265,37 +265,37 @@
                                             </xsl:when>
                                             <xsl:otherwise>
 
-                                        <xsl:choose>
-                                            <xsl:when test="@code='a'">
-                                                <xsl:value-of select="."/>
-                                            </xsl:when>
-                                            <xsl:when test="@code='s'">
-                                                <xsl:value-of select="."/>
-                                            </xsl:when>
-                                            <xsl:when test="@code='e'">
-                                                <xsl:text>&#32;(</xsl:text>
-                                                <xsl:value-of select="."/>
-                                                <xsl:text>)</xsl:text>
-                                            </xsl:when>
-                                            <xsl:when test="@code='c'">
-                                                <xsl:if test="position()&gt;1">
-                                                    <xsl:text>.&#32;</xsl:text>
-                                                </xsl:if>
-                                                <xsl:value-of select="."/>
-                                            </xsl:when>
-                                            <xsl:when test="@code='i'">
-                                                <xsl:text>;&#32;</xsl:text>
-                                                <xsl:value-of select="."/>
-                                            </xsl:when>
-                                            <xsl:when test="@code='k'">
-                                                <xsl:text>,&#32;</xsl:text>
-                                                <xsl:value-of select="."/>
-                                            </xsl:when>
-                                            <xsl:when test="@code='j'">
-                                                <xsl:text>,&#32;</xsl:text>
-                                                <xsl:value-of select="."/>
-                                            </xsl:when>
-                                        </xsl:choose>
+                                                <xsl:choose>
+                                                    <xsl:when test="@code='a'">
+                                                        <xsl:value-of select="."/>
+                                                    </xsl:when>
+                                                    <xsl:when test="@code='s'">
+                                                        <xsl:value-of select="."/>
+                                                    </xsl:when>
+                                                    <xsl:when test="@code='e'">
+                                                        <xsl:text>&#32;(</xsl:text>
+                                                        <xsl:value-of select="."/>
+                                                        <xsl:text>)</xsl:text>
+                                                    </xsl:when>
+                                                    <xsl:when test="@code='c'">
+                                                        <xsl:if test="position()&gt;1">
+                                                            <xsl:text>.&#32;</xsl:text>
+                                                        </xsl:if>
+                                                        <xsl:value-of select="."/>
+                                                    </xsl:when>
+                                                    <xsl:when test="@code='i'">
+                                                        <xsl:text>;&#32;</xsl:text>
+                                                        <xsl:value-of select="."/>
+                                                    </xsl:when>
+                                                    <xsl:when test="@code='k'">
+                                                        <xsl:text>,&#32;</xsl:text>
+                                                        <xsl:value-of select="."/>
+                                                    </xsl:when>
+                                                    <xsl:when test="@code='j'">
+                                                        <xsl:text>,&#32;</xsl:text>
+                                                        <xsl:value-of select="."/>
+                                                    </xsl:when>
+                                                </xsl:choose>
 
                                             </xsl:otherwise>
                                         </xsl:choose>
@@ -313,7 +313,7 @@
                                                 <xsl:text>radio/tv</xsl:text>
                                             </xsl:when>
                                             <xsl:when test="contains(/mc:record/mc:datafield[@tag='005']/mc:subfield[@code='v'],'v')">
-                                                 <xsl:text>radio/tv</xsl:text>
+                                                <xsl:text>radio/tv</xsl:text>
                                             </xsl:when>
 
                                             <xsl:when test="contains(/mc:record/mc:datafield[@tag='008']/mc:subfield[@code='h'],'n') and contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'],'xe')">
@@ -493,7 +493,7 @@
                                                 <xsl:text>sammensat</xsl:text>
                                             </xsl:when>
                                             <xsl:otherwise>
-                                                 <xsl:text>bog</xsl:text>
+                                                <xsl:text>bog</xsl:text>
                                             </xsl:otherwise>
                                         </xsl:choose>
                                     </xsl:otherwise>
@@ -506,11 +506,11 @@
                                     <xsl:when test="contains(/mc:record/mc:datafield[@tag='008']/mc:subfield[@code='t'],'p')">
                                         <xsl:choose>
                                             <xsl:when test="contains(/mc:record/mc:datafield[@tag='005']/mc:subfield[@code='v'],'g')">
-                                                                                           <xsl:text>radio/tv</xsl:text>
-                                                                                       </xsl:when>
-                                                                                       <xsl:when test="contains(/mc:record/mc:datafield[@tag='005']/mc:subfield[@code='v'],'v')">
-                                                                                            <xsl:text>radio/tv</xsl:text>
-                                                                                       </xsl:when>
+                                                <xsl:text>radio/tv</xsl:text>
+                                            </xsl:when>
+                                            <xsl:when test="contains(/mc:record/mc:datafield[@tag='005']/mc:subfield[@code='v'],'v')">
+                                                <xsl:text>radio/tv</xsl:text>
+                                            </xsl:when>
 
                                             <xsl:when test="contains(/mc:record/mc:datafield[@tag='008']/mc:subfield[@code='h'],'n') and contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'],'xe')">
                                                 <xsl:text>e-newspaper</xsl:text>
@@ -688,7 +688,7 @@
                                                 <xsl:text>composite</xsl:text>
                                             </xsl:when>
                                             <xsl:otherwise>
-                                                 <xsl:text>book</xsl:text>
+                                                <xsl:text>book</xsl:text>
                                             </xsl:otherwise>
                                         </xsl:choose>
                                     </xsl:otherwise>
@@ -697,34 +697,35 @@
                         </dc:type>
                         <xsl:for-each select="mc:datafield[@tag='260']/mc:subfield[@code='c']">
                             <dc:date>
-                                    <xsl:choose>
-                        <xsl:when test="contains(.,'@UD8')">
-                            <xsl:value-of select="translate(substring-before(.,'@UD8'),'abcdefghijklmnopqrstuvwxyzæøåABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ [](),.','')"/>
-                            <xsl:text>-</xsl:text>
-                            <xsl:value-of select="translate(substring-after(.,'@UD8'),'abcdefghijklmnopqrstuvwxyzæøåABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ [](),.','')"/>
+                                <xsl:choose>
+                                    <xsl:when test="contains(.,'@UD8')">
+                                        <xsl:value-of select="translate(substring-before(.,'@UD8'),'abcdefghijklmnopqrstuvwxyzæøåABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ [](),.','')"/>
+                                        <xsl:text>-</xsl:text>
+                                        <xsl:value-of select="translate(substring-after(.,'@UD8'),'abcdefghijklmnopqrstuvwxyzæøåABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ [](),.','')"/>
 
-                        </xsl:when>
-                         <xsl:when test="contains(.,'{')">
-                                    <xsl:value-of select="translate(substring-after(substring-before(.,'}'),'{'),'abcdefghijklmnopqrstuvwxyzæøåABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ [](),.','')"/>
+                                    </xsl:when>
+                                    <xsl:when test="contains(.,'{')">
+                                        <xsl:value-of select="translate(substring-after(substring-before(.,'}'),'{'),'abcdefghijklmnopqrstuvwxyzæøåABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ [](),.','')"/>
 
-                                </xsl:when>
-                          <xsl:when test="contains(.,', p')">
-                            <xsl:value-of select="translate(substring-before(.,', p'),'abcdefghijklmnopqrstuvwxyzæøåABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ [](),.','')"/>
+                                    </xsl:when>
+                                    <xsl:when test="contains(.,', p')">
+                                        <xsl:value-of select="translate(substring-before(.,', p'),'abcdefghijklmnopqrstuvwxyzæøåABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ [](),.','')"/>
 
-                        </xsl:when>
-                         <xsl:when test="contains(.,'-')">
-                            <xsl:value-of select="translate(substring-before(.,'-'),'abcdefghijklmnopqrstuvwxyzæøåABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ [](),.','')"/>
-                            <xsl:text>-</xsl:text>
-                             <xsl:value-of select="translate(substring-after(.,'-'),'abcdefghijklmnopqrstuvwxyzæøåABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ [](),.','')"/>
+                                    </xsl:when>
+                                    <xsl:when test="contains(.,'-')">
+                                        <xsl:value-of select="translate(substring-before(.,'-'),'abcdefghijklmnopqrstuvwxyzæøåABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ [](),.','')"/>
+                                        <xsl:text>-</xsl:text>
+                                        <xsl:value-of select="translate(substring-after(.,'-'),'abcdefghijklmnopqrstuvwxyzæøåABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ [](),.','')"/>
 
-                        </xsl:when>
-                        <xsl:otherwise>
-                    <xsl:value-of select="substring(translate(.,'abcdefghijklmnopqrstuvwxyzæøåABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ [](),.',''),1,4)"/>
-              </xsl:otherwise>
-               </xsl:choose>
+                                    </xsl:when>
+                                    <xsl:otherwise>
+                                        <xsl:value-of select="substring(translate(.,'abcdefghijklmnopqrstuvwxyzæøåABCDEFGHIJKLMNOPQRSTUVWXYZÆØÅ [](),.',''),1,4)"/>
+                                    </xsl:otherwise>
+                                </xsl:choose>
                             </dc:date>
                         </xsl:for-each>
-                        <xsl:for-each select="mc:datafield[@tag='021']/mc:subfield[@code='a' or @code='e']">
+                        <!-- Udkommenteret for at få link til materialetypen i den korte visning i eboeger -->
+                        <!--<xsl:for-each select="mc:datafield[@tag='021']/mc:subfield[@code='a' or @code='e']">
                             <xsl:choose>
                                 <xsl:when test="position()=1">
                                     <dc:identifier>
@@ -733,21 +734,21 @@
                                     </dc:identifier>
                                 </xsl:when>
                             </xsl:choose>
-                        </xsl:for-each>
-                        <xsl:for-each select="mc:datafield[@tag='856']">
+                        </xsl:for-each> -->
+                        <xsl:for-each select="mc:datafield[@tag='856']/mc:subfield[@code='u']">
                             <xsl:if test="contains(../mc:datafield[@tag='009']/mc:subfield[@code='g'],'xe')">
                                 <dc:identifier>
                                     <xsl:value-of select="."/>
                                 </dc:identifier>
                             </xsl:if>
-
                         </xsl:for-each>
-                      <dc:format>
-                      <xsl:for-each select=".">
-                                            <xsl:choose>
-                                                <xsl:when test="contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position()=1],'xe')">
-                                                    <xsl:choose>
-                                                        <xsl:when test="contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position() >1],'xx')
+
+                        <dc:format>
+                            <xsl:for-each select=".">
+                                <xsl:choose>
+                                    <xsl:when test="contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position()=1],'xe')">
+                                        <xsl:choose>
+                                            <xsl:when test="contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position() >1],'xx')
                                                         or contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position() >1],'xa')
                                                          or contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position() >1],'xc')
                                                            or contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position() >1],'xd')
@@ -758,25 +759,25 @@
                                                                      or contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position() >1],'tb')
                                                                        or contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position() >1],'th')
                                                           or contains(/mc:record/mc:datafield[@tag='009']/mc:subfield[@code='g'][position() >1],'tg')">
-                                                              <xsl:text>mono</xsl:text>
-                                                        </xsl:when>
+                                                <xsl:text>mono</xsl:text>
+                                            </xsl:when>
 
-                                                        <xsl:otherwise>
-                                                                <xsl:text>todo</xsl:text>
-                                                        </xsl:otherwise>
-                                                    </xsl:choose>
-                                                           
-														</xsl:when>
-                                                <xsl:when test="contains(/mc:record/mc:datafield[@tag='008']/mc:subfield[@code='t'],'p')">
-									               			<xsl:text>journal</xsl:text>
-												</xsl:when>
-												<xsl:otherwise>
-                                                           <xsl:text>mono</xsl:text>
-                                                </xsl:otherwise>
-                                    </xsl:choose>
+                                            <xsl:otherwise>
+                                                <xsl:text>todo</xsl:text>
+                                            </xsl:otherwise>
+                                        </xsl:choose>
 
-                                    </xsl:for-each>
-                               </dc:format>
+                                    </xsl:when>
+                                    <xsl:when test="contains(/mc:record/mc:datafield[@tag='008']/mc:subfield[@code='t'],'p')">
+                                        <xsl:text>journal</xsl:text>
+                                    </xsl:when>
+                                    <xsl:otherwise>
+                                        <xsl:text>mono</xsl:text>
+                                    </xsl:otherwise>
+                                </xsl:choose>
+
+                            </xsl:for-each>
+                        </dc:format>
 
                         <!--                  <xsl:variable name="fonogram">
                        <xsl:for-each select="mc:datafield[@tag='096']">
