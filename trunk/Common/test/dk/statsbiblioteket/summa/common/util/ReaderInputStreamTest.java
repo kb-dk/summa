@@ -59,6 +59,12 @@ public class ReaderInputStreamTest extends TestCase {
                               + "§<>\\");
     }
 
+    /**
+     * This unit test will fail on multi-char unicode characters as described
+     * in the class documentation for {@link ReaderInputStream}. We keep it
+     * enabled to ensure we don't forget about this!
+     * @throws Exception always
+     */
     public void testMonkey() throws Exception {
         int RUNS = 5000;
         int MAX = 30;
@@ -84,6 +90,12 @@ public class ReaderInputStreamTest extends TestCase {
         }
     }
 
+    /**
+     * This unit test will fail on multi-char unicode characters as described
+     * in the class documentation for {@link ReaderInputStream}. We keep it
+     * enabled to ensure we don't forget about this!
+     * @throws Exception always
+     */
     public void testAll() throws Exception {
         int PART = 30;
         char c = 0;
@@ -100,8 +112,11 @@ public class ReaderInputStreamTest extends TestCase {
         }
     }
 
-    /* The problem here probably lies with Java's handling of unicode-chars
-       made up by multiple Java chars.
+    /**
+     * This unit test will fail on multi-char unicode characters as described
+     * in the class documentation for {@link ReaderInputStream}. We keep it
+     * enabled to ensure we don't forget about this!
+     * @throws Exception always
      */
     public void test56300() throws Exception {
         int LENGTH = 30;
