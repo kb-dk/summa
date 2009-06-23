@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<IndexDescriptor version="1.0" xmlns="http://statsbiblioteket.dk/summa/2008/IndexDescriptor">
+
+    <fields>
+        <field name="author" parent="verbatim"/>
+        <field name="split" parent="text"/>
+    </fields>
+
+    <defaultSearchFields>
+        <field ref="split"/>
+    </defaultSearchFields>
+</IndexDescriptor>
