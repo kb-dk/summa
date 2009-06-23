@@ -76,7 +76,7 @@
         <mkdir dir="${apidocs.dir}"/>        
         <javadoc packagenames="dk.statsbiblioteket.*"
                 destdir="${apidocs.dir}" author="true"
-                version="true" access="private" windowtitle="Summa Documentation - ${summa.version}"
+                version="true" access="protected" windowtitle="Summa Documentation - ${summa.version}"
                 additionalparam="-breakiterator">
             <classpath>
                 <fileset dir="${basedir}">
