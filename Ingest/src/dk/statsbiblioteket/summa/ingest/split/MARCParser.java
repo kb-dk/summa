@@ -335,11 +335,13 @@ public abstract class MARCParser extends ThreadedStreamParser {
                     MARC_TAG_DATAFIELD_ATTRIBUTE_IND2)) {
                 ind2 = reader.getAttributeValue(i);
             } else {
-                log.debug(String.format(
-                        "processDatafield: Unexpected attribute %s with value" +
-                                " '%s' for tag %s",
-                        reader.getAttributeLocalName(i),
-                        reader.getAttributeValue(i), MARC_TAG_DATAFIELD));
+                if (log.isTraceEnabled()) {
+                    log.trace(String.format(
+                            "processDatafield: Unexpected attribute %s with "
+                            + "value '%s' for tag %s",
+                            reader.getAttributeLocalName(i),
+                            reader.getAttributeValue(i), MARC_TAG_DATAFIELD));
+                }
             }
         }
         beginDataField(tag, ind1, ind2);
