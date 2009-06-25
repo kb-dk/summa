@@ -20,7 +20,9 @@ import org.apache.commons.logging.LogFactory;
  * A simple filter that clears a given set of bases on the first invocation
  * and is a no-op on any subsequent calls to {@code pump()}.
  * <p/>
- * To configure the target storage 
+ * To configure the target storage set the
+ * {@link dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer#CONF_RPC_TARGET}
+ * property.
  */
 public class ClearBaseFilter extends ObjectFilterImpl {
 
