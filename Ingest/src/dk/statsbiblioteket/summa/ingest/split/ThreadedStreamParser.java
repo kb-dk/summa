@@ -208,7 +208,8 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
     }
 
     /**
-     * Add the generated Record to the queue by creating a Payload around it.
+     * Add the generated Record to the queue by creating a Payload around it,
+     * blocking until there is room in the queue.
      * @param record the newly generated Record to add to the out queue.
      */
     protected void addToQueue(Record record) {
@@ -223,27 +224,41 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
         if (record.getId() != null) {
             newPayload.setID(record.getId());
         }
-        queue.add(newPayload);
+
+        uninterruptiblePut(newPayload);
     }
 
     /**
      * Add the generated InputStream to the queue by creating a Payload around
-     * it.
+     * it, blocking until there is room in the queue.
      * @param stream the newly generated strean to add to the out queue.
      */
     protected void addToQueue(InputStream stream) {
-        queue.add(new Payload(stream));
+        uninterruptiblePut(new Payload(stream));
     }
 
     /**
-     * Add the generated Payload to the queue.
+     * Add the generated Payload to the queue, blocking until there is room
+     * in the queue.
      * @param payload the payload to add to the queue.
      */
     protected void addToQueue(Payload payload) {
         if (log.isTraceEnabled()) {
             log.trace(String.format("Adding %s to queue", payload));
         }
-        queue.add(payload);
+        uninterruptiblePut(payload);
+    }
+
+    private void uninterruptiblePut(Payload p) {
+        while (true) {
+            try {
+                queue.put(p);
+                return;
+            } catch (InterruptedException e) {
+                log.warn("Interrupted while queueing payload "
+                         + p + ". Retrying");
+            }
+        }
     }
 
     /**
