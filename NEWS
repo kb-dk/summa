@@ -1,4 +1,12 @@
 =======================
+2009-06-26: Summa 1.4.7
+=======================
+
+ * Critical bugfix: The ThreadedStreamParser class, which is the base class for
+                    many of the core filters, could drop payloads when the
+                    internal queue was overflowed
+
+=======================
 2009-06-23: Summa 1.4.6
 =======================
 

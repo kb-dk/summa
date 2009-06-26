@@ -1,8 +1,68 @@
-2009-06-23 14:00  mke
+2009-06-26 11:30  mke
 
-	* [r1643]
-	  build.properties, ChangeLog, NEWS:
+	* [r1613] build.properties, ChangeLog, NEWS
+	
+	Release Summa 1.4.7
 
+2009-06-26 10:32  mke
+
+	* [r1612]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/ThreadedStreamParser.java,
+	  Ingest/test/dk/statsbiblioteket/summa/ingest/split/ThreadedStreamParserTest.java:
+	  
+	  Critical bugfix: Use ArrayBlockingQueue.put() instead of .add().
+	  The add() method would simply throw an IllegalStateException if
+	  the queue was full, leading to lots of lost payloads when the
+	  queues overflowed
+
+2009-06-26 06:30  nig
+
+	* [r1611] Index/config/targets/tictoc/tictoc_author.xsl,
+	  Index/config/targets/tictoc/tictoc_index.xsl:
+	  
+	  tic toc
+
+2009-06-25 09:47  toke
+
+	* [r1610]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/MARCParser.java:
+	  
+	  Debug: Changed the logging level for feedback on unknown
+	  attributes from debug to trace
+
+2009-06-25 09:29  mke
+
+	* [r1609]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/ClearBaseFilter.java:
+	  
+	  Document how to set the target storage of a ClearBaseFilter
+
+2009-06-24 11:35  mke
+
+	* [r1608]
+	  Index/src/dk/statsbiblioteket/summa/plugins/CommandLineTransformer.java[DEL],
+	  Index/src/dk/statsbiblioteket/summa/plugins/PhonofileDuration.java[DEL]:
+	  
+	  Remove obsolete classes from the plugins module
+
+2009-06-23 12:39  nig
+
+	* [r1607] Index/config/targets/ebog/ebog_short_format.xsl:
+	  
+	  Fikset identifier for at få et link i shortformat til
+	  materialetypen
+
+2009-06-23 12:16  mke
+
+	* [r1606] build.xml:
+	  
+	  Only compile javadocs with 'protected access' not full private
+	  access
+
+2009-06-23 12:01  mke
+
+	* [r1604] ChangeLog, NEWS, build.properties:
+	  
 	  Release Summa 1.4.6
 
 2009-06-23 11:23  mke
