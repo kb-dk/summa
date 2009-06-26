@@ -594,7 +594,7 @@
     </library>
     <library name="sbutil">
       <CLASSES>
-        <root url="jar://$PROJECT_DIR$/lib/sbutil-0.4.5.jar!/" />
+        <root url="jar://$PROJECT_DIR$/lib/sbutil-0.4.6-beta1.jar!/" />
       </CLASSES>
       <JAVADOC>
         <root url="jar://$PROJECT_DIR$/lib/apidocs/sbutil-0.4.5-apidocs.zip!/" />
