@@ -10,6 +10,8 @@
                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchiv">
     <xsl:output version="1.0" encoding="UTF-8" indent="yes" method="xml"/>
 
+    <!-- ARBEJDE I GANG, DERFOR ER DER PT FEJL!!!!!! i DENNE TEMPLATE -->
+
     <!-- Author -->
     <xsl:template name="author">
 
@@ -60,18 +62,28 @@
         </xsl:choose>
     </xsl:template>
 
+
     <xsl:template name="person_inverted">
         <xsl:param name="names_inverted" />
+  <!--       <xsl:param name="count" select="1" />
+        <xsl:variable name="name1" />
         <xsl:choose>
-            <xsl:when test="contains($names_inverted,',')">
-                <xsl:text>Indeholder komma</xsl:text>
-            </xsl:when>
+            <xsl:when test="contains(substring-after($names_inverted,' '),' ')">
+                <xsl:text>Indeholder 3 eller flere navne</xsl:text>
+                <xsl:variable name="name1" select="substring-before($names_inverted,' ')"/>
+                <xsl:call-template name="person_inverted">
+                    <xsl:with-param name="names_inverted" select="substring-after($names_inverted,' ')"/>
+                    <xsl:with-param name="count" select="$count+1"/>
+               </xsl:call-template>
+       -->        <!-- <xsl:value-of select="substring-before($names_inverted,' ')"/> -->
+     <!--       </xsl:when>
             <xsl:otherwise>
                 <xsl:value-of select="substring-after($names_inverted,' ')"/>
                 <xsl:text>, </xsl:text>
+                <xsl:value-of select="$name1"/>
                 <xsl:value-of select="substring-before($names_inverted,' ')"/>
             </xsl:otherwise>
         </xsl:choose>
-    </xsl:template>
+ -->   </xsl:template>    
 
 </xsl:stylesheet>
