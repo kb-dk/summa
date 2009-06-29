@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -34,10 +34,15 @@ import java.io.IOException;
  * A wrapper for {@link TermStat} that watches for new persistent term
  * statistics and ensures up-to-date data. Used by SummaIndexReader.
  * </p><p>
+ * As the term stat provider is meant to be used with a Lucene-like document
+ * searcher (i.e. an inverted field/term-based index), some optimization might
+ * take place. Removing all terms with a count of 1 might be such an
+ * optimization as the document frequency used for scoring will always be at
+ * least 1 for some searchers. By "some searchers" we mean "Lucene et al".
+ * </p><p>
  * The wrapper received a Configuration that will be used directly to create
  * a {@link TermStat} and an {@link IndexWatcher}.
  * </p><p>
- * Relevant property for the TermStat is {@link TermStat#CONF_MEMORYBASED}.
  * Important property for IndexWatcher is
  * {@link IndexWatcher#CONF_INDEX_WATCHER_INDEX_ROOT}. The default is
  * {@link #DEFAULT_TERMSTAT_ROOT}.
@@ -87,7 +92,7 @@ public class TermProviderImpl implements IndexListener, TermProvider {
                          + "statistics");
                 return;
             }
-            if (termStat.open(indexFolder, true)) {
+            if (termStat.open(indexFolder)) {
                 termStatActive = true;
             } else {
                 log.warn(String.format(
@@ -121,8 +126,9 @@ public class TermProviderImpl implements IndexListener, TermProvider {
      * @param term a term in the form "field:value".
      * @return the document frequency for the term or -1 if the distributed
      *         term stats are not available or does not contain the term.
+     * @throws java.io.IOException if an error happened during resolving.
      */
-    public int docFreq(String term) {
+    public int docFreq(String term) throws IOException {
         return termStatActive ? termStat.getTermCount(term) : -1;
     }
 
@@ -135,6 +141,10 @@ public class TermProviderImpl implements IndexListener, TermProvider {
         log.debug("Closing down TermProviderImpl");
         indexWatcher.stopWatching();
         termStatActive = false;
-        termStat.close();
+        try {
+            termStat.close();
+        } catch (IOException e) {
+            log.warn("Exception while closing underlying TermStat", e);
+        }
     }
 }

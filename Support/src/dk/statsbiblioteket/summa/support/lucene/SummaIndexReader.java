@@ -41,6 +41,10 @@ import dk.statsbiblioteket.util.qa.QAInfo;
  * Using this reader ensures that ranking is coordinated between shards of the
  * whole conceptual index, making it possible for distribution to be
  * functionally equivalent with a single big index.
+ * </p><p>
+ * Note that it is acceptable for the TermProvider to return the docCount for
+ * terms with only one instance as non-existing. This will result in a request
+ * to the underlying IndexReader
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -75,6 +79,14 @@ public class SummaIndexReader extends FilterIndexReader {
         return num == 0 ? super.maxDoc() : num;
     }
 
+    /**
+     * Resolve the number of documents containing the term across the
+     * distributed index. If the underlying term-provider is unable to provide
+     * a document count, the wrapped Indexreader  is used for resolving.
+     * @param t the term to get the document count for.
+     * @return the document count for the term.
+     * @throws IOException if an error happened during resolving.
+     */
     @Override
     public int docFreq(Term t) throws IOException {
         int freq;
@@ -90,8 +102,12 @@ public class SummaIndexReader extends FilterIndexReader {
                          + "to create error message. The term was '" + t + "'",
                          e2);
             }
-            return super.docFreq(t);
+            return atLeastOne(super.docFreq(t));
         }
-        return freq == -1 ? super.docFreq(t) : freq;
+        return freq == -1 ? atLeastOne(super.docFreq(t)) : freq;
+    }
+
+    private int atLeastOne(int value) {
+        return value <= 0 ? 1 : value;
     }
 }

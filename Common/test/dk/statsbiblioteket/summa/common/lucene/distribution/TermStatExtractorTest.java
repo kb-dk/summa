@@ -80,9 +80,9 @@ public class TermStatExtractorTest extends TestCase {
                  + Strings.join(dumpLocation.listFiles(), ", "));
 
         TermStat termStat = new TermStat(conf);
-        termStat.open(dumpLocation, true);
+        termStat.open(dumpLocation);
         assertEquals("The number of stored stats should be correct",
-                     expectedEntries, termStat.size());
+                     expectedEntries, termStat.getTermCount());
         termStat.close();
     }
 
@@ -96,7 +96,7 @@ public class TermStatExtractorTest extends TestCase {
                  + Strings.join(dumpLocation.listFiles(), ", "));
 
         TermStat termStat = new TermStat(conf);
-        termStat.open(dumpLocation, true);
+        termStat.open(dumpLocation);
         String FIXED = "fixed:fixedcontent";
         assertEquals("The termcount for " + FIXED + " should be numDocs",
                      100, termStat.getTermCount(FIXED));
@@ -125,7 +125,7 @@ public class TermStatExtractorTest extends TestCase {
                              new File(TEST_DIR, "merged"));
 
         TermStat termStat = new TermStat(conf);
-        termStat.open(new File(TEST_DIR, "merged"), true);
+        termStat.open(new File(TEST_DIR, "merged"));
         String FIXED = "fixed:fixedcontent";
         assertEquals("The termcount for " + FIXED + " should be numDocs",
                      400, termStat.getTermCount(FIXED));

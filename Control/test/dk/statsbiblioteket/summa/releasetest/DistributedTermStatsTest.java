@@ -37,7 +37,6 @@ import dk.statsbiblioteket.summa.common.lucene.distribution.TermStat;
 import dk.statsbiblioteket.summa.common.lucene.distribution.TermEntry;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
 import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.common.pool.SortedPool;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
 import dk.statsbiblioteket.summa.search.api.SummaSearcher;
 import dk.statsbiblioteket.summa.search.api.Request;
@@ -60,7 +59,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.lang.reflect.Method;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
@@ -105,13 +103,19 @@ public class DistributedTermStatsTest extends NoExitTestCase {
         close(searchers);
 
         TermStat termStat = new TermStat(Configuration.newMemoryBased());
-        termStat.open(mergedLocation, false);
+        termStat.open(mergedLocation);
         assertEquals("The count for bar2 should be correct",
                      4, termStat.getTermCount("multi_token:bar2"));
-        updateCount(termStat, "multi_token:bar1", 50); // bar2 is now common
+
+        // Update bar1
+        Thread.sleep(1000); // To ensure new time-based folder name
+        TermStat updated = updateCount(termStat, "multi_token:bar1", 50);
+        termStat.close();
+        termStat = updated;
+
         assertEquals("The count for bar2 should be updated",
                      50, termStat.getTermCount("multi_token:bar1"));
-        termStat.store();
+        termStat.close();
 
         searchers = createSearchers(
                 mergedLocation.getParentFile(),
@@ -133,16 +137,34 @@ public class DistributedTermStatsTest extends NoExitTestCase {
         close(searchers);
     }
 
-    private void updateCount(TermStat termStat, String term, int count)
+    /* Create an updated TermStat. Does not close the given TermStat */
+    private TermStat updateCount(TermStat termStat, String term, int count)
                                                               throws Exception {
-        Method method = TermStat.class.getDeclaredMethod("getTermCounts");
-        method.setAccessible(true);
-        Object result = method.invoke(termStat);
-        //noinspection unchecked
-        SortedPool<TermEntry> pool = (SortedPool<TermEntry>)result;
-        TermEntry te = new TermEntry(term, count);
-        pool.remove(pool.indexOf(te));
-        pool.add(te);
+        File destinationLocation = new File(
+                termStat.getLocation().getParentFile(),
+                IndexCommon.getTimestamp());
+        log.info("Storing updated term stats in '"
+                  + destinationLocation + "'");
+        TermStat destination = new TermStat(Configuration.newMemoryBased());
+        destination.create(destinationLocation);
+        termStat.reset();
+        while (termStat.hasNext()) {
+            TermEntry te = termStat.get();
+            if (te == null) {
+                break;
+            }
+            if (te.getTerm().equals(term)) {
+                te.setCount(count);
+            }
+            destination.add(te);
+        }
+        destination.setSource(termStat.getSource());
+        destination.setDocCount(termStat.getDocCount());
+        destination.store();
+        Files.saveString(Long.toString(System.currentTimeMillis()), new File(
+                destinationLocation, IndexCommon.VERSION_FILE));
+
+        return destination;
     }
 
     private List<File> extendFiles(List<File> indexLocations, String subdir) {
@@ -472,4 +494,5 @@ public class DistributedTermStatsTest extends NoExitTestCase {
         }
         return payloads;
     }
+
 }
