@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -21,6 +21,8 @@ package dk.statsbiblioteket.summa.support.lucene;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 
+import java.io.IOException;
+
 /**
  * Provides distributed term statistics.
  */
@@ -39,6 +41,7 @@ public interface TermProvider {
      *        {@code field:value}.
      * @return the document frequency for the term or -1 if it could not be
      *         resolved.
+     * @throws java.io.IOException if an error happened during resolving.
      */
-    int docFreq(String term);
+    int docFreq(String term) throws IOException;
 }

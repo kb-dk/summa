@@ -38,9 +38,6 @@ import java.util.ArrayList;
  * The format of the output-file is {@code field:text\tfrequency\n} where
  * line-breaks in text are escaped with \n and frequency is written with
  * {@code Integer.toString()}.
- * </p><p>
- * When configuring the TermStatExtractor, consider specifying
- * {@link TermStat#CONF_MEMORYBASED}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -142,7 +139,7 @@ public class TermStatExtractor {
         stats.create(destination);
         TermEnum terms = ir.terms();
         while (terms.next()) {
-            stats.dirtyAdd(new TermEntry(
+            stats.add(new TermEntry(
                     terms.term().field() + ":" + terms.term().text(),
                     terms.docFreq()));
             profiler.beat();
@@ -187,13 +184,8 @@ public class TermStatExtractor {
             log.trace("Opening the source '" + fileSource + "'");
             try {
                 TermStat source = new TermStat(termStatConf);
-                source.open(fileSource, true);
-                if (source.size() == 0) {
-                    log.debug("the source " + fileSource + " did not contain "
-                              + "any terms. Skipping source");
-                    source.close();
-                    continue;
-                }
+                source.open(fileSource);
+                source.reset();
                 sources.add(source);
             } catch (Exception e) {
                 log.warn(String.format(
@@ -210,25 +202,34 @@ public class TermStatExtractor {
             // Find the first term in Unicode-order
             TermStat first = null;
             for (TermStat candidate : sources) {
+                TermEntry candidateEntry = candidate.peek();
+                if (candidateEntry == null) {
+                    continue;
+                }
                 if (first == null ||
-                    candidate.get(candidate.position).getTerm().compareTo(
-                            first.get(first.position).getTerm()) < 0) {
+                    candidate.peek().getTerm().compareTo(
+                            first.peek().getTerm()) < 0) {
                     first = candidate;
                 }
             }
 
             // Sum the term counts and remove empty
-            TermEntry firstEntry = first.get(first.position);
+            TermEntry firstEntry = first.peek();
             int sum = 0; //firstEntry.getCount();
             String term = firstEntry.getTerm();
             for (int i = sources.size() - 1 ; i >= 0 ; i--) {
                 TermStat current = sources.get(i);
-                String currentTerm = current.get(current.position).getTerm();
-                if (currentTerm.equals(term)) {
-                    sum += current.get(current.position).getCount();
-                    current.position++;
+                TermEntry currentTerm = current.peek();
+                if (currentTerm == null) {
+                    current.close();
+                    sources.remove(i);
+                    continue;
+                }
+                if (currentTerm.getTerm().equals(term)) {
+                    sum += currentTerm.getCount();
+                    current.get();
                     // Remove depleted
-                    if (current.position == current.size()) {
+                    if (!current.hasNext()) {
                         current.close();
                         sources.remove(i);
                     }
@@ -237,12 +238,10 @@ public class TermStatExtractor {
             if (log.isTraceEnabled()) {
                 log.trace("Summed docFreq for '" + term + "' is " + sum);
             }
-            destination.dirtyAdd(new TermEntry(term, sum));
+            destination.add(new TermEntry(term, sum));
             profiler.beat();
         }
-        log.debug("Finished merging. Cleaning up...");
-        destination.cleanup();
-        log.debug("Cleanup finished. Storing...");
+        log.debug("Finished merging. Storing...");
         destination.store();
         log.debug("Finished storing");
         destination.close();
