@@ -10,6 +10,11 @@
         version="1.0" xmlns:dc="http://purl.org/dc/elements/1.1/"
         xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns:admin="http://webns.net/mvcb/"
+        xmlns:prism="http://purl.org/rss/1.0/modules/prism/"
+        xmlns:syn="http://purl.org/rss/1.0/modules/syndication/"
+        xmlns:taxo="http://purl.org/rss/1.0/modules/taxonomy/"
+        xmlns:purl="http://purl.org/rss/1.0/"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchiv">
 
     <xsl:include href="tictoc_shortformat.xsl" />
@@ -29,8 +34,7 @@
                 <xsl:for-each select="rss/channel/item/link">
                     <xsl:value-of select="."/>
                 </xsl:for-each>
-                <xsl:for-each select="rdf:RDF/item/dc:title">
-                    haleleluja
+                <xsl:for-each select="rdf:RDF/purl:channel/prism:issn">
                     <xsl:value-of select="."/>
                 </xsl:for-each>
             </xsl:attribute>
@@ -39,32 +43,42 @@
                 <xsl:value-of select="'tictoc'"/>
             </xsl:attribute>
 
-            <xsl:choose>
-                <xsl:when test="rss/@version='2.0'">
-                       <xsl:for-each select="rss/channel/item">
-                        <Index:fields>
-                            <xsl:call-template name="shortformat" />
-                            <xsl:call-template name="author" />
-                            <xsl:call-template name="title" />
-                            <xsl:call-template name="date" />
-                            <xsl:call-template name="notes" />
-                            <xsl:call-template name="identifiers" />
-                            <xsl:call-template name="ma" />
-                            <!--
-                            <xsl:call-template name="language" />
-                            <xsl:call-template name="su" />
-                            <xsl:call-template name="publisher" />
-                            -->
 
-                            <Index:field Index:name="openUrl" Index:navn="openUrl"  Index:type="stored" Index:freetext="false">id=<xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.OpenUrlEscape.escape(link)" /></Index:field>
+            <xsl:for-each select="rss/channel/item">
+                <Index:fields>
+                    <xsl:call-template name="shortformat" />
+                    <xsl:call-template name="author" />
+                    <xsl:call-template name="title" />
+                    <xsl:call-template name="date" />
+                    <xsl:call-template name="notes" />
+                    <xsl:call-template name="identifiers" />
+                    <xsl:call-template name="ma" />
+                    <!--
+                    <xsl:call-template name="language" />
+                    <xsl:call-template name="su" />
+                    <xsl:call-template name="publisher" />
+                    -->
+                    <Index:field Index:name="openUrl" Index:navn="openUrl"  Index:type="stored" Index:freetext="false">id=<xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.OpenUrlEscape.escape(link)" /></Index:field>
+                </Index:fields>
+            </xsl:for-each>
 
-                        </Index:fields>
-                    </xsl:for-each>
-                </xsl:when>
-                <xsl:otherwise>
-                       Otherwise
-                </xsl:otherwise>
-            </xsl:choose>
+            <xsl:for-each select="rdf:RDF/purl:item">
+                <Index:fields>
+                    <xsl:call-template name="shortformat" />
+                    <xsl:call-template name="author" />
+                    <xsl:call-template name="title" />
+                    <xsl:call-template name="date" />
+                    <xsl:call-template name="notes" />
+                    <xsl:call-template name="identifiers" />
+                    <xsl:call-template name="ma" />
+                    <!--
+                    <xsl:call-template name="language" />
+                    <xsl:call-template name="su" />
+                    <xsl:call-template name="publisher" />
+                    -->
+                    <Index:field Index:name="openUrl" Index:navn="openUrl"  Index:type="stored" Index:freetext="false">id=<xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.OpenUrlEscape.escape(link)" /></Index:field>
+                </Index:fields>
+            </xsl:for-each>
 
 
 
