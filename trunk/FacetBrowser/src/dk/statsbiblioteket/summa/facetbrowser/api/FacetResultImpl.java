@@ -447,6 +447,16 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
         }
         return result;
     }
+
+    /**
+     * Escape the tag for use in a query. Currently this means placing a
+     * backslash in front of quotes.
+     * @param cleanTag the tag to escape.
+     * @return the escaped tag.
+     */
+    protected String queryEscapeTag(String cleanTag) {
+        return cleanTag.replace("\"", "\\\"");
+    }
 }
 
 

@@ -92,7 +92,7 @@ public class FacetResultLocal extends FacetResultImpl<Integer> {
         for (int i = 0 ; i < fc.getFields().length ; i++) {
             sw.append(fc.getFields()[i]);
             sw.append(":\"");
-            sw.append(cleanTag);
+            sw.append(queryEscapeTag(cleanTag));
             sw.append("\"");
             if (i < fc.getFields().length - 1) {
                 sw.append(" OR ");
@@ -145,6 +145,3 @@ public class FacetResultLocal extends FacetResultImpl<Integer> {
         return "FacetResultLocal";
     }
 }
-
-
-
