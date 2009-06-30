@@ -123,6 +123,8 @@ public class SearchWS {
      * @return An XML string containing the result or an error description.
      */
     public String getSuggestions(String prefix, int maxSuggestions) {
+        log.trace("getSuggestion('" + prefix + "', " + maxSuggestions + ")");
+        long startTime = System.currentTimeMillis();
         String retXML;
 
         ResponseCollection res;
@@ -151,6 +153,9 @@ public class SearchWS {
             retXML = "<error>Error performing getSuggestions</error>";
         }
 
+        log.trace("getSuggestion('" + prefix + "', " + maxSuggestions
+                  + ") finished in " + (System.currentTimeMillis() - startTime)
+                  + "ms");
         return retXML;
     }
 
@@ -163,6 +168,7 @@ public class SearchWS {
      * Suggestion database.
      */
     public void commitQuery(String query, long hitCount) {
+        log.debug("commitQuery('" + query + "', " + hitCount + ")");
         ResponseCollection res;
 
         Request req = new Request();
@@ -186,6 +192,8 @@ public class SearchWS {
      * @return An XML string containing the result or an error description.
      */
     public String getField(String id, String fieldName) {
+        log.trace("getField('" + id + "', '" + fieldName + "')");
+        long startTime = System.currentTimeMillis();
         String retXML;
 
         ResponseCollection res;
@@ -213,6 +221,9 @@ public class SearchWS {
             retXML = "<error>Error performing query</error>";
         }
 
+        log.trace("getField('" + id + "', '" + fieldName
+                  + "') finished in " + (System.currentTimeMillis() - startTime)
+                  + "ms");
         return retXML;
     }
 
@@ -223,6 +234,8 @@ public class SearchWS {
      * @return An XML string containing the result or an error description.
      */
     public String getMoreLikeThis(String id, int numberOfRecords) {
+        log.trace("getMoreLikeThis('" + id + "', " + numberOfRecords + ")");
+        long startTime = System.currentTimeMillis();
         String retXML;
 
         ResponseCollection res;
@@ -244,6 +257,9 @@ public class SearchWS {
             retXML = "<error>Error performing morelikethis</error>";
         }
 
+        log.debug("getMoreLikeThis('" + id + "', " + numberOfRecords
+                  + ") finished in " + (System.currentTimeMillis() - startTime)
+                  + "ms");
         return retXML;
     }
 
@@ -279,10 +295,13 @@ public class SearchWS {
      * @return An XML string containing the result or an error description.
      */
     public String simpleSearchSorted(String query, int numberOfRecords, int startIndex, String sortKey, boolean reverse) {
-        log.debug(String.format(
-                "simpleSearchSorted(query='%s', numberOfRecords=%d, "
-                + "startIndex=%d, sortKey='%s', reverse=%b) entered",
-                query, numberOfRecords, startIndex, sortKey, reverse));
+        if (log.isTraceEnabled()) {
+            log.debug(String.format(
+                    "simpleSearchSorted(query='%s', numberOfRecords=%d, "
+                    + "startIndex=%d, sortKey='%s', reverse=%b) entered",
+                    query, numberOfRecords, startIndex, sortKey, reverse));
+        }
+        long startTime = System.currentTimeMillis();
 
         String retXML;
         ResponseCollection res;
@@ -336,6 +355,11 @@ public class SearchWS {
             retXML = "<error>Error performing query</error>";
         }
 
+        log.debug(String.format(
+                "simpleSearchSorted(query='%s', numberOfRecords=%d, "
+                + "startIndex=%d, sortKey='%s', reverse=%b) finished in %s ms",
+                query, numberOfRecords, startIndex, sortKey, reverse,
+                System.currentTimeMillis() - startTime));
         return retXML;
     }
 
@@ -361,6 +385,9 @@ public class SearchWS {
      * @return An XML string containing the facet result or an error description.
      */
     public String simpleFacet(String query) {
+        log.trace("simpleFacet('" + query + "')");
+        long startTime = System.currentTimeMillis();
+
         query = cleanQuery(query);
         String retXML;
 
@@ -404,6 +431,8 @@ public class SearchWS {
             retXML = "<error>Error performing query</error>";
         }
 
+        log.debug("simpleFacet('" + query + "') finished in "
+                  + (System.currentTimeMillis() - startTime) + "ms");
         return retXML;
     }
 }
