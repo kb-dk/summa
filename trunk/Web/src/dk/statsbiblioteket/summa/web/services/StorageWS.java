@@ -126,6 +126,13 @@ public class StorageWS {
      * @return A String with the contents of the record or null if unable to retrieve record.
      */
     private String realGetRecord(String id, boolean expand, boolean legacyMerge) {
+        if (log.isTraceEnabled()) {
+            log.trace(String.format(
+                    "realGetRecord('%s', expand=%b, legacyMerge=%b)",
+                    id, expand, legacyMerge));
+        }
+        long startTime = System.currentTimeMillis();
+
         String retXML;
         Record record;
         QueryOptions q = null;
@@ -156,6 +163,10 @@ public class StorageWS {
             retXML = null;
         }
 
+        log.trace(String.format(
+                "realGetRecord('%s', expand=%b, legacyMerge=%b) finished in %d"
+                + " ms", id, expand, legacyMerge, 
+                         System.currentTimeMillis() - startTime));
         return retXML;
     }
 }
