@@ -30,7 +30,6 @@ import java.util.HashMap;
 import java.io.StringWriter;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.util.ParseUtil;
 
 /**
  * This facet structure representation is suitable for serializing and other
@@ -58,6 +57,7 @@ public class FacetResultExternal extends FacetResultImpl<String> {
         return "FacetResult";
     }
 
+    @Override
     protected String getQueryString(String facet, String tag) {
         if (fields.get(facet) == null) {
             throw new IllegalStateException(String.format(
@@ -74,7 +74,7 @@ public class FacetResultExternal extends FacetResultImpl<String> {
         for (int i = 0 ; i < fields.length ; i++) {
             sw.append(fields[i]);
             sw.append(":\"");
-            sw.append(cleanTag);
+            sw.append(queryEscapeTag(cleanTag));
             sw.append("\"");
             if (i < fields.length - 1) {
                 sw.append(" OR ");
@@ -86,7 +86,6 @@ public class FacetResultExternal extends FacetResultImpl<String> {
 
         return sw.toString();
     }
-
 }
 
 
