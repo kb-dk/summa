@@ -16,6 +16,7 @@
 
 
 <!-- Identifiers -->
+<!-- Fra det simple format hentes et libnk som identifier?? -->
 <xsl:template name="identifiers">
     <Index:group Index:name="numbers" Index:navn="nr">
         <xsl:for-each select="link">
