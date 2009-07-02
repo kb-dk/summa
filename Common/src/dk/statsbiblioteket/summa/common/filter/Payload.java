@@ -179,7 +179,7 @@ public class Payload {
                       + super.toString() + "'. Returning null", e);
             return null;
         }
-        log.debug("Could not extract ID for payload '"
+        log.trace("Could not extract ID for payload '"
                   + super.toString() + "'");
         return null;
     }
