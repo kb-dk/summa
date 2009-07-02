@@ -165,7 +165,7 @@ public class AssignMetaFilter extends ObjectFilterImpl {
         if (assignId != null) {
             String newId = getMatch(assignId, content, payload, "ID");
             if (newId != null && !"".equals(newId)) {
-                payload.getRecord().setId(newId);
+                payload.setID(newId);
             }
         }
         if (assignBase != null) {
