@@ -24,9 +24,9 @@
                 </xsl:call-template>
             </xsl:for-each>
             <xsl:for-each select="dc:creator/text()">
-                <Index:field Index:repeat="true" Index:name="author_person" Index:navn="pe" Index:type="token" Index:boostFactor="10">
-                    <xsl:value-of select="."/>
-                </Index:field>
+                <xsl:call-template name="person_complex">
+                    <xsl:with-param name="names" select="."/>
+                </xsl:call-template>
             </xsl:for-each>
         </Index:group>
 
@@ -73,6 +73,42 @@
             </xsl:otherwise>
         </xsl:choose>
     </xsl:template>
+
+    <xsl:template name="person_complex">
+        <xsl:param name="names"/>
+
+        <xsl:choose>
+            <xsl:when test="contains($names,'.,')">
+                <xsl:variable name="firstAuthor">
+                    <xsl:value-of select="substring-before($names,'.,')"/>
+                    <xsl:text>.</xsl:text>
+                </xsl:variable>
+                <Index:field Index:repeat="true" Index:name="author_person" Index:navn="pe" Index:type="token" Index:boostFactor="10">
+                    <xsl:value-of select="normalize-space(substring-after($firstAuthor,','))"/>
+                    <xsl:text> </xsl:text>
+                    <xsl:value-of select="normalize-space(substring-before($firstAuthor,','))"/>
+                </Index:field>
+                <xsl:call-template name="person_complex" >
+                    <xsl:with-param  name="names" select="substring-after($names,'.,')"/>
+                </xsl:call-template>
+            </xsl:when>
+            <xsl:otherwise>
+                <Index:field Index:repeat="true" Index:name="author_person" Index:navn="pe" Index:type="token" Index:boostFactor="10">
+                    <xsl:value-of select="normalize-space(substring-after($names,','))"/>
+                    <xsl:text> </xsl:text>
+                    <xsl:value-of select="normalize-space(substring-before($names,','))"/>
+                </Index:field>
+            </xsl:otherwise>
+        </xsl:choose>
+
+
+
+    </xsl:template>
+
+
+
+
+
 
 
     <xsl:template name="person_inverted">

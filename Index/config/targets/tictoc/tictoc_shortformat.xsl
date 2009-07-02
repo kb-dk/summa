@@ -40,13 +40,22 @@
                         </xsl:for-each>
                         <xsl:for-each select="dc:creator">
                             <dc:creator>
-                                <xsl:variable name="firstAuthor">
-                                    <xsl:value-of select="substring-before(.,'.,')"/>
-                                    <xsl:text>.</xsl:text>
-                                </xsl:variable>
-                                <xsl:value-of select="normalize-space(substring-after($firstAuthor,','))"/>
-                                <xsl:text> </xsl:text>
-                                <xsl:value-of select="normalize-space(substring-before($firstAuthor,','))"/>
+                                <xsl:choose>
+                                    <xsl:when test="contains(.,'.,')">
+                                        <xsl:variable name="firstAuthor">
+                                            <xsl:value-of select="substring-before(.,'.,')"/>
+                                            <xsl:text>.</xsl:text>
+                                        </xsl:variable>
+                                        <xsl:value-of select="normalize-space(substring-after($firstAuthor,','))"/>
+                                        <xsl:text> </xsl:text>
+                                        <xsl:value-of select="normalize-space(substring-before($firstAuthor,','))"/>
+                                    </xsl:when>
+                                    <xsl:otherwise>
+                                        <xsl:value-of select="normalize-space(substring-after(.,','))"/>
+                                        <xsl:text> </xsl:text>
+                                        <xsl:value-of select="normalize-space(substring-before(.,','))"/>
+                                    </xsl:otherwise>
+                                </xsl:choose>
                             </dc:creator>
                         </xsl:for-each>
 
