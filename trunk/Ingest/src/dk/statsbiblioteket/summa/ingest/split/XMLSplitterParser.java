@@ -59,6 +59,7 @@ public class XMLSplitterParser extends ThreadedStreamParser {
         target = new XMLSplitterParserTarget(conf);
         factory = SAXParserFactory.newInstance();
         factory.setNamespaceAware(true);
+        factory.setValidating(false);
         handler = new XMLSplitterHandler(conf, this, target);
     }
 

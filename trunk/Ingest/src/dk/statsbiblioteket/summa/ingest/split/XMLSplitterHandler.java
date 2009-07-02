@@ -25,12 +25,14 @@ package dk.statsbiblioteket.summa.ingest.split;
 import java.util.*;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.io.StringReader;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.xml.sax.ext.DefaultHandler2;
 import org.xml.sax.SAXException;
 import org.xml.sax.Attributes;
+import org.xml.sax.InputSource;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
 import dk.statsbiblioteket.summa.common.util.UniqueTimestampGenerator;
@@ -318,6 +320,25 @@ public class XMLSplitterHandler extends DefaultHandler2 {
             return;
         }
         sw.append("]]>");
+    }
+
+    /*
+     * Forcefully - not resolve DTDs
+     */
+    @Override
+    public InputSource resolveEntity(String publicId, String systemId) {
+        log.trace("Ignoring request to resolve entity '" + publicId + "'");
+        return new InputSource(new StringReader(""));
+    }
+
+    /*
+     * Forcefully - not resolve DTDs
+     */
+    @Override
+    public InputSource resolveEntity(String name, String publicId,
+                                     String baseURI, String systemId) {
+        log.trace("Ignoring request to resolve entity '" + publicId + "'");
+        return new InputSource(new StringReader(""));
     }
 
 }
