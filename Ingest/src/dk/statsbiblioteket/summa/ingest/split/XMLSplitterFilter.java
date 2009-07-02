@@ -135,7 +135,10 @@ public class XMLSplitterFilter extends StreamController {
      * Example 3: "foo" matches <baz:foo>myid</baz:foo> and returns myid. 
      * Example 4: "baz:foo" does not match <foo>myid</foo>.
      * </p><p>
-     * Default: "id".
+     * If the id-element is set to the empty string, a dummy-ID will be assigned
+     * to generated Records.
+     * </p><p>
+     * Optional. Default: "id".
      */
     public static final String CONF_ID_ELEMENT =
             "summa.ingest.xmlsplitter.idelement";

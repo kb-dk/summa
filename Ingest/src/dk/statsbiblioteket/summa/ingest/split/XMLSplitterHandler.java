@@ -32,7 +32,8 @@ import org.xml.sax.ext.DefaultHandler2;
 import org.xml.sax.SAXException;
 import org.xml.sax.Attributes;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.util.ParseUtil;
+import dk.statsbiblioteket.util.xml.XMLUtil;
+import dk.statsbiblioteket.summa.common.util.UniqueTimestampGenerator;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 
@@ -98,6 +99,7 @@ public class XMLSplitterHandler extends DefaultHandler2 {
     }
 
 
+    @Override
     public void startPrefixMapping (String prefix, String uri) throws
                                                                SAXException {
         checkRunning();
@@ -114,6 +116,7 @@ public class XMLSplitterHandler extends DefaultHandler2 {
         }
     }
 
+    @Override
     public void endPrefixMapping (String prefix) throws SAXException {
         checkRunning();
         // Ignore
@@ -125,6 +128,7 @@ public class XMLSplitterHandler extends DefaultHandler2 {
   */
     }
 
+    @Override
     public void startElement (String uri, String local, String qName,
                               Attributes atts) throws SAXException {
         checkRunning();
@@ -159,9 +163,9 @@ public class XMLSplitterHandler extends DefaultHandler2 {
             prefixes.clear();
         }
 
-        // Check if this is an id element. If we already have an id just
-        // move along
-        if (id.getBuffer().length() == 0) {
+        // Check if this is an id element if the idElement from target is not
+        // an empty string. If we already have an id just move along
+        if (!"".equals(target.idElement) && id.getBuffer().length() == 0) {
             if (target.idNamespace == null) {
                 // Do sloppy id element extraction
                 if (equalsAny(target.idElement, qName, local)) {
@@ -182,7 +186,7 @@ public class XMLSplitterHandler extends DefaultHandler2 {
             sw.append(" ").append(target.preserveNamespaces ?
                                   atts.getQName(i) :
                                   atts.getLocalName(i)).append("=\"");
-            sw.append(ParseUtil.encode(atts.getValue(i))).append("\"");
+            sw.append(XMLUtil.encode(atts.getValue(i))).append("\"");
             if (inId && !"".equals(target.idTag) &&
                 equalsAny(target.idTag,
                           atts.getQName(i), atts.getLocalName(i))) {
@@ -200,6 +204,7 @@ public class XMLSplitterHandler extends DefaultHandler2 {
     }
 
 
+    @Override
     public void endElement (String uri, String localName, String qName) throws
                                                                   SAXException {
         checkRunning();
@@ -223,14 +228,20 @@ public class XMLSplitterHandler extends DefaultHandler2 {
             // Record XML end reached
             log.debug("Record XML collected, creating Record");
             if ("".equals(id.toString())) {
-                log.warn("Record found, but no id could be located. Skipping");
-                if (log.isTraceEnabled()) {
-                    log.trace("Dumping id-less Record-XML (expected id-element "
-                              + target.idElement + " # " + target.idTag
-                              + "):\n" + sw.toString());
+                if ("".equals(target.idElement)) {
+                    makeRandomID(id);
+                } else {
+                    log.warn("Record found, but no id could be located. "
+                             + "Skipping Record");
+                    if (log.isTraceEnabled()) {
+                        log.trace(String.format(
+                                "Dumping id-less Record-XML (expected "
+                                + "id-element %s#%s):\n%s",
+                                target.idElement, target.idTag, sw.toString()));
+                    }
+                    prepareScanForNextRecord();
+                    return;
                 }
-                prepareScanForNextRecord();
-                return;
             }
             try {
                 Record record = new Record(
@@ -248,6 +259,17 @@ public class XMLSplitterHandler extends DefaultHandler2 {
         }
     }
 
+    /**
+     * Created a semi-random ID, guaranteed to be unique within the current
+     * XMLSplitterHandler instance.
+     * @param id where to append the ID.
+     */
+    private void makeRandomID(StringWriter id) {
+        id.append("randomID_").append(Long.toString(utg.next()));
+    }
+    private UniqueTimestampGenerator utg = new UniqueTimestampGenerator();
+
+    @Override
     public void characters(char ch[], int start, int length) throws
                                                              SAXException {
         checkRunning();
@@ -261,15 +283,17 @@ public class XMLSplitterHandler extends DefaultHandler2 {
         }
 
         // Append escaped characters to the body
-        sw.append(ParseUtil.encode(chars));
+        sw.append(XMLUtil.encode(chars));
     }
 
 
+    @Override
     public void ignorableWhitespace(char ch[], int start, int length) throws
                                                                       SAXException {
         characters(ch, start, length);
     }
 
+    @Override
     public void comment(char ch [], int start, int length) throws SAXException {
         checkRunning();
         if (!inRecord) {
@@ -279,6 +303,7 @@ public class XMLSplitterHandler extends DefaultHandler2 {
         sw.append("<!--").append(chars).append("-->");
     }
 
+    @Override
     public void startCDATA() throws SAXException {
         checkRunning();
         if (!inRecord) {
@@ -286,6 +311,7 @@ public class XMLSplitterHandler extends DefaultHandler2 {
         }
         sw.append("<![CDATA[");
     }
+    @Override
     public void endCDATA() throws SAXException {
         checkRunning();
         if (!inRecord) {
