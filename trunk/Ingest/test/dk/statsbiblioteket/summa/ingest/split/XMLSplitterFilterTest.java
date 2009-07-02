@@ -64,6 +64,29 @@ public class XMLSplitterFilterTest extends TestCase implements ObjectFilter {
         assertFalse("No more Payloads should be available", parser.hasNext());
     }
 
+    public void testNoIDFound() throws Exception {
+        Configuration conf = getBasicConfiguration();
+        conf.set(XMLSplitterFilter.CONF_ID_ELEMENT, "nonexisting");
+        ObjectFilter parser = new XMLSplitterFilter(conf);
+        parser.setSource(this);
+        startProducer(2);
+        assertFalse("No records should be available as all has bad IDs",
+                    parser.hasNext());
+    }
+
+    public void testRandomID() throws Exception {
+        Configuration conf = getBasicConfiguration();
+        conf.set(XMLSplitterFilter.CONF_ID_ELEMENT, "");
+        ObjectFilter parser = new XMLSplitterFilter(conf);
+        parser.setSource(this);
+        startProducer(2);
+        for (int i = 0 ; i < 4 ; i++) {
+            String id = parser.next().getRecord().getId();
+            assertTrue("The id '" + id + "' should contain the string " 
+                       + "'randomID'", id.contains("randomID"));
+        }
+    }
+
     public void testCloseCall() throws Exception {
         Configuration conf = getBasicConfiguration();
         ObjectFilter parser = new XMLSplitterFilter(conf);
