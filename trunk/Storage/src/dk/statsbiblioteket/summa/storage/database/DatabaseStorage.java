@@ -30,6 +30,7 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.util.StringMap;
+import dk.statsbiblioteket.summa.common.util.UniqueTimestampGenerator;
 import dk.statsbiblioteket.summa.storage.StorageBase;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager.StatementHandle;
@@ -1020,7 +1021,7 @@ getco     */
      * Get a {@link ResultSetCursor} over all records with an {@code mtime}
      * timestamp strictly bigger than {@code mtimeTimestamp}. The provided
      * timestamp must be in the format as returned by a
-     * {@link UniqueTimestampGenerator}, ie. it is <i>not</i> a normal system
+     * {@link dk.statsbiblioteket.summa.common.util.UniqueTimestampGenerator}, ie. it is <i>not</i> a normal system
      * time in milliseconds.
      * <p/>
      * The returned ResultSetCursor <i>must</i> be closed by the caller to

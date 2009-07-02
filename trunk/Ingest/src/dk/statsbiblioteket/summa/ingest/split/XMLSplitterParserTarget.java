@@ -74,7 +74,10 @@ public class XMLSplitterParserTarget {
                 XMLSplitterFilter.CONF_RECORD_ELEMENT, recordElement);
         idElement = configuration.getString(
                 XMLSplitterFilter.CONF_ID_ELEMENT, idElement);
-        if (idElement.contains("#")) {
+        if ("".equals(idElement)) {
+            log.debug("The idElement is empty. A dummy ID will be assigned to "
+                      + "generated Records");
+        } else if (idElement.contains("#")) {
             if (!idElement.endsWith("#") || idElement.startsWith("#")) {
                 String oldIdElement = idElement;
                 idTag = idElement.substring(idElement.indexOf("#")+1);

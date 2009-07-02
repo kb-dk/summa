@@ -3,7 +3,7 @@ package dk.statsbiblioteket.summa.storage.database.cursors;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
-import dk.statsbiblioteket.summa.storage.database.UniqueTimestampGenerator;
+import dk.statsbiblioteket.summa.common.util.UniqueTimestampGenerator;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.common.Record;
 
@@ -280,7 +280,7 @@ public class ResultSetCursor implements Cursor {
      * modification time, but a unique timestamp that can be used by paging
      * models as offset for subsequent queries.
      * @param mtimeTimestamp a timestamp in the binary format of a
-     *                       {@link UniqueTimestampGenerator}
+     *                       {@link dk.statsbiblioteket.summa.common.util.UniqueTimestampGenerator}
      */
     public void setRecordMtimeTimestamp(long mtimeTimestamp) {
         nextMtimeTimestamp = mtimeTimestamp;
