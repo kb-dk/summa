@@ -17,6 +17,77 @@
 
     <xsl:template name="lav_felter_hovedpost">
         <datafield tag="24x" ind1="0" ind2="0">
+            <xsl:choose>
+                <xsl:when test="marc:datafield[@tag='C45']">
+                           <xsl:for-each select="marc:datafield[@tag='C45']">
+                <xsl:for-each select="marc:subfield">
+                    <xsl:if test="@code='g'">
+                        <subfield code="g">
+                            <xsl:value-of select="."/>
+                        </subfield>
+                    </xsl:if>
+                    <xsl:if test="@code='a'">
+                        <subfield code="a">
+                            <xsl:value-of select="."/>
+                        </subfield>
+                    </xsl:if>
+                    <xsl:if test="@code='m'">
+                        <subfield code="m">
+                            <xsl:value-of select="."/>
+                        </subfield>
+                    </xsl:if>
+                    <xsl:if test="@code='3' or @code='4'">
+                        <subfield code="c">
+                            <xsl:text>[</xsl:text>
+                            <xsl:value-of select="."/>
+                            <xsl:text>]</xsl:text>
+                        </subfield>
+                    </xsl:if>
+                    <xsl:if test="@code='b' or @code='c' or @code='n' or @code='o' or @code='u' or @code='y'">
+                        <subfield code="c">
+                            <xsl:value-of select="."/>
+                        </subfield>
+                    </xsl:if>
+                    <xsl:if test="@code='l'">
+                        <subfield code="k">
+                            <xsl:value-of select="."/>
+                        </subfield>
+                    </xsl:if>
+                    <xsl:if test="@code='e'">
+                        <subfield code="e">
+                            <xsl:value-of select="."/>
+                        </subfield>
+                    </xsl:if>
+                    <xsl:if test="@code='f' or @code='i' or @code='j' or @code='k' ">
+                        <subfield code="e">
+                            <xsl:value-of select="."/>
+                        </subfield>
+                    </xsl:if>
+                    <xsl:if test="@code='p' ">
+                        <subfield code="p">
+                            <xsl:value-of select="."/>
+                        </subfield>
+                    </xsl:if>
+                    <xsl:if test="@code='t' ">
+                        <subfield code="t">
+                            <xsl:value-of select="."/>
+                        </subfield>
+                    </xsl:if>
+                    <xsl:if test="@code='x' ">
+                        <subfield code="x">
+                            <xsl:value-of select="."/>
+                        </subfield>
+                    </xsl:if>
+                    <xsl:if test="@code='w' ">
+                        <subfield code="w">
+                            <xsl:value-of select="."/>
+                        </subfield>
+                    </xsl:if>
+                </xsl:for-each>
+
+            </xsl:for-each>
+                </xsl:when>
+                <xsl:otherwise>
             <xsl:for-each select="marc:datafield[@tag='245']">
                 <xsl:for-each select="marc:subfield">
                     <xsl:if test="@code='g'">
@@ -84,6 +155,8 @@
                 </xsl:for-each>
 
             </xsl:for-each>
+                </xsl:otherwise>
+            </xsl:choose>
             <xsl:for-each select="marc:datafield[@tag='250']/marc:subfield[@code='a']">
                 <subfield code="w">
                     <xsl:value-of select="."/>
@@ -182,6 +255,13 @@
                     </xsl:choose>
                 </subfield>
             </xsl:for-each>
+            <xsl:if test="marc:datafield[@tag='C45']">
+                      <xsl:for-each select="marc:datafield[@tag='245']">
+            <datafield tag="745" ind1="0" ind2="0">
+                <xsl:copy-of select="marc:subfield"/>
+            </datafield>
+        </xsl:for-each>
+            </xsl:if>
             <xsl:for-each select="marc:datafield[@tag='502' or @tag='504' or @tag='505' or @tag='506' or @tag='507' or @tag='508' or @tag='509' or @tag='518' or @tag='532' or @tag='540' or @tag='555' or @tag='559']/marc:subfield[@code='a']">
                 <subfield code="l">
                     <xsl:value-of select="."/>
