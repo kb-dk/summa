@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://statsbiblioteket.dk/summa/2009/SearchResponse"
+            elementFormDefault="qualified"
+            xmlns:summa="http://statsbiblioteket.dk/summa/2009/SearchResponse">
+    <xsd:annotation>
+        <xsd:documentation xml:lang="en">
+            XML Schema for Summa search responses.
+            A SearchResponse is a collection of SearchNodeResponses.
+            Notable search nodes in Summa are Lucene- and Facet-nodes.
+        </xsd:documentation>
+    </xsd:annotation>
+
+    <xsd:element name="responsecollection" type="summa:responseCollection"/>
+
+    <xsd:complexType name="responseCollection">
+        <xsd:sequence>
+            <xsd:element name="response" type="summa:response" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="response">
+        <xsd:annotation>
+            <xsd:documentation xml:lang="en">
+                A response contains search node specific content.
+                The only required attribute is 'name' that is fixed for each
+                response-type. See the schemas for the individual responses
+                for their names.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:choice>
+            <xsd:any namespace="##any" processContents="strict" minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:choice>
+
+        <xsd:attribute name="name" type="xsd:string"   use="required"/>
+    </xsd:complexType>
+
+</xsd:schema>

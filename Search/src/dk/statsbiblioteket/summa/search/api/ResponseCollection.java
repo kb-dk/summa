@@ -73,6 +73,8 @@ public class ResponseCollection implements Collection<Response>, Serializable {
         StringWriter sw = new StringWriter(5000);
         sw.append("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n");
         sw.append("<responsecollection>\n");
+        // TODO: We really want to thate the namespace!
+//        sw.append("<responsecollection xmlns:\"http://statsbiblioteket.dk/summa/2009/SearchResponse\">\n");
         for (Map.Entry<String, Response> entry: responses.entrySet()) {
             sw.append("<response name=\"").append(entry.getValue().getName());
             sw.append("\">\n");
