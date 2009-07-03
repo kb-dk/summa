@@ -7,7 +7,6 @@ import javax.management.MBeanServer;
 import javax.management.ObjectName;
 import java.rmi.RemoteException;
 import java.rmi.NotBoundException;
-import java.rmi.RMISecurityManager;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.registry.Registry;
 import java.rmi.registry.LocateRegistry;
@@ -17,6 +16,12 @@ import java.io.File;
 import java.net.UnknownHostException;
 import java.net.URL;
 import java.net.MalformedURLException;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Zips;
@@ -28,6 +33,15 @@ import dk.statsbiblioteket.summa.common.util.Security;
 public class RemoteHelper {
 
     static private final Log log = LogFactory.getLog (RemoteHelper.class);
+    static private final RemoteHelperShutdownHook shutdownHook;
+
+    // Create and install the shutdown hook to clear all non-freed services
+    static {
+        shutdownHook = new RemoteHelperShutdownHook();
+        Thread hookThread = new Thread(shutdownHook,
+                                       "RemoteHelperShutdownHook");
+        Runtime.getRuntime().addShutdownHook(hookThread);
+    }
 
     /**
      * Expose the an object as a remote service. Currently this implementation
@@ -69,6 +83,7 @@ public class RemoteHelper {
 
         try {
             reg.rebind(serviceName, remote);
+            shutdownHook.registerService(registryPort, serviceName);
         } catch (NullPointerException e) {
             throw new NullPointerException(String.format(
                     "NullPointerException while calling rebind(%s, %s",
@@ -101,7 +116,9 @@ public class RemoteHelper {
 
         try {
             reg.unbind(serviceName);
-            log.debug("Succesfully unexported service '" + serviceName + "'");
+            shutdownHook.unregisterService(registryPort, serviceName);
+            log.info("Unexported service '" + serviceName + "' on port "
+                      + registryPort);
         } catch (NotBoundException e) {
             log.error ("Service '" + serviceName + "' not bound in registry on "
                        + "port " + registryPort);
@@ -280,6 +297,62 @@ public class RemoteHelper {
 
         public InvalidCodeBaseException(String msg) {
             super (msg);
+        }
+    }
+
+    /**
+     * Shutdown hook for the JVM to free all registered services when
+     * it exits
+     */
+    private static class RemoteHelperShutdownHook implements Runnable {
+
+        // Port -> List of service names
+        private Map<Integer,List<String>> serviceRegistry;
+
+        public RemoteHelperShutdownHook() {
+            serviceRegistry = new HashMap<Integer, List<String>>();
+        }
+
+        public void registerService(int port, String name) {
+            List<String> services = serviceRegistry.get(port);
+
+            if (services == null) {
+                services = new LinkedList<String>();
+                serviceRegistry.put(port, services);
+            }
+
+            services.add(name);
+        }
+
+        public void unregisterService(int port, String name) {
+            List<String> services = serviceRegistry.get(port);
+
+            if (services == null) {
+                return;
+            }
+
+            services.remove(name);
+        }
+
+        public void run() {
+            // We actually don't do conccurent modifications of the
+            // serviceRegistry map here
+            for (Map.Entry<Integer,List<String>> entry :
+                                            serviceRegistry.entrySet()) {
+                int registryPort = entry.getKey();
+
+                // We clone the service name list to avoid
+                // concurrent modifications
+                for (String serviceName :
+                        new LinkedList<String>(entry.getValue())) {
+                    try {
+                        unExportRemoteInterface(serviceName,registryPort);
+                    } catch (IOException e) {
+                        log.error("Failed to unexport remote interface '"
+                                  + serviceName + "' on port " + registryPort);
+                    }
+                }
+            }
         }
     }
 }
