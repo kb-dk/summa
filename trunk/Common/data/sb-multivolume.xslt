@@ -486,7 +486,7 @@
             </datafield>
         </xsl:for-each>
 
-        <xsl:for-each select="marc:datafield[not(@tag='096' or @tag='245' or @tag='250' or @tag='260' or @tag='300' or @tag='440' or @tag='501' or @tag='502' or @tag='504' or @tag='505' or @tag='506' or @tag='507' or @tag='508' or @tag='509' or @tag='512' or @tag='513' or @tag='517' or @tag='518' or @tag='520' or @tag='523' or @tag='526' or @tag='530' or @tag='532' or @tag='534' or @tag='540' or @tag='555' or @tag='559' or @tag='021' or @tag='856' or @tag='256' or @tag='013' or @tag='014' or @tag='015' or @tag='001' or @tag='004' or @tag='994')]">
+        <xsl:for-each select="marc:datafield[not(@tag='096' or @tag='245' or @tag='250' or @tag='260' or @tag='300' or @tag='440' or @tag='501' or @tag='502' or @tag='504' or @tag='505' or @tag='506' or @tag='507' or @tag='508' or @tag='509' or @tag='512' or @tag='513' or @tag='517' or @tag='518' or @tag='520' or @tag='523' or @tag='526' or @tag='530' or @tag='532' or @tag='534' or @tag='540' or @tag='555' or @tag='559' or @tag='021' or @tag='856' or @tag='256' or @tag='013' or @tag='014' or @tag='015' or @tag='001' or @tag='004' or @tag='994' or @tag='C45')]">
             <xsl:copy-of select="."/>
         </xsl:for-each>
 
