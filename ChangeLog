@@ -1,8 +1,207 @@
-2009-06-26 11:30  mke
+2009-08-03 08:47  mke
 
-	* [r1613] build.properties, ChangeLog, NEWS
-	
-	Release Summa 1.4.7
+	* [r1634]
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/RecordShaperFilterTest.java:
+	  
+	  Docstring typo
+
+2009-07-30 08:50  mke
+
+	* [r1633]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/RecordShaperFilter.java[CPY],
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/RecordShaperFilterTest.java[CPY]:
+	  
+	  Rename AssignMetaFilter to RecordShaperFilter
+	  
+	  Rename properties in RecordShaperFilter from assignmeta.* to
+	  record.*
+	  
+	  Massive doc updates for RecordShaperFilter
+	  
+	  Tweak RecordShaperFilterTest to excersise the template system an
+	  group matching a bit
+
+2009-07-03 12:14  toke
+
+	* [r1632]
+	  Search/src/dk/statsbiblioteket/summa/search/api/ResponseCollection.java,
+	  Search/src/dk/statsbiblioteket/summa/search/api/SearchResponse.xsd[CPY],
+	  Search/src/dk/statsbiblioteket/summa/search/api/document/DocumentResponse.xsd:
+	  
+	  Some work on Schemas
+
+2009-07-03 11:50  mke
+
+	* [r1631]
+	  Common/src/dk/statsbiblioteket/summa/common/rpc/RemoteHelper.java:
+	  
+	  Bugfix: Automagically free all RMI services registered via the
+	  RemoteHelper when the JVM exits (this means pertty much all RMI
+	  services). This should fix some bugs where the services refused
+	  to come back up when started from a ClientShell, but killed with
+	  'kill <pid>' from a Unix shell. The problem was that Java doesn't
+	  do this clean up by default - go figure
+
+2009-07-03 07:43  dorete
+
+	* [r1630] Common/data/LegacyMultiVolumeConverter.xslt:
+	  
+	  Ændring af e-tss (short_format medtager requires_pw="true" og
+	  resource_id)
+
+2009-07-03 07:41  toke
+
+	* [r1629] Common/data/sb-multivolume.xslt[DEL],
+	  Common/data/sb-multivolume.xslt.disabled[CPY]:
+	  
+	  Marked old merger as disabled
+
+2009-07-03 07:38  dorete
+
+	* [r1628] Common/data/sb-multivolume.xslt:
+	  
+	  Ændring af e-tss (short_format medtager requires_pw="true" og
+	  resource_id)
+
+2009-07-03 07:30  dorete
+
+	* [r1627] Common/data/sb-multivolume.xslt:
+	  
+	  Ændring af e-tss (short_format medtager requires_pw="true" og
+	  resource_id)
+
+2009-07-02 16:07  toke
+
+	* [r1626]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/AssignMetaFilter.java:
+	  
+	  Bugfix: The AssignMetaFilter did not set the id on the Payload,
+	  only on the Record
+
+2009-07-02 14:34  toke
+
+	* [r1625]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/Payload.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/database/UniqueTimestampGeneratorTest.java[DEL]:
+	  
+	  Logging: Changed loglevel for non-extraction of Payload ID to
+	  TRACE
+
+2009-07-02 12:27  mke
+
+	* [r1624]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/XMLSplitterHandler.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/XMLSplitterParser.java:
+	  
+	  Bugfix: Don't resolve DTDs in the
+	  XMLSplitter{Parser,Handler,Filter}
+
+2009-07-02 12:19  nig
+
+	* [r1623] Index/config/targets/tictoc/tictoc_author.xsl,
+	  Index/config/targets/tictoc/tictoc_identifiers.xsl,
+	  Index/config/targets/tictoc/tictoc_shortformat.xsl:
+	  
+	  tic toc opdateringer authors og identifiers
+
+2009-07-02 11:59  toke
+
+	* [r1622]
+	  Ingest/test/dk/statsbiblioteket/summa/ingest/split/XMLSplitterFilterTest.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/UniqueTimestampGenerator.java[DEL]:
+	  
+	  Missing update
+
+2009-07-02 08:25  toke
+
+	* [r1621]
+	  Common/src/dk/statsbiblioteket/summa/common/util/UniqueTimestampGenerator.java[CPY],
+	  Common/test/dk/statsbiblioteket/summa/common/util/UniqueTimestampGeneratorTest.java[CPY],
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/XMLSplitterFilter.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/XMLSplitterHandler.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/XMLSplitterParserTarget.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/cursors/ResultSetCursor.java:
+	  
+	  Refactor: Moved the UniqueTimestampGenerator to Common
+	  Feature: Changed XMLSplitterFilter to support splitting without
+	  extracting IDs
+
+2009-07-02 07:50  toke
+
+	* [r1620]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/AssignMetaFilter.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/AssignMetaFilterTest.java:
+	  
+	  Feature: Added AssignMetaFilter to assign attributes to Record
+	  based on content
+
+2009-06-30 10:57  toke
+
+	* [r1619]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/api/FacetResultExternal.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/api/FacetResultImpl.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/browse/FacetResultLocal.java:
+	  
+	  Debug: Quotes weren't escaped when generating facet-query
+
+2009-06-30 08:22  toke
+
+	* [r1618]
+	  Web/src/dk/statsbiblioteket/summa/web/services/SearchWS.java,
+	  Web/src/dk/statsbiblioteket/summa/web/services/StorageWS.java:
+	  
+	  Debug: More log messages in web services
+
+2009-06-29 15:10  toke
+
+	* [r1617] Common/scripts/buildPerformance.sh,
+	  Common/scripts/indexDumper.sh, Common/scripts/inspect.sh,
+	  Common/scripts/termStats.sh,
+	  Common/scripts/termStatsPerformance.sh[CPY],
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/distribution/TermStat.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/distribution/TermStatExtractor.java,
+	  Common/src/dk/statsbiblioteket/summa/common/unittest/TermStatPerformance.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/distribution/TermStatExtractorTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/distribution/TermStatTest.java,
+	  Control/test/dk/statsbiblioteket/summa/releasetest/DistributedTermStatsTest.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/SummaIndexReader.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/TermProvider.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/TermProviderImpl.java,
+	  build.properties, lib/apidocs/sbutil-0.4.5-apidocs.zip,
+	  lib/sbutil-0.4.6-beta1.jar, lib/src/sbutil-0.4.5-src.zip:
+	  
+	  Feature: More work on the distributes terms
+	  Bugfix: Shell- and Ant-scripts weren't upgraded to the new SBUtil
+
+2009-06-29 14:14  nig
+
+	* [r1616] Index/config/targets/tictoc/tictoc_author.xsl,
+	  Index/config/targets/tictoc/tictoc_date.xsl,
+	  Index/config/targets/tictoc/tictoc_identifiers.xsl,
+	  Index/config/targets/tictoc/tictoc_index.xsl,
+	  Index/config/targets/tictoc/tictoc_ma.xsl,
+	  Index/config/targets/tictoc/tictoc_notes.xsl,
+	  Index/config/targets/tictoc/tictoc_shortformat.xsl,
+	  Index/config/targets/tictoc/tictoc_title.xsl:
+	  
+	  tic toc opdateringer
+
+2009-06-26 11:42  mke
+
+	* [r1615] Summa.ipr, lib/sbutil-0.4.5.jar[DEL],
+	  lib/sbutil-0.4.6-beta1.jar:
+	  
+	  Critical bugfix: Use ArrayBlockingQueue.put() instead of .add().
+	  The add() method would simply throw an IllegalStateException if
+	  the queue was full, leading to lots of lost payloads when the
+	  queues overflowed
+
+2009-06-26 11:25  mke
+
+	* [r1613] ChangeLog, NEWS, build.properties:
+	  
+	  Release Summa 1.4.7
 
 2009-06-26 10:32  mke
 

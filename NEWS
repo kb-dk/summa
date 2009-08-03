@@ -1,4 +1,25 @@
 =======================
+2009-08-03: Summa 1.4.8
+=======================
+
+ * New filter RecordShaperFilter for restructuring and handling record metadata
+   in the filter pipeline
+
+ * XMLSplitterFilter supports splitting streams into Records without
+   extracting IDs
+
+ * Bump SBUtil dependency to 0.4.6
+
+ * Bugfix: Automagically free all RMI services registered via the
+           RemoteHelper when the JVM exits (this means pertty much all RMI
+           services). This should fix some bugs where the services refused
+           to come back up when started from a ClientShell, but killed with
+           'kill <pid>' from a Unix shell. The problem was that Java doesn't
+           do this clean up by default - go figure
+
+ * Bugfix: Don't resolve DTDs in the XMLSplitter{Parser,Handler,Filter}
+
+=======================
 2009-06-26: Summa 1.4.7
 =======================
 
