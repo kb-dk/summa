@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 /**
- * AssignMetaFilter Tester.
+ * RecordShaperFilter Tester.
  *
  * @author <Authors name>
  * @since <pre>06/27/2009</pre>
