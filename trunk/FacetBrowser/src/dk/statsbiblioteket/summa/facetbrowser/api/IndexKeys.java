@@ -41,8 +41,9 @@ public interface IndexKeys {
 
     /**
      * The conseptual field to perform a lookup on. As this is mapped directly
-     * to a facet, the facet must be specified in the IndexDescriptor. If no
-     * field is specified, no index-lookup is performed.
+     * to a facet, the facet must be specified in the IndexDescriptor.
+     * </p><p>
+     * Mandatory: If no field is specified, no index-lookup is performed.
      */
     public static final String SEARCH_INDEX_FIELD = "search.index.field";
 
@@ -50,11 +51,15 @@ public interface IndexKeys {
      * The term to use for the lookup. The terms in the stated field are
      * searched for this term and the nearest matching term is used as origo
      * for the returned index.
+     * </p><p>
+     * Mandatory: If no term is specified, no index-lookup is performed.
      */
     public static final String SEARCH_INDEX_TERM = "search.index.term";
 
     /**
      * Specifies whether the search is case-sensitive or not.
+     * </p><p>
+     * Optional. If no value is specified, the default setup is used.
      */
     public static final String SEARCH_INDEX_CASE_SENSITIVE =
             "search.index.casesensitive";
@@ -62,11 +67,15 @@ public interface IndexKeys {
     /**
      * The delta, relative to the origo derived from the given term, to the
      * start-position for the index. This is normally 0 or negative.
+     * </p><p>
+     * Optional. If no value is specified, the default setup is used.
      */
     public static final String SEARCH_INDEX_DELTA = "search.index.delta";
 
     /**
      * The maximum length of the index to return.
+     * </p><p>
+     * Optional. If no value is specified, the default setup is used.
      */
     public static final String SEARCH_INDEX_LENGTH = "search.index.length";
 }
