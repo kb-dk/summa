@@ -38,10 +38,7 @@ import org.apache.commons.logging.LogFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Provides (optionally persistent) maps of tags in facets. The mapping is
@@ -111,6 +108,19 @@ public class TagHandlerImpl implements TagHandler {
     public int getTagID(int facetID, String tagName) {
         failIfDirty();
         return facets[facetID].indexOf(tagName);
+    }
+
+    public int getNearestTagID(int facetID, String tagName) {
+        failIfDirty();
+        log.trace("getNearestTagId(" + facetID + ", '" + tagName + "')");
+        return Collections.binarySearch(facets[facetID], tagName);
+    }
+
+    public Locale getFacetLocale(int facetID) {
+        String localeStr = facets[facetID].getLocale();
+        return localeStr == null || "".equals(localeStr) ? 
+               null :
+               new Locale(localeStr);
     }
 
     public String getTagName(int facetID, int tagID) {

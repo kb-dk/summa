@@ -26,6 +26,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
 
@@ -246,7 +247,21 @@ public class Structure implements Configurable, Serializable {
      * @return the ID for the Facet (unique among other Facets).
      */
     public int getFacetID(String facetName) {
-        return facets.get(facetName).getFacetID();
+        try {
+            return facets.get(facetName).getFacetID();
+        } catch (NullPointerException e) {
+            if (facets == null) {
+                throw new IllegalStateException(String.format(
+                        "The facets list was null when performing lookup of"
+                        + " facet '%s'", facetName));
+            } else {
+                //noinspection unchecked
+                throw new IllegalArgumentException(String.format(
+                        "The facet '%s' did not exist in the facet-list %s", 
+                        facetName, Logs.expand(new ArrayList(
+                        facets.keySet()), 20)));
+            }
+        }
     }
 
     /**

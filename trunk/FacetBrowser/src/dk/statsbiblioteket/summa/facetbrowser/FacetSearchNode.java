@@ -34,6 +34,7 @@ import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult;
 import dk.statsbiblioteket.summa.facetbrowser.browse.Browser;
 import dk.statsbiblioteket.summa.facetbrowser.browse.BrowserThread;
 import dk.statsbiblioteket.summa.facetbrowser.browse.FacetRequest;
+import dk.statsbiblioteket.summa.facetbrowser.browse.IndexLookup;
 import dk.statsbiblioteket.summa.facetbrowser.core.FacetCore;
 import dk.statsbiblioteket.summa.facetbrowser.core.FacetMap;
 import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMap;
@@ -66,7 +67,13 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * with multiple processors, but old-style access to RAM, the increase in
  * performance is smaller.
  * </p><p>
- * @see {@link FacetKeys} for query-syntax.
+ * Note that this node is also responsible for index lookups. The configuration
+ * for the node should thus contain settings for
+ * {@link dk.statsbiblioteket.summa.facetbrowser.browse.IndexRequest} along
+ * with settings for the facets.
+ * @see {@link FacetKeys} and
+ * {@link dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys} for 
+ * query-syntax.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -84,6 +91,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
     private Configuration conf;
     private Structure structure = null;
     private FacetMap facetMap = null;
+    private IndexLookup indexLookup;
     /**
      * The structure and facetMaps are updated upon open, depending on setup.
      * A lock is needed to ensure consistency.
@@ -115,6 +123,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
             Structure structure = new Structure(conf);
             initStructures(structure);
         }
+        indexLookup = new IndexLookup(conf);
         log.trace("FacetSearchNode constructed. Awaiting open");
     }
 
@@ -235,6 +244,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
             throw new RemoteException("Unable to perform facet search as no "
                                       + "facet structure has been opened");
         }
+        indexLookup.lookup(request, responses, facetMap.getTagHandler());
         if (!responses.getTransient().containsKey(DocumentSearcher.DOCIDS)) {
             log.debug("No " + DocumentSearcher.DOCIDS + " from a previous "
                       + "DocumentSearcher in responses. Skipping faceting");

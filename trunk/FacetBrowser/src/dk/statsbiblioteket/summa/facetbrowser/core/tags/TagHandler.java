@@ -29,6 +29,7 @@ package dk.statsbiblioteket.summa.facetbrowser.core.tags;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.util.List;
+import java.util.Locale;
 import java.io.File;
 import java.io.IOException;
 
@@ -74,6 +75,27 @@ public interface TagHandler {
      *                tag does not exist.
      */
     public int getTagID(int facetID, String tagName);
+
+    /**
+     * If the tagName is present, this behaves identically to
+     * {@link #getTagID(int, String)}. If not, (-(insertion point) - 1) is
+     * returned, similar to Collections.binarySearch.
+     * @param facetID the integer representation of a Facet (can be resolved
+     *                by getFacetID).
+     * @param tagName the String representation of a Tag under the given Facet.
+     * @return        the integer representation for the given Tag or
+     *                (-(insertion point) - 1) if the tag does not exist.
+     */
+    public int getNearestTagID(int facetID, String tagName);
+
+    /**
+     * If the Tags in the given Facet are sorted according to a Locale, this
+     * will be returned.
+     * @param facetID the integer representation of a Facet (can be resolved
+     *                by getFacetID).
+     * @return the Locale, if defined, for the given Facet.
+     */
+    public Locale getFacetLocale(int facetID);
 
     /**
      * Resolve the name (String representation) for a given tag id. This should
