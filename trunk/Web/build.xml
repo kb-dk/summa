@@ -57,6 +57,7 @@
         <pathelement location="../Common/${summa.classes.dir}"/>
         <pathelement location="../Storage/${summa.classes.dir}"/>
         <pathelement location="../Search/${summa.classes.dir}"/>
+        <pathelement location="../FacetBrowser/${summa.classes.dir}"/>
     </path>
 
     <!-- lib.files : set by the .checkDepends target -->

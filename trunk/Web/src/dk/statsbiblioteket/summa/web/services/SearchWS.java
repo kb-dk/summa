@@ -29,6 +29,8 @@ import dk.statsbiblioteket.summa.search.api.SearchClient;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.support.api.LuceneKeys;
 import dk.statsbiblioteket.summa.support.api.SuggestKeys;
+import dk.statsbiblioteket.summa.facetbrowser.browse.IndexRequest;
+import dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.DOM;
 import org.apache.commons.logging.Log;
@@ -224,6 +226,55 @@ public class SearchWS {
         log.trace("getField('" + id + "', '" + fieldName
                   + "') finished in " + (System.currentTimeMillis() - startTime)
                   + "ms");
+        return retXML;
+    }
+
+
+    /**
+     * Performs a lookup in the given field for the given term and returns a
+     * list starting at the term position + delta with the given length.
+     * </p><p>
+     * Example: {@code indexLookup("myfield", "d", -2, 5)} on a field that has
+     *          the values a, b, c, d, e, f, g, h will give the result
+     *          b, c, d, e, f.
+     * </p><p>
+     * If the term cannot be located, the nearest matching position will be
+     * used instead.
+     * @param field  the field to perform a lookup on. Currently this must be
+     *               the name of a facet.
+     * @param term   the term to search for. This can be multiple words.
+     * @param delta  the offset relative to the term position.
+     * @param length the maximum number of terms to return.
+     * @return an XML string containing the result or an error description.
+     */
+    public String indexLookup(String field, String term,
+                              int delta, int length) {
+        //noinspection DuplicateStringLiteralInspection
+        String call = "indexLookup(" + field + ":" + term + ", " + delta + ", "
+                      + length + ")";
+        log.trace(call);
+        long startTime = System.currentTimeMillis();
+        String retXML;
+
+        ResponseCollection res;
+
+        Request req = new Request();
+        req.put(IndexKeys.SEARCH_INDEX_FIELD, field);
+        req.put(IndexKeys.SEARCH_INDEX_TERM, term);
+        req.put(IndexKeys.SEARCH_INDEX_DELTA, delta);
+        req.put(IndexKeys.SEARCH_INDEX_LENGTH, length);
+
+        try {
+            res = getSearchClient().search(req);
+            retXML = res.toXML();
+        } catch (IOException e) {
+            log.warn("Error executing " + call + ": ", e);
+            // TODO: return a nicer error xml block
+            retXML = "<error>Error performing " + call + "</error>";
+        }
+        //noinspection DuplicateStringLiteralInspection
+        log.trace(call + " finished in "
+                  + (System.currentTimeMillis() - startTime + "ms"));
         return retXML;
     }
 
