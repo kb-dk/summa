@@ -18,6 +18,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
  * fields, the mapping is not 1:1. Users should consult the IndexDescriptor
  * before requesting an index.
  * </p><p>
+ * The Locale used for sorting is inferred from the provider of the index data.
+ * </p><p>
  * Example: field=author, term=hugo, delta=-2, length=5
  * Result: birger, carsten, hugo, lars, melanie
  * </p><p>
