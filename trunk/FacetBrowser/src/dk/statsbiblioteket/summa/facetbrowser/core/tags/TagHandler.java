@@ -27,13 +27,17 @@
 package dk.statsbiblioteket.summa.facetbrowser.core.tags;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMap;
 
 import java.util.List;
 import java.io.File;
 import java.io.IOException;
 
 /**
+ * A TagHandler conceptually maintains a collection of Facets, each containing
+ * a collection of Tags. Normally the Tags will be words or small text snippets.
+ * The TagHandler is geared towards efficient handling of large amounts of Tags
+ * (10's of millions, with an upper limit above 100 million) for each Facet.
+ * </p><p>
  * The TagHandler is responsible for mapping between integer and String
  * representations of tags. It enforces Strict ordering of the Tags.
  * </p><p>
