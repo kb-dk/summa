@@ -34,6 +34,24 @@
         </parameters>
         <return type="xsd:string" />
     </service>
+    <service name="summaindexlookup" type="soap">
+        <wsdl>http://localhost:8080/summa-web-search/services/SearchWS?wsdl</wsdl>
+        <servicename>SearchWS</servicename>
+        <operationname>indexLookup</operationname>
+        <parameters>
+            <parameter name="field" type="xsd:string" />
+        </parameters>
+        <parameters>
+            <parameter name="term" type="xsd:string" />
+        </parameters>
+        <parameters>
+            <parameter name="delta" type="xsd:int" />
+        </parameters>
+        <parameters>
+            <parameter name="length" type="xsd:int" />
+        </parameters>
+        <return type="xsd:string" />
+    </service>
     <service name="summagetsuggest" type="soap">
         <wsdl>http://localhost:8080/summa-web-search/services/SearchWS?wsdl</wsdl>
         <servicename>SearchWS</servicename>

@@ -41,7 +41,7 @@
         <documentation>Search web service for the Summa system</documentation>
         <parameter name="className" value="dk.statsbiblioteket.summa.web.services.SearchWS"/>
 
-        <parameter name="allowedMethods" value="simpleSearch simpleSearchSorted simpleFacet getMoreLikeThis getField getSuggestions commitQuery"/>
+        <parameter name="allowedMethods" value="simpleSearch simpleSearchSorted simpleFacet getMoreLikeThis indexLookup getField getSuggestions commitQuery"/>
         <namespace>http://statsbiblioteket.dk/summa/search</namespace>
 
         <operation name="getSuggestions">
@@ -60,10 +60,10 @@
             <documentation>
                 Commits a query to the Suggestion database. This enables this query to be returned in the result from getSuggestions. It is recommended that only query that the user actually enters are committed - ie. it might not be a good idea to commit queries that come from the user clicking facets, etc.             </documentation>
             <parameter name="query" type="tns:string">
-                <documentation>the query to commit to the database.</documentation>
+                <documentation>The query to commit to the database.</documentation>
             </parameter>
             <parameter name="hitCount" type="tns:int">
-                <documentation>the number of hits that resulted from the query. If this is 0 then the query is removed from the Suggestion database.</documentation>
+                <documentation>The number of hits that resulted from the query. If this is 0 then the query is removed from the Suggestion database.</documentation>
             </parameter>
         </operation>
 
@@ -88,6 +88,24 @@
             </parameter>
             <parameter name="numberOfRecords" type="tns:int">
                 <documentation>The maximum number of records returned in the search result.</documentation>
+            </parameter>
+        </operation>
+
+        <operation name="indexLookup">
+            <documentation>
+                Perform a lookup for a given term on a given field and returns a list of terms surrounding it.
+            </documentation>
+            <parameter name="field" type="tns:string">
+                <documentation>The field to perform lookup on. Valid fields are all defined facets.</documentation>
+            </parameter>
+            <parameter name="term" type="tns:string">
+                <documentation>The term to perform lookup for. Terms can be single or multiple words.</documentation>
+            </parameter>
+            <parameter name="delta" type="tns:int">
+                <documentation>The offset from the term position in the field for the start of the list of terms.</documentation>
+            </parameter>
+            <parameter name="length" type="tns:int">
+                <documentation>The manimum number of terms to return.</documentation>
             </parameter>
         </operation>
 
