@@ -35,6 +35,8 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Locale;
+import java.text.Collator;
 
 /**
  * The result of an index-lookup, suitable for later merging and sorting.
@@ -55,16 +57,23 @@ public class IndexResponse implements Response {
     private int delta;
     private int length;
 
+    // If the sortLocale is null, Unicode order is used.
+    private Locale sortLocale;
+
+    // Sorting
+    private transient Comparator<String> sorter;
+
     private ArrayList<String> index;
 
     public IndexResponse(String field, String term, boolean caseSensitive,
-                         int delta, int length) {
+                         int delta, int length, Locale sortLocale) {
         log.debug("Creating index response " + field + ":" + term);
         this.field = field;
         this.term = term;
         this.caseSensitive = caseSensitive;
         this.delta = delta;
         this.length = length;
+        this.sortLocale = sortLocale;
         index = new ArrayList<String>(length);
     }
 
@@ -114,37 +123,60 @@ public class IndexResponse implements Response {
 
     private static class SensitiveComparator implements Comparator<String>,
                                                         Serializable {
+        private Collator collator = null;
+        public SensitiveComparator(Collator collator) {
+            this.collator = collator;
+        }
+        public SensitiveComparator() { }
+
         public int compare(String o1, String o2) {
-            return o1.compareTo(o2);
+            return collator == null ?
+                   o1.compareTo(o2) :
+                   collator.compare(o1, o2);
         }
     }
     private static class InSensitiveComparator implements Comparator<String>,
                                                           Serializable {
+        private Collator collator = null;
+        public InSensitiveComparator(Collator collator) {
+            this.collator = collator;
+        }
+        public InSensitiveComparator() { }
+
         public int compare(String o1, String o2) {
-            return o1.compareToIgnoreCase(o2);
+            return collator == null ?
+                   o1.compareToIgnoreCase(o2) :
+                   collator.compare(o1.toLowerCase(), o2.toLowerCase());
         }
     }
 
     /**
-     * Ensires that the index is sorted and trimmed, according to the attributes
+     * Ensures that the index is sorted and trimmed, according to the attributes
      * specified in this response. This is to be called before producing any
      * external representation of this response.
      */
     private void clean() {
         log.trace("clean() called");
-        Collections.sort(index, caseSensitive
-                                ? new SensitiveComparator()
-                                : new InSensitiveComparator());
+        if (sorter == null) { // Create sorters
+            if (sortLocale == null) {
+                sorter = caseSensitive
+                         ? new SensitiveComparator()
+                         : new InSensitiveComparator();
+            } else {
+                Collator collator = Collator.getInstance(sortLocale);
+                sorter = caseSensitive
+                         ? new SensitiveComparator(collator)
+                         : new InSensitiveComparator(collator);
+            }
+        }
+        Collections.sort(index, sorter);
         int start = Math.max(0, getOrigo() + delta);
         index = new ArrayList<String>(index.subList(
                 start, Math.min(index.size(), start + length)));
     }
 
     private int getOrigo() {
-        int origo = Collections.binarySearch(
-                index, term, caseSensitive
-                             ? new SensitiveComparator()
-                             : new InSensitiveComparator());
+        int origo = Collections.binarySearch(index, term, sorter);
         return origo < 0 ? (origo + 1) * -1 : origo;
     }
 
