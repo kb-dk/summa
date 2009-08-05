@@ -122,7 +122,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
      * Fetches a descriptor from the file system. If there is currently no
      * descriptor or if the facets in the new descriptor differs from those in
      * the old descriptor, a write lock is acquired and the underlying structure
-     * for the Facat searcher is initialized. The searcher is unavailable during
+     * for the Facet searcher is initialized. The searcher is unavailable during
      * this phase.
      * </p><p>
      * If the new descriptor defines the same faces as the existing descriptor,
