@@ -207,6 +207,7 @@ public class IndexResponse implements Response {
             xmlOut.setDefaultNamespace(INDEX_RESPONSE_NAMESPACE);
 
             xmlOut.writeStartDocument();
+            xmlOut.writeCharacters("\n");
 
             xmlOut.writeStartElement("indexresponse");
             xmlOut.writeAttribute("field", field);
@@ -216,18 +217,24 @@ public class IndexResponse implements Response {
             xmlOut.writeAttribute("delta", Integer.toString(delta));
             xmlOut.writeAttribute("length", Integer.toString(length));
             xmlOut.writeAttribute("origo", Integer.toString(getOrigo()));
+            xmlOut.writeCharacters("\n");
 
             xmlOut.writeStartElement("index");
+            xmlOut.writeCharacters("\n");
             for (String term: index) {
                 xmlOut.writeStartElement("term");
                 xmlOut.writeCharacters(term);
                 xmlOut.writeEndElement();
+                xmlOut.writeCharacters("\n");
             }
             xmlOut.writeEndElement(); // index
+            xmlOut.writeCharacters("\n");
 
             xmlOut.writeEndElement(); // indexresponse
+            xmlOut.writeCharacters("\n");
 
             xmlOut.writeEndDocument();
+            xmlOut.writeCharacters("\n");
         } catch (XMLStreamException e) {
             throw new RuntimeException(
                     "Unexpected XMLStreamException in toXML()", e);
