@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -49,7 +49,7 @@ public class SortFactory {
         this.comparators = comparators;
     }
 
-    public Sort getSort(boolean reverse) {
+    public synchronized Sort getSort(boolean reverse) {
         log.trace("getSort for field '" + field + "' with language '"
                   + sortLanguage + "' called");
         if (normalSort != null) {
@@ -66,11 +66,9 @@ public class SortFactory {
             log.debug(String.format(
                     "Creating sorters for field '%s' with language '%s'",
                     field, sortLanguage));
-            SortField nField =
-                    new SortField(field, getComparator());
+            SortField nField = new SortField(field, getComparator());
             normalSort = new Sort(nField);
-            SortField rField =
-                    new SortField(field, getComparator(), true);
+            SortField rField = new SortField(field, getComparator(), true);
             reverseSort = new Sort(rField);
         } catch (Exception e) {
             log.error("Could not create comparator for language code '"
