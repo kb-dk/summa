@@ -375,6 +375,8 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
         }
         if (loadDescriptorFromIndex) {
             openDescriptor(baseLocation);
+        } else {
+            sortPool = new SortPool(descriptor);
         }
         try {
             searcher = new IndexSearcher(getIndexreader(urlLocation));
