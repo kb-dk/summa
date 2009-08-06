@@ -72,9 +72,10 @@ public class SortPool {
     }
 
     private void updateField(IndexField field) {
-        if (field.getSortLocale() == null) {
+/*        if (field.getSortLocale() == null) {
             return;
         }
+        */
         if (!sortFactories.containsKey(field.getName())) {
             log.debug("Adding sort locale '" + field.getSortLocale()
                       + "' to Field '" + field.getName() + "'");
