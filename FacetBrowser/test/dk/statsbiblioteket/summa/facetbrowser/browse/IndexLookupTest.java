@@ -44,6 +44,7 @@ import java.rmi.RemoteException;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
+import org.w3c.dom.Node;
 
 public class IndexLookupTest extends TestCase {
     public IndexLookupTest(String name) {
@@ -87,6 +88,16 @@ public class IndexLookupTest extends TestCase {
     }
 
     public void testBasic() throws Exception {
+        TagHandler tagHandler = fillSimpleTagHandler();
+
+        assertEquals("b", -1, 2, tagHandler, "a, b");
+        assertEquals("a", -100, 200, tagHandler, "a, b, d, do, æ, ø, å");
+        assertEquals("c", -1, 5, tagHandler, "b, d, do, æ, ø");
+        assertEquals("ø", -1, 3, tagHandler, "æ, ø, å");
+        assertEquals("", -1, 3, tagHandler, "a, b, d");
+    }
+
+    private TagHandler fillSimpleTagHandler() throws IOException {
         TagHandler tagHandler = createEmptyTagHandler();
         int authorID = tagHandler.getFacetID("test");
         tagHandler.insertTag(authorID, "b");
@@ -99,11 +110,31 @@ public class IndexLookupTest extends TestCase {
         // a b d do æ ø å
         assertTrue("There should be some tags for the facet test",
                    tagHandler.getTagCount("test") > 0);
+        return tagHandler;
+    }
 
-        assertEquals("b", -1, 2, tagHandler, "a, b");
-        assertEquals("a", -100, 200, tagHandler, "a, b, d, do, æ, ø, å");
-        assertEquals("c", -1, 5, tagHandler, "b, d, do, æ, ø");
-        assertEquals("ø", -1, 3, tagHandler, "æ, ø, å");
+    public void testDOM() throws Exception {
+        TagHandler tagHandler = fillSimpleTagHandler();
+        Configuration indexConf = Configuration.newMemoryBased(
+                IndexRequest.CONF_INDEX_DELTA, -5,
+                IndexRequest.CONF_INDEX_LENGTH, 10
+        );
+        String xml = getLookupXML("b", indexConf, tagHandler);
+        System.out.println("Got XML:\n" + xml);
+        Document domIndex = DOM.stringToDOM(xml);
+        NodeList nl = DOM.selectNodeList(domIndex, "//term");
+
+        String index = "";
+        for (int i = 0; i < nl.getLength(); i++) {
+            Node n = nl.item(i);
+            index += "'" + (DOM.selectString(n, "./text()")) + "'";
+            if (i < nl.getLength() - 1) {
+                // only add the , if this isn't the very last element
+                index += ",";
+            }
+        }
+
+        System.out.println(index);
     }
 
     private void assertEquals(String term, int delta, int length,
@@ -133,6 +164,18 @@ public class IndexLookupTest extends TestCase {
 
     private List<String> getTerms(String term, Configuration indexConf,
                                   TagHandler tagHandler) throws RemoteException{
+        String responseXML = getLookupXML(term, indexConf, tagHandler);
+        Document dom = DOM.stringToDOM(responseXML);
+        NodeList nodes = DOM.selectNodeList(dom, "indexresponse/index/term");
+        List<String> terms = new ArrayList<String>(nodes.getLength());
+        for (int i = 0 ; i < nodes.getLength() ; i++) {
+            terms.add(DOM.getElementNodeValue(nodes.item(i)));
+        }
+        return terms;
+    }
+
+    private String getLookupXML(String term, Configuration indexConf,
+                                TagHandler tagHandler) throws RemoteException {
         IndexLookup lookup = new IndexLookup(indexConf);
         Request request = new Request();
         request.put(IndexKeys.SEARCH_INDEX_FIELD, "test");
@@ -143,12 +186,6 @@ public class IndexLookupTest extends TestCase {
                      + " term '" + term + "'",
                      1, responses.size());
         IndexResponse indexResponse = (IndexResponse)responses.toArray()[0];
-        Document dom = DOM.stringToDOM(indexResponse.toXML());
-        NodeList nodes = DOM.selectNodeList(dom, "indexresponse/index/term");
-        List<String> terms = new ArrayList<String>(nodes.getLength());
-        for (int i = 0 ; i < nodes.getLength() ; i++) {
-            terms.add(DOM.getElementNodeValue(nodes.item(i)));
-        }
-        return terms;
+        return indexResponse.toXML();
     }
 }

@@ -206,8 +206,8 @@ public class IndexResponse implements Response {
             XMLStreamWriter xmlOut = xmlFactory.createXMLStreamWriter(sw);
             xmlOut.setDefaultNamespace(INDEX_RESPONSE_NAMESPACE);
 
-            xmlOut.writeStartDocument();
-            xmlOut.writeCharacters("\n");
+//            xmlOut.writeStartDocument();
+//            xmlOut.writeCharacters("\n");
 
             xmlOut.writeStartElement("indexresponse");
             xmlOut.writeAttribute("field", field);
@@ -233,8 +233,8 @@ public class IndexResponse implements Response {
             xmlOut.writeEndElement(); // indexresponse
             xmlOut.writeCharacters("\n");
 
-            xmlOut.writeEndDocument();
-            xmlOut.writeCharacters("\n");
+//            xmlOut.writeEndDocument();
+//            xmlOut.writeCharacters("\n");
         } catch (XMLStreamException e) {
             throw new RuntimeException(
                     "Unexpected XMLStreamException in toXML()", e);

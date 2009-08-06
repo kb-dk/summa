@@ -54,7 +54,8 @@ public interface IndexKeys {
      * searched for this term and the nearest matching term is used as origo
      * for the returned index.
      * </p><p>
-     * Mandatory: If no term is specified, no index-lookup is performed.
+     * Optional: If no term is specified, index-lookup is performed from the
+     *           first available term.
      */
     public static final String SEARCH_INDEX_TERM = "search.index.term";
 

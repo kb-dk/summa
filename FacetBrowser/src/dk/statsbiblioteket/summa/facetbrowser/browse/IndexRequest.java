@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -145,8 +145,8 @@ public class IndexRequest {
         }
         if ((term = request.getString(IndexKeys.SEARCH_INDEX_TERM, null)) ==
             null) {
-            log.trace("No term specified in createRequest");
-            return null;
+            log.trace("No term specified in createRequest, assigning \"\"");
+            term = "";
         }
         return new IndexRequest(
                 field, term,

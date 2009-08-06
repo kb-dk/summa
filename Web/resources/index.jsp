@@ -101,6 +101,7 @@
     <script type="text/javascript">
         function init() {
             $('#q').autocomplete({ serviceUrl:'service/autocomplete.jsp' });
+            $('#i').autocomplete({ serviceUrl:'service/indexlookup.jsp' });
         }
     </script>
 </head>
@@ -112,14 +113,21 @@
 <div class="searchBoxContainer" id="searchBoxContainer">
     <div class="searchBox" id="searchBox">
         <form action="index.jsp" class="searchBoxTweak" id="fpSearch">
-            <input type="text" name="query" size="80" id="q" value="<%= form_query %>" />
+            Standard search
+            <input type="text" name="query" size="65" id="q" value="<%= form_query %>" />
             <input type="submit" value="Search" />
             <input type="hidden" name="usersearch" value="true" />
+        </form>
+        <form action="index.jsp" class="searchBoxTweak" id="fpSearchI">
+            Experimental index lookup (enter <code>facetname:term</code>)
+            <input type="text" name="query" size="65" id="i" value="" />
+            <input type="submit" value="Search" />
+            <input type="hidden" name="usersearchI" value="true" />
         </form>
     </div>
 </div>
 
-<div class="clusterLeft">
+<div class="clusterLeft" style="clear: both;">
     <%= search_html %>
 </div>
 <div class="clusterRight">
