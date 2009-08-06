@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -99,13 +99,16 @@ public class IndexLookup {
                 request.getField(), request.getTerm(),
                 request.isCaseSensitive(), request.getDelta(),
                 request.getLength(), tagHandler.getFacetLocale(facetID));
+        int termCount = 0;
         for (int tagID = start ;
              tagID < tagCount && tagID < start + request.getLength() ;
              tagID++) {
             response.addTerm(tagHandler.getTagName(facetID, tagID));
+            termCount++;
         }
         log.debug("Finished lookup for " + request.getField() + ":"
-                  + request.getTerm() + " in "
+                  + request.getTerm() + " getting " + termCount
+                  + " results in "
                   + (System.nanoTime() - startTime) / 100000D + "ms");
         return response;
     }
