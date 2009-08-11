@@ -78,14 +78,15 @@ public class FacetRequest extends Structure {
             String[] tokens = wantedFacets.split(" *, *");
             for (String facetToken: tokens) {
                 // zoo(12 ALPHA)
-                String[] subTokens = facetToken.split("\\(", 2);
+                String[] subTokens = facetToken.split(" *\\(", 2);
                 // zoo
-                FacetStructure fc = defaults.getFacets().get(subTokens[0]);
+                FacetStructure fc =
+                        defaults.getFacets().get(subTokens[0].trim());
                 if (fc == null) {
                     log.warn(String.format(
                             "Could not find a Facet named '%s', parsed from "
                             + "'%s' in the default structure. Skipping Facet",
-                            subTokens[0], wantedFacets));
+                            subTokens[0].trim(), wantedFacets));
                     continue;
                 }
                 if (subTokens.length == 1) {
@@ -94,7 +95,7 @@ public class FacetRequest extends Structure {
                     continue;
                 }
                 // "  5  ALPHA)  " | "5)" | " ALPHA) | "vgfsd"
-                String noParen = subTokens[1].split("\\)", 1)[0].trim();
+                String noParen = subTokens[1].split("\\)", 2)[0].trim();
                 // "5  ALPHA" | "5" | "ALPHA" | "vgfsd"
                 String[] facetArgs = noParen.split(" +", 2);
                 // "5", "ALPHA" | "5" | "ALPHA" | "vgfsd"
@@ -132,6 +133,11 @@ public class FacetRequest extends Structure {
 
     public DocIDCollector getDocIDs() {
         return docIDs;
+    }
+
+    @Override
+    public String toString() {
+        return "FacetRequest(" + super.toString(true) + ")";
     }
 
 }
