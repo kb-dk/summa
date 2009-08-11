@@ -20,6 +20,8 @@
     <orderEntry type="library" name="lucene-core" level="project" />
     <orderEntry type="library" name="lucene-queries" level="project" />
     <orderEntry type="library" name="h2" level="project" />
+    <orderEntry type="module" module-name="Ingest" />
+    <orderEntry type="library" name="heritrix-1.14.3" level="project" />
     <orderEntryProperties />
   </component>
 </module>

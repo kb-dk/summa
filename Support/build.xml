@@ -54,6 +54,7 @@
     <path id="lib.internal">
         <pathelement location="../Common/${summa.classes.dir}"/>
         <pathelement location="../Search/${summa.classes.dir}"/>
+        <pathelement location="../Ingest/${summa.classes.dir}"/>
         <pathelement location="../Index/${summa.classes.dir}"/>
     </path>
 
@@ -74,6 +75,10 @@
         <ant inheritAll="false" dir="../Search" target="compile"/>
     </target>
 
+    <target name=".compileIngest">
+        <ant inheritAll="false" dir="../Ingest" target="compile"/>
+    </target>
+
     <target name=".compileIndex">
         <ant inheritAll="false" dir="../Index" target="compile"/>
     </target>
@@ -84,6 +89,10 @@
 
     <target name=".releaseSearch">
         <ant inheritAll="false" dir="../Search" target="release"/>
+    </target>
+
+    <target name=".releaseIngest">
+        <ant inheritAll="false" dir="../Ingest" target="release"/>
     </target>
 
     <target name=".releaseIndex">
@@ -180,6 +189,7 @@
         <copy file="${basedir}/../${summa.lib.lucene.queries}" tofile="${summa.lib.lucene.queries}"/>
         <copy file="${basedir}/../${summa.lib.h2}" tofile="${summa.lib.h2}"/>
         <copy file="${basedir}/../${summa.lib.sbutil}" tofile="${summa.lib.sbutil}"/>
+        <copy file="${basedir}/../${summa.lib.heritrix}" tofile="${summa.lib.heritrix}"/>
     </target>
 
 
