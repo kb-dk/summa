@@ -718,6 +718,20 @@
         <root url="jar://$PROJECT_DIR$/lib/src/heritrix-1.14.3-javasrc.zip!/java" />
       </SOURCES>
     </library>
+    <library name="fastutil-heritrix-subset">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/lib/fastutil-5.0.3-heritrix-subset-1.0.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="commons-httpclient">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/lib/commons-httpclient-3.1.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
   </component>
 </project>
 

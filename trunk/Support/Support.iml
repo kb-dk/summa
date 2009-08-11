@@ -22,6 +22,8 @@
     <orderEntry type="library" name="h2" level="project" />
     <orderEntry type="module" module-name="Ingest" />
     <orderEntry type="library" name="heritrix-1.14.3" level="project" />
+    <orderEntry type="library" name="fastutil-heritrix-subset" level="project" />
+    <orderEntry type="library" name="commons-httpclient" level="project" />
     <orderEntryProperties />
   </component>
 </module>
