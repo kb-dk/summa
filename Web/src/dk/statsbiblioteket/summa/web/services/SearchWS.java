@@ -31,6 +31,7 @@ import dk.statsbiblioteket.summa.support.api.LuceneKeys;
 import dk.statsbiblioteket.summa.support.api.SuggestKeys;
 import dk.statsbiblioteket.summa.facetbrowser.browse.IndexRequest;
 import dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys;
+import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.DOM;
 import org.apache.commons.logging.Log;
@@ -439,6 +440,33 @@ public class SearchWS {
         log.trace("simpleFacet('" + query + "')");
         long startTime = System.currentTimeMillis();
 
+        String retXML = advancedFacet(query, null);
+
+        log.debug("simpleFacet('" + query + "') finished in "
+                  + (System.currentTimeMillis() - startTime) + "ms");
+        return retXML;
+    }
+
+    /**
+     * A more advanced way to query the facet browser giving the caller control over the individual facets and tags.
+     * @param query The query to perform.
+     * @param facetKeys A comma-separeted list with the names of the wanted Facets.
+     * Optionally, the maximum Tag-count for a given Facet can be specified in parenthesis after the name.
+     *
+     * Example: "Title, Author (5), City (10), Year".
+     *
+     * If no maximum Tag-count is specified, the number is taken from the defaults.
+     * Optionally, the sort-type for a given Facet can be specified in the same parenthesis. Valid values are POPULARITY and ALPHA. If no sort-type is specified, the number is taken from the defaults.
+     *
+     * Example: "Title (ALPHA), Author (5 POPULARITY), City"
+     *
+     * This is all optional. If no facets are specified, the default facets are requested.
+     * @return An XML string containing the facet result or an error description.
+     */
+    public String advancedFacet(String query, String facetKeys) {
+        log.trace("advancedFacet('" + query + "', '" + facetKeys + "')");
+        long startTime = System.currentTimeMillis();
+
         query = cleanQuery(query);
         String retXML;
 
@@ -447,6 +475,9 @@ public class SearchWS {
         Request req = new Request();
         req.put(DocumentKeys.SEARCH_QUERY, query);
         req.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, true);
+        if (facetKeys != null && !"".equals(facetKeys)) {
+            req.put(FacetKeys.SEARCH_FACET_FACETS, facetKeys);
+        }
 
         try {
             res = getSearchClient().search(req);
@@ -482,7 +513,7 @@ public class SearchWS {
             retXML = "<error>Error performing query</error>";
         }
 
-        log.debug("simpleFacet('" + query + "') finished in "
+        log.debug("advancedFacet('" + query + "', '" + facetKeys + "') finished in "
                   + (System.currentTimeMillis() - startTime) + "ms");
         return retXML;
     }

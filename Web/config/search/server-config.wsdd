@@ -41,7 +41,7 @@
         <documentation>Search web service for the Summa system</documentation>
         <parameter name="className" value="dk.statsbiblioteket.summa.web.services.SearchWS"/>
 
-        <parameter name="allowedMethods" value="simpleSearch simpleSearchSorted simpleFacet getMoreLikeThis indexLookup getField getSuggestions commitQuery"/>
+        <parameter name="allowedMethods" value="simpleSearch simpleSearchSorted simpleFacet advancedFacet getMoreLikeThis indexLookup getField getSuggestions commitQuery"/>
         <namespace>http://statsbiblioteket.dk/summa/search</namespace>
 
         <operation name="getSuggestions">
@@ -151,6 +151,30 @@
             </documentation>
             <parameter name="query" type="tns:string">
                 <documentation>The query string.</documentation>
+            </parameter>
+        </operation>
+
+        <operation name="advancedFacet">
+            <documentation>
+                A more advanced way to query the facet browser giving the caller control over the individual facets and tags.
+            </documentation>
+            <parameter name="query" type="tns:string">
+                <documentation>The query string.</documentation>
+            </parameter>
+            <parameter name="facetKeys" type="tns:string">
+                <documentation>
+                    A comma-separeted list with the names of the wanted Facets.
+                    Optionally, the maximum Tag-count for a given Facet can be specified in parenthesis after the name.
+
+                    Example: "Title, Author (5), City (10), Year".
+
+                    If no maximum Tag-count is specified, the number is taken from the defaults.
+                    Optionally, the sort-type for a given Facet can be specified in the same parenthesis. Valid values are POPULARITY and ALPHA. If no sort-type is specified, the number is taken from the defaults.
+
+                    Example: "Title (ALPHA), Author (5 POPULARITY), City"
+
+                    This is all optional. If no facets are specified, the default facets are requested.
+                </documentation>
             </parameter>
         </operation>
     </service>
