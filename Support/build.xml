@@ -184,12 +184,14 @@
         <mkdir dir="${lib.dir}"/>
         <copy file="${basedir}/../${summa.lib.log4j}" tofile="${summa.lib.log4j}"/>
         <copy file="${basedir}/../${summa.lib.commons-logging}" tofile="${summa.lib.commons-logging}"/>
+        <copy file="${basedir}/../${summa.lib.commons-httpclient}" tofile="${summa.lib.commons-httpclient}"/>
         <copy file="${basedir}/../${summa.lib.junit}" tofile="${summa.lib.junit}"/>
         <copy file="${basedir}/../${summa.lib.lucene}" tofile="${summa.lib.lucene}"/>
         <copy file="${basedir}/../${summa.lib.lucene.queries}" tofile="${summa.lib.lucene.queries}"/>
         <copy file="${basedir}/../${summa.lib.h2}" tofile="${summa.lib.h2}"/>
         <copy file="${basedir}/../${summa.lib.sbutil}" tofile="${summa.lib.sbutil}"/>
         <copy file="${basedir}/../${summa.lib.heritrix}" tofile="${summa.lib.heritrix}"/>
+        <copy file="${basedir}/../${summa.lib.heritrix.fastutil}" tofile="${summa.lib.heritrix.fastutil}"/>
     </target>
 
 

@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -58,6 +58,7 @@ public class ARCParser extends ThreadedStreamParser {
         ArchiveReader archiveReader =
                 ARCReaderFactory.get("Foo", sourcePayload.getStream(), true);
         Iterator<ArchiveRecord> archiveRecords = archiveReader.iterator();
+        // TODO: Consider skipping the first record (meta-data for the ARC file)
         while (archiveRecords.hasNext() && running) {
             ArchiveRecord ar = archiveRecords.next();
             ArchiveRecordHeader header = ar.getHeader();

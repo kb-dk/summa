@@ -26,12 +26,21 @@ import junit.framework.TestCase;
 import java.io.InputStream;
 import java.io.FileInputStream;
 import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
 
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
+import dk.statsbiblioteket.summa.ingest.split.StreamController;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
+@SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class ARCParserTest extends TestCase {
+    private static Log log = LogFactory.getLog(ARCParserTest.class);
+
     public ARCParserTest(String name) {
         super(name);
     }
@@ -56,9 +65,30 @@ public class ARCParserTest extends TestCase {
         InputStream is = new FileInputStream(source);
         Payload payloadIn = new Payload(is);
         payloadIn.setID(source.toString());
+        PayloadFeederHelper feeder =
+                new PayloadFeederHelper(Arrays.asList(payloadIn));
 
-        Configuration arcConf = Configuration.newMemoryBased();
-        ARCParser ap = new ARCParser(arcConf);
+        Configuration arcConf = Configuration.newMemoryBased(
+                StreamController.CONF_PARSER, ARCParser.class);
+        StreamController ap = new StreamController(arcConf);
+        ap.setSource(feeder);
+        
         assertTrue("At least one Payload should be generated", ap.hasNext());
+        log.debug("Iterating through ARC records");
+        while (ap.hasNext()) {
+            Payload payload = ap.next();
+            System.out.println("Found " + payload + " with content length "
+                               + streamLength(payload));
+            payload.close();
+        }
+        ap.close(true);
+    }
+
+    private long streamLength(Payload payload) throws IOException {
+        long length = 0;
+        while (payload.getStream().read() != -1) {
+            length++;
+        }
+        return length;
     }
 }
