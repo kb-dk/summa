@@ -101,7 +101,7 @@
     <script type="text/javascript">
         function init() {
             $('#q').autocomplete({ serviceUrl:'service/autocomplete.jsp' });
-            $('#i').autocomplete({ serviceUrl:'service/indexlookup.jsp' });
+            <%-- $('#i').autocomplete({ serviceUrl:'service/indexlookup.jsp' }); --%>
         }
     </script>
 </head>
@@ -118,12 +118,14 @@
             <input type="submit" value="Search" />
             <input type="hidden" name="usersearch" value="true" />
         </form>
+        <%--
         <form action="index.jsp" class="searchBoxTweak" id="fpSearchI">
             Experimental index lookup (enter <code>facetname:term</code>)
             <input type="text" name="query" size="65" id="i" value="" />
             <input type="submit" value="Search" />
             <input type="hidden" name="usersearchI" value="true" />
         </form>
+        --%>
     </div>
 </div>
 
