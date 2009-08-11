@@ -707,6 +707,17 @@
       </JAVADOC>
       <SOURCES />
     </library>
+    <library name="heritrix-1.14.3">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/lib/heritrix-1.14.3.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$PROJECT_DIR$/lib/apidocs/heritrix-1.14.3-apidocs.zip!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$PROJECT_DIR$/lib/src/heritrix-1.14.3-javasrc.zip!/java" />
+      </SOURCES>
+    </library>
   </component>
 </project>
 
