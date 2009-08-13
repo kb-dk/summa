@@ -64,6 +64,18 @@ public class FilterSequence implements ObjectFilter {
     public static final String CONF_FILTER_CLASS =
             "summa.filter.sequence.filterclass";
 
+    /**
+     * Whether or not the filter is active. If this is false for a filter,
+     * the filter will not be part of the chain.
+     * </p><p>
+     * The use-case for this property is flexible configurations where parts
+     * of the chain can be enabled or disabled via system properties.
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_FILTER_ENABLED = "filter.enabled";
+    public static final boolean DEFAULT_FILTER_ENABLED = true;
+
     private ArrayList<ObjectFilter> filters = new ArrayList<ObjectFilter>(10);
     private ObjectFilter lastFilter = null;
 
@@ -108,6 +120,18 @@ public class FilterSequence implements ObjectFilter {
                  + filterConfigurations.size() + " filters");
         for (Configuration filterConf: filterConfigurations) {
             try {
+                if (!filterConf.getBoolean(
+                        CONF_FILTER_ENABLED, DEFAULT_FILTER_ENABLED)) {
+                    //noinspection DuplicateStringLiteralInspection
+                    log.debug(String.format(
+                            "Skipping %s filter of class %s as it is not "
+                            + "enabled",
+                            filterConf.getString(
+                                    Filter.CONF_FILTER_NAME, "unknown"),
+                            filterConf.getString(CONF_FILTER_CLASS, "unknown")
+                    ));
+                    continue;
+                }
                 ObjectFilter filter = createFilter(filterConf);
                 log.debug("Adding Filter '" + filter + "' to sequence");
                 if (lastFilter != null) {
@@ -122,7 +146,11 @@ public class FilterSequence implements ObjectFilter {
                         "Could not create filter '%s'", filterConf), e);
             }
         }
-        log.trace("Exiting buildChain");
+        if (filters.size() == 0) {
+            log.warn("buildChain: No filters created");
+        }
+        log.info("Finished buildChain with " + filters.size()
+                 + " filters created");
     }
 
     private ObjectFilter createFilter(Configuration configuration) {
