@@ -72,7 +72,9 @@ public class ClearBaseFilterTest extends TestCase {
     public Storage createTestStorage() throws Exception {
         String dbLocation = "summatest" + File.separator + "testDB";
         File dbFile = new File(dbLocation);
-        Files.delete(dbFile.getParentFile());
+        if (dbFile.getParentFile().exists()) {
+            Files.delete(dbFile.getParentFile());
+        }
 
         storage = StorageFactory.createStorage(
                         Configuration.newMemoryBased(
