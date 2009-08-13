@@ -91,11 +91,13 @@ public class ConnectionConsumer<E> implements Configurable {
         try {
             connId = conf.getString(CONF_RPC_TARGET);
         } catch (NullPointerException e) {
-            throw new ConfigurationException(CONF_RPC_TARGET + " not set. No"
-                                             + "RPC vendor");
+            throw new ConfigurationException(String.format(
+                    "%s not set. No RPC vendor", CONF_RPC_TARGET));
         }
         conn = null;
-        log.debug("Created ConnectionConsumer for " + connId);
+        //noinspection DuplicateStringLiteralInspection
+        log.debug(String.format("Created ConnectionConsumer '%s' for %s",
+                                this, connId));
     }
 
     /**
@@ -117,14 +119,11 @@ public class ConnectionConsumer<E> implements Configurable {
     public ConnectionConsumer (Configuration conf, String defaultVendor) {
         ConnectionFactory<E> connFact = new GenericConnectionFactory<E> (conf);
         connMan = new ConnectionManager<E>(connFact);
-        try {
-            connId = conf.getString(CONF_RPC_TARGET, defaultVendor);
-        } catch (NullPointerException e) {
-            throw new ConfigurationException(CONF_RPC_TARGET + " not set. No"
-                                             + "RPC vendor");
-        }
+        connId = conf.getString(CONF_RPC_TARGET, defaultVendor);
         conn = null;
-        log.debug("Created ConnectionConsumer for " + connId);
+        //noinspection DuplicateStringLiteralInspection
+        log.debug(String.format("Created ConnectionConsumer '%s' for %s",
+                                this, connId));
     }
 
     /**
@@ -140,6 +139,7 @@ public class ConnectionConsumer<E> implements Configurable {
      *         connection can not be established
      */
     public synchronized E getConnection () {
+        log.trace("getConnection called");
         if (conn == null) {
             conn = connMan.get(connId);
         }
@@ -218,6 +218,3 @@ public class ConnectionConsumer<E> implements Configurable {
         return connId;
     }
 }
-
-
-

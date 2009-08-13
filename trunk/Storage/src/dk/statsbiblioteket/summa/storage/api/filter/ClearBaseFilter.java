@@ -43,20 +43,23 @@ public class ClearBaseFilter extends ObjectFilterImpl {
         this.bases = bases;
         fired = false;
 
-        log.info("Created ClearBaseFilter on bases: "
+        log.info("Created ClearBaseFilter directly on Storage for bases: "
                  + Strings.join(bases, ", "));
     }
 
     public ClearBaseFilter(Configuration conf) {
         super(conf);
+        log.trace("Creating StorageClient");
         storage = new StorageWriterClient(conf);
+        log.trace("Created StorageClient");
         bases = conf.getStrings(CONF_CLEAR_BASES, new ArrayList<String>());
         fired = false;
 
-        log.info("Created ClearBaseFilter on bases: "
+        log.info("Created ClearBaseFilter for bases: "
                  + Strings.join(bases, ", "));
     }
 
+    @Override
     protected synchronized boolean processPayload(Payload payload)
                                                        throws PayloadException {
         if (fired) {
@@ -69,6 +72,7 @@ public class ClearBaseFilter extends ObjectFilterImpl {
 
         for (String base : bases) {
             try {
+                //noinspection DuplicateStringLiteralInspection
                 log.info("Clearing base: " + base);
                 storage.clearBase(base);
             } catch (IOException e) {
