@@ -263,11 +263,15 @@ public class RMIStorageProxy extends UnicastRemoteObject
 
     @Override
     public void clearBase(String base) throws RemoteException {
+        //noinspection DuplicateStringLiteralInspection
+        log.debug(String.format("clearBase(%s) called", base));
         try {
             backend.clearBase(base);
         } catch (IOException e) {
-            throw new RemoteException("Failed to clear base '" + base +"': "
-                                      + e.getMessage(), e);
+            String message = "Failed to clear base '" + base +"': "
+                                      + e.getMessage();
+            log.warn(message, e);
+            throw new RemoteException(message, e);
         }
     }
 }

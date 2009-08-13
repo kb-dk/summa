@@ -1816,6 +1816,7 @@ getco     */
 
     @Override
     public void clearBase (String base) throws IOException {
+        log.debug(String.format("clearBase(%s) called", base));
         Connection conn = null;
 
         try {
