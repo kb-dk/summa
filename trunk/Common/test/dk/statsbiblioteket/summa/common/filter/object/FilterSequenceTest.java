@@ -31,22 +31,18 @@ import junit.framework.TestSuite;
 import java.io.IOException;
 import java.util.List;
 
-/**
- * FilterSequence Tester.
- *
- * @author <Authors name>
- * @since <pre>11/10/2008</pre>
- * @version 1.0
- */
+@SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class FilterSequenceTest extends TestCase implements ObjectFilter {
     public FilterSequenceTest(String name) {
         super(name);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
     }
@@ -80,6 +76,26 @@ public class FilterSequenceTest extends TestCase implements ObjectFilter {
                    first.getData("aFoo") != null);
     }
 
+    public void testEnable() throws Exception {
+        Configuration seqConf = Configuration.newMemoryBased();
+        List<Configuration> seqElements =
+                seqConf.createSubConfigurations(FilterSequence.CONF_FILTERS, 2);
+
+        Configuration aConf = seqElements.get(0);
+        aConf.set(FilterSequence.CONF_FILTER_CLASS, DummyFilter.class);
+        aConf.set(FilterSequence.CONF_FILTER_ENABLED, false);
+        aConf.set("key", "aFoo");
+        aConf.set("value", "aBar");
+
+        Configuration bConf = seqElements.get(1);
+        bConf.set(FilterSequence.CONF_FILTER_CLASS, DummyFilter.class);
+        bConf.set("key", "bFoo");
+        bConf.set("value", "bBar");
+
+        FilterSequence sequence = new FilterSequence(seqConf);
+        assertEquals("The created filter sequence should only have a single "
+                     + "enabled filter", 1, sequence.getFilters().size());
+    }
 
     /* Object filter interface */
 
