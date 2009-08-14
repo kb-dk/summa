@@ -72,9 +72,7 @@ public class FilterFactory extends Template {
     }
 
     public FilterFactory(String nick, Class<Filter> filterClass) {
-        super(filterClass);
-        filterNick = nick;
-        this.filterClass = filterClass;
+        super(filterClass, nick);
     }
 
 }

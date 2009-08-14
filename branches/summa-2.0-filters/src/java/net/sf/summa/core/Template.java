@@ -24,9 +24,9 @@ public class Template extends Config {
         boolean allowNull;
     }
 
-    private Class templateClass;
+    protected Class templateClass;
+    protected String nick;
     private Map<String, Prop> props;
-    private String nick;
 
     public Template(Class cls) {
         if (cls == null) {
@@ -62,9 +62,21 @@ public class Template extends Config {
         try {
             Object inst = templateClass.newInstance();
             for (Prop p : props.values()) {
-                // FIXME: Private members
+                // For private fields we do a quick twiddling of the
+                // accessibility flag to grant our selves access
                 Field f = templateClass.getField(p.fieldName);
+                boolean fieldAccessible = f.isAccessible();
+
+                if (!fieldAccessible) {
+                    f.setAccessible(true);
+                }
+
                 f.set(inst, p.value);
+
+                if (!fieldAccessible) {
+                    f.setAccessible(false);
+                }
+
             }
             return inst;
         } catch (InstantiationException e) {
