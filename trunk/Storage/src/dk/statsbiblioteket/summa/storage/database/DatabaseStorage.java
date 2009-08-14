@@ -1819,6 +1819,10 @@ getco     */
         log.debug(String.format("clearBase(%s) called", base));
         Connection conn = null;
 
+        if (base == null) {
+            throw new NullPointerException("Can not clear base 'null'");
+        }
+
         try {
             conn = getDefaultConnection();
             clearBaseWithConnection(base, conn);
@@ -1834,13 +1838,57 @@ getco     */
 
     private void clearBaseWithConnection (String base, Connection conn)
                                               throws IOException, SQLException {
+        //
+        // FIXME: This uses one big SELECT with a full result set, which might
+        //        might lead to a huge memory consumption on bases like H2
+        //        which always buffer the result set in memory. Basically we
+        //        need to take the 'usePagaingModel' flag into account
+        //
+
         log.info ("Clearing base '" + base + "'");
 
-        PreparedStatement stmt = conn.prepareStatement(stmtClearBase.getSql());
+        // Convert time to the internal binary format used by DatabaseStorage
+        long mtimeTimestamp = timestampGenerator.baseTimestamp(0);
+
+        PreparedStatement stmt = conn.prepareStatement(
+                "SELECT * "
+                + " FROM " + RECORDS
+                + " WHERE " + BASE_COLUMN + "=?"
+                + " AND " + MTIME_COLUMN + ">?",
+                ResultSet.TYPE_FORWARD_ONLY,
+                ResultSet.CONCUR_UPDATABLE);
+
+        // Set the statement up for fetching of large result sets, see fx.
+        // http://jdbc.postgresql.org/documentation/83/query.html#query-with-cursor
+        // This prevents an OOM for backends like Postgres
+        try {
+            stmt.getConnection().setAutoCommit(false);
+            stmt.getConnection().setTransactionIsolation(
+                                       Connection.TRANSACTION_READ_UNCOMMITTED);
+            stmt.getConnection().setReadOnly(false);
+            stmt.setFetchDirection(ResultSet.FETCH_FORWARD);
+
+            stmt.setFetchSize(FETCH_SIZE);
+        } catch (SQLException e) {
+            throw new IOException("Error preparing connection for "
+                                  + "clearing base '" + base + "': "
+                                  + e.getMessage(), e);
+        }
 
         try {
             stmt.setString(1, base);
-            stmt.executeUpdate();
+            stmt.setLong(2, mtimeTimestamp);
+            stmt.execute();
+            ResultSet cursor = stmt.getResultSet();
+
+            while (cursor.next()) {
+                cursor.updateInt(DELETED_COLUMN, 1);
+                cursor.updateLong(MTIME_COLUMN, timestampGenerator.next());
+                cursor.updateRow();
+                log.debug("Deleted " + cursor.getString(ID_COLUMN));
+            }
+            stmt.getConnection().commit();
+
             updateModificationTime(base);
         } finally {
             closeStatement(stmt);
