@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -88,19 +88,28 @@ public class TikaTest extends TestCase {
                 conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS);
         filterConfs.get(0).set(FileReader.CONF_ROOT_FOLDER,
-                               "/home/te/tmp/arc");
+//                               "/home/te/tmp/arc");
         // TODO: Change back
-//                               Resolver.getFile("data/arc").toString());
+                               Resolver.getFile("data/arc").toString());
 
         List<Configuration> innerConfs = filterConfs.get(2).
                 getSubConfigurations(MUXFilter.CONF_FILTERS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS);
         String descriptorLocation = "data/tika/TikaTest_IndexDescriptor.xml";
         for (int filterPos: new int[]{0, 1}) {
+            assertTrue("An inner descriptor location should be present for "
+                       + filterPos, innerConfs.get(filterPos).
+                    getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
+                    valueExists(IndexDescriptor.CONF_ABSOLUTE_LOCATION));
             innerConfs.get(filterPos).
                     getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).set(
                     IndexDescriptor.CONF_ABSOLUTE_LOCATION, descriptorLocation);
         }
+
+        assertTrue("A descriptor location should be present for the indexer",
+                   filterConfs.get(3).getSubConfiguration(
+                           IndexDescriptor.CONF_DESCRIPTOR).valueExists(
+                           IndexDescriptor.CONF_ABSOLUTE_LOCATION));
         filterConfs.get(3).
                 getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).set(
                 IndexDescriptor.CONF_ABSOLUTE_LOCATION, descriptorLocation);
@@ -109,7 +118,9 @@ public class TikaTest extends TestCase {
 /*        filterConfs.get(5).set(
                 DumpFilter.CONF_OUTPUTFOLDER, TEST_ROOT.getAbsolutePath()
                                               + "/d2");*/
-
+        assertTrue("An absolute path for the index should exist",
+                   filterConfs.get(3).valueExists(
+                           IndexControllerImpl.CONF_INDEX_ROOT_LOCATION));
         filterConfs.get(3).set(IndexControllerImpl.CONF_INDEX_ROOT_LOCATION,
                                TEST_ROOT.getAbsolutePath());
 

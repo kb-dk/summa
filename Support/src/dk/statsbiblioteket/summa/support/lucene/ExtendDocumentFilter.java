@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -25,6 +25,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
 import dk.statsbiblioteket.summa.common.util.SimplePair;
+import dk.statsbiblioteket.summa.common.util.SimpleTriple;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
@@ -85,7 +86,25 @@ public class ExtendDocumentFilter extends DocumentCreatorBase {
     public static final String CONF_FIELD_TEMPLATES = "extend.field.templates";
     public static final String DEFAULT_FIELD_TEMPLATE = "$0";
 
-    private List<SimplePair<Pattern, String>> keys;
+    /**
+     * Expert only.
+     * </p><p>
+     * A list of contents corresponding to the regular expressions and
+     * templates. The following strings will be replaced:<br />
+     * ${content} the value from the meta data with the key matching regexp.
+     * ${key}     the meta data key.
+     * ${field}   the name of the field derived from the field template.
+     * </p><p>
+     * Optional. If the length of the list is 0, ${content} (a direct copy of
+     *           the content) will be used for each regexp.
+     */
+    public static final String CONF_FIELD_CONTENTS = "extend.field.contents";
+    @SuppressWarnings({"DuplicateStringLiteralInspection"})
+    public static final String DEFAULT_FIELD_CONTENT = "${content}";
+
+    // Pattern, template, content
+    // Optimized so content == null -> direct copy
+    private List<SimpleTriple<Pattern, String, String>> keys;
     private LuceneIndexDescriptor descriptor;
 
     public ExtendDocumentFilter(Configuration conf) throws
@@ -95,6 +114,9 @@ public class ExtendDocumentFilter extends DocumentCreatorBase {
         List<String> patterns = conf.getStrings(CONF_PATTERNS);
         List<String> templates = conf.valueExists(CONF_FIELD_TEMPLATES) ?
                                  conf.getStrings(CONF_FIELD_TEMPLATES) :
+                                 new ArrayList<String>(0);
+        List<String> contents = conf.valueExists(CONF_FIELD_CONTENTS) ?
+                                 conf.getStrings(CONF_FIELD_CONTENTS) :
                                  new ArrayList<String>(0);
         if (templates.size() != patterns.size()) {
             log.debug(String.format(
@@ -108,10 +130,25 @@ public class ExtendDocumentFilter extends DocumentCreatorBase {
                 templates.add(DEFAULT_FIELD_TEMPLATE);
             }
         }
-        keys = new ArrayList<SimplePair<Pattern, String>>(patterns.size());
+        if (contents.size() != patterns.size()) {
+            log.debug(String.format(
+                    "Creating default contents as the length of the"
+                    + " patterns-list was %d and the length of the "
+                    + "contents-list was %d",
+                    patterns.size(), contents.size()));
+            contents = new ArrayList<String>(patterns.size());
+            //noinspection UnusedDeclaration
+            for (String pattern : patterns) {
+                contents.add(DEFAULT_FIELD_CONTENT);
+            }
+        }
+        keys = new ArrayList<SimpleTriple<
+                Pattern, String, String>>(patterns.size());
         for (int i = 0 ; i < patterns.size() ; i++) {
-            keys.add(new SimplePair<Pattern, String>(
-                    Pattern.compile(patterns.get(i)), templates.get(i)));
+            keys.add(new SimpleTriple<Pattern, String, String>(
+                    Pattern.compile(patterns.get(i)), templates.get(i),
+                    DEFAULT_FIELD_CONTENT.equals(contents.get(i)) ?
+                    null : contents.get(i)));
         }
         log.debug(String.format("Created filter with %d keys", keys.size()));
     }
@@ -124,7 +161,7 @@ public class ExtendDocumentFilter extends DocumentCreatorBase {
             return false;
         }
         Document lucenedoc = (Document)docO;
-        for (SimplePair<Pattern, String> keyPair: keys) {
+        for (SimpleTriple<Pattern, String, String> keyPair: keys) {
             for (Map.Entry<String, Serializable> entry:
                     payload.getData().entrySet()) {
                 assign(payload, lucenedoc, keyPair, entry.getKey(),
@@ -145,7 +182,7 @@ public class ExtendDocumentFilter extends DocumentCreatorBase {
 
     // False if not assigned
     private boolean assign(Payload payload, Document document,
-                           SimplePair<Pattern, String> key,
+                           SimpleTriple<Pattern, String, String> key,
                            String metaKey, Object content)
                                                        throws PayloadException {
         if (content == null) {
@@ -153,24 +190,42 @@ public class ExtendDocumentFilter extends DocumentCreatorBase {
         }
         if (log.isTraceEnabled()) {
             log.trace(String.format(
-                    "assign(%s, ..., (%s, %s), %s, %s) called",
-                    payload, key.getKey(), key.getValue(), metaKey,
-                    content.toString()));
+                    "assign(%s, ..., (%s, %s, %s), %s, %s) called",
+                    payload, key.getKey(), key.getValue1(), key.getValue2(),
+                    metaKey, content.toString()));
         }
-        String fieldName = getFieldName(key.getKey(), key.getValue(), metaKey);
+        String fieldName = getFieldName(key.getKey(), key.getValue1(), metaKey);
         if (fieldName == null) {
             return false;
         }
         if (log.isTraceEnabled()) {
             log.trace(String.format(
-                    "Assigning field '%s' with content '%s' to %s",
-                    fieldName, content, payload));
+                    "Assigning field '%s' with content '%s' to %s with "
+                    + "content-template '%s'",
+                    fieldName, content, payload,
+                    key.getValue2() == null ? DEFAULT_FIELD_CONTENT :
+                    key.getValue2()));
         }
         String c = content.toString();
         if (c == null) {
             log.debug(String.format(
                     "Null from content.toString() in assign for field '%s' to " 
                     + "%s", fieldName, payload));
+            return false;
+        }
+        if ("".equals(c)) {
+            log.trace("Empty content");
+            return false;
+        }
+        if (key.getValue2() != null) {
+            //noinspection DuplicateStringLiteralInspection
+            c = key.getValue2().replace("${content}", c).
+                    replace("${key}", metaKey).
+                    replace("${field}", fieldName);
+            if (log.isTraceEnabled()) {
+                log.trace("Produced new content for field "
+                          + fieldName + ": " + c);
+            }
         }
         try {
             addFieldToDocument(descriptor, document, fieldName, c, 1.0F);
