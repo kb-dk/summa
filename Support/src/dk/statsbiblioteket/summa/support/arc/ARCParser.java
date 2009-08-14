@@ -33,18 +33,27 @@ import org.archive.io.ArchiveRecord;
 import org.archive.io.ArchiveRecordHeader;
 
 import java.util.Iterator;
+import java.io.File;
 
 /**
  * Receives a stream in the ARC file format and extracts the content, along with
  * meta-data.
  * </p><p>
  * This filter is a wrapper for the ARCParser from the heritrix project.
+ * Meta-data from the ARC container and records are provided at Payload-meta
+ * prefixed with "arc".
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class ARCParser extends ThreadedStreamParser {
     private static Log log = LogFactory.getLog(ARCParser.class);
+
+    @SuppressWarnings({"DuplicateStringLiteralInspection"})
+    public String[] ARC_FIELDS = new String[]{
+            "arc.arcname", "arc.arcoffset", "arc.contentLength", "arc.date",
+            "arc.digest", "arc.primaryType", "arc.title", "arc.tstamp",
+            "arc.url"};
 
     // TODO: Add timeout
 
@@ -53,22 +62,41 @@ public class ARCParser extends ThreadedStreamParser {
         log.debug("ARCParser constructed");
     }
 
+    private long runCount = 0;
     @Override
     protected void protectedRun() throws Exception {
+
+// 1839 records, 57 sec
+        log.trace("Starting protected run " + ++runCount + " for "
+                  + sourcePayload);
+//        ArchiveReader archiveReader =
+//                ARCReaderFactory.get("Foo", sourcePayload.getStream(), true);
         ArchiveReader archiveReader =
-                ARCReaderFactory.get("Foo", sourcePayload.getStream(), true);
+                ARCReaderFactory.get(new File(sourcePayload.getData(Payload.ORIGIN).toString()), false, 0);
         Iterator<ArchiveRecord> archiveRecords = archiveReader.iterator();
         // TODO: Consider skipping the first record (meta-data for the ARC file)
+        int internalCount = 0;
+        if (!archiveRecords.hasNext()) {
+            String message = "No record present in ARC";
+            log.debug(message + " for " + sourcePayload);
+            //noinspection DuplicateStringLiteralInspection
+            Logging.logProcess("ARCParser", message, Logging.LogLevel.DEBUG,
+                               sourcePayload);
+        }
         while (archiveRecords.hasNext() && running) {
+            log.trace("Extracting record " + ++internalCount);
             ArchiveRecord ar = archiveRecords.next();
             ArchiveRecordHeader header = ar.getHeader();
             FutureInputStream arStream = new FutureInputStream(ar);
             Payload payload = new Payload(arStream);
-            payload.setID(header.getUrl());
+            fillPayloadFromHeader(payload, header, archiveReader.getFileName());
             addToQueue(payload);
 
             arStream.waitForClose();
             if (!arStream.isClosed()) {
+                //noinspection DuplicateStringLiteralInspection
+                log.warn("Timeout while waiting for close of record from ARC "
+                         + "from " + sourcePayload);
                 //noinspection DuplicateStringLiteralInspection
                 Logging.logProcess(
                         "ARCParser",
@@ -85,5 +113,27 @@ public class ARCParser extends ThreadedStreamParser {
                     "Stopped parsing  due to the running-flag being false",
                     Logging.LogLevel.DEBUG, sourcePayload);
         }
+        log.debug("Ending protected run " + runCount + " with " + internalCount
+                  + " extracted records. running=" + running);
+    }
+
+    @SuppressWarnings({"DuplicateStringLiteralInspection"})
+    private void fillPayloadFromHeader(Payload payload,
+                                       ArchiveRecordHeader header,
+                                       String arcFilename) {
+        payload.setID(header.getUrl());
+        payload.getData().put("arc.arcname", arcFilename);
+        payload.getData().put("arc.arcoffset", header.getOffset());
+//        payload.getData().put("arc.boost", header.);
+//        payload.getData().put("arc.collection", header.);
+        payload.getData().put("arc.contentLength", header.getLength());
+        payload.getData().put("arc.date", header.getDate()); // Epoch
+        payload.getData().put("arc.digest", header.getDigest()); // ?
+        payload.getData().put("arc.primaryType", header.getMimetype());
+//        payload.getData().put("arc.segment", header.);
+//        payload.getData().put("arc.subType", header.);
+        payload.getData().put("arc.title", header.getRecordIdentifier());
+        payload.getData().put("arc.tstamp", header.getDate());
+        payload.getData().put("arc.url", header.getUrl());
     }
 }

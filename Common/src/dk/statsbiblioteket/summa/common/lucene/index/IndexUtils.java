@@ -90,14 +90,14 @@ public class IndexUtils {
             //noinspection DuplicateStringLiteralInspection
             Logging.logProcess("IndexUtils.assignBasicProperties",
                                message, Logging.LogLevel.DEBUG, payload);
-            log.warn(String.format(message + ": " + payload));
+            log.debug(String.format(message + ": " + payload));
             return;
         }
         String base = payload.getRecord().getBase();
         assignSingleField(document, payload, RECORD_BASE, base);
     }
 
-    private static void assignSingleField(Document document, Payload payload,
+    public static void assignSingleField(Document document, Payload payload,
                                           String field, String term) {
         if (log.isTraceEnabled()) {
             log.trace(String.format("Assigning %s:%s to %s",
