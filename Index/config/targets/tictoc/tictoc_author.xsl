@@ -13,6 +13,7 @@
     <xsl:output version="1.0" encoding="UTF-8" indent="yes" method="xml"/>
 
     <!-- ARBEJDE I GANG, DERFOR ER DER PT FEJL!!!!!! i DENNE TEMPLATE -->
+    <!-- Author nomalized formaterer ikke navnet korrekt i ordinaer RSS 2.0 formatet, hvis forfatterne har mellemnavne -->
 
     <!-- Author -->
     <xsl:template name="author">
@@ -31,21 +32,21 @@
         </Index:group>
 
         <xsl:for-each select="author">
-            <Index:field Index:repeat="false" Index:name="author_normalised" Index:navn="lfo" Index:type="keyword" Index:boostFactor="10">
-                <xsl:call-template name="person_inverted">
-                    <xsl:with-param name="names_inverted" select="."/>
-                </xsl:call-template>
-            </Index:field>
+
+            <xsl:call-template name="person_inverted">
+                <xsl:with-param name="names_inverted" select="."/>
+            </xsl:call-template>
+
         </xsl:for-each>
         <xsl:for-each select="dc:creator/text()">
-            <Index:field Index:repeat="true" Index:name="author_normalized" Index:navn="lfo" Index:type="keyword" Index:boostFactor="10">
-                <xsl:value-of select="."/>
-            </Index:field>
+            <xsl:call-template name="person_inverted_complex">
+                <xsl:with-param name="names" select="."  />
+            </xsl:call-template>
         </xsl:for-each>
 
     </xsl:template>
 
-    <!-- Rekursiv template for at hive forfattere ud af samme tag-->
+    <!-- Rekursiv template for at hive flere forfattere ud af samme tag (Ordinaer RSS format)-->
     <xsl:template name="person">
         <xsl:param name="names"/>
         <xsl:choose>
@@ -66,6 +67,23 @@
                     </xsl:otherwise>
                 </xsl:choose>
             </xsl:when>
+            <xsl:when test="contains($names,';')">
+                <Index:field Index:repeat="true" Index:name="author_person" Index:navn="pe" Index:type="token" Index:boostFactor="10">
+                    <xsl:value-of select="normalize-space(substring-before($names,';'))"/>
+                </Index:field>
+                <xsl:choose>
+                    <xsl:when test="contains(substring-after($names,';'),';')">
+                        <xsl:call-template name="person">
+                            <xsl:with-param name="names" select="substring-after($names,';')"/>
+                        </xsl:call-template>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <Index:field Index:repeat="true" Index:name="author_person" Index:navn="pe" Index:type="token" Index:boostFactor="10">
+                            <xsl:value-of select="normalize-space(substring-after($names,';'))"/>
+                        </Index:field>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:when>
             <xsl:otherwise>
                 <Index:field Index:repeat="true" Index:name="author_person" Index:navn="pe" Index:type="token" Index:boostFactor="10">
                     <xsl:value-of select="."/>
@@ -74,9 +92,46 @@
         </xsl:choose>
     </xsl:template>
 
+
+    <xsl:template name="person_inverted">
+        <xsl:param name="names_inverted" />
+        <xsl:choose>
+            <xsl:when test="contains($names_inverted,', ')">
+                <xsl:variable name="firstAuthor" select="substring-before($names_inverted,', ')"/>
+                <Index:field Index:repeat="false" Index:name="author_normalised" Index:navn="lfo" Index:type="keyword" Index:boostFactor="10">
+                    <xsl:value-of select="substring-after($firstAuthor,' ')"  />
+                    <xsl:text>, </xsl:text>
+                    <xsl:value-of select="substring-before($firstAuthor,' ')"  />
+                </Index:field>
+                <xsl:call-template name="person_inverted">
+                    <xsl:with-param name="names_inverted" select="substring-after($names_inverted,', ')"/>
+                </xsl:call-template>
+            </xsl:when>
+            <xsl:when test="contains($names_inverted,'; ')">
+                <xsl:variable name="firstAuthor" select="substring-before($names_inverted,'; ')"/>
+                <Index:field Index:repeat="false" Index:name="author_normalised" Index:navn="lfo" Index:type="keyword" Index:boostFactor="10">
+                    <xsl:value-of select="substring-after($firstAuthor,' ')"  />
+                    <xsl:text>, </xsl:text>
+                    <xsl:value-of select="substring-before($firstAuthor,' ')"  />
+                </Index:field>
+                <xsl:call-template name="person_inverted">
+                    <xsl:with-param name="names_inverted" select="substring-after($names_inverted,'; ')"/>
+                </xsl:call-template>
+            </xsl:when>
+            <xsl:otherwise>
+                <Index:field Index:repeat="false" Index:name="author_normalised" Index:navn="lfo" Index:type="keyword" Index:boostFactor="10">
+                    <xsl:value-of select="substring-after($names_inverted,' ')"/>
+                    <xsl:text>, </xsl:text>
+                    <xsl:value-of select="substring-before($names_inverted,' ')"/>
+                </Index:field>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:template>
+
+
+    <!-- Rekursiv template for at hive flere forfattere ud af samme tag (komplekst RSS format)-->
     <xsl:template name="person_complex">
         <xsl:param name="names"/>
-
         <xsl:choose>
             <xsl:when test="contains($names,'.,')">
                 <xsl:variable name="firstAuthor">
@@ -94,44 +149,66 @@
             </xsl:when>
             <xsl:otherwise>
                 <Index:field Index:repeat="true" Index:name="author_person" Index:navn="pe" Index:type="token" Index:boostFactor="10">
-                    <xsl:value-of select="normalize-space(substring-after($names,','))"/>
+                    <xsl:value-of select="normalize-space(substring-after($names,' '))"/>
                     <xsl:text> </xsl:text>
-                    <xsl:value-of select="normalize-space(substring-before($names,','))"/>
+                    <xsl:value-of select="normalize-space(substring-before($names,' '))"/>
                 </Index:field>
             </xsl:otherwise>
         </xsl:choose>
-
-
-
     </xsl:template>
 
 
-
-
-
-
-
-    <xsl:template name="person_inverted">
-        <xsl:param name="names_inverted" />
-        <!--       <xsl:param name="count" select="1" />
-         <xsl:variable name="name1" />
-         <xsl:choose>
-             <xsl:when test="contains(substring-after($names_inverted,' '),' ')">
-                 <xsl:text>Indeholder 3 eller flere navne</xsl:text>
-                 <xsl:variable name="name1" select="substring-before($names_inverted,' ')"/>
-                 <xsl:call-template name="person_inverted">
-                     <xsl:with-param name="names_inverted" select="substring-after($names_inverted,' ')"/>
-                     <xsl:with-param name="count" select="$count+1"/>
+      <!-- Rekursiv template for at hive flere forfattere ud af samme tag (komplekst RSS format)-->
+    <xsl:template name="person_complex2">
+        <xsl:param name="names"/>
+        <xsl:choose>
+            <xsl:when test="contains($names,',')">
+                <xsl:variable name="firstAuthor">
+                    <xsl:value-of select="substring-before($names,',')"/>
+                </xsl:variable>
+                <Index:field Index:repeat="true" Index:name="author_person" Index:navn="pe" Index:type="token" Index:boostFactor="10">
+                    <xsl:value-of select="normalize-space(substring-after($firstAuthor,' '))"/>
+                    <xsl:text> </xsl:text>
+                    <xsl:value-of select="normalize-space(substring-before($firstAuthor,' '))"/>
+                </Index:field>
+                <xsl:call-template name="person_complex" >
+                    <xsl:with-param  name="names" select="substring-after($names,',')"/>
                 </xsl:call-template>
-        -->        <!-- <xsl:value-of select="substring-before($names_inverted,' ')"/> -->
-        <!--       </xsl:when>
-                   <xsl:otherwise>
-                       <xsl:value-of select="substring-after($names_inverted,' ')"/>
-                       <xsl:text>, </xsl:text>
-                       <xsl:value-of select="$name1"/>
-                       <xsl:value-of select="substring-before($names_inverted,' ')"/>
-                   </xsl:otherwise>
-               </xsl:choose>
-        -->   </xsl:template>
+            </xsl:when>
+            <xsl:otherwise>
+                <Index:field Index:repeat="true" Index:name="author_person" Index:navn="pe" Index:type="token" Index:boostFactor="10">
+                    <xsl:value-of select="normalize-space(substring-after($names,' '))"/>
+                    <xsl:text> </xsl:text>
+                    <xsl:value-of select="normalize-space(substring-before($names,' '))"/>
+                </Index:field>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:template>
+
+    <!-- Rekursiv template for at hive flere forfattere ud af samme tag (komplekst RSS format)-->
+    <xsl:template name="person_inverted_complex">
+        <xsl:param name="names" />
+        <xsl:choose>
+            <xsl:when test="contains($names,'.,')">
+                <xsl:variable name="firstAuthor">
+                    <xsl:value-of select="substring-before($names,'.,')"/>
+                    <xsl:text>.</xsl:text>
+                </xsl:variable>
+                <Index:field Index:repeat="true" Index:name="author_normalized" Index:navn="lfo" Index:type="keyword" Index:boostFactor="10">
+                    <xsl:value-of select="normalize-space($firstAuthor)"/>
+                </Index:field>
+                <xsl:call-template name="person_inverted_complex">
+                    <xsl:with-param  name="names" select="substring-after($names,'.,')"/>
+                </xsl:call-template>
+            </xsl:when>
+            <xsl:otherwise>
+                <Index:field Index:repeat="true" Index:name="author_normalized" Index:navn="lfo" Index:type="keyword" Index:boostFactor="10">
+                    <xsl:value-of select="normalize-space($names)"/>
+                </Index:field>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:template>
+
+
 
 </xsl:stylesheet>
