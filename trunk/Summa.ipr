@@ -135,6 +135,7 @@
       <entry name="*.data" />
       <entry name="*.dat" />
       <entry name="*.zip" />
+      <entry name="*.gz" />
       <entry name="*" />
     </wildcardResourcePatterns>
   </component>

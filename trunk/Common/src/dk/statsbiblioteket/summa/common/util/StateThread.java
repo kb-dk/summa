@@ -90,10 +90,13 @@ public abstract class StateThread implements Runnable {
     protected abstract void runMethod();
 
     public final void run() {
+        dk.statsbiblioteket.util.Profiler profiler =
+                new dk.statsbiblioteket.util.Profiler();
         try {
             log.debug("Starting run");
             runMethod();
-            log.debug("Run complete. Cleaning up");
+            log.info("Run complete after " + profiler.getSpendTime()
+                     + ". Cleaning up");
             if (!status.equals(STATUS.error)) {
                 status = STATUS.stopped;
             }

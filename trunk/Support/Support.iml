@@ -13,6 +13,15 @@
     <orderEntry type="module" module-name="Index" />
     <orderEntry type="module" module-name="Search" />
     <orderEntry type="module" module-name="Common" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/tika-0.3.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
     <orderEntry type="library" name="sbutil" level="project" />
     <orderEntry type="library" name="log4j-1.2.14" level="project" />
     <orderEntry type="library" name="junit-3.8.1" level="project" />
@@ -24,6 +33,7 @@
     <orderEntry type="library" name="heritrix-1.14.3" level="project" />
     <orderEntry type="library" name="fastutil-heritrix-subset" level="project" />
     <orderEntry type="library" name="commons-httpclient" level="project" />
+    <orderEntry type="module" module-name="FacetBrowser" />
     <orderEntryProperties />
   </component>
 </module>

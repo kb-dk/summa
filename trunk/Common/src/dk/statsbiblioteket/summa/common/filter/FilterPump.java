@@ -43,7 +43,6 @@ public class FilterPump extends StateThread implements Configurable {
     private static final int DEBUG_FEEDBACK = 100;
     private static final int INFO_FEEDBACK = 10000;
 
-
     long objectCounter = 0;
     long streamBytesCounter = 0;
 

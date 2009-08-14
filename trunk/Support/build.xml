@@ -56,6 +56,7 @@
         <pathelement location="../Search/${summa.classes.dir}"/>
         <pathelement location="../Ingest/${summa.classes.dir}"/>
         <pathelement location="../Index/${summa.classes.dir}"/>
+        <pathelement location="../FacetBrowser/${summa.classes.dir}"/>
     </path>
 
     <!-- lib.files : set by the .checkDepends target -->
@@ -192,8 +193,17 @@
         <copy file="${basedir}/../${summa.lib.sbutil}" tofile="${summa.lib.sbutil}"/>
         <copy file="${basedir}/../${summa.lib.heritrix}" tofile="${summa.lib.heritrix}"/>
         <copy file="${basedir}/../${summa.lib.heritrix.fastutil}" tofile="${summa.lib.heritrix.fastutil}"/>
+        <copy file="${basedir}/../${summa.lib.tika}" tofile="${summa.lib.tika}"/>
     </target>
 
+    <target name=".getTikaLibs">
+        <!-- Downloads Tika implementation lib and replaces the API-stub.
+             Call this after .getLibs to get full Tika functionality. 
+         -->
+        <delete file="${summa.lib.tika}"/>
+        <get src="${summa.lib.tika.implementation.location}"
+             dest="${summa.lib.tika}"/>
+    </target>
 
     <target name="compile" depends="depends">
         <mkdir dir="${build.dir}"/>
@@ -204,7 +214,6 @@
             <classpath refid="lib.internal"/>
         </javac>
     </target>
-
 
     <target name="doc" depends="compile">
         <mkdir dir="${doc.dir}"/>
