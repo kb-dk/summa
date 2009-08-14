@@ -26,6 +26,16 @@
     <xsl:include href="tictoc_notes.xsl" />
     <!--<xsl:include href="oai_publisher.xsl" />   -->
 
+
+
+    <!--
+    Tictoc data er hentet fra mange forskellige kilder  med tilsvarende varierende formater.
+    Især formateringen af forfatterdata varierer meget. Derfor er xslt templates ikke
+    korrekte til alle formater. Indekseringen er foreløbig et eksperiment. 
+    -->
+
+
+
     <xsl:output version="1.0" encoding="UTF-8" indent="yes" method="xml"/>
     <xsl:template match="/">
         <Index:document Index:defaultBoost="1" Index:defaultType="token" Index:defaultFreetext="true" Index:defaultSuggest="false"
@@ -76,7 +86,7 @@
                     <xsl:call-template name="su" />
                     <xsl:call-template name="publisher" />
                     -->
-                    <Index:field Index:name="openUrl" Index:navn="openUrl"  Index:type="stored" Index:freetext="false">id=<xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.OpenUrlEscape.escape(link)" /></Index:field>
+                    <Index:field Index:name="openUrl" Index:navn="openUrl"  Index:type="stored" Index:freetext="false">id=<xsl:value-of select="java:dk.statsbiblioteket.summa.plugins.OpenUrlEscape.escape(purl:link)" /></Index:field>
                 </Index:fields>
             </xsl:for-each>
 
