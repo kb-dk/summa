@@ -63,6 +63,10 @@
                                     <key>summa.ingest.stream.controller.parser</key>
                                     <value class="string">dk.statsbiblioteket.summa.support.arc.ARCParser</value>
                                 </entry>
+                                <entry>
+                                    <key>usefilehack</key>
+                                    <value class="boolean">true</value>
+                                </entry>
                             </xproperties>
 
                             <xproperties>
@@ -101,7 +105,7 @@
                                                             <value class="string">Tika document creator</value>
                                                         </entry>
                                                         <entry>
-                                                            <key>summa.muxfilter.filter.class</key>
+                                                            <key>summa.filter.sequence.filterclass</key>
                                                             <value class="string">dk.statsbiblioteket.summa.support.TikaDocumentCreator</value>
                                                         </entry>
                                                         <entry>
@@ -127,7 +131,7 @@
                                                         </entry>
                                                         <entry>
             <!--                                                <key>summa.filter.sequence.filterclass</key>-->
-                                                            <key>summa.muxfilter.filter.class</key>
+                                                            <key>summa.filter.sequence.filterclass</key>
                                                             <value class="string">dk.statsbiblioteket.summa.support.lucene.ExtendDocumentFilter</value>
                                                         </entry>
                                                         <entry>
@@ -143,12 +147,28 @@
                                                             <key>extend.patterns</key>
                                                             <value class="list">
                                                                 <item class="string">arc\.(.+)</item>
+                                                                <item class="string">arc\.title</item>
                                                             </value>
                                                         </entry>
                                                         <entry>
                                                             <key>extend.field.templates</key>
                                                             <value class="list">
                                                                 <item class="string">$1</item>
+                                                                <item class="string">shortformat</item>
+                                                            </value>
+                                                        </entry>
+                                                        <entry>
+                                                            <key>extend.field.contents</key>
+                                                            <value class="list">
+<!--                                                                <item class="string">***${content}/${key}/${field}***</item>-->
+                                                                <item class="string">${content}</item>
+                                                                <item class="string">&lt;shortrecord&gt;
+&lt;rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"&gt;
+&lt;rdf:Description&gt;
+&lt;dc:title&gt;${content}&lt;/dc:title&gt;
+&lt;/rdf:Description&gt;
+&lt;/rdf:RDF&gt;
+&lt;/shortrecord&gt;</item>
                                                             </value>
                                                         </entry>
                                                     </xproperties>

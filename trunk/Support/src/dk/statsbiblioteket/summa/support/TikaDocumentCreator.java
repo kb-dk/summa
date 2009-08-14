@@ -169,8 +169,9 @@ public class TikaDocumentCreator extends DocumentCreatorBase {
                   + (System.nanoTime() - startTime) / 1000000D + " ms");
         IndexUtils.assignSingleField(document, payload,
                                      IndexUtils.RECORD_BASE, recordBase);
-        IndexUtils.assignSingleField(document, payload, 
-                                     IndexUtils.RECORD_FIELD, payload.getId());
+        // recordID is assigned by the indexer
+//        IndexUtils.assignSingleField(document, payload,
+//                                     IndexUtils.RECORD_FIELD, payload.getId());
         return true;
     }
 

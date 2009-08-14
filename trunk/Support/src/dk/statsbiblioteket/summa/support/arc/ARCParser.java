@@ -56,10 +56,13 @@ public class ARCParser extends ThreadedStreamParser {
             "arc.url"};
 
     // TODO: Add timeout
+    private boolean useFileHack = false;
 
     public ARCParser(Configuration conf) {
         super(conf);
-        log.debug("ARCParser constructed");
+        useFileHack = conf.getBoolean("usefilehack", useFileHack);
+        log.debug("ARCParser constructed"
+                  + (useFileHack ? " with filehack enabled" : ""));
     }
 
     private long runCount = 0;
@@ -69,10 +72,19 @@ public class ARCParser extends ThreadedStreamParser {
 // 1839 records, 57 sec
         log.trace("Starting protected run " + ++runCount + " for "
                   + sourcePayload);
-//        ArchiveReader archiveReader =
-//                ARCReaderFactory.get("Foo", sourcePayload.getStream(), true);
+        /*
+        The file hack is truly horrible, but the ARCReaderFactory will always
+        expect streams to be GZIPped and we need to experiment with uncompressed
+        ARC files as there seems to be an incompatibility between the GZIP
+        that Ubuntu uses and the heritrix ARCParser.
+        // TODO: Locate and eliminate the GZIP incompatability problem
+         */
         ArchiveReader archiveReader =
-                ARCReaderFactory.get(new File(sourcePayload.getData(Payload.ORIGIN).toString()), false, 0);
+                useFileHack
+                ? ARCReaderFactory.get(new File(sourcePayload.getData(
+                        Payload.ORIGIN).toString()), false, 0)
+                : ARCReaderFactory.get("Foo", sourcePayload.getStream(), true);
+
         Iterator<ArchiveRecord> archiveRecords = archiveReader.iterator();
         // TODO: Consider skipping the first record (meta-data for the ARC file)
         int internalCount = 0;
