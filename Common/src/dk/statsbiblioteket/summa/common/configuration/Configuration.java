@@ -903,11 +903,11 @@ public class Configuration implements Serializable,
                     + " does not have a constructor taking a Configuration"
                     + " as its sole argument", e);
         } catch (IllegalAccessException e) {
-            throw new Configurable.ConfigurationException(e);
+            throw new Configurable.ConfigurationException(e.getMessage(), e);
         } catch (InvocationTargetException e) {
-            throw new Configurable.ConfigurationException(e);
+            throw new Configurable.ConfigurationException(e.getMessage(), e);
         } catch (InstantiationException e) {
-            throw new Configurable.ConfigurationException(e);
+            throw new Configurable.ConfigurationException(e.getMessage(), e);
         }
     }
 
