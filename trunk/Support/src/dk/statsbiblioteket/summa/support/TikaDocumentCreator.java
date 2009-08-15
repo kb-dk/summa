@@ -161,7 +161,12 @@ public class TikaDocumentCreator extends DocumentCreatorBase {
             throw new PayloadException(
                     "TikaException during Tika parse", e, payload);
         }
-
+        try {
+            payload.getStream().close();
+        } catch (IOException e) {
+            throw new PayloadException("IOException while closing stream",
+                                       e, payload);
+        }
         payload.getData().put(Payload.LUCENE_DOCUMENT, document);
         //noinspection DuplicateStringLiteralInspection
         log.debug("Added Lucene Document to payload "

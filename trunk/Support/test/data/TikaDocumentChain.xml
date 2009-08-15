@@ -53,25 +53,6 @@
                             <xproperties>
                                 <entry>
                                     <key>filter.name</key>
-                                    <value class="string">ARCParser</value>
-                                </entry>
-                                <entry>
-                                    <key>summa.filter.sequence.filterclass</key>
-                                    <value class="string">dk.statsbiblioteket.summa.ingest.split.StreamController</value>
-                                </entry>
-                                <entry>
-                                    <key>summa.ingest.stream.controller.parser</key>
-                                    <value class="string">dk.statsbiblioteket.summa.support.arc.ARCParser</value>
-                                </entry>
-                                <entry>
-                                    <key>usefilehack</key>
-                                    <value class="boolean">true</value>
-                                </entry>
-                            </xproperties>
-
-                            <xproperties>
-                                <entry>
-                                    <key>filter.name</key>
                                     <value class="string">Muxer</value>
                                 </entry>
                                 <entry>
@@ -89,7 +70,7 @@
                                         <xproperties>
                                             <entry>
                                                 <key>filter.name</key>
-                                                <value class="string">Tika Sequencer</value>
+                                                <value class="string">Arctika Sequencer</value>
                                             </entry>
                                             <entry>
                                                 <key>summa.muxfilter.filter.class</key>
@@ -98,6 +79,26 @@
                                             <entry>
                                                 <key>summa.filter.sequence.filters</key>
                                                 <value class="list">
+
+                                                    <xproperties>
+                                                        <entry>
+                                                            <key>filter.name</key>
+                                                            <value class="string">ARCParser</value>
+                                                        </entry>
+                                                        <entry>
+                                                            <key>summa.filter.sequence.filterclass</key>
+                                                            <value class="string">dk.statsbiblioteket.summa.ingest.split.StreamController</value>
+                                                        </entry>
+                                                        <entry>
+                                                            <key>summa.ingest.stream.controller.parser</key>
+                                                            <value class="string">dk.statsbiblioteket.summa.support.arc.ARCParser</value>
+                                                        </entry>
+                                                        <entry>
+                                                            <key>usefilehack</key>
+                                                            <value class="boolean">true</value>
+                                                        </entry>
+                                                    </xproperties>
+
                                                     <!-- Create a Lucene Document with Tika -->
                                                     <xproperties>
                                                         <entry>

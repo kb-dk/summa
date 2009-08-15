@@ -24,6 +24,7 @@
         <field name="title" parent="text" stored="true" multiValued="true" indexed="true" inFreeText="false"/>
         <field name="tstamp" parent="storedKeyword" multiValued="false" indexed="true" inFreeText="false"/>
         <field name="url" parent="storedKeyword" multiValued="false" indexed="true" inFreeText="true"/>
+        <field name="shortformat" parent="stored" inFreeText="false"/>
 
     </fields>
 
