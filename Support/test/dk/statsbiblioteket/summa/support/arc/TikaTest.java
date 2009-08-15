@@ -21,6 +21,7 @@ package dk.statsbiblioteket.summa.support.arc;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.Profiler;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.FilterControl;
 import dk.statsbiblioteket.summa.common.filter.object.FilterSequence;
@@ -83,6 +84,7 @@ public class TikaTest extends TestCase {
     }
 
     public void testTikaDocumentCreator() throws Exception {
+        Profiler profiler = new Profiler();
         Configuration conf = Configuration.load("data/TikaDocumentChain.xml");
         List<Configuration> filterConfs =
                 conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
@@ -92,11 +94,11 @@ public class TikaTest extends TestCase {
         // TODO: Change back
                                Resolver.getFile("data/arc").toString());
 
-        List<Configuration> innerConfs = filterConfs.get(2).
+        List<Configuration> innerConfs = filterConfs.get(1).
                 getSubConfigurations(MUXFilter.CONF_FILTERS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS);
         String descriptorLocation = "data/tika/TikaTest_IndexDescriptor.xml";
-        for (int filterPos: new int[]{0, 1}) {
+        for (int filterPos: new int[]{1, 2}) {
             assertTrue("An inner descriptor location should be present for "
                        + filterPos, innerConfs.get(filterPos).
                     getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).
@@ -107,10 +109,10 @@ public class TikaTest extends TestCase {
         }
 
         assertTrue("A descriptor location should be present for the indexer",
-                   filterConfs.get(3).getSubConfiguration(
+                   filterConfs.get(2).getSubConfiguration(
                            IndexDescriptor.CONF_DESCRIPTOR).valueExists(
                            IndexDescriptor.CONF_ABSOLUTE_LOCATION));
-        filterConfs.get(3).
+        filterConfs.get(2).
                 getSubConfiguration(IndexDescriptor.CONF_DESCRIPTOR).set(
                 IndexDescriptor.CONF_ABSOLUTE_LOCATION, descriptorLocation);
 
@@ -119,13 +121,14 @@ public class TikaTest extends TestCase {
                 DumpFilter.CONF_OUTPUTFOLDER, TEST_ROOT.getAbsolutePath()
                                               + "/d2");*/
         assertTrue("An absolute path for the index should exist",
-                   filterConfs.get(3).valueExists(
+                   filterConfs.get(2).valueExists(
                            IndexControllerImpl.CONF_INDEX_ROOT_LOCATION));
-        filterConfs.get(3).set(IndexControllerImpl.CONF_INDEX_ROOT_LOCATION,
+        filterConfs.get(2).set(IndexControllerImpl.CONF_INDEX_ROOT_LOCATION,
                                TEST_ROOT.getAbsolutePath());
 
         FilterControl control = new FilterControl(conf);
         control.start();
         control.waitForFinish(100000);
+        System.out.println("Total time used: " + profiler.getSpendTime());
     }
 }

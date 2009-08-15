@@ -20,6 +20,7 @@
 package dk.statsbiblioteket.summa.support.lucene;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.xml.XMLUtil;
 import dk.statsbiblioteket.summa.index.lucene.DocumentCreatorBase;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
@@ -219,7 +220,8 @@ public class ExtendDocumentFilter extends DocumentCreatorBase {
         }
         if (key.getValue2() != null) {
             //noinspection DuplicateStringLiteralInspection
-            c = key.getValue2().replace("${content}", c).
+            // TODO: Do we always want to encode here?
+            c = key.getValue2().replace("${content}", XMLUtil.encode(c)).
                     replace("${key}", metaKey).
                     replace("${field}", fieldName);
             if (log.isTraceEnabled()) {
