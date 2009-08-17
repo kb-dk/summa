@@ -34,6 +34,7 @@
     <orderEntry type="library" name="fastutil-heritrix-subset" level="project" />
     <orderEntry type="library" name="commons-httpclient" level="project" />
     <orderEntry type="module" module-name="FacetBrowser" />
+    <orderEntry type="library" name="tika" level="project" />
     <orderEntryProperties />
   </component>
 </module>
