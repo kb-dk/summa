@@ -2,13 +2,26 @@
 2009-08-03: Summa 1.4.8
 =======================
 
- * New filter RecordShaperFilter for restructuring and handling record metadata
-   in the filter pipeline
+ * Added setting for filters in FilterSequence to control whether the filter
+   is enabled or not. Set the property "filter.enabled" to true or false to
+   control this
+
+ * New new filter called TikaDocumentCreator that creates Lucene documents
+   directly from Tika XHTML events. This bypasses the needs for XSLT processing
+   and can provide big performance gains where raw Tika processing is applicable
+
+ * New filters RecordShaperFilter and DocumentShaperFilter for restructuring and'
+   handling record metadata and Lucene document fields (respectively) in the
+   filter pipeline
 
  * XMLSplitterFilter supports splitting streams into Records without
-   extracting IDs
+   extracting IDs. This is useful in conjunction with the new RecordShaperFilter
 
  * Bump SBUtil dependency to 0.4.6
+
+ * Introduce experimental API to do super fast alphabetical index listings via the
+   facet browser. See dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys for
+   a starting point
 
  * Bugfix: Automagically free all RMI services registered via the
            RemoteHelper when the JVM exits (this means pertty much all RMI
@@ -18,6 +31,12 @@
            do this clean up by default - go figure
 
  * Bugfix: Don't resolve DTDs in the XMLSplitter{Parser,Handler,Filter}
+
+ * Bugfix: Fix https://sourceforge.net/apps/trac/summa/ticket/41 - 
+           "Search-time boosts in the IndexDescriptor are not used"
+ 
+ * Bugfix: Fix https://sourceforge.net/apps/trac/summa/ticket/28 -
+          "DatabaseStorage.clearBase() doesn't update record mtimes"
 
 =======================
 2009-06-26: Summa 1.4.7

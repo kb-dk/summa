@@ -1,3 +1,423 @@
+2009-08-18 13:00  mkamstrup
+
+        * [r1679]
+          ChangeLog, NEWS:
+
+         Release Summa 1.4.8
+
+2009-08-18 09:45  toke-sb
+
+	* [r1678]
+	  Common/src/dk/statsbiblioteket/summa/common/index/IndexField.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/search/LuceneBooster.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/search/SummaQueryParser.java,
+	  Common/test/dk/statsbiblioteket/summa/common/lucene/search/SummaQueryParserTest.java:
+	  
+	  BugFix: The query parser did not apply boosts defined in the
+	  index descriptor
+
+2009-08-18 09:33  mkamstrup
+
+	* [r1677]
+	  Support/src/dk/statsbiblioteket/summa/support/TikaDocumentCreator.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/DocumentShaperFilter.java[CPY],
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/ExtendDocumentFilter.java[DEL],
+	  Support/test/data/TikaDocumentChain.xml, Support/test/log4j.xml:
+	  
+	  Rename ExtendDocumentFilter to DocumentShaperFilter
+
+2009-08-18 07:48  mkamstrup
+
+	* [r1676] Summa.iml, Summa.ipr, Support/Support.iml,
+	  Support/build.xml,
+	  Support/src/dk/statsbiblioteket/summa/support/arc[DEL],
+	  Support/test/dk/statsbiblioteket/summa/support/arc[DEL],
+	  build.properties, lib/apidocs/heritrix-1.14.3-apidocs.zip[DEL],
+	  lib/fastutil-5.0.3-heritrix-subset-1.0.jar[DEL],
+	  lib/heritrix-1.14.3.jar[DEL],
+	  lib/license/heritrix-1.14.3-license.txt[DEL],
+	  lib/src/heritrix-1.14.3-javasrc.zip[DEL]:
+	  
+	  Remove Heritrix dependencies and ARCParser code prior to Summa
+	  1.4.8 release.
+
+2009-08-17 14:05  mkamstrup
+
+	* [r1675] Support/Support.iml:
+	  
+	  Add the Tika jar to the deps of the Support module (needed by the
+	  new TikaDocumentCreator)
+
+2009-08-15 01:07  toke-sb
+
+	* [r1674]
+	  Support/src/dk/statsbiblioteket/summa/support/TikaDocumentCreator.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/ExtendDocumentFilter.java,
+	  Support/test/data/TikaDocumentChain.xml,
+	  Support/test/data/tika/TikaTest_IndexDescriptor.xml,
+	  Support/test/dk/statsbiblioteket/summa/support/arc/TikaTest.java:
+	  
+	  Enhancement: Closed the ARC record stream ASAP instead of after
+	  full processing of the Payload
+
+2009-08-14 22:11  toke-sb
+
+	* [r1673]
+	  Common/src/dk/statsbiblioteket/summa/common/util/SimpleTriple.java[CPY],
+	  Support/src/dk/statsbiblioteket/summa/support/TikaDocumentCreator.java,
+	  Support/src/dk/statsbiblioteket/summa/support/arc/ARCParser.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/ExtendDocumentFilter.java,
+	  Support/test/data/TikaDocumentChain.xml,
+	  Support/test/dk/statsbiblioteket/summa/support/arc/TikaTest.java,
+	  Support/test/log4j.xml:
+	  
+	  Enhancement: Updated ExtendDocumentFilter to handle small tweaks
+	  to the added field content
+	  Hack: Made it possible to select hos to access ARC-filed until
+	  the ARCParser from heritrix is fixed or replaced
+
+2009-08-14 21:48  toke-sb
+
+	* [r1672]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/Configuration.java:
+	  
+	  Enhancement: The Configuration discarded vital information from
+	  the stack trace upon exception throwing
+
+2009-08-14 19:31  toke-sb
+
+	* [r1671] lib/apidocs/heritrix-1.14.3-apidocs.zip,
+	  lib/heritrix-1.14.3.jar, lib/license/heritrix-1.14.3-license.txt,
+	  lib/src/heritrix-1.14.3-javasrc.zip:
+	  
+	  Added missing heritrix-libs
+
+2009-08-14 15:08  toke-sb
+
+	* [r1670]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/FilterPump.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/index/IndexUtils.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/StateThread.java,
+	  Summa.ipr, Support/Support.iml, Support/build.xml,
+	  Support/src/dk/statsbiblioteket/summa/support/TikaDocumentCreator.java[CPY],
+	  Support/src/dk/statsbiblioteket/summa/support/arc/ARCParser.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/ExtendDocumentFilter.java,
+	  Support/test/data/TikaDocumentChain.xml,
+	  Support/test/data/TikaTestChain.xml, Support/test/data/tika,
+	  Support/test/data/tika/TikaTest_IndexDescriptor.xml,
+	  Support/test/dk/statsbiblioteket/summa/support/arc/TikaTest.java,
+	  Support/test/log4j.xml, build.properties:
+	  
+	  Nearly finished work on making an ARC over Tika index test
+
+2009-08-14 12:39  mkamstrup
+
+	* [r1669]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java:
+	  
+	  Fix: https://sourceforge.net/apps/trac/summa/ticket/28 :
+	  "DatabaseStorage.clearBase() doesn't update record mtimes"
+
+2009-08-14 12:24  nielsgamborg
+
+	* [r1668] Index/config/targets/tictoc/tictoc_author.xsl,
+	  Index/config/targets/tictoc/tictoc_date.xsl,
+	  Index/config/targets/tictoc/tictoc_index.xsl,
+	  Index/config/targets/tictoc/tictoc_shortformat.xsl:
+	  
+	  tictoc opdateringer
+
+2009-08-14 11:32  toke-sb
+
+	* [r1667]
+	  Common/src/dk/statsbiblioteket/summa/common/util/SimplePair.java:
+	  
+	  Feature: Trivial implementation of Pair
+
+2009-08-13 13:36  toke-sb
+
+	* [r1665]
+	  Common/src/dk/statsbiblioteket/summa/common/rpc/ConnectionConsumer.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/ClearBaseFilter.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/rmi/RMIStorageProxy.java:
+	  
+	  Logging: Added misc. debugging to storage
+
+2009-08-13 13:34  toke-sb
+
+	* [r1664]
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/StorageWriterClientTest.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/rmi,
+	  Storage/test/dk/statsbiblioteket/summa/storage/rmi/RMIStorageProxyTest.java:
+	  
+	  Testing: Added tests for remote clearing of storages
+
+2009-08-13 10:59  toke-sb
+
+	* [r1663]
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/filter/ClearBaseFilterTest.java:
+	  
+	  Bugfix/testing: The unit-test for ClearBaseFilter failed when the
+	  folder for the database did not exist before run
+
+2009-08-13 08:51  toke-sb
+
+	* [r1662]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/FilterSequence.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/FilterSequenceTest.java:
+	  
+	  Feature: Added setting for filters in FilterSequence to control
+	  whether the filter is enabled or not
+
+2009-08-11 14:36  toke-sb
+
+	* [r1661] Summa.ipr, Support/Support.iml, Support/build.xml,
+	  Support/src/dk/statsbiblioteket/summa/support/arc/ARCParser.java,
+	  Support/test/dk/statsbiblioteket/summa/support/arc/ARCParserTest.java,
+	  build.properties, lib/commons-httpclient-3.1.jar,
+	  lib/fastutil-5.0.3-heritrix-subset-1.0.jar:
+	  
+	  Added libs and tweaked ARCParser(Test)-code. The ARCParser is now
+	  capable of extracting content. A bare minimum of meta-data are
+	  extracted
+
+2009-08-11 13:34  toke-sb
+
+	* [r1660]
+	  Common/src/dk/statsbiblioteket/summa/common/util/FutureInputStream.java,
+	  Summa.iml, Summa.ipr, Support/Support.iml, Support/build.xml,
+	  Support/src/dk/statsbiblioteket/summa/support/arc,
+	  Support/src/dk/statsbiblioteket/summa/support/arc/ARCParser.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/BitsArray.java[DEL],
+	  Support/test/data/arc,
+	  Support/test/data/arc/ARC-SAMPLE-20060928223931-00000-gojoblack.arc.gz,
+	  Support/test/data/arc/readme,
+	  Support/test/dk/statsbiblioteket/summa/support/arc,
+	  Support/test/dk/statsbiblioteket/summa/support/arc/ARCParserTest.java,
+	  Web/Web.iml, build.properties:
+	  
+	  Skeleton code for ARC-support (the Internet Archive variant, not
+	  the compression format)
+
+2009-08-11 12:34  mads-sb
+
+	* [r1659] Web/resources/index.jsp:
+	  
+	  Comment out experimental index feature in example website
+
+2009-08-11 10:51  mads-sb
+
+	* [r1658] Web/Web.iml, Web/config/search/server-config.wsdd,
+	  Web/src/dk/statsbiblioteket/summa/web/services/SearchWS.java:
+	  
+	  Exposed the more advanced facetting options in a webservice call.
+
+2009-08-11 09:33  toke-sb
+
+	* [r1657]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/browse/FacetRequest.java,
+	  FacetBrowser/test/dk/statsbiblioteket/summa/facetbrowser/browse/FacetRequestTest.java:
+	  
+	  Bugfix: The Facet-name parser did not properly handle spaces
+	  Testing: Some tests for the facet-request parser added
+
+2009-08-07 13:40  toke-sb
+
+	* [r1656]
+	  Common/src/dk/statsbiblioteket/summa/common/util/BitsArray.java[CPY],
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/ReferenceSorter.java:
+	  
+	  Refactor: Moved the BitsArray to Common/util
+
+2009-08-07 13:27  toke-sb
+
+	* [r1655]
+	  Common/src/dk/statsbiblioteket/summa/common/util/ListSorter.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/BitsArray.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/ReferenceSorter.java:
+	  
+	  Added initial and non-working classes that are to be used for
+	  memory-efficient sorting in Lucene
+
+2009-08-07 13:22  toke-sb
+
+	* [r1654]
+	  Common/src/dk/statsbiblioteket/summa/common/util/IndirectIntSorter.java[CPY]:
+	  
+	  Added IndirectIntsorter, which is a copy of IndirectLongSorter.
+	  This was dictated by the use of the atomic long[]
+
+2009-08-06 12:58  toke-sb
+
+	* [r1651]
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/SortFactory.java:
+	  
+	  Bugfix: The SortFactory.getSort() wasn't synchronized. As
+	  initializing a sorter potentially takes a lot of time, there was
+	  a real risk of doing double work on sort initialization on newly
+	  opened indexes
+
+2009-08-06 12:52  toke-sb
+
+	* [r1650]
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/SortPool.java:
+	  
+	  Enhancement: Sorting on fields with no defined locale used a
+	  standard Lucene Sort. This was changed to use Summa sorting,
+	  which uses a more compact representation of values
+
+2009-08-06 12:47  toke-sb
+
+	* [r1649]
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/LuceneSearchNode.java:
+	  
+	  Bugfix: When using a static IndexDescriptor, the sort pools for
+	  the Lucene search node wasn't updated upon index change,
+	  resulting in potentially faulty sorts
+
+2009-08-06 11:47  toke-sb
+
+	* [r1648]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/api/IndexKeys.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/api/IndexResponse.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/browse/IndexRequest.java,
+	  FacetBrowser/test/dk/statsbiblioteket/summa/facetbrowser/browse/IndexLookupTest.java,
+	  Web/resources/index.jsp, Web/resources/service/indexlookup.jsp:
+	  
+	  Cleanup of the IndexLookup, especially with regard to the sample
+	  website.
+	  The sample website not allows for easy testing of index lookup.
+
+2009-08-06 07:28  toke-sb
+
+	* [r1647]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/api/IndexResponse.java:
+	  
+	  Added newlines to the XML returned from IndexResponse
+
+2009-08-06 07:15  toke-sb
+
+	* [r1646]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/browse/IndexLookup.java:
+	  
+	  Improved logging for IndexLookup
+
+2009-08-05 15:15  toke-sb
+
+	* [r1645] Web/config/search/server-config.wsdd,
+	  Web/config/website/services.xml,
+	  Web/resources/service/indexlookup.jsp[CPY]:
+	  
+	  Addition of a jps-page for handling index lookups, including
+	  defining the call in the wsdd. The index lookup currently only
+	  works from the command line
+
+2009-08-05 13:47  toke-sb
+
+	* [r1644]
+	  Search/src/dk/statsbiblioteket/summa/search/api/tools/SearchTool.java,
+	  Web/Web.iml, Web/build.xml,
+	  Web/src/dk/statsbiblioteket/summa/web/services/SearchWS.java:
+	  
+	  Connected the search web service to index lookup
+	  Added sample query to SearchTool
+
+2009-08-05 13:11  toke-sb
+
+	* [r1643]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/FacetSearchNode.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/Structure.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/browse/IndexLookup.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/tags/TagHandler.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/tags/TagHandlerImpl.java,
+	  FacetBrowser/test/dk/statsbiblioteket/summa/facetbrowser/browse/IndexLookupTest.java:
+	  
+	  Finished the index lookup with a basic unit-test and incorporated
+	  the lookup mechanism into the facet search node
+
+2009-08-05 09:07  toke-sb
+
+	* [r1642]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/tags/TagHandler.java:
+	  
+	  Slightly improved JavaDoc for TagHandler
+
+2009-08-05 08:40  toke-sb
+
+	* [r1641]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/browse/IndexRequest.java:
+	  
+	  Added first version of IndexRequest, keeping track of
+	  configurable default values and mapping from generic search
+	  request
+
+2009-08-05 08:14  toke-sb
+
+	* [r1640]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/api/IndexKeys.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/api/IndexResponse.java:
+	  
+	  Changes the sort for the index response to support locale
+
+2009-08-05 07:45  toke-sb
+
+	* [r1639] Common/Common.iml, Control/Control.iml,
+	  FacetBrowser/FacetBrowser.iml,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/FacetSearchNode.java,
+	  Index/Index.iml, Ingest/Ingest.iml, Search/Search.iml,
+	  Storage/Storage.iml, Summa.iml, Summa.ipr, Support/Support.iml,
+	  Web/Web.iml, Workflow/Workflow.iml:
+	  
+	  Corrected spelling error in JavaDoc for the facet search node
+	  Line-breaks in IDEA iml-files changed back to unix-style
+
+2009-08-04 19:19  toke-sb
+
+	* [r1638] Common/Common.iml, Control/Control.iml,
+	  FacetBrowser/FacetBrowser.iml,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/api/IndexKeys.java,
+	  Index/Index.iml, Ingest/Ingest.iml, Search/Search.iml,
+	  Storage/Storage.iml, Summa.iml, Summa.ipr, Support/Support.iml,
+	  Web/Web.iml, Workflow/Workflow.iml:
+	  
+	  Slight addition to JavaDoc for IndexKeys
+
+2009-08-04 14:53  toke-sb
+
+	* [r1637]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/api/IndexKeys.java[CPY],
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/api/IndexResponse.java[CPY],
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/api/IndexResponse.xsd[CPY],
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/api/IndexResponseSample.xml[CPY]:
+	  
+	  Added formal definition, sample XML, response implementation and
+	  search-keys for the index lookup searcher
+
+2009-08-03 12:04  mkamstrup
+
+	* [r1636] build.properties:
+	  
+	  Bump version number to 1.4.8
+
+2009-08-03 09:56  mke
+
+	* [r1635] ChangeLog,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/AssignMetaFilter.java[DEL],
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/AssignMetaFilterTest.java[DEL],
+	  NEWS, Summa.ipr, build.properties,
+	  lib/apidocs/sbutil-0.4.5-apidocs.zip[DEL],
+	  lib/apidocs/sbutil-0.4.6-apidocs.zip,
+	  lib/sbutil-0.4.6-beta1.jar[DEL], lib/sbutil-0.4.6.jar,
+	  lib/src/sbutil-0.4.5-src.zip[DEL], lib/src/sbutil-0.4.6-src.zip:
+	  
+	  Import SBUtil 0.4.6 files and update build.xml and Idea project
+	  files accordingly
+	  
+	  Delete stale AssignMetaFilter classes
+	  
+	  Update ChangeLog and NEWS in preparation for next Summa release
+
 2009-08-03 08:47  mke
 
 	* [r1634]
