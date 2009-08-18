@@ -32,6 +32,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.index.IndexGroup;
 import dk.statsbiblioteket.summa.common.index.IndexField;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
+import dk.statsbiblioteket.summa.common.lucene.LuceneIndexField;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.search.Query;
@@ -60,16 +62,34 @@ public class LuceneBooster {
     private static final Pattern singleBoost =
             Pattern.compile("^(.+)\\^([0-9]+(\\.[0-9]+)?)$");
 
-    private IndexDescriptor descriptor;
+    private LuceneIndexDescriptor descriptor;
+    private Map<String, Float> descriptorBoosts;
 
     /**
      * Constructs a lucene booster, responsible for query-time field-level
      * boosting.
      * @param descriptor the descriptor for the Lucene index.
      */
-    public LuceneBooster(IndexDescriptor descriptor) {
+    public LuceneBooster(LuceneIndexDescriptor descriptor) {
         log.debug("Constructing LuceneBooster");
         this.descriptor = descriptor;
+        extractDescriptorBoosts(descriptor);
+    }
+
+    private void extractDescriptorBoosts(LuceneIndexDescriptor descriptor) {
+        descriptorBoosts = new HashMap<String, Float>(
+                descriptor.getFields().size());
+        for (Map.Entry<String, LuceneIndexField> entry:
+                descriptor.getFields().entrySet()) {
+            LuceneIndexField field = entry.getValue();
+            //noinspection FloatingPointEquality
+            if (field.getQueryBoost() != IndexField.DEFAULT_BOOST) {
+                log.debug(String.format(
+                        "Extracted query time boost %s for field '%s'",
+                        field.getQueryBoost(), field.getName()));
+                descriptorBoosts.put(field.getName(), field.getQueryBoost()); 
+            }
+        }
     }
 
     /**
@@ -156,7 +176,18 @@ public class LuceneBooster {
     }
 
     /**
-     * Applies the given boosts to the query.
+     * Applies the query-time boosts specified in the index descriptor to the
+     * query.
+     * @param query  a standard query.
+     */
+    public void applyDescriptorBoosts(Query query) {
+        log.trace("Applying descriptor boosts");
+        applyBoost(query, descriptorBoosts);
+    }
+
+    /**
+     * Applies the given boosts to the query. Existing boosts are multiplied
+     * with the new boost.
      * @param query  a standard query.
      * @param boosts map from field/group name/alias to boost.
      * @return true if at least one boost was applied.
