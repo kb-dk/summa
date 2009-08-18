@@ -57,6 +57,14 @@ public class SummaQueryParserTest extends TestCase {
                "foo");
     }
 
+    public void testIndexDescriptorBoost() throws Exception {
+        SummaQueryParser qp = getQueryParser();
+        assertEquals("The parsed query should boost author", qp,
+                     "author:foo^1.5[1.5]", "author:foo");
+        assertEquals("The author boost should be a multiple of boosts", qp,
+                     "author:foo^3.0[3.0]", "author:foo boost(author^2)");
+    }
+
     public void testGroupBoost() throws Exception {
         SummaQueryParser qp = getQueryParser();
         assertEquals("The parsed query should boost groups", qp,
@@ -97,7 +105,7 @@ public class SummaQueryParserTest extends TestCase {
     public void testDefaultExpansionSpeed() throws Exception {
         SummaQueryParser qp = getQueryParser();
         Random random = new Random(87);
-        int RUNS = 50000;
+        int RUNS = 5000;
                          // ~250 q/s
         Profiler profiler = new Profiler();
         profiler.setExpectedTotal(RUNS);

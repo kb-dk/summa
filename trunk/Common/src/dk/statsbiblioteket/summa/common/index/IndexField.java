@@ -68,6 +68,12 @@ public class IndexField<A, T, F> {
     private static Log log = LogFactory.getLog(IndexField.class);
 
     /**
+     * The boost used when no explicit boost is specified.
+     */
+    public static Float DEFAULT_BOOST = 1.0F;
+
+
+    /**
      * The name of the field is used verbatim as the field in generated indexes.
      * </p><p>
      * This is used at index- and query-time.
@@ -141,7 +147,7 @@ public class IndexField<A, T, F> {
      * This is used at query-time.
      * @see {@link #indexBoost}.
      */
-    private float queryBoost = 1.0f;
+    private float queryBoost = DEFAULT_BOOST;
 
     /**
      * The boost used when indexing. This boost will be applied to any
@@ -151,7 +157,7 @@ public class IndexField<A, T, F> {
      * This is used at index-time.
      * @see {@link #queryBoost}.
      */
-    private float indexBoost = 1.0f;
+    private float indexBoost = DEFAULT_BOOST;
 
     /**
      * A ISO 639-1 code specifying which locale that should be used for sorting.

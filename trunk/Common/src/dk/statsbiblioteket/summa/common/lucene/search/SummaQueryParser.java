@@ -171,6 +171,7 @@ public class SummaQueryParser {
     private void extractSetup(Configuration conf) {
         supportQueryTimeBoosts = conf.getBoolean(CONF_QUERY_TIME_FIELD_BOOSTS,
                                                  supportQueryTimeBoosts);
+        //noinspection DuplicateStringLiteralInspection
         log.debug("Query time boosts are "
                   + (supportQueryTimeBoosts ? "enabled" : "disabled"));
     }
@@ -203,20 +204,22 @@ public class SummaQueryParser {
         }
         //String qstr = expandQueryString(queryString);
         //log.debug("expanded query: " + qstr);
-        Query a = parser.parse(queryString);
-//        Query a = parser.parse(qstr);
+        Query query = parser.parse(queryString);
+//        Query query = parser.parse(qstr);
 
 
         if (log.isDebugEnabled()) {
-            log.debug("Parsed query (" + a + ") in "
+            log.debug("Parsed query (" + query + ") in "
                       + (System.nanoTime() - startTime) / 1000000D + "ms: "
-                      + a.toString());
+                      + query.toString());
         }
+
+        booster.applyDescriptorBoosts(query);
 
         if (supportQueryTimeBoosts) {
             long boostStartTime = System.nanoTime();
             try {
-                booster.applyBoost(a, boosts);
+                booster.applyBoost(query, boosts);
             } catch (Exception e) {
                 log.error("Exception applying query-time boost", e);
             }
@@ -228,13 +231,13 @@ public class SummaQueryParser {
             try {
                 log.debug("Fully parsed and boosted query in "
                           + (System.nanoTime() - startTime) / 1000000D
-                          + "ms: " + LuceneIndexUtils.queryToString(a));
+                          + "ms: " + LuceneIndexUtils.queryToString(query));
             } catch (Exception e) {
                 log.error("Could not dump fully parsed and boosted query to" 
                           + " String", e);
             }
         }
-        return a;
+        return query;
     }
 
     /*protected String expandQueryString(String query) throws ParseException {
