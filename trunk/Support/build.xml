@@ -191,8 +191,8 @@
         <copy file="${basedir}/../${summa.lib.lucene.queries}" tofile="${summa.lib.lucene.queries}"/>
         <copy file="${basedir}/../${summa.lib.h2}" tofile="${summa.lib.h2}"/>
         <copy file="${basedir}/../${summa.lib.sbutil}" tofile="${summa.lib.sbutil}"/>
-        <copy file="${basedir}/../${summa.lib.heritrix}" tofile="${summa.lib.heritrix}"/>
-        <copy file="${basedir}/../${summa.lib.heritrix.fastutil}" tofile="${summa.lib.heritrix.fastutil}"/>
+        <!--<copy file="${basedir}/../${summa.lib.heritrix}" tofile="${summa.lib.heritrix}"/>
+        <copy file="${basedir}/../${summa.lib.heritrix.fastutil}" tofile="${summa.lib.heritrix.fastutil}"/>-->
         <copy file="${basedir}/../${summa.lib.tika}" tofile="${summa.lib.tika}"/>
     </target>
 
