@@ -28,9 +28,8 @@ import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
-import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.index.lucene.DocumentCreatorBase;
-import dk.statsbiblioteket.summa.support.lucene.ExtendDocumentFilter;
+import dk.statsbiblioteket.summa.support.lucene.DocumentShaperFilter;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -77,7 +76,7 @@ public class TikaDocumentCreator extends DocumentCreatorBase {
     private String recordBase;
 
     private Parser parser;
-    private ExtendDocumentFilter extender;
+    private DocumentShaperFilter extender;
 
     /**
      * Initialize the underlying parser and set up internal structures.

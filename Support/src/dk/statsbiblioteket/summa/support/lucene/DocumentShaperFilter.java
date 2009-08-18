@@ -25,7 +25,6 @@ import dk.statsbiblioteket.summa.index.lucene.DocumentCreatorBase;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
-import dk.statsbiblioteket.summa.common.util.SimplePair;
 import dk.statsbiblioteket.summa.common.util.SimpleTriple;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
@@ -60,8 +59,8 @@ import java.io.Serializable;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class ExtendDocumentFilter extends DocumentCreatorBase {
-    private static Log log = LogFactory.getLog(ExtendDocumentFilter.class);
+public class DocumentShaperFilter extends DocumentCreatorBase {
+    private static Log log = LogFactory.getLog(DocumentShaperFilter.class);
 
     /**
      * A list of regular expressions for the keys to the values to extend the
@@ -69,7 +68,7 @@ public class ExtendDocumentFilter extends DocumentCreatorBase {
      * </p><p>
      * Mandatory.
      */
-    public static final String CONF_PATTERNS = "extend.patterns";
+    public static final String CONF_PATTERNS = "document.patterns";
 
     /**
      * A list of templates for inserting captured groups from the
@@ -84,7 +83,7 @@ public class ExtendDocumentFilter extends DocumentCreatorBase {
      * Optional. If the length of the list is 0, $0 (a direct copy of the match)
      *           will be used for each regexp.
      */
-    public static final String CONF_FIELD_TEMPLATES = "extend.field.templates";
+    public static final String CONF_FIELD_TEMPLATES = "document.field.templates";
     public static final String DEFAULT_FIELD_TEMPLATE = "$0";
 
     /**
@@ -99,7 +98,7 @@ public class ExtendDocumentFilter extends DocumentCreatorBase {
      * Optional. If the length of the list is 0, ${content} (a direct copy of
      *           the content) will be used for each regexp.
      */
-    public static final String CONF_FIELD_CONTENTS = "extend.field.contents";
+    public static final String CONF_FIELD_CONTENTS = "document.field.contents";
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public static final String DEFAULT_FIELD_CONTENT = "${content}";
 
@@ -108,7 +107,7 @@ public class ExtendDocumentFilter extends DocumentCreatorBase {
     private List<SimpleTriple<Pattern, String, String>> keys;
     private LuceneIndexDescriptor descriptor;
 
-    public ExtendDocumentFilter(Configuration conf) throws
+    public DocumentShaperFilter (Configuration conf) throws
                                                         ConfigurationException {
         super(conf);
         descriptor = LuceneIndexUtils.getDescriptor(conf);
