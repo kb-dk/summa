@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -39,6 +39,9 @@ public class FutureInputStream extends InputStream {
 
     private InputStream is;
     private boolean closed = false;
+
+    private boolean doNotCloseSource = false;
+
 
     private final Object waiter = new Object();
 
@@ -83,11 +86,25 @@ public class FutureInputStream extends InputStream {
         return closed;
     }
 
+    /**
+     * @param doNotCloseSource if set to true, the source InputStream will not
+     * be closed when close is called in the FutureInputStream. The default is
+     * false.
+     */
+    public void setDoNotCloseSource(boolean doNotCloseSource) {
+        this.doNotCloseSource = doNotCloseSource;
+    }
+
     @Override
     public void close() throws IOException {
         if (!closed) {
             log.trace("Closing FutureInputStream");
-            super.close();
+            if (doNotCloseSource) {
+                log.trace("Skipping close of source as doNotCloseSurce is set "
+                          + "to true");
+            } else {
+                super.close();
+            }
             closed = true;
         } else {
             log.debug("close() called on already closed. Ignoring");
