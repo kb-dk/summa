@@ -163,13 +163,14 @@ public class TikaDocumentCreator extends DocumentCreatorBase {
         try {
             payload.getStream().close();
         } catch (IOException e) {
-            throw new PayloadException("IOException while closing stream",
-                                       e, payload);
+            throw new PayloadException(
+                    "IOException while closing stream", e, payload);
         }
         payload.getData().put(Payload.LUCENE_DOCUMENT, document);
         //noinspection DuplicateStringLiteralInspection
         log.debug("Added Lucene Document to payload "
-                  + payload + ". Processing time was "
+                  + payload + ". Content character count was " + characterCount
+                  + ". Processing time was "
                   + (System.nanoTime() - startTime) / 1000000D + " ms");
         IndexUtils.assignSingleField(document, payload,
                                      IndexUtils.RECORD_BASE, recordBase);
@@ -180,6 +181,7 @@ public class TikaDocumentCreator extends DocumentCreatorBase {
     }
 
     private Document document; // Used by TransformerHandler
+    private long characterCount = 0;
     private ContentHandler createHandler() {
         document = new Document();
 
@@ -205,6 +207,7 @@ public class TikaDocumentCreator extends DocumentCreatorBase {
             public void characters(char ch[], int start, int length)
                                                            throws SAXException {
                 // TODO: Check byte content (images et al)
+                characterCount += length;
                 String content = new String(ch, start, length).trim();
                 if ("".equals(content)) {
                     return;
@@ -228,6 +231,14 @@ public class TikaDocumentCreator extends DocumentCreatorBase {
                                 + "for '%s'", FIELD_TITLE));
                     }
                 }
+            }
+
+            /**
+             * @return the number of characters received and consequently added
+             *         to the document.
+             */
+            public long getCharacterCount() {
+                return characterCount;
             }
         };
     }
