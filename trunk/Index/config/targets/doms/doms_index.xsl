@@ -32,6 +32,9 @@
         <xsl:choose>
             <!--- DANSKE AVISER Papers-->
             <xsl:when test="substring(d:digitalObjectBundle/foxml:digitalObject/@PID,0,15)='doms:dda_paper'">
+                <xsl:variable name="paperId">
+                    <xsl:value-of select="d:digitalObjectBundle/foxml:digitalObject/@PID" />
+                </xsl:variable>
                 <Index:document Index:defaultBoost="1" Index:defaultType="token" Index:defaultFreetext="true" Index:defaultSuggest="false"
                                 Index:defaultGroup="false" Index:langAutogroup="true" Index:resolver="doms" Index:id="{d:digitalObjectBundle/foxml:digitalObject/@PID}">
                     <Index:fields>
@@ -258,7 +261,7 @@
                                     <xsl:value-of select="." />
                                 </Index:field>
                             </xsl:for-each>
-                            <xsl:for-each select="foxml:digitalObject/foxml:datastream/foxml:datastreamVersion/foxml:xmlContent/oai:danskeaviser/oai:titles/oai:text">
+                            <xsl:for-each select="foxml:digitalObject/foxml:datastream/foxml:datastreamVersion/foxml:xmlContent/danskeaviser/titles/text">
                                 <Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token" Index:boostFactor="2">
                                     <xsl:value-of select="."/>
                                 </Index:field>
@@ -268,15 +271,15 @@
                                     <xsl:value-of select="."/>
                                 </Index:field>
                             </xsl:for-each>
-                            <xsl:for-each select="foxml:digitalObject/foxml:datastream/foxml:datastreamVersion/foxml:xmlContent/oai:danskeaviser/oai:text/oai:txt">
+                            <xsl:for-each select="foxml:digitalObject/foxml:datastream/foxml:datastreamVersion/foxml:xmlContent/danskeaviser/text/txt">
                                 <Index:field Index:repeat="true" Index:name="no" Index:navn="no" Index:type="token" Index:boostFactor="2">
                                     <xsl:value-of select="."/>
                                 </Index:field>
                             </xsl:for-each>
                             <!--
-                                               <Index:field Index:repeat="true" Index:name="other" Index:navn="other" Index:type="token">
-                                                   <xsl:value-of select="util:decodeBase64(foxml:digitalObject/foxml:datastream[@ID='CONTENT']/foxml:datastreamVersion/foxml:xmlContent/oai:content)" />
-                                               </Index:field>
+                                <Index:field Index:repeat="true" Index:name="other" Index:navn="other" Index:type="token">
+                                    <xsl:value-of select="util:decodeBase64(foxml:digitalObject/foxml:datastream[@ID='CONTENT']/foxml:datastreamVersion/foxml:xmlContent/oai:content)" />
+                                 </Index:field>
                             -->
 
                             <!-- Author normalised -->
@@ -379,21 +382,36 @@
                                     <xsl:value-of select="." />
                                 </Index:field>
                             </xsl:for-each>
+                            <!--
+                            Henvisning til firstpage, hvor referencen til png filen findes.
+                            Dette er IKKE summa men for at hive URL'en ud et eller andet sted indtil
+                            den endelige metode findes.
+                            -->
+                            <xsl:for-each select="foxml:digitalObject/foxml:datastream/foxml:datastreamVersion/foxml:xmlContent/rdf:RDF/rdf:Description[@rdf:about=concat('info:fedora/',$paperId)]/doms:firstPage/@rdf:resource">
+                                <Index:field Index:name="henvisning-til-firstpage-hvor-png-fil-referencen ligger">
+                                    <xsl:value-of select="."/>
+                                </Index:field>
+                            </xsl:for-each>
 
-                            <!-- Potential fields: author_descr, barcode, barcode_normalised, cluster, collection, collection_normalised, format, ip, l_call, lip, llang, location, location_normalised, lso, no, openUrl, original_language, other, place, pu, series_normalised, year -->
+
                         </xsl:for-each>
                     </Index:fields>
                 </Index:document>
             </xsl:when>
 
 
-            <!--- DANSKE AVISER Papers-->
+            <!--- DANSKE AVISER Pages-->
+            <!-- Illegal XML for at undgå indeksering af Danske Aviser Pages, der ikke indeholder data, der skal være søgbare -->
             <xsl:when test="substring(d:digitalObjectBundle/foxml:digitalObject/@PID,0,14)='doms:dda_page'">
-                <xsl:text>Hest</xsl:text>
+                <xsl:text>Id: </xsl:text>
+                <xsl:value-of select="d:digitalObjectBundle/foxml:digitalObject/@PID" />
+                <xsl:text>&#xa;Url: </xsl:text>
+                <xsl:value-of select="d:digitalObjectBundle/foxml:digitalObject/foxml:datastream/foxml:datastreamVersion/foxml:contentLocation/@REF" />
             </xsl:when>
 
-            <!-- ÅRBOEGER -->
 
+
+            <!-- ÅRBOEGER -->
             <xsl:otherwise>
                 <xsl:for-each select="d:digitalObjectBundle/foxml:digitalObject">
                     <xsl:if test="position()=1">
