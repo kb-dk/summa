@@ -23,6 +23,7 @@
 package dk.statsbiblioteket.summa.search;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.util.ChangingSemaphore;
 import dk.statsbiblioteket.summa.search.api.Request;
@@ -138,7 +139,7 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
             watcher.addIndexListener(this);
             watcher.startWatching(); // This fires an open to the indexes
         } else {
-            indexChanged(new File(staticRoot));
+            indexChanged(Resolver.getPersistentFile(new File(staticRoot)));
         }
         log.debug("Finished constructing SummaSearcherImpl");
     }
