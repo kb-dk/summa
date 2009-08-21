@@ -225,7 +225,7 @@
   <component name="ProjectFileVersion" converted="true" />
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/src/dk/statsbiblioteket/summa/Arctika.iml" filepath="$PROJECT_DIR$/src/dk/statsbiblioteket/summa/Arctika.iml" />
+      <module fileurl="file:///home/mke/tmp/Arctika/Arctika.iml" filepath="/home/mke/tmp/Arctika/Arctika.iml" />
     </modules>
   </component>
   <component name="ProjectRootManager" version="2" assert-keyword="true" jdk-15="true" project-jdk-name="1.6" project-jdk-type="JavaSDK">
@@ -316,6 +316,14 @@
       <CLASSES>
         <root url="jar://$PROJECT_DIR$/lib/summa-common-1.4.8.jar!/" />
         <root url="jar://$PROJECT_DIR$/lib/summa-ingest-1.4.8.jar!/" />
+        <root url="jar://$PROJECT_DIR$/lib/summa-index-1.4.8.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="commons-httpclient">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/lib/commons-httpclient-3.1.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES />
