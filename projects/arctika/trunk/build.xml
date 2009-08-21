@@ -133,9 +133,7 @@
         <jar basedir="${build.dir}" compress="true" jarfile="${release.jar}"/>
     </target>
 
-    <target name="release" depends="distclean, .jar, apidocs, .getTikaLibs">
-
-        <antcall target="checkTikaLibs"/>
+    <target name="release" depends="distclean, .jar, apidocs, checkTikaLibs">
 
         <mkdir dir="${dist.dir}"/>
 
