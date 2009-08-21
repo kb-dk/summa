@@ -1,0 +1,284 @@
+<xproperties>
+    <xproperties>
+        <entry>
+            <key>filter.name</key>
+            <value class="string">Simple file-based OAI ingest</value>
+        </entry>
+        <entry>
+            <key>filtercontrol.sequential</key>
+            <value class="boolean">true</value>
+        </entry>
+        <entry>
+            <key>filtercontrol.chains</key>
+            <value class="list">
+                <xproperties>
+                    <entry>
+                        <key>filter.name</key>
+                        <value class="string">SingleChain</value>
+                    </entry>
+                    <entry>
+                        <key>summa.filter.sequence.filters</key>
+                        <value class="list">
+                            <!-- Scan for ARC files and don't rename
+                                 files when we are done with them -->
+                            <xproperties>
+                                <entry>
+                                    <key>filter.name</key>
+                                    <value class="string">Reader</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.filter.sequence.filterclass</key>
+                                    <value class="string">dk.statsbiblioteket.summa.ingest.stream.FileReader</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.ingest.filereader.rootfolder</key>
+                                    <value class="string">data/arc</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.ingest.filereader.recursive</key>
+                                    <value class="boolean">true</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.ingest.filereader.filepattern</key>
+                                    <value class="string">.*\.arc</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.ingest.filereader.completedpostfix</key>
+                                    <value class="string"></value>
+                                </entry>
+                            </xproperties>
+
+                            <!-- Split the ARC files into their content -->
+
+                            <xproperties>
+                                <entry>
+                                    <key>filter.name</key>
+                                    <value class="string">Muxer</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.filter.sequence.filterclass</key>
+                                    <value class="string">dk.statsbiblioteket.summa.common.filter.object.MUXFilter</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.muxfilter.filter.instances</key>
+                                    <value class="int">2</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.muxfilter.filters</key>
+                                    <value class="list">
+
+                                        <xproperties>
+                                            <entry>
+                                                <key>filter.name</key>
+                                                <value class="string">Arctika Sequencer</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.muxfilter.filter.class</key>
+                                                <value class="string">dk.statsbiblioteket.summa.common.filter.object.FilterSequence</value>
+                                            </entry>
+                                            <entry>
+                                                <key>summa.filter.sequence.filters</key>
+                                                <value class="list">
+
+                                                    <xproperties>
+                                                        <entry>
+                                                            <key>filter.name</key>
+                                                            <value class="string">ARCParser</value>
+                                                        </entry>
+                                                        <entry>
+                                                            <key>summa.filter.sequence.filterclass</key>
+                                                            <value class="string">dk.statsbiblioteket.summa.ingest.split.StreamController</value>
+                                                        </entry>
+                                                        <entry>
+                                                            <key>summa.ingest.stream.controller.parser</key>
+                                                            <value class="string">dk.statsbiblioteket.summa.support.arc.ARCParser</value>
+                                                        </entry>
+                                                        <entry>
+                                                            <key>usefilehack</key>
+                                                            <value class="boolean">true</value>
+                                                        </entry>
+                                                    </xproperties>
+
+                                                    <!-- Create a Lucene Document with Tika -->
+                                                    <xproperties>
+                                                        <entry>
+                                                            <key>filter.name</key>
+                                                            <value class="string">Tika document creator</value>
+                                                        </entry>
+                                                        <entry>
+                                                            <key>summa.filter.sequence.filterclass</key>
+                                                            <value class="string">dk.statsbiblioteket.summa.support.TikaDocumentCreator</value>
+                                                        </entry>
+                                                        <entry>
+                                                            <key>summa.index.descriptorsetup</key>
+                                                            <value class="xproperties">
+                                                                <entry>
+                                                                    <key>summa.common.indexdescriptor.absolutelocation</key>
+                                                                    <value class="string">/tmp/summatest/data/oai/oai_IndexDescriptor.xml</value>
+                                                                </entry>
+                                                            </value>
+                                                        </entry>
+                                                    </xproperties>
+
+                                                    <!-- Extend the document with ARC metadata -->
+                                                    <xproperties>
+                                                        <entry>
+                                                            <key>filter.name</key>
+                                                            <value class="string">ARC-based document extender</value>
+                                                        </entry>
+                                                        <entry>
+                                                            <key>filter.enabled</key>
+                                                            <value class="boolean">true</value>
+                                                        </entry>
+                                                        <entry>
+            <!--                                                <key>summa.filter.sequence.filterclass</key>-->
+                                                            <key>summa.filter.sequence.filterclass</key>
+                                                            <value class="string">dk.statsbiblioteket.summa.support.lucene.ExtendDocumentFilter</value>
+                                                        </entry>
+                                                        <entry>
+                                                            <key>summa.index.descriptorsetup</key>
+                                                            <value class="xproperties">
+                                                                <entry>
+                                                                    <key>summa.common.indexdescriptor.absolutelocation</key>
+                                                                    <value class="string">/tmp/summatest/data/oai/oai_IndexDescriptor.xml</value>
+                                                                </entry>
+                                                            </value>
+                                                        </entry>
+                                                        <entry>
+                                                            <key>extend.patterns</key>
+                                                            <value class="list">
+                                                                <item class="string">arc\.(.+)</item>
+                                                                <item class="string">arc\.title</item>
+                                                            </value>
+                                                        </entry>
+                                                        <entry>
+                                                            <key>extend.field.templates</key>
+                                                            <value class="list">
+                                                                <item class="string">$1</item>
+                                                                <item class="string">shortformat</item>
+                                                            </value>
+                                                        </entry>
+                                                        <entry>
+                                                            <key>extend.field.contents</key>
+                                                            <value class="list">
+<!--                                                                <item class="string">***${content}/${key}/${field}***</item>-->
+                                                                <item class="string">${content}</item>
+                                                                <item class="string">&lt;shortrecord&gt;
+&lt;rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"&gt;
+&lt;rdf:Description&gt;
+&lt;dc:title&gt;${content}&lt;/dc:title&gt;
+&lt;/rdf:Description&gt;
+&lt;/rdf:RDF&gt;
+&lt;/shortrecord&gt;</item>
+                                                            </value>
+                                                        </entry>
+                                                    </xproperties>
+                                                </value>
+                                            </entry>
+                                        </xproperties>
+                                    </value>
+                                </entry>
+                            </xproperties>
+
+                            <xproperties>
+                                <entry>
+                                    <key>filter.name</key>
+                                    <value class="string">IndexUpdate</value>
+                                </entry>
+                                <entry>
+                                    <key>filter.enabled</key>
+                                    <value class="boolean">true</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.filter.sequence.filterclass</key>
+                                    <value class="string">dk.statsbiblioteket.summa.index.IndexControllerImpl</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.index.indexrootlocation</key>
+                                    <value class="string">index</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.index.createnewindex</key>
+                                    <value class="boolean">true</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.index.commitmaxdocuments</key>
+                                    <value class="int">-1</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.index.consolidatetimeout</key>
+                                    <value class="int">-1</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.index.consolidatemaxdocuments</key>
+                                    <value class="int">-1</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.index.consolidatemaxcommits</key>
+                                    <value class="int">-1</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.index.consolidateonclose</key>
+                                    <value class="boolean">true</value>
+                                </entry>
+
+                                <entry>
+                                    <key>summa.index.descriptorsetup</key>
+                                    <value class="xproperties">
+                                        <entry>
+                                            <key>summa.common.indexdescriptor.absolutelocation</key>
+                                            <value class="string">../resources/${site.id}_IndexDescriptor.xml</value>
+                                        </entry>
+                                    </value>
+                                </entry>
+                                <entry>
+                                    <key>summa.index.manipulators</key>
+                                    <value class="list">
+
+                                        <xproperties>
+                                            <entry>
+                                                <key>summa.index.manipulatorclass</key>
+                                                <value class="string">dk.statsbiblioteket.summa.index.lucene.LuceneManipulator</value>
+                                            </entry>
+                                        </xproperties>
+
+                                        <xproperties>
+                                            <entry>
+                                                <key>summa.index.manipulatorclass</key>
+                                                <value class="string">dk.statsbiblioteket.summa.facetbrowser.FacetManipulator</value>
+                                            </entry>
+                                            <entry>
+                                                <!-- Set this property to false to enable iterative updates,
+                                        true for best performance on full index builds -->
+                                                <key>summa.facet.skipfacetonupdate</key>
+                                                <value class="string">true</value>
+                                            </entry>
+                                        </xproperties>
+                                    </value>
+                                </entry>
+                            </xproperties>
+
+                            <!-- Dump the analyzed content to stdout -->
+                            <!--
+                            <xproperties>
+                                <entry>
+                                    <key>filter.name</key>
+                                    <value class="string">StdOut</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.filter.sequence.filterclass</key>
+                                    <value class="string">dk.statsbiblioteket.summa.common.filter.object.StdOutFilter</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.filter.stdout.escapecontent</key>
+                                    <value class="boolean">false</value>
+                                </entry>
+                            </xproperties>
+                            -->
+                        </value>
+                    </entry>
+                </xproperties>
+            </value>
+        </entry>
+    </xproperties>
+</xproperties>

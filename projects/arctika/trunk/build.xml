@@ -1,15 +1,13 @@
 <?xml version="1.0"?>
-<project default="all" name="Support" basedir=".">
+<project default="all" name="arctika" basedir=".">
 
     <!--
        PROPERTIES
     -->
 
-    <property file="${basedir}/../build.properties"/>
-
     <!-- Project properties -->
-    <property name="project.name" value="summa-support"/>
-    <property name="project.version" value="${summa.version}"/>
+    <property name="project.name" value="summa-arctika"/>
+    <property name="project.version" value="${0.1}"/>
     <property name="release" value="${project.name}-${project.version}"/>
     <property name="release.jar" value="${release}.jar"/>
     <property name="release.api.jar" value="${project.name}-api-${project.version}.jar"/>
@@ -19,17 +17,18 @@
     <property name="test.src.dir" value="${basedir}/test"/>
 
     <!-- Temporary files and directories -->
-    <property name="build.dir" value="${basedir}/${summa.classes.dir}"/>
-    <property name="test.build.dir" value="${basedir}/${summa.test.classes.dir}"/>
-    <property name="dist.dir" value="${basedir}/${summa.dist.dir}"/>
-    <property name="doc.dir" value="${basedir}/${summa.apidocs.dir}"/>
+    <property name="build.dir" value="${basedir}/classes"/>
+    <property name="test.build.dir" value="${basedir}/classes-test"/>
+    <property name="dist.dir" value="${basedir}/dist"/>
+    <property name="doc.dir" value="${basedir}/doc"/>
+    <property name="apidocs.dir" value="${doc.dir}/apidocs"/>
     <property name="lib.dir" value="${basedir}/lib"/>
     <property name="tmp.dir" value="${basedir}/tmp"/>
 
     <!-- Compilation properties -->
-    <property name="compiler" value="${summa.compiler}"/>
-    <property name="compiler.optimize" value="${summa.compiler.optimize}"/>
-    <property name="compiler.debug" value="${summa.compiler.debug}"/>
+    <property name="compiler" value="modern"/>
+    <property name="compiler.optimize" value="on"/>
+    <property name="compiler.debug" value="on"/>
     <tstamp>
         <format property="build.time" pattern="MM/dd/yyyy HH:mm"/>
     </tstamp>
@@ -48,15 +47,6 @@
         <pathelement location="${test.build.dir}" />
         <pathelement location="${ant.home}/lib/ant-junit.jar"/>
         <pathelement location="${test.src.dir}"/>
-    </path>
-
-    <!-- Internal project dependencies -->
-    <path id="lib.internal">
-        <pathelement location="../Common/${summa.classes.dir}"/>
-        <pathelement location="../Search/${summa.classes.dir}"/>
-        <pathelement location="../Ingest/${summa.classes.dir}"/>
-        <pathelement location="../Index/${summa.classes.dir}"/>
-        <pathelement location="../FacetBrowser/${summa.classes.dir}"/>
     </path>
 
     <!-- lib.files : set by the .checkDepends target -->
