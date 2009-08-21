@@ -306,7 +306,14 @@ public abstract class IndexDescriptor<F extends IndexField> implements
         }
         String indirection = locationRoot + CURRENT;
         URL url = Resolver.getURL(indirection);
-        String content = Resolver.getUTF8Content(url);
+        String content;
+        try {
+            content = Resolver.getUTF8Content(url);
+        } catch(IOException e) {
+            throw new IOException(String.format(
+                    "Unable to get content from URL '%s', resolved from '%s'",
+                    url, locationRoot), e);
+        }
         String tokens[] = content.split("\n");
         URL absoluteLocation = Resolver.getURL(tokens[0].trim());
         log.debug("fetchDescription: Got absoluteLocation '"

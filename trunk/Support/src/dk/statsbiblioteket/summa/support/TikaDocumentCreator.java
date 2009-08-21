@@ -88,7 +88,7 @@ public class TikaDocumentCreator extends DocumentCreatorBase {
     public TikaDocumentCreator(Configuration conf) throws
                                                         ConfigurationException {
         super(conf);
-        log.debug("Creating TikaDocumentCreator");
+        log.debug("Creating Tika Document Creator");
         descriptor = LuceneIndexUtils.getDescriptor(conf);
         if (conf.valueExists(TikaFilter.CONF_TIKA_CONFIG)){
             URL tikaConfUrl = Resolver.getURL(conf.getString(
@@ -167,8 +167,22 @@ public class TikaDocumentCreator extends DocumentCreatorBase {
                     "IOException while closing stream", e, payload);
         }
         payload.getData().put(Payload.LUCENE_DOCUMENT, document);
+
         //noinspection DuplicateStringLiteralInspection
-        log.debug("Added Lucene Document to payload "
+        log.trace("Adding " + meta.size() + " meta data to document");
+        // Add all extracted metadata to the stored record metadata
+        for (String key : meta.names()) {
+            if (log.isTraceEnabled()) {
+                String value = meta.get(key);
+                //noinspection DuplicateStringLiteralInspection
+                log.trace("record.meta(" + key + ") = '" + value + "'");
+            }
+            //record.addMeta(key, meta.get(key));
+        }
+
+
+        //noinspection DuplicateStringLiteralInspection
+        log.debug("Added Lucene Document to "
                   + payload + ". Content character count was " + characterCount
                   + ". Processing time was "
                   + (System.nanoTime() - startTime) / 1000000D + " ms");
@@ -182,6 +196,7 @@ public class TikaDocumentCreator extends DocumentCreatorBase {
 
     private Document document; // Used by TransformerHandler
     private long characterCount = 0;
+    private long lastCharacterCount = 0;
     private ContentHandler createHandler() {
         document = new Document();
 
@@ -195,12 +210,23 @@ public class TikaDocumentCreator extends DocumentCreatorBase {
                 if (HTML_TITLE.equals(localName)) {
                     inTitle = true;
                 }
+                if (log.isTraceEnabled()) {
+                    log.trace((lastCharacterCount > 0 ?
+                              "(" + lastCharacterCount + " chars) "
+                              : "") + "<" + localName+ ">");
+                }
+                lastCharacterCount = 0;
             }
 
             @Override
             public void endElement(String uri, String localName, String qName)
                                                            throws SAXException {
                 inTitle = false; // No nested tags in title
+                if (log.isTraceEnabled()) {
+                    log.trace("(" + lastCharacterCount + " chars) </"
+                              + localName+ ">");
+                }
+                lastCharacterCount = 0;
             }
 
             @Override
@@ -208,6 +234,7 @@ public class TikaDocumentCreator extends DocumentCreatorBase {
                                                            throws SAXException {
                 // TODO: Check byte content (images et al)
                 characterCount += length;
+                lastCharacterCount += length;
                 String content = new String(ch, start, length).trim();
                 if ("".equals(content)) {
                     return;
