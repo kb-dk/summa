@@ -232,7 +232,7 @@
   <component name="ProjectFileVersion" converted="true" />
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file:///home/mke/tmp/Arctika/Arctika.iml" filepath="/home/mke/tmp/Arctika/Arctika.iml" />
+      <module fileurl="file://$PROJECT_DIR$/arctika.iml" filepath="$PROJECT_DIR$/arctika.iml" />
     </modules>
   </component>
   <component name="ProjectRootManager" version="2" assert-keyword="true" jdk-15="true" project-jdk-name="1.6" project-jdk-type="JavaSDK">

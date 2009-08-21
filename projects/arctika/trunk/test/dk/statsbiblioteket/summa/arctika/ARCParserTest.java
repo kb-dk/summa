@@ -61,7 +61,7 @@ public class ARCParserTest extends TestCase {
 
     public void testSimpleARC() throws Exception {
         File source = Resolver.getFile(
-                "data/arc/ARC-SAMPLE-20060928223931-00000-gojoblack.arc.gz");
+                "test/data/arc/ARC-SAMPLE-20060928223931-00000-gojoblack.arc.gz");
         InputStream is = new FileInputStream(source);
         Payload payloadIn = new Payload(is);
         payloadIn.setID(source.toString());
