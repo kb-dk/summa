@@ -85,7 +85,9 @@ public class TikaTest extends TestCase {
 
     public void testTikaDocumentCreator() throws Exception {
         Profiler profiler = new Profiler();
-        Configuration conf = Configuration.load("test/data/TikaDocumentChain.xml");
+        String CONF = "test/data/TikaDocumentChain.xml";
+        //System.out.println("Loading conf from " + Resolver.getFile(CONF));
+        Configuration conf = Configuration.load(CONF);
         List<Configuration> filterConfs =
                 conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS);
