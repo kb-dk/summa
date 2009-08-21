@@ -7,7 +7,7 @@
 
     <!-- Project properties -->
     <property name="project.name" value="summa-arctika"/>
-    <property name="project.version" value="${0.1}"/>
+    <property name="project.version" value="0.1"/>
     <property name="release" value="${project.name}-${project.version}"/>
     <property name="release.jar" value="${release}.jar"/>
     <property name="release.api.jar" value="${project.name}-api-${project.version}.jar"/>
@@ -24,6 +24,12 @@
     <property name="apidocs.dir" value="${doc.dir}/apidocs"/>
     <property name="lib.dir" value="${basedir}/lib"/>
     <property name="tmp.dir" value="${basedir}/tmp"/>
+
+    <!-- Tika standalone setup -->
+    <property name="tika.version" value="0.3"/>
+    <property name="tika.file" value="tika-${tika.version}-standalone.jar"/>
+    <property name="tika.url"
+              value="http://people.apache.org/repo/m2-snapshot-repository/org/apache/tika/tika/${tika.version}/${tika.file}"/>
 
     <!-- Compilation properties -->
     <property name="compiler" value="modern"/>
@@ -49,6 +55,11 @@
         <pathelement location="${test.src.dir}"/>
     </path>
 
+    <!-- Store space-separated list of lib-filenames in lib.files -->
+    <pathconvert refid="lib.path" property="lib.files" pathsep=" ">
+        <map from="${lib.dir}/" to=""/>
+    </pathconvert>
+
     <!-- lib.files : set by the .checkDepends target -->
 
 
@@ -57,104 +68,6 @@
     -->
 
     <target name=".phony"><!-- Dummy target --></target>
-
-    <target name=".compileCommon">
-        <ant inheritAll="false" dir="../Common" target="compile"/>
-    </target>
-
-    <target name=".compileSearch">
-        <ant inheritAll="false" dir="../Search" target="compile"/>
-    </target>
-
-    <target name=".compileIngest">
-        <ant inheritAll="false" dir="../Ingest" target="compile"/>
-    </target>
-
-    <target name=".compileIndex">
-        <ant inheritAll="false" dir="../Index" target="compile"/>
-    </target>
-
-    <target name=".releaseCommon">
-        <ant inheritAll="false" dir="../Common" target="release"/>
-    </target>
-
-    <target name=".releaseSearch">
-        <ant inheritAll="false" dir="../Search" target="release"/>
-    </target>
-
-    <target name=".releaseIngest">
-        <ant inheritAll="false" dir="../Ingest" target="release"/>
-    </target>
-
-    <target name=".releaseIndex">
-        <ant inheritAll="false" dir="../Index" target="release"/>
-    </target>
-
-    <target name="depends">
-        <!-- Check global dependencies -->
-        <ant inheritall="false" dir=".." target="depends"/>
-
-        <!-- If libs/ does not exist, call getLibs target -->
-        <echo message="Checking for libs/"/>
-        <condition property="newTask" value=".phony" else=".getLibs">
-            <and>
-                <available file="${summa.lib.log4j}"/>
-                <available file="${summa.lib.commons-logging}"/>
-                <available file="${summa.lib.junit}"/>
-                <available file="${summa.lib.lucene}"/>
-                <available file="${summa.lib.lucene.queries}"/>
-                <available file="${summa.lib.h2}"/>
-                <available file="${summa.lib.sbutil}"/>
-            </and>
-        </condition>
-        <antcall target="${newTask}"/>
-
-        <!-- Check that Common is compiled -->
-        <echo message="Checking whether Common is compiled"/>
-        <condition property="compileCommonTask" value=".phony" else=".compileCommon">
-            <available file="../Common/${summa.classes.dir}"/>
-        </condition>
-        <antcall target="${compileCommonTask}"/>
-
-        <!-- Check that Search is compiled -->
-        <echo message="Checking whether Search is compiled"/>
-        <condition property="compileSearchTask" value=".phony" else=".compileSearch">
-            <available file="../Search/${summa.classes.dir}"/>
-        </condition>
-        <antcall target="${compileSearchTask}"/>
-
-        <!-- Check that Index is compiled -->
-        <echo message="Checking whether Index is compiled"/>
-        <condition property="compileIndexTask" value=".phony" else=".compileIndex">
-            <available file="../Index/${summa.classes.dir}"/>
-        </condition>
-        <antcall target="${compileIndexTask}"/>
-
-        <!-- Store space-separated list of lib-filenames in lib.files -->
-        <pathconvert refid="lib.path" property="lib.files" pathsep=" ">
-            <map from="${lib.dir}/" to=""/>
-        </pathconvert>
-    </target>
-
-    <target name=".release.depends" depends="depends">
-        <!-- Check that Common release is compiled -->
-        <condition property="releaseCommonTask" value=".phony" else=".releaseCommon">
-            <available file="../${summa.ilib.common}"/>
-        </condition>
-        <antcall target="${releaseCommonTask}"/>
-
-        <!-- Check that Search release is compiled -->
-        <condition property="releaseSearchTask" value=".phony" else=".releaseSearch">
-            <available file="../${summa.ilib.search}"/>
-        </condition>
-        <antcall target="${releaseSearchTask}"/>
-
-        <!-- Check that Index release is compiled -->
-        <condition property="releaseIndexTask" value=".phony" else=".releaseIndex">
-            <available file="../${summa.ilib.index}"/>
-        </condition>
-        <antcall target="${releaseIndexTask}"/>
-    </target>
 
     <target name="clean">
         <delete dir="${build.dir}"/>
@@ -166,61 +79,51 @@
 
     <target name="distclean" depends="clean">
         <delete dir="${dist.dir}"/>
-        <delete dir="${lib.dir}"/>
-        <delete dir="${doc.dir}"/>
+        <delete dir="${apidocs.dir}"/>
     </target>
 
-    <target name=".getLibs">
-        <delete dir="${lib.dir}"/>
-        <mkdir dir="${lib.dir}"/>
-        <copy file="${basedir}/../${summa.lib.log4j}" tofile="${summa.lib.log4j}"/>
-        <copy file="${basedir}/../${summa.lib.commons-logging}" tofile="${summa.lib.commons-logging}"/>
-        <copy file="${basedir}/../${summa.lib.commons-httpclient}" tofile="${summa.lib.commons-httpclient}"/>
-        <copy file="${basedir}/../${summa.lib.junit}" tofile="${summa.lib.junit}"/>
-        <copy file="${basedir}/../${summa.lib.lucene}" tofile="${summa.lib.lucene}"/>
-        <copy file="${basedir}/../${summa.lib.lucene.queries}" tofile="${summa.lib.lucene.queries}"/>
-        <copy file="${basedir}/../${summa.lib.h2}" tofile="${summa.lib.h2}"/>
-        <copy file="${basedir}/../${summa.lib.sbutil}" tofile="${summa.lib.sbutil}"/>
-        <copy file="${basedir}/../${summa.lib.heritrix}" tofile="${summa.lib.heritrix}"/>
-        <copy file="${basedir}/../${summa.lib.heritrix.fastutil}" tofile="${summa.lib.heritrix.fastutil}"/>
-        <copy file="${basedir}/../${summa.lib.tika}" tofile="${summa.lib.tika}"/>
-    </target>
-
-    <target name=".getTikaLibs">
+    <target name=".getTika">
         <!-- Downloads Tika implementation lib and replaces the API-stub.
-             Call this after .getLibs to get full Tika functionality. 
+             Call this after .getLibs to get full Tika functionality.
          -->
-        <delete file="${summa.lib.tika}"/>
-        <get src="${summa.lib.tika.implementation.location}"
-             dest="${summa.lib.tika}"/>
+        <delete file="${lib.dir}/${tika.file}"/>
+        <get src="${tika.url}"
+             dest="${lib.dir}/${tika.file}"/>
     </target>
 
-    <target name="compile" depends="depends">
+    <target name="checkTikaLibs">
+        <!-- Assure that tika-standalone is downloaded -->
+        <echo message="Checking whether ${tika.file} is present"/>
+        <condition property="getTikaTask" value=".phony" else=".getTika">
+            <available file="${lib.dir}/${tika.file}"/>
+        </condition>
+        <antcall target="${getTikaTask}"/>
+    </target>
+
+    <target name="compile">
         <mkdir dir="${build.dir}"/>
         <javac srcdir="${src.dir}" destdir="${build.dir}" encoding="UTF-8"
                compiler="${compiler}" optimize="${compiler.optimize}"
                debug="${compiler.debug}">
             <classpath refid="lib.path"/>
-            <classpath refid="lib.internal"/>
         </javac>
     </target>
 
-    <target name="doc" depends="compile">
-        <mkdir dir="${doc.dir}"/>
+    <target name="apidocs" depends="compile">
+        <mkdir dir="${apidocs.dir}"/>
         <javadoc
                 packagenames="dk.statsbiblioteket.summa.*"
-                destdir="${doc.dir}"
+                destdir="${apidocs.dir}"
                 author="true"
                 version="true"
-                access="private"
-                windowtitle="Summa Metadata Storage"
+                access="protected"
+                windowtitle="Summa Arctika"
                 additionalparam="-breakiterator">
 
             <classpath refid="lib.path"/>
-            <classpath refid="lib.internal"/>
 
             <packageset dir="${src.dir}">
-                <include name="dk/statsbiblioteket/summa/**"/>
+                <include name="dk/statsbiblioteket/summa/arctika/**"/>
             </packageset>
         </javadoc>
 
@@ -228,11 +131,11 @@
 
     <target name=".jar" depends="compile">
         <jar basedir="${build.dir}" compress="true" jarfile="${release.jar}"/>
-        <jar basedir="${build.dir}" compress="true" jarfile="${release.api.jar}"
-             includes="dk/statsbiblioteket/summa/support/api/**/*"/>
     </target>
 
-    <target name="release" depends="distclean, .release.depends, .jar, doc">
+    <target name="release" depends="distclean, .jar, apidocs, .getTikaLibs">
+
+        <antcall target="checkTikaLibs"/>
 
         <mkdir dir="${dist.dir}"/>
 
@@ -247,18 +150,15 @@
             <zipfileset prefix="${prefix}" file="${release.jar}"/>
             <zipfileset prefix="${prefix}" file="${release.api.jar}"/>
 
-            <zipfileset prefix="${prefix}/lib" dir="${lib.dir}" includes="${lib.files}"/>
-            <zipfileset prefix="${prefix}/lib"  dir="${basedir}" file="../${summa.ilib.common}"/>
-            <zipfileset prefix="${prefix}/lib"  dir="${basedir}" file="../${summa.ilib.search}"/>
-            <zipfileset prefix="${prefix}/lib"  dir="${basedir}" file="../${summa.ilib.index}"/>
+            <zipfileset prefix="${prefix}/lib" dir="${lib.dir}">
+                <include name="*.jar"/>
+            </zipfileset>
 
-            <zipfileset dir="${doc.dir}" prefix="${prefix}/${summa.apidocs.dir}">
+            <zipfileset dir="${doc.dir}" prefix="${prefix}/${doc.dir}">
                 <include name="**/*"/>
             </zipfileset>
 
         </zip>
-
-        <unzip src="${dist.dir}/${release}.zip" dest="${dist.dir}"/>
 
     </target>
 
