@@ -66,8 +66,8 @@
         </layout>
     </appender>
 
-    <logger name="dk.statsbiblioteket.summa.suggest">
-        <level value="DEBUG" />
+    <logger name="dk.statsbiblioteket.summa.support.TikaDocumentCreator">
+        <level value="trace" />
         <appender-ref ref="FILE" />
     </logger>
 
@@ -76,11 +76,11 @@
         <appender-ref ref="CONSOLE" />
     </logger>
 
-    <logger name="dk.statsbiblioteket.summa">
+<!--    <logger name="dk.statsbiblioteket.summa">
         <level value="info" />
         <appender-ref ref="CONSOLE" />
     </logger>
-
+    -->
 <!--    <logger name="dk.statsbiblioteket.summa.support.lucene">
         <level value="debug" />
         <appender-ref ref="CONSOLE" />

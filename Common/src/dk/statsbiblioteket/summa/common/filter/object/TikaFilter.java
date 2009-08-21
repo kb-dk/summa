@@ -95,6 +95,7 @@ public class TikaFilter extends ObjectFilterImpl {
         recordBase = conf.getString(CONF_BASE, DEFAULT_BASE);
     }
 
+    @Override
     protected boolean processPayload(Payload payload) throws PayloadException {
         if (payload.getStream() == null) {
             throw new PayloadException("Payload has no input stream", payload);
@@ -152,6 +153,10 @@ public class TikaFilter extends ObjectFilterImpl {
 
         // Add all extracted metadata to the stored record metadata
         for (String key : meta.names()) {
+            if (log.isTraceEnabled()) {
+                String value = meta.get(key); 
+                log.trace("record.meta(" + key + ") = '" + value + "'");
+            }
             record.addMeta(key, meta.get(key));
         }
 
