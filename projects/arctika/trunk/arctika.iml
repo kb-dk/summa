@@ -19,6 +19,7 @@
     <orderEntry type="library" name="sbutil" level="project" />
     <orderEntry type="library" name="summa" level="project" />
     <orderEntry type="library" name="tika" level="project" />
+    <orderEntry type="library" name="tika_standalone" level="project" />
     <orderEntryProperties />
   </component>
 </module>

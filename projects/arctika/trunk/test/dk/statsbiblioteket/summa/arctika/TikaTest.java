@@ -73,11 +73,11 @@ public class TikaTest extends TestCase {
             "java.io.tmpdir")), "tikatest");
 
     public void testDumpTikaResult() throws Exception {
-        Configuration conf = Configuration.load("data/TikaTestChain.xml");
+        Configuration conf = Configuration.load("test/data/TikaTestChain.xml");
         conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS).get(0).
                 set(FileReader.CONF_ROOT_FOLDER, 
-                    Resolver.getFile("data/arc").toString());
+                    Resolver.getFile("test/data/arc").toString());
         FilterControl control = new FilterControl(conf);
         control.start();
         control.waitForFinish(100000);
@@ -85,19 +85,19 @@ public class TikaTest extends TestCase {
 
     public void testTikaDocumentCreator() throws Exception {
         Profiler profiler = new Profiler();
-        Configuration conf = Configuration.load("data/TikaDocumentChain.xml");
+        Configuration conf = Configuration.load("test/data/TikaDocumentChain.xml");
         List<Configuration> filterConfs =
                 conf.getSubConfigurations(FilterControl.CONF_CHAINS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS);
         filterConfs.get(0).set(FileReader.CONF_ROOT_FOLDER,
 //                               "/home/te/tmp/arc");
         // TODO: Change back
-                               Resolver.getFile("data/arc").toString());
+                               Resolver.getFile("test/data/arc").toString());
 
         List<Configuration> innerConfs = filterConfs.get(1).
                 getSubConfigurations(MUXFilter.CONF_FILTERS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS);
-        String descriptorLocation = "data/tika/TikaTest_IndexDescriptor.xml";
+        String descriptorLocation = "test/data/tika/TikaTest_IndexDescriptor.xml";
         for (int filterPos: new int[]{1, 2}) {
             assertTrue("An inner descriptor location should be present for "
                        + filterPos, innerConfs.get(filterPos).

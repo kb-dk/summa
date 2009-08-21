@@ -61,7 +61,7 @@
                                 </entry>
                                 <entry>
                                     <key>summa.ingest.stream.controller.parser</key>
-                                    <value class="string">dk.statsbiblioteket.summa.support.arc.ARCParser</value>
+                                    <value class="string">dk.statsbiblioteket.summa.arctika.ARCParser</value>
                                 </entry>
                             </xproperties>
 

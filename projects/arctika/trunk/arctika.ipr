@@ -108,6 +108,32 @@
     <option name="IS_EMACS_ERRORS_MODE" value="true" />
     <option name="ADDITIONAL_OPTIONS_STRING" value="" />
   </component>
+  <component name="MavenBuildProjectComponent">
+    <option name="mavenExecutable" value="" />
+    <option name="Settings File" value="/home/te/.m2/settings.xml" />
+    <option name="mavenCommandLineParams" value="" />
+    <option name="vmOptions" value="" />
+    <option name="useMavenEmbedder" value="false" />
+    <option name="useFilter" value="false" />
+    <option name="Batch Mode" value="false" />
+    <option name="Check Plugin Updates" value="false" />
+    <option name="Debug" value="false" />
+    <option name="Errors" value="false" />
+    <option name="Fail At End" value="false" />
+    <option name="Fail Fast" value="false" />
+    <option name="Fail Never" value="false" />
+    <option name="Lax Checksums" value="false" />
+    <option name="No Plugin Registry" value="false" />
+    <option name="No Plugin Updates" value="false" />
+    <option name="Non Recursive" value="false" />
+    <option name="Offline" value="false" />
+    <option name="Reactor" value="false" />
+    <option name="Strict Checksums" value="false" />
+    <option name="Update Plugins" value="false" />
+    <option name="Update Snapshots" value="false" />
+    <option name="Skip Tests" value="false" />
+    <pom-list />
+  </component>
   <component name="Palette2">
     <group name="Swing">
       <item class="com.intellij.uiDesigner.HSpacer" tooltip-text="Horizontal Spacer" icon="/com/intellij/uiDesigner/icons/hspacer.png" removable="false" auto-create-binding="false" can-attach-label="false">
@@ -324,6 +350,11 @@
         <root url="jar://$PROJECT_DIR$/lib/summa-common-1.4.8.jar!/" />
         <root url="jar://$PROJECT_DIR$/lib/summa-ingest-1.4.8.jar!/" />
         <root url="jar://$PROJECT_DIR$/lib/summa-index-1.4.8.jar!/" />
+        <root url="jar://$PROJECT_DIR$/lib/summa-support-1.4.8.jar!/" />
+        <root url="jar://$PROJECT_DIR$/lib/summa-support-api-1.4.8.jar!/" />
+        <root url="jar://$PROJECT_DIR$/lib/lucene-core-2.4.0.jar!/" />
+        <root url="jar://$PROJECT_DIR$/lib/summa-facetbrowser-1.4.8.jar!/" />
+        <root url="jar://$PROJECT_DIR$/lib/summa-facetbrowser-api-1.4.8.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES />
@@ -331,6 +362,13 @@
     <library name="commons-httpclient">
       <CLASSES>
         <root url="jar://$PROJECT_DIR$/lib/commons-httpclient-3.1.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
+    <library name="tika_standalone">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/lib/tika-0.3-standalone.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES />

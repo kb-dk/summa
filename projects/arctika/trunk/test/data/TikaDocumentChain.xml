@@ -91,7 +91,7 @@
                                                         </entry>
                                                         <entry>
                                                             <key>summa.ingest.stream.controller.parser</key>
-                                                            <value class="string">dk.statsbiblioteket.summa.support.arc.ARCParser</value>
+                                                            <value class="string">dk.statsbiblioteket.summa.arctika.ARCParser</value>
                                                         </entry>
                                                         <entry>
                                                             <key>usefilehack</key>
@@ -133,7 +133,7 @@
                                                         <entry>
             <!--                                                <key>summa.filter.sequence.filterclass</key>-->
                                                             <key>summa.filter.sequence.filterclass</key>
-                                                            <value class="string">dk.statsbiblioteket.summa.support.lucene.ExtendDocumentFilter</value>
+                                                            <value class="string">dk.statsbiblioteket.summa.support.lucene.DocumentShaperFilter</value>
                                                         </entry>
                                                         <entry>
                                                             <key>summa.index.descriptorsetup</key>
@@ -145,21 +145,21 @@
                                                             </value>
                                                         </entry>
                                                         <entry>
-                                                            <key>extend.patterns</key>
+                                                            <key>document.patterns</key>
                                                             <value class="list">
                                                                 <item class="string">arc\.(.+)</item>
                                                                 <item class="string">arc\.title</item>
                                                             </value>
                                                         </entry>
                                                         <entry>
-                                                            <key>extend.field.templates</key>
+                                                            <key>document.field.templates</key>
                                                             <value class="list">
                                                                 <item class="string">$1</item>
                                                                 <item class="string">shortformat</item>
                                                             </value>
                                                         </entry>
                                                         <entry>
-                                                            <key>extend.field.contents</key>
+                                                            <key>document.field.contents</key>
                                                             <value class="list">
 <!--                                                                <item class="string">***${content}/${key}/${field}***</item>-->
                                                                 <item class="string">${content}</item>
