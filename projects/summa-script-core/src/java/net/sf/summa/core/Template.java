@@ -12,7 +12,7 @@ import static net.sf.summa.core.Property.Access;
  * @author mke
  * @since Aug 7, 2009
  */
-public class Template extends Config {
+public class Template implements Map<String,Object> {
 
     private static class Prop {
         Object value;
@@ -37,7 +37,7 @@ public class Template extends Config {
         templateClass = cls;
         parseTemplate();
         props = new HashMap<String, Prop>();
-        nick = null;
+        nick = cls.getName();
     }
 
     public Template(Class cls, String nick) {
