@@ -30,18 +30,15 @@ import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.api.watch.StorageWatcher;
 import dk.statsbiblioteket.summa.storage.api.filter.RecordReader;
-import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
+import dk.statsbiblioteket.summa.storage.StorageMonkeyTest;
 import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
-import dk.statsbiblioteket.summa.control.api.Service;
-import junit.framework.TestCase;
 
-import java.io.File;
+import java.io.StringWriter;
 import java.util.Random;
 import java.util.List;
 import java.util.ArrayList;
@@ -56,6 +53,7 @@ import java.util.ArrayList;
 public class StorageTest extends NoExitTestCase {
     private static Log log = LogFactory.getLog(StorageTest.class);
 
+    @Override
     public void setUp () throws Exception {
         super.setUp();
         IngestTest.deleteOldStorages();
@@ -100,6 +98,51 @@ public class StorageTest extends NoExitTestCase {
 
     public void testStorageScaleMedium() throws Exception {
         testStorageScale(5, 100, 100000);
+    }
+
+    public void testSmallMonkey() throws Exception {
+        Configuration storageConf = IngestTest.getStorageConfiguration();
+        Storage storage = StorageFactory.createStorage(storageConf);
+        StorageMonkeyTest monkey = new StorageMonkeyTest();
+        monkey.monkey(storage,  10, 5, 2, 2, 0, 100000, 1, 100,
+                      0, 5, 0, 30, null, null);
+    }
+
+    public void testCharMonkey() throws Exception {
+        Configuration storageConf = IngestTest.getStorageConfiguration();
+        Storage storage = StorageFactory.createStorage(storageConf);
+
+        StringWriter chars = new StringWriter(65000);
+        for (char c = 0 ; c < 65000 ; c++) {
+            chars.append(c);
+        }
+        StorageMonkeyTest monkey = new StorageMonkeyTest();
+        monkey.monkey(storage,  10, 5, 2, 2, 0, 100000, 1, 100,
+                      0, 5, 0, 30, chars.toString(), null);
+    }
+
+    public void testMediumMonkey() throws Exception {
+        Configuration storageConf = IngestTest.getStorageConfiguration();
+        Storage storage = StorageFactory.createStorage(storageConf);
+        StorageMonkeyTest monkey = new StorageMonkeyTest();
+        monkey.monkey(storage,  1000, 200, 100, 5, 0, 1000000, 1, 100,
+                      0, 5, 0, 30, null, null);
+    }
+
+    public void testUpdateMonkey() throws Exception {
+        Configuration storageConf = IngestTest.getStorageConfiguration();
+        Storage storage = StorageFactory.createStorage(storageConf);
+        StorageMonkeyTest monkey = new StorageMonkeyTest();
+        monkey.monkey(storage,  1000, 2000, 100, 5, 0, 100000, 1, 100,
+                      0, 5, 0, 30, null, null);
+    }
+
+    public void disabledtestLargeMonkey() throws Exception {
+        Configuration storageConf = IngestTest.getStorageConfiguration();
+        Storage storage = StorageFactory.createStorage(storageConf);
+        StorageMonkeyTest monkey = new StorageMonkeyTest();
+        monkey.monkey(storage,  10000, 2000, 1000, 5, 0, 1000000, 1, 100,
+                      0, 5, 0, 30, null, null);
     }
 
     /**
