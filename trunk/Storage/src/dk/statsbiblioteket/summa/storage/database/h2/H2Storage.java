@@ -44,10 +44,20 @@ public class H2Storage extends DatabaseStorage implements Configurable {
     private int maxConnections;
     private boolean createNew = true;
     private boolean forceNew = false;
+    private boolean useL2cache = true;
 
     private JdbcDataSource dataSource;
     private MiniConnectionPoolManager pool;
     private long numFlushes;
+
+    /**
+     * Boolean property determining whether the second level page cache should
+     * be enabled in the H2 database. The L2 cache provides some performance
+     * gains on larger bases, but might be a slow down on smaller bases.
+     * Default is {@code true}.
+     */
+    public static final String CONF_L2CACHE = "summa.storage.database.l2cache";
+    public static final boolean DEFAULT_L2CACHE = true;
 
 
     public H2Storage(Configuration conf) throws IOException {
@@ -58,6 +68,7 @@ public class H2Storage extends DatabaseStorage implements Configurable {
         password = conf.getString(CONF_PASSWORD, "");
         maxConnections = conf.getInt(CONF_MAX_CONNECTIONS,
                                      DEFAULT_MAX_CONNECTIONS);
+        useL2cache = conf.getBoolean(CONF_L2CACHE, DEFAULT_L2CACHE);
 
         // Database file location
         if (conf.valueExists(CONF_LOCATION)) {
@@ -145,8 +156,15 @@ public class H2Storage extends DatabaseStorage implements Configurable {
 
         dataSource = new JdbcDataSource();
 
+        // Sppedup for large dbs, but slowdown for smaller ones
+        String l2cache = "";
+        if (useL2cache) {
+            log.debug("Enabling H2 L2 cache");
+            l2cache = ";CACHE_TYPE=SOFT_LRU";
+        }
+
         dataSource.setURL("jdbc:h2:"+location.getAbsolutePath()
-                          + File.separator + DB_FILE);
+                          + File.separator + DB_FILE + l2cache);
 
         if (username != null) {
             dataSource.setUser(username);
