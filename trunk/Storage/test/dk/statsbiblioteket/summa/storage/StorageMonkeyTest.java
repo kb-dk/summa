@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -244,10 +244,17 @@ public class StorageMonkeyTest {
             log.debug("Starting Job thread");
             ArrayList<Record> summaRecords =
                     new ArrayList<Record>(records.size());
-            for (FutureRecord record: records) {
-                summaRecords.add(record.getRecord());
-            }
             try {
+                for (FutureRecord record: records) {
+                    Record summaRecord = record.getRecord();
+                    if (summaRecord.isDeleted() &&
+                        storage.getRecord(summaRecord.getId(), null) == null) {
+                        log.error("The Record with id " + summaRecord.getId() 
+                                  + " should exist in the Storage");
+                    }
+                    summaRecords.add(summaRecord);
+
+                }
                 storage.flushAll(summaRecords);
             } catch (IOException e) {
                 log.error("Failed to flush " + this, e);
