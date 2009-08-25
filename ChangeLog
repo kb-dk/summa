@@ -1,9 +1,69 @@
-2009-08-18 13:00  mkamstrup
+2009-08-21 12:58  toke-sb
 
-        * [r1679]
-          ChangeLog, NEWS:
+	* [r1699]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/TikaFilter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/index/IndexDescriptor.java,
+	  Support/src/dk/statsbiblioteket/summa/support/TikaDocumentCreator.java,
+	  Support/test/data/tika/lax1.xhtml,
+	  Support/test/data/tika/strict1.xhtml,
+	  Support/test/dk/statsbiblioteket/summa/support/TikaDocumentCreatorTest.java,
+	  Support/test/log4j.xml:
+	  
+	  Testing: Added unit-test for TikaDocumentCreator
 
-         Release Summa 1.4.8
+2009-08-19 22:11  toke-sb
+
+	* [r1686]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/ARCParserLight.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/ARCRecordStream.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/ARCRecordStreamIterator.java:
+	  
+	  Work in progress: Skeleton classes for native ARC support
+
+2009-08-19 21:56  toke-sb
+
+	* [r1685]
+	  Common/src/dk/statsbiblioteket/summa/common/util/FutureInputStream.java:
+	  
+	  Feature: Made it optionable to close the underlying stream in
+	  FutureInputStream when close is called, to make it easier to use
+	  from Stream->Stream split filters
+
+2009-08-19 21:55  toke-sb
+
+	* [r1684]
+	  Support/src/dk/statsbiblioteket/summa/support/TikaDocumentCreator.java:
+	  
+	  Logging: Better statistics from the TikaDocumentCreator
+
+2009-08-19 12:17  nielsgamborg
+
+	* [r1683] Index/config/targets/doms/doms_index.xsl:
+	  
+	  danske aviser opdateringer
+
+2009-08-19 09:40  toke-sb
+
+	* [r1682]
+	  Search/src/dk/statsbiblioteket/summa/search/SummaSearcherImpl.java:
+	  
+	  Enhancement: when specifying a static root for SummasearcherImpl,
+	  it will now be expanded with Resolver.getPersistentFile instead
+	  of being used directly. This manes it trivial to place the
+	  suggest-data under the default persistent folder
+
+2009-08-18 12:05  mkamstrup
+
+	* [r1681] NEWS:
+	  
+	  Fix bad release date for 1.4.8 mentionedd in the NEWS file. The
+	  correct release date is 18/8-09
+
+2009-08-18 10:46  mkamstrup
+
+	* [r1679] ChangeLog, NEWS:
+	  
+	  Release Summa 1.4.8
 
 2009-08-18 09:45  toke-sb
 
