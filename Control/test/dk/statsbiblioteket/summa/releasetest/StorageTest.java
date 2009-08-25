@@ -112,8 +112,8 @@ public class StorageTest extends NoExitTestCase {
         Configuration storageConf = IngestTest.getStorageConfiguration();
         Storage storage = StorageFactory.createStorage(storageConf);
 
-        StringWriter chars = new StringWriter(65000);
-        for (char c = 0 ; c < 65000 ; c++) {
+        StringWriter chars = new StringWriter(65535);
+        for (char c = 0 ; c < 65535 ; c++) {
             chars.append(c);
         }
         StorageMonkeyTest monkey = new StorageMonkeyTest();
