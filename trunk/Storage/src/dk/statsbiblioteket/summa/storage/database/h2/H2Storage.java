@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.rmi.RemoteException;
 import java.sql.*;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager;
 import dk.statsbiblioteket.summa.storage.database.MiniConnectionPoolManager.StatementHandle;
@@ -304,10 +306,15 @@ public class H2Storage extends DatabaseStorage implements Configurable {
     protected void touchParents(String id,
                                 QueryOptions options, Connection conn)
                                               throws IOException, SQLException {
+        touchParents(id, new HashSet<String>(10), options, conn);
+    }
+
+    private void touchParents(String id, Set<String> touched,
+                              QueryOptions options, Connection conn)
+                                              throws IOException, SQLException {
         if (log.isTraceEnabled()) {
             log.trace("Preparing to touch parents of " + id);
         }
-
         List<Record> parents = getParents(id, options, conn);
 
         if (parents == null || parents.isEmpty()) {
@@ -319,9 +326,16 @@ public class H2Storage extends DatabaseStorage implements Configurable {
 
         // Touch each parent and recurse upwards
         for (Record parent : parents) {
+            if (touched.contains(parent.getId())) {
+                log.trace("Parent '" + parent.getId() + "' already touched");
+                continue;
+            }
+            touched.add(parent.getId());
+
             touchRecord(parent.getId(), conn);
-            touchParents(parent.getId(), options, conn);
+            touchParents(parent.getId(), touched, options, conn);
         }
+
     }
 
     // H2 is very bad at large result sets (_very_)
