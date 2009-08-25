@@ -104,8 +104,9 @@ public class StorageTest extends NoExitTestCase {
         Configuration storageConf = IngestTest.getStorageConfiguration();
         Storage storage = StorageFactory.createStorage(storageConf);
         StorageMonkeyTest monkey = new StorageMonkeyTest();
-        monkey.monkey(storage,  10, 5, 2, 2, 0, 100000, 1, 100,
+        monkey.monkey(10, 5, 2, 2, 0, 100000, 1, 100,
                       0, 5, 0, 30, null, null);
+        storage.close();
     }
 
     public void testCharMonkey() throws Exception {
@@ -117,32 +118,36 @@ public class StorageTest extends NoExitTestCase {
             chars.append(c);
         }
         StorageMonkeyTest monkey = new StorageMonkeyTest();
-        monkey.monkey(storage,  10, 5, 2, 2, 0, 100000, 1, 100,
+        monkey.monkey(10, 5, 2, 2, 0, 10000, 1, 100,
                       0, 5, 0, 30, chars.toString(), null);
+        storage.close();
     }
 
     public void testMediumMonkey() throws Exception {
         Configuration storageConf = IngestTest.getStorageConfiguration();
         Storage storage = StorageFactory.createStorage(storageConf);
         StorageMonkeyTest monkey = new StorageMonkeyTest();
-        monkey.monkey(storage,  1000, 200, 100, 5, 0, 1000000, 1, 100,
+        monkey.monkey(1000, 200, 100, 5, 0, 1000000, 1, 100,
                       0, 5, 0, 30, null, null);
+        storage.close();
     }
 
     public void testUpdateMonkey() throws Exception {
         Configuration storageConf = IngestTest.getStorageConfiguration();
         Storage storage = StorageFactory.createStorage(storageConf);
         StorageMonkeyTest monkey = new StorageMonkeyTest();
-        monkey.monkey(storage,  1000, 2000, 100, 5, 0, 100000, 1, 100,
+        monkey.monkey(1000, 2000, 100, 5, 0, 100000, 1, 100,
                       0, 5, 0, 30, null, null);
+        storage.close();
     }
 
     public void disabledtestLargeMonkey() throws Exception {
         Configuration storageConf = IngestTest.getStorageConfiguration();
         Storage storage = StorageFactory.createStorage(storageConf);
         StorageMonkeyTest monkey = new StorageMonkeyTest();
-        monkey.monkey(storage,  10000, 2000, 1000, 5, 0, 1000000, 1, 100,
+        monkey.monkey(10000, 2000, 1000, 5, 0, 1000000, 1, 100,
                       0, 5, 0, 30, null, null);
+        storage.close();
     }
 
     /**
