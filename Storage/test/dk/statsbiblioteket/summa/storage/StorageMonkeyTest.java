@@ -21,7 +21,9 @@ package dk.statsbiblioteket.summa.storage;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.storage.api.Storage;
+import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
@@ -47,12 +49,13 @@ import java.io.StringWriter;
 public class StorageMonkeyTest {
     private static Log log = LogFactory.getLog(StorageMonkeyTest.class);
 
-    private List<String> existingIDs = new ArrayList<String>(10000);
+    private List<Integer> existingIDs = new ArrayList<Integer>(10000);
     private int idCounter = 0; // For new IDs
     private Random random = new Random(87);
-    private int minSize;
-    private int maxSize;
-    private Storage storage;
+    private int minContentSize;
+    private int maxContentSize;
+    private double parentChance = 0.1;
+    private double childChance = 0.2;
 
 
     // Meta data
@@ -68,7 +71,6 @@ public class StorageMonkeyTest {
     /**
      * Performs a monkey-test on the given Storage, using multiple Threads with
      * varying payloads.
-     * @param storage      the Storage to use for testing.
      * @param news         the number of new records to create.
      * @param updates      the number of existing records to update.
      * @param deletes      the number of existing records to delete.
@@ -87,7 +89,6 @@ public class StorageMonkeyTest {
      * @throws Exception if the test failed.
      */
     public synchronized void monkey(
-            Storage storage,
             int news, int updates, int deletes, int threads,
             int minSize, int maxSize, int minFlushSize, int maxFlushSize,
             int minMetaEntries, int maxMetaEntries,
@@ -100,9 +101,8 @@ public class StorageMonkeyTest {
                     + "%d. the number of deletes must be less than or equal to "
                     + "news", deletes, news));
         }
-        this.minSize = minSize;
-        this.maxSize = maxSize;
-        this.storage = storage;
+        this.minContentSize = minSize;
+        this.maxContentSize = maxSize;
         this.validChars = validMetaChars == null ? validChars : validMetaChars;
         this.validKeys = validMetaKeys == null ? validKeys : validMetaKeys;
         this.minMetaEntries = minMetaEntries;
@@ -118,8 +118,7 @@ public class StorageMonkeyTest {
             Job job = new Job();
             for (int i = 0 ; i < records ; i++) {
                 if (existingIDs.size() == 0) {
-                    job.add(new FutureRecord(
-                            Integer.toString(idCounter++), false));
+                    job.add(new FutureRecord(idCounter++, false));
                     news--;
                     continue;
                 }
@@ -136,7 +135,8 @@ public class StorageMonkeyTest {
                 switch (types.get(random.nextInt(types.size()))) {
                     case d: {
                         job.add(new FutureRecord(
-                                Integer.toString(idCounter++), true));
+                                existingIDs.get(random.nextInt(
+                                        existingIDs.size())), true));
                         deletes--;
                         break;
                     }
@@ -148,8 +148,7 @@ public class StorageMonkeyTest {
                         break;
                     }
                     case n: {
-                        job.add(new FutureRecord(
-                                Integer.toString(idCounter++), false));
+                        job.add(new FutureRecord(idCounter++, false));
                         news--;
                         break;
                     }
@@ -187,11 +186,11 @@ public class StorageMonkeyTest {
         return random.nextInt(max - min) + min;
     }
 
-    public Record makeRecord(Random random, String id, boolean delete,
+    public Record makeRecord(Random random, int id, boolean delete,
                                     int minSize, int maxSize) {
         byte[] content = new byte[random.nextInt(maxSize - minSize) + minSize];
         random.nextBytes(content);
-        Record record = new Record(id, "simian", new byte[0]);
+        Record record = new Record(Integer.toString(id), "simian", new byte[0]);
         record.setContent(content, true);
         int entries = nextInt(minMetaEntries, maxMetaEntries);
         for (int i = 0 ; i < entries ; i++) {
@@ -205,26 +204,36 @@ public class StorageMonkeyTest {
                     validKeys.get(random.nextInt(validKeys.size())),
                     sw.toString());
         }
+        if (random.nextDouble() < parentChance) {
+            record.setParentIds(Arrays.asList(Integer.toString(
+                    random.nextInt(Math.max(1, id)))));
+        }
+        if (random.nextDouble() < childChance) {
+            record.setChildIds(Arrays.asList(
+                    Integer.toString(random.nextInt(Math.max(1, id))),
+                    Integer.toString(random.nextInt(Math.max(1, id)))));
+        }
         record.setDeleted(delete);
         return record;
     }
 
     private class FutureRecord {
-        private String id;
+        private int id;
         private boolean delete;
 
-        private FutureRecord(String id, boolean delete) {
+        private FutureRecord(int id, boolean delete) {
             this.id = id;
             this.delete = delete;
             if (!delete && !existingIDs.contains(id)) {
                 existingIDs.add(id);
             } else if (delete) {
-                existingIDs.remove(id);
+                existingIDs.remove(Integer.valueOf(id));
             }
         }
 
         public Record getRecord() {
-            return makeRecord(random, id, delete, minSize, maxSize);
+            return makeRecord(
+                    random, id, delete, minContentSize, maxContentSize);
         }
     }
 
@@ -242,24 +251,30 @@ public class StorageMonkeyTest {
 
         public void run() {
             log.debug("Starting Job thread");
-            ArrayList<Record> summaRecords =
-                    new ArrayList<Record>(records.size());
             try {
+                Storage storage = getStorage();
+                ArrayList<Record> summaRecords =
+                        new ArrayList<Record>(records.size());
                 for (FutureRecord record: records) {
                     Record summaRecord = record.getRecord();
                     if (summaRecord.isDeleted() &&
                         storage.getRecord(summaRecord.getId(), null) == null) {
-                        log.error("The Record with id " + summaRecord.getId() 
-                                  + " should exist in the Storage");
+                        log.debug("The Record with id " + summaRecord.getId()
+                                  + " has not yet been added to the Storage");
                     }
                     summaRecords.add(summaRecord);
-
                 }
                 storage.flushAll(summaRecords);
+                storage.close();
             } catch (IOException e) {
                 log.error("Failed to flush " + this, e);
             }
             log.debug("Ending Job thread");
+        }
+
+        private Storage getStorage() throws IOException {
+            Configuration conf = Configuration.newMemoryBased();
+            return StorageFactory.createStorage(conf);
         }
     }
 }
