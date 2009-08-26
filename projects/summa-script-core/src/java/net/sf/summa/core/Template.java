@@ -65,42 +65,58 @@ public class Template<E> implements Map<String,Object> {
     }
 
     public E create() {
+        E inst = null;
+
         try {
-            Object inst = templateClass.newInstance();
-            for (Prop p : props.values()) {
-                // Assert that the property is set if it is mandatory
-                if (p.value == null && p.mandatory) {
-                    throw new InvalidPropertyAssignment("No value assigned for "
-                                                        + "mandatory property "
-                                                        + p.name);
-                }
-
-                // For private fields we do a quick twiddling of the
-                // accessibility flag to grant our selves access
-                Field f = templateClass.getDeclaredField(p.fieldName);
-                boolean fieldAccessible = f.isAccessible();
-
-                if (!fieldAccessible) {
-                    f.setAccessible(true);
-                }
-
-                f.set(inst, p.value);
-
-                if (!fieldAccessible) {
-                    f.setAccessible(false);
-                }
-
-            }
-            return (E)inst;
-        } catch (InstantiationException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            inst = templateClass.newInstance();
         } catch (IllegalAccessException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            throw new TemplateInstantiationError("Non-accessible no-args " +
+                                                 "constructor for "
+                                                 + templateClass.getName(), e);
+        } catch (InstantiationException e) {
+            throw new TemplateInstantiationError("Non-instantiable class "
+                                                 + templateClass.getName(), e);
         }
-        //FIXME: BAD BAD BAD!
-        return null;
+
+        for (Prop p : props.values()) {
+            // Assert that the property is set if it is mandatory
+            if (p.value == null && p.mandatory) {
+                throw new InvalidPropertyAssignment("No value assigned for "
+                                                    + "mandatory property "
+                                                    + p.name);
+            }
+
+            // For private fields we do a quick twiddling of the
+            // accessibility flag to grant our selves access
+            Field f;
+            try {
+                f = templateClass.getDeclaredField(p.fieldName);
+            } catch (NoSuchFieldException e) {
+                throw new InvalidPropertyDeclaration(
+                        "No field matching property " + p.name);
+            }
+
+            boolean fieldAccessible = f.isAccessible();
+
+            if (!fieldAccessible) {
+                f.setAccessible(true);
+            }
+
+            try {
+                f.set(inst, p.value);
+            } catch (IllegalAccessException e) {
+                throw new InvalidPropertyDeclaration(
+                        "Non-accessible field for property " + p.name, e);
+            }
+
+
+            if (!fieldAccessible) {
+                f.setAccessible(false);
+            }
+
+        }
+
+        return inst;        
     }
 
     private void parseTemplate() {

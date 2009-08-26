@@ -17,6 +17,7 @@ public @interface Property {
 
     public enum Access {
         READ,
+        CONSTRUCT,
         WRITE,
         READ_WRITE
     }
@@ -31,12 +32,11 @@ public @interface Property {
 
     boolean mandatory() default false;
 
-    boolean allowNull() default false;
-
     //FIXME: Bounds checking
 
     /**
-     * A property has been declared in an invalid way. This is consiedered a
+     * A property has been declared in an invalid way. This stems from a
+     * compile time error and is considered a
      * fatal bug in the code declaraing the property, hence this throwable
      * inherits from {@code Error} and is not simply a {@code RuntimeException}
      */
@@ -44,6 +44,10 @@ public @interface Property {
 
         public InvalidPropertyDeclaration(String msg) {
             super(msg);
+        }
+
+        public InvalidPropertyDeclaration(String msg, Throwable cause) {
+            super(msg, cause);
         }
     }
 
