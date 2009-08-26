@@ -2,9 +2,11 @@ package net.sf.summa.core;
 
 import java.util.*;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.InvocationTargetException;
 import static java.util.AbstractMap.SimpleImmutableEntry;
 
-import static net.sf.summa.core.Property.Access;
+import static net.sf.summa.core.Property.*;
 
 /**
  * FIXME: Missing class docs for net.sf.summa.core.ConfigTemplate
@@ -103,7 +105,6 @@ public class Template<E> implements Map<String,Object> {
             }
 
             Prop p = new Prop();
-            p.value = a.value();
             p.defaultValue = a.value();
             p.fieldName = field.getName();
             p.type = a.type();
@@ -111,6 +112,34 @@ public class Template<E> implements Map<String,Object> {
             p.mandatory = a.mandatory();
             p.allowNull = a.allowNull();
 
+            // See if we must convert the default value to the correct type,
+            // note that assigned values are checked on assignment time
+            if (p.defaultValue instanceof String && p.type != String.class) {
+                // We extract the static 'valueOf(String)' method on the class
+                // of the p.defaultValue member, and use that for conversion
+                try {
+                    Method convert = p.type.getMethod("valueOf", String.class);
+                    p.defaultValue = convert.invoke(null, p.defaultValue);
+                } catch (NoSuchMethodException e) {
+                    throw new InvalidPropertyDeclaration(
+                                 a.name() + "=" + p.defaultValue
+                                 + " has no conversion method "
+                                 + p.type.getSimpleName() + ".valueOf(String)");
+                } catch (InvocationTargetException e) {
+                    throw new InvalidPropertyDeclaration(
+                                                 a.name() + "=" + p.defaultValue
+                                                 + " can not be converted to a "
+                                                 + p.type.getSimpleName());
+                } catch (IllegalAccessException e) {
+                    throw new InvalidPropertyDeclaration(
+                                 a.name() + "=" + p.defaultValue
+                                 + " has non-accessible conversion method "
+                                 + p.type.getSimpleName() + ".valueOf(String)");
+                }
+
+            }
+
+            p.value = p.defaultValue;
             props.put(a.name(), p);
         }
     }

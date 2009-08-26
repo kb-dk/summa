@@ -34,4 +34,16 @@ public @interface Property {
     boolean allowNull() default false;
 
     //FIXME: Bounds checking
+
+    /**
+     * A property has been declared in an invalid way. This is consiedered a
+     * fatal bug in the code declaraing the property, hence this throwable
+     * inherits from {@code Error} and is not simply a {@code RuntimeException}
+     */
+    public static class InvalidPropertyDeclaration extends Error {
+
+        public InvalidPropertyDeclaration(String msg) {
+            super(msg);
+        }
+    }
 }
