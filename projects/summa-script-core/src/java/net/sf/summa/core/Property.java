@@ -46,4 +46,15 @@ public @interface Property {
             super(msg);
         }
     }
+
+    /**
+     * Thrown when a property is assigned an invalid value or if a value
+     * is missing from a mandatory property
+     */
+    public static class InvalidPropertyAssignment extends RuntimeException {
+
+        public InvalidPropertyAssignment(String msg) {
+            super(msg);
+        }
+    }
 }

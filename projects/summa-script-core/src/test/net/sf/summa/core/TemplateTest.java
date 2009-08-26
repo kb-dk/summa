@@ -1,5 +1,6 @@
 package net.sf.summa.core;
 
+import static net.sf.summa.core.Property.*;
 import org.testng.annotations.Test;
 import static org.testng.Assert.*;
 
@@ -30,6 +31,12 @@ public class TemplateTest {
 
         @Property(value="3.14", name="float", type = Float.class)
         private float f;
+    }
+
+    public static class Manda {
+        @Property(name="integer",
+                  type = Integer.class, mandatory = true)
+        private int i;
     }
 
     @Test
@@ -67,6 +74,13 @@ public class TemplateTest {
         Bar b = t.create();
         assertNotNull(b);
         assertEquals(b.i, 1);
+    }
+
+    @Test(expectedExceptions = InvalidPropertyAssignment.class)
+    public void missingMandatory() {
+        Template<Manda> t = Template.forClass(Manda.class);
+        assertEquals(t.size(), 1, "Number of properties must match");
+        Manda b = t.create();
     }
 
     @Test

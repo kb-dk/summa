@@ -20,6 +20,7 @@ public class Template<E> implements Map<String,Object> {
         Object value;
         Object defaultValue;
         String fieldName;
+        String name;
         Class type;
         Access access;
         boolean mandatory;
@@ -67,6 +68,13 @@ public class Template<E> implements Map<String,Object> {
         try {
             Object inst = templateClass.newInstance();
             for (Prop p : props.values()) {
+                // Assert that the property is set if it is mandatory
+                if (p.value == null && p.mandatory) {
+                    throw new InvalidPropertyAssignment("No value assigned for "
+                                                        + "mandatory property "
+                                                        + p.name);
+                }
+
                 // For private fields we do a quick twiddling of the
                 // accessibility flag to grant our selves access
                 Field f = templateClass.getDeclaredField(p.fieldName);
@@ -107,14 +115,18 @@ public class Template<E> implements Map<String,Object> {
             Prop p = new Prop();
             p.defaultValue = a.value();
             p.fieldName = field.getName();
+            p.name = a.name();
             p.type = a.type();
             p.access = a.access();
             p.mandatory = a.mandatory();
             p.allowNull = a.allowNull();
 
-            // See if we must convert the default value to the correct type,
-            // note that assigned values are checked on assignment time
-            if (p.defaultValue instanceof String && p.type != String.class) {
+            // See if we must convert the default value to the correct type.
+            // Note that assigned values are checked on assignment time, and
+            // that mandatory properties are left unset on purpose
+            if (p.defaultValue instanceof String &&
+                p.type != String.class &&
+                ! p.mandatory) {
                 // We extract the static 'valueOf(String)' method on the class
                 // of the p.defaultValue member, and use that for conversion
                 try {
@@ -139,8 +151,11 @@ public class Template<E> implements Map<String,Object> {
 
             }
 
-            p.value = p.defaultValue;
-            props.put(a.name(), p);
+            // We leave mandatory properties unset to be able
+            // to detect this later
+            p.value = p.mandatory ? null : p.defaultValue;
+            
+            props.put(p.name, p);
         }
     }
 
