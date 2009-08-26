@@ -119,6 +119,41 @@ public class Template<E> implements Map<String,Object> {
         return inst;        
     }
 
+    public static <K> K create(Class<K> cls, Map<String,Object> templ) {
+        Template<K> t  = Template.forClass(cls);
+        t.putAll(templ);
+        return t.create();
+    }
+
+    public static Object create(Map<String,Object> templ, String classKey)
+                                                 throws ClassNotFoundException {
+        Object _cls = templ.get(classKey);
+        Class cls;
+        if (_cls instanceof Class) {
+            cls = (Class)_cls;
+        } else {
+            cls = Class.forName(_cls.toString());
+        }
+
+        // FIXME: We need to mask the classKey key out of templ, ,and then use
+        // the masked map to create the Template instance
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Convenience method calling {@link Template#create(Map, String)} with the
+     * string "__class__" as {@code classKey} argument.
+     * @param templ the map to use for template values
+     * @return a new object instance created from the properties defined in
+     *         {@code templ}
+     * @throws ClassNotFoundException if the class referenced by the
+     *                                {@code __class__} is unknown
+     */
+    public static Object create(Map<String,Object> templ)
+                                                 throws ClassNotFoundException {
+        return Template.create(templ, "__class__");
+    }
+
     private void parseTemplate() {
         props.clear();
         for (Field field : templateClass.getDeclaredFields()) {
