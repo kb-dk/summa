@@ -10,7 +10,7 @@ import java.util.Collections;
 /**
  *
  */
-public abstract class ServiceTemplate extends Template {
+public abstract class ServiceTemplate<E> extends Template<E> {
 
     private String serviceNick;
     private Class serviceInterface;
@@ -19,7 +19,7 @@ public abstract class ServiceTemplate extends Template {
     private static Map<String,Map<String,ServiceTemplate>> serviceNicks
                             = new HashMap<String,Map<String,ServiceTemplate>>();
 
-    protected ServiceTemplate(Class serviceInterface,
+    protected ServiceTemplate(Class<E> serviceInterface,
                               String serviceNick,
                               String instanceNick) {
         super(serviceInterface, instanceNick);

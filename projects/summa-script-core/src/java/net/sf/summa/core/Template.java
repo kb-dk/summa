@@ -12,7 +12,7 @@ import static net.sf.summa.core.Property.Access;
  * @author mke
  * @since Aug 7, 2009
  */
-public class Template implements Map<String,Object> {
+public class Template<E> implements Map<String,Object> {
 
     private static class Prop {
         Object value;
@@ -24,33 +24,36 @@ public class Template implements Map<String,Object> {
         boolean allowNull;
     }
 
-    protected Class templateClass;
+    protected Class<E> templateClass;
     protected String nick;
     private Map<String, Prop> props;
 
-    public Template(Class cls) {
+    Template(Class<E> cls) {
         if (cls == null) {
             throw new NullPointerException("Can not create config template " +
                                            "for class: null");
         }
 
+        props = new HashMap<String, Prop>();
         templateClass = cls;
         parseTemplate();
-        props = new HashMap<String, Prop>();
         nick = cls.getName();
     }
 
-    public Template(Class cls, String nick) {
+    Template(Class<E> cls, String nick) {
         this(cls);
         this.nick = nick;
     }
 
-    public void setTemplateClass(Class cls) {
-        templateClass = cls;
-        parseTemplate();
+    public static <K> Template<K> forClass(Class<K> cls) {
+        return new Template<K>(cls);
     }
 
-    public Class getTemplateClass() {
+    public static <K> Template<K> forClass(Class<K> cls, String nick) {
+        return new Template<K>(cls, nick);        
+    }
+
+    public Class<E> getTemplateClass() {
         return templateClass;
     }
 
@@ -58,13 +61,13 @@ public class Template implements Map<String,Object> {
         return nick;
     }
 
-    public Object create() {
+    public E create() {
         try {
             Object inst = templateClass.newInstance();
             for (Prop p : props.values()) {
                 // For private fields we do a quick twiddling of the
                 // accessibility flag to grant our selves access
-                Field f = templateClass.getField(p.fieldName);
+                Field f = templateClass.getDeclaredField(p.fieldName);
                 boolean fieldAccessible = f.isAccessible();
 
                 if (!fieldAccessible) {
@@ -78,7 +81,7 @@ public class Template implements Map<String,Object> {
                 }
 
             }
-            return inst;
+            return (E)inst;
         } catch (InstantiationException e) {
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         } catch (IllegalAccessException e) {
@@ -92,7 +95,7 @@ public class Template implements Map<String,Object> {
 
     private void parseTemplate() {
         props.clear();
-        for (Field field : templateClass.getFields()) {
+        for (Field field : templateClass.getDeclaredFields()) {
             Property a = field.getAnnotation(Property.class);
 
             if (a == null) {
