@@ -183,6 +183,19 @@ public class StorageTest extends TestCase {
         assertTrue(storage.getModificationTime (null) > testStartTime);
     }
 
+    public void testUpdateMultiFlush() throws Exception {
+        Record plain = new Record(testId1, testBase1, testContent1);
+        Record deleted = new Record(testId1, testBase1, testContent1);
+        deleted.setDeleted(true);
+
+        assertNull("The test record should not exist",
+                   storage.getRecord(plain.getId(), null));
+        storage.flushAll(Arrays.asList(deleted));
+        storage.flushAll(Arrays.asList(plain, plain));
+        storage.flushAll(Arrays.asList(plain, deleted, plain));
+        storage.flushAll(Arrays.asList(plain, deleted, deleted, plain));
+    }
+
     public void testClearOne() throws Exception {
         testAddOne();
         storage.clearBase(testBase1);
