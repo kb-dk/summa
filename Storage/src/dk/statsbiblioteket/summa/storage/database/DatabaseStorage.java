@@ -40,6 +40,7 @@ import dk.statsbiblioteket.summa.storage.database.cursors.PagingCursor;
 import dk.statsbiblioteket.summa.storage.database.cursors.ResultSetCursor;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.Zips;
+import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -508,7 +509,7 @@ getco     */
         try {
             prepareStatements();
         } catch (SQLException e) {
-            throw new IOException("Failed to prepare SQL statements: "
+            throw new IOException("init(): Failed to prepare SQL statements: "
                                   + e.getMessage(), e);
         }
 
@@ -996,10 +997,8 @@ getco     */
     }
 
     @Override
-    public synchronized long getRecordsModifiedAfter(long time,
-                                                     String base,
-                                                     QueryOptions options)
-                                                        throws IOException {
+    public synchronized long getRecordsModifiedAfter(
+            long time, String base, QueryOptions options) throws IOException {
         // Convert time to the internal binary format used by DatabaseStorage
         long mtimeTimestamp = timestampGenerator.baseTimestamp(time);
 
@@ -1035,9 +1034,8 @@ getco     */
      *         caller to avoid leaking connections and locking up the storage
      * @throws IOException
      */
-    public ResultSetCursor getRecordsModifiedAfterCursor (long mtimeTimestamp,
-                                                          String base,
-                                                          QueryOptions options)
+    public ResultSetCursor getRecordsModifiedAfterCursor (
+            long mtimeTimestamp, String base, QueryOptions options)
                                                             throws IOException {
         PreparedStatement stmt;
 
@@ -1073,12 +1071,9 @@ getco     */
      *         after {@code time}. Otherwise a ResultIterator ready for fetching
      *         records
      */
-    private synchronized ResultSetCursor
-                         doGetRecordsModifiedAfterCursor(long mtimeTimestamp,
-                                                         String base,
-                                                         QueryOptions options,
-                                                         PreparedStatement stmt)
-                                                            throws IOException {
+    private synchronized ResultSetCursor doGetRecordsModifiedAfterCursor(
+            long mtimeTimestamp, String base, QueryOptions options,
+            PreparedStatement stmt) throws IOException {
         log.debug("getRecordsModifiedAfter('" + mtimeTimestamp + "', " + base
                   + ") entered");
 
@@ -1161,9 +1156,8 @@ getco     */
         }
     }
 
-    public List<Record> getRecordsWithConnection(List<String> ids,
-                                                 QueryOptions options,
-                                                 Connection conn)
+    public List<Record> getRecordsWithConnection(
+            List<String> ids, QueryOptions options, Connection conn)
                                                             throws IOException {
         ArrayList<Record> result = new ArrayList<Record>(ids.size());
 
@@ -1268,10 +1262,9 @@ getco     */
 
     /* Expand child records if we need to and there indeed
      * are any children to expand */
-    private void expandChildRecords (Record record,
-                                     RecursionQueryOptions options,
-                                     Connection conn)
-                                                        throws IOException {
+    private void expandChildRecords(
+            Record record, RecursionQueryOptions options, Connection conn)
+                                                            throws IOException {
         if (options.childRecursionDepth() == 0) {
             return;
         }
@@ -1303,10 +1296,9 @@ getco     */
 
     /* Expand parent records if we need to and there indeed
      * are any parents to expand */
-    private void expandParentRecords (Record record,
-                                      RecursionQueryOptions options,
-                                      Connection conn)
-                                                        throws IOException {
+    private void expandParentRecords(
+            Record record, RecursionQueryOptions options, Connection conn)
+                                                            throws IOException {
         if (options.parentRecursionHeight() == 0) {
             return;
         }
@@ -1367,8 +1359,7 @@ getco     */
         }                               
     }
 
-    private Record expandRelations(Record r,
-                                   QueryOptions options)
+    private Record expandRelations(Record r, QueryOptions options)
                                               throws IOException, SQLException {
 
         Connection conn = getTransactionalConnection();
@@ -1389,10 +1380,8 @@ getco     */
 
     }
 
-    private Record expandRelationsWithConnection(Record r,
-                                                 QueryOptions options,
-                                                 Connection conn)
-                                                             throws IOException{
+    private Record expandRelationsWithConnection(
+            Record r, QueryOptions options, Connection conn) throws IOException{
         if (options == null) {
             return r;
         }
@@ -1434,8 +1423,9 @@ getco     */
 
             // We can not throw the SQLException over RPC as the receiver
             // probably does not have the relevant exception class
-            throw new IOException("Failed to flush " + record.getId() + ": "
-                                  + e.getMessage());
+            throw new IOException(String.format(
+                    "flush(...): Failed to flush %s: %s",
+                    record, e.getMessage()));
         } finally {
             try {
                 if(error == null) {
@@ -1443,12 +1433,13 @@ getco     */
                     conn.commit();
                     log.debug("Committed " + record.getId());
                 } else {
-                    log.warn("Not committing " + record.getId()
-                             + " because of error: " + error);
+                    log.warn(String.format(
+                            "Not committing %s because of error: %s",
+                            record.getId(), error));
                 }
             } catch (SQLException e) {
-                error = "Failed to commit " + record.getId() + ": "
-                                                               + e.getMessage();
+                error = "flush: Failed to commit " + record.getId() + ": "
+                        + e.getMessage();
                 log.warn(error, e);
                 throw new IOException(error, e);
             } finally {
@@ -1499,8 +1490,9 @@ getco     */
                       + ((System.nanoTime() - start)/1000000D) + "ms");
         } catch (SQLException e) {
             error = e.getMessage();
-            throw new IOException("Failed to flush " + lastRecord.getId() + ": "
-                                  + e.getMessage(), e);
+            throw new IOException(String.format(
+                    "flushAll(%d records): Failed to flush %s: %s",
+                    recs.size(), lastRecord, e.getMessage()), e);
         } finally {
             try {
                 if(error == null) {
@@ -1521,8 +1513,10 @@ getco     */
                         }
                     }
                 } else {
-                    log.warn("Not committing the last " + recs.size()
-                             + " records because of error: " + error);
+                    log.warn(String.format(
+                            "Not committing the last %d records because of "
+                            + "error '%s'. The records was %s",
+                            recs.size(), error, Logs.expand(recs, 10)));
                 }
             } catch (SQLException e) {
                 error = "Failed to commit the last " + recs.size()
@@ -1554,9 +1548,10 @@ getco     */
                 // Note that this will also handle deleted records
                 updateRecordWithConnection(r, conn);
             } else {
-                throw new IOException("Internal error in DatabaseStorage, "
-                                      + "failed to flush " + r.getId() + ": "
-                                      + e.getMessage(), e);
+                throw new IOException(String.format(
+                        "flushWithConnection: Internal error in "
+                        + "DatabaseStorage, failed to flush %s: %s",
+                        r.getId(), e.getMessage()), e);
             }
         }
 
@@ -1593,9 +1588,8 @@ getco     */
      * @param options any query options that may affect how the touching is
      *                handled
      */
-    protected void touchParents (String id,
-                                              QueryOptions options,
-                                              Connection conn)
+    protected void touchParents (String id, QueryOptions options,
+                                 Connection conn)
                                               throws IOException, SQLException {
         List<Record> parents = getParents(id, options, conn);
 

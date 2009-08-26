@@ -290,6 +290,7 @@ public class StorageMonkeyHelper {
     public class Job implements Runnable {
         private List<FutureRecord> records = new ArrayList<FutureRecord>(100);
         private int flushSize;
+        private int recordCount = 0;
 
         public Job(int flushSize) {
             this.flushSize = flushSize;
@@ -297,11 +298,12 @@ public class StorageMonkeyHelper {
 
         public void add(FutureRecord record) {
             records.add(record);
+            recordCount++;
         }
 
         @Override
         public String toString() {
-            return "Job(" + records + " records)";
+            return "Job(" + recordCount + " records)";
         }
 
         public void run() {
