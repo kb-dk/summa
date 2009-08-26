@@ -9,7 +9,7 @@ import static java.util.AbstractMap.SimpleImmutableEntry;
 import static net.sf.summa.core.Property.*;
 
 /**
- * FIXME: Missing class docs for net.sf.summa.core.ConfigTemplate
+ * FIXME: Missing class docs for net.sf.summa.core.Template
  *
  * @author mke
  * @since Aug 7, 2009
@@ -135,7 +135,6 @@ public class Template<E> implements Map<String,Object> {
             p.type = a.type();
             p.access = a.access();
             p.mandatory = a.mandatory();
-            p.allowNull = a.allowNull();
 
             // See if we must convert the default value to the correct type.
             // Note that assigned values are checked on assignment time, and
