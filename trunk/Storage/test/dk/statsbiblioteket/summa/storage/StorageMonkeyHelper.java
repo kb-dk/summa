@@ -22,8 +22,7 @@ package dk.statsbiblioteket.summa.storage;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.storage.api.Storage;
-import dk.statsbiblioteket.summa.storage.api.StorageFactory;
+import dk.statsbiblioteket.summa.storage.api.*;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 
@@ -309,7 +308,8 @@ public class StorageMonkeyHelper {
         public void run() {
             log.debug("Starting Job thread");
             try {
-                Storage storage = getStorage();
+                WritableStorage storageW = getStorageW();
+                ReadableStorage storageR = getStorageR();
                 while (records.size() > 0) {
                     int currentJobSize = Math.min(flushSize, records.size());
                     ArrayList<Record> summaRecords = new ArrayList<Record>(
@@ -321,14 +321,13 @@ public class StorageMonkeyHelper {
                         records.clear();
                     } else {
                         records = records.subList(
-                                currentJobSize,
-                                records.size() - currentJobSize);
+                                currentJobSize, records.size());
                     }
 
                     for (FutureRecord record: currentRecords) {
                         Record summaRecord = record.getRecord();
                         if (summaRecord.isDeleted() &&
-                            storage.getRecord(summaRecord.getId(), null)
+                            storageR.getRecord(summaRecord.getId(), null)
                             == null) {
                             log.debug(
                                     "The Record with id " + summaRecord.getId()
@@ -337,9 +336,9 @@ public class StorageMonkeyHelper {
                         summaRecords.add(summaRecord);
                     }
                     log.debug("Flushing " + summaRecords.size() + " records");
-                    storage.flushAll(summaRecords);
+                    storageW.flushAll(summaRecords);
                 }
-                storage.close();
+                storageW.close();
             } catch (IOException e) {
                 log.error("Failed to flush " + this, e);
             } catch (NullPointerException e) {
@@ -348,9 +347,15 @@ public class StorageMonkeyHelper {
             log.debug("Ending Job thread");
         }
 
-        private Storage getStorage() throws IOException {
+        private WritableStorage getStorageW() throws IOException {
             Configuration conf = Configuration.newMemoryBased();
-            return StorageFactory.createStorage(conf);
+
+            return new StorageWriterClient(conf);
+        }
+        private ReadableStorage getStorageR() throws IOException {
+            Configuration conf = Configuration.newMemoryBased();
+
+            return new StorageReaderClient(conf);
         }
     }
 }
