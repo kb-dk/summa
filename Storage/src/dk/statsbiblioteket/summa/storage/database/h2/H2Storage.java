@@ -197,7 +197,7 @@ public class H2Storage extends DatabaseStorage implements Configurable {
             Statement stmt = conn.createStatement();
             stmt.execute("ANALYZE");
         } catch (SQLException e) {
-            log.warn("Failed to optimize table selectivity");
+            log.warn("Failed to optimize table selectivity", e);
             return;
         } finally {
             try {
@@ -209,7 +209,7 @@ public class H2Storage extends DatabaseStorage implements Configurable {
     }
 
     @Override
-    public void flush(Record rec) throws IOException {
+    public synchronized void flush(Record rec) throws IOException {
         numFlushes++;
         numFlushes = numFlushes % OPTIMIZE_INDEX_THRESHOLD;
 
@@ -306,7 +306,7 @@ public class H2Storage extends DatabaseStorage implements Configurable {
     protected void touchParents(String id,
                                 QueryOptions options, Connection conn)
                                               throws IOException, SQLException {
-        touchParents(id, new HashSet<String>(10), options, conn);
+        touchParents(id, null, options, conn);
     }
 
     private void touchParents(String id, Set<String> touched,
@@ -323,6 +323,8 @@ public class H2Storage extends DatabaseStorage implements Configurable {
             }
             return;
         }
+
+        touched = touched != null ? touched : new HashSet(10);
 
         // Touch each parent and recurse upwards
         for (Record parent : parents) {
