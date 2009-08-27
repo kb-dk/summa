@@ -314,6 +314,12 @@ public class BundleTool {
         builder.getFiles().clear();
         builder.getFiles().addAll(files);
 
+        // Update extra args to the JVM
+        List<String> jvmArgs =
+                       Environment.escapeSystemProperties(builder.getJvmArgs());
+        builder.getJvmArgs().clear();
+        builder.getJvmArgs().addAll(jvmArgs);
+
         // Update property values        
         for (Map.Entry<String, Serializable> entry: builder.getProperties()) {
             entry.setValue(
