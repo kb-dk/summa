@@ -219,9 +219,11 @@ public class SuggestSearchNode extends SearchNodeImpl {
         if (maintenance) {
             return;
         }
-        log.debug("None of the expected keys " + SuggestKeys.SEARCH_PREFIX
-                  + " or " + SuggestKeys.SEARCH_UPDATE_QUERY
-                  + " encountered, no suggest performed");
+        log.debug(String.format(
+                "None of the expected keys %s, %s, %s, %s or %s encountered,"
+                + " no suggest will be performed", 
+                SuggestKeys.SEARCH_PREFIX, SuggestKeys.SEARCH_UPDATE_QUERY,
+                SEARCH_CLEAR, SEARCH_IMPORT, SEARCH_EXPORT));
     }
 
     private void suggestSearch(Request request, ResponseCollection responses)
