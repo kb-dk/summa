@@ -130,6 +130,35 @@ public class SuggestSearchNode extends SearchNodeImpl {
      */
     public static final String SUGGEST_FOLDER = "suggest";
 
+    /**
+     * Maintenance search key. This should not be passed through from end-users.
+     * </p><p>
+     * If set to true, the suggest database is cleared.
+     */
+    static final String SEARCH_CLEAN = "summa.support.suggest.clean";
+
+    /**
+     * Maintenance search key. This should not be passed through from end-users.
+     * </p><p>
+     * If set to true, the SuggestSearchNode will import suggest-data from the
+     * file "suggest_in.dat" in the current folder for the suggest storage.
+     * </p><p>
+     * The data must be in tab-separated format with the columns
+     * {@code hits count query}.
+     */
+    static final String SEARCH_IMPORT = "summa.support.suggest.import";
+
+    /**
+     * Maintenance search key. This should not be passed through from end-users.
+     * </p><p>
+     * If set to true, the SuggestSearchNode will export suggest-data to the
+     * file "suggest_out.dat" in the current folder for the suggest storage.
+     * </p><p>
+     * The data must be in tab-separated format with the columns
+     * {@code hits count query}.
+     */
+    static final String SEARCH_EXPORT = "summa.support.suggest.export";
+
     private int maxResults = DEFAULT_MAX_RESULTS;
     private int defaultMaxResults = DEFAULT_DEFAULT_MAX_RESULTS;
     private SuggestStorage storage;
@@ -155,7 +184,23 @@ public class SuggestSearchNode extends SearchNodeImpl {
     @Override
     protected void managedSearch(Request request, ResponseCollection responses)
             throws RemoteException {
+        boolean maintenance = false;
         try {
+            if (request.getBoolean(SEARCH_CLEAN, false)) {
+                log.info("Clearing all suggestions");
+                storage.clear();
+                maintenance = true;
+            }
+            if (request.getBoolean(SEARCH_IMPORT, false)) {
+                log.info("Importing all suggestions");
+                storage.importSuggestions();
+                maintenance = true;
+            }
+            if (request.getBoolean(SEARCH_EXPORT, false)) {
+                log.info("Exporting all suggestions");
+                storage.exportSuggestions();
+                maintenance = true;
+            }
             if (request.containsKey(SuggestKeys.SEARCH_PREFIX)) {
                 suggestSearch(request, responses);
                 return;
@@ -168,8 +213,12 @@ public class SuggestSearchNode extends SearchNodeImpl {
             throw new RemoteException(
                     "Exception performing managed search with " + request, e);
         }
-        log.debug("None of the expected keys " + SuggestKeys.SEARCH_PREFIX + " or "
-                  + SuggestKeys.SEARCH_UPDATE_QUERY + " encountered, no suggest performed");
+        if (maintenance) {
+            return;
+        }
+        log.debug("None of the expected keys " + SuggestKeys.SEARCH_PREFIX
+                  + " or " + SuggestKeys.SEARCH_UPDATE_QUERY
+                  + " encountered, no suggest performed");
     }
 
     private void suggestSearch(Request request, ResponseCollection responses)

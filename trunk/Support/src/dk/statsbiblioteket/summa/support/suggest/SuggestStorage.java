@@ -35,6 +35,9 @@ import java.util.ArrayList;
         author = "te")
 public abstract interface SuggestStorage extends Configurable {
 
+    public static final String IMPORT_FILE = "suggest_in.dat";
+    public static final String EXPORT_FILE = "suggest_out.dat";
+
     /**
      * Open a storage at the specified location. If the location does not exist,
      * then create it and initialize.
@@ -42,6 +45,11 @@ public abstract interface SuggestStorage extends Configurable {
      * @throws java.io.IOException if the open could not be completed.
      */
     void open(File location) throws IOException;
+
+    /**
+     * @return the location og the storage, as given in {@link #open}.
+     */
+    File getLocation();
 
     /**
      * Close any connections and free memory. Can be called multiple times,
@@ -104,4 +112,30 @@ public abstract interface SuggestStorage extends Configurable {
      * @throws IOException if the suggestions could not be added.
      */
     void addSuggestions(ArrayList<String> suggestions) throws IOException;
+
+    /**
+     * Imports suggest-data from the file "suggest_in.dat" in the folder for the
+     * suggest storage.
+     * </p><p>
+     * Each suggest-entry if represented as
+     * {@code query\thits\tqueryCount} in utf-8 where {@code \t} is tab.
+     * @throws IOException if the data could not be imported.
+     */
+    void importSuggestions() throws IOException;
+
+    /**
+     * Exports suggest-data to the file "suggest_out.dat" in the folder for the 
+     * suggest storage.
+     * </p><p>
+     * Each suggest-entry will be represented as
+     * {@code query\thits\tqueryCount} in utf-8 where {@code \t} is tab.
+     * @throws IOException if the data could not be exported.
+     */
+    void exportSuggestions() throws IOException;
+
+    /**
+     * Clears all suggestions.
+     * @throws IOException if the suggestions could not be cleared.
+     */
+    void clear() throws IOException;
 }
