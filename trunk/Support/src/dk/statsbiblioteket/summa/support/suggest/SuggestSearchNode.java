@@ -135,7 +135,7 @@ public class SuggestSearchNode extends SearchNodeImpl {
      * </p><p>
      * If set to true, the suggest database is cleared.
      */
-    static final String SEARCH_CLEAN = "summa.support.suggest.clean";
+    static final String SEARCH_CLEAR = "summa.support.suggest.clean";
 
     /**
      * Maintenance search key. This should not be passed through from end-users.
@@ -186,19 +186,22 @@ public class SuggestSearchNode extends SearchNodeImpl {
             throws RemoteException {
         boolean maintenance = false;
         try {
-            if (request.getBoolean(SEARCH_CLEAN, false)) {
+            if (request.getBoolean(SEARCH_CLEAR, false)) {
                 log.info("Clearing all suggestions");
                 storage.clear();
+                responses.add(new SuggestResponse("Suggestions cleared", 10));
                 maintenance = true;
             }
             if (request.getBoolean(SEARCH_IMPORT, false)) {
                 log.info("Importing all suggestions");
                 storage.importSuggestions();
+                responses.add(new SuggestResponse("Suggestions imported", 10));
                 maintenance = true;
             }
             if (request.getBoolean(SEARCH_EXPORT, false)) {
                 log.info("Exporting all suggestions");
                 storage.exportSuggestions();
+                responses.add(new SuggestResponse("Suggestions exported", 10));
                 maintenance = true;
             }
             if (request.containsKey(SuggestKeys.SEARCH_PREFIX)) {
