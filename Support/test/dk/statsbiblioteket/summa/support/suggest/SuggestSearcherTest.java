@@ -39,12 +39,41 @@ public class SuggestSearcherTest extends TestCase {
         Configuration conf =
                 Configuration.load("data/suggest/SuggestSearch.xml");
         conf.set(SummaSearcherImpl.CONF_STATIC_ROOT, storageRoot.toString());
+        conf.set(SuggestSearchNode.CONF_LOWERCASE_QUERIES, false);
         return new SummaSearcherImpl(conf);
     }
 
     @Override
     public void tearDown() throws Exception {
         searcher.close();
+    }
+
+    public void testImport() throws Exception {
+        String data = "importA\t10\t12\nimportB\t7\t8\n";
+        Files.saveString(
+                data, new File(storageRoot, SuggestStorage.IMPORT_FILE));
+        Request request = new Request();
+        request.put(SuggestSearchNode.SEARCH_IMPORT, true);
+        searcher.search(request);
+        assertGet("imp", "queryCount=\"12\">importA");
+        assertGet("imp", "queryCount=\"8\">importB");
+    }
+
+    public void testExport() throws Exception {
+        String data = "importA\t10\t12\nimportB\t7\t8\n";
+        Files.saveString(
+                data, new File(storageRoot, SuggestStorage.IMPORT_FILE));
+        Request request = new Request();
+        request.put(SuggestSearchNode.SEARCH_IMPORT, true);
+        searcher.search(request);
+
+        request = new Request();
+        request.put(SuggestSearchNode.SEARCH_EXPORT, true);
+        searcher.search(request);
+
+        String dump = Files.loadString(new File(
+                storageRoot, SuggestStorage.EXPORT_FILE));
+        assertEquals("Import and export should match", data, dump);
     }
 
     public void testAddAndGet() throws Exception {

@@ -41,7 +41,7 @@ import java.util.Locale;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class SuggestStorageH2 implements SuggestStorage {
+public class SuggestStorageH2 extends SuggestStorageImpl {
     private static Log log = LogFactory.getLog(SuggestStorageH2.class);
 
     public static final String DB_FILE = "suggest_h2storage";
@@ -479,4 +479,19 @@ public class SuggestStorageH2 implements SuggestStorage {
         }
     }
 
+    public synchronized void clear() throws IOException {
+        log.info("Clearing suggest data");
+        try {
+            Statement s = connection.createStatement();
+            s.execute("drop table suggest;");
+            createSchema();
+        } catch (SQLException e) {
+            throw new IOException(
+                    "Exception while dropping and re-creating table", e);
+        }
+    }
+
+    public File getLocation() {
+        return location;
+    }
 }
