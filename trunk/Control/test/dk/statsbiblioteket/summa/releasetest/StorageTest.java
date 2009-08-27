@@ -30,7 +30,6 @@ import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.api.watch.StorageWatcher;
 import dk.statsbiblioteket.summa.storage.api.filter.RecordReader;
-import dk.statsbiblioteket.summa.storage.StorageMonkeyHelper;
 import dk.statsbiblioteket.summa.common.configuration.storage.MemoryStorage;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
@@ -38,14 +37,10 @@ import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.unittest.NoExitTestCase;
 
-import java.io.StringWriter;
 import java.util.Random;
 import java.util.List;
 import java.util.ArrayList;
 
-/**
- * te forgot to document this class.
- */
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -100,74 +95,6 @@ public class StorageTest extends NoExitTestCase {
         testStorageScale(5, 100, 100000);
     }
 
-    public void testSmallMonkey() throws Exception {
-        Configuration storageConf = IngestTest.getStorageConfiguration();
-        Storage storage = StorageFactory.createStorage(storageConf);
-        StorageMonkeyHelper monkey = new StorageMonkeyHelper(
-                0, 1000000, 0.01, 0.02, null, null, 0, 5, 0, 50);
-        monkey.monkey(10, 5, 2, 10, 2, 1, 100);
-        storage.close();
-    }
-
-    public void testCharMonkey() throws Exception {
-        Configuration storageConf = IngestTest.getStorageConfiguration();
-        Storage storage = StorageFactory.createStorage(storageConf);
-
-        StringWriter chars = new StringWriter(65535);
-        for (char c = 0 ; c < 65535 ; c++) {
-            chars.append(c);
-        }
-        StorageMonkeyHelper monkey = new StorageMonkeyHelper(
-                0, 1000000, 0.01, 0.02, null, null, 0, 5, 0, 50);
-        monkey.monkey(10, 5, 2, 10, 2, 1, 100);
-        storage.close();
-    }
-
-    public void testMediumMonkey() throws Exception {
-        Configuration storageConf = IngestTest.getStorageConfiguration();
-        Storage storage = StorageFactory.createStorage(storageConf);
-        StorageMonkeyHelper monkey = new StorageMonkeyHelper(
-                0, 1000000, 0.01, 0.02, null, null, 0, 5, 0, 50);
-        monkey.monkey(1000, 200, 100, 1000, 5, 1, 100);
-        storage.close();
-    }
-
-    public void testUpdateMonkey() throws Exception {
-        Configuration storageConf = IngestTest.getStorageConfiguration();
-        Storage storage = StorageFactory.createStorage(storageConf);
-        StorageMonkeyHelper monkey = new StorageMonkeyHelper(
-                0, 1000000, 0.01, 0.02, null, null, 0, 5, 0, 50);
-        monkey.monkey(1000, 2000, 100, 1000, 5, 1, 100);
-        storage.close();
-    }
-
-    public void disabledtestLargeMonkey() throws Exception {
-        Configuration storageConf = IngestTest.getStorageConfiguration();
-        Storage storage = StorageFactory.createStorage(storageConf);
-        StorageMonkeyHelper monkey = new StorageMonkeyHelper(
-                0, 1000000, 0.01, 0.02, null, null, 0, 5, 0, 50);
-        monkey.monkey(10000, 2000, 1000, 1000, 5, 1, 100);
-        storage.close();
-    }
-
-    public void testPauseResume() throws Exception {
-        Configuration storageConf = IngestTest.getStorageConfiguration();
-        Storage storage = StorageFactory.createStorage(storageConf);
-        StorageMonkeyHelper monkey = new StorageMonkeyHelper(
-                50, 2000, 0.01, 0.02, null, null, 0, 5, 0, 50);
-        List<StorageMonkeyHelper.Job> primaryJobs =
-                monkey.createJobs(10000, 0, 0, 10000, 100, 100);
-        log.info("Handling primary jobs");
-        monkey.doJobs(primaryJobs, 1);
-        log.info("Sleeping 10 seconds");
-        Thread.sleep(10 * 1000);
-        log.info("Handling secondary jobs");
-        List<StorageMonkeyHelper.Job> secondaryJobs =
-                monkey.createJobs(1000, 0, 0, 1000, 100, 100);
-        monkey.doJobs(secondaryJobs, 1);
-        log.info("Finished");
-        storage.close();
-    }
 
     /**
      * Create a Storage and fill it with dummy Records.
