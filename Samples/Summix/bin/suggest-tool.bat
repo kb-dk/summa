@@ -25,6 +25,9 @@ if "%ACTION%."=="." (
     echo Actions:
     echo query prefix
     echo update query hitcount [querycount]       
+    echo clear
+    echo import
+    echo export
     goto :end
 )
 
@@ -34,6 +37,18 @@ if "%ACTION%"=="query" (
 )
 if "%ACTION%"=="update" (
     set ARGS=summa.support.suggest.update.query="%QUERY%"  summa.support.suggest.update.hitcount=%HITCOUNT%
+    goto :actionOK
+)
+if "%ACTION%"=="clear" (
+    set ARGS=summa.support.suggest.clear=true
+    goto :actionOK
+)
+if "%ACTION%"=="import" (
+    set ARGS=summa.support.suggest.import=true
+    goto :actionOK
+)
+if "%ACTION%"=="export" (
+    set ARGS=summa.support.suggest.export=true
     goto :actionOK
 )
 echo Unknown action %ACTION%
