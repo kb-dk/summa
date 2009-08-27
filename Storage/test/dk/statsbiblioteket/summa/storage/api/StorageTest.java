@@ -3,9 +3,8 @@ package dk.statsbiblioteket.summa.storage.api;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
-import dk.statsbiblioteket.summa.storage.database.derby.DerbyStorage;
-import dk.statsbiblioteket.summa.storage.database.postgres.PostgresStorage;
 import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
+import dk.statsbiblioteket.summa.storage.StorageMonkeyHelper;
 import dk.statsbiblioteket.util.Files;
 
 import java.util.Arrays;
@@ -13,14 +12,12 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.io.File;
+import java.io.StringWriter;
 
 import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-/**
- *
- */
 public class StorageTest extends TestCase {
     private static Log log = LogFactory.getLog(StorageTest.class);
 
@@ -696,4 +693,100 @@ public class StorageTest extends TestCase {
                          result.get(l).getChildren().get(0).getId().substring(0,6));
         }
     }
+
+    // Copied from the Service API
+    public static final String CONF_SERVICE_ID = "summa.control.service.id";
+    public static final String CONF_SERVICE_BASEPATH = "summa.control.service.basepath";
+    public static final String CONF_SERVICE_PORT = "summa.control.service.port";
+    public static final String CONF_REGISTRY_PORT = "summa.control.service.registry.port";
+
+
+    public static final String STORAGE_ADDRESS =
+            "//localhost:28000/summa-storage";
+    public static Configuration getStorageConfiguration() {
+        Configuration conf = Configuration.newMemoryBased();
+        conf.set(DatabaseStorage.CONF_LOCATION,
+                 getStorageLocation().toString());
+        conf.set(DatabaseStorage.CONF_FORCENEW, true);
+        conf.set(CONF_SERVICE_PORT, 27003);
+        conf.set(CONF_REGISTRY_PORT, 27000);  // Why is this not done?
+        conf.set(CONF_SERVICE_ID, "TestStorage");
+        System.setProperty(CONF_SERVICE_ID, "TestStorage");
+        return conf;
+    }
+    public static File getStorageLocation() {
+        return new File(System.getProperty("java.io.tmpdir"),
+                        "storage" + storageCounter++);
+    }
+
+
+    public void testSmallMonkey() throws Exception {
+        Configuration storageConf = getStorageConfiguration();
+        Storage storage = StorageFactory.createStorage(storageConf);
+        StorageMonkeyHelper monkey = new StorageMonkeyHelper(
+                0, 1000000, 0.01, 0.02, null, null, 0, 5, 0, 50);
+        monkey.monkey(10, 5, 2, 10, 2, 1, 100);
+        storage.close();
+    }
+
+    public void testCharMonkey() throws Exception {
+        Configuration storageConf = getStorageConfiguration();
+        Storage storage = StorageFactory.createStorage(storageConf);
+
+        StringWriter chars = new StringWriter(65535);
+        for (char c = 0 ; c < 65535 ; c++) {
+            chars.append(c);
+        }
+        StorageMonkeyHelper monkey = new StorageMonkeyHelper(
+                0, 1000000, 0.01, 0.02, null, null, 0, 5, 0, 50);
+        monkey.monkey(10, 5, 2, 10, 2, 1, 100);
+        storage.close();
+    }
+
+    public void testMediumMonkey() throws Exception {
+        Configuration storageConf = getStorageConfiguration();
+        Storage storage = StorageFactory.createStorage(storageConf);
+        StorageMonkeyHelper monkey = new StorageMonkeyHelper(
+                0, 1000000, 0.01, 0.02, null, null, 0, 5, 0, 50);
+        monkey.monkey(1000, 200, 100, 1000, 5, 1, 100);
+        storage.close();
+    }
+
+    public void testUpdateMonkey() throws Exception {
+        Configuration storageConf = getStorageConfiguration();
+        Storage storage = StorageFactory.createStorage(storageConf);
+        StorageMonkeyHelper monkey = new StorageMonkeyHelper(
+                0, 1000000, 0.01, 0.02, null, null, 0, 5, 0, 50);
+        monkey.monkey(1000, 2000, 100, 1000, 5, 1, 100);
+        storage.close();
+    }
+
+    public void disabledtestLargeMonkey() throws Exception {
+        Configuration storageConf = getStorageConfiguration();
+        Storage storage = StorageFactory.createStorage(storageConf);
+        StorageMonkeyHelper monkey = new StorageMonkeyHelper(
+                0, 1000000, 0.01, 0.02, null, null, 0, 5, 0, 50);
+        monkey.monkey(10000, 2000, 1000, 1000, 5, 1, 100);
+        storage.close();
+    }
+
+    public void testPauseResume() throws Exception {
+        Configuration storageConf = getStorageConfiguration();
+        Storage storage = StorageFactory.createStorage(storageConf);
+        StorageMonkeyHelper monkey = new StorageMonkeyHelper(
+                50, 2000, 0.01, 0.02, null, null, 0, 5, 0, 50);
+        List<StorageMonkeyHelper.Job> primaryJobs =
+                monkey.createJobs(10000, 0, 0, 10000, 100, 100);
+        log.info("Handling primary jobs");
+        monkey.doJobs(primaryJobs, 1);
+        log.info("Sleeping 10 seconds");
+        Thread.sleep(10 * 1000);
+        log.info("Handling secondary jobs");
+        List<StorageMonkeyHelper.Job> secondaryJobs =
+                monkey.createJobs(1000, 0, 0, 1000, 100, 100);
+        monkey.doJobs(secondaryJobs, 1);
+        log.info("Finished");
+        storage.close();
+    }
+
 }
