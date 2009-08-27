@@ -5,5 +5,19 @@ package net.sf.summa.core.actor;
  */
 public abstract class Actor {
 
-    public abstract Select act(Channel chan, Select sel, Object... args);
+    private Select select;
+
+    public static final Object Shutdown = new Object();
+
+    public abstract Select act(Channel chan,
+                               Object continuation,
+                               Object message);
+
+    void setSelect(Select s) {
+        select = s;
+    }
+
+    Select getSelect() {
+        return select;
+    }
 }
