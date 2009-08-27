@@ -1466,6 +1466,7 @@ getco     */
         } catch (SQLException e) {
             log.error("Failed to set connection in write mode: "
                       + e.getMessage(), e);
+            closeConnection(conn);
             // We can not throw the SQLException over RPC as the receiver
             // probably does not have the relevant exception class
             throw new IOException("Can not prepare database for write mode: "
