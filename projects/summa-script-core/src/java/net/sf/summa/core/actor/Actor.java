@@ -8,6 +8,7 @@ public abstract class Actor {
     private Select select;
 
     public static final Object Shutdown = new Object();
+    public static final Object Timeout = new Object();
 
     public abstract Select act(Channel chan,
                                Object continuation,

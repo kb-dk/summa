@@ -3,30 +3,21 @@ package net.sf.summa.core.actor;
 import java.util.Iterator;
 import java.util.List;
 import java.util.LinkedList;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
+
+import static net.sf.summa.core.actor.SimpleScheduler.*;
 
 /**
  *
  */
 class SimpleChannel extends Channel {
 
-    private static class Message {
-        public Actor sender;
-        public Object message;
-
-        public Message(Actor a, Object msg) {
-            sender = a;
-            message = msg;
-        }
-    }
-
     private List<Actor> actors;
-    private Queue<Message> messages;
+    private SimpleScheduler scheduler;
 
-    SimpleChannel() {
+    SimpleChannel(SimpleScheduler sched) {
         actors = new LinkedList<Actor>();
-        messages = new ConcurrentLinkedQueue<Message>();
+        scheduler = sched;
+
     }
 
     public void add (Actor actor) {
@@ -38,6 +29,6 @@ class SimpleChannel extends Channel {
     }
 
     public void send (Actor sender, Object message) {
-        messages.add(new Message(sender, message));
+        scheduler.registerMessage(new Message(this, sender, message));
     }
 }
