@@ -7,6 +7,7 @@ import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.summa.storage.StorageMonkeyHelper;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.util.Profiler;
 
 import java.util.Arrays;
 import java.util.List;
@@ -811,6 +812,60 @@ public class StorageTest extends TestCase {
                 monkey.createJobs(1000, 0, 0, 1000, 100, 100);
         monkey.doJobs(secondaryJobs, 1);
         log.info("Finished");
+        storage.close();
+    }
+
+    /*
+    Ingests 3 * 1M tiny records
+     */
+    public void disabledtestMassiveTinyFlood() throws Exception {
+        int MIN_CONTENT_SIZE = 10;
+        int MAX_CONTENT_SIZE = 200;
+        int META_MIN_LENGTH = 1;
+        int META_MAX_LENGTH = 10;
+        int META_MIN_ENTRIES = 1;
+        int META_MAX_ENTRIES = 3;
+
+        int RUNS = 5;
+        int JOBS_PER_RUN = 100;
+
+        int JOB_NEW = 9000;
+        int JOB_UPDATE = 500;
+        int JOB_DELETE = 500;
+        int jobSize = JOB_NEW + JOB_UPDATE + JOB_DELETE;
+
+        int FLUSH_SIZE = 100;
+        double PARENT_CHANCE = 0.01;
+        double CHILD_CHANCE = 0.02;
+
+        Configuration storageConf = getStorageConfiguration();
+        Storage storage = StorageFactory.createStorage(storageConf);
+
+        StorageMonkeyHelper monkey = new StorageMonkeyHelper(
+                MIN_CONTENT_SIZE, MAX_CONTENT_SIZE, PARENT_CHANCE, CHILD_CHANCE,
+                null, null, META_MIN_ENTRIES, META_MAX_ENTRIES,
+                META_MIN_LENGTH, META_MAX_LENGTH);
+        monkey.setCheckForExistingOnDelete(false);
+        
+        for (int run = 0 ; run < RUNS ; run++) {
+            log.info("Starting run " + (run + 1));
+            Profiler profiler = new Profiler(JOBS_PER_RUN);
+            for (int job = 0 ; job < JOBS_PER_RUN ; job++) {
+                List<StorageMonkeyHelper.Job> jobs = monkey.createJobs(
+                        JOB_NEW, JOB_UPDATE, JOB_DELETE,
+                        Integer.MAX_VALUE, FLUSH_SIZE, FLUSH_SIZE);
+                monkey.doJobs(jobs, 1);
+                profiler.beat();
+                log.debug(String.format(
+                        "Did job %d/%d of size %d for run %d/%d at %s records/"
+                        + "second. ETA for current job: %s",
+                        job+1, JOBS_PER_RUN, jobs.get(0).size(),
+                        (run+1), RUNS,
+                        (int)(profiler.getBps(true) * jobSize),
+                        profiler.getETAAsString(true)));
+            }
+        }
+
         storage.close();
     }
 

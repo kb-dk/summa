@@ -67,6 +67,8 @@ public class StorageMonkeyHelper {
     private int minMetaLength;
     private int maxMetaLength;
 
+    private boolean checkForExistingOnDelete = true;
+
     /**
      * Performs a monkey-test on the given Storage, using multiple Threads with
      * varying payloads.
@@ -220,7 +222,9 @@ public class StorageMonkeyHelper {
         log.debug("Waiting for jobs");
         while (pool.getCompletedTaskCount() < jobs.size()) {
             try {
-                Thread.sleep(50);
+                synchronized (pool) {
+                    pool.wait(50);
+                }
             } catch (InterruptedException e) {
                 log.warn("Interrupted while waiting for job completion. " 
                          + "Re-waiting");
@@ -305,6 +309,10 @@ public class StorageMonkeyHelper {
             return "Job(" + recordCount + " records)";
         }
 
+        public int size() {
+            return recordCount;
+        }
+
         public void run() {
             log.debug("Starting Job thread");
             try {
@@ -326,7 +334,8 @@ public class StorageMonkeyHelper {
 
                     for (FutureRecord record: currentRecords) {
                         Record summaRecord = record.getRecord();
-                        if (summaRecord.isDeleted() &&
+                        if (checkForExistingOnDelete &&
+                            summaRecord.isDeleted() &&
                             storageR.getRecord(summaRecord.getId(), null)
                             == null) {
                             log.debug(
@@ -338,7 +347,6 @@ public class StorageMonkeyHelper {
                     log.debug("Flushing " + summaRecords.size() + " records");
                     storageW.flushAll(summaRecords);
                 }
-                storageW.close();
             } catch (IOException e) {
                 log.error("Failed to flush " + this, e);
             } catch (NullPointerException e) {
@@ -357,5 +365,13 @@ public class StorageMonkeyHelper {
 
             return new StorageReaderClient(conf);
         }
+    }
+
+    public boolean isCheckForExistingOnDelete() {
+        return checkForExistingOnDelete;
+    }
+
+    public void setCheckForExistingOnDelete(boolean checkForExistingOnDelete) {
+        this.checkForExistingOnDelete = checkForExistingOnDelete;
     }
 }

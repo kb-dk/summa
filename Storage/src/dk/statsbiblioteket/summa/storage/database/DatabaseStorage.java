@@ -1487,7 +1487,8 @@ getco     */
                 lastRecord = r;
                 flushWithConnection(r, conn);
             }
-            log.info("Flushed " + recs.size() + " in "
+            // TODO: Introduce time-based logging on info
+            log.debug("Flushed " + recs.size() + " in "
                       + ((System.nanoTime() - start)/1000000D) + "ms");
         } catch (SQLException e) {
             error = e.getMessage();
@@ -1502,9 +1503,9 @@ getco     */
                               + recs.size() + " records");
                     start = System.nanoTime();
                     conn.commit();
-                    log.info("Transaction of " + recs.size()
-                             + " records completed in " +
-                             + ((System.nanoTime() - start)/1000000D) + "ms");
+                    log.debug("Transaction of " + recs.size()
+                              + " records completed in " +
+                              + ((System.nanoTime() - start)/1000000D) + "ms");
                     if (isDebug) {
                         for (Record r : recs) {
                             // It may seem dull to iterate over all records *again*,
