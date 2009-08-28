@@ -6,6 +6,7 @@ import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
 import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.summa.storage.StorageMonkeyHelper;
 import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.Logs;
 
 import java.util.Arrays;
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.io.File;
 import java.io.StringWriter;
+import java.io.IOException;
 
 import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
@@ -35,14 +37,15 @@ public class StorageTest extends TestCase {
     static byte[] testContent1 = new byte[] {'s', 'u', 'm', 'm', 'a'};
     long testStartTime;
 
+    private static String lastStorageLocation = null;
     public static Configuration createConf () throws Exception {
 
+        lastStorageLocation =
+                testDBRoot + File.separator + dbPrefix + (storageCounter++);
         // H2 Config
         Configuration conf = Configuration.newMemoryBased(
-                Storage.CONF_CLASS,
-                H2Storage.class,
-                DatabaseStorage.CONF_LOCATION,
-                testDBRoot + File.separator + dbPrefix + (storageCounter++)
+                Storage.CONF_CLASS, H2Storage.class,
+                DatabaseStorage.CONF_LOCATION, lastStorageLocation
         );
 
         // Derby Config
@@ -692,6 +695,28 @@ public class StorageTest extends TestCase {
             assertEquals("child_",
                          result.get(l).getChildren().get(0).getId().substring(0,6));
         }
+    }
+
+    public void testTransaction() throws Exception {
+        Record plain = new Record(testId1, testBase1, testContent1);
+        Record deleted = new Record(testId1, testBase1, testContent1);
+        deleted.setDeleted(true);
+
+        String before = Logs.expand(Arrays.asList(listStorageFiles()), 100);
+        storage.flushAll(Arrays.asList(plain, deleted, deleted, plain));
+        String afterFlush = Logs.expand(Arrays.asList(listStorageFiles()), 100);
+        storage.close();
+        String afterClose = Logs.expand(Arrays.asList(listStorageFiles()), 100);
+
+        System.out.println("Database location: "
+                           + new File(lastStorageLocation).getAbsolutePath());
+        System.out.println("Before:     " + before);
+        System.out.println("AfterFlush: " + afterFlush);
+        System.out.println("AfterClose: " + afterClose);
+    }
+
+    private File[] listStorageFiles() throws IOException {
+        return new File(lastStorageLocation).listFiles();
     }
 
     // Copied from the Service API
