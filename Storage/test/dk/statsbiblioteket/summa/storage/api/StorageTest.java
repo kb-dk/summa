@@ -645,6 +645,24 @@ public class StorageTest extends TestCase {
         assertBaseCount(testBase2, 1);
     }
 
+    public void testRawSpeed() throws Exception {
+        int RUNS = 1000;
+        int JOB_SIZE = 100;
+        Profiler profiler = new Profiler(RUNS * JOB_SIZE, JOB_SIZE * 3);
+        for (int run = 0 ; run < RUNS ; run++) {
+            List<Record> recs = new ArrayList<Record>(JOB_SIZE);
+            for (int rec = 0 ; rec < JOB_SIZE ; rec++) {
+                recs.add(new Record(
+                        Integer.toString(run * JOB_SIZE + rec), "dummy",
+                        testContent1));
+                profiler.beat();
+            }
+            storage.flushAll(recs);
+            log.debug("Flushed " + (run+1) * JOB_SIZE + " records at "
+                      + profiler.getBps(true) + " records/sec");
+        }
+    }
+
     public void testFlushAllWithNestedChildren() throws Exception {
         List<Record> recs = new ArrayList<Record>();
 
@@ -816,9 +834,37 @@ public class StorageTest extends TestCase {
     }
 
     /*
-    Ingests 3 * 1M tiny records
+    Ingests 5 * 1M tiny records
+
+          INFO  [main] [2009-08-28 14:34:15,728] [dk.statsbiblioteket.summa.storage.api.StorageTest] Starting run 1
+DEBUG [main] [2009-08-28 14:34:25,559] [dk.statsbiblioteket.summa.storage.api.StorageTest] Did job 1/100 of size 10000 for run 1/5 at 0 records/second. ETA for current job: 2009-08-28 14:34:25
+DEBUG [main] [2009-08-28 14:34:30,993] [dk.statsbiblioteket.summa.storage.api.StorageTest] Did job 2/100 of size 10000 for run 1/5 at 1840 records/second. ETA for current job: 2009-08-28 14:43:23
+DEBUG [main] [2009-08-28 14:34:35,920] [dk.statsbiblioteket.summa.storage.api.StorageTest] Did job 3/100 of size 10000 for run 1/5 at 1930 records/second. ETA for current job: 2009-08-28 14:42:58
+DEBUG [main] [2009-08-28 14:34:40,956] [dk.statsbiblioteket.summa.storage.api.StorageTest] Did job 4/100 of size 10000 for run 1/5 at 2007 records/second. ETA for current job: 2009-08-28 14:42:39
+DEBUG [main] [2009-08-28 14:34:46,501] [dk.statsbiblioteket.summa.storage.api.StorageTest] Did job 5/100 of size 10000 for run 1/5 at 1890 records/second. ETA for current job: 2009-08-28 14:43:09
+DEBUG [main] [2009-08-28 14:34:54,543] [dk.statsbiblioteket.summa.storage.api.StorageTest] Did job 6/100 of size 10000 for run 1/5 at 1472 records/second. ETA for current job: 2009-08-28 14:45:33
+DEBUG [main] [2009-08-28 14:35:03,628] [dk.statsbiblioteket.summa.storage.api.StorageTest] Did job 7/100 of size 10000 for run 1/5 at 1167 records/second. ETA for current job: 2009-08-28 14:48:20
+DEBUG [main] [2009-08-28 14:35:12,150] [dk.statsbiblioteket.summa.storage.api.StorageTest] Did job 8/100 of size 10000 for run 1/5 at 1135 records/second. ETA for current job: 2009-08-28 14:48:42
+DEBUG [main] [2009-08-28 14:35:21,984] [dk.statsbiblioteket.summa.storage.api.StorageTest] Did job 9/100 of size 10000 for run 1/5 at 1089 records/second. ETA for current job: 2009-08-28 14:49:17
+DEBUG [main] [2009-08-28 14:35:31,973] [dk.statsbiblioteket.summa.storage.api.StorageTest] Did job 10/100 of size 10000 for run 1/5 at 1008 records/second. ETA for current job: 2009-08-28 14:50:23
+DEBUG [main] [2009-08-28 14:35:47,928] [dk.statsbiblioteket.summa.storage.api.StorageTest] Did job 11/100 of size 10000 for run 1/5 at 770 records/second. ETA for current job: 2009-08-28 14:55:02
+DEBUG [main] [2009-08-28 14:35:58,681] [dk.statsbiblioteket.summa.storage.api.StorageTest] Did job 12/100 of size 10000 for run 1/5 at 748 records/second. ETA for current job: 2009-08-28 14:55:33
+
      */
-    public void disabledtestMassiveTinyFlood() throws Exception {
+    public void testMassiveTinyFloodNoReopen() throws Exception {
+        testMassiveTinyFlood(false, 0);
+    }
+
+    public void testMassiveTinyFloodReopen() throws Exception {
+        testMassiveTinyFlood(true, 0);
+    }
+
+    public void testMassiveTinyFloodReopenPause() throws Exception {
+        testMassiveTinyFlood(true, 10 * 1000);
+    }
+
+    public void testMassiveTinyFlood(boolean reopen, int delay)
+                                                              throws Exception {
         int MIN_CONTENT_SIZE = 10;
         int MAX_CONTENT_SIZE = 200;
         int META_MIN_LENGTH = 1;
@@ -829,28 +875,58 @@ public class StorageTest extends TestCase {
         int RUNS = 5;
         int JOBS_PER_RUN = 100;
 
-        int JOB_NEW = 9000;
-        int JOB_UPDATE = 500;
-        int JOB_DELETE = 500;
+        int JOB_NEW = 9900;
+        int JOB_UPDATE = 50;
+        int JOB_DELETE = 50;
         int jobSize = JOB_NEW + JOB_UPDATE + JOB_DELETE;
 
         int FLUSH_SIZE = 100;
         double PARENT_CHANCE = 0.01;
         double CHILD_CHANCE = 0.02;
+        int JOBS_PER_REOPEN = 10;
 
         Configuration storageConf = getStorageConfiguration();
         Storage storage = StorageFactory.createStorage(storageConf);
+
+        // For later re-opens
+        storageConf.set(DatabaseStorage.CONF_FORCENEW, false);
+        storageConf.set(DatabaseStorage.CONF_CREATENEW, false);
+
+        storage.close();
+        storage = StorageFactory.createStorage(storageConf);
+/*        if (reopen) {
+            storage.close();
+        }*/
 
         StorageMonkeyHelper monkey = new StorageMonkeyHelper(
                 MIN_CONTENT_SIZE, MAX_CONTENT_SIZE, PARENT_CHANCE, CHILD_CHANCE,
                 null, null, META_MIN_ENTRIES, META_MAX_ENTRIES,
                 META_MIN_LENGTH, META_MAX_LENGTH);
         monkey.setCheckForExistingOnDelete(false);
-        
+
         for (int run = 0 ; run < RUNS ; run++) {
             log.info("Starting run " + (run + 1));
             Profiler profiler = new Profiler(JOBS_PER_RUN);
+            profiler.setBpsSpan(3);
             for (int job = 0 ; job < JOBS_PER_RUN ; job++) {
+                if (reopen && job % JOBS_PER_REOPEN == 1) {
+                    profiler.pause();
+                    long beginTime = System.currentTimeMillis();
+                    if (delay > 0) {
+                        log.debug(String.format(
+                                "Pausing for %dms before reopening Storage",
+                                delay));
+                        Thread.sleep(delay);
+                    }
+                    log.trace("Closing existing Storage");
+                    storage.close();
+                    log.trace("Opening new Storage");
+                    storage = StorageFactory.createStorage(storageConf);
+                    log.debug(String.format("Storage re-opened in %dms",
+                              + (System.currentTimeMillis() - beginTime)));
+                    profiler.unpause();
+                }
+
                 List<StorageMonkeyHelper.Job> jobs = monkey.createJobs(
                         JOB_NEW, JOB_UPDATE, JOB_DELETE,
                         Integer.MAX_VALUE, FLUSH_SIZE, FLUSH_SIZE);
@@ -865,8 +941,6 @@ public class StorageTest extends TestCase {
                         profiler.getETAAsString(true)));
             }
         }
-
         storage.close();
     }
-
 }
