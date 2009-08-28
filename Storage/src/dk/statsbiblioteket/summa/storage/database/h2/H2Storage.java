@@ -220,6 +220,21 @@ public class H2Storage extends DatabaseStorage implements Configurable {
         super.flush(rec);
     }
 
+    /*
+    * Note: the 'synchronized' part of this method decl is paramount to
+    * allowing us to set our transaction level to
+    * Connection.TRANSACTION_READ_UNCOMMITTED
+    */
+    @Override
+    public synchronized void flushAll(List<Record> recs) throws IOException {
+        if (numFlushes > OPTIMIZE_INDEX_THRESHOLD) {
+            numFlushes = 0;
+            optimizeTables();
+        }
+        numFlushes += recs.size();
+        super.flushAll(recs);
+    }
+
     /**
      * The purpose of this method is to make sure that H2's limit on the
      * maximum number of memory buffered rows is bigger than the pageSize
