@@ -33,7 +33,7 @@ import org.archive.io.ArchiveRecord;
 import org.archive.io.ArchiveRecordHeader;
 
 import java.util.Iterator;
-import java.io.File;
+import java.io.*;
 
 /**
  * Receives a stream in the ARC file format and extracts the content, along with
@@ -49,18 +49,33 @@ import java.io.File;
 public class ARCParser extends ThreadedStreamParser {
     private static Log log = LogFactory.getLog(ARCParser.class);
 
+    /**
+     * If true, ARC-content that starts with "http" is expected to start with
+     * HTTP-headers. These headers will be trimmed and added to the meta-data
+     * for the payload, with the key-prefix "http-header.".
+     * </p><p>
+     * Optional. Default is true.
+     */
+    public static final String CONF_REMOVE_HTTP_HEADERS =
+            "arcparser.removehttpheaders";
+    public static final boolean DEFAULT_REMOVE_HTTP_HEADERS = true;
+
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    public String[] ARC_FIELDS = new String[]{
+    public static final String[] ARC_FIELDS = new String[]{
             "arc.arcname", "arc.arcoffset", "arc.contentLength", "arc.date",
             "arc.digest", "arc.primaryType", "arc.title", "arc.tstamp",
             "arc.url"};
+    public static final String HTTP_PREFIX = "http-header.";
 
     // TODO: Add timeout
     private boolean useFileHack = false;
+    private boolean removeHTTPHeaders = DEFAULT_REMOVE_HTTP_HEADERS;
 
     public ARCParser(Configuration conf) {
         super(conf);
         useFileHack = conf.getBoolean("usefilehack", useFileHack);
+        removeHTTPHeaders = conf.getBoolean(
+                CONF_REMOVE_HTTP_HEADERS, removeHTTPHeaders);
         log.debug("ARCParser constructed"
                   + (useFileHack ? " with filehack enabled" : ""));
     }
@@ -102,6 +117,7 @@ public class ARCParser extends ThreadedStreamParser {
             FutureInputStream arStream = new FutureInputStream(ar);
             Payload payload = new Payload(arStream);
             fillPayloadFromHeader(payload, header, archiveReader.getFileName());
+            handleHTTPHeaders(payload);
             addToQueue(payload);
 
             arStream.waitForClose();
@@ -127,6 +143,43 @@ public class ARCParser extends ThreadedStreamParser {
         }
         log.debug("Ending protected run " + runCount + " with " + internalCount
                   + " extracted records. running=" + running);
+    }
+
+    // Leaved the stream at the beginning of the real content
+    private void handleHTTPHeaders(Payload payload) throws IOException {
+        if (!removeHTTPHeaders) {
+            log.trace("RemoveHTTPHeaders not enabled");
+            return;
+        }
+        String url = payload.getData("arc.url").toString();
+        if (url.length() < 4 || !url.startsWith("http")) {
+            if (log.isTraceEnabled()) {
+                log.trace(String.format(
+                        "Skipped handleHTTPHeaders for %s as content did not"
+                        + " start with http", payload));
+            }
+            return;
+        }
+        if (log.isTraceEnabled()) {
+            log.trace("Removing HTTP headers from " + payload);
+        }
+        BufferedReader in;
+        try {
+            in = new BufferedReader(new InputStreamReader(
+                    payload.getStream(), "utf-8"));
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalStateException("utf-8 not supported", e);
+        }
+        String line;
+        int counter = 0;
+        while (!"".equals(line = in.readLine())) {
+            String[] tokens = line.split(":", 2);
+            if (tokens.length == 2 && !"".equals(tokens[0])) {
+                payload.getData().put(HTTP_PREFIX + tokens[0], tokens[1]);
+                counter++;
+            }
+        }
+        log.trace("Extracted " + counter + " HTTP headers");
     }
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})

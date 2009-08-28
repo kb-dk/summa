@@ -99,7 +99,8 @@ public class TikaTest extends TestCase {
         List<Configuration> innerConfs = filterConfs.get(1).
                 getSubConfigurations(MUXFilter.CONF_FILTERS).get(0).
                 getSubConfigurations(FilterSequence.CONF_FILTERS);
-        String descriptorLocation = "test/data/tika/TikaTest_IndexDescriptor.xml";
+        String descriptorLocation =
+                "test/data/tika/TikaTest_IndexDescriptor.xml";
         for (int filterPos: new int[]{1, 2}) {
             assertTrue("An inner descriptor location should be present for "
                        + filterPos, innerConfs.get(filterPos).

@@ -34,6 +34,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import dk.statsbiblioteket.summa.ingest.split.StreamController;
+import dk.statsbiblioteket.util.Strings;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -77,8 +78,14 @@ public class ARCParserTest extends TestCase {
         log.debug("Iterating through ARC records");
         while (ap.hasNext()) {
             Payload payload = ap.next();
-            System.out.println("Found " + payload + " with content length "
-                               + streamLength(payload));
+            if (true || "text/html".equals(payload.getData("arc.primaryType"))) {
+                System.out.println(String.format(
+                        "Found %s with content\n%s",
+                        payload, Strings.flushLocal(payload.getStream())));
+            } else {
+                System.out.println("Found " + payload + " with content length "
+                                   + streamLength(payload));
+            }
             payload.close();
         }
         ap.close(true);
@@ -91,4 +98,5 @@ public class ARCParserTest extends TestCase {
         }
         return length;
     }
+
 }
