@@ -7,6 +7,18 @@ import static java.lang.System.nanoTime;
  */
 public abstract class Select {
 
+    private static final Select shutDown = new Select(0, 0, null) {
+        public boolean accepts(Object message) {
+            return false;
+        }
+    };
+
+    private static final Select ignore = new Select(0, 0, null) {
+        public boolean accepts(Object message) {
+            return false;
+        }
+    };
+
     protected long timeout;
     protected long selectionTime;
     protected Object continuation;
@@ -59,6 +71,10 @@ public abstract class Select {
                 }
                 return false;
             }
+
+            public String toString() {
+                return "Select.message";
+            }
         };
     }    
 
@@ -70,13 +86,12 @@ public abstract class Select {
     public static Select any(long timeout,
                              Object continuation) {
         return new Select(timeout, nanoTime(), continuation) {
-            /*
-             * Accepts any message of the listed classes. Message checking is
-             * done in a for-loop since we can expect only a few valid classes,
-             * hence direct iteration is faster than, say, a HashSet
-             */
             public boolean accepts (Object message) {
                 return message != null;
+            }
+
+            public String toString() {
+                return "Select.any";
             }
         };
     }
@@ -96,14 +111,25 @@ public abstract class Select {
     public static Select defer(long timeout,
                                Object continuation) {
         return new Select(timeout, nanoTime(), continuation) {
-            /*
-             * Accepts any message of the listed classes. Message checking is
-             * done in a for-loop since we can expect only a few valid classes,
-             * hence direct iteration is faster than, say, a HashSet
-             */
             public boolean accepts (Object message) {
                 return false;
             }
+
+            public String toString() {
+                return "Select.defer";
+            }
         };
+    }
+
+    public static Select defer(long timeout) {
+        return Select.defer(timeout, null);
+    }
+
+    public static Select shutdown() {
+        return Select.shutDown;
+    }
+
+    public static Select ignore() {
+        return Select.ignore;
     }
 }

@@ -8,4 +8,10 @@ public abstract class Scheduler {
     public abstract Channel newChannel();
 
     public abstract void broadcast(Channel chan, Actor actor, Object msg);
+
+    public abstract void start();
+
+    public abstract void shutdown();
+
+    public abstract boolean awaitShutdown(long timeoutMillis);
 }
