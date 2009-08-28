@@ -27,6 +27,12 @@
     </logger>
 
     <!--
+    <logger name="dk.statsbiblioteket.summa.storage.StorageMonkeyHelper">
+        <level value="DEBUG" />
+        <appender-ref ref="CONSOLE" />
+    </logger>
+        -->
+    <!--
     <logger name="dk.statsbiblioteket.summa.storage.database.h2">
         <level value="TRACE" />
         <appender-ref ref="CONSOLE" />

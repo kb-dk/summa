@@ -48,7 +48,7 @@ import java.io.StringWriter;
 public class StorageMonkeyHelper {
     private static Log log = LogFactory.getLog(StorageMonkeyHelper.class);
 
-    private List<Integer> existingIDs = new ArrayList<Integer>(10000);
+//    private List<Integer> existingIDs = new ArrayList<Integer>(10000);
     private int idCounter = 0; // For new IDs
     private Random random = new Random(87);
 
@@ -163,16 +163,16 @@ public class StorageMonkeyHelper {
             int flushSize = Math.max(1, nextInt(minFlushSize, maxFlushSize));
             Job job = new Job(flushSize);
             for (int i = 0 ; i < records ; i++) {
-                if (existingIDs.size() == 0) {
+/*                if (existingIDs.size() == 0) {
                     job.add(new FutureRecord(idCounter++, false));
                     news--;
                     continue;
-                }
+                }*/
                 List<TYPE> types = new ArrayList<TYPE>(3);
-                if (deletes > 0 && existingIDs.size() > 0) {
+                if (deletes > 0) {
                     types.add(TYPE.d);
                 }
-                if (updates > 0 && existingIDs.size() > 0) {
+                if (updates > 0) {
                     types.add(TYPE.u);
                 }
                 if (news > 0) {
@@ -181,15 +181,13 @@ public class StorageMonkeyHelper {
                 switch (types.get(random.nextInt(types.size()))) {
                     case d: {
                         job.add(new FutureRecord(
-                                existingIDs.get(random.nextInt(
-                                        existingIDs.size())), true));
+                                random.nextInt(idCounter), true));
                         deletes--;
                         break;
                     }
                     case u: {
                         job.add(new FutureRecord(
-                                existingIDs.get(random.nextInt(
-                                        existingIDs.size())), false));
+                                random.nextInt(idCounter), false));
                         updates--;
                         break;
                     }
@@ -277,17 +275,18 @@ public class StorageMonkeyHelper {
         private FutureRecord(int id, boolean delete) {
             this.id = id;
             this.delete = delete;
-            if (!delete && !existingIDs.contains(id)) {
+/*            if (!delete && !existingIDs.contains(id)) {
                 existingIDs.add(id);
             } else if (delete) {
                 existingIDs.remove(Integer.valueOf(id));
-            }
+            }*/
         }
 
         public Record getRecord() {
             return makeRecord(
                     random, id, delete, minContentSize, maxContentSize);
         }
+
     }
 
     public class Job implements Runnable {
@@ -314,7 +313,7 @@ public class StorageMonkeyHelper {
         }
 
         public void run() {
-            log.debug("Starting Job thread");
+            log.debug("Starting thread " + this);
             try {
                 WritableStorage storageW = getStorageW();
                 ReadableStorage storageR = getStorageR();
