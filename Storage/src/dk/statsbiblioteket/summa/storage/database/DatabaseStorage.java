@@ -1081,7 +1081,7 @@ getco     */
         // http://jdbc.postgresql.org/documentation/83/query.html#query-with-cursor
         // This prevents an OOM for backends like Postgres
         try {
-            stmt.getConnection().setAutoCommit(false);
+            //stmt.getConnection().setAutoCommit(false);
             stmt.getConnection().setTransactionIsolation(
                                        Connection.TRANSACTION_READ_UNCOMMITTED);
             stmt.getConnection().setReadOnly(true);
@@ -1526,6 +1526,15 @@ getco     */
                 log.warn(error, e);
                 throw new IOException(error, e);
             } finally {
+                try {
+                    if (error != null) {
+                        conn.rollback();
+                        log.info("Transaction rolled back succesfully");
+                    }
+                } catch (SQLException e) {
+                    log.error("Transaction rollback failed: " + e.getMessage(),
+                              e);
+                }
                 closeConnection(conn);
             }
         }
