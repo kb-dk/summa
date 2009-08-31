@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.util.LoggingExceptionHandler;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
@@ -123,6 +124,7 @@ public class RecordWriter extends ObjectFilterImpl {
             log.debug("Starting batch job watcher");
             watcher = new Thread(this, "RecordBatcher");
             watcher.setDaemon(true); // Allow the JVM to exit
+            watcher.setUncaughtExceptionHandler(new LoggingExceptionHandler());
             watcher.start();
         }
 
