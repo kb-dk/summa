@@ -35,9 +35,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
-/**
- *
- */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
@@ -64,6 +61,10 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
     private boolean lowercaseQueries =
             SuggestSearchNode.DEFAULT_LOWERCASE_QUERIES;
     private Locale lowercaseLocale;
+
+    private int updateCount = 0;
+    public static final int ANALYZE_INTERVAL = 10000;
+
 
     @SuppressWarnings({"UnusedDeclaration"})
     public SuggestStorageH2(Configuration conf) {
@@ -117,6 +118,13 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
                 createSchema();
             } catch (SQLException e) {
                 throw new IOException("Unable to create schema", e);
+            }
+        } else {
+            log.debug("Calling analyze, just to make sure");
+            try {
+                optimizeTables();
+            } catch (Exception e) {
+                log.warn("Exception while optimizing tables upon startup", e);
             }
         }
         closed = false;
@@ -252,6 +260,8 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         psInsert.setInt(3, queryCount);
         psInsert.setLong(4, hits);
         psInsert.executeUpdate();
+        updateCount++;
+        analyzeIfNeeded();
     }
 
     private int getQueryCount(String query) throws SQLException {
@@ -435,6 +445,8 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             log.trace(String.format("Finished adding %d suggestions. "
                                     + "Committing", suggestions.size()));
             connection.commit();
+            updateCount += suggestions.size();
+            analyzeIfNeeded();
         } catch (SQLException e) {
             throw new IOException("SQLException adding suggestions", e);
         } finally {
@@ -494,4 +506,24 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
     public File getLocation() {
         return location;
     }
+
+    private void analyzeIfNeeded() {
+        if (updateCount < ANALYZE_INTERVAL) {
+            return;
+        }
+        updateCount = 0;
+    }
+
+    private synchronized void optimizeTables() {
+        try {
+            // Rebuild the table selectivity indexes used by the query optimizer
+            log.debug("Optimizing suggest table selectivity");
+            Statement stmt = connection.createStatement();
+            //noinspection DuplicateStringLiteralInspection
+            stmt.execute("ANALYZE");
+        } catch (SQLException e) {
+            log.warn("Failed to optimize suggest table selectivity", e);
+        }
+    }
+
 }
