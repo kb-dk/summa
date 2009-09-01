@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -62,53 +62,71 @@ public class PayloadMatcher {
     public static final String CONF_CONTENT_REGEX =
                                             "summa.record.contentpatterns";
 
+    /**
+     * Optional property defining a list of keys. A list of the same length must
+     * be defined for {@link #CONF_META_VALUE_REGEXP}. For each entry in Payload
+     * or Record that has one of the keys in this list, the corresponding regexp
+     * is checked.
+     */
+    public static final String CONF_META_KEY = "summa.record.metakey";
+
+    /**
+     * The list of regexps corresponfing to {@link #CONF_META_KEY}. Should be
+     * defined if CONF_META_KEY, but if null, all values will match.
+     */
+    public static final String CONF_META_VALUE_REGEXP =
+            "summa.record.metavaluepattern";
+
     private List<Matcher> idMatchers;
     private List<Matcher> baseMatchers;
     private List<Matcher> contentMatchers;
+    private List<String> metaKeys;
+    private List<Matcher> metaValueMatchers;
 
     private static final String PAYLOAD_WITHOUT_RECORD =
             "Payload without record, can not check record %s. No match";
 
     public PayloadMatcher(Configuration conf) {
         log.trace("Constructing PayloadMatcher");
-        List<String> idRegex = conf.getStrings(
-                PayloadMatcher.CONF_ID_REGEX, (List<String>)null);
-        List<String> baseRegex = conf.getStrings(
-                PayloadMatcher.CONF_BASE_REGEX, (List<String>)null);
-        List<String> contentRegex = conf.getStrings(
-                PayloadMatcher.CONF_CONTENT_REGEX, (List<String>)null);
+        idMatchers = getMatchers(conf, CONF_ID_REGEX, "id");
+        baseMatchers = getMatchers(conf, CONF_BASE_REGEX, "base");
+        //noinspection DuplicateStringLiteralInspection
+        contentMatchers = getMatchers(conf, CONF_CONTENT_REGEX, "content");
 
-        if (idRegex != null) {
-            idMatchers = new ArrayList<Matcher>(idRegex.size());
-            for (String regex : idRegex) {
-                log.debug("Compiling id filter regex: " + regex);
-                idMatchers.add(Pattern.compile(regex).matcher(""));
-            }
+        metaKeys = conf.getStrings(CONF_META_KEY, (List<String>)null);
+        metaValueMatchers = getMatchers(
+                conf, CONF_META_VALUE_REGEXP, "meta value");
+        if (metaKeys != null && metaValueMatchers != null
+            && metaKeys.size() != metaValueMatchers.size()) {
+            throw new IllegalArgumentException(String.format(
+                    "The number of %s was %d while number of %s was %s. As the"
+                    + " lists are used in parallen, the numbers must match",
+                    CONF_META_KEY, metaKeys.size(),
+                    CONF_META_VALUE_REGEXP, metaValueMatchers.size()));
         }
 
-        if (baseRegex != null) {
-            baseMatchers = new ArrayList<Matcher>(baseRegex.size());
-            for (String regex : baseRegex) {
-                log.debug("Compiling base filter regex: " + regex);
-                baseMatchers.add(Pattern.compile(regex).matcher(""));
-            }
-        }
-
-        if (contentRegex != null) {
-            contentMatchers = new ArrayList<Matcher>(contentRegex.size());
-            for (String regex : contentRegex) {
-                log.debug("Compiling content filter regex: " + regex);
-                contentMatchers.add(Pattern.compile(regex).matcher(""));
-            }
-        }
-
-        if (idMatchers == null && baseMatchers == null && contentMatchers == null){
+        if (idMatchers == null && baseMatchers == null
+            && contentMatchers == null){
             log.warn("No patterns configured. Set the properties "
                      + PayloadMatcher.CONF_ID_REGEX + ", "
                      + PayloadMatcher.CONF_BASE_REGEX +", and/or"
                      + PayloadMatcher.CONF_CONTENT_REGEX
                      + " to control the behaviour");
         }
+    }
+
+    private List<Matcher> getMatchers(Configuration conf,
+                                      String confKey, String type) {
+        List<String> regexps = conf.getStrings(confKey, (List<String>)null);
+        if (regexps == null) {
+            return null;
+        }
+        List<Matcher> matchers = new ArrayList<Matcher>(regexps.size());
+        for (String regex : regexps) {
+            log.debug("Compiling " + type + " filter regex: " + regex);
+            matchers.add(Pattern.compile(regex).matcher(""));
+        }
+        return matchers;
     }
 
     /**
@@ -119,12 +137,8 @@ public class PayloadMatcher {
         if (log.isTraceEnabled()) {
             log.trace("matching " + payload);
         }
-        if (idMatchers != null) {
-            for (Matcher m : idMatchers) {
-                if (m.reset(payload.getId()).matches()) {
-                    return true;
-                }
-            }
+        if (isMatch(idMatchers, payload.getId())) {
+            return true;
         }
 
         if (baseMatchers != null) {
@@ -137,10 +151,8 @@ public class PayloadMatcher {
                 return true;
             }
 
-            for (Matcher m : baseMatchers) {
-                if (m.reset(r.getBase()).matches()) {
-                    return true;
-                }
+            if (isMatch(baseMatchers, r.getBase())) {
+                return true;
             }
         }
 
@@ -156,14 +168,44 @@ public class PayloadMatcher {
                 return false;
             }
 
-            for (Matcher m : contentMatchers) {
-                if (m.reset(r.getContentAsUTF8()).matches()) {
-                    return true;
-                }
+            if (isMatch(contentMatchers, r.getContentAsUTF8())) {
+                return true;
             }
         }
 
+        if (metaKeys != null) {
+            for (int i = 0 ; i < metaKeys.size() ; i++) {
+                String metaKey = metaKeys.get(i);
+                Object value = payload.getData(metaKey);
+                if (value != null &&
+                    (metaValueMatchers == null
+                     || metaValueMatchers.get(i).reset(
+                            value.toString()).matches())) {
+                    return true;
+                }
+                if (payload.getRecord() != null 
+                    && (value = payload.getRecord().getMeta(metaKey)) != null) {
+                    if (metaValueMatchers == null ||
+                        metaValueMatchers.get(i).reset(
+                                value.toString()).matches()) {
+                        return true;
+                    }
+                }
+            }
+        }
         log.trace("No match for payload");
+        return false;
+    }
+
+    private boolean isMatch(List<Matcher> matchers, String value) {
+        if (matchers == null) {
+            return false;
+        }
+        for (Matcher m : matchers) {
+            if (m.reset(value).matches()) {
+                return true;
+            }
+        }
         return false;
     }
 }
