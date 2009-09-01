@@ -186,14 +186,13 @@ public class H2Storage extends DatabaseStorage implements Configurable {
         }
 
         setMaxMemoryRows();
-        optimizeTables();
     }
 
     private void optimizeTables() {
         Connection conn = getConnection();
         try {
             // Rebuild the table selectivity indexes used by the query optimizer
-            log.debug("Optimizing table selectivity");
+            log.info("Optimizing table selectivity");
             Statement stmt = conn.createStatement();
             stmt.execute("ANALYZE");
         } catch (SQLException e) {
@@ -339,7 +338,7 @@ public class H2Storage extends DatabaseStorage implements Configurable {
             return;
         }
 
-        touched = touched != null ? touched : new HashSet(10);
+        touched = touched != null ? touched : new HashSet<String>(10);
 
         // Touch each parent and recurse upwards
         for (Record parent : parents) {
