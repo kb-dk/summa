@@ -2,14 +2,14 @@ package dk.statsbiblioteket.summa.common.filter.object;
 
 import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.util.PayloadMatcher;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
-
-import java.io.StringReader;
 
 /**
  * Test cases for {@link RegexFilter}
  */
+@SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class RegexFilterTest extends TestCase {
 
     ObjectFilter filter;
@@ -19,9 +19,9 @@ public class RegexFilterTest extends TestCase {
                                          String contentRegex,
                                          boolean isInclusive) {
         Configuration conf = Configuration.newMemoryBased(
-                RegexFilter.CONF_ID_REGEX, idRegex,
-                RegexFilter.CONF_BASE_REGEX, baseRegex,
-                RegexFilter.CONF_CONTENT_REGEX, contentRegex,
+                PayloadMatcher.CONF_ID_REGEX, idRegex,
+                PayloadMatcher.CONF_BASE_REGEX, baseRegex,
+                PayloadMatcher.CONF_CONTENT_REGEX, contentRegex,
                 RegexFilter.CONF_MODE, isInclusive ? "inclusive" : "exclusive"
         );
 
@@ -33,8 +33,8 @@ public class RegexFilterTest extends TestCase {
         // Set up the source filter
         PushFilter source = new PushFilter(records.length+1, 2048);
 
-        for (int i = 0; i < records.length; i++) {
-            Payload p = new Payload(records[i]);
+        for (Record record : records) {
+            Payload p = new Payload(record);
             source.add(p);
         }
         source.signalEOF();
@@ -59,7 +59,7 @@ public class RegexFilterTest extends TestCase {
                        new Record("id2", "base1", "test content 2".getBytes()));
 
         // Flush the filter chain
-        while (buf.pump()){;}
+        while (buf.pump()){}
 
         assertEquals(2, buf.size());
         assertEquals("id1", buf.get(0).getRecord().getId());
@@ -75,7 +75,7 @@ public class RegexFilterTest extends TestCase {
                        new Record("id2", "base1", "test content 2".getBytes()));
 
         // Flush the filter chain
-        while (buf.pump()){;}
+        while (buf.pump()){}
 
         assertEquals(0, buf.size());
     }
@@ -89,7 +89,7 @@ public class RegexFilterTest extends TestCase {
                        new Record("bad2", "base1", "test content 2".getBytes()));
 
         // Flush the filter chain
-        while (buf.pump()){;}
+        while (buf.pump()){}
 
         assertEquals(1, buf.size());
         assertEquals("good1", buf.get(0).getRecord().getId());
@@ -104,7 +104,7 @@ public class RegexFilterTest extends TestCase {
                        new Record("bad2", "base1", "test content 2".getBytes()));
 
         // Flush the filter chain
-        while (buf.pump()){;}
+        while (buf.pump()){}
 
         assertEquals(1, buf.size());
         assertEquals("bad2", buf.get(0).getRecord().getId());
@@ -119,7 +119,7 @@ public class RegexFilterTest extends TestCase {
                        new Record("id2", "badBase", "test content 2".getBytes()));
 
         // Flush the filter chain
-        while (buf.pump()){;}
+        while (buf.pump()){}
 
         assertEquals(1, buf.size());
         assertEquals("id1", buf.get(0).getRecord().getId());
@@ -134,7 +134,7 @@ public class RegexFilterTest extends TestCase {
                        new Record("id2", "badBase", "test content 2".getBytes()));
 
         // Flush the filter chain
-        while (buf.pump()){;}
+        while (buf.pump()){}
 
         assertEquals(1, buf.size());
         assertEquals("id2", buf.get(0).getRecord().getId());
@@ -149,7 +149,7 @@ public class RegexFilterTest extends TestCase {
                        new Record("id2", "base1", "bad content 2".getBytes()));
 
         // Flush the filter chain
-        while (buf.pump()){;}
+        while (buf.pump()){}
 
         assertEquals(1, buf.size());
         assertEquals("id1", buf.get(0).getRecord().getId());
@@ -164,7 +164,7 @@ public class RegexFilterTest extends TestCase {
                        new Record("id2", "base1", "bad content 2".getBytes()));
 
         // Flush the filter chain
-        while (buf.pump()){;}
+        while (buf.pump()){}
 
         assertEquals(1, buf.size());
         assertEquals("id2", buf.get(0).getRecord().getId());
@@ -181,7 +181,7 @@ public class RegexFilterTest extends TestCase {
                        new Record("id4", "base4", "good content 4".getBytes()));
 
         // Flush the filter chain
-        while (buf.pump()){;}
+        while (buf.pump()){}
 
         assertEquals(2, buf.size());
         assertEquals("id1", buf.get(0).getRecord().getId());
@@ -199,7 +199,7 @@ public class RegexFilterTest extends TestCase {
                        new Record("id4", "good4", "bad content 4".getBytes()));
 
         // Flush the filter chain
-        while (buf.pump()){;}
+        while (buf.pump()){}
 
         assertEquals(1, buf.size());
         assertEquals("id2", buf.get(0).getRecord().getId());
@@ -207,7 +207,7 @@ public class RegexFilterTest extends TestCase {
 
     public void testTwoIdFiltersExclusive() throws Exception {
         Configuration conf = Configuration.newMemoryBased(
-                RegexFilter.CONF_ID_REGEX,
+                PayloadMatcher.CONF_ID_REGEX,
                 "bad1, bad2"
         );
         filter = new RegexFilter(conf);
@@ -220,7 +220,7 @@ public class RegexFilterTest extends TestCase {
                        new Record("bad2", "base1", "content 4".getBytes()));
 
         // Flush the filter chain
-        while (buf.pump()){;}
+        while (buf.pump()){}
 
         assertEquals(2, buf.size());
         assertEquals("id1", buf.get(0).getRecord().getId());
@@ -229,7 +229,7 @@ public class RegexFilterTest extends TestCase {
 
     public void testTwoIdFiltersInclusive() throws Exception {
         Configuration conf = Configuration.newMemoryBased(
-                RegexFilter.CONF_ID_REGEX,
+                PayloadMatcher.CONF_ID_REGEX,
                 "good1, good2",
                 RegexFilter.CONF_MODE, "inclusive"
         );
@@ -243,7 +243,7 @@ public class RegexFilterTest extends TestCase {
                        new Record("id4", "base1", "content 4".getBytes()));
 
         // Flush the filter chain
-        while (buf.pump()){;}
+        while (buf.pump()){}
 
         //
         assertEquals(2, buf.size());
@@ -255,7 +255,7 @@ public class RegexFilterTest extends TestCase {
         // The dots in these regexes are part of the id's and should
         // strictly speaking be escaped, but in this test we are lazy...
         Configuration conf = Configuration.newMemoryBased(
-                RegexFilter.CONF_ID_REGEX,
+                PayloadMatcher.CONF_ID_REGEX,
                 "oai:doaj-articles:b37e5a0253e3ca1090ee7b6268050a44, " +
                 "oai:pangaea.de:doi:10.1594/PANGAEA.712421"
         );
@@ -271,7 +271,7 @@ public class RegexFilterTest extends TestCase {
                 new Record("good2", "base1", "content 4".getBytes()));
 
         // Flush the filter chain
-        while (buf.pump()){;}
+        while (buf.pump()){}
 
         assertEquals(2, buf.size());
         assertEquals("good1", buf.get(0).getRecord().getId());
