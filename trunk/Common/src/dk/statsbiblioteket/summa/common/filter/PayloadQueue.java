@@ -237,7 +237,7 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
         return BASE +
                (!payload.hasData() ? 0 : 1000) +
                (payload.getRecord() == null ? 0 :
-                payload.getRecord().getContent().length
+                payload.getRecord().getContent(false).length
                + (!payload.getRecord().hasMeta() ? 0 : 1000));
     }
 }
