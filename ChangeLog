@@ -1,3 +1,288 @@
+2009-09-01 12:15  mkamstrup
+
+	* [r1747] build.properties, ChangeLog, NEWS:
+
+	  Release Summa 1.4.9
+
+2009-09-01 12:11  toke-sb
+
+	* [r1746]
+	  Common/src/dk/statsbiblioteket/summa/common/util/PayloadMatcher.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/ClearBaseFilter.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/filter/ClearBaseFilterTest.java:
+	  
+	  Testing: The ClearBaseFilter with PayloadMatcher now has a unit
+	  test
+
+2009-09-01 11:06  mkamstrup
+
+	* [r1745] build.xml:
+	  
+	  Feature: Add a new .jar file to the distribution,
+	  summa-standalone-${summa.version}.jar, containing all summa libs
+	  and dependencies. Stand Alone is the word
+
+2009-09-01 09:46  toke-sb
+
+	* [r1744]
+	  Common/src/dk/statsbiblioteket/summa/common/util/PayloadMatcher.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/RegexFilterTest.java:
+	  
+	  Feature: Added matching on key and value on Payload and embedded
+	  Record for PayloadMatcher
+
+2009-09-01 09:39  mkamstrup
+
+	* [r1743]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/h2/H2Storage.java:
+	  
+	  Performance: Don't optimize table selectivity on startup
+	  
+	  Code cleanup: Fix compiler warning about generics
+
+2009-09-01 08:56  toke-sb
+
+	* [r1742]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/RegexFilter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/PayloadMatcher.java,
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/RegexFilterTest.java:
+	  
+	  Refactoring: Extracted the Payload-matching code from
+	  RegexpFilter
+
+2009-09-01 07:49  toke-sb
+
+	* [r1741]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/PayloadQueue.java:
+	  
+	  Bugfix: the PayloadQueue unpacked all compressed content when it
+	  checked for size
+
+2009-08-31 14:07  toke-sb
+
+	* [r1740]
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorageH2.java:
+	  
+	  Performance: The H2-based Suggest storage now performs an alazyle
+	  upon startup and after each 10,000 updates. The analyze is quick
+	  for the suggest-corpus at Statsbiblioteket (< 1 second) and seems
+	  to improve lookup performance considerably
+
+2009-08-31 12:21  mkamstrup
+
+	* [r1739]
+	  Common/test/dk/statsbiblioteket/summa/common/rpc/RemoteHelperTest.java:
+	  
+	  Tests: Do some interaction tests with RemoteHelper. Among other
+	  interesting stuff this reveals that OOM pass cascade directly
+	  from the server process to the calling client process... Scary...
+
+2009-08-31 11:39  mkamstrup
+
+	* [r1738]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/RecordWriter.java:
+	  
+	  Bugfix: Log uncaught exceptions in the RecordBatcher thread in
+	  the RecordWriter filter
+
+2009-08-31 11:37  mkamstrup
+
+	* [r1737]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java:
+	  
+	  Bugfix: In DatabaseStorage explicitly rollback connections with
+	  any errors detected (the rollbacks where implicit from closing
+	  the connection before - this is not good JDBC behaviour)
+
+2009-08-28 12:45  toke-sb
+
+	* [r1735]
+	  Storage/test/dk/statsbiblioteket/summa/storage/StorageMonkeyHelper.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/StorageTest.java,
+	  Storage/test/log4j.xml:
+	  
+	  Testing: Updated test for a large amount (5M) of tiny Records in
+	  Storage
+
+2009-08-28 12:44  toke-sb
+
+	* [r1734]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/h2/H2Storage.java:
+	  
+	  Feature: Made H2Storage perform an analyze every 100000 records
+	  on flushAll
+
+2009-08-28 09:40  toke-sb
+
+	* [r1733]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/StorageMonkeyHelper.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/StorageTest.java,
+	  Storage/test/log4j.xml:
+	  
+	  Testing: Introduced test for a large amount (5M) of tiny Records
+	  in Storage
+
+2009-08-28 01:52  toke-sb
+
+	* [r1730]
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/StorageTest.java:
+	  
+	  Testing: Added minor transaction debug oriented test to
+	  StorageTest
+
+2009-08-27 23:47  toke-sb
+
+	* [r1729]
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestSearchNode.java:
+	  
+	  Logging: Better error message on missing suggest keys
+
+2009-08-27 23:23  toke-sb
+
+	* [r1728]
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/StorageTest.java:
+	  
+	  Moved MonkeyTest away from Control
+
+2009-08-27 23:22  toke-sb
+
+	* [r1727]
+	  Control/test/dk/statsbiblioteket/summa/releasetest/StorageTest.java:
+	  
+	  Moved MonkeyTest away from Control
+
+2009-08-27 20:35  toke-sb
+
+	* [r1725] Samples/Summix/bin/suggest-tool.bat,
+	  Samples/Summix/bin/suggest-tool.sh:
+	  
+	  Added clear/import/export commands to suggest-tool
+
+2009-08-27 13:35  toke-sb
+
+	* [r1723]
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestSearchNode.java:
+	  
+	  Cosmetics: Better feedback on clear/import/export for suggest
+
+2009-08-27 13:22  toke-sb
+
+	* [r1722]
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestSearchNode.java,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorage.java,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorageH2.java,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorageImpl.java,
+	  Support/test/dk/statsbiblioteket/summa/support/suggest/SuggestSearcherTest.java:
+	  
+	  Feature: Added import and export of suggest data
+
+2009-08-27 11:52  toke-sb
+
+	* [r1721] Common/scripts/buildPerformance.sh,
+	  Common/scripts/indexDumper.sh, Common/scripts/inspect.sh,
+	  Common/scripts/termStatsPerformance.sh:
+	  
+	  Update: Bumped common scripts version to match Summa trunk
+
+2009-08-27 11:18  mkamstrup
+
+	* [r1720]
+	  Control/src/dk/statsbiblioteket/summa/control/bundle/BundleTool.java:
+	  
+	  Bugfix: Bundle Tool should escape property refs inside <jvmArg>
+	  tags
+
+2009-08-27 11:15  toke-sb
+
+	* [r1719]
+	  Storage/test/dk/statsbiblioteket/summa/storage/StorageMonkeyHelper.java:
+	  
+	  Testing: StorageMonkeyHelper now uses StorageWriterClient and
+	  StorageReaderClient in order to perform remote connections to
+	  Storage
+
+2009-08-27 07:49  mkamstrup
+
+	* [r1718]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/h2/H2Storage.java:
+	  
+	  Bugfix: Fix db connection leak in flushAll() when we fail to set
+	  the connection in write-mode. This is categorized as a
+	  corner-case bug, but a bug nonetheless
+	  
+	  Performance fix: Small performance regression in
+	  H2Storage.touchParents() where we allocate a HashSet even when we
+	  might not need it
+
+2009-08-26 11:14  toke-sb
+
+	* [r1711]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/StorageMonkeyHelper.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/StorageMonkeyTest.java[DEL]:
+	  
+	  Testing: More work on Storage monkey
+
+2009-08-26 09:13  toke-sb
+
+	* [r1710]
+	  Control/test/dk/statsbiblioteket/summa/releasetest/StorageTest.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/StorageMonkeyHelper.java[CPY]:
+	  
+	  Testing: Extended the Storage monkey test to include large-scale
+	  uninterrupted ingests
+
+2009-08-26 09:04  toke-sb
+
+	* [r1709]
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/StorageTest.java:
+	  
+	  Testing: Added test for flushAll with multiple instances of the
+	  same record to Storage
+
+2009-08-25 12:43  toke-sb
+
+	* [r1708]
+	  Control/test/dk/statsbiblioteket/summa/releasetest/StorageTest.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/StorageMonkeyTest.java:
+	  
+	  Testing: Enhanced the monkey Storage test to use remote Storage
+
+2009-08-25 12:16  toke-sb
+
+	* [r1707]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/h2/H2Storage.java:
+	  
+	  Bugfix: Added check for endless recursion in touchParent
+
+2009-08-25 11:43  toke-sb
+
+	* [r1706]
+	  Control/test/dk/statsbiblioteket/summa/releasetest/StorageTest.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/StorageMonkeyTest.java:
+	  
+	  Testing: Extended monkey test for Storage
+
+2009-08-25 11:29  toke-sb
+
+	* [r1705]
+	  Control/test/dk/statsbiblioteket/summa/releasetest/StorageTest.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/StorageMonkeyTest.java:
+	  
+	  Testing: Added monkey test for Storage
+
+2009-08-25 10:08  mkamstrup
+
+	* [r1704] ChangeLog,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/h2/H2Storage.java:
+	  
+	  Performance: Enable the H2 second level LRU cache by default.
+	  This should speed up large bases, but might be a small hit for
+	  smaller bases. This feature can be controlled via the
+	  summa.storage.database.l2cache boolean property
+
 2009-08-21 12:58  toke-sb
 
 	* [r1699]
