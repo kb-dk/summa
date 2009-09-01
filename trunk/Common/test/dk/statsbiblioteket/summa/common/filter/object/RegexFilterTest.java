@@ -50,6 +50,27 @@ public class RegexFilterTest extends TestCase {
         return buf;
     }
 
+    public PayloadBufferFilter prepareFilterChain(ObjectFilter filter,
+                                                  Payload... payloads) {
+        // Set up the source filter
+        PushFilter source = new PushFilter(payloads.length+1, 5048);
+
+        for (Payload payload : payloads) {
+            source.add(payload);
+        }
+        source.signalEOF();
+
+        // Set up the endpoint filter
+        PayloadBufferFilter buf = new PayloadBufferFilter(
+                                                Configuration.newMemoryBased());
+
+        // Connect filters
+        filter.setSource(source);
+        buf.setSource(filter);
+
+        return buf;
+    }
+
     public void testUnconfiguredExclusive() throws Exception {
         filter = createRegexFilter(null, null, null, false);
 
@@ -93,6 +114,66 @@ public class RegexFilterTest extends TestCase {
 
         assertEquals(1, buf.size());
         assertEquals("good1", buf.get(0).getRecord().getId());
+    }
+
+    public void testMetaNullValueRegexp() throws Exception {
+        Configuration conf = Configuration.newMemoryBased(
+                PayloadMatcher.CONF_META_KEY, "foo",
+                RegexFilter.CONF_MODE, "inclusive"
+        );
+
+        RegexFilter matcher = new RegexFilter(conf);
+        Payload noMatch = new Payload(new Record(
+                "noMatch", "dummy", new byte[10]));
+        Record recordMatch = new Record(
+                "recordMatch", "dummy", new byte[10]);
+        recordMatch.getMeta().put("foo", "ost");
+        Payload recordMatchPayload = new Payload(recordMatch);
+        Payload match = new Payload(new Record(
+                "match", "dummy", new byte[10]));
+        match.getData().put("foo", "klarbardaf");
+        PayloadBufferFilter buf = prepareFilterChain(
+                       matcher,
+                       noMatch, match, recordMatchPayload);
+
+        // Flush the filter chain
+        while (buf.pump()){}
+
+        assertEquals(2, buf.size());
+        assertEquals("match", buf.get(0).getRecord().getId());
+        assertEquals("recordMatch", buf.get(1).getRecord().getId());
+    }
+
+    public void testMetaValueRegexp() throws Exception {
+        Configuration conf = Configuration.newMemoryBased(
+                PayloadMatcher.CONF_META_KEY, "foo",
+                PayloadMatcher.CONF_META_VALUE_REGEXP, ".*a.*",
+                RegexFilter.CONF_MODE, "inclusive"
+        );
+
+        RegexFilter matcher = new RegexFilter(conf);
+        Payload noMatch = new Payload(new Record(
+                "noMatch", "dummy", new byte[10]));
+        Record recordMatch = new Record(
+                "recordMatch", "dummy", new byte[10]);
+        recordMatch.getMeta().put("foo", "osteanretning");
+        Payload recordMatchPayload = new Payload(recordMatch);
+        Payload match = new Payload(new Record(
+                "match", "dummy", new byte[10]));
+        match.getData().put("foo", "klarbardaf");
+        Payload noMatch2 = new Payload(new Record(
+                "noMatch2", "dummy", new byte[10]));
+        noMatch2.getData().put("foo", "hest");
+        PayloadBufferFilter buf = prepareFilterChain(
+                       matcher,
+                       noMatch, match, recordMatchPayload, noMatch2);
+
+        // Flush the filter chain
+        while (buf.pump()){}
+
+        assertEquals(2, buf.size());
+        assertEquals("match", buf.get(0).getRecord().getId());
+        assertEquals("recordMatch", buf.get(1).getRecord().getId());
     }
 
     public void testIdFilterExclusive() throws Exception {
