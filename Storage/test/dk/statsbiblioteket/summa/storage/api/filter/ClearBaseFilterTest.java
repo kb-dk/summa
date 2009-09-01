@@ -143,7 +143,7 @@ public class ClearBaseFilterTest extends TestCase {
 
     public void testEpoch() throws Exception {
         Calendar cal = Calendar.getInstance();
-        //     2009-08-31 16:09:32
+        //     2009-08-31 16:09:32 => 1251727772660 
         cal.set(Calendar.YEAR, 2009);
         cal.set(Calendar.MONTH, Calendar.AUGUST);
         cal.set(Calendar.DAY_OF_MONTH, 31);
