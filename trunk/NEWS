@@ -1,4 +1,45 @@
 =======================
+2009-09-01: Summa 1.4.9
+=======================
+
+ * The ClearBaseFilter can now select to clear the configured base only
+   if the incoming payload matches a criteria in the same that a RegexFilter
+   matches Payloads+Records (SB)
+
+ * Make the default Storage backend (H2Storage) perform an analyze
+   every 100000 records on flushAll, and skip the corresponding analysis
+   on startup. This should improve boot times on big databases considerably (SB) 
+
+ * Added clear/import/export commands to the Suggest service. Also supported
+   by the command line tool 'suggest-tool.sh' (SB)
+
+ * Enable the H2 second level LRU page cache by default. This should speed up
+   large bases, but might be a small hit for smaller bases. This feature
+   can be controlled via the summa.storage.database.l2cache boolean property
+
+ * when specifying a static root for SummasearcherImpl, it will now be
+   expanded with Resolver.getPersistentFile instead of being used directly
+
+ * Bugfix: Make sure that the database indexes are used in the H2 Suggest
+           backend (SB)
+
+ * Bugfix: Log uncaught exceptions in the RecordBatcher thread in
+           the RecordWriter filter (SB)
+
+ * Bugfix: In DatabaseStorage explicitly rollback connections with
+           any errors detected (the rollbacks where implicit from closing
+           the connection before - this is not good JDBC behaviour) (SB)
+
+ * Bugfix: Bundle Tool should escape property refs inside <jvmArg>
+           tags (SB)
+
+ * Bugfix: Fix db connection leak in flushAll() when we fail to set
+         the connection in write-mode. This is categorized as a
+         corner-case bug, but a bug nonetheless (SB)
+
+ * Bugfix: Added check for endless recursion in H2Storage.touchParent
+
+=======================
 2009-08-18: Summa 1.4.8
 =======================
 
