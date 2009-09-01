@@ -163,6 +163,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         log.trace("getSuggestion(" + prefix + ", " + maxResults + ")");
         try {
             long startTime = System.nanoTime();
+            setMaxMemoryRows(maxResults + 10);
             PreparedStatement psExists = connection.prepareStatement(
                     "SELECT query, query_count, hit_count FROM suggest WHERE "
                     + "querylower LIKE '" + prefix.toLowerCase(lowercaseLocale)
@@ -324,6 +325,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
     public ArrayList<String> listSuggestions(int start, int max) throws
                                                                  IOException {
         log.debug(String.format("listsuggestions(%d, %d) called", start, max));
+        setMaxMemoryRows(max + 10);
         ResultSet rs = null;
         try {
             PreparedStatement psExists = connection.prepareStatement(
@@ -526,4 +528,25 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         }
     }
 
+    private static final int MIN_MEMORY_ROWS = 100;
+    private int lastMaxMemoryRows = 0;
+    private void setMaxMemoryRows(int maxMemoryRows) {
+        maxMemoryRows = Math.max(MIN_MEMORY_ROWS, maxMemoryRows);
+        if (maxMemoryRows == lastMaxMemoryRows) {
+            if (log.isTraceEnabled()) {
+                log.trace("maxMemoryRows is already at " + maxMemoryRows);
+            }
+            return;
+        }
+        lastMaxMemoryRows = maxMemoryRows;
+        try {
+            log.debug("Setting MAX_MEMORY_ROWS for suggest to "
+                      + maxMemoryRows);
+            Statement stmt = connection.createStatement();
+            //noinspection DuplicateStringLiteralInspection
+            stmt.execute("SET MAX_MEMORY_ROWS " + maxMemoryRows);
+        } catch (SQLException e) {
+            log.warn("Failed to set MAX_MEMORY_ROWS for suggest", e);
+        }
+    }
 }
