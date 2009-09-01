@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<collection xmlns="http://www.loc.gov/MARC21/slim">
+<record>
+  <leader>.....cmm  22.....0  45032</leader>
+  <datafield tag="001" ind1=" " ind2=" ">
+    <subfield code="a">6661666</subfield>
+    <subfield code="c">20071003150200</subfield>
+    <subfield code="d">20071003</subfield>
+  </datafield>
+  <datafield tag="004" ind1="0" ind2="0">
+    <subfield code="r">c</subfield>
+    <subfield code="a">e</subfield>
+  </datafield>
+  <datafield tag="008" ind1="0" ind2="0">
+    <subfield code="t">m</subfield>
+    <subfield code="u">f</subfield>
+    <subfield code="a">2007</subfield>
+    <subfield code="b">dk</subfield>
+    <subfield code="v">0</subfield>
+    <subfield code="l">dan</subfield>
+  </datafield>
+  <datafield tag="009" ind1="0" ind2="0">
+    <subfield code="a">m</subfield>
+    <subfield code="g">th</subfield>
+  </datafield>
+    <datafield tag="010" ind1="0" ind2="0">
+      <subfield code="a">D545320487</subfield>
+    </datafield>
+    <datafield tag="014" ind1="0" ind2="0">
+      <subfield code="a">aParent</subfield>
+    </datafield>
+    <datafield tag="015" ind1="0" ind2="0">
+      <subfield code="a">childOne</subfield>
+        <subfield code="v">002</subfield>
+    </datafield>
+    <datafield tag="015" ind1="0" ind2="0">
+      <subfield code="a">childTwo</subfield>
+    </datafield>
+    <datafield tag="015" ind1="0" ind2="0">
+      <subfield code="a">childThree</subfield>
+    </datafield>
+    <datafield tag="015" ind1="0" ind2="0">
+        <subfield code="a">childFour</subfield>
+        <subfield code="v">001</subfield>
+    </datafield>
+    <datafield tag="015" ind1="0" ind2="0">
+        <subfield code="a">childFive</subfield>
+        <subfield code="v">003</subfield>
+    </datafield>
+    <datafield tag="015" ind1="0" ind2="0">
+      <subfield code="a">childSix</subfield>
+    </datafield>
+  <datafield tag="010" ind1="0" ind2="0">
+    <subfield code="a">2 740 553 3</subfield>
+    <subfield code="b">870970</subfield>
+    <subfield code="c">20071001125641</subfield>
+    <subfield code="d">20070909</subfield>
+    <subfield code="f">a</subfield>
+    <subfield code="t">ARKHAM</subfield>
+  </datafield>
+  <datafield tag="021" ind1="0" ind2="0">
+    <subfield code="d">Snuskategori: D+</subfield>
+  </datafield>
+  <datafield tag="023" ind1="0" ind2="0">
+    <subfield code="a">5706710027812</subfield>
+  </datafield>
+  <datafield tag="032" ind1="0" ind2="0">
+    <subfield code="a">KLR200799</subfield>
+    <subfield code="x">MBK200799</subfield>
+  </datafield>
+  <datafield tag="041" ind1="0" ind2="0">
+    <subfield code="a">dan</subfield>
+    <subfield code="c">eng</subfield>
+  </datafield>
+  <datafield tag="241" ind1="0" ind2="0">
+    <subfield code="a">The apocalyptic chicken drummer</subfield>
+  </datafield>
+  <datafield tag="245" ind1="0" ind2="0">
+    <subfield code="a">Kaoskyllingens trommedag</subfield>
+    <subfield code="e">efter idé af Mitzy Stardust</subfield>
+    <subfield code="e">idea by Klaznarnokow Zrakwenko</subfield>
+    <subfield code="f">animal trainers Lord Greystoke ... [et al.]</subfield>
+    <subfield code="e">director Tim Burton</subfield>
+    <subfield code="f">produced by Doc Hollywood</subfield>
+    <subfield code="f">oversættelse: MumboJumbo</subfield>
+  </datafield>
+  <datafield tag="260" ind1="0" ind2="0">
+    <subfield code="a">[Aar.]</subfield>
+    <subfield code="b">MyFilms</subfield>
+    <subfield code="c">2007</subfield>
+  </datafield>
+  <datafield tag="300" ind1="0" ind2="0">
+    <subfield code="n">7 dvd-video</subfield>
+    <subfield code="l">ca. 90 min.</subfield>
+  </datafield>
+  <datafield tag="440" ind1="0" ind2="0">
+    <subfield code="0">-</subfield>
+    <subfield code="a">Hundenes favorit</subfield>
+  </datafield>
+  <datafield tag="504" ind1="0" ind2="0">
+    <subfield code="a">Kaoskyllingen invaderer Lillerød Stationsby, men har glemt at regne med Trommemesteren</subfield>
+  </datafield>
+  <datafield tag="505" ind1="0" ind2="0">
+    <subfield code="a">Computerdestrueret musikfilm</subfield>
+  </datafield>
+  <datafield tag="512" ind1="0" ind2="0">
+    <subfield code="i">Danske stemmer</subfield>
+    <subfield code="e">Phil Colins, Anker Jørgensen, Kaj, Åge ... et al.</subfield>
+  </datafield>
+  <datafield tag="517" ind1="0" ind2="0">
+    <subfield code="a">Mærkning: Tilladt for bibliotekarer</subfield>
+  </datafield>
+  <datafield tag="517" ind1="0" ind2="0">
+    <subfield code="a">Fra 50 år</subfield>
+  </datafield>
+  <datafield tag="520" ind1="0" ind2="0">
+    <subfield code="a">Blaseret engelsk udgave: Uganda : Apocalyptic Chicken Film : ACF i samarbejde med Destructive Hamsters i 2005</subfield>
+  </datafield>
+  <datafield tag="530" ind1="0" ind2="0">
+    <subfield code="a">Indhold: Kaoskyllingens trommedag ; Kaoskyllingens violintime ; Tambourmajorens endeligt ; Kaoskyllingen vender tilbage</subfield>
+  </datafield>
+  <datafield tag="538" ind1="0" ind2="0">
+    <subfield code="a">DVDS 666</subfield>
+  </datafield>
+  <datafield tag="590" ind1="0" ind2="0">
+    <subfield code="5">SB</subfield>
+    <subfield code="k">m999999</subfield>
+    <subfield code="v">Plv</subfield>
+  </datafield>
+  <datafield tag="652" ind1="0" ind2="0">
+    <subfield code="p">66.6</subfield>
+  </datafield>
+  <datafield tag="666" ind1="0" ind2="0">
+    <subfield code="s">kyllinger</subfield>
+  </datafield>
+  <datafield tag="700" ind1="0" ind2="0">
+    <subfield code="0">-</subfield>
+    <subfield code="a">Colins</subfield>
+    <subfield code="h">Phil</subfield>
+    <subfield code="c">f. 1754</subfield>
+  </datafield>
+  <datafield tag="991" ind1="0" ind2="0">
+    <subfield code="o">Må udlånes fra: 6.6.2099</subfield>
+  </datafield>
+  <datafield tag="994" ind1="0" ind2="0">
+    <subfield code="z">3319632</subfield>
+  </datafield>
+  <datafield tag="096" ind1=" " ind2=" ">
+    <subfield code="a">DVD 00666</subfield>
+    <subfield code="b">dvd-p</subfield>
+    <subfield code="i">dui</subfield>
+    <subfield code="j">400021565006</subfield>
+    <subfield code="k">DVD 06666</subfield>
+    <subfield code="l">0</subfield>
+    <subfield code="q">3314632</subfield>
+    <subfield code="s">i</subfield>
+    <subfield code="t">4399086</subfield>
+    <subfield code="y">14155</subfield>
+    <subfield code="z">SB-dvd</subfield>
+  </datafield>
+</record>
+</collection>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://statsbiblioteket.dk/summa/2008/Document"
+            elementFormDefault="qualified"
+            xmlns:summa="http://statsbiblioteket.dk/summa/2008/Document">
+    <xsd:annotation>
+        <xsd:documentation xml:lang="en">
+            XML Schema for the Summa Document format - used by a document builder
+            for updaing a document index, such as Lucene. In a standard workflow,
+            All records that are to be indexed are ultimately transformed to
+            Summa Documents right before the index is updated.
+        </xsd:documentation>
+    </xsd:annotation>
+
+    <!-- TODO: Consider adding resolver to facilitate lookup -->
+
+    <xsd:element name="SummaDocument">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="fields" minOccurs="1" maxOccurs="1">
+                    <xsd:complexType>
+                        <xsd:sequence>
+                            <xsd:element name="field" type="summa:Fieldtype" minOccurs="0" maxOccurs="unbounded"/>
+                        </xsd:sequence>
+                    </xsd:complexType>
+                </xsd:element>
+            </xsd:sequence>
+            <xsd:attribute name="version" type="xsd:string" use="optional"/>
+            <xsd:attribute name="id" type="xsd:string" use="optional">
+                <xsd:annotation>
+                    <xsd:documentation xml:lang="en">
+                        The id-attribute is highly recommended for ease of
+                        debugging, but the authoritative id is taken from the
+                        Record object.
+                    </xsd:documentation>
+                </xsd:annotation>
+            </xsd:attribute>
+            <xsd:attribute name="boost" type="xsd:float" use="optional"/>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:complexType name="Fieldtype">
+        <xsd:simpleContent>
+            <xsd:extension base="xsd:string">
+                <xsd:attribute name="name" type="xsd:string" use="required"/>
+                <xsd:attribute name="boost" type="xsd:float" use="optional"/>
+            </xsd:extension>
+        </xsd:simpleContent>
+    </xsd:complexType>
+</xsd:schema>
