@@ -87,6 +87,10 @@ public class PayloadMatcher {
             "Payload without record, can not check record %s. No match";
 
     public PayloadMatcher(Configuration conf) {
+        this(conf, true);
+    }
+
+    public PayloadMatcher(Configuration conf, boolean warnOnNoMatchers) {
         log.trace("Constructing PayloadMatcher");
         idMatchers = getMatchers(conf, CONF_ID_REGEX, "id");
         baseMatchers = getMatchers(conf, CONF_BASE_REGEX, "base");
@@ -105,14 +109,22 @@ public class PayloadMatcher {
                     CONF_META_VALUE_REGEXP, metaValueMatchers.size()));
         }
 
-        if (idMatchers == null && baseMatchers == null
-            && contentMatchers == null){
+        if (warnOnNoMatchers && !isMatcherActive()) {
             log.warn("No patterns configured. Set the properties "
+                     + PayloadMatcher.CONF_META_KEY + ", "
                      + PayloadMatcher.CONF_ID_REGEX + ", "
                      + PayloadMatcher.CONF_BASE_REGEX +", and/or"
                      + PayloadMatcher.CONF_CONTENT_REGEX
                      + " to control the behaviour");
         }
+    }
+
+    /**
+     * @return true is any match property is set.
+     */
+    public boolean isMatcherActive() {
+        return idMatchers != null || baseMatchers != null
+               || contentMatchers != null || metaKeys != null;
     }
 
     private List<Matcher> getMatchers(Configuration conf,
