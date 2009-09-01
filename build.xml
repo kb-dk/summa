@@ -53,7 +53,7 @@
         The module listing here takes module dependencies into account.
         Bad ordering may prolong compilation (but not break it)
     -->
-    <target name="all" depends="depends">
+    <target name="all" depends="depends, .standalone.jar">
         <ant dir="Common" inheritall="false"/>
         <ant dir="Storage" inheritall="false"/>
         <ant dir="Ingest" inheritall="false"/>
@@ -194,6 +194,35 @@
         <ant dir="Workflow" inheritall="false" target=".jar"/>
     </target>
 
+    <target name=".standalone.jar" depends=".jar">
+        <jar compress="true" jarfile="summa-standalone-${summa.version}.jar">
+            <!-- Summa libs -->
+            <zipfileset src="Common/summa-common-${summa.version}.jar"/>
+            <zipfileset src="Storage/summa-storage-${summa.version}.jar"/>
+            <zipfileset src="Ingest/summa-ingest-${summa.version}.jar"/>
+            <zipfileset src="Index/summa-index-${summa.version}.jar"/>
+            <zipfileset src="Search/summa-search-${summa.version}.jar"/>
+            <zipfileset src="Support/summa-support-${summa.version}.jar"/>
+            <zipfileset src="FacetBrowser/summa-facetbrowser-${summa.version}.jar"/>
+            <zipfileset src="Control/summa-control-${summa.version}.jar"/>
+
+            <!-- 3rd party dependencies -->
+            <zipfileset src="${summa.lib.commons-cli}"/>
+            <zipfileset src="${summa.lib.commons-httpclient}"/>
+            <zipfileset src="${summa.lib.commons-logging}"/>
+            <zipfileset src="${summa.lib.derby}"/>
+            <zipfileset src="${summa.lib.h2}"/>
+            <zipfileset src="${summa.lib.jline}"/>
+            <zipfileset src="${summa.lib.junit}"/>
+            <zipfileset src="${summa.lib.log4j}"/>
+            <zipfileset src="${summa.lib.lucene}"/>
+            <zipfileset src="${summa.lib.lucene.queries}"/>
+            <zipfileset src="${summa.lib.postgres}"/>
+            <zipfileset src="${summa.lib.sbutil}"/>
+            <zipfileset src="${summa.lib.tika}"/>
+        </jar>
+    </target>
+
     <!-- Wrap up a tarball ready for distribution -->
     <target name="release" depends="depends, distclean, all, doc">
         <property name="release.tmp.dir" value="${dist.dir}/summa-${summa.version}.tmp" />
@@ -211,6 +240,7 @@
                 <include name="**/dist/*.jar"/>
                 <include name="**/dist/*.war"/>
                 <include name="${summa.license}"/>
+                <include name="summa-standalone-${summa.version}.jar"/>
             </fileset>
          </copy>
          <copy todir="${release.tmp.dir}/${summa.doc.dir}">
