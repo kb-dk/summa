@@ -43,8 +43,10 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
 
     public static final String DB_FILE = "suggest_h2storage";
     private static final String SELECT_QUERY =
-            "SELECT query FROM suggest WHERE query=?";
-    private static final String SELECT_LOWERCASE_QUERY =
+            "SELECT query FROM suggest WHERE query=? LIMIT ?";
+//    private static final String SELECT_LOWERCASE_QUERY =
+//            "SELECT query FROM suggest WHERE querylower=? LIMIT ?";
+    private static final String DELETE_LOWERCASE_QUERY =
             "SELECT query FROM suggest WHERE querylower=?";
     private static final String INSERT_STATEMENT =
             "INSERT INTO suggest VALUES (?, ?, ?, ?)";
@@ -166,8 +168,9 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             setMaxMemoryRows(maxResults + 10);
             PreparedStatement psExists = connection.prepareStatement(
                     "SELECT query, query_count, hit_count FROM suggest WHERE "
-                    + "querylower LIKE '" + prefix.toLowerCase(lowercaseLocale)
-                    + "%' ORDER BY query_count DESC");
+                    + "querylower LIKE ? ORDER BY query_count DESC LIMIT ?");
+            psExists.setString(1, prefix.toLowerCase(lowercaseLocale) + "%");
+            psExists.setInt(2, maxResults * 3);
             ResultSet rs = psExists.executeQuery();
             List<BuildSuggestTripel> suggestions =
                     new ArrayList<BuildSuggestTripel>(maxResults); 
@@ -288,7 +291,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
     private void deleteSuggestion(String query) throws SQLException {
         log.debug("Removing suggestion '" + query + "'");
         PreparedStatement psExists =
-                connection.prepareStatement(SELECT_LOWERCASE_QUERY);
+                connection.prepareStatement(DELETE_LOWERCASE_QUERY);
         psExists.setString(1, query.toLowerCase(lowercaseLocale));
         ResultSet rs = psExists.executeQuery();
         try {
@@ -304,6 +307,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         log.trace("existsInDb called with '" + query + "'");
         PreparedStatement psExists = connection.prepareStatement(SELECT_QUERY);
         psExists.setString(1, query);
+        psExists.setInt(2, 1);
         ResultSet rs = psExists.executeQuery();
         try {
             return rs.next();
@@ -528,7 +532,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         }
     }
 
-    private static final int MIN_MEMORY_ROWS = 100;
+    private static final int MIN_MEMORY_ROWS = 100 * 1000; // Default is 10,000
     private int lastMaxMemoryRows = 0;
     private void setMaxMemoryRows(int maxMemoryRows) {
         maxMemoryRows = Math.max(MIN_MEMORY_ROWS, maxMemoryRows);
