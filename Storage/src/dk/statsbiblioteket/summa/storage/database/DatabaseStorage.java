@@ -544,7 +544,7 @@ getco     */
      */
     protected abstract Connection getConnection();
 
-    /**
+    /**                                  getrec
      * Get an auto committing, write enabled connection
      * @return a pooled connection
      * @throws SQLException if unable to set write access or auto commit
