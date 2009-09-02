@@ -135,6 +135,8 @@ public class ControlUtils {
     public static String getDeployerClassName (String shortDesc) {
         if ("ssh".equals (shortDesc)) {
             return "dk.statsbiblioteket.summa.control.server.deploy.SSHDeployer";
+        } else if ("local".equals (shortDesc)) {
+            return "dk.statsbiblioteket.summa.control.server.deploy.LocalDeployer";
         } else {
             throw new BadConfigurationException("Unknown deployment transport "
                                                + "'" + shortDesc + "'");
