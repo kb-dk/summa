@@ -5,7 +5,7 @@ package net.sf.summa.core.actor;
  */
 public abstract class Scheduler {
 
-    public abstract Channel newChannel();
+    public abstract Channel newChannel(Actor... actors);
 
     public abstract void broadcast(Channel chan, Actor actor, Object msg);
 

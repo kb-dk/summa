@@ -111,9 +111,14 @@ public class SimpleScheduler extends Scheduler {
         channels = Collections.synchronizedList(new ArrayList<Channel>());
     }
 
-    public Channel newChannel() {
+    public Channel newChannel(Actor... actors) {
         Channel chan = new SimpleChannel(this);
         channels.add(chan);
+
+        for (Actor actor : actors) {
+            chan.add(actor);
+        }
+
         return chan;
     }
 

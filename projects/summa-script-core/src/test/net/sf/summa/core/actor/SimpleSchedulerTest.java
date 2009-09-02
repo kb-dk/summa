@@ -68,12 +68,10 @@ public class SimpleSchedulerTest {
     @Test
     public void synchronousOneWayMessage() {
         Scheduler sched = new SimpleScheduler(10);
-        Channel chan = sched.newChannel();
         StringSender sender = new StringSender(10);
         StringReceiver receiver = new StringReceiver();
+        sched.newChannel(sender, receiver);
 
-        chan.add(sender);
-        chan.add(receiver);
         sched.start();
         sched.shutdown();
         boolean completed = sched.awaitShutdown(1000);
