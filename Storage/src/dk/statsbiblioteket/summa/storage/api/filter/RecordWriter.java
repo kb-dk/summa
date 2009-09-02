@@ -85,6 +85,16 @@ public class RecordWriter extends ObjectFilterImpl {
     public static final int DEFAULT_BATCH_SIZE = 100;
 
     /**
+     * The maximum amount of memory in bytes used by grouped Records before they
+     * are committed to Storage.
+     * </p><p>
+     * Optional. Default is 10000000 (10MB).
+     */
+    public static final String CONF_BATCH_MAXMEMORY =
+            "summa.storage.recordwriter.maxmemory";
+    public static final int DEFAULT_BATCH_MAXMEMORY = 10 * 1000 * 1000;
+
+    /**
      * The number of milliseconds to wait without receiving any records before
      * committing the currently batched records to storage. The default value
      * is 1000ms (that would be 1s)
