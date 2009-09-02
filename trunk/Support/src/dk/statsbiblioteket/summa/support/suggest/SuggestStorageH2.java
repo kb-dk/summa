@@ -50,6 +50,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             "SELECT query FROM suggest WHERE querylower=?";
     private static final String INSERT_STATEMENT =
             "INSERT INTO suggest VALUES (?, ?, ?, ?)";
+    public static final int MAX_QUERY_LENGTH = 250;
 
     /**
      * The maximum number of suggestions to return from {@link #listSuggestions}
@@ -104,16 +105,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             }
         }
 
-        String sourceURL = "jdbc:h2:" + location.getAbsolutePath()
-                           + File.separator + DB_FILE;
-        JdbcDataSource dataSource = new JdbcDataSource();
-        dataSource.setURL(sourceURL);
-        try {
-            connection = dataSource.getConnection();
-        } catch (SQLException e) {
-            throw new IOException(String.format(
-                    "Unable to get a connection from '%s'", sourceURL), e);
-        }
+        connection = getConnection();
         if (createNew) {
             log.info(String.format("Creating new table for '%s'", location));
             try {
@@ -132,18 +124,47 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         closed = false;
     }
 
+    private Connection getConnection() throws IOException {
+        String sourceURL = "jdbc:h2:" + location.getAbsolutePath()
+                           + File.separator + DB_FILE;
+        JdbcDataSource dataSource = new JdbcDataSource();
+        dataSource.setURL(sourceURL);
+        try {
+            connection = dataSource.getConnection();
+            connection.setTransactionIsolation(
+                    Connection.TRANSACTION_READ_UNCOMMITTED);
+        } catch (SQLException e) {
+            throw new IOException(String.format(
+                    "Unable to get a connection from '%s'", sourceURL), e);
+        }
+        return connection;
+    }
+
     private void createSchema() throws SQLException {
         Statement s = connection.createStatement();
-        s.execute("create table suggest("
-                  + "query varchar(250), "
-                  + "querylower varchar(250), "
+        s.execute(String.format("create table suggest("
+                  + "query varchar(%1$d), "
+                  + "querylower varchar(%1$d), "
                   + "query_count int, "
-                  + "hit_count int)");
-        s.execute("create index suggest_query ON suggest(querylower)");
-        s.execute("create index suggest_query_count ON suggest(query_count)");
-        s.execute("create index suggest_query_count_desc ON "
-                  + "suggest(query_count desc)");
+                  + "hit_count int)", MAX_QUERY_LENGTH));
+        s.close();
+        createIndexes();
+    }
 
+    private void createIndexes() throws SQLException {
+        Statement s = connection.createStatement();
+        s.execute("create index suggest_query ON suggest(querylower)");
+//        s.execute("create index suggest_query_count ON suggest(query_count)");
+        s.execute("create index suggest_query_count_desc ON "
+                  + "suggest(querylower, query_count desc)");
+        s.close();
+    }
+
+    private void dropIndexes() throws SQLException {
+        Statement s = connection.createStatement();
+        s.execute("drop index suggest_query");
+        s.execute("drop index suggest_query_count_desc");
+        s.close();
     }
 
     public synchronized void close() {
@@ -166,11 +187,18 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         try {
             long startTime = System.nanoTime();
             setMaxMemoryRows(maxResults + 10);
+
+            connection.setReadOnly(true);
+            connection.setAutoCommit(false);
+
             PreparedStatement psExists = connection.prepareStatement(
                     "SELECT query, query_count, hit_count FROM suggest WHERE "
                     + "querylower LIKE ? ORDER BY query_count DESC LIMIT ?");
             psExists.setString(1, prefix.toLowerCase(lowercaseLocale) + "%");
             psExists.setInt(2, maxResults * 3);
+            psExists.setFetchDirection(ResultSet.FETCH_FORWARD);
+            psExists.setFetchSize(maxResults * 3);
+
             ResultSet rs = psExists.executeQuery();
             List<BuildSuggestTripel> suggestions =
                     new ArrayList<BuildSuggestTripel>(maxResults); 
@@ -194,6 +222,8 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
                 return response;
             } finally {
                 rs.close();
+                connection.setReadOnly(false);
+                connection.setAutoCommit(true);
             }
         } catch (SQLException e) {
             throw new IOException(
@@ -234,6 +264,11 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
                                       + query + "'");
             }
             return;
+        }
+        if (query.length() > MAX_QUERY_LENGTH) {
+            log.debug("addSuggestion: The query must be " + MAX_QUERY_LENGTH
+                      + " chars or less. Got " + query.length()
+                      + " chars from '" + query + "'");
         }
         try {
             if (existsInDb(query)) {
@@ -521,6 +556,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
     }
 
     private synchronized void optimizeTables() {
+        long startTime = System.currentTimeMillis();
         try {
             // Rebuild the table selectivity indexes used by the query optimizer
             log.debug("Optimizing suggest table selectivity");
@@ -530,6 +566,8 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         } catch (SQLException e) {
             log.warn("Failed to optimize suggest table selectivity", e);
         }
+        log.debug("Optimize finished in "
+                  + (System.currentTimeMillis() - startTime) + "ms");
     }
 
     private static final int MIN_MEMORY_ROWS = 100 * 1000; // Default is 10,000
@@ -551,6 +589,31 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             stmt.execute("SET MAX_MEMORY_ROWS " + maxMemoryRows);
         } catch (SQLException e) {
             log.warn("Failed to set MAX_MEMORY_ROWS for suggest", e);
+        }
+    }
+
+    /* Drop and re-create the indexes */
+    @Override
+    public void importSuggestions() throws IOException {
+        log.debug("importsuggestions: Dropping indexes");
+        try {
+            dropIndexes();
+        } catch (SQLException e) {
+            throw new IOException("SQLException while dropping indexes", e);
+        }
+        try {
+            log.debug("Calling super.import");
+            super.importSuggestions();
+        } finally {
+
+            log.debug("importsuggestions: Creating indexes");
+            try {
+                createIndexes();
+                log.debug("importsuggestion: Finished creating indexes");
+            } catch (SQLException e) {
+                //noinspection ThrowFromFinallyBlock
+                throw new IOException("SQLException while creating indexes", e);
+            }
         }
     }
 }
