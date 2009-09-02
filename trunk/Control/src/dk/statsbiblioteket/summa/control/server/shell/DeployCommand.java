@@ -38,7 +38,7 @@ public class DeployCommand extends Command {
 
         installOption ("t", "transport", true,
                        "Which deployment transport to use. Allowed values are"
-                       + " 'ssh'. Default is ssh");
+                       + " 'ssh' or 'local'. Default is ssh");
 
         installOption ("b", "basepath", true,
                        "What basepath to use for the client installation "
