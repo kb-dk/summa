@@ -140,6 +140,8 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         return connection;
     }
 
+    // Review: Why is suggest.query not primary key, and why is the index on
+    //         suggest.querylower not unique? -- mke
     private void createSchema() throws SQLException {
         Statement s = connection.createStatement();
         s.execute(String.format("create table suggest("
@@ -233,6 +235,8 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
 
     }
 
+    // Review: The interaactions with updateResponse() and
+    //         getSuggestion() seems hugely ineffective? -- mke
     private void updateResponse(List<BuildSuggestTripel> suggestions,
                                 String query, long hits, int queryCount) {
         if (lowercaseQueries) {
