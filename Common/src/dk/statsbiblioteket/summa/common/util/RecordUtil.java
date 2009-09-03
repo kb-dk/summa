@@ -28,10 +28,7 @@ import org.apache.commons.logging.Log;
 import javax.xml.stream.events.XMLEvent;
 import javax.xml.stream.*;
 import java.io.*;
-import java.util.Map;
-import java.util.Date;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 
@@ -694,5 +691,61 @@ public class RecordUtil {
             }
         }
         return null;
+    }
+
+    /**
+     * Calculates the approximate memory usage of the Record.
+     * </p><p>
+     * This method is fairly light-weight and aims for approximations in the
+     * kilobyte range. Thus the length of String attributes et al are ignored.
+     * The sizes is primarily determined by content and meta-data.
+     * @param record      the Record to calculate memory usage for.
+     * @param followLinks if true, a transitive traversal of parents and
+     *                    children is performed, summing the sizes.
+     * @return the approximate memory usage of the Record.
+     */
+    public static int calculateRecordSize(Record record, boolean followLinks) {
+        return calculateRecordSize(record, followLinks, null);
+    }
+    private static int calculateRecordSize(Record record, boolean followLinks,
+                                           Set<Record> visited) {
+        if (visited != null) {
+            if (visited.contains(record)) {
+                return 0;
+            }
+            visited.add(record);
+        }
+
+        int size = record.getContent(false) == null ? 0
+                   : record.getContent(false).length;
+        if (record.getMeta() != null) {
+            for (Map.Entry<String, String> entry: record.getMeta().entrySet()) {
+                try {
+                    size += entry.getKey().length() + entry.getValue().length();
+                } catch (NullPointerException e) {
+                    log.trace("NPE while requesting key and value size from "
+                              + "entry " + entry.getKey() + " in " + record, e);
+                }
+            }
+        }
+        if (!followLinks ||
+            (record.getParents() == null && record.getChildren() == null)) {
+            return size;
+        }
+        if (visited == null) {
+            visited = new HashSet<Record>(10);
+            visited.add(record);
+        }
+        if (record.getParents() != null) {
+            for (Record parent: record.getParents()) {
+                size += calculateRecordSize(parent, followLinks, visited);
+            }
+        }
+        if (record.getChildren() != null) {
+            for (Record child: record.getChildren()) {
+                size += calculateRecordSize(child, followLinks, visited);
+            }
+        }
+        return size;
     }
 }

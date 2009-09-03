@@ -28,6 +28,7 @@ import java.util.ArrayList;
 
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.util.LoggingExceptionHandler;
+import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
@@ -69,12 +70,16 @@ public class RecordWriter extends ObjectFilterImpl {
             "summa.storage.recordwriter.storage";
 
     /**
-     * The writer will try to group records into chunks of at least this size
-     * and commit them to the storage via {@link WritableStorage#flushAll}.
+     * The writer groups records into chunks before commiting them to storage
+     * via {@link WritableStorage#flushAll}. The number of records in the
+     * chunks limited by CONF_BATCH_SIZE and {@link #CONF_BATCH_MAXMEMORY}.
+     * </p><p>
      * If no records has been received during {@link #CONF_BATCH_TIMEOUT}
      * milliseconds the currently batched records will be committed.
      * <p/>
      * The default value for this property is 100.
+     * </p><p>
+     * @see {@link #CONF_BATCH_MAXMEMORY}.
      */
     public static final String CONF_BATCH_SIZE =
                                          "summa.storage.recordwriter.batchsize";
@@ -88,7 +93,12 @@ public class RecordWriter extends ObjectFilterImpl {
      * The maximum amount of memory in bytes used by grouped Records before they
      * are committed to Storage.
      * </p><p>
+     * Note: The memory check is performed after the addition of each record.
+     * If the limit is 10MB and 2 records of 9MB each are added, the queue will
+     * contain both records before commit.
+     * </p><p>
      * Optional. Default is 10000000 (10MB).
+     * @see {@link #CONF_BATCH_SIZE}.
      */
     public static final String CONF_BATCH_MAXMEMORY =
             "summa.storage.recordwriter.maxmemory";
@@ -116,16 +126,20 @@ public class RecordWriter extends ObjectFilterImpl {
         long lastCommit;
         private long lastUpdate;
         private int batchSize;
+        private int batchMaxMemory;
         private int batchTimeout;
         private List<Record> records;
         private Thread watcher;
         private WritableStorage storage;
 
-        public Batcher (int batchSize, int batchTimeout,
+        private long byteSize = 0;
+
+        public Batcher (int batchSize, int batchMaxMemory, int batchTimeout,
                         WritableStorage storage) {
             mayRun = true;
             records = new ArrayList<Record>(batchSize);
             this.batchSize = batchSize;
+            this.batchMaxMemory = batchMaxMemory;
             this.batchTimeout = batchTimeout;
             lastUpdate = System.currentTimeMillis();
             lastCommit = System.nanoTime();
@@ -158,18 +172,21 @@ public class RecordWriter extends ObjectFilterImpl {
 
             lastUpdate = System.currentTimeMillis();
             records.add(r);
+            byteSize += RecordUtil.calculateRecordSize(r, true);
             notifyAll();
         }
 
         public void clear() {
             records.clear();
+            byteSize = 0;
         }
 
 
         public boolean shouldCommit () {
-            return (records.size() >= batchSize ||
-                    System.currentTimeMillis() - lastUpdate >= batchTimeout ||
-                    !mayRun); // Force commit if closing
+            return records.size() >= batchSize
+                   || System.currentTimeMillis() - lastUpdate >= batchTimeout
+                   || !mayRun // Force commit if closing
+                   || byteSize > batchMaxMemory;
         }
 
         private boolean checkCommit() {
@@ -218,7 +235,7 @@ public class RecordWriter extends ObjectFilterImpl {
             }
 
             // Clear the batch queue and awake anyone waiting for us
-            records.clear();
+            clear();
             log.trace("Batch queue cleared");
             notifyAll();
             log.trace("Notified");
@@ -259,6 +276,7 @@ public class RecordWriter extends ObjectFilterImpl {
 
     private WritableStorage storage;
     private int batchSize;
+    private int batchMaxMemory;
     private int batchTimeout;
     private Batcher batcher;
     private Profiler profiler = new Profiler();
@@ -281,19 +299,27 @@ public class RecordWriter extends ObjectFilterImpl {
 
         storage = new StorageWriterClient(conf);
         batchSize = conf.getInt(CONF_BATCH_SIZE, DEFAULT_BATCH_SIZE);
+        batchMaxMemory = conf.getInt(
+                CONF_BATCH_MAXMEMORY, DEFAULT_BATCH_MAXMEMORY);
         batchTimeout = conf.getInt(CONF_BATCH_TIMEOUT, DEFAULT_BATCH_TIMEOUT);
-        batcher = new Batcher(batchSize, batchTimeout, storage);
+        batcher = new Batcher(batchSize, batchMaxMemory, batchTimeout, storage);
 
         // TODO: Perform a check to see if the Storage is alive
     }
 
-    public RecordWriter (WritableStorage storage,
-                         int batchSize, int batchTimeout) {
+    public RecordWriter(WritableStorage storage,
+                        int batchSize, int batchTimeout) {
+        this(storage, batchSize, DEFAULT_BATCH_MAXMEMORY, batchTimeout);
+    }
+
+    public RecordWriter(WritableStorage storage,
+                        int batchSize, int batchMaxMemory, int batchTimeout) {
         super (Configuration.newMemoryBased());
         this.storage = storage;
         this.batchSize = batchSize;
+        this.batchMaxMemory = batchMaxMemory;
         this.batchTimeout = batchTimeout;
-        batcher = new Batcher(batchSize, batchTimeout, storage);
+        batcher = new Batcher(batchSize, batchMaxMemory, batchTimeout, storage);
     }
 
     /**

@@ -65,6 +65,7 @@ public class RecordWriterTest extends TestCase {
         super(name);
     }
 
+    @Override
     public void setUp() throws Exception {
         super.setUp();
         if (storageLocation.exists()) {
@@ -87,6 +88,7 @@ public class RecordWriterTest extends TestCase {
         Thread.sleep(200);
     }
 
+    @Override
     public void tearDown() throws Exception {
         super.tearDown();
     }
