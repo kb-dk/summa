@@ -62,19 +62,22 @@ public class SearchTool {
         }
 
 
-        System.err.println("Using searcher on: "
+        System.err.println("Connection searcher on: "
                            + conf.getString(ConnectionConsumer.CONF_RPC_TARGET));
 
         SearchClient searcher = new SearchClient (conf);
         Request rq = parseArgs (args);
 
         System.err.print("Performing search... ");
+        long time = System.currentTimeMillis();
         ResponseCollection resp = searcher.search(rq);
+        time = System.currentTimeMillis() - time;
         System.err.println("[OK]");
 
         System.err.println("Result:");
         System.err.flush();
         System.out.println (resp.toXML());
+        System.err.println("Response time: " + time + "ms");
     }
 
     /**
