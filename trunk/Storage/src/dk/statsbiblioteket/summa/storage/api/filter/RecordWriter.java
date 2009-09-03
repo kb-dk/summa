@@ -97,7 +97,7 @@ public class RecordWriter extends ObjectFilterImpl {
      * If the limit is 10MB and 2 records of 9MB each are added, the queue will
      * contain both records before commit.
      * </p><p>
-     * Optional. Default is 2000000 (2MB).
+     * Optional. Default is 2000000 (~2MB).
      * @see {@link #CONF_BATCH_SIZE}.
      */
     public static final String CONF_BATCH_MAXMEMORY =
@@ -216,14 +216,13 @@ public class RecordWriter extends ObjectFilterImpl {
             try {
                 String stats = records.size() + " records of total"
                          + " size " + byteSize/1024 + "KB";
-                log.info(String.format(
-                        "Committing %s. Time since last commit: %s", 
-                        stats, (System.nanoTime() - lastCommit)/1000000D));
+                log.debug(String.format("Committing %s.", stats));
                 long start = System.nanoTime();
                 storage.flushAll(records);
                 log.info(String.format(
-                        "Committed %s in %sms",
-                        stats, (System.nanoTime() - start)/1000000D));
+                        "Committed %s in %sms. Last commit was %sms ago",
+                        stats, (System.nanoTime() - start)/1000000D,
+                         (System.nanoTime() - lastCommit)/1000000D));
                 lastCommit = System.nanoTime();
             } catch (Exception e) {
                 log.error("Dropped " + records.size() + " records in commit: "
