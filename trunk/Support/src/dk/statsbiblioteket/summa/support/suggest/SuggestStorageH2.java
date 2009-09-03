@@ -120,6 +120,12 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             } catch (Exception e) {
                 log.warn("Exception while optimizing tables upon startup", e);
             }
+            try {
+                createIndexes();
+            } catch (SQLException e) {
+                throw new IOException("SQLException while creating indexes "
+                                      + "during startup", e);
+            }
         }
         closed = false;
     }
@@ -154,12 +160,18 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
     }
 
     private void createIndexes() throws SQLException {
+        long startTime = System.currentTimeMillis();
+        log.info("Creating indexes if they do not already exists. This might "
+                 + "take a while");
         Statement s = connection.createStatement();
-        s.execute("create index suggest_query ON suggest(querylower)");
+        s.execute("create index if not exists suggest_query ON"
+                  + " suggest(querylower)");
 //        s.execute("create index suggest_query_count ON suggest(query_count)");
-        s.execute("create index suggest_query_count_desc ON "
+        s.execute("create index if not exists suggest_query_count_desc ON "
                   + "suggest(querylower, query_count desc)");
         s.close();
+        log.info("Finished ensuring index existence in "
+                 + (System.currentTimeMillis() - startTime) + "ms");
     }
 
     private void dropIndexes() throws SQLException {
