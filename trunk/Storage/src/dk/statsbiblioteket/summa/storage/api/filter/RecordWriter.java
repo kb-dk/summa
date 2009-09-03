@@ -82,7 +82,7 @@ public class RecordWriter extends ObjectFilterImpl {
      * @see {@link #CONF_BATCH_MAXMEMORY}.
      */
     public static final String CONF_BATCH_SIZE =
-                                         "summa.storage.recordwriter.batchsize";
+            "summa.storage.recordwriter.batchsize";
 
     /**
      * Default value for the {@link #CONF_BATCH_SIZE} property
@@ -97,12 +97,12 @@ public class RecordWriter extends ObjectFilterImpl {
      * If the limit is 10MB and 2 records of 9MB each are added, the queue will
      * contain both records before commit.
      * </p><p>
-     * Optional. Default is 10000000 (10MB).
+     * Optional. Default is 2000000 (2MB).
      * @see {@link #CONF_BATCH_SIZE}.
      */
     public static final String CONF_BATCH_MAXMEMORY =
             "summa.storage.recordwriter.maxmemory";
-    public static final int DEFAULT_BATCH_MAXMEMORY = 10 * 1000 * 1000;
+    public static final int DEFAULT_BATCH_MAXMEMORY = 2 * 1000 * 1000;
 
     /**
      * The number of milliseconds to wait without receiving any records before
@@ -214,14 +214,16 @@ public class RecordWriter extends ObjectFilterImpl {
             }
 
             try {
-                log.info("Committing " + records.size() + " records of total"
-                         + " size " + byteSize/1024
-                         + "KB. Time since last commit: "
-                         + ((System.nanoTime() - lastCommit)/1000000D) + "ms");
+                String stats = records.size() + " records of total"
+                         + " size " + byteSize/1024 + "KB";
+                log.info(String.format(
+                        "Committing %s. Time since last commit: %s", 
+                        stats, (System.nanoTime() - lastCommit)/1000000D));
                 long start = System.nanoTime();
                 storage.flushAll(records);
-                log.info("Committed " + records.size() + " records in "
-                          + ((System.nanoTime() - start)/1000000D) + "ms");
+                log.info(String.format(
+                        "Committed %s in %sms",
+                        stats, (System.nanoTime() - start)/1000000D));
                 lastCommit = System.nanoTime();
             } catch (Exception e) {
                 log.error("Dropped " + records.size() + " records in commit: "
