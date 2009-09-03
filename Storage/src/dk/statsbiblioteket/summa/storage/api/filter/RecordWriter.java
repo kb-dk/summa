@@ -204,14 +204,13 @@ public class RecordWriter extends ObjectFilterImpl {
 
         private synchronized void forceCommit() {
             if (log.isDebugEnabled()) {
-                if (records.isEmpty()) {
-                    log.debug("No records to commit");
-                    return;
-                }
-
                 for (Record r : records) {
                     log.debug("Committing: " + r.getId());
                 }
+            }
+            if (records.isEmpty()) {
+                log.debug("No records to commit");
+                return;
             }
 
             try {
