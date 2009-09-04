@@ -65,7 +65,9 @@ public class ARCParser extends ThreadedStreamParser {
     public static final String[] ARC_FIELDS = new String[]{
             "arc.arcname", "arc.arcoffset", "arc.contentLength", "arc.date",
             "arc.digest", "arc.primaryType", "arc.title", "arc.tstamp",
-            "arc.url"};
+            "arc.url",
+            // custom additions below
+            "arc.site" };
     public static final String HTTP_PREFIX = "http-header.";
 
     // TODO: Add timeout
@@ -182,9 +184,9 @@ public class ARCParser extends ThreadedStreamParser {
             String[] tokens = line.split(": ", 2);
             if (tokens.length == 2 && !"".equals(tokens[0])) {
                 payload.getData().put(HTTP_PREFIX + tokens[0], tokens[1]);
-/*                if (log.isTraceEnabled()) {
-                    log.trace(tokens[0] + ": " + tokens[1]);
-                }*/
+                if (log.isTraceEnabled()) {
+                    log.trace(HTTP_PREFIX + tokens[0] + " = " + tokens[1]);
+                }
                 counter++;
             }
         }
@@ -210,5 +212,26 @@ public class ARCParser extends ThreadedStreamParser {
         payload.getData().put("arc.title", header.getRecordIdentifier());
         payload.getData().put("arc.tstamp", header.getDate());
         payload.getData().put("arc.url", header.getUrl());
+        payload.getData().put("arc.site", extractSite(header.getUrl()));
+    }
+
+    // https://foo/bar... => foo
+    // dns:foo/bar... => foo
+    private String extractSite(String url) {
+        String[] colonTokens = url.split(":", 2);
+        if (colonTokens.length < 2) {
+            return null;
+        }
+        if ("filedesc".equals(colonTokens[0])) {
+            return null;
+        }
+        // Hackety hack
+        String rest = colonTokens[1];
+        while (rest.startsWith("/")) {
+            rest = rest.substring(1, rest.length());
+        }
+        String[] slashtokens = rest.split("/");
+        System.out.println(slashtokens[0]);
+        return slashtokens[0];
     }
 }
