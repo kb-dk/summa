@@ -33,6 +33,7 @@ import org.archive.io.ArchiveRecord;
 import org.archive.io.ArchiveRecordHeader;
 
 import java.util.Iterator;
+import java.util.Map;
 import java.io.*;
 
 /**
@@ -117,6 +118,9 @@ public class ARCParser extends ThreadedStreamParser {
             FutureInputStream arStream = new FutureInputStream(ar);
             Payload payload = new Payload(arStream);
             fillPayloadFromHeader(payload, header, archiveReader.getFileName());
+/*            for (Object field: ar.getHeader().getHeaderFields().entrySet().toArray()) {
+                System.out.println(field);
+            }*/
             handleHTTPHeaders(payload);
             addToQueue(payload);
 
@@ -161,31 +165,37 @@ public class ARCParser extends ThreadedStreamParser {
             return;
         }
         if (log.isTraceEnabled()) {
-            log.trace("Removing HTTP headers from " + payload);
+            log.trace("Extracting HTTP headers from " + payload);
         }
         BufferedReader in;
         try {
+            // Buffer needs to be 1 as the BufferedReader is only used for header
             in = new BufferedReader(new InputStreamReader(
-                    payload.getStream(), "utf-8"));
+                    payload.getStream(), "utf-8"), 1);
         } catch (UnsupportedEncodingException e) {
             throw new IllegalStateException("utf-8 not supported", e);
         }
         String line;
         int counter = 0;
         while (!"".equals(line = in.readLine())) {
-            String[] tokens = line.split(":", 2);
+            //System.out.println("*** " + line);
+            String[] tokens = line.split(": ", 2);
             if (tokens.length == 2 && !"".equals(tokens[0])) {
                 payload.getData().put(HTTP_PREFIX + tokens[0], tokens[1]);
+/*                if (log.isTraceEnabled()) {
+                    log.trace(tokens[0] + ": " + tokens[1]);
+                }*/
                 counter++;
             }
         }
+//        System.out.println("*Extra* " + in.readLine());
+//        System.out.println("*Extra* " + in.readLine());
         log.trace("Extracted " + counter + " HTTP headers");
     }
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    private void fillPayloadFromHeader(Payload payload,
-                                       ArchiveRecordHeader header,
-                                       String arcFilename) {
+    private void fillPayloadFromHeader(
+            Payload payload, ArchiveRecordHeader header, String arcFilename) {
         payload.setID(header.getUrl());
         payload.getData().put("arc.arcname", arcFilename);
         payload.getData().put("arc.arcoffset", header.getOffset());

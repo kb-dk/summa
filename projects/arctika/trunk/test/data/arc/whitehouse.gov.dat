@@ -1,0 +1,562 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+	<head>
+		<title>Welcome to the White House</title>
+		<link rel="home" title="Home" href="http://www.whitehouse.gov/index.html" />
+		<link rel="stylesheet" type="text/css" title="main" href="/css/wh-main.css" />
+		
+  <script language="javascript" type="text/javascript" src="/js/navbar.js"></script>
+
+  <style type="text/css">
+   A:link { text-decoration: none }
+   A:active { text-decoration: none }
+   A:visited { text-decoration: none }
+   A:hover { color: #003399; text-decoration: underline }
+  </style>
+
+		<link rel="shortcut icon" href="favicon.ico" />
+		
+<meta name="date"                 content="2001-01-01"/>
+<meta name="description"          content="Whitehouse.gov is the official web site for the White House and President George W. Bush, the 43rd President of the United States. This site is a source for information about the President, White House news and policies, White House history, the federal government"/>
+<meta name="keywords"             content="social security, medicare, energy, tax relief, Education, policies, White House history, White House news, news, United States of America, 43rd President, George W., W., George W, President George W. Bush, President Bush, White House, government"/>
+
+		
+	</head>
+	<body bgcolor="#FFFFFF" link="#003399" vlink="#990000" alink="#666699" style="margin-bottom:0; margin-left:0; margin-top:0" onload="MM_preloadImages('/images/header3/home_on_r2_c5.jpg','#1');MM_preloadImages('/images/header3/home_on_r2_c7.jpg','#2');MM_preloadImages('/images/header3/home_on_r2_c9.jpg','#3');MM_preloadImages('/images/header3/home_on_r2_c12.jpg','#4');MM_preloadImages('/images/header3/home_on_r2_c16.jpg','#5');MM_preloadImages('/images/header3/home_on_r2_c20.jpg','#6');MM_preloadImages('/images/header3/home_on_r3_c6.jpg','#8');MM_preloadImages('/images/header3/home_on_r3_c10.jpg','#9');MM_preloadImages('/images/header3/home_on_r3_c14.jpg','#10');MM_preloadImages('/images/header3/home_on_r3_c15.jpg','#11');MM_preloadImages('/images/header3/home_on_r3_c19.jpg','#12');MM_preloadImages('/images/header3/home_on_r3_c11.jpg','#13');MM_preloadImages('/images/header3/home_on_r3_c21.jpg','#14')">
+
+<table id="main-table" cellpadding="0" cellspacing="0" width="751" summary="Main Table">
+	<tr>
+		<td colspan="3">
+			<form name="seek" method="get" action="/query.html">
+				<table cellpadding="0" cellspacing="0" width="751" summary="Top Navigation, E-mail Updates, Search">
+					<tr> 
+						<td colspan="2"><a href="#content"><img name="a1" src="/images/header3/home_off_r1_c1.jpg" border="0" alt="Skip to Content" width="41" height="2" /></a><a href="/text/index.html"><img name="a2" alt="Text Only" src="/images/header3/home_off_r1_c2.jpg" border="0" width="43" height="2" /></a><a href="#quicksearch"><img src="/images/header3/home_off_r1_c3.jpg" name="a3" alt="Go to Search" border="0" width="40" height="2" /></a><img src="/images/header3/home_off_r1_c4.jpg" alt="" width="627" height="2" /></td>
+					</tr>
+					<tr> 
+						<td colspan="2"><a href="/"><img src="/images/header3/home_off_r2_c1.jpg" border="0" alt="Welcome to the White House" width="84" height="20" /></a><img src="/images/header3/home_off_r2_c3.jpg" alt="" width="40" height="20" /><img src="/images/header3/home_off_r2_c4.jpg" alt="" width="143" height="20" /><a href="/president/" onmouseout="MM_swapImgRestore()" onmouseover="MM_swapImage('document.t1','document.t1','/images/header3/home_on_r2_c5.jpg','#1')"><img name="t1" src="/images/header3/home_off_r2_c5.jpg" border="0" alt="President" width="61" height="20" /></a><a href="/news/" onmouseout="MM_swapImgRestore()" onmouseover="MM_swapImage('document.t2','document.t2','/images/header3/home_on_r2_c7.jpg','#2')"><img name="t2" src="/images/header3/home_off_r2_c7.jpg" border="0" alt="News" width="58" height="20" /></a><a href="/vicepresident/" onmouseout="MM_swapImgRestore()" onmouseover="MM_swapImage('document.t3','document.t3','/images/header3/home_on_r2_c9.jpg','#3')"><img name="t3" src="/images/header3/home_off_r2_c9.jpg" border="0" alt="Vice President" width="89" height="20" /></a><a href="/history/" onmouseout="MM_swapImgRestore()" onmouseover="MM_swapImage('document.t4','document.t4','/images/header3/home_on_r2_c12.jpg','#4')"><img name="t4" src="/images/header3/home_off_r2_c12.jpg" border="0" alt="History &amp; Tours" width="107" height="20" /></a><a href="/firstlady/" onmouseout="MM_swapImgRestore()" onmouseover="MM_swapImage('document.t5','document.t5','/images/header3/home_on_r2_c16.jpg','#5')"><img name="t5" src="/images/header3/home_off_r2_c16.jpg"  border="0" alt="First Lady" width="85" height="20" /></a><a href="/mrscheney/" onmouseout="MM_swapImgRestore()" onmouseover="MM_swapImage('document.t6','document.t6','/images/header3/home_on_r2_c20.jpg','#6')"><img name="t6" src="/images/header3/home_off_r2_c20.jpg" border="0" alt="Mrs. Cheney" width="84" height="20" /></a></td>
+					</tr>
+					<tr> 
+						<td colspan="2"><a href="/"><img src="/images/header3/home_off_r3_c1.jpg" border="0" alt="Welcome to the White House" width="84" height="18" /></a><img src="/images/header3/home_off_r3_c3.jpg" alt="" width="183" height="18" /><img src="/images/header3/home_off_r3_c5.jpg" alt="" width="35" height="18" /><a href="/government/" onmouseout="MM_swapImgRestore()" onmouseover="MM_swapImage('document.t8','document.t8','/images/header3/home_on_r3_c6.jpg','#8')"><img name="t8" src="/images/header3/home_off_r3_c6.jpg" border="0" alt="Government" width="116" height="18" /></a><a href="/kids/" onmouseout="MM_swapImgRestore()" onmouseover="MM_swapImage('document.t9','document.t9','/images/header3/home_on_r3_c10.jpg','#9')"><img name="t9" src="/images/header3/home_off_r3_c10.jpg"  border="0" alt="Kids Only" width="34" height="18" /></a><a href="/espanol/index.es.html" onmouseout="MM_swapImgRestore()" onmouseover="MM_swapImage('document.t13','document.t13','/images/header3/home_on_r3_c11.jpg','#13')"><img name="t13" src="/images/header3/home_off_r3_c11.jpg" border="0" alt="Espanol" width="54" height="18" /></a><a href="/contact/" onmouseout="MM_swapImgRestore()" onmouseover="MM_swapImage('document.t10','document.t10','/images/header3/home_on_r3_c14.jpg','#10')"><img name="t10" src="/images/header3/home_off_r3_c14.jpg" border="0" alt="Contact" width="54" height="18" /></a><a href="/privacy.html" onmouseout="MM_swapImgRestore()" onmouseover="MM_swapImage('document.t11','document.t11','/images/header3/home_on_r3_c15.jpg','#11')"><img name="t11" src="/images/header3/home_off_r3_c15.jpg" border="0" alt="Privacy Policy" width="84" height="18" /></a><a href="/sitemap.html" onmouseout="MM_swapImgRestore()" onmouseover="MM_swapImage('document.t12','document.t12','/images/header3/home_on_r3_c19.jpg','#12')"><img name="t12" src="/images/header3/home_off_r3_c19.jpg" border="0" alt="SiteMap" width="54" height="18" /></a><a href="/search/" onmouseout="MM_swapImgRestore()" onmouseover="MM_swapImage('document.t14','document.t14','/images/header3/home_on_r3_c21.jpg','#14')"><img name="t14" src="/images/header3/home_off_r3_c21.jpg" border="0" alt="Search" width="53" height="18" /></a></td>
+					</tr>
+					<tr> 
+						<td valign="top" nowrap="nowrap">
+							<a href="/"><img src="/images/header3/home_off_r4_c1.jpg" border="0" alt="Welcome to the White House" width="84" height="51" /><img src="/images/header3/home_off_r4_c3.jpg" alt="" border="0" width="218" height="51" /><img src="/images/header3/home_off_r4_c6.jpg" alt="" border="0" width="46" height="51" /></a><img src="/images/header3/home_off_r4_c8.jpg" alt="" width="129" height="51" /><a href="/email/"><img src="/images/header3/home_off_r4_c13.jpg" border="0" alt="Receive Email Updates" width="123" height="51" /></a><img src="/images/header3/home_off_r4_c17.jpg" alt="" width="5" height="51" /></td>
+						<td valign="top"><img src="/images/header3/home_off_r4_c18.jpg" alt="" width="93" height="26" /><img src="/images/header3/home_off_r4_c21.jpg" alt="" width="53" height="26" /><a name="quicksearch"></a>
+							<input type="hidden" name="col" value="colpics" />
+							<input maxlength="2047" name="qt" size="9" />
+							<input name="submit" type="image" src="/images/header3/home_off_r5_c21.jpg" border="0" alt="Search" /></td>
+					</tr>
+				</table>
+			</form>
+		</td>
+	</tr>
+	<tr>
+
+	<!-- * * * * * LEFT CONTENT - LEFT NAVIGATION * * * * * -->
+		<td id="left-nav" width="110" valign="top">
+			<table cellspacing="0" cellpadding="0" width="100%" summary="Local Navigation">
+				<tr>
+					<td>&nbsp;</td>
+					<td valign="top">
+						<div id="leftnavbar-main">
+							
+
+<!-- * * * * BEGIN ISSUES * * * * * -->
+<h2 class="first">Issues</h2>
+	<ul>
+		<li><a href="/infocus/budget/">Budget Management</a></li>
+		<li><a href="/infocus/education/">Education</a></li>
+		<li><a href="/infocus/energy/">Energy</a></li>
+		<li><a href="/infocus/healthcare/">Health Care</a></li>
+		<li><a href="/infocus/homeland/">Homeland Security</a></li>
+		<li><a href="/infocus/hurricane/">Hurricanes</a></li>
+		<li><a href="/infocus/immigration/">Immigration</a></li>
+		<li><a href="/infocus/economy/">Jobs &amp; Economy</a></li>
+              <li><a href="/infocus/judicialnominees/">Judicial Nominations</a></li>
+		<li><a href="/infocus/medicare/">Medicare</a></li>
+		<li><a href="/infocus/mideast/">Middle East</a></li>
+		<li><a href="/infocus/nationalsecurity/">National Security</a></li>
+		<li><a href="/infocus/pandemicflu/">Pandemic Flu</a></li>
+		<li><a href="/infocus/patriotact/">Patriot Act</a></li>
+		<li><a href="/infocus/iraq/">Renewal in Iraq</a></li>
+		<li><a href="/infocus/social-security/">Social Security</a></li>
+	</ul>
+
+<p class="more"><a href="/infocus/">More Issues</a></p>
+
+
+<!-- * * * * BEGIN NEWS * * * * * -->
+<h2>News</h2>
+	<ul>
+		<li><a href="/news/">Current News</a></li>
+		<li><a href="/news/briefings/">Press Briefings</a></li>
+		<li><a href="/news/proclamations/">Proclamations</a></li>
+		<li><a href="/news/orders/">Executive Orders</a></li>
+		<li><a href="/radio/">Radio</a></li>
+	</ul>
+
+<a href="/rss/"><img src="/images/rss.gif" width="27" height="14" alt="RSS Feeds" border="0" style="margin-right: 0.20em; vertical-align: middle;"/></a><a href="/rss/">RSS Feeds</a>
+        
+
+<!-- * * * * * BEGIN MAJOR SPEECHES * * * * -->
+
+<h2>Major Speeches</h2>
+	<ul>
+		<li><a href="/news/releases/2006/09/20060911-3.html">Address to the Nation</a></li>
+		<li><a href="/news/releases/2006/09/20060907-2.html">War on Terror</a></li>
+		<li><a href="/news/releases/2006/09/20060906-3.html">Military Commissions</a></li>
+		<li><a href="/news/releases/2006/08/20060828-5.html">Gulf Coast Recovery</a></li>
+	</ul>
+
+<!-- * * * * BEGIN INTERACT * * * * * -->
+
+<h2>Interact</h2>
+	<ul>		 
+		<li><a href="/ask/">Ask the White House</a></li>	
+		<li><a href="/interactive/">White House Interactive</a></li>
+	</ul>
+		
+
+<!-- * * * * BEGIN YOUR GOVERNMENT * * * * * -->
+
+<h2>Your Government</h2>
+	<ul>		
+		<li><a href="/government/cabinet.html">President's Cabinet</a></li>
+		<li><a href="http://www.usafreedomcorps.gov/">USA Freedom Corps</a></li>
+		<li><a href="/government/fbci/">Faith-Based &amp; Community</a></li>
+		<li><a href="/omb/" title="Office of Management and Budget">OMB</a></li>
+		<li><a href="/nsc/" title="National Security Council">NSC</a></li>
+	</ul>
+
+<p class="more"><a href="/government/eop.html">More Offices</a></p>	
+
+<!-- * * * * BEGIN APPOINTMENTS * * * * * -->
+
+<h2>Appointments</h2>
+ 	<ul>             
+		<li><a href="/news/nominations/">Nominations</a></li>
+		<li><a href="/appointments/">Application</a></li>
+	</ul>
+              
+<br />
+
+<!-- * * * * PHOTO ESSAYS * * * * * -->
+	<p><a href="/president/gallery/photoessay/"><img src="/images/home-photos.jpg" width="100" height="105" alt="Link to Photo Essays" border="0" /></a><br />
+	<a href="/features/"><img src="/images/features-bnr.gif" width="100" height="105" alt="White House Features - A Gallery of our special pages" border="0" /></a></p>
+
+
+
+
+	
+						</div>
+					</td>
+				</tr>
+			</table>
+		</td>
+		<td id="gutter"><img src="/images/pixel.gif" width="10" height="1" alt="" /></td>
+
+		<!-- * * * * * MAIN CONTENT * * * * * -->
+		<td id="main-content" width="631" valign="top">
+			<table border="0" cellspacing="0" cellpadding="0" width="631" summary="Main Content">
+				<tr valign="top">
+					<td width="631"><a name="content"></a>
+						 
+						
+						
+<!-- BEGIN -->
+
+
+
+
+<table border="0" cellpadding="0" cellspacing="0" width="631">
+  <tr valign="top">
+   <td width="350">
+    <table width="100%" border="0" cellspacing="0" cellpadding="7">
+     <tr>
+      <td><font face="Arial, Helvetica, Sans Serif" size="2">
+       <table border="0" cellpadding="0" cellspacing="0" width="100%">
+        <tr>
+         <td valign="middle">
+          <font face="Arial, Helvetica, sans-serif" size="1" color="#A80404"><b>
+           September 28, 2006 | Last Updated 6:25 p.m. (EDT)<br />&nbsp;<br />
+          </b></font>
+         </td>
+        </tr>
+       </table>
+       
+<table cellpadding="0" cellspacing="0" border="0" width="100%">
+<tr><td>
+<font face="Arial, Helvetica, Sans Serif" size="1">
+
+<font face="Arial, Helvetica, sans-serif" size="3"><b><a href="/news/releases/2006/09/20060928-3.html">President Bush Discusses Energy in Alabama</a></b></font><br/><font face="Arial, Helvetica, sans-serif" size="2"><a href="/news/releases/2006/09/images/20060928-3_p092806pm-220-515h.html"><img src="/news/releases/2006/09/images/20060928-3_p092806pm-220-70h.jpg" alt="President George W. Bush stresses the importance of developing and using alternative fuels while speaking on energy issues Thursday, Sept. 28, 2006, during a visit to the Hoover Public Safety Center in Hoover, Ala. The city has just opened an alternative fueling station to provide E85 (ethanol) and biodiesel fuels for public agency vehicles. White House photo by Paul Morse" border="0" align="left" class="homepage-thumb" width="72" height="72"></a>President Bush on Thursday said, "You know, the price of gasoline has been dropping, and that's good news for the American consumer, it's good news for the small business owners, it's good news for the farmers.  But it's very important for us to remember that we still have an issue when it comes to dependence on foreign oil.  And one way to become less dependent on foreign oil is for us to develop new ways to power our automobiles right here in America." <a href="/news/releases/2006/09/20060928-3.html"><img src="/images/fullstory1.gif" width="50" height="10" alt="full story" border="0"/></a>  <a href="/news/releases/2006/09/20060928-3.es.html"><img src="/news/images/espanol.gif" alt="en Espa&#241ol" border="0" width="60" height="10"></a> </font><br/><font size="1"><img src="/images/text4.gif" width="10" height="10" align="absbottom" alt="Fact sheet"/>
+<a href="/infocus/energy/"><b>In Focus: Energy</b></a>
+<br/></font>
+</td>
+</tr>
+<tr>
+<td>
+<hr noshade="noshade" width="100%" size="1">
+</td></tr></table><P>
+<table cellpadding="0" cellspacing="0" border="0" width="100%">
+<tr><td>
+<font face="Arial, Helvetica, Sans Serif" size="1">
+
+<font face="Arial, Helvetica, sans-serif" size=3><b><a href="/ask/question2.html">Discuss Lebanon Reconstruction on "Ask the White House"</a></b></font><br/><font face="Arial, Helvetica, sans-serif" size="2"><a href="/ask/question2.html"><img class="homepage-thumb" src="/ask/images/dhabib-50.jpg" align="left" border="0" alt="Dina Habib Powell"  width="50" height="70"/></a>On Friday at 4 PM ET, Dina Habib Powell, Assistant Secretary of State for Educational and Cultural Affairs, will answer your questions about her recent Presidential Delegation to Lebanon to discuss rebuilding priorities and a nationwide effort to encourage private donations for reconstruction. <a href="/ask/question.html" style="font: normal 10 px arial;">Submit a question</a> <a href="/ask/question2.html"><img
+class="homepage-thumb"                       src="/images/fullstory1.gif" width="50" height="10"
+                      alt="full story" border="0"></a>
+</font><br/>
+</td>
+</tr>
+<tr>
+<td>
+<hr noshade="noshade" width="100%" size="1">
+</td></tr></table><p>
+<table cellpadding="0" cellspacing="0" border="0" width="100%">
+<tr><td>
+<font face="Arial, Helvetica, Sans Serif" size="1">
+
+<font face="Arial, Helvetica, sans-serif" size="3"><b><a href="/news/releases/2006/09/20060928.html">President Meets with Republican Senate Conference</a></b></font><br/><font face="Arial, Helvetica, sans-serif" size="2">
+<script type="text/javascript" language="javascript">
+<!--
+      document.write(lt+"a href=\"#\" onClick=\"javascript:popup('/news/releases/2006/09/20060928.v.html','394','316')\" "+gt+""+lt+"b"+gt+""+lt+"img src="+dquot+"/news/releases/2006/09/images/20060928_vidbtn68h.jpg"+dquot+" name="+dquot+"vidbtn"+dquot+" class="+dquot+"homepage-thumb"+dquot+" alt="+dquot+"Play Video"+dquot+" border="+dquot+"0"+dquot+" align="+dquot+"left"+dquot+"/"+gt+""+lt+"/b"+gt+""+lt+"/a"+gt+"");
+//-->
+</script>
+<noscript><a href="/news/releases/2006/09/20060928.v.html"><b><img src="/news/releases/2006/09/images/20060928_vidbtn68h.jpg" name="vidbtn" class="homepage-thumb" alt="Play Video" border="0" align="left" width="70" height="64"/></b></a></noscript>
+President Bush on Thursday said, "Our most solemn job is the security of this country.  People shouldn't forget there's still an enemy out there that wants to do harm to the United States.	And therefore a lot of my discussion with the members of the Senate was to remind them of this solemn responsibility.  And so I look forward to you passing good legislation, Senators." <a href="/news/releases/2006/09/20060928.html"><img src="/images/fullstory1.gif" width="50" height="10" alt="full story" border="0"/></a>  </font><br/><font size="1">
+
+</td>
+</tr>
+<tr>
+<td>
+<hr noshade="noshade" width="100%" size="1">
+</td></tr></table><p>
+<table cellpadding="0" cellspacing="0" border="0" width="100%">
+<tr><td>
+<font face="Arial, Helvetica, Sans Serif" size="1">
+
+<font face="Arial, Helvetica, sans-serif" size="3"><b><a href="/news/releases/2006/09/20060927-5.html">President Bush Hosts Presidents of Pakistan and Afghanistan at the White House</a></b></font><br/><font face="Arial, Helvetica, sans-serif" size="2">
+<script type="text/javascript" language="javascript">
+<!--
+      document.write(lt+"a href=\"#\" onClick=\"javascript:popup('/news/releases/2006/09/20060927-5.v.html','394','316')\" "+gt+""+lt+"b"+gt+""+lt+"img src="+dquot+"/news/releases/2006/09/images/20060927-5_vidbtn68h.jpg"+dquot+" name="+dquot+"vidbtn"+dquot+" class="+dquot+"homepage-thumb"+dquot+" alt="+dquot+"Play Video"+dquot+" border="+dquot+"0"+dquot+" align="+dquot+"left"+dquot+"/"+gt+""+lt+"/b"+gt+""+lt+"/a"+gt+"");
+//-->
+</script>
+<noscript><a href="/news/releases/2006/09/20060927-5.v.html"><b><img src="/news/releases/2006/09/images/20060927-5_vidbtn68h.jpg" name="vidbtn" class="homepage-thumb" alt="Play Video" border="0" align="left" width="70" height="64"/></b></a></noscript>
+President Bush on Wednesday said, "These two men are personal friends of mine; they are strong leaders who have a understanding of the world in which we live; they understand that the forces of moderation are being challenged by extremists and radicals.  And we're working closely together to help improve the lives of the people in Afghanistan and the people in Pakistan." <a href="/news/releases/2006/09/20060927-5.html"><img src="/images/fullstory1.gif" width="50" height="10" alt="full story" border="0"/></a>  </font><br/><font size="1">
+<font size="1"><img src="/images/text4.gif" width="10" height="10" align="absbottom" alt="Fact sheet"/>
+<a href="/infocus/globaldiplomacy/"><b>In Focus: Global Diplomacy</b></a>
+<br/></font><font size="1"><img src="/images/text4.gif" width="10" height="10" align="absbottom" alt="Fact sheet"/>
+<a href="/infocus/mideast/"><b>In Focus: Middle East</b></a>
+<br/></font>
+</td>
+</tr>
+<tr>
+<td>
+<hr noshade="noshade" width="100%" size="1">
+</td></tr></table><p>
+<table cellpadding="0" cellspacing="0" border="0" width="100%">
+<tr><td>
+<font face="Arial, Helvetica, Sans Serif" size="1">
+
+<font face="Arial, Helvetica, sans-serif" size="3"><b><a href="/news/releases/2006/09/20060927-2.html">Press Briefing by Tony Snow</a></b></font><br/><font face="Arial, Helvetica, sans-serif" size="2">
+<script type="text/javascript" language="javascript">
+<!--
+      document.write(lt+"a href=\"#\" onClick=\"javascript:popup('/news/releases/2006/09/20060927-2.v.html','394','316')\" "+gt+""+lt+"b"+gt+""+lt+"img src="+dquot+"/news/releases/2006/09/images/20060927-2_vidbtn68h.jpg"+dquot+" name="+dquot+"vidbtn"+dquot+" class="+dquot+"homepage-thumb"+dquot+" alt="+dquot+"Play Video"+dquot+" border="+dquot+"0"+dquot+" align="+dquot+"left"+dquot+"/"+gt+""+lt+"/b"+gt+""+lt+"/a"+gt+"");
+//-->
+</script>
+<noscript><a href="/news/releases/2006/09/20060927-2.v.html"><b><img src="/news/releases/2006/09/images/20060927-2_vidbtn68h.jpg" name="vidbtn" class="homepage-thumb" alt="Play Video" border="0" align="left" width="70" height="63"/></b></a></noscript>
+Watch Wednesday's Press Briefing with White House Press Secretary Tony Snow. <a href="/news/releases/2006/09/20060927-2.html"><img src="/images/fullstory1.gif" width="50" height="10" alt="full story" border="0"/></a>  </font><br/><font size="1">
+
+</td>
+</tr>
+<tr>
+<td>
+<hr noshade="noshade" width="100%" size="1">
+</td></tr></table>
+
+
+        <br />
+        <a href="http://www.whitehouse.gov/news/"><img alt=" More White House News" border="0" height="20" src="/images/morewhnews.gif" width="150" /></a>
+        <br />
+       <p>&nbsp;</p>
+      </font></td>
+     </tr>
+    </table>
+   </td>
+   <td rowspan="3" width="1">&nbsp;</td>
+   <td width="300">
+    <table border="0" cellpadding="7" cellspacing="0" width="300">
+     <tr valign="top">
+      <td>
+       <table width="300" border="0" cellspacing="0" cellpadding="0">
+        <tr valign="top">
+         <td><font face="Arial, Helvetica, Sans Serif" size="1" color="#333">
+
+<a href="/news/releases/2006/09/images/20060928-3_p092806pm-160-515h.html"><img src="/news/releases/2006/09/images/20060928-3_p092806pm-160-298h.jpg" alt="President George W. Bush observes an alternative fueling demonstration with Hoover Police Department Officer Reggie Parker, center, being embraced by Alabama Governor Bob Riley, Thursday, Sept. 28, 2006, during President Bush&#146;s visit to the Hoover Public Safety Center in Hoover, Ala. The city has just opened an alternative fueling station to provide E85 (ethanol) and biodiesel fuels for public agency vehicles. White House photo by Paul Morse" border="0" width="299" height="210"></a>
+President George W. Bush observes an alternative fueling demonstration with Hoover Police Department Officer Reggie Parker, center, being embraced by Alabama Governor Bob Riley, Thursday, Sept. 28, 2006, during President Bush&#146;s visit to the Hoover Public Safety Center in Hoover, Ala. The city has just opened an alternative fueling station to provide E85 (ethanol) and biodiesel fuels for public agency vehicles. White House photo by Paul Morse
+
+        </font></td>
+        </tr>
+
+       </table>
+
+      </td>
+     </tr>
+     <tr valign="top">
+      <td width="300">
+<table border="0" cellpadding="0" cellspacing="0" width="300">
+ <tr>
+  <td bgcolor="#999999" colspan="3" height="1"><img alt="" height="1" src="/images/pixel.gif" /></td>
+ </tr>
+ <tr>
+  <td bgcolor="#999999" width="1"><img alt="" src="/images/pixel.gif" width="1" /></td>
+  <td width="298"><font face="Arial, Helvetica, Sans Serif" size="1">
+
+  <table border="0" cellpadding="0" cellspacing="1" width="300">
+   <tr>
+    <td colspan="5" height="4"><img alt="" height=8 src="/images/pixel.gif" /></td>
+   </tr>
+   <tr>
+    <td width="4"><img alt="" src="/images/pixel.gif" width="4" /></td>
+    <td colspan="3" valign="top">
+       <table width="282" border="0" cellpadding="0" cellspacing="0">
+ <tr>
+ <td colspan="2" bgcolor="#003366">
+ <a href="/infocus/energy/"><img src="/images/inside-energy.jpg" border="0" alt="Energy Security for the 21st Century " width="290" height="25"></a></td>
+</tr>
+ </table>
+
+     <table width="282" bgcolor="#efefef" border="0" cellpadding="4" cellspacing="0">
+     <tr valign="top">
+     <td>
+     <table width="282" bgcolor="#efefef" border="0" cellpadding="4" cellspacing="0">
+
+         <tr valign="top">
+         <td>
+	 <font face="arial, helvetica, sans-serif" size="2"><center>
+	<a href="/infocus/energy/"><b>Energy Security</b></a></center></font><font face="Arial, Helvetica, sans-serif" size=1>
+	America's prosperity depends on reliable, affordable and secure sources of energy.  President Bush believes the power of technology and the innovative spirit of America will reduce our reliance on foreign sources of energy, which will help ensure a growing and prosperous America in the 21st Century.
+
+<!-- 
+
+President Bush believes the power of technology and the innovative spirit of America will reduce our reliance on foreign sources of energy, which will help ensure a growing and prosperous America in the 21st Century.
+
+America's prosperity depends on reliable, affordable and secure sources of energy.   President Bush recently discussed the effect of Hurricanes Katrina and Rita on energy supplies in the Gulf Coast region. <a href="/infocus/energy/">Click here</a> to learn more about steps that Americans can take to help alleviate energy supply disruptions. 
+/images/energy-thumb70h.jpg
+
+<IMG SRC="/images/inside-economy-thumb.jpg" ALT="Energy Security for the 21st Century" BORDER="0" width="70" height="70">
+
+-->
+
+<br>
+
+	</font>
+	</td> 
+	<td valign="top"><DIV ID="thumbnail"><a href="/infocus/energy/"><IMG SRC="/images/inside-energy-thumb.jpg"
+ALT="Energy Security for the 21st Century" BORDER="0" width="70" height="70"></a></DIV></td>
+         </tr>
+
+     </table>
+     </center>
+     </td>  
+     </tr>   
+     </table>
+
+
+<table width="282" border="0" cellpadding="0" cellspacing="0">
+	<tr>
+ 		<td colspan="2" bgcolor="#003366">
+ 			<a href="/ask/"><img src="/images/ask_the_white_house.gif" border="0" alt="Ask the White House" width="290" height="25"></a>
+		</td> 
+	</tr>
+ </table>
+
+
+<table width="282" bgcolor="#efefef" border="0" cellpadding="4" cellspacing="0">
+	<tr valign="top">
+     		<td>
+     			<table width="282" bgcolor="#efefef" border="0" cellpadding="4" cellspacing="0">
+                                <tr>
+                                  <td valign="top">
+                                        <font face="arial, helvetica, sans-serif" size="2">
+					<div align="center">
+                                        <a href="/ask/question.html"><strong>Discuss Energy Policy</strong></a></font>
+					</div>
+                                        <font face="Arial, Helvetica, sans-serif" size="1">
+Samuel Bodman, Secretary of Energy, will discuss the President's Advanced Energy Initiative, "Advancing Renewable Energy," a conference jointly hosted by the Departments of Energy and Agriculture, which builds upon the Advanced Energy Initiative, as well as energy efficiency Monday at 4 PM ET.
+					      </td>
+                                        <td valign="top">
+					<a href="/ask/question.html"><img src="/ask/images/bodman-50.jpg" alt="Samuel Bodman" border="0" width="50" height="70"></a>
+</td>
+                                </tr>
+     			</table>
+     		</td>
+     	</tr>
+ </table>
+
+
+<table width="290" border="0" cellpadding="0" cellspacing="0">
+	<tr>
+		<td bgcolor="#003366">
+			<a href="/news/setting-record-straight/index.html"><img src="/images/inside-setting-record.gif" border="0" alt="Setting the Record Straight" width="290" height="25"></a></td>
+		</tr>
+</table>
+<div align="center">
+<table width="290" bgcolor="#efefef" border="0" cellpadding="4" cellspacing="0">
+	<tr valign="top">
+		<td>
+			<ul style="list-style-type: none; padding-top: 0px; padding-right: 0px; padding-bottom: 0px; padding-left: 5px; margin: 0; text-align: left;">
+				
+<li style="background-image: url(/images/icon-docs-sm.gif); background-repeat: no-repeat; background-position: 0 .5em; padding: 0px 0px 5px 13px; font: 11px Verdana, Arial, Helvetica, sans-serif; color: #000000;">
+<a href="/news/releases/2006/09/20060926-8.html">The Rest of the Story: The NIE Reflects Previous Statements About the War on Terror</a>
+</li>
+
+<li style="background-image: url(/images/icon-docs-sm.gif); background-repeat: no-repeat; background-position: 0 .5em; padding: 0px 0px 5px 13px; font: 11px Verdana, Arial, Helvetica, sans-serif; color: #000000;">
+<a href="/news/releases/2006/09/20060915-7.html">Now and Then: Editorials on the McCain Amendment</a>
+</li>
+
+			</ul>
+			<div align="right"><a href="/news/setting-record-straight/index.html"><img src="/images/news-more.gif" border="0" alt="White House News" width="213" height="11"></a></div>
+		</td>
+	</tr>
+</table>
+</div>
+
+
+  <table width="282" border="0" cellpadding="0" cellspacing="0">
+  <tr>
+  <td colspan="2" bgcolor="#003366"><a href="/infocus/economy/">
+  <img src="/images/inside-economy.gif" border="0" alt="The Economy" width="290" height="25"></a></td>
+  </tr>
+  </table>
+
+   <table width="290" bgcolor="#efefef" border="0" cellpadding="4" cellspacing="0">
+   <tr valign="top">
+   <td><font face="arial, helvetica, sans serif" size=2><center><b>
+<a href="/infocus/economy/">Strong U.S. Economy</a></b></center></font>
+   <font face="arial, helvetica, sans serif" size=1>Economic growth continues with 128,000 new jobs created in August.  There have been over 5.7 million new jobs created since August of 2003, and the unemployment rate is at 4.7 percent, below the average of the past four decades. 
+ <a href="/infocus/economy/">Click here</a> to learn more about the President's pro-growth policies.
+
+<!--
+Economic growth continues with 113,000 new jobs created in July.  There have been over 5.5 million new jobs created since August of 2003, and the unemployment rate is at 4.8 percent, below the averages of the 1960's, '70s, '80s and '90s. 
+
+President Bush discussed his commitment to keep taxes low and restrain spending.  The President believes money spent in Washington, D.C. is not the government�s money � it is the American people's money, and our economy is better off when the American people keep more of it.
+
+The American economy is strong, growing 3.5 percent in 2005, faster than any other major industrialized country in the world. There have been over 5.1 million new jobs created since August of 2003, and the unemployment rate is at 4.7 percent, below the averages of the 1960's, '70s, '80s and '90s.
+
+Economic Growth continues as the unemployment rate dipped to 4.7%.  Job gains have occured for the past 29 months and over 2 million jobs have been created over the past 12 months, nearly 4.8 million since August 2003.  <a href="/cea/pubs.html">Click here</a> to read the report and learn more about the President's pro-growth policies.-->
+
+</font></td>
+   <td valign="top">
+   <a href="/infocus/economy/"><img src="/images/inside-economy-thumb.jpg" alt="President George W. Bush" border="0" align="right" width="70" height="70"></a>
+   </td>   
+   </tr>   
+   </table>
+
+
+
+<table width="282" border="0" cellpadding="0" cellspacing="0">
+ <tr>
+ <td colspan="2" bgcolor="#003366">
+ <a href="/infocus/ramadan/2006/"><img src="/images/ramadan05-inside.gif" border="0" alt="Ramadan 2006" width="290" height="25"></a></td> </tr>
+ </table>
+
+     <table width="282" bgcolor="#efefef" border="0" cellpadding="4" cellspacing="0">
+     <tr valign="top">
+     <td>
+     <table width="282" bgcolor="#efefef" border="0" cellpadding="4" cellspacing="0">
+         <tr valign="top">
+         <td>
+	 <font face="arial, helvetica, sans-serif" size="2"><center><a
+	 href="/infocus/ramadan/2006/"><b>Ramadan 2006</b></a></center></font><font face="Arial, Helvetica,
+	 sans-serif" size=1>
+Ramadan is the holiest time of the Muslim year and an important holiday when Muslims take time for prayer, fasting, and personal sacrifice. <a href="/infocus/ramadan/2006/">Click here </a>to read the President's Message, view photos, and learn more.
+</font></td> 
+<td><a href="/infocus/ramadan/2006/"><img src="/infocus/ramadan/2006/images/ramadan06-thumb.gif" alt="Link to Ramadan 2006 Front Page" border="0" width="70" height="70"></a>
+</td>
+
+         </tr>
+     </table>
+     </td>  
+     </tr>   
+     </table>
+
+
+
+			<table width="290" border="0" cellpadding="0" cellspacing="0">
+ 			  <tr>
+ 			    <td bgcolor="#003366"><a href="/email/"><img src="/images/email-inside.jpg" border="0" alt="E-Mail Updates" width="290" height="25"></a></td> 
+			  </tr>
+ 			</table>
+     			<table width="290" bgcolor="#efefef" border="0" cellpadding="4" cellspacing="0">
+         		  <tr valign="top">
+         		    <td>
+					<img src="/images/email-inside-thumb.jpg" border="0" alt="E-Mail Updates" align="right" width="70" height="70">
+					<font face="arial, helvetica, sans serif" size="2"><center><b><a href="/email/">White House Weekly Review</a></b></center></font>
+					<font face="arial, helvetica, sans serif" size="1">Sign-up to receive weekly Saturday morning e-mail updates featuring President Bush's events, speeches, photos and White House web site exclusives from the past week. <a href="/email/">Click to subscribe</a></font><br />
+			    </td>
+         		  </tr>
+     			</table>
+
+
+    </td>
+    <td width="4"><img alt="" src="/images/pixel.gif" width="4" /></td>
+   </tr>
+   <tr>
+    <td colspan="5" height="4"><img alt="" height="8" src="/images/pixel.gif" /></td>
+   </tr>
+  </table>
+  </font></td>
+  <td bgcolor="#999999" width="1"><img alt="" src="/images/pixel.gif" width="1" /></td>
+  </tr>
+ <tr>
+  <td bgcolor="#999999" colspan="3" height="1"><img alt="" height="1" src="/images/pixel.gif" /></td>
+ </tr>
+</table>
+      </td>
+     </tr>
+    </table>
+   </td>
+  </tr>
+ </table>
+<!-- CRON TEST -->
+
+<!-- END -->
+<br /><br />
+					</td>
+				</tr>
+			</table>
+		</td>
+	</tr>
+	<tr>
+		<td colspan="3">
+			<div id="footer">
+				<a href="/president/">President</a> |
+				<a href="/vicepresident/">Vice President</a> | 
+				<a href="/firstlady/">First Lady</a> | 
+				<a href="/mrscheney/">Mrs. Cheney</a> | 
+				<a href="/news/">News &amp; Policies</a><br />
+				<a href="/history/">History &amp; Tours</a> |
+				<a href="/kids/">Kids</a> |
+				<a href="/government/">Your Government</a> | 
+				<a href="/appointments/">Appointments</a> |
+				<a href="/oa/jobs/">Jobs</a> | 
+				<a href="/contact/">Contact</a> |
+				<a href="/text/index.html">Text only</a><br />
+				<a href="/accessibility.html">Accessibility</a> | 
+				<a href="/search/">Search</a> | 
+				<a href="/privacy.html">Privacy Policy</a> | 
+				<a href="/help.html">Help</a>
+			</div>
+		</td>
+	</tr>
+</table>
+
+<script src="/js/stat.js" language="javascript" type="text/javascript"></script>
+<noscript>
+<img alt="" border="0" name="DCSIMG" width="1" height="1" src="http://statse.webtrendslive.com/DCSArO55rNH8I36lrbe6wexE5_5B8I/njs.gif?dcsuri=/nojavascript&amp;WT.js=No"/>
+</noscript>
+
+
+</body>
+
+</html> 

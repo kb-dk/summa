@@ -23,17 +23,20 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
 
-import java.io.InputStream;
-import java.io.FileInputStream;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.Arrays;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Random;
 
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import dk.statsbiblioteket.summa.ingest.split.StreamController;
+import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.Streams;
 import dk.statsbiblioteket.util.Strings;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -61,34 +64,91 @@ public class ARCParserTest extends TestCase {
     }
 
     public void testSimpleARC() throws Exception {
-        File source = Resolver.getFile(
-                "test/data/arc/ARC-SAMPLE-20060928223931-00000-gojoblack.arc.gz");
-        InputStream is = new FileInputStream(source);
-        Payload payloadIn = new Payload(is);
-        payloadIn.setID(source.toString());
-        PayloadFeederHelper feeder =
-                new PayloadFeederHelper(Arrays.asList(payloadIn));
+        ObjectFilter feeder = getFeeder(Arrays.asList(
+                Resolver.getFile("test/data/arc/ARC-SAMPLE-20060928223931-"
+                                 + "00000-gojoblack.arc.gz")));
 
         Configuration arcConf = Configuration.newMemoryBased(
                 StreamController.CONF_PARSER, ARCParser.class);
         StreamController ap = new StreamController(arcConf);
         ap.setSource(feeder);
-        
+
+        assertValidARCParse(ap, 120);
+    }
+
+    public void testUncompressedread() throws Exception {
+/*        ObjectFilter feeder = getFeeder(Arrays.asList(
+                Resolver.getFile("test/data/arc/17676-38-20070528072102-00008-sb-prod-har-002.statsbiblioteket.dk.arc")));*/
+        ObjectFilter feeder = getFeeder(Arrays.asList(
+                Resolver.getFile("test/data/arc/ARC-SAMPLE-20060928223931-"
+                                 + "00000-gojoblack.arc")));
+
+        Configuration arcConf = Configuration.newMemoryBased(
+                StreamController.CONF_PARSER, ARCParser.class,
+                "usefilehack", true);
+        StreamController ap = new StreamController(arcConf);
+        ap.setSource(feeder);
+
+        assertValidARCParse(ap, 120);
+    }
+
+    public void testRecordExtraction() throws Exception {
+        ObjectFilter feeder = getFeeder(Arrays.asList(
+                Resolver.getFile("test/data/arc/ARC-SAMPLE-20060928223931-"
+                                 + "00000-gojoblack.arc")));
+
+        Configuration arcConf = Configuration.newMemoryBased(
+                StreamController.CONF_PARSER, ARCParser.class,
+                "usefilehack", true);
+        StreamController ap = new StreamController(arcConf);
+        ap.setSource(feeder);
+
+        String WHITE = "http://www.whitehouse.gov/";
+        String expected = Files.loadString(Resolver.getFile(
+                "data/arc/whitehouse.gov.dat"));
+        while (ap.hasNext()) {
+            Payload next = ap.next();
+            log.trace("Got " + next);
+            if (WHITE.equals(next.getId())) {
+                log.debug("Located whitehouse.gov");
+                String actual = Strings.flush(next.getStream());
+                log.debug("Flushed content of whitehouse.gov");
+                assertEquals("whitehouse.gov should be as expected",
+                             expected, actual);
+                return;
+            }
+            next.close();
+        }
+        ap.close(true);
+        fail(WHITE + " not found");
+    }
+    private void assertValidARCParse(ObjectFilter ap, int expected)
+                                                              throws Exception {
+        Random random = new Random();
         assertTrue("At least one Payload should be generated", ap.hasNext());
         log.debug("Iterating through ARC records");
+        List<String> ids = new ArrayList<String>(100);
         while (ap.hasNext()) {
             Payload payload = ap.next();
-            if (true || "text/html".equals(payload.getData("arc.primaryType"))) {
-                System.out.println(String.format(
-                        "Found %s with content\n%s",
-                        payload, Strings.flushLocal(payload.getStream())));
-            } else {
-                System.out.println("Found " + payload + " with content length "
-                                   + streamLength(payload));
-            }
+            System.out.println("Found " + payload + " with content length "
+                               + streamLength(payload));
             payload.close();
         }
         ap.close(true);
+        assertEquals("The number of payloads should be as expected",
+                     expected, ids.size());
+    }
+
+    private ObjectFilter getFeeder(List<File> arcs) throws IOException {
+        List<Payload> payloads = new ArrayList<Payload>(arcs.size());
+        for (File arc: arcs) {
+            InputStream is = new FileInputStream(arc);
+            Payload payloadIn = new Payload(is);
+            payloadIn.getData().put(Payload.ORIGIN, arc.getAbsolutePath());
+            payloadIn.setID(arc.toString());
+            payloads.add(payloadIn);
+        }
+        return new PayloadFeederHelper(payloads);
     }
 
     private long streamLength(Payload payload) throws IOException {
@@ -98,5 +158,4 @@ public class ARCParserTest extends TestCase {
         }
         return length;
     }
-
 }
