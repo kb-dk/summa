@@ -240,6 +240,5 @@ public class ARCParser extends ThreadedStreamParser {
             log.warn("Exception extracting site from " + url, e);
             return null;
         }
-
     }
 }
