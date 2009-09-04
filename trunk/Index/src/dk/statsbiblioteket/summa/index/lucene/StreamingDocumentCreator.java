@@ -94,8 +94,8 @@ public class StreamingDocumentCreator extends DocumentCreatorBase {
         inputFactory = XMLInputFactory.newInstance();
         // TODO: Check to see if we need to handle CData-events
 //        inputFactory.setProperty("report-cdata-event", Boolean.TRUE);
-        inputFactory.setProperty(XMLInputFactory.IS_COALESCING,
-                                 Boolean.TRUE);
+        //inputFactory.setProperty(XMLInputFactory.IS_COALESCING,
+        //                         Boolean.TRUE);
         inputFactory.setProperty(XMLInputFactory.IS_NAMESPACE_AWARE,
                                  Boolean.TRUE);
 
