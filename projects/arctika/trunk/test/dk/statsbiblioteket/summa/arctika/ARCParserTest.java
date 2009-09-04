@@ -110,7 +110,8 @@ public class ARCParserTest extends TestCase {
             Payload next = ap.next();
             log.trace("Got " + next);
             if (WHITE.equals(next.getId())) {
-                log.debug("Located whitehouse.gov");
+                log.debug("Located whitehouse.gov with site "
+                          + next.getData("arc.site"));
                 String actual = Strings.flush(next.getStream());
                 log.debug("Flushed content of whitehouse.gov");
                 assertEquals("whitehouse.gov should be as expected",
@@ -124,7 +125,6 @@ public class ARCParserTest extends TestCase {
     }
     private void assertValidARCParse(ObjectFilter ap, int expected)
                                                               throws Exception {
-        Random random = new Random();
         assertTrue("At least one Payload should be generated", ap.hasNext());
         log.debug("Iterating through ARC records");
         List<String> ids = new ArrayList<String>(100);
@@ -132,6 +132,7 @@ public class ARCParserTest extends TestCase {
             Payload payload = ap.next();
             System.out.println("Found " + payload + " with content length "
                                + streamLength(payload));
+            ids.add(payload.getId());
             payload.close();
         }
         ap.close(true);

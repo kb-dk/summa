@@ -33,7 +33,6 @@ import org.archive.io.ArchiveRecord;
 import org.archive.io.ArchiveRecordHeader;
 
 import java.util.Iterator;
-import java.util.Map;
 import java.io.*;
 
 /**
@@ -218,20 +217,29 @@ public class ARCParser extends ThreadedStreamParser {
     // https://foo/bar... => foo
     // dns:foo/bar... => foo
     private String extractSite(String url) {
-        String[] colonTokens = url.split(":", 2);
-        if (colonTokens.length < 2) {
+        try {
+            String[] colonTokens = url.split(":", 2);
+            if (colonTokens.length < 2) {
+                return null;
+            }
+            if ("filedesc".equals(colonTokens[0])) {
+                return null;
+            }
+            // Hackety hack
+            String rest = colonTokens[1];
+            while (rest.startsWith("/")) {
+                rest = rest.substring(1, rest.length());
+            }
+            String first = rest.split("/")[0];
+//        System.out.println(slashtokens[0]);
+            if (first.startsWith("www.")) {
+                first = first.substring(4, first.length());
+            }
+            return first;
+        } catch (Exception e) {
+            log.warn("Exception extracting site from " + url, e);
             return null;
         }
-        if ("filedesc".equals(colonTokens[0])) {
-            return null;
-        }
-        // Hackety hack
-        String rest = colonTokens[1];
-        while (rest.startsWith("/")) {
-            rest = rest.substring(1, rest.length());
-        }
-        String[] slashtokens = rest.split("/");
-        System.out.println(slashtokens[0]);
-        return slashtokens[0];
+
     }
 }
