@@ -241,6 +241,8 @@ public class TikaDocumentCreator extends DocumentCreatorBase {
                 }
                 if (inTitle) {
                     try {
+                        // Overwrite old title if it exists
+                        document.removeField(FIELD_TITLE);
                         addFieldToDocument(descriptor, document, FIELD_TITLE,
                                            content, 1.0F);
                     } catch (IndexServiceException e) {
