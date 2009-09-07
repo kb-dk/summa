@@ -44,6 +44,7 @@ import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandlerFactory;
 import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
+import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.summa.search.document.DocumentSearcher;
 import dk.statsbiblioteket.util.Profiler;
@@ -157,8 +158,8 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
                     urlLocation));
             return;
         }
-        log.debug(String.format("Performing major initialization based on '%s'",
-                                urlLocation));
+        log.info(String.format(
+                "Performing major initialization based on '%s'", urlLocation));
         initStructures(newStructure);
         if (log.isDebugEnabled()) {
             log.debug(String.format(
@@ -240,6 +241,7 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
     @Override
     protected void managedSearch(Request request, ResponseCollection responses)
                                                         throws RemoteException {
+        long startTime = System.currentTimeMillis();
         if (facetMap == null) {
             throw new RemoteException("Unable to perform facet search as no "
                                       + "facet structure has been opened");
@@ -263,6 +265,18 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
                 collector, request.containsKey(FacetKeys.SEARCH_FACET_FACETS) ?
                            request.getString(FacetKeys.SEARCH_FACET_FACETS) :
                            null));
+        if (log.isDebugEnabled()) {
+            if (request.containsKey(DocumentKeys.SEARCH_QUERY)) {
+                log.debug("Finished facet call for query '"
+                          + request.get(DocumentKeys.SEARCH_QUERY) + "' with "
+                          + collector.getDocCount() + " hits in "
+                          + (System.currentTimeMillis() - startTime));
+            } else {
+                log.debug("Finished facet call for unknown query with "
+                          + collector.getDocCount() + " hits in "
+                          + (System.currentTimeMillis() - startTime));
+            }
+        }
     }
 
     public List<String> getFacetNames() {
@@ -281,8 +295,8 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
             log.trace("Requesting BrowserThread");
             BrowserThread browserThread;
             try {
-                browserThread = browsers.poll(BROWSER_THREAD_QUEUE_TIMEOUT,
-                                              TimeUnit.MILLISECONDS);
+                browserThread = browsers.poll(
+                        BROWSER_THREAD_QUEUE_TIMEOUT, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
                 throw new RemoteException("Interrupted while waiting for a "
                                           + "free BrowserThread", e);
@@ -295,8 +309,8 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
             try {
                 // TODO: Make this threaded
                 log.trace("Activating BrowserThread");
-                browserThread.startRequest(docIDs, 0, docIDs.getBits().length(),
-                                           facetRequest);
+                browserThread.startRequest(
+                        docIDs, 0, docIDs.getBits().length(), facetRequest);
                 log.trace("Waiting for browserThread");
                 browserThread.waitForResult(BROWSER_THREAD_MARK_TIMEOUT);
                 log.trace("Finished waiting for BrowserThread, "
