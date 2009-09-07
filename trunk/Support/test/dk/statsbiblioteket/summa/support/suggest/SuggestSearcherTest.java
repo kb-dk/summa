@@ -147,7 +147,7 @@ public class SuggestSearcherTest extends TestCase {
     private void assertGet(String prefix, String expected) throws
                                                            IOException {
         String xml = get(prefix);
-        assertTrue(String.format("The string '%s' should be in the result '%s'",
+        assertTrue(String.format("The string '%s' should be in the result:\n%s",
                                  expected, xml),
                    xml.contains(expected));
         log.trace("Got xml for prefix '" + prefix + "':\n" + xml);
