@@ -101,7 +101,7 @@ public class RecordWriter extends ObjectFilterImpl {
      * @see {@link #CONF_BATCH_SIZE}.
      */
     public static final String CONF_BATCH_MAXMEMORY =
-            "summa.storage.recordwriter.maxmemory";
+            "summa.storage.recordwriter.batchmaxmemory";
     public static final int DEFAULT_BATCH_MAXMEMORY = 2 * 1000 * 1000;
 
     /**
