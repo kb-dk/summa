@@ -271,12 +271,19 @@ public abstract class StorageBase implements Storage {
      */
     public List<Record> getRecords (List<String> ids, QueryOptions options)
                                                         throws IOException {
+        long startTime = System.currentTimeMillis();
         ArrayList<Record> result = new ArrayList<Record>(ids.size());
         for (String id : ids) {
             Record r = getRecord(id, options);
             if (r != null) {
                 result.add(r);
             }
+        }
+        if (log.isDebugEnabled()) {
+            //noinspection DuplicateStringLiteralInspection
+            log.debug("Finished getRecords(" + ids.size()
+                      + " ids, ...) in "
+                      + (System.currentTimeMillis() - startTime) + "ms");
         }
 
         return result;

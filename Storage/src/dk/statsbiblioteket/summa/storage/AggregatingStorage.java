@@ -106,15 +106,15 @@ public class AggregatingStorage extends StorageBase {
                                                            readers.entrySet()) {
                 ReadableStorage reader = entry.getValue();
                 String readerBase = entry.getKey();
-                IteratorContext subIter = new IteratorContext(reader,
-                                                              readerBase, mtime,
-                                                              opts, lastAccess);
+                IteratorContext subIter = new IteratorContext(
+                        reader, readerBase, mtime, opts, lastAccess);
                 long subKey = subIter.getKey();
 
                 // FIXME: Better collision handling
                 if (iterators.containsKey(subKey)) {
-                    throw new RuntimeException("Internal error. Iterator key "
-                                               + "collision '" + subKey +"'");
+                    throw new RuntimeException(String.format(
+                            "Internal error. Iterator key collision '%s'",
+                            subKey));
                 }
 
                 // Calc the merger's iterKey as the sum the children's
@@ -235,8 +235,8 @@ public class AggregatingStorage extends StorageBase {
             this.lastAccess = lastAccess;
 
             if (reader != null) {
-                this.iterKey = reader.getRecordsModifiedAfter(mtime,
-                                                              base, opts);
+                this.iterKey = reader.getRecordsModifiedAfter(
+                        mtime, base, opts);
             }
         }
 
@@ -401,7 +401,8 @@ public class AggregatingStorage extends StorageBase {
             } catch (IOException e) {
                 log.warn ("No sub-sub-config for aggregated storage for bases '"
                           + Strings.join(bases, ", ") + "'. We can't tell if "
-                          + "this is an error. See https://gforge.statsbiblioteket.dk/tracker/index.php?func=detail&aid=1487");
+                          + "this is an error. See https://gforge.statsbibliote"
+                          + "ket.dk/tracker/index.php?func=detail&aid=1487");
             }
 
             if (storageConf != null) {
@@ -489,6 +490,7 @@ public class AggregatingStorage extends StorageBase {
     @Override
     public List<Record> getRecords(List<String> ids, QueryOptions options)
                                                             throws IOException {
+        long startTime = System.currentTimeMillis();
         if (log.isTraceEnabled()) {
             log.trace ("getRecords("+ Logs.expand(ids, 5)
                                     +", "+options+")");
@@ -500,12 +502,16 @@ public class AggregatingStorage extends StorageBase {
             List<Record> recs = reader.getRecords(ids, options);
             result.addAll(recs);
         }
-
+        //noinspection DuplicateStringLiteralInspection
+        log.debug("Finished getRecords(" + ids.size() + " records ids, ...) -> "
+                  + result.size() + "records in "
+                  + (System.currentTimeMillis() - startTime));
         return result;
     }
 
     @Override
     public Record getRecord(String id, QueryOptions options) throws IOException {
+        long startTime = System.currentTimeMillis();
         if (log.isTraceEnabled()) {
             log.trace ("getRecord('"+id+"', "+options+")");
         }
@@ -515,6 +521,11 @@ public class AggregatingStorage extends StorageBase {
         for (StorageReaderClient reader : readers.values()) {
             r = reader.getRecord(id, options);
             if (r != null) {
+                if (log.isDebugEnabled()) {
+                    log.debug("Finished getRecord(" + id + ",...) -> " + r
+                              +  " in "
+                              + (System.currentTimeMillis() - startTime));
+                }
                 return r;
             }
         }
@@ -570,6 +581,7 @@ public class AggregatingStorage extends StorageBase {
 
     @Override
     public void flush(Record record) throws IOException {
+        long startTime = System.currentTimeMillis();
         if (log.isTraceEnabled()) {
             log.trace ("flush("+record+")");
         }
@@ -583,6 +595,11 @@ public class AggregatingStorage extends StorageBase {
         }
 
         writer.flush(record);
+        if (log.isDebugEnabled()) {
+            //noinspection DuplicateStringLiteralInspection
+            log.debug("Flushed " + record + " in "
+                      + (System.currentTimeMillis() - startTime) + "ms");
+        }
     }
 
     @Override
