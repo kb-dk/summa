@@ -1,7 +1,141 @@
-2009-09-01 12:15  mkamstrup
+2009-09-04 13:59  toke-sb
 
-	* [r1747] build.properties, ChangeLog, NEWS:
+	* [r1769]
+	  Support/src/dk/statsbiblioteket/summa/support/TikaDocumentCreator.java:
+	  
+	  Tweak: made the TikaDocumentcreator overwrite title
 
+2009-09-04 10:50  mkamstrup
+
+	* [r1764]
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/StreamingDocumentCreator.java:
+	  
+	  Bugfix+WARNING: Remove IS_COALESCING property from the
+	  XMLInputFactory. This might break stuff, but the hopes is that
+	  solves some StackOverflowErrors as described in
+	  http://sbdevel.wordpress.com/2009/09/04/an-excursion-in-java-recursion/
+
+2009-09-03 13:45  toke-sb
+
+	* [r1763]
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorageH2.java:
+	  
+	  Performance: The SuggestStorrageH2 now checks for existence of
+	  indexes upon startup and creates them if they do not exist
+
+2009-09-03 11:26  toke-sb
+
+	* [r1762]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/RecordWriter.java:
+	  
+	  Logging: Reduced the number of INFO log messages from the
+	  RecordWriter
+
+2009-09-03 11:11  toke-sb
+
+	* [r1761]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/RecordWriter.java:
+	  
+	  Tweak: changed the default for RecordWriter queue size
+
+2009-09-03 09:55  toke-sb
+
+	* [r1760]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/RecordWriter.java:
+	  
+	  Bugfix: The RecordWriter did not perform a proper wait when the
+	  byteSize was too big
+
+2009-09-03 09:27  toke-sb
+
+	* [r1759]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/RecordWriter.java:
+	  
+	  Bugfix: The RecordWriter needed to run with debug logging enabled
+	  in order to run at oeak performance
+
+2009-09-03 09:12  toke-sb
+
+	* [r1758]
+	  Common/src/dk/statsbiblioteket/summa/common/util/RecordUtil.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/RecordWriter.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/filter/RecordWriterTest.java:
+	  
+	  Feature: Introduced memory-based limit on batch size for the
+	  RecordWriter
+
+2009-09-03 06:42  mkamstrup
+
+	* [r1757]
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorageH2.java:
+	  
+	  Add review comments
+
+2009-09-03 06:10  mkamstrup
+
+	* [r1756]
+	  Search/src/dk/statsbiblioteket/summa/search/api/tools/SearchTool.java:
+	  
+	  Output cleanup for search-tool
+
+2009-09-03 06:07  mkamstrup
+
+	* [r1755]
+	  Search/src/dk/statsbiblioteket/summa/search/api/tools/SearchTool.java:
+	  
+	  Feature: Log search engine response time in search-tool
+
+2009-09-02 15:21  toke-sb
+
+	* [r1754]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/RecordWriter.java:
+	  
+	  In progress: Upgrading the RecordWriter to use byte size as limit
+	  for batch jobs
+
+2009-09-02 15:20  toke-sb
+
+	* [r1753]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorageH2.java:
+	  
+	  Performance: Made import for suggest drop and re-create indexes,
+	  greatly improving import performance
+
+2009-09-02 11:46  mkamstrup
+
+	* [r1751]
+	  Control/src/dk/statsbiblioteket/summa/control/server/ControlUtils.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/deploy/LocalDeployer.java,
+	  Control/src/dk/statsbiblioteket/summa/control/server/shell/DeployCommand.java:
+	  
+	  Feature: New deployment mechanism LocalDeployer that can be used
+	  to bypass the need for an SSH session when deploying+starting a
+	  client on a local machine. Pass '-t local' to the 'deploy'
+	  command when deploying a client from the control-shell.
+
+2009-09-02 10:25  toke-sb
+
+	* [r1750]
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorageH2.java:
+	  
+	  Performance: Added LIMIT til SuggestStorageH2, giving a huge
+	  performance boost for short queries
+
+2009-09-01 13:23  toke-sb
+
+	* [r1749]
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/filter/ClearBaseFilterTest.java,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorageH2.java:
+	  
+	  Performance: Introduces max rows setting to h2 backend for
+	  suggest, ensuring lower response times for parts of a large
+	  result set (for example single character prefixes)
+
+2009-09-01 12:18  mkamstrup
+
+	* [r1747] ChangeLog, NEWS, build.properties:
+	  
 	  Release Summa 1.4.9
 
 2009-09-01 12:11  toke-sb

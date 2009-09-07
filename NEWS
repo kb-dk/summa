@@ -1,3 +1,37 @@
+========================
+XXXX-XX-XX: Summa 1.4.10
+========================
+
+ * The RecordWriter filter, responsible for inserting Records into Storage,
+   now has a memory cap for its internal queue that can be set via the
+   summa.storage.recordwriter.batchmaxmemory property. Huge Records could cause
+   freak OOMs on the Storage
+
+ * New deployment mechanism LocalDeployer that can be used to bypass the need
+   for an SSH session when deploying+starting a client on a local machine.
+   Pass '-t local' to the 'deploy' command when deploying a client from
+   the control-shell
+
+ * A lot of performace enhancements in the Suggest service:
+
+    - Introduces max rows setting to h2 backend for suggest, ensuring
+      lower response times for parts of a large result set (for example single
+      character prefixes)
+
+    - Make import for suggest drop and re-create indexes,
+	  greatly improving import performance
+
+ * search-tool.sh will now echo the search response time in ms
+
+ * Bugfix: The RecordWriter needed to run with debug logging enabled
+           in order to run at oeak performance
+
+ * Bugfix: The StreamingDocumentCreator filter that is responsible for creating
+           Lucene documents could raise StackOverflowErrors on huge
+           SummaDocuments. This was caused by a misuse of recursion inside the
+           XMLStreamReader shipped with Java, see:
+	       http://sbdevel.wordpress.com/2009/09/04/an-excursion-in-java-recursion/
+
 =======================
 2009-09-01: Summa 1.4.9
 =======================
