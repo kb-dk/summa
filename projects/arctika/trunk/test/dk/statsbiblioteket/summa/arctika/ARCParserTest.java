@@ -27,7 +27,6 @@ import java.io.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Random;
 
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -36,7 +35,6 @@ import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import dk.statsbiblioteket.summa.ingest.split.StreamController;
 import dk.statsbiblioteket.util.Files;
-import dk.statsbiblioteket.util.Streams;
 import dk.statsbiblioteket.util.Strings;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -99,7 +97,7 @@ public class ARCParserTest extends TestCase {
 
         Configuration arcConf = Configuration.newMemoryBased(
                 StreamController.CONF_PARSER, ARCParser.class,
-                "usefilehack", true);
+                ARCParser.CONF_USE_FILEHACK, true);
         StreamController ap = new StreamController(arcConf);
         ap.setSource(feeder);
 
@@ -123,6 +121,18 @@ public class ARCParserTest extends TestCase {
         ap.close(true);
         fail(WHITE + " not found");
     }
+
+    private static enum MY_ENUM { bar, zoo;
+        @Override
+        public String toString() {
+            return "foo." + super.toString();
+        }
+    }
+    public void testEnumToString() throws Exception {
+        assertEquals("Custom ENUM toString should work", 
+                     "foo.bar", MY_ENUM.bar.toString());
+    }
+
     private void assertValidARCParse(ObjectFilter ap, int expected)
                                                               throws Exception {
         assertTrue("At least one Payload should be generated", ap.hasNext());
@@ -130,8 +140,8 @@ public class ARCParserTest extends TestCase {
         List<String> ids = new ArrayList<String>(100);
         while (ap.hasNext()) {
             Payload payload = ap.next();
-            System.out.println("Found " + payload + " with content length "
-                               + streamLength(payload));
+            log.info("Found " + payload + " with content length "
+                     + streamLength(payload));
             ids.add(payload.getId());
             payload.close();
         }

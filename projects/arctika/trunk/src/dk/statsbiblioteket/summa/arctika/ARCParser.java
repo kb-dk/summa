@@ -41,7 +41,7 @@ import java.io.*;
  * </p><p>
  * This filter is a wrapper for the ARCParser from the heritrix project.
  * Meta-data from the ARC container and records are provided at Payload-meta
- * prefixed with "arc".
+ * prefixed with "arc". See the ARC enum for details.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -60,22 +60,36 @@ public class ARCParser extends ThreadedStreamParser {
             "arcparser.removehttpheaders";
     public static final boolean DEFAULT_REMOVE_HTTP_HEADERS = true;
 
-    @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    public static final String[] ARC_FIELDS = new String[]{
-            "arc.arcname", "arc.arcoffset", "arc.contentLength", "arc.date",
-            "arc.digest", "arc.primaryType", "arc.title", "arc.tstamp",
-            "arc.url",
-            // custom additions below
-            "arc.site" };
+    public static enum ARC {
+        arcname,       // filedesc://981-...
+        arcoffset,     // Offset in arc file in bytes
+        contentLength, // Length in bytes
+//        dateEpoch,     // Seconds since epoch
+        digest,        // MD5?
+        primaryType,   // MIME-primary (text/image/...)
+        subType,       // MIME-sub (xml/gif/...)
+        title,         // date+time+url
+//        tstamp,        // ISO-compact: YYYYMMDDHHmmSS
+        isodate,       // YYYYMMDD
+        isotime,       // HHmmSS
+        url,           // Origin as stated in ARC
+        site;          // Site minus www extracted from url
+        @Override
+        public String toString() {
+            return "arc." + super.toString();
+        }
+    }
+
     public static final String HTTP_PREFIX = "http-header.";
 
     // TODO: Add timeout
     private boolean useFileHack = false;
+    static final String CONF_USE_FILEHACK = "usefilehack"; 
     private boolean removeHTTPHeaders = DEFAULT_REMOVE_HTTP_HEADERS;
 
     public ARCParser(Configuration conf) {
         super(conf);
-        useFileHack = conf.getBoolean("usefilehack", useFileHack);
+        useFileHack = conf.getBoolean(CONF_USE_FILEHACK, useFileHack);
         removeHTTPHeaders = conf.getBoolean(
                 CONF_REMOVE_HTTP_HEADERS, removeHTTPHeaders);
         log.debug("ARCParser constructed"
@@ -96,11 +110,12 @@ public class ARCParser extends ThreadedStreamParser {
         that Ubuntu uses and the heritrix ARCParser.
         // TODO: Locate and eliminate the GZIP incompatability problem
          */
+        String origin = sourcePayload.getData(Payload.ORIGIN) == null ? "N/A" :
+                        sourcePayload.getData(Payload.ORIGIN).toString();
         ArchiveReader archiveReader =
                 useFileHack
-                ? ARCReaderFactory.get(new File(sourcePayload.getData(
-                        Payload.ORIGIN).toString()), false, 0)
-                : ARCReaderFactory.get("Foo", sourcePayload.getStream(), true);
+                ? ARCReaderFactory.get(new File(origin), false, 0)
+                : ARCReaderFactory.get(origin, sourcePayload.getStream(), true);
 
         Iterator<ArchiveRecord> archiveRecords = archiveReader.iterator();
         // TODO: Consider skipping the first record (meta-data for the ARC file)
@@ -197,21 +212,37 @@ public class ARCParser extends ThreadedStreamParser {
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     private void fillPayloadFromHeader(
             Payload payload, ArchiveRecordHeader header, String arcFilename) {
-        payload.setID(header.getUrl());
-        payload.getData().put("arc.arcname", arcFilename);
-        payload.getData().put("arc.arcoffset", header.getOffset());
+        payload.setID("arc_" + header.getUrl());
+        addData(payload, ARC.arcname, arcFilename);
+        addData(payload, ARC.arcoffset, header.getOffset());
+        addData(payload, ARC.contentLength, header.getLength());
+//        addData(payload, ARC.dateEpoch, header.getDate());
+        addData(payload, ARC.digest, header.getDigest());
+        if (header.getMimetype() != null) {
+            String[] mime = header.getMimetype().split("/", 2);
+            addData(payload, ARC.primaryType, mime[0]);
+            addData(payload, ARC.subType, mime.length > 1 ? mime[1] : null);
+        }
+        addData(payload, ARC.title, header.getRecordIdentifier());
+        if (header.getDate() != null && header.getDate().length() >= 14) {
+            addData(payload, ARC.isodate, header.getDate().substring(0, 8));
+            addData(payload, ARC.isotime, header.getDate().substring(8, 14));
+        }
+        addData(payload, ARC.url, header.getUrl());
+        addData(payload, ARC.site, extractSite(header.getUrl()));
 //        payload.getData().put("arc.boost", header.);
 //        payload.getData().put("arc.collection", header.);
-        payload.getData().put("arc.contentLength", header.getLength());
-        payload.getData().put("arc.date", header.getDate()); // Epoch
-        payload.getData().put("arc.digest", header.getDigest()); // ?
-        payload.getData().put("arc.primaryType", header.getMimetype());
 //        payload.getData().put("arc.segment", header.);
-//        payload.getData().put("arc.subType", header.);
-        payload.getData().put("arc.title", header.getRecordIdentifier());
-        payload.getData().put("arc.tstamp", header.getDate());
-        payload.getData().put("arc.url", header.getUrl());
-        payload.getData().put("arc.site", extractSite(header.getUrl()));
+    }
+
+    private void addData(Payload payload, ARC key, Object value) {
+        if (value == null) {
+            return;
+        }
+        if (log.isTraceEnabled()) {
+            log.trace("Adding " + key + ": '" + value + "' to " + payload);
+        }
+        payload.getData().put(key.toString(), value.toString());
     }
 
     // https://foo/bar... => foo
