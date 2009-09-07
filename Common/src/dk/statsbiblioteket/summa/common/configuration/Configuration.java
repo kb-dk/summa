@@ -1098,8 +1098,9 @@ public class Configuration implements Serializable,
             try {
                 storage = RemoteStorage.getRemote(confLocation);
             } catch (Exception e) {
+                //noinspection DuplicateStringLiteralInspection
                 throw new ConfigurationException(
-                        StorageWriterClient.UNABLE_TO_CONNECT_TO + confLocation, e);
+                        "Unable to connect to " + confLocation, e);
             }
         } else if (confLocation.contains("://")) {
             // This is an URL
