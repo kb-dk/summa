@@ -1139,6 +1139,7 @@ getco     */
     @Override
     public List<Record> getRecords (List<String> ids, QueryOptions options)
                                                         throws IOException {
+        long startTime = System.currentTimeMillis();
         Connection conn = getTransactionalConnection();
         try {
             conn.setReadOnly(true);
@@ -1150,7 +1151,13 @@ getco     */
         }
 
         try {
-            return getRecordsWithConnection(ids, options, conn);
+            List<Record> result = getRecordsWithConnection(ids, options, conn);
+            if (log.isDebugEnabled()) {
+                log.debug("Finished getRecords(" + ids.size()
+                          + " ids, ...) in "
+                          + (System.currentTimeMillis() - startTime) + "ms");
+            }
+            return result;
         } finally {
             closeConnection(conn);
         }
@@ -1181,6 +1188,7 @@ getco     */
     @Override
     public Record getRecord(String id, QueryOptions options)
                                                             throws IOException {
+        long startTime = System.currentTimeMillis();
         Connection conn = getTransactionalConnection();
 
         try {
@@ -1191,10 +1199,13 @@ getco     */
         }
 
         try {
-            return getRecordWithConnection(id, options, conn);
+            Record record =  getRecordWithConnection(id, options, conn);
+            log.debug("Finished getRecord(" + id + ", ...) in "
+                      + (System.currentTimeMillis()-startTime) + "ms");
+            return record;
         } catch (SQLException e){
-            log.error("Failed to get record '" + id + "': " + e.getMessage(),
-                      e);
+            log.error(String.format("Failed to get record '%s': %s",
+                                    id, e.getMessage()), e);
             return null;
         } finally {
             closeConnection(conn);
@@ -1409,6 +1420,7 @@ getco     */
      */
     @Override
     public synchronized void flush(Record record) throws IOException {
+        long startTime = System.currentTimeMillis();
         Connection conn = getTransactionalConnection();
 
         // Brace yourself for the try-catch-finally hell, but we really don't
@@ -1431,7 +1443,8 @@ getco     */
                 if(error == null) {
                     // All is OK, write to the DB
                     conn.commit();
-                    log.debug("Committed " + record.getId());
+                    log.debug("Committed " + record.getId() + " in " 
+                              + (System.currentTimeMillis()-startTime) + "ms");
                 } else {
                     log.warn(String.format(
                             "Not committing %s because of error: %s",
@@ -1646,9 +1659,8 @@ getco     */
         }
     }
 
-    protected List<Record> getParents (String id,
-                                       QueryOptions options,
-                                       Connection conn)
+    protected List<Record> getParents(
+            String id, QueryOptions options, Connection conn)
                                               throws IOException, SQLException {
         PreparedStatement stmt = conn.prepareStatement(stmtGetParents.getSql());
 
@@ -1730,8 +1742,9 @@ getco     */
             return children;
 
         } catch (SQLException e) {
-            throw new IOException("Failed to get children for record '"
-                                      + id + "': " + e.getMessage(), e);
+            throw new IOException(String.format(
+                    "Failed to get children for record '%s': %s",
+                    id, e.getMessage()), e);
         } finally {
             if (iter != null) {
                 iter.close();
@@ -1922,13 +1935,14 @@ getco     */
                 } catch (SQLException e) {
                     if (isIntegrityConstraintViolation(e)) {
                         if (log.isDebugEnabled()) {
-                            log.debug ("Relation "+ rec.getId() + " -> "
-                                       + childId + ", already known");
+                            log.debug("Relation "+ rec.getId() + " -> "
+                                      + childId + ", already known");
                         }
                     } else {
                         closeStatement(stmt);
-                        throw new SQLException("Error creating child relations"
-                                               + " for " + rec.getId (), e);
+                        throw new SQLException(String.format(
+                                "Error creating child relations for %s",
+                                rec.getId()), e);
                     }
                 }
             }
