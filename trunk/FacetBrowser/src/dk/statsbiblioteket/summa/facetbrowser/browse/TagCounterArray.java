@@ -299,8 +299,8 @@ public class TagCounterArray implements TagCounter, Runnable {
     private void addFirstTagsPopularity(
             final int maxTags, final int[] counterList, final int counterLength,
             FacetResultLocal result, final int facetID) {
-        if (log.isDebugEnabled()) {
-            log.debug(String.format(
+        if (log.isTraceEnabled()) {
+            log.trace(String.format(
                     "addFirstTagsPopularity(maxTags %d, counterList.length %d, "
                     + "counterLength %d, result, facetID %d) called",
                     maxTags, counterList.length, counterLength, facetID));
@@ -470,6 +470,7 @@ public class TagCounterArray implements TagCounter, Runnable {
         }
     }
 
+    @Override
     public String toString() {
         int MAX_TAGS = 10;
         if (tags == null) {

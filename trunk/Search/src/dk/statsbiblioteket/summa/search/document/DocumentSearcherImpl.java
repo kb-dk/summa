@@ -132,7 +132,7 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements
         }
 
         if (resultFields.length == fallbackValues.length) {
-            log.debug ("Fallback field values configured correctly");
+            log.trace("Fallback field values configured correctly");
         }
 
         String[] newFallbacks = new String[resultFields.length];

@@ -208,8 +208,8 @@ public class SummaQueryParser {
 //        Query query = parser.parse(qstr);
 
 
-        if (log.isDebugEnabled()) {
-            log.debug("Parsed query (" + query + ") in "
+        if (log.isTraceEnabled()) {
+            log.trace("Parsed query (" + query + ") in "
                       + (System.nanoTime() - startTime) / 1000000D + "ms: "
                       + query.toString());
         }
@@ -223,8 +223,11 @@ public class SummaQueryParser {
             } catch (Exception e) {
                 log.error("Exception applying query-time boost", e);
             }
-            log.debug("Applied boost in " + (System.nanoTime() - boostStartTime)
-                                            / 1000000D + "ms: ");
+            if (log.isTraceEnabled()) {
+                log.trace("Applied boost in "
+                          + (System.nanoTime() - boostStartTime)  / 1000000D
+                          + "ms");
+            }
         }
 
         if (log.isDebugEnabled()) {
