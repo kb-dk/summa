@@ -20,20 +20,23 @@
 package dk.statsbiblioteket.summa.support.suggest;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.util.UniqueTimestampGenerator;
+import dk.statsbiblioteket.summa.common.lucene.analysis.SummaKeywordAnalyzer;
 import dk.statsbiblioteket.summa.support.api.SuggestResponse;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.reader.CharSequenceReader;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.Token;
 import org.h2.jdbcx.JdbcDataSource;
 
 import java.io.File;
 import java.io.IOException;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -54,29 +57,53 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
 
     /**
      * The maximum number of suggestions to return from {@link #listSuggestions}
-     * regardless of the stated maximum in the method-call.
+     * and {@link #getSuggestion(String, int)}  regardless of the stated
+     * maximum in the method-call.
      */
-    public static final int MAX_SUGGESTIONS = 100000;
+    public static final int MAX_SUGGESTIONS = 1000;
 
     private File location = null;
     private Connection connection;
     private boolean closed = true;
-    private boolean lowercaseQueries =
-            SuggestSearchNode.DEFAULT_LOWERCASE_QUERIES;
+    private Analyzer analyzer;
     private Locale lowercaseLocale;
-
     private int updateCount = 0;
+    private boolean useL2cache;
+    private UniqueTimestampGenerator timestamps;
     public static final int ANALYZE_INTERVAL = 10000;
 
+    /**
+     * Whether or not to enable the H2 level 2 page cache. This will be a
+     * performance gain on most databases, but might decrease performance
+     * on small databases. The default value is {@code true}.
+     */
+    public static final String CONF_L2CACHE = "summa.support.suggest.l2cache";
+    public static final boolean DEFAULT_L2CACHE = true;
+
+    /**
+     * The {@link Analyzer} implementation to use for generating
+     * query collation keys. Default is
+     * {@link dk.statsbiblioteket.summa.common.lucene.analysis.SummaKeywordAnalyzer}.
+     * <p/>
+     * The specified class <i>must</i> have a no-arguments constructor.
+     */
+    public static final String CONF_ANALYZER = "summa.support.suggest.analyzer";
+    public static final Class<? extends Analyzer> DEFAULT_ANALYZER =
+                                                     SummaKeywordAnalyzer.class;
 
     @SuppressWarnings({"UnusedDeclaration"})
     public SuggestStorageH2(Configuration conf) {
         log.debug("Creating SuggestStorageH2");
-        lowercaseQueries = conf.getBoolean(
-                SuggestSearchNode.CONF_LOWERCASE_QUERIES, lowercaseQueries);
-        lowercaseLocale = new Locale(conf.getString(
-                SuggestSearchNode.CONF_LOWERCASE_LOCALE,
-                SuggestSearchNode.DEFAULT_LOWERCASE_LOCALE));
+        Class<? extends Analyzer> analyzerClass = Configuration.getClass(
+                          CONF_ANALYZER,Analyzer.class, DEFAULT_ANALYZER, conf);
+        try {
+            analyzer = analyzerClass.newInstance();
+        } catch (Exception e) {
+            throw new ConfigurationException(
+                    "Unable to instantiate query analyzer", e);
+        }
+        useL2cache = conf.getBoolean(CONF_L2CACHE, DEFAULT_L2CACHE);
+        timestamps = new UniqueTimestampGenerator();
     }
 
     public synchronized void open(File location) throws IOException {
@@ -105,7 +132,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             }
         }
 
-        connection = getConnection();
+        connection = resetConnection();
         if (createNew) {
             log.info(String.format("Creating new table for '%s'", location));
             try {
@@ -127,12 +154,30 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
                                       + "during startup", e);
             }
         }
+
         closed = false;
     }
 
-    private Connection getConnection() throws IOException {
+    private Connection resetConnection() throws IOException {
+        if (connection != null) {
+            log.warn("Resetting database connection");
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                log.error("Failed to close database connection: "
+                          + e.getMessage(), e);
+            }
+        }
+
+        String l2cache = "";
+        if (useL2cache) {
+            log.debug("Enabling H2 L2 cache");
+            l2cache = ";CACHE_TYPE=SOFT_LRU";
+        }
+
         String sourceURL = "jdbc:h2:" + location.getAbsolutePath()
-                           + File.separator + DB_FILE;
+                           + File.separator + DB_FILE + l2cache;
+
         JdbcDataSource dataSource = new JdbcDataSource();
         dataSource.setURL(sourceURL);
         try {
@@ -143,46 +188,61 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             throw new IOException(String.format(
                     "Unable to get a connection from '%s'", sourceURL), e);
         }
+
+        setMaxMemoryRows(MAX_SUGGESTIONS);
+
         return connection;
     }
 
-    // Review: Why is suggest.query not primary key, and why is the index on
-    //         suggest.querylower not unique? -- mke
     private void createSchema() throws SQLException {
         Statement s = connection.createStatement();
-        s.execute(String.format("create table suggest("
-                  + "query varchar(%1$d), "
-                  + "querylower varchar(%1$d), "
-                  + "query_count int, "
-                  + "hit_count int)", MAX_QUERY_LENGTH));
+        s.execute(String.format("CREATE TABLE suggest_index("
+                                      + "query VARCHAR(%1$d) PRIMARY KEY, "
+                                      + "query_count INTEGER, "
+                                      + "hit_count INTEGER, "
+                                      + "mtime BIGINT)", MAX_QUERY_LENGTH));
+
+        s.execute(String.format("CREATE TABLE suggest_map("
+                                      + "query VARCHAR(%1$d), "
+                                      + "user_query VARCHAR(%1$d), "
+                                      + "PRIMARY KEY (query,user_query))",
+                                MAX_QUERY_LENGTH));
         s.close();
         createIndexes();
     }
 
     private void createIndexes() throws SQLException {
         long startTime = System.currentTimeMillis();
-        log.info("Creating indexes if they do not already exists. This might "
-                 + "take a while");
+        log.info("Preparing table indices");
         Statement s = connection.createStatement();
-        s.execute("create index if not exists suggest_query ON"
-                  + " suggest(querylower)");
-//        s.execute("create index suggest_query_count ON suggest(query_count)");
-        s.execute("create index if not exists suggest_query_count_desc ON "
-                  + "suggest(querylower, query_count desc)");
+
+        // We don't need to create an index on suggest.query since it
+        // is already the pimary key (which requires an index)
+
+        // This index is used for prefix searches sorted on query_count
+        s.execute("CREATE INDEX IF NOT EXISTS suggest_query_count "
+                + "ON suggest_index(query, query_count desc)");
+
+        // This index is not currently used, but can provide some
+        // nifty stats in the future. Eg. most recent queries sorted
+        // by query_count
+        s.execute("CREATE UNIQUE INDEX IF NOT EXISTS suggest_mtime "
+                + "ON suggest_index(mtime, query_count desc)");
+
         s.close();
-        log.info("Finished ensuring index existence in "
+        log.info("Table indices prepared in "
                  + (System.currentTimeMillis() - startTime) + "ms");
     }
 
     private void dropIndexes() throws SQLException {
         Statement s = connection.createStatement();
-        s.execute("drop index suggest_query");
-        s.execute("drop index suggest_query_count_desc");
+        s.execute("DROP INDEX suggest_query_count");
+        s.execute("DROP INDEX suggest_mtime");
         s.close();
     }
 
     public synchronized void close() {
-        log.debug(String.format("close() called for location '%s'" , location));
+        log.info(String.format("Closing '%s'" , location));
         if (closed) {
             return;
         }
@@ -195,44 +255,45 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
     }
 
     public synchronized SuggestResponse getSuggestion(
-            String prefix, int maxResults) throws IOException {
-        //noinspection DuplicateStringLiteralInspection
-        log.trace("getSuggestion(" + prefix + ", " + maxResults + ")");
+                             String prefix, int maxResults) throws IOException {
+        if (log.isTraceEnabled()) {
+            log.trace("getSuggestion(" + prefix + ", " + maxResults + ")");
+        }
+
         try {
             long startTime = System.nanoTime();
-            setMaxMemoryRows(maxResults + 10);
+            maxResults = Math.min(maxResults, MAX_SUGGESTIONS);
 
             connection.setReadOnly(true);
             connection.setAutoCommit(false);
 
             PreparedStatement psExists = connection.prepareStatement(
-                    "SELECT query, query_count, hit_count FROM suggest WHERE "
-                    + "querylower LIKE ? ORDER BY query_count DESC LIMIT ?");
-            psExists.setString(1, prefix.toLowerCase(lowercaseLocale) + "%");
-            psExists.setInt(2, maxResults * 3);
+                 "SELECT user_query AS query, query_count, hit_count " +
+                 "FROM suggest_index " +
+                 "INNER JOIN suggest_map " +
+                 "ON suggest_index.query = suggest_map.query " +
+                 "WHERE suggest_index.query LIKE ? " +
+                 "ORDER BY query_count DESC " +
+                 "LIMIT ?");
+            psExists.setString(1, analyze(prefix) + "%");
+            psExists.setInt(2, maxResults);
             psExists.setFetchDirection(ResultSet.FETCH_FORWARD);
-            psExists.setFetchSize(maxResults * 3);
+            psExists.setFetchSize(maxResults);
 
             ResultSet rs = psExists.executeQuery();
-            List<BuildSuggestTripel> suggestions =
-                    new ArrayList<BuildSuggestTripel>(maxResults); 
-            int current = 0;
+            int count = 0;
+            SuggestResponse response = new SuggestResponse(prefix, maxResults);
             try {
-                while (rs.next() && suggestions.size() < maxResults) {
-                    updateResponse(suggestions, rs.getString(1), rs.getLong(3),
-                                   rs.getInt(2));
+                while (rs.next() && count < maxResults) {
+                    count++;
+                    response.addSuggestion(
+                            rs.getString(1), rs.getInt(3), rs.getInt(2));
                 }
-                //noinspection DuplicateStringLiteralInspection
+
                 log.debug("getSuggestion(" + prefix + ", " + maxResults
-                          + ") -> " + current + " suggestions in "
+                          + ") -> " + count + " suggestions in "
                           + (System.nanoTime() - startTime) / 1000000D + "ms");
-                SuggestResponse response = new SuggestResponse(
-                        prefix, suggestions.size());
-                for (BuildSuggestTripel bst: suggestions) {
-                    // TODO: Update SuggestResponse to long for hits
-                    response.addSuggestion(bst.getQuery(), (int)bst.getHits(),
-                                           bst.getQueryCount());
-                }
+
                 return response;
             } finally {
                 rs.close();
@@ -247,177 +308,173 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
 
     }
 
-    // Review: The interaactions with updateResponse() and
-    //         getSuggestion() seems hugely ineffective? -- mke
-    private void updateResponse(List<BuildSuggestTripel> suggestions,
-                                String query, long hits, int queryCount) {
-        if (lowercaseQueries) {
-            query = query.toLowerCase(lowercaseLocale);
-            for (BuildSuggestTripel bst: suggestions) {
-                if (bst.getQuery().equals(query)) {
-                    bst.setHits(Math.max(bst.getHits(), hits));
-                    bst.setQueryCount(bst.getQueryCount() + queryCount);
-                    return;
-                }
-            }
-        }
-        suggestions.add(new BuildSuggestTripel(query, (int)hits, queryCount));
-    }
-
     public void addSuggestion(String query, int hits) throws IOException {
         addSuggestion(query, hits, -1);
     }
 
     // -1 means no update of queryCount
-    public synchronized void addSuggestion(String query, int hits,
-                                           int queryCount) throws IOException {
+    public synchronized void addSuggestion(
+                    String query, int hits, int queryCount) throws IOException {
         if (hits == 0) {
             log.trace("No hits for '" + query + "'. Deleting query...");
             try {
                 deleteSuggestion(query);
             } catch (SQLException e) {
-                throw new IOException("Unable to delete suggestion '"
-                                      + query + "'");
+                log.warn(String.format(
+                        "Unable to delete suggestion '%s': %s",
+                        query, e.getMessage()), e);
             }
             return;
         }
         if (query.length() > MAX_QUERY_LENGTH) {
-            log.debug("addSuggestion: The query must be " + MAX_QUERY_LENGTH
+            log.info("addSuggestion: The query must be " + MAX_QUERY_LENGTH
                       + " chars or less. Got " + query.length()
                       + " chars from '" + query + "'");
         }
+
+        queryCount = queryCount == -1 ? 1 : queryCount;
         try {
-            if (existsInDb(query)) {
-                // TODO: Consider updating hits for queries matching lowercase
-                if (queryCount == -1) {
-                    updateDb(query, hits, getQueryCount(query) + 1);
-                } else {
-                    updateDb(query, hits, queryCount);
-                }
-                return;
-            }
-            log.trace("New query '" + query + "' with hits " + hits);
-            insertIntoDb(query, hits, queryCount == -1 ? 1 : queryCount);
+            insertSuggestion(query, hits, queryCount);
         } catch (SQLException e) {
-            throw new IOException(String.format(
-                    "Unable to complete addSuggestion(%s, %d, %d)",
-                    query, hits, queryCount), e);
+            if (isIntegrityConstraintViolation(e)) {
+                updateSuggestion(query, hits, queryCount);
+            } else {
+                throw new IOException(String.format(
+                        "Unable to complete addSuggestion(%s, %d, %d)",
+                        query, hits, queryCount), e);
+            }
         }
     }
 
-    private void insertIntoDb(String query, int hits, int queryCount) throws
-                                                                      SQLException {
+    private void insertSuggestion(String query, int hits, int queryCount)
+            throws SQLException {
 
+        String analyzedQuery = analyze(query);
         PreparedStatement psInsert = connection.prepareStatement(
-                INSERT_STATEMENT);
-        psInsert.setString(1, query);
-        psInsert.setString(2, query.toLowerCase(lowercaseLocale));
-        psInsert.setInt(3, queryCount);
-        psInsert.setLong(4, hits);
+                "INSERT INTO suggest_index " +
+                "VALUES (?, ?, ?, ?)");
+        psInsert.setString(1, analyzedQuery);
+        psInsert.setInt(2, queryCount);
+        psInsert.setInt(3, hits);
+        psInsert.setLong(4, timestamps.next());
         psInsert.executeUpdate();
+        psInsert.close();
+
+        psInsert = connection.prepareStatement(
+                "INSERT INTO suggest_map " +
+                "VALUES (?, ?)");
+        psInsert.setString(1, analyzedQuery);
+        psInsert.setString(2, query);
+        psInsert.executeUpdate();
+
         updateCount++;
         analyzeIfNeeded();
-    }
-
-    private int getQueryCount(String query) throws SQLException {
-        int retval = 0;
-
-        PreparedStatement psQuery = connection.prepareStatement(
-                "SELECT query_count FROM suggest WHERE query=?");
-        psQuery.setString(1, query);
-        ResultSet rs = psQuery.executeQuery();
-        try {
-            while (rs.next()) {
-                retval = rs.getInt(1);
-            }
-        } finally {
-            rs.close();
-        }
-
-        log.trace("getQueryCount(" + query + ") -> " + retval);
-        return retval;
     }
 
     // Deletes all suggestions, no matter the case
     private void deleteSuggestion(String query) throws SQLException {
         log.debug("Removing suggestion '" + query + "'");
-        PreparedStatement psExists =
-                connection.prepareStatement(DELETE_LOWERCASE_QUERY);
-        psExists.setString(1, query.toLowerCase(lowercaseLocale));
-        ResultSet rs = psExists.executeQuery();
-        try {
-            while (rs.next()) {
-                rs.deleteRow();
-            }
-        } finally {
-            rs.close();
-        }
-    }
 
-    private boolean existsInDb(String query) throws SQLException {
-        log.trace("existsInDb called with '" + query + "'");
-        PreparedStatement psExists = connection.prepareStatement(SELECT_QUERY);
-        psExists.setString(1, query);
-        psExists.setInt(2, 1);
-        ResultSet rs = psExists.executeQuery();
-        try {
-            return rs.next();
-        } finally {
-            rs.close();
-        }
-    }
-
-    private void updateDb(String query, int hits, int queryCount)
-            throws SQLException {
+        // Delete from suggest_index table
+        String analyzedQuery = analyze(query);
         PreparedStatement psUpdate = connection.prepareStatement(
-                "UPDATE suggest SET query_count=?, hit_count=? WHERE query=?");
-        psUpdate.setInt(1, queryCount);
-        psUpdate.setLong(2, hits);
-        psUpdate.setString(3, query);
+                "DELETE FROM suggest_index " +
+                "WHERE query=?"
+        );
+        psUpdate.setString(1, analyzedQuery);
         psUpdate.executeUpdate();
+
+        // Delete from suggest_map table
+        psUpdate = connection.prepareStatement(
+                "DELETE FROM suggest_map " +
+                "WHERE query=?"
+        );
+        psUpdate.setString(1, analyzedQuery);
+        psUpdate.executeUpdate();
+
+        updateCount++;
+        analyzeIfNeeded();
+    }
+
+    private void updateSuggestion(String query, int hits, int queryCount) {
+        try {
+            String analyzedQuery = analyze(query);
+            PreparedStatement psUpdate = connection.prepareStatement(
+                "UPDATE suggest_index " +
+                "SET query_count=query_count+?, " +
+                "    hit_count=?, " +
+                "    mtime=? " +
+                "WHERE query=?");
+            psUpdate.setInt(1, queryCount);
+            psUpdate.setLong(2, hits);
+            psUpdate.setLong(3, timestamps.next());
+            psUpdate.setString(4, analyzedQuery);
+            psUpdate.executeUpdate();
+
+            try {
+                psUpdate = connection.prepareStatement(
+                        "INSERT INTO suggest_map " +
+                        "VALUES (?, ?)");
+                psUpdate.setString(1, analyzedQuery);
+                psUpdate.setString(2, query);
+                psUpdate.executeUpdate();
+            } catch (SQLException e) {
+                if (!isIntegrityConstraintViolation(e)) {
+                    log.error(String.format(
+                            "Failed to update suggestion map with '%s': %s",
+                            query, e.getMessage()), e);
+                }
+            }
+        } catch (SQLException e) {
+            log.error(String.format(
+                    "Failed to update database with query %s, "
+                    + "hits=%s, queryCount=%s: %s",
+                    query, hits, queryCount, e.getMessage()), e);
+        }
+
+        updateCount++;
+        analyzeIfNeeded();
     }
 
     public ArrayList<String> listSuggestions(int start, int max) throws
                                                                  IOException {
-        log.debug(String.format("listsuggestions(%d, %d) called", start, max));
-        setMaxMemoryRows(max + 10);
-        ResultSet rs = null;
-        try {
-            PreparedStatement psExists = connection.prepareStatement(
-                    "SELECT query, query_count, hit_count FROM suggest");
-            rs = psExists.executeQuery();
+        log.debug(String.format(
+                "Listing suggestions from %d to %d", start, max));
 
-            max = Math.min(max, MAX_SUGGESTIONS);
+        long startTime = System.currentTimeMillis();
+        ResultSet rs = null;
+        max = Math.min(max, MAX_SUGGESTIONS);
+        try {
+            PreparedStatement psAll = connection.prepareStatement(
+                    "SELECT suggest_map.user_query AS query, " +
+                    "       query_count," +
+                    "       hit_count," +
+                    "       mtime " +
+                    "FROM suggest_index " +
+                    "INNER JOIN suggest_map " +
+                    "ON suggest_index.query = suggest_map.query " +
+                    "LIMIT ? " +
+                    "OFFSET ?");
+            psAll.setInt(1, max);
+            psAll.setInt(2, start);
+            rs = psAll.executeQuery();
+
             ArrayList<String> suggestions = new ArrayList<String>(max);
 
-            if (!rs.next()) {
-                return suggestions;
-            }
-
-            int current = 0;
-            while (current < start && current++ < start + max) {
-                if (!rs.next()) {
-                    log.debug("Out of suggestions before start was reached");
-                    return suggestions;
-                }
-            }
-
-            while (current++ < start + max) {
+            while (rs.next()) {
                 suggestions.add(rs.getString(1) + "\t" + rs.getInt(3) + "\t"
-                                + rs.getLong(2));
-                if (!rs.next()) {
-                    log.debug("No more suggestions. Got " + suggestions.size());
-                    return suggestions;
-                }
+                                + rs.getInt(2));
             }
 
-            log.debug(String.format("Got all %d suggestions, as requested",
-                                    suggestions.size()));
+            log.debug(String.format(
+                   "Listed %d suggestions in %sms",
+                   suggestions.size(), System.currentTimeMillis() - startTime));
             return suggestions;
         } catch (SQLException e) {
-            throw new IOException(String.format(
+            log.error(String.format(
                     "SQLException while dumping a maximum of %d suggestions, "
                     + "starting at %d", max, start), e);
+            return new ArrayList<String>();
         } finally {
             if (rs != null) {
                 try {
@@ -425,7 +482,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
                 } catch (SQLException e) {
                     log.warn(String.format("Exception while closing Resultset "
                                            + "in listSuggestions(%d, %d)",
-                                           start, max));
+                                           start, max), e);
                 }
             }
         }
@@ -486,18 +543,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
                             "NumberFormatException for querycount with '%s'",
                             tokens[2]));
                 }
-                try {
-                    psInsert.setString(1, query);
-                    psInsert.setString(2, query.toLowerCase(lowercaseLocale));
-                    psInsert.setInt(3, queryCount);
-                    psInsert.setLong(4, hits);
-                    psInsert.executeUpdate();
-                } catch (SQLException e) {
-                    log.warn(String.format(
-                            "SQLException while inserting query '%s'"
-                            + " with %d hits and %d queryCount",
-                            query, hits, queryCount), e);
-                }
+                addSuggestion(query, (int)hits, queryCount);
             }
             log.trace(String.format("Finished adding %d suggestions. "
                                     + "Committing", suggestions.size()));
@@ -505,6 +551,12 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             updateCount += suggestions.size();
             analyzeIfNeeded();
         } catch (SQLException e) {
+            try {
+                connection.rollback();
+            } catch (SQLException e1) {
+                log.error("Failed to roll back transaction: " + e.getMessage(),
+                          e);
+            }
             throw new IOException("SQLException adding suggestions", e);
         } finally {
             try {
@@ -516,43 +568,12 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         }
     }
 
-    private static class BuildSuggestTripel {
-        private String query;
-        private long hits;
-        private int queryCount;
-
-        public BuildSuggestTripel(String query, int hits, int queryCount) {
-            this.query = query;
-            this.hits = hits;
-            this.queryCount = queryCount;
-        }
-
-        public String getQuery() {
-            return query;
-        }
-
-        public long getHits() {
-            return hits;
-        }
-
-        public void setHits(long hits) {
-            this.hits = hits;
-        }
-
-        public int getQueryCount() {
-            return queryCount;
-        }
-
-        public void setQueryCount(int queryCount) {
-            this.queryCount = queryCount;
-        }
-    }
-
     public synchronized void clear() throws IOException {
         log.info("Clearing suggest data");
         try {
             Statement s = connection.createStatement();
-            s.execute("drop table suggest;");
+            s.execute("DROP TABLE suggest_index;");
+            s.execute("DROP TABLE suggest_map;");
             createSchema();
         } catch (SQLException e) {
             throw new IOException(
@@ -569,6 +590,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             return;
         }
         updateCount = 0;
+        optimizeTables();
     }
 
     private synchronized void optimizeTables() {
@@ -586,17 +608,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
                   + (System.currentTimeMillis() - startTime) + "ms");
     }
 
-    private static final int MIN_MEMORY_ROWS = 100 * 1000; // Default is 10,000
-    private int lastMaxMemoryRows = 0;
     private void setMaxMemoryRows(int maxMemoryRows) {
-        maxMemoryRows = Math.max(MIN_MEMORY_ROWS, maxMemoryRows);
-        if (maxMemoryRows == lastMaxMemoryRows) {
-            if (log.isTraceEnabled()) {
-                log.trace("maxMemoryRows is already at " + maxMemoryRows);
-            }
-            return;
-        }
-        lastMaxMemoryRows = maxMemoryRows;
         try {
             log.debug("Setting MAX_MEMORY_ROWS for suggest to "
                       + maxMemoryRows);
@@ -630,6 +642,36 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
                 //noinspection ThrowFromFinallyBlock
                 throw new IOException("SQLException while creating indexes", e);
             }
+        }
+    }
+
+    /**
+     * Check if an SQLException is an integrity constraint violation.
+     * H2 only uses its custom JdbcSQLExceptions, and not the proper
+     * exceptions according to the JDBC spec, so we have to apply
+     * this heuristic to detect violations.
+     *
+     * @param e the sql exception to check
+     * @return true if {@code e} has been raised due to a unique key violation
+     */
+    private boolean isIntegrityConstraintViolation (SQLException e) {
+        // The H2 error codes for integrity constraint violations are
+        // numbers between 23000 and 23999
+        return (e instanceof SQLIntegrityConstraintViolationException ||
+                (e.getErrorCode() >= 23000 && e.getErrorCode() < 24000));
+    }
+
+    private String analyze(String s) {
+        try {
+            TokenStream tokens = analyzer.reusableTokenStream(
+                    "query", new CharSequenceReader(s));
+            Token tok = new Token();
+            tokens.next(tok);
+            return tok.term();
+        } catch (IOException e) {
+            log.error(String.format(
+                    "Error analyzing query '%s': %s", s, e.getMessage()), e);
+            return "ERROR";
         }
     }
 }
