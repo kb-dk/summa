@@ -228,6 +228,7 @@ public class ARCParser extends ThreadedStreamParser {
             addData(payload, ARC.isodate, header.getDate().substring(0, 8));
             addData(payload, ARC.isotime, header.getDate().substring(8, 14));
         }
+        // TODO: Add IP
         addData(payload, ARC.url, header.getUrl());
         addData(payload, ARC.site, extractSite(header.getUrl()));
 //        payload.getData().put("arc.boost", header.);
