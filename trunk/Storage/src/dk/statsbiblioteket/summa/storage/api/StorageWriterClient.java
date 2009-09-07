@@ -32,6 +32,7 @@ import java.net.NoRouteToHostException;
         author = "mke")
 public class StorageWriterClient extends ConnectionConsumer<WritableStorage>
                                  implements WritableStorage {
+    private static final String UNABLE_TO_CONNECT = "Unable to connect to ";
 
     /**
      * Create a new storage writer. If no RPC vendor is defined in the
@@ -49,16 +50,15 @@ public class StorageWriterClient extends ConnectionConsumer<WritableStorage>
         WritableStorage storage = getConnection();
 
         if (storage == null) {
-            throw new NoRouteToHostException("Unable to connect to "
-                                             + getVendorId());
+            throw new NoRouteToHostException(UNABLE_TO_CONNECT + getVendorId());
         }
 
         try {
             storage.flush (record);
         } catch (Throwable t) {
             connectionError(t);
-            throw new IOException("flush("+record+") failed: "
-                                  + t.getMessage(), t);
+            throw new IOException(String.format(
+                    "flush(%s) failed: %s", record, t.getMessage()), t);
         } finally {
             releaseConnection();
         }
@@ -68,16 +68,15 @@ public class StorageWriterClient extends ConnectionConsumer<WritableStorage>
         WritableStorage storage = getConnection();
 
         if (storage == null) {
-            throw new NoRouteToHostException("Unable to connect to "
-                                             + getVendorId());
+            throw new NoRouteToHostException(UNABLE_TO_CONNECT + getVendorId());
         }
         
         try {
             storage.flushAll (records);
         } catch (Throwable t) {
             connectionError(t);
-            throw new IOException("flushAll("+records+") failed: "
-                                  + t.getMessage(), t);
+            throw new IOException(String.format(
+                    "flushAll(%s) failed: %s", records, t.getMessage()), t);
         } finally {
             releaseConnection();
         }
@@ -87,16 +86,15 @@ public class StorageWriterClient extends ConnectionConsumer<WritableStorage>
         WritableStorage storage = getConnection();
 
         if (storage == null) {
-            throw new NoRouteToHostException("Unable to connect to "
-                                             + getVendorId());
+            throw new NoRouteToHostException(UNABLE_TO_CONNECT + getVendorId());
         }
 
         try {
             storage.clearBase (base);
         } catch (Throwable t) {
             connectionError(t);
-            throw new IOException("clearBase("+base+") failed: "
-                                  + t.getMessage(), t);
+            throw new IOException(String.format(
+                    "clearBase(%s) failed: %s", base, t.getMessage()), t);
         } finally {
             releaseConnection();
         }
@@ -106,8 +104,7 @@ public class StorageWriterClient extends ConnectionConsumer<WritableStorage>
         WritableStorage storage = getConnection();
 
         if (storage == null) {
-            throw new NoRouteToHostException("Unable to connect to "
-                                             + getVendorId());
+            throw new NoRouteToHostException(UNABLE_TO_CONNECT + getVendorId());
         }
 
         try {
@@ -120,6 +117,3 @@ public class StorageWriterClient extends ConnectionConsumer<WritableStorage>
         }
     }
 }
-
-
-
