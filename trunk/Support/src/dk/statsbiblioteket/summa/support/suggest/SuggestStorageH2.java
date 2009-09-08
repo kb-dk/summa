@@ -332,11 +332,8 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             }
             return;
         }
-        if (query.length() > MAX_QUERY_LENGTH) {
-            log.info("addSuggestion: The query must be " + MAX_QUERY_LENGTH
-                      + " chars or less. Got " + query.length()
-                      + " chars from '" + query + "'");
-        }
+
+        if (!checkString(query)) return;
 
         try {
             insertSuggestion(query, hits, queryCount == -1 ? 1 : queryCount);
@@ -355,6 +352,8 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             throws SQLException {
 
         String analyzedQuery = analyze(query);
+
+        if (!checkString(analyzedQuery)) return;
 
         if (normalizeQueries) {
             query = analyzedQuery;
@@ -379,6 +378,17 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
 
         updateCount++;
         analyzeIfNeeded();
+    }
+
+    private boolean checkString (String analyzedQuery) {
+        if (analyzedQuery.length() > MAX_QUERY_LENGTH) {
+            log.info("addSuggestion: The analyzed query must be "
+                     + MAX_QUERY_LENGTH + " chars or less. Got "
+                     + analyzedQuery.length()
+                      + " chars from '" + analyzedQuery + "'");
+            return false;
+        }
+        return true;
     }
 
     // Deletes all suggestions, no matter the case
@@ -416,6 +426,8 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
     private void updateSuggestion(String query, int hits, int queryCount) {
         try {
             String analyzedQuery = analyze(query);
+
+            if (!checkString(analyzedQuery)) return;
 
             if (normalizeQueries) {
                 query = analyzedQuery;
