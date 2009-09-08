@@ -74,16 +74,6 @@ public class XMLSplitterFilter extends StreamController {
     public static final String EXPAND_FOLDER = "{ORIGIN_LAST_PATH_ELEMENT}";
 
     /**
-     * The XML namespace of the ID element matched by {@link #CONF_ID_ELEMENT}.
-     * If this property is unset IDs will be extracted as descibed in
-     * {@link #CONF_ID_ELEMENT}.
-     * </p><p>
-     * Default: {@code null}.
-     */
-    public static final String CONF_ID_NAMESPACE =
-            "summa.ingest.xmlsplitter.idelementnamespace";
-
-    /**
      * If true, extracted ids which beginning matches {@link #CONF_ID_PREFIX}
      * will not have the prefix prepended.
      * </p><p>
@@ -121,6 +111,17 @@ public class XMLSplitterFilter extends StreamController {
             "summa.ingest.xmlsplitter.recordelement";
 
     /**
+     * The XML namespace of the RECORD element matched by
+     * {@link #CONF_RECORD_ELEMENT}.
+     * If this property is unset RECORDs will be extracted as descibed in
+     * {@link #CONF_RECORD_ELEMENT}.
+     * </p><p>
+     * Default: {@code null}.
+     */
+    public static final String CONF_RECORD_NAMESPACE =
+            "summa.ingest.xmlsplitter.recordelementnamespace";
+
+    /**
      * The id-element containing the id for a given record. The element must be
      * present inside the record-element. If a tag inside an element is used for
      * id, the syntax is element#tag.
@@ -142,6 +143,16 @@ public class XMLSplitterFilter extends StreamController {
      */
     public static final String CONF_ID_ELEMENT =
             "summa.ingest.xmlsplitter.idelement";
+
+    /**
+     * The XML namespace of the ID element matched by {@link #CONF_ID_ELEMENT}.
+     * If this property is unset IDs will be extracted as descibed in
+     * {@link #CONF_ID_ELEMENT}.
+     * </p><p>
+     * Default: {@code null}.
+     */
+    public static final String CONF_ID_NAMESPACE =
+            "summa.ingest.xmlsplitter.idelementnamespace";
 
     /**
      * The base for the constructed Records.
