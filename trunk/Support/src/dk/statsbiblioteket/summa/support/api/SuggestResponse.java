@@ -114,7 +114,7 @@ public class SuggestResponse implements Response {
         Collections.sort(suggestions, new Comparator<SuggestTripel>() {
             public int compare(SuggestTripel o1, SuggestTripel o2) {
                 return Integer.valueOf(
-                        o1.getQueryCount()).compareTo(o2.getQueryCount());
+                        o2.getQueryCount()).compareTo(o1.getQueryCount());
             }
         });
         if (suggestions.size() > maxResults) {
