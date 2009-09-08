@@ -195,7 +195,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
                     "Unable to get a connection from '%s'", sourceURL), e);
         }
 
-        setMaxMemoryRows(MAX_SUGGESTIONS);
+        setMaxMemoryRows(MAX_SUGGESTIONS*3);
 
         return connection;
     }
