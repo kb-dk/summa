@@ -28,7 +28,7 @@ fi
 if [ "$ACTION" == "query" ]; then
     ARGS="summa.support.suggest.prefix=\"$QUERY\""
 elif [ "$ACTION" == "recent" ]; then
-    ARGS="summa.support.suggest.recent=$QUERY
+    ARGS="summa.support.suggest.recent=$QUERY"
 elif [ "$ACTION" == "update" ]; then
     ARGS="summa.support.suggest.update.query=\"$QUERY\""
     ARGS="$ARGS summa.support.suggest.update.hitcount=$HITCOUNT"
