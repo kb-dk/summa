@@ -18,6 +18,7 @@ if [ -z "$1" -o -z "$2" ]; then
     echo -e "\t$1 <action> <action_args>" 1>&2
     echo -e "Actions:" 1>&2
     echo -e "\tquery\t<prefix>" 1>&2
+    echo -e "\trecent\t<age-seconds>" 1>&2
     echo -e "\tupdate\t<query> <hitcount> [querycount]" 1>&2
     echo -e "\tclear" 1>&2
     echo -e "\timport <URL>" 1>&2
@@ -26,6 +27,8 @@ fi
 
 if [ "$ACTION" == "query" ]; then
     ARGS="summa.support.suggest.prefix=\"$QUERY\""
+elif [ "$ACTION" == "recent" ]; then
+    ARGS="summa.support.suggest.recent=$QUERY
 elif [ "$ACTION" == "update" ]; then
     ARGS="summa.support.suggest.update.query=\"$QUERY\""
     ARGS="$ARGS summa.support.suggest.update.hitcount=$HITCOUNT"

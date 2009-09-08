@@ -67,6 +67,18 @@ public abstract interface SuggestStorage extends Configurable {
                                                                  IOException;
 
     /**
+     * Create a SuggestResponse containing the last {@code maxResult}
+     * recorded suggestions within the last {@code ageSeconds} seconds.
+     *
+     * @param ageSeconds number of seconds to look back
+     * @param maxResults the maximum number of suggestions to give.
+     * @return a list of suggestions, wrapped in a response.
+     * @throws java.io.IOException if the suggestion could not be handled.
+     */
+    SuggestResponse getRecentSuggestions(int ageSeconds, int maxResults) throws
+                                                                 IOException;
+
+    /**
      * Add the given suggestion. If it already exists, update its queryCount
      * with 1 and set the number of hits. If it does not exist, create a new
      * entry with queryCount set to 1.

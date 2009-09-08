@@ -215,6 +215,10 @@ public class SuggestSearchNode extends SearchNodeImpl {
                 suggestSearch(request, responses);
                 return;
             }
+            if (request.containsKey(SuggestKeys.SEARCH_RECENT)) {
+                suggestRecent(request, responses);
+                return;
+            }
             if (request.containsKey(SuggestKeys.SEARCH_UPDATE_QUERY)) {
                 suggestUpdate(request, responses);
                 return;
@@ -252,6 +256,29 @@ public class SuggestSearchNode extends SearchNodeImpl {
         responses.add(storage.getSuggestion(prefix, maxResults));
         log.debug("Completed Suggest for prefix '" + prefix
                   + "' with maxResults=" + maxResults + " in "
+                  + (System.nanoTime() - startTime) / 1000000D + "ms");
+    }
+
+    private void suggestRecent(Request request, ResponseCollection responses)
+                                                            throws IOException {
+        long startTime = System.nanoTime();
+        int ageSeconds = request.getInt(SuggestKeys.SEARCH_RECENT);
+        int maxResults = request.getInt(
+                SuggestKeys.SEARCH_MAX_RESULTS, this.defaultMaxResults);
+        if (maxResults > this.maxResults) {
+            log.warn(String.format(
+                    "maxResults %d requested for updates within last %ss" +
+                    " with configuration-defined maxResults %d. Throttling " +
+                    "to configuration-defined max",
+                    maxResults, ageSeconds, this.maxResults));
+            maxResults = this.maxResults;
+        }
+
+        log.trace("Performing suggestRecent search within " + ageSeconds
+                  + "s with maxResults=" + maxResults);
+        responses.add(storage.getRecentSuggestions(ageSeconds, maxResults));
+        log.debug("Completed suggestRecent for updates within " + ageSeconds
+                  + "s with maxResults=" + maxResults + " in "
                   + (System.nanoTime() - startTime) / 1000000D + "ms");
     }
 
