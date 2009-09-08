@@ -39,7 +39,7 @@ public class SuggestSearcherTest extends TestCase {
         Configuration conf =
                 Configuration.load("data/suggest/SuggestSearch.xml");
         conf.set(SummaSearcherImpl.CONF_STATIC_ROOT, storageRoot.toString());
-        conf.set(SuggestSearchNode.CONF_LOWERCASE_QUERIES, false);
+        conf.set(SuggestSearchNode.CONF_NORMALIZE_QUERIES, false);
         return new SummaSearcherImpl(conf);
     }
 
@@ -84,14 +84,14 @@ public class SuggestSearcherTest extends TestCase {
         assertGet("Foo", "queryCount=\"2\">Foo Fighters");
     }
 
-    public void testCaseSensitiveness() throws Exception {
+    public void testCaseSensitivity() throws Exception {
         put("Foo Fighters", 87);
         put("Foo Bars", 123);
         assertGet("Foo", "queryCount=\"1\">Foo Fighters");
         assertGet("foo", "queryCount=\"1\">Foo Fighters");
         put("Foo fighters", 87);
-        assertGet("Foo", "queryCount=\"1\">Foo Fighters");
-        assertGet("Foo", "queryCount=\"1\">Foo fighters");
+        assertGet("Foo", "queryCount=\"2\">Foo Fighters");
+        assertGet("Foo", "queryCount=\"2\">Foo fighters");
     }
 
     public void testAddWithQueryCount() throws Exception {

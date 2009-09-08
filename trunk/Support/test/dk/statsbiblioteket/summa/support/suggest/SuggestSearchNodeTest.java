@@ -58,9 +58,10 @@ public class SuggestSearchNodeTest extends TestCase {
         node.open(storageRoot.toString());
         put(node, "Foo Fighters", 87);
         put(node, "Foo Bars", 123);
-        assertGet(node, "Foo", "queryCount=\"1\">foo fighters");
-        put(node, "Foo Fighters", 87);
+        assertGet(node, "Foo", "queryCount=\"1\">Foo Fighters");
+        put(node, "foo fighters", 87);
         assertGet(node, "Foo", "queryCount=\"2\">foo fighters");
+        assertGet(node, "Foo", "queryCount=\"2\">Foo Fighters");
         node.close();
     }
 
@@ -101,7 +102,7 @@ public class SuggestSearchNodeTest extends TestCase {
     public void testAddWithQueryCount() throws Exception {
         SuggestSearchNode node = new SuggestSearchNode(
                 Configuration.newMemoryBased(
-                        SuggestSearchNode.CONF_LOWERCASE_QUERIES, false));
+                        SuggestSearchNode.CONF_NORMALIZE_QUERIES, false));
         node.open(storageRoot.toString());
         put(node, "Foo Fighters", 87);
         put(node, "Foo Bars", 123);
@@ -114,7 +115,7 @@ public class SuggestSearchNodeTest extends TestCase {
     public void testLowercase() throws Exception {
         SuggestSearchNode node = new SuggestSearchNode(
                 Configuration.newMemoryBased(
-                        SuggestSearchNode.CONF_LOWERCASE_QUERIES, true));
+                        SuggestSearchNode.CONF_NORMALIZE_QUERIES, true));
         node.open(storageRoot.toString());
         put(node, "Foo Fighters", 87, 12);
         put(node, "Foo fighters", 123);
@@ -133,7 +134,8 @@ public class SuggestSearchNodeTest extends TestCase {
         SuggestSearchNode node2 = new SuggestSearchNode(
                 Configuration.newMemoryBased());
         node2.open(storageRoot.toString());
-        assertGet(node2, "Foo", "queryCount=\"1\">foo fighters");
+        assertGet(node2, "Foo", "hits=\"87\" queryCount=\"1\">Foo Fighters");
+        assertGet(node2, "Foo", "hits=\"123\" queryCount=\"1\">Foo Bars");
         node2.close();
     }
 
@@ -147,7 +149,7 @@ public class SuggestSearchNodeTest extends TestCase {
 
         node.search(request, responses);
         String xml = responses.toXML();
-        assertTrue(String.format("The string '%s' should be in the result '%s'",
+        assertTrue(String.format("The string '%s' should be in the result:\n%s",
                                  expected, xml),
                    xml.contains(expected));
         log.debug("Got xml for prefix '" + prefix + "':\n" + xml);

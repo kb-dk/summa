@@ -66,15 +66,15 @@
         </layout>
     </appender>
 
-    <logger name="dk.statsbiblioteket.summa.support.TikaDocumentCreator">
-        <level value="trace" />
-        <appender-ref ref="FILE" />
-    </logger>
-
-    <logger name="dk.statsbiblioteket.summa.support.lucene.DocumentShaperFilter">
+    <logger name="dk.statsbiblioteket.summa.support">
         <level value="debug" />
         <appender-ref ref="CONSOLE" />
     </logger>
+
+    <!--<logger name="dk.statsbiblioteket.summa.support.lucene.DocumentShaperFilter">
+        <level value="debug" />
+        <appender-ref ref="CONSOLE" />
+    </logger>-->
 
 <!--    <logger name="dk.statsbiblioteket.summa">
         <level value="info" />

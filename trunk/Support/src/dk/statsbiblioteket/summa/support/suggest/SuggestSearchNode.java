@@ -97,11 +97,11 @@ public class SuggestSearchNode extends SearchNodeImpl {
      * This setting does not affect the addition of queries, so it is possible
      * to switch back and forth between the two behaviours.
      * </p><p>
-     * Optional. Default is true.
+     * Optional. Default is false.
      */
-    public static final String CONF_LOWERCASE_QUERIES =
-            "summa.support.suggest.lowercasequeries";
-    public static final boolean DEFAULT_LOWERCASE_QUERIES = true;
+    public static final String CONF_NORMALIZE_QUERIES =
+            "summa.support.suggest.normalizequeries";
+    public static final boolean DEFAULT_NORMALIZE_QUERIES = false;
 
     /**
      * The class for the back-end storage for suggest.
