@@ -94,6 +94,7 @@ public class SuggestSearcherTest extends TestCase {
         put("Foo fighters", 87);
         assertGet("Foo", "queryCount=\"2\">Foo Fighters");
         assertGet("Foo", "queryCount=\"2\">Foo fighters");
+        System.out.println(get("fo"));
     }
 
     public void testAddWithQueryCount() throws Exception {
@@ -112,6 +113,18 @@ public class SuggestSearcherTest extends TestCase {
         searcher = getSearcher();
 
         assertGet("Foo", "queryCount=\"1\">Foo Fighters");
+    }
+
+    public void testOrdering() throws Exception {
+        put("XOne", 87, 1);
+        put("XTwo", 123, 2);
+        put("XThree", 2, 3);
+        String xml = get("X");
+        System.out.println(xml);
+        xml = eat(xml, "XThree");
+        xml = eat(xml, "XTwo");
+        xml = eat(xml, "XOne");
+
     }
 
     public void testPerformance() throws Exception {
@@ -177,5 +190,25 @@ public class SuggestSearcherTest extends TestCase {
         request.put(SuggestKeys.SEARCH_UPDATE_HITCOUNT, hits);
         request.put(SuggestKeys.SEARCH_UPDATE_QUERYCOUNT, queryCount);
         searcher.search(request);
+    }
+
+    /**
+     * Eats everything out of food, up until, and including, bite.
+     * Returns the remainer of food.
+     * <p/>
+     * The primary purpose of this method is to check for a certain sorted
+     * subset of strings within food, in some specific order.
+     *
+     * @param food
+     * @param bite
+     * @return
+     */
+    public String eat(String food, String bite) {
+        int i = food.indexOf(bite);
+        if (i == -1) {
+            fail("'" + bite + "' not found in :\n" + food);
+        }
+
+        return food.substring(i + bite.length());
     }
 }

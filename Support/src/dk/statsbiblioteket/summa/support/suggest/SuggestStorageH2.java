@@ -311,7 +311,64 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
                     "Unable to get suggestion for '" + prefix + "', "
                     + maxResults, e);
         }
+    }
 
+    @Override
+    public synchronized SuggestResponse getRecentSuggestions(
+            int ageSeconds, int maxResults) throws IOException {
+        if (log.isTraceEnabled()) {
+            log.trace("getRecentSuggestions("
+                      + ageSeconds + "s, " + maxResults + ")");
+        }
+
+        try {
+            long startTime = System.nanoTime();
+            long mtime = System.currentTimeMillis() - ageSeconds*1000;
+            mtime = timestamps.baseTimestamp(mtime);
+            maxResults = Math.min(maxResults, MAX_SUGGESTIONS);
+
+            connection.setReadOnly(true);
+            connection.setAutoCommit(false);
+
+            PreparedStatement psExists = connection.prepareStatement(
+                 "SELECT user_query AS query, query_count, hit_count " +
+                 "FROM suggest_index " +
+                 "INNER JOIN suggest_map " +
+                 "ON suggest_index.query = suggest_map.query " +
+                 "WHERE suggest_index.mtime > ? " +
+                 "ORDER BY query_count DESC " +
+                 "LIMIT ?");
+            psExists.setLong(1, mtime);
+            psExists.setInt(2, maxResults);
+            psExists.setFetchDirection(ResultSet.FETCH_FORWARD);
+            psExists.setFetchSize(maxResults);
+
+            ResultSet rs = psExists.executeQuery();
+            int count = 0;
+            SuggestResponse response = new SuggestResponse("", maxResults);
+            try {
+                while (rs.next() && count < maxResults) {
+                    count++;
+                    response.addSuggestion(
+                            rs.getString(1), rs.getInt(3), rs.getInt(2));
+                }
+
+                log.debug(String.format(
+                   "getRecentSuggestions(%ss, + %s) -> %s  suggestions in %sms",
+                   ageSeconds, maxResults, count,
+                   (System.nanoTime() - startTime) / 1000000D));
+
+                return response;
+            } finally {
+                rs.close();
+                connection.setReadOnly(false);
+                connection.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new IOException(
+                    "Unable to get " + maxResults + " recent suggestions for"
+                    + " the last " + ageSeconds + "s", e);
+        }
     }
 
     public void addSuggestion(String query, int hits) throws IOException {
