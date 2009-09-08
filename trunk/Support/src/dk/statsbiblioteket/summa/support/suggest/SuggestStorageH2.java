@@ -71,7 +71,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
     private int updateCount = 0;
     private boolean useL2cache;
     private UniqueTimestampGenerator timestamps;
-    public static final int ANALYZE_INTERVAL = 10000;
+    public static final int ANALYZE_INTERVAL = 50000;
 
     /**
      * Whether or not to enable the H2 level 2 page cache. This will be a
