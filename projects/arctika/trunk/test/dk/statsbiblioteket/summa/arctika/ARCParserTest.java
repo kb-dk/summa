@@ -83,7 +83,7 @@ public class ARCParserTest extends TestCase {
 
         Configuration arcConf = Configuration.newMemoryBased(
                 StreamController.CONF_PARSER, ARCParser.class,
-                "usefilehack", true);
+                ARCParser.CONF_USE_FILEHACK, true);
         StreamController ap = new StreamController(arcConf);
         ap.setSource(feeder);
 

@@ -350,14 +350,8 @@
     </library>
     <library name="summa">
       <CLASSES>
-        <root url="jar://$PROJECT_DIR$/lib/summa-common-1.4.8.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib/summa-ingest-1.4.8.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib/summa-index-1.4.8.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib/summa-support-1.4.8.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib/summa-support-api-1.4.8.jar!/" />
         <root url="jar://$PROJECT_DIR$/lib/lucene-core-2.4.0.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib/summa-facetbrowser-1.4.8.jar!/" />
-        <root url="jar://$PROJECT_DIR$/lib/summa-facetbrowser-api-1.4.8.jar!/" />
+        <root url="jar://$PROJECT_DIR$/lib/summa-standalone-1.4.9.jar!/" />
       </CLASSES>
       <JAVADOC />
       <SOURCES />

@@ -56,9 +56,10 @@ public class ARCParser extends ThreadedStreamParser {
      * </p><p>
      * Optional. Default is true.
      */
-    public static final String CONF_REMOVE_HTTP_HEADERS =
-            "arcparser.removehttpheaders";
-    public static final boolean DEFAULT_REMOVE_HTTP_HEADERS = true;
+    public static final String CONF_EXTRACT_HTTP_HEADERS =
+            "arcparser.extracthttpheaders";
+    public static final boolean DEFAULT_EXTRACT_HTTP_HEADERS = true;
+    public static final String HTTP_PREFIX = "http-header.";
 
     public static enum ARC {
         arcname,       // filedesc://981-...
@@ -73,6 +74,7 @@ public class ARCParser extends ThreadedStreamParser {
         isodate,       // YYYYMMDD
         isotime,       // HHmmSS
         url,           // Origin as stated in ARC
+        ipaddress,     // What site resolved to at harvest time
         site;          // Site minus www extracted from url
         @Override
         public String toString() {
@@ -80,18 +82,16 @@ public class ARCParser extends ThreadedStreamParser {
         }
     }
 
-    public static final String HTTP_PREFIX = "http-header.";
-
     // TODO: Add timeout
     private boolean useFileHack = false;
-    static final String CONF_USE_FILEHACK = "usefilehack"; 
-    private boolean removeHTTPHeaders = DEFAULT_REMOVE_HTTP_HEADERS;
+    static final String CONF_USE_FILEHACK = "usefilehack";
+    private boolean removeHTTPHeaders = DEFAULT_EXTRACT_HTTP_HEADERS;
 
     public ARCParser(Configuration conf) {
         super(conf);
         useFileHack = conf.getBoolean(CONF_USE_FILEHACK, useFileHack);
         removeHTTPHeaders = conf.getBoolean(
-                CONF_REMOVE_HTTP_HEADERS, removeHTTPHeaders);
+                CONF_EXTRACT_HTTP_HEADERS, removeHTTPHeaders);
         log.debug("ARCParser constructed"
                   + (useFileHack ? " with filehack enabled" : ""));
     }
@@ -228,9 +228,13 @@ public class ARCParser extends ThreadedStreamParser {
             addData(payload, ARC.isodate, header.getDate().substring(0, 8));
             addData(payload, ARC.isotime, header.getDate().substring(8, 14));
         }
-        // TODO: Add IP
+/*        for (Object entry: header.getHeaderFields().entrySet()) {
+            Map.Entry e = (Map.Entry)entry;
+            System.out.println(e.getKey() + ": " + e.getValue());
+        }*/
         addData(payload, ARC.url, header.getUrl());
         addData(payload, ARC.site, extractSite(header.getUrl()));
+        addData(payload, ARC.ipaddress, header.getHeaderValue("ip-address"));
 //        payload.getData().put("arc.boost", header.);
 //        payload.getData().put("arc.collection", header.);
 //        payload.getData().put("arc.segment", header.);
