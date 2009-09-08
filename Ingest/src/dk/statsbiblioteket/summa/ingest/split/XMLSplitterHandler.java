@@ -136,7 +136,9 @@ public class XMLSplitterHandler extends DefaultHandler2 {
         checkRunning();
         List<String> prefixes;
         boolean rootRecordElement;
-        if (!inRecord && equalsAny(target.recordElement, qName, local)) {
+        if (!inRecord && equalsAny(target.recordElement, qName, local)
+            && (target.recordNamespace == null
+                || target.recordNamespace.equals(uri))) {
             // This is the Record root element
             inRecord = true;
             rootRecordElement = true;
@@ -226,7 +228,9 @@ public class XMLSplitterHandler extends DefaultHandler2 {
         }
         sw.append("</").append(target.preserveNamespaces ? qName : localName);
         sw.append(">");
-        if (equalsAny(target.recordElement, qName, localName)) {
+        if (equalsAny(target.recordElement, qName, localName)
+            && (target.recordNamespace == null
+                || target.recordNamespace.equals(uri))) {
             // Record XML end reached
             log.debug("Record XML collected, creating Record");
             if ("".equals(id.toString())) {

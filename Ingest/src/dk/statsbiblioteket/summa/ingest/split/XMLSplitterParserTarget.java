@@ -47,6 +47,7 @@ public class XMLSplitterParserTarget {
     public boolean collapsePostfix = true;
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public String recordElement = "record";
+    public String recordNamespace = null;
     public String idElement ="id";
     public String idTag = "";
     public String idNamespace = null;
@@ -72,6 +73,8 @@ public class XMLSplitterParserTarget {
                 XMLSplitterFilter.CONF_COLLAPSE_POSTFIX, collapsePostfix);
         recordElement = configuration.getString(
                 XMLSplitterFilter.CONF_RECORD_ELEMENT, recordElement);
+        recordNamespace = configuration.getString(
+                XMLSplitterFilter.CONF_RECORD_NAMESPACE, recordNamespace);
         idElement = configuration.getString(
                 XMLSplitterFilter.CONF_ID_ELEMENT, idElement);
         if ("".equals(idElement)) {
