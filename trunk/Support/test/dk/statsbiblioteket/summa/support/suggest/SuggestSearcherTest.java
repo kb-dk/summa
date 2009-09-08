@@ -20,6 +20,8 @@ import java.io.IOException;
  */
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class SuggestSearcherTest extends TestCase {
+    public static final String IMPORT_FILE = "suggest_in.dat";
+    public static final String EXPORT_FILE = "suggest_out.dat";
     private static Log log = LogFactory.getLog(SuggestSearcherTest.class);
 
     File storageRoot = new File(new File(System.getProperty("java.io.tmpdir")),
@@ -50,10 +52,10 @@ public class SuggestSearcherTest extends TestCase {
 
     public void testImport() throws Exception {
         String data = "importA\t10\t12\nimportB\t7\t8\n";
-        Files.saveString(
-                data, new File(storageRoot, SuggestStorage.IMPORT_FILE));
+        File dump = new File(storageRoot, IMPORT_FILE);
+        Files.saveString(data, dump);
         Request request = new Request();
-        request.put(SuggestSearchNode.SEARCH_IMPORT, true);
+        request.put(SuggestSearchNode.SEARCH_IMPORT, dump.toURI().toURL());
         searcher.search(request);
         assertGet("imp", "queryCount=\"12\">importA");
         assertGet("imp", "queryCount=\"8\">importB");
@@ -61,19 +63,19 @@ public class SuggestSearcherTest extends TestCase {
 
     public void testExport() throws Exception {
         String data = "importA\t10\t12\nimportB\t7\t8\n";
-        Files.saveString(
-                data, new File(storageRoot, SuggestStorage.IMPORT_FILE));
+        File dump = new File(storageRoot, IMPORT_FILE);
+        Files.saveString(data, dump);
         Request request = new Request();
-        request.put(SuggestSearchNode.SEARCH_IMPORT, true);
+        request.put(SuggestSearchNode.SEARCH_IMPORT, dump.toURI().toString());
         searcher.search(request);
 
         request = new Request();
-        request.put(SuggestSearchNode.SEARCH_EXPORT, true);
+        File export = new File(storageRoot, EXPORT_FILE);
+        request.put(SuggestSearchNode.SEARCH_EXPORT, export);
         searcher.search(request);
 
-        String dump = Files.loadString(new File(
-                storageRoot, SuggestStorage.EXPORT_FILE));
-        assertEquals("Import and export should match", data, dump);
+        String exportDump = Files.loadString(export);
+        assertEquals("Import and export should match", data, exportDump);
     }
 
     public void testAddAndGet() throws Exception {

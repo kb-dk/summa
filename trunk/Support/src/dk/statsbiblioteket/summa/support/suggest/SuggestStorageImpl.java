@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -26,6 +26,7 @@ import org.apache.commons.logging.Log;
 import java.io.*;
 import java.util.List;
 import java.util.ArrayList;
+import java.net.URL;
 
 /**
  * Default implementation of import and export of suggestions.
@@ -37,21 +38,29 @@ public abstract class SuggestStorageImpl implements SuggestStorage {
     private static Log log = LogFactory.getLog(SuggestStorageImpl.class);
     private static final int BATCH_SIZE = 1000;
 
-    public void importSuggestions() throws IOException {
+    /*public void importSuggestions() throws IOException {
         File location = getLocation(IMPORT_FILE);
+
         if (!location.exists()) {
             throw new FileNotFoundException(String.format(
                     "Unable to import suggest data from '%s' as the file does "
                     + "not exist", location));
         }
-        log.info(String.format("Importing suggestions from '%s'", location));
 
-        BufferedReader in = new BufferedReader(new InputStreamReader(
-                new FileInputStream(location), "utf-8"));
+        importSuggestions(location.toURI().toURL());
+    }*/
+
+    @Override
+    public void importSuggestions(URL in) throws IOException {
+        log.info(String.format("Importing suggestions from '%s'", in));
+        long importStart = System.currentTimeMillis();
+        InputStream inStream = in.openConnection().getInputStream();
+        InputStreamReader reader = new InputStreamReader(inStream);
+        BufferedReader lines = new BufferedReader(reader);
         String line;
         ArrayList<String> buffer = new ArrayList<String>(BATCH_SIZE);
         int counter = 0;
-        while ((line = in.readLine()) != null) {
+        while ((line = lines.readLine()) != null) {
             counter++;
             log.trace("Importing suggestion " + line);
             if ("".equals(line)) {
@@ -59,26 +68,36 @@ public abstract class SuggestStorageImpl implements SuggestStorage {
             }
             buffer.add(line);
             if (buffer.size() == BATCH_SIZE) {
-                addSuggestions(buffer);
+                addSuggestions(buffer.iterator());
                 buffer.clear();
             }
         }
         if (buffer.size() > 0) {
-            addSuggestions(buffer);
+            addSuggestions(buffer.iterator());
         }
-        in.close();
-        log.info(String.format("Finished importing %d suggestions", counter));
+        lines.close();
+        log.info(String.format(
+                "Finished importing %d suggestions in %ds",
+                counter, (System.currentTimeMillis() - importStart)/1000));
     }
 
-    public void exportSuggestions() throws IOException {
-        File location = getLocation(EXPORT_FILE);
-        log.info(String.format("Exporting suggestions to '%s'", location));
-        if (location.exists()) {
-            log.info(String.format("Deleting old export '%s'", location));
-            location.delete();
+    @Override
+    public void exportSuggestions(File target) throws IOException {
+        long exportStart = System.currentTimeMillis();
+        target = target.getAbsoluteFile();
+        log.info(String.format("Exporting suggestions to '%s'", target));
+        if (target.isFile()) {
+            log.info(String.format("Deleting old export '%s'", target));
+            target.delete();
+        } else if (target.isDirectory()) {
+            throw new IOException("Export target is a directory: " + target);
         }
+
+        // Create all parent dirs
+        target.getParentFile().mkdirs();
+
         BufferedWriter out = new BufferedWriter(new OutputStreamWriter(
-                new FileOutputStream(location), "utf-8"));
+                new FileOutputStream(target), "utf-8"));
         int exported = 0;
         while (true) {
             List<String> buffer = listSuggestions(exported, BATCH_SIZE);
@@ -92,17 +111,10 @@ public abstract class SuggestStorageImpl implements SuggestStorage {
             }
         }
         out.close();
-        log.info(String.format("Exported %d suggestions to '%s'",
-                               exported, location));
-    }
-
-    private File getLocation(String filename) throws IOException {
-        if (getLocation() == null) {
-            throw new IllegalArgumentException(
-                    "No location. Please call open()");
-        }
-        return new File(
-                getLocation().getParentFile(), filename).getAbsoluteFile();
-    }
+        log.info(String.format(
+                "Exported %d suggestions to '%s' in %ds",
+                exported, target,
+                (System.currentTimeMillis() - exportStart)/1000));
+    }    
 
 }

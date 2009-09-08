@@ -23,9 +23,11 @@ import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.support.api.SuggestResponse;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.io.IOException;
+import java.io.File;
+import java.net.URL;
 
 /**
  * Interface for the storage responsible for persistence
@@ -33,10 +35,7 @@ import java.util.ArrayList;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public abstract interface SuggestStorage extends Configurable {
-
-    public static final String IMPORT_FILE = "suggest_in.dat";
-    public static final String EXPORT_FILE = "suggest_out.dat";
+public abstract interface SuggestStorage extends Configurable {    
 
     /**
      * Open a storage at the specified location. If the location does not exist,
@@ -101,8 +100,8 @@ public abstract interface SuggestStorage extends Configurable {
     ArrayList<String> listSuggestions(int start, int max) throws IOException;
 
     /**
-     * Batch-add suggestions to the underlying storage. This is typically used
-     * for initial population.
+     * Add a collection of suggestions to the underlying storage. This is
+     * typically used for initial population.
      * </p><p>
      * The input format is the format of the data exported by
      * {@link #listSuggestions}. It is possible to leave out both queryCount and
@@ -111,27 +110,25 @@ public abstract interface SuggestStorage extends Configurable {
      * @param suggestions a list of suggestions.
      * @throws IOException if the suggestions could not be added.
      */
-    void addSuggestions(ArrayList<String> suggestions) throws IOException;
+    void addSuggestions(Iterator<String> suggestions) throws IOException;
 
     /**
-     * Imports suggest-data from the file "suggest_in.dat" in the folder for the
-     * suggest storage.
+     * Downloads and installs suggest-data from {@code in}.
      * </p><p>
      * Each suggest-entry if represented as
      * {@code query\thits\tqueryCount} in utf-8 where {@code \t} is tab.
      * @throws IOException if the data could not be imported.
      */
-    void importSuggestions() throws IOException;
+    void importSuggestions(URL in) throws IOException;
 
     /**
-     * Exports suggest-data to the file "suggest_out.dat" in the folder for the 
-     * suggest storage.
+     * Exports suggest-data to the file {@code out}.
      * </p><p>
      * Each suggest-entry will be represented as
      * {@code query\thits\tqueryCount} in utf-8 where {@code \t} is tab.
      * @throws IOException if the data could not be exported.
      */
-    void exportSuggestions() throws IOException;
+    void exportSuggestions(File out) throws IOException;
 
     /**
      * Clears all suggestions.

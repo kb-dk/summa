@@ -33,6 +33,7 @@ import java.io.File;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.net.URL;
 
 /**
  * A suggest-search is a low overhead Search meant for interactive use.
@@ -140,8 +141,8 @@ public class SuggestSearchNode extends SearchNodeImpl {
     /**
      * Maintenance search key. This should not be passed through from end-users.
      * </p><p>
-     * If set to true, the SuggestSearchNode will import suggest-data from the
-     * file "suggest_in.dat" in the current folder for the suggest storage.
+     * If set to a URL the SuggestSearchNode will import suggest-data from the
+     * given URL.
      * </p><p>
      * The data must be in tab-separated format with the columns
      * {@code hits count query}.
@@ -151,10 +152,10 @@ public class SuggestSearchNode extends SearchNodeImpl {
     /**
      * Maintenance search key. This should not be passed through from end-users.
      * </p><p>
-     * If set to true, the SuggestSearchNode will export suggest-data to the
-     * file "suggest_out.dat" in the current folder for the suggest storage.
+     * If set to a file path, the SuggestSearchNode will export suggest-data
+     * to the given file, creating any parent directories of necessary.
      * </p><p>
-     * The data must be in tab-separated format with the columns
+     * The data will be in tab-separated format with the columns
      * {@code hits count query}.
      */
     static final String SEARCH_EXPORT = "summa.support.suggest.export";
@@ -192,15 +193,21 @@ public class SuggestSearchNode extends SearchNodeImpl {
                 responses.add(new SuggestResponse("Suggestions cleared", 10));
                 maintenance = true;
             }
-            if (request.getBoolean(SEARCH_IMPORT, false)) {
-                log.info("Importing all suggestions");
-                storage.importSuggestions();
+            if (request.containsKey(SEARCH_IMPORT)) {
+                String sourceUrl = request.getString(SEARCH_IMPORT);
+                log.info("Importing suggestions from " + sourceUrl);
+
+                URL source = new URL(sourceUrl);
+                storage.importSuggestions(source);
                 responses.add(new SuggestResponse("Suggestions imported", 10));
                 maintenance = true;
             }
-            if (request.getBoolean(SEARCH_EXPORT, false)) {
-                log.info("Exporting all suggestions");
-                storage.exportSuggestions();
+            if (request.containsKey(SEARCH_EXPORT)) {
+                String targetPath = request.getString(SEARCH_EXPORT);
+                File target = new File(targetPath);
+                log.info("Exporting suggestions to: " + target);
+
+                storage.exportSuggestions(target);
                 responses.add(new SuggestResponse("Suggestions exported", 10));
                 maintenance = true;
             }
@@ -333,6 +340,6 @@ public class SuggestSearchNode extends SearchNodeImpl {
      */
     public void addSuggestions(ArrayList<String> suggestions) throws
                                                               IOException {
-        storage.addSuggestions(suggestions);
+        storage.addSuggestions(suggestions.iterator());
     }
 }
