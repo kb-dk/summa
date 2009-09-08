@@ -37,6 +37,7 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.*;
 import java.util.*;
+import java.net.URL;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -521,10 +522,11 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         }
     }
 
-    public void addSuggestions(ArrayList<String> suggestions) throws
+    @Override
+    public void addSuggestions(Iterator<String> suggestions) throws
                                                                    IOException {
-        log.debug(String.format("addsuggestion called with %d suggestions",
-                                suggestions.size()));
+        log.debug("addSuggestions called");
+        long start = System.nanoTime();
 
         try {
             connection.setAutoCommit(false);
@@ -534,7 +536,10 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         }
 
         try {
-            for (String suggestion: suggestions) {
+            int count = 0;
+            while (suggestions.hasNext()) {
+                count++;
+                String suggestion = suggestions.next();
                 if (suggestion == null || "".equals(suggestion)) {
                     continue;
                 }
@@ -569,10 +574,11 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
                 }
                 addSuggestion(query, (int)hits, queryCount);
             }
-            log.trace(String.format("Finished adding %d suggestions. "
-                                    + "Committing", suggestions.size()));
+            log.debug(String.format(
+                    "Finished adding %d suggestions in %sms ",
+                    count, (System.nanoTime() - start)/1000000D));
             connection.commit();
-            updateCount += suggestions.size();
+            updateCount += count;
             analyzeIfNeeded();
         } catch (SQLException e) {
             try {
@@ -646,7 +652,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
 
     /* Drop and re-create the indexes */
     @Override
-    public void importSuggestions() throws IOException {
+    public void importSuggestions(URL in) throws IOException {
         log.debug("importsuggestions: Dropping indexes");
         try {
             dropIndexes();
@@ -655,7 +661,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         }
         try {
             log.debug("Calling super.import");
-            super.importSuggestions();
+            super.importSuggestions(in);
         } finally {
 
             log.debug("importsuggestions: Creating indexes");
