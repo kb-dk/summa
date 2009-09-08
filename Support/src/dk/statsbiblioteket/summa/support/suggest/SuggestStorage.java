@@ -78,9 +78,9 @@ public abstract interface SuggestStorage extends Configurable {
     void addSuggestion(String query, int hits) throws IOException;
 
     /**
-     * Add the given suggestion. If it already exists, se its queryCount and the
-     * number of hits. If it does not exist, create a new entry with the given
-     * parameters.
+     * Add the given suggestion. If it already exists, set its queryCount and
+     * the number of hits. If it does not exist, create a new entry with the
+     * given parameters.
      * @param query the query to store.
      * @param hits the number of hits that the query gives.
      * @param queryCount the number of times the suggestion has been added.

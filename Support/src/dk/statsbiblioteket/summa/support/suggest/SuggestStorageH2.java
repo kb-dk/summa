@@ -66,7 +66,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
     private Connection connection;
     private boolean closed = true;
     private Analyzer analyzer;
-    private Locale lowercaseLocale;
+    private boolean normalizeQueries;
     private int updateCount = 0;
     private boolean useL2cache;
     private UniqueTimestampGenerator timestamps;
@@ -94,6 +94,11 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
     @SuppressWarnings({"UnusedDeclaration"})
     public SuggestStorageH2(Configuration conf) {
         log.debug("Creating SuggestStorageH2");
+
+        normalizeQueries = conf.getBoolean(
+                SuggestSearchNode.CONF_NORMALIZE_QUERIES,
+                SuggestSearchNode.DEFAULT_NORMALIZE_QUERIES);
+
         Class<? extends Analyzer> analyzerClass = Configuration.getClass(
                           CONF_ANALYZER,Analyzer.class, DEFAULT_ANALYZER, conf);
         try {
@@ -312,7 +317,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         addSuggestion(query, hits, -1);
     }
 
-    // -1 means no update of queryCount
+    // -1 means add 1 to suggest_index.query_count
     public synchronized void addSuggestion(
                     String query, int hits, int queryCount) throws IOException {
         if (hits == 0) {
@@ -332,9 +337,8 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
                       + " chars from '" + query + "'");
         }
 
-        queryCount = queryCount == -1 ? 1 : queryCount;
         try {
-            insertSuggestion(query, hits, queryCount);
+            insertSuggestion(query, hits, queryCount == -1 ? 1 : queryCount);
         } catch (SQLException e) {
             if (isIntegrityConstraintViolation(e)) {
                 updateSuggestion(query, hits, queryCount);
@@ -350,6 +354,11 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             throws SQLException {
 
         String analyzedQuery = analyze(query);
+
+        if (normalizeQueries) {
+            query = analyzedQuery;
+        }
+
         PreparedStatement psInsert = connection.prepareStatement(
                 "INSERT INTO suggest_index " +
                 "VALUES (?, ?, ?, ?)");
@@ -396,15 +405,39 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         analyzeIfNeeded();
     }
 
+    /**
+     * If queryCount is -1 we must add one to the previous value, otherwise
+     * we should set suggest_index.query_count to queryCount
+     * @param query
+     * @param hits
+     * @param queryCount
+     */
     private void updateSuggestion(String query, int hits, int queryCount) {
         try {
             String analyzedQuery = analyze(query);
-            PreparedStatement psUpdate = connection.prepareStatement(
-                "UPDATE suggest_index " +
-                "SET query_count=query_count+?, " +
-                "    hit_count=?, " +
-                "    mtime=? " +
-                "WHERE query=?");
+
+            if (normalizeQueries) {
+                query = analyzedQuery;
+            }
+
+            PreparedStatement psUpdate;
+            if (queryCount == -1){
+                queryCount = 1;
+                psUpdate = connection.prepareStatement(
+                        "UPDATE suggest_index " +
+                        "SET query_count=query_count+?, " +
+                        "    hit_count=?, " +
+                        "    mtime=? " +
+                        "WHERE query=?");
+            } else {
+                psUpdate = connection.prepareStatement(
+                        "UPDATE suggest_index " +
+                        "SET query_count=?, " +
+                        "    hit_count=?, " +
+                        "    mtime=? " +
+                        "WHERE query=?");
+            }
+
             psUpdate.setInt(1, queryCount);
             psUpdate.setLong(2, hits);
             psUpdate.setLong(3, timestamps.next());
@@ -492,15 +525,6 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
                                                                    IOException {
         log.debug(String.format("addsuggestion called with %d suggestions",
                                 suggestions.size()));
-
-        PreparedStatement psInsert;
-        try {
-            psInsert = connection.prepareStatement(INSERT_STATEMENT);
-        } catch (SQLException e) {
-            throw new IOException(String.format(
-                    "SQLException while preparing statement '%s'",
-                    INSERT_STATEMENT), e);
-        }
 
         try {
             connection.setAutoCommit(false);
