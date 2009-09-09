@@ -233,7 +233,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         // nifty stats in the future. Eg. most recent queries sorted
         // by query_count
         s.execute("CREATE UNIQUE INDEX IF NOT EXISTS suggest_mtime "
-                + "ON suggest_index(mtime, query_count desc)");
+                + "ON suggest_index(mtime desc, query_count desc)");
 
         s.close();
         log.info("Table indices prepared in "
@@ -274,6 +274,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             connection.setAutoCommit(false);
 
             PreparedStatement psExists = connection.prepareStatement(
+                 // FIXME: Sorting on query_count is slow
                  "SELECT user_query AS query, query_count, hit_count " +
                  "FROM suggest_index " +
                  "INNER JOIN suggest_map " +
@@ -331,12 +332,13 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             connection.setAutoCommit(false);
 
             PreparedStatement psExists = connection.prepareStatement(
+                 // FIXME: ORDER BY query_count is slow
                  "SELECT user_query AS query, query_count, hit_count " +
                  "FROM suggest_index " +
                  "INNER JOIN suggest_map " +
                  "ON suggest_index.query = suggest_map.query " +
                  "WHERE suggest_index.mtime > ? " +
-                 "ORDER BY query_count DESC " +
+                 "ORDER BY mtime DESC " +
                  "LIMIT ?");
             psExists.setLong(1, mtime);
             psExists.setInt(2, maxResults);
