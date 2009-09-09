@@ -49,10 +49,10 @@ import org.apache.commons.logging.LogFactory;
  * <pre>
  *    var id = payload.getId();
  *
- *    if (id.startswith("illegal")) {
+ *    if (id.startsWith("illegal")) {
  *        feedbackMessage = "Illegal id prefix";
  *        allowPayload = false;
- *    } else if (id.startswith("sleepy")) {
+ *    } else if (id.startsWith("sleepy")) {
  *        // Sleepy payloads are still allowed to pass through
  *       java.lang.Thread.sleep(1000);
  *    }
