@@ -66,12 +66,31 @@ public class StorageFactory {
      * @return an object implementing the {@link Storage} interface.
      * @throws IOException if the storage could not be created.
      */
-    public static Storage createStorage(Configuration conf) throws IOException {
-        log.trace("createStorage called");
+    public static Storage createStorage(Configuration conf)
+            throws IOException {
+        return createStorage(conf, Storage.CONF_CLASS);
+    }
+
+    /**
+     * <p>Construct a storage instance based on the given properties.
+     * The properties are also passed to the constructor for the storage.</p>
+     *
+     * <p>The property {@code classProp} within {@code conf} determines
+     * the class used for instantiating the storage.</p>
+     *
+     * @param conf setup for the wanted storage determined by the
+     *             {@code classProp} property wihtin {@code conf}
+     * @param classProp the property defining the storage class to instantiate
+     * @return an object implementing the {@link Storage} interface.
+     * @throws IOException if the storage could not be created.
+     */
+    public static Storage createStorage(Configuration conf, String classProp)
+            throws IOException {
+        log.trace("createStorage(conf,prop) called");
 
         Class<? extends Storage> storageClass;
         try {
-            storageClass = Configuration.getClass(Storage.CONF_CLASS,
+            storageClass = Configuration.getClass(classProp,
                                                   Storage.class,
                                                   DEFAULT_STORAGE,
                                                   conf);
@@ -86,11 +105,11 @@ public class StorageFactory {
         log.debug("Instantiating storage class " + storageClass);
 
         try {
-            // FIXME: This forces a RMI call when packing as a service. Not good 
-            return Configuration.create(storageClass, conf);        
+            // FIXME: This forces a RMI call when packing as a service. Not good
+            return Configuration.create(storageClass, conf);
         } catch (Exception e) {
             throw new IOException("Failed to instantiate storage class "
-                                  + storageClass + ": " + e.getMessage(), e);
+                                  + classProp + ": " + e.getMessage(), e);
         }
     }
 
