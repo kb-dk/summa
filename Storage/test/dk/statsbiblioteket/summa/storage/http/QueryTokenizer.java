@@ -6,7 +6,11 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 /**
- * Utility class to tokenize
+ * Utility class to tokenize URI query parts like {@code arg1=foo&arg2=bar}
+ * into a sequence of {@link QueryToken}s.
+ * <p/>
+ * For maximum efficiency you can reuse instances of {@code QueryTokenizer}s
+ * without allocating new memory by calling {@link #reset(CharSequence)}.
  *
  * @author mke
  * @since Sep 10, 2009
@@ -19,10 +23,24 @@ public class QueryTokenizer implements Iterator<QueryToken> {
     private CharSequence seq;
     private int pos;
 
+    /**
+     * Create a new tokenizer on the given character sequence. Note that
+     * character sequences can be both Strings, StringBuilders, and a host of
+     * other native Java types.
+     * <p/>
+     * You may also pass {@code null} as an argument in which case
+     * @param seq
+     */
     public QueryTokenizer(CharSequence seq) {
         this.seq = seq;
         pos = 0;
         builder = new StringBuilder();
+    }
+
+    public QueryTokenizer reset() {
+        pos = 0;
+        builder.setLength(0);
+        return this;
     }
 
     public QueryTokenizer reset(CharSequence seq) {
@@ -33,11 +51,11 @@ public class QueryTokenizer implements Iterator<QueryToken> {
     }
 
     public boolean hasNext() {
-        return pos < seq.length();
+        return seq != null && pos < seq.length();
     }
 
     public QueryToken next() {
-        if (pos >= seq.length()) {
+        if (seq == null || pos >= seq.length()) {
             throw new NoSuchElementException();
         }
 

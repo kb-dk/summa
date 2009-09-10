@@ -3,6 +3,8 @@ package dk.statsbiblioteket.summa.storage.http;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import junit.framework.TestCase;
 
+import java.util.NoSuchElementException;
+
 /**
  * FIXME: Missing class docs for dk.statsbiblioteket.summa.storage.http.QueryTokenizerTest
  *
@@ -72,5 +74,16 @@ public class QueryTokenizerTest extends TestCase {
         toks = new QueryTokenizer("abe=cape&");
         assertTrue(toks.hasNext());
         assertEquals("abe=cape", toks.next().toString());
+    }
+
+    public void testNullSequence() {
+        toks = new QueryTokenizer(null);
+        assertFalse(toks.hasNext());
+        try {
+            toks.next();
+            fail("Expected a NoSuchElementException");
+        } catch (NoSuchElementException e) {
+            // Expected
+        }
     }
 }
