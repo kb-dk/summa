@@ -20,7 +20,7 @@
         </layout>
     </appender>
 
-    <logger name="dk.statsbiblioteket.summa.storage.api.StorageTest">
+    <logger name="dk.statsbiblioteket.summa">
     <!--<logger name="dk.statsbiblioteket.summa.storage.StorageMonkeyHelper">-->
         <level value="DEBUG" />
         <appender-ref ref="CONSOLE" />

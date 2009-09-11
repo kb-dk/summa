@@ -56,7 +56,7 @@ public class HttpExperiment {
         HttpStorageBridge bridge = new HttpStorageBridge(
                 Configuration.newMemoryBased(
                         HttpStorageBridge.CONF_STORAGE, H2Storage.class,
-                        HttpStorageBridge.CONF_PUBLISHED_METHODS, "record"
+                        HttpStorageBridge.CONF_PUBLISHED_METHODS, "record,mtime"
                 )
         );
 
