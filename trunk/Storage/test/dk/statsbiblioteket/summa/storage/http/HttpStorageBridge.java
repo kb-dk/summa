@@ -13,10 +13,9 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -44,6 +43,7 @@ public class HttpStorageBridge implements Configurable {
 
     private Storage storage;
     private Set<Method> publishedMethods;
+    private DateFormat dateFormat;
 
     public enum Method {
         ERROR,     // 500 Internal Error
@@ -65,6 +65,7 @@ public class HttpStorageBridge implements Configurable {
                 CONF_PUBLISHED_METHODS, new String[0])) {
             publishedMethods.add(Method.valueOf(method.toUpperCase()));
         }
+        dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.S");
 
         log.info("Published methods: " + Strings.join(publishedMethods, ", "));
     }
@@ -160,7 +161,11 @@ public class HttpStorageBridge implements Configurable {
             Method type, long reponseTime, String message) {
         PrintWriter w = new PrintWriter(out);
         w.println("<reponse type=\"" + type + "\">");
+
+        // Print URL path
         w.println("  <path>" + Strings.join(path, "/")+ "</path>");
+
+        // Print URL query args
         while (query.hasNext()) {
             QueryToken tok = query.next();
             w.println(String.format(
@@ -168,9 +173,13 @@ public class HttpStorageBridge implements Configurable {
                   tok.getKey(), tok.getValue()));
         }
         query.reset();
-        w.println("  <message>");
-        w.println("    " + message);
-        w.println("  </message>");
+
+        // Print message
+        if (message != null) {
+            w.println("  <message>");
+            w.println("    " + message);
+            w.println("  </message>");
+        }
 
         return w;
     }
@@ -236,6 +245,10 @@ public class HttpStorageBridge implements Configurable {
 
             PrintWriter w = prepareResponse(
                     out, path, query, Method.MTIME, responseTime, null);
+            w.println("  <mtime base=\"" + (base != null ? base : "*") + "\">");
+            w.println("    <epoch>" + mtime + "</epoch>");
+            w.println("    <iso>" +dateFormat.format(new Date(mtime))+"</iso>");
+            w.println("  </mtime>");
             return closeReponse(w, 200);
         } catch (Exception e) {
             return dispatchError(out, path, query, Method.MTIME, e);
@@ -256,12 +269,18 @@ public class HttpStorageBridge implements Configurable {
 
             PrintWriter w = prepareResponse(
                     out, path, query, Method.RECORD, responseTime, null);
-            w.println("  <records>");
-            for (Record rec : recs) {
-                w.println(RecordUtil.toXML(rec));
+
+            if (recs.isEmpty()) {
+                w.println("  <records/>");
+                return closeReponse(w, 404);
+            } else {
+                w.println("  <records>");
+                for (Record rec : recs) {
+                    w.println(RecordUtil.toXML(rec));
+                }
+                w.println("  </records>");
+                return closeReponse(w, 200);
             }
-            w.println("  </records>");
-            return closeReponse(w, 200);
         } catch (Exception e) {
             return dispatchError(out, path, query, Method.MTIME, e);
         }

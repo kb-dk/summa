@@ -727,6 +727,13 @@
       <JAVADOC />
       <SOURCES />
     </library>
+    <library name="servlet">
+      <CLASSES>
+        <root url="jar://$PROJECT_DIR$/lib/servlet-api-2.5.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
   </component>
 </project>
 

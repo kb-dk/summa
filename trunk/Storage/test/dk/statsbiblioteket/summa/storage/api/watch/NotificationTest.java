@@ -10,6 +10,7 @@ import java.io.File;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
+import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.summa.storage.database.derby.DerbyStorage;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
 import dk.statsbiblioteket.summa.storage.api.Storage;
@@ -69,7 +70,7 @@ public class NotificationTest extends TestCase {
 
         Configuration conf = Configuration.newMemoryBased(
                 RMIStorageProxy.CONF_BACKEND,
-                DerbyStorage.class,
+                H2Storage.class,
                 DatabaseStorage.CONF_LOCATION,
                 testDBLocation + (storageCounter++),
                 DatabaseStorage.CONF_FORCENEW,
