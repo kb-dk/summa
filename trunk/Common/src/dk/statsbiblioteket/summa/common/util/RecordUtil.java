@@ -153,7 +153,7 @@ public class RecordUtil {
     }
 
     // http://www.w3.org/TR/xmlschema-2/#dateTime
-    // 2002-10-10T17:00:00
+    // 2002-10-10T17:00:00.000
     private static SimpleDateFormat schemaTimestampFormatter =
             new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.S");
     // synchronized due to schemaTimestampFormatter
