@@ -302,7 +302,6 @@ getco     */
     private StatementHandle stmtGetModifiedAfter;
     private StatementHandle stmtGetModifiedAfterAll;
     private StatementHandle stmtGetRecord;
-    private StatementHandle stmtClearBase;
     private StatementHandle stmtDeleteRecord;
     private StatementHandle stmtCreateRecord;
     private StatementHandle stmtUpdateRecord;
@@ -796,15 +795,6 @@ getco     */
         log.debug("Preparing query getRecord with '" + getRecordQuery + "'");
         stmtGetRecord = prepareStatement(getRecordQuery);
         log.debug("getRecord handle: " + stmtGetRecord);
-
-        /* clearBase */
-        String clearBaseQuery = "UPDATE " + RECORDS
-                                + " SET " + DELETED_COLUMN + "=1"
-                                + " WHERE " + BASE_COLUMN + "=?";
-        log.debug("Preparing query clearBase with '"
-                  + clearBaseQuery + "'");
-        stmtClearBase = prepareStatement(clearBaseQuery);
-        log.debug("clearBase handle: " + stmtClearBase);
 
         /*
          FIXME: We might want a prepared statement to fetch multiple records in
