@@ -47,6 +47,7 @@ import org.xml.sax.ext.DefaultHandler2;
 import java.io.IOException;
 import java.net.URL;
 
+// TODO: Handle Tika Exceptions gracefully, optionally accepting the Payload
 /**
  * Parses the embedded Stream from a Payload through Tika and creates a Lucene
  * Document from it.
@@ -68,7 +69,7 @@ public class TikaDocumentCreator extends DocumentCreatorBase {
     private static Log log = LogFactory.getLog(TikaDocumentCreator.class);
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
-    private static final String FIELD_TITLE = "title";
+    private static final String FIELD_TITLE = "tika.title";
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     private static final String HTML_TITLE = "title";
 
