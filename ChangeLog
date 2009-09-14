@@ -1,3 +1,38 @@
+2009-09-14 15:00  mkamstrup
+
+	* [r1803] build.properties, ChangeLog:
+
+	  Release Summa 1.4.10
+
+2009-09-14 14:22  toke-sb
+
+	* [r1804]
+	  Common/src/dk/statsbiblioteket/summa/common/util/xhtml-lat1.ent[DEL],
+	  Common/src/dk/statsbiblioteket/summa/common/util/xhtml-special.ent[DEL],
+	  Common/src/dk/statsbiblioteket/summa/common/util/xhtml-symbol.ent[DEL],
+	  Common/src/dk/statsbiblioteket/summa/common/xml/EntityResolver.java,
+	  Common/src/dk/statsbiblioteket/summa/common/xml/XHTMLEntityResolver.java,
+	  Common/src/dk/statsbiblioteket/summa/common/xml/xhtml-lat1.ent[CPY],
+	  Common/src/dk/statsbiblioteket/summa/common/xml/xhtml-special.ent[CPY],
+	  Common/src/dk/statsbiblioteket/summa/common/xml/xhtml-symbol.ent[CPY],
+	  Common/src/dk/statsbiblioteket/summa/common/xml/xhtml1-frameset.dtd,
+	  Common/src/dk/statsbiblioteket/summa/common/xml/xhtml1-strict.dtd,
+	  Common/src/dk/statsbiblioteket/summa/common/xml/xhtml1-transitional.dtd,
+	  Common/test/data/identity.xslt,
+	  Common/test/data/webpage_html-nondeclared.html,
+	  Common/test/data/webpage_xhtml-1.0-strict.xml,
+	  Common/test/dk/statsbiblioteket/summa/common/xml,
+	  Common/test/dk/statsbiblioteket/summa/common/xml/XHTMLEntityResolverTest.java,
+	  Summa.ipr:
+	  
+	  New: Started work on proper HTML handling
+
+2009-09-14 13:58  mkamstrup
+
+	* [r1803] ChangeLog, NEWS:
+	  
+	  Update ChangeLog and NEWS in prep for 1.4.10
+
 2009-09-14 12:48  mkamstrup
 
 	* [r1802] Summa.ipr, build.properties, lib/h2-1.1.109.jar[DEL],
