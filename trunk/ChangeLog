@@ -1,3 +1,283 @@
+2009-09-14 12:48  mkamstrup
+
+	* [r1802] Summa.ipr, build.properties, lib/h2-1.1.109.jar[DEL],
+	  lib/h2-1.1.118.jar:
+	  
+	  Lib upgrade: Upgrade the H2 database libs from 1.1.109 to 1.1.118
+
+2009-09-14 08:16  toke-sb
+
+	* [r1801]
+	  Common/src/dk/statsbiblioteket/summa/common/util/xhtml-lat1.ent,
+	  Common/src/dk/statsbiblioteket/summa/common/util/xhtml-special.ent,
+	  Common/src/dk/statsbiblioteket/summa/common/util/xhtml-symbol.ent:
+	  
+	  New: Added XHTML 1.0 entity lists
+
+2009-09-11 10:06  toke-sb
+
+	* [r1800]
+	  Support/src/dk/statsbiblioteket/summa/support/TikaDocumentCreator.java:
+	  
+	  Tweak: the Tika document creater now adds "tika"-prefixed meta
+	  data
+
+2009-09-11 08:05  mkamstrup
+
+	* [r1799]
+	  Common/src/dk/statsbiblioteket/summa/common/util/RecordUtil.java:
+	  
+	  Comment fix: Fix comment about date formatting in RecordUtil to
+	  note that dateformats also include a millisecond fraction
+
+2009-09-11 08:04  mkamstrup
+
+	* [r1798] Storage/Storage.iml,
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/watch/NotificationTest.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/http/HttpExperiment.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/http/HttpStorageBridge.java,
+	  Storage/test/log4j.xml, Summa.ipr:
+	  
+	  Experiment: More work on HttpStorageBridge
+	  
+	  Make NotificationTest use a H2Storage and not a DerbyStorage
+
+2009-09-11 08:03  mkamstrup
+
+	* [r1797]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java:
+	  
+	  Cleanup: Remove stmtClearBase since we now manually iterate the
+	  table to mark records as deleted
+
+2009-09-10 12:20  mkamstrup
+
+	* [r1796]
+	  Storage/test/dk/statsbiblioteket/summa/storage/http/HttpExperiment.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/http/HttpStorageBridge.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/http/QueryTokenizer.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/http/QueryTokenizerTest.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/http/ServletExperiment.java:
+	  
+	  Test/Experiment: Play around with HTTP REST API
+
+2009-09-10 10:04  mkamstrup
+
+	* [r1795]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/StorageFactory.java:
+	  
+	  New API: Add a method to instantiate a given storage class from
+	  some specific property within the given config in StorageFactory
+
+2009-09-10 09:31  mkamstrup
+
+	* [r1794]
+	  Storage/test/dk/statsbiblioteket/summa/storage/http/QueryToken.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/http/QueryTokenizer.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/http/QueryTokenizerTest.java:
+	  
+	  Simple classes for parsing URI query parts
+
+2009-09-09 09:15  toke-sb
+
+	* [r1793]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/ScriptFilter.java:
+	  
+	  Bugfix: The JavaScript example in the script filter containd two
+	  errors
+
+2009-09-09 08:48  toke-sb
+
+	* [r1792]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/ScriptFilter.java:
+	  
+	  Bugfix: The script filter did not resolve the script type
+	  properly for external scripts
+	  Code style: Reduced multi-line statements to fewer lines
+
+2009-09-09 07:57  mkamstrup
+
+	* [r1791]
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorageH2.java:
+	  
+	  Make getRecentSuggestions() sort by mtime - sorting by
+	  query_count is dog slow on large result sets
+
+2009-09-08 13:40  toke-sb
+
+	* [r1790]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/ContentToStreamFilter.java:
+	  
+	  Feature: Created ContentToStreamFilter to wrap content from
+	  Record into a Stream on Payload
+
+2009-09-08 13:38  toke-sb
+
+	* [r1789]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/XMLSplitterFilter.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/XMLSplitterHandler.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/XMLSplitterParserTarget.java:
+	  
+	  Feature: Made the XMLSplitter optionally namespace-aware with
+	  regard to record specification
+
+2009-09-08 13:32  mkamstrup
+
+	* [r1788] Samples/Summix/bin/suggest-tool.sh:
+	  
+	  Fix missing " in newly added 'recent' action to suggest-tool
+
+2009-09-08 13:20  mkamstrup
+
+	* [r1787] Samples/Summix/bin/suggest-tool.sh,
+	  Support/src/dk/statsbiblioteket/summa/support/api/SuggestKeys.java,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestSearchNode.java,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorage.java,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorageH2.java,
+	  Support/test/dk/statsbiblioteket/summa/support/suggest/SuggestSearcherTest.java,
+	  Support/test/dk/statsbiblioteket/summa/support/suggest/SuggestStorageTest.java:
+	  
+	  Add support for querying for recently updated suggestions in the
+	  API (and to suggest-tool.sh as well). Pass the search key
+	  'summa.support.suggest.recent' with value the number of seconds
+	  to look back, to the suggest search engine.
+	  
+	  Include some unit tests that test for correct ordering of
+	  suggest-results
+
+2009-09-08 13:03  mkamstrup
+
+	* [r1786]
+	  Support/src/dk/statsbiblioteket/summa/support/api/SuggestResponse.java:
+	  
+	  Bugfix: The SuggestResponse resorted the results in reverse order
+	  (lowest hitCount first)
+
+2009-09-08 12:59  mkamstrup
+
+	* [r1785]
+	  Support/src/dk/statsbiblioteket/summa/support/api/SuggestResponse.java:
+	  
+	  Bugfix: The SuggestResponse resorted the results based on
+	  hitCount, not queryCount
+
+2009-09-08 11:11  mkamstrup
+
+	* [r1783]
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorageH2.java:
+	  
+	  Make sure we also have room to buffer the suggestions in memory
+	  by setting MAX_MEMORY_ROWS in H2 to 3 times our internal max row
+	  count
+
+2009-09-08 10:44  mkamstrup
+
+	* [r1782]
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorageH2.java:
+	  
+	  Make the analyze interval considerably bigger on SuggestStorageH2
+
+2009-09-08 10:37  mkamstrup
+
+	* [r1781]
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorageH2.java:
+	  
+	  Bugfix: Possible value overflow when logging a suggestion with a
+	  very long query string
+
+2009-09-08 10:14  mkamstrup
+
+	* [r1780] Samples/Summix/bin/suggest-tool.sh,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestSearchNode.java,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorage.java,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorageH2.java,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorageImpl.java,
+	  Support/test/dk/statsbiblioteket/summa/support/suggest/SuggestSearcherTest.java:
+	  
+	  Update the import/export framework around the Suggest service.
+	  You must now specify a URL to import from and a file path to
+	  export to. This has also been updated in Summix' suggest-tool.sh
+
+2009-09-08 08:20  mkamstrup
+
+	* [r1779]
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestSearchNode.java,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorage.java,
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorageH2.java,
+	  Support/test/dk/statsbiblioteket/summa/support/suggest/SuggestSearchNodeTest.java,
+	  Support/test/dk/statsbiblioteket/summa/support/suggest/SuggestSearcherTest.java,
+	  Support/test/log4j.xml:
+	  
+	  All unit tests passing for SuggestStorageH2
+	  
+	  Property rename: The property
+	  summa.support.suggest.lowercasequeries has been renamed to
+	  summa.support.suggest.normalizequeries since the SuggestStorageH2
+	  can do more advanced transformations now (you can register any
+	  Lucene analyzer to do query processing - the default is
+	  SummaKeywordAnalyzer)
+
+2009-09-07 13:10  mkamstrup
+
+	* [r1776]
+	  Support/src/dk/statsbiblioteket/summa/support/suggest/SuggestStorageH2.java,
+	  Support/test/dk/statsbiblioteket/summa/support/suggest/SuggestSearcherTest.java:
+	  
+	  Rewrite/instability warning: Major reqork of SuggestStorageH2 in
+	  progress. This compiles and *one* unit tests is passing. That is
+	  all...
+
+2009-09-07 13:07  toke-sb
+
+	* [r1775]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/Configuration.java:
+	  
+	  Bugfix: The configuration was made dependent on storage
+
+2009-09-07 11:41  toke-sb
+
+	* [r1774]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/Configuration.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/AggregatingStorage.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/StorageBase.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java:
+	  
+	  Logging: Introduced better logging for the storage parts
+
+2009-09-07 11:33  toke-sb
+
+	* [r1773]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/StorageWriterClient.java:
+	  
+	  Cosmetics: Code cleanup according to code style
+
+2009-09-07 10:56  toke-sb
+
+	* [r1772]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/search/SummaQueryParser.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/FacetSearchNode.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/browse/TagCounterArray.java,
+	  Search/src/dk/statsbiblioteket/summa/search/document/DocumentSearcherImpl.java:
+	  
+	  Logging: Cleaned up logging for document and facet searches,
+	  reducing the number of debugs and extracting more relevant
+	  information to th remaining statements
+
+2009-09-07 07:26  mkamstrup
+
+	* [r1771] ChangeLog, NEWS:
+	  
+	  Updates for NEWS and ChangeLog in prep for Summa 1.4.10
+
+2009-09-07 07:01  mkamstrup
+
+	* [r1770]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/RecordWriter.java:
+	  
+	  Rename the newly introduced property
+	  summa.storage.recordwriter.maxmemory to *.batchmaxmemory to be
+	  consistent with the other batch contriol props
+
 2009-09-04 13:59  toke-sb
 
 	* [r1769]
