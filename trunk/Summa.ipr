@@ -672,7 +672,7 @@
     </library>
     <library name="h2">
       <CLASSES>
-        <root url="jar://$PROJECT_DIR$/lib/h2-1.1.109.jar!/" />
+        <root url="jar://$PROJECT_DIR$/lib/h2-1.1.118.jar!/" />
       </CLASSES>
       <JAVADOC>
         <root url="jar://$PROJECT_DIR$/lib/apidocs/h2-2008-09-26-apidocs.zip!/" />
