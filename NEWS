@@ -1,5 +1,5 @@
 ========================
-XXXX-XX-XX: Summa 1.4.10
+2009-09-14: Summa 1.4.10
 ========================
 
  * The RecordWriter filter, responsible for inserting Records into Storage,
@@ -12,7 +12,15 @@ XXXX-XX-XX: Summa 1.4.10
    Pass '-t local' to the 'deploy' command when deploying a client from
    the control-shell
 
- * A lot of performace enhancements in the Suggest service:
+ * A lot of work on the Suggest service - particularly some serious
+   performance issues should have been ironed out
+
+    - Compare strings by normalizing them with a Lucene analyzer,
+      using SummaKeywordAnalyzer by default
+
+    - The property summa.support.suggest.lowercasequeries has been renamed to
+	  summa.support.suggest.normalizequeries since we can do more advanced
+	  transformations now (see point above)
 
     - Introduces max rows setting to h2 backend for suggest, ensuring
       lower response times for parts of a large result set (for example single
@@ -21,7 +29,22 @@ XXXX-XX-XX: Summa 1.4.10
     - Make import for suggest drop and re-create indexes,
 	  greatly improving import performance
 
- * search-tool.sh will now echo the search response time in ms
+	- Add a new search key to fetch the most recently updated sugegstions.
+	  Pass in summa.support.suggest.recent to test this out. It is also
+	  supported in suggest-tool.sh shipped in Summix
+
+ * WARNING: The afore mentioned work on the Suggest service has broken the
+   database layout of the default backend SuggestStorageH2. You will need to
+   export your old data and import it in a new empty suggest instance
+
+ * search-tool.sh will now echo the search response time in ms (also applies
+   to suggest-tool.sh)
+
+ * Created ContentToStreamFilter to wrap content from Record into a
+    Stream on Payload
+
+ * Made the XMLSplitter optionally namespace-aware with regard to
+   record specification
 
  * Bugfix: The RecordWriter needed to run with debug logging enabled
            in order to run at oeak performance
@@ -31,6 +54,9 @@ XXXX-XX-XX: Summa 1.4.10
            SummaDocuments. This was caused by a misuse of recursion inside the
            XMLStreamReader shipped with Java, see:
 	       http://sbdevel.wordpress.com/2009/09/04/an-excursion-in-java-recursion/
+
+ * Bugfix: ScriptFilter did not resolve the script engine correctly when
+           sniffing only on the script extension.
 
 =======================
 2009-09-01: Summa 1.4.9
