@@ -137,6 +137,8 @@
       <entry name="*.zip" />
       <entry name="*.gz" />
       <entry name="*" />
+      <entry name="?*.ent" />
+      <entry name="?*.html" />
     </wildcardResourcePatterns>
   </component>
   <component name="CopyrightManager" default="">
