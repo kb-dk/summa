@@ -1,0 +1,43 @@
+<xproperties>
+
+    <!--
+         A simple workflow consisting of one WaitStep that waits for 5s
+
+         IMPORTANT: Please do not change anything in this file as unit tests
+                    may depend on the details
+    -->
+
+    <xproperties>
+        <entry>
+            <key>summa.workflow.steps</key>
+            <value class="list">
+                <xproperties>
+                    <entry>
+                        <key>summa.workflow.step.class</key>
+                        <value class="string">
+                            dk.statsbiblioteket.summa.workflow.WaitStep
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>summa.workflow.step.wait.time</key>
+                        <value class="int">2</value>
+                    </entry>
+                </xproperties>
+                <xproperties>
+                    <entry>
+                        <key>summa.workflow.step.class</key>
+                        <value class="string">
+                            dk.statsbiblioteket.summa.workflow.WaitStep
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>summa.workflow.step.wait.time</key>
+                        <value class="int">3</value>
+                    </entry>
+                </xproperties>
+            </value>
+        </entry>
+    </xproperties>
+</xproperties>
+
+
