@@ -139,7 +139,9 @@ public class ConnectionConsumer<E> implements Configurable {
      *         connection can not be established
      */
     public synchronized E getConnection () {
-        log.trace("getConnection called");
+        if (log.isTraceEnabled()) {
+            log.trace("getConnection called for " + connId);
+        }
         if (conn == null) {
             conn = connMan.get(connId);
         }
