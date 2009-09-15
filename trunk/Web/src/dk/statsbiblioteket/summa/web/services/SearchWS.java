@@ -110,8 +110,8 @@ public class SearchWS {
                 log.debug("Trying to load configuration from: " + paramValue);
                 conf = Configuration.load(paramValue);
             } catch (NamingException e) {
-                log.error("Failed to lookup env-entry.", e);
-                log.warn("Trying to load system configuration.");
+                log.warn("Failed to lookup env-entry. Trying to load system " 
+                         + "configuration.", e);
                 conf = Configuration.getSystemConfiguration(true);
             }
         }
@@ -376,7 +376,8 @@ public class SearchWS {
                             option, query));
                 }
             } else {
-                log.trace("No processing options for query '%s'");
+                log.trace(String.format("No processing options for query '%s'",
+                                        query));
             }
         } catch (Exception e) {
             log.warn(String.format(
