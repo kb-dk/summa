@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2009  The State and University Library
@@ -32,12 +32,12 @@ import java.util.HashMap;
  * defined by the standard (lat1, symbol and special).
  * </p><p>
  * This resolver can be extended by specifying the property
- * {@link dk.statsbiblioteket.summa.common.xml.EntityResolver#CONF_RESOURCE_MAP}.
+ * {@link SummaEntityResolver#CONF_RESOURCE_MAP}.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class XHTMLEntityResolver extends EntityResolver {
+public class XHTMLEntityResolver extends SummaEntityResolver {
     private static Log log = LogFactory.getLog(XHTMLEntityResolver.class);
 
     public static final String[][] XHTML_RESOURCES = new String[][] {
