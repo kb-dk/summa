@@ -299,6 +299,9 @@ public class LuceneManipulator implements IndexManipulator {
         Document document = (Document)payload.getData(Payload.LUCENE_DOCUMENT);
         // TODO: Add support for Tokenizer and Filters
         writer.addDocument(document, descriptor.getIndexAnalyzer());
+        //noinspection DuplicateStringLiteralInspection
+        Logging.logProcess("LuceneManipulator", "Added Lucene document",
+                           Logging.LogLevel.TRACE, payload);
         if (log.isTraceEnabled()) {
             log.trace("Dumping analyzed fields for " + payload);
             for (Object field: document.getFields()) {
@@ -325,6 +328,9 @@ public class LuceneManipulator implements IndexManipulator {
                                   idMapper.get(id));
             writer.commit();
             writer.deleteDocuments(new Term(IndexUtils.RECORD_FIELD, id));
+            //noinspection DuplicateStringLiteralInspection
+            Logging.logProcess("LuceneManipulator", "Deleted Lucene document",
+                               Logging.LogLevel.TRACE, payload);
             // TODO: Consider if we can delay flush
             // The problem is add(a), delete(a), add(a). Without flushing we
             // don't know if a will be present in the index or not.
@@ -332,6 +338,7 @@ public class LuceneManipulator implements IndexManipulator {
             // deltions are stored in a HashMap
             writer.commit();
         } else {
+            //noinspection DuplicateStringLiteralInspection
             Logging.logProcess(
                     "LuceneManipulator", "Delete requested, but the Record was "
                                          + "not present in the index",

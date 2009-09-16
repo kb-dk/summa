@@ -27,13 +27,27 @@ import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
+import dk.statsbiblioteket.summa.common.xml.SummaEntityResolver;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XSLT;
+import dk.statsbiblioteket.util.xml.DOM;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.xml.sax.EntityResolver;
+import org.xml.sax.XMLReader;
+import org.xml.sax.SAXException;
+import org.xml.sax.InputSource;
+import org.xml.sax.helpers.XMLReaderFactory;
 
 import javax.xml.transform.TransformerException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.Result;
+import javax.xml.transform.Source;
+import javax.xml.transform.sax.SAXSource;
+import javax.xml.transform.stream.StreamResult;
 import java.io.ByteArrayOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 
 /**
@@ -84,8 +98,21 @@ public class XMLTransformer extends ObjectFilterImpl {
             "summa.xmltransformer.ignorexmlnamespaces";
     public static final boolean DEFAULT_STRIP_XML_NAMESPACES = false;
 
+    /**
+     * If specified, the stated EntityResolver class will be instantiated and
+     * used by the Transformer.
+     * </p><p>
+     * Optional.
+     * @see {@link dk.statsbiblioteket.summa.common.xml.SummaEntityResolver}.
+     */
+    public static final String CONF_ENTITY_RESOLVER =
+            "summa.xmltransformer.entityresolver";
+
     private URL xsltLocation;
     private boolean stripXMLNamespaces = DEFAULT_STRIP_XML_NAMESPACES;
+    private EntityResolver entityResolver = null;
+    // Used if the EntityResolver is not null
+    private Transformer transformer;
 
     /**
      * Sets up the transformer stated in the configuration.
@@ -115,11 +142,35 @@ public class XMLTransformer extends ObjectFilterImpl {
                     + "output. Falling back to default %b",
                     CONF_STRIP_XML_NAMESPACES, stripXMLNamespaces));
         }
-        stripXMLNamespaces = conf.getBoolean(CONF_STRIP_XML_NAMESPACES,
-                                             stripXMLNamespaces);
+        stripXMLNamespaces = conf.getBoolean(
+                CONF_STRIP_XML_NAMESPACES, stripXMLNamespaces);
+        initTransformer(conf);
         log.info("XMLTransformer for '" + xsltLocation + "' ready for use. "
                  + "Namespaces will " + (stripXMLNamespaces ? "" : "not ") 
                  + "be stripped from input before transformation");
+    }
+
+    private void initTransformer(Configuration conf) throws
+                                                        ConfigurationException {
+        if (!conf.valueExists(CONF_ENTITY_RESOLVER)) {
+            log.debug("No entity-resolver specified. Using basic transformation"
+                      + " calls");
+            return;
+        }
+        log.debug("Attempting to assign entity resolver "
+                  + conf.get(CONF_ENTITY_RESOLVER));
+        Class<? extends EntityResolver> resolver = conf.getClass(
+                CONF_ENTITY_RESOLVER, EntityResolver.class,
+                SummaEntityResolver.class);
+        entityResolver = Configuration.create(resolver, conf);
+        try {
+            log.debug("Getting transformer");
+            transformer = XSLT.getLocalTransformer(xsltLocation);
+        } catch (TransformerException e) {
+            throw new ConfigurationException(String.format(
+                    "Unable to create transformer based on '%s'",
+                    xsltLocation));
+        }
     }
 
 
@@ -146,13 +197,29 @@ public class XMLTransformer extends ObjectFilterImpl {
                     "Unable to transform payload with '%s' due to no content",
                     xsltLocation), payload);
         }
+        transform(payload, content);
+        return true;
+    }
+
+    private ByteArrayOutputStream out = null;
+    private void transform(Payload payload, byte[] content) throws
+                                                              PayloadException {
+        if (transformer != null && entityResolver != null) {
+            entityTransform(payload, content);
+            return;
+        }
+        basicTransform(payload, content);
+    }
+
+    private void basicTransform(Payload payload, byte[] content) throws
+                                                              PayloadException {
         try {
             ByteArrayOutputStream out = XSLT.transform(
                     xsltLocation, content, null, stripXMLNamespaces);
             if (out == null) {
                 throw new PayloadException(String.format(
                         "null return from transformation  XSLT '%s' and"
-                        + " stripNamespaces %b", 
+                        + " stripNamespaces %b",
                         xsltLocation, stripXMLNamespaces),
                         payload);
             }
@@ -173,7 +240,51 @@ public class XMLTransformer extends ObjectFilterImpl {
                     "Unable to transform payload with '" + xsltLocation + "'",
                     e, payload);
         }
-        return true;
+    }
+
+    private void entityTransform(Payload payload, byte[] content) throws
+                                                              PayloadException {
+        if (log.isTraceEnabled()) {
+            log.trace("Transforming using entity resolver " + payload);
+        }
+
+        if (stripXMLNamespaces) {
+            log.trace("Stripping name spaces");
+            try {
+                content = DOM.domToString(DOM.streamToDOM(
+                        new ByteArrayInputStream(content))).getBytes("utf-8");
+            } catch (TransformerException e) {
+                throw new PayloadException(
+                        "Unable to strip name spaces from content", e);
+            } catch (UnsupportedEncodingException e) {
+                throw new PayloadException(
+                        "Unable to convert name space stripped content to "
+                        + "UTF-8", e);
+            }
+        }
+
+        XMLReader reader;
+        try {
+            reader = XMLReaderFactory.createXMLReader();
+        } catch (SAXException e) {
+            throw new PayloadException("Unable to create XMLReader", e);
+        }
+        reader.setEntityResolver(entityResolver);
+        if (out == null) {
+            out = new ByteArrayOutputStream(1000);
+        }
+        out.reset();
+        Result result = new StreamResult(out);
+        InputSource is = new InputSource(new ByteArrayInputStream(content));
+        Source source = new SAXSource(reader, is);
+
+        try {
+            transformer.transform(source, result);
+        } catch (TransformerException e) {
+            throw new PayloadException(
+                    "Unable to transform content", e, payload);
+        }
+        payload.getRecord().setRawContent(out.toByteArray());
     }
 
     @Override

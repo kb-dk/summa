@@ -24,22 +24,15 @@ import junit.framework.TestSuite;
 import junit.framework.TestCase;
 
 import javax.xml.transform.*;
-import javax.xml.transform.stax.StAXSource;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.transform.stream.StreamResult;
-import javax.xml.stream.XMLStreamReader;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLResolver;
-import javax.xml.stream.XMLStreamException;
 import java.io.FileInputStream;
 import java.io.ByteArrayOutputStream;
 
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.SAXException;
 import org.xml.sax.helpers.XMLReaderFactory;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
@@ -89,10 +82,10 @@ public class XHTMLEntityResolverTest extends TestCase {
         Transformer transformer = factory.newTransformer(new StreamSource(
                 new FileInputStream(Resolver.getFile("data/identity.xslt"))));
 
-//        XMLReader reader = XMLReaderFactory.createXMLReader();
-//        reader.setEntityResolver(new XHTMLEntityResolver(null));
+        XMLReader reader = XMLReaderFactory.createXMLReader();
+        reader.setEntityResolver(new XHTMLEntityResolver(null));
 
-        XMLInputFactory xif = XMLInputFactory.newInstance();
+/*        XMLInputFactory xif = XMLInputFactory.newInstance();
         xif.setProperty(XMLInputFactory.IS_REPLACING_ENTITY_REFERENCES, true);
         xif.setProperty(XMLInputFactory.IS_VALIDATING, false);
         xif.setProperty(XMLInputFactory.SUPPORT_DTD, true);
@@ -101,19 +94,19 @@ public class XHTMLEntityResolverTest extends TestCase {
                 System.out.println("public: " + publicID);
                 return null;  //To change body of implemented methods use File | Settings | File Templates.
             }
-        });
+        });*/
 
-        XMLStreamReader streamReader = xif.createXMLStreamReader(new FileInputStream(
+/*        XMLStreamReader streamReader = xif.createXMLStreamReader(new FileInputStream(
                     Resolver.getFile(webpage)));
-
+                                                */
         InputSource is = new InputSource(new FileInputStream(
                     Resolver.getFile(webpage)));
-//        Source source = new SAXSource(reader, streamReader);
-        StAXSource ax = new StAXSource(streamReader);
+        Source source = new SAXSource(reader, is);
+//        StAXSource ax = new StAXSource(streamReader);
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Result result = new StreamResult(out);
-        transformer.transform(ax, result);
+        transformer.transform(source, result);
         System.out.println("Transformation result:\n" + out.toString("utf-8"));
     }
 
