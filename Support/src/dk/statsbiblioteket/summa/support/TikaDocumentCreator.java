@@ -28,8 +28,8 @@ import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexUtils;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexServiceException;
 import dk.statsbiblioteket.summa.common.lucene.index.IndexUtils;
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.index.lucene.DocumentCreatorBase;
-import dk.statsbiblioteket.summa.support.lucene.DocumentShaperFilter;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -68,6 +68,13 @@ import java.net.URL;
 public class TikaDocumentCreator extends DocumentCreatorBase {
     private static Log log = LogFactory.getLog(TikaDocumentCreator.class);
 
+    /**
+     * If true, processing errors are ignored. If false, errors during
+     * processing results in the current payload being discarded.
+     */
+    public static final String CONF_IGNORE_ERRORS = "tika.flow.ignoreerrors";
+    public static final boolean DEFAULT_IGNORE_ERRORS = true;
+
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     private static final String FIELD_TITLE = "tika.title";
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
@@ -75,9 +82,10 @@ public class TikaDocumentCreator extends DocumentCreatorBase {
 
     private LuceneIndexDescriptor descriptor;
     private String recordBase;
+    private boolean ignoreErrors = DEFAULT_IGNORE_ERRORS;
 
     private Parser parser;
-    private DocumentShaperFilter extender;
+//    private DocumentShaperFilter extender;
 
     /**
      * Initialize the underlying parser and set up internal structures.
@@ -116,6 +124,7 @@ public class TikaDocumentCreator extends DocumentCreatorBase {
             log.debug("Using default Tika configuration");
             parser = new AutoDetectParser();
         }
+        ignoreErrors = conf.getBoolean(CONF_IGNORE_ERRORS, ignoreErrors);
         recordBase = conf.getString(
                 TikaFilter.CONF_BASE, TikaFilter.DEFAULT_BASE);
     }
@@ -141,6 +150,37 @@ public class TikaDocumentCreator extends DocumentCreatorBase {
             throw new PayloadException("No Stream present", payload);
         }
 
+        try {
+            processInner(payload);
+        } catch (PayloadException e) {
+            if (ignoreErrors) {
+                Logging.logProcess(
+                        "TikadocumentCreator",
+                        "Encountered exception while Tika-processing. Further "
+                        + "Tika-processing is aborted but the Payload was not "
+                        + "discarded as ignoreErrors is true",
+                        Logging.LogLevel.DEBUG, payload, e);
+            } else {
+                throw new PayloadException(
+                        "Exception Tika-processing", e, payload);
+            }
+        }
+
+
+        //noinspection DuplicateStringLiteralInspection
+        log.debug("Added Lucene Document to "
+                  + payload + ". Content character count was " + characterCount
+                  + ". Processing time was "
+                  + (System.nanoTime() - startTime) / 1000000D + " ms");
+        IndexUtils.assignSingleField(document, payload,
+                                     IndexUtils.RECORD_BASE, recordBase);
+        // recordID is assigned by the indexer
+//        IndexUtils.assignSingleField(document, payload,
+//                                     IndexUtils.RECORD_FIELD, payload.getId());
+        return true;
+    }
+
+    private void processInner(Payload payload) throws PayloadException {
         Metadata meta = new Metadata();
 
         // Give the filename to the parser to help it sniff the content type
@@ -181,19 +221,6 @@ public class TikaDocumentCreator extends DocumentCreatorBase {
             }
             //record.addMeta(key, meta.get(key));
         }
-
-
-        //noinspection DuplicateStringLiteralInspection
-        log.debug("Added Lucene Document to "
-                  + payload + ". Content character count was " + characterCount
-                  + ". Processing time was "
-                  + (System.nanoTime() - startTime) / 1000000D + " ms");
-        IndexUtils.assignSingleField(document, payload,
-                                     IndexUtils.RECORD_BASE, recordBase);
-        // recordID is assigned by the indexer
-//        IndexUtils.assignSingleField(document, payload,
-//                                     IndexUtils.RECORD_FIELD, payload.getId());
-        return true;
     }
 
     private Document document; // Used by TransformerHandler
