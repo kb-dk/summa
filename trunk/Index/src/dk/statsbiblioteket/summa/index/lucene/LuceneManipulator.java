@@ -298,7 +298,14 @@ public class LuceneManipulator implements IndexManipulator {
         checkWriter();
         Document document = (Document)payload.getData(Payload.LUCENE_DOCUMENT);
         // TODO: Add support for Tokenizer and Filters
-        writer.addDocument(document, descriptor.getIndexAnalyzer());
+        try {
+            writer.addDocument(document, descriptor.getIndexAnalyzer());
+        } catch (IOException e) {
+            // TODO: Bomb all the way out
+            log.fatal("Encountered IOException during addition of document to "
+                      + "index. Offending payload was " + payload, e);
+            throw new IOException("IOException adding document " + payload, e);
+        }
         //noinspection DuplicateStringLiteralInspection
         Logging.logProcess("LuceneManipulator", "Added Lucene document",
                            Logging.LogLevel.TRACE, payload);
@@ -326,17 +333,26 @@ public class LuceneManipulator implements IndexManipulator {
         if (idMapper.containsKey(id)) {
             payload.getData().put(LuceneIndexUtils.META_DELETE_DOCID,
                                   idMapper.get(id));
+            try {
+                writer.commit();
+                writer.deleteDocuments(new Term(IndexUtils.RECORD_FIELD, id));
+                //noinspection DuplicateStringLiteralInspection
+                Logging.logProcess(
+                        "LuceneManipulator", "Deleted Lucene document",
+                        Logging.LogLevel.TRACE, payload);
+                // TODO: Consider if we can delay flush
+                // The problem is add(a), delete(a), add(a). Without flushing
+                // we don't know if a will be present in the index or not.
+                // Another problem is add(a), delete(a), add(a), delete(a) as
+                // the deltions are stored in a HashMap
             writer.commit();
-            writer.deleteDocuments(new Term(IndexUtils.RECORD_FIELD, id));
-            //noinspection DuplicateStringLiteralInspection
-            Logging.logProcess("LuceneManipulator", "Deleted Lucene document",
-                               Logging.LogLevel.TRACE, payload);
-            // TODO: Consider if we can delay flush
-            // The problem is add(a), delete(a), add(a). Without flushing we
-            // don't know if a will be present in the index or not.
-            // Another problem is add(a), delete(a), add(a), delete(a) as the
-            // deltions are stored in a HashMap
-            writer.commit();
+        } catch (IOException e) {
+            // TODO: Bomb all the way out
+            log.fatal("Encountered IOException during deletion of document. "
+                      + "Offending payload was " + payload, e);
+            throw new IOException(
+                    "IOException deleting document " + payload, e);
+        }
         } else {
             //noinspection DuplicateStringLiteralInspection
             Logging.logProcess(
