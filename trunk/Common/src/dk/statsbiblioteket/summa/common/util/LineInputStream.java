@@ -38,7 +38,7 @@ import java.io.ByteArrayOutputStream;
  * This implementation is not thread-safe.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_NEEDED,
         author = "te")
 public class LineInputStream extends InputStream {
     private static Log log = LogFactory.getLog(LineInputStream.class);
@@ -94,17 +94,23 @@ public class LineInputStream extends InputStream {
             // Pending was something, so we add it and continue reading
             buffer.write(pending);
         }
+        int read = 0;
         while ((pending = source.read()) != -1) {
+            read++;
             if (pending == LF) { // Reached EOL, check for CR
-                pending = read();
+                pending = source.read();
                 if (pending == CR) {
                     pending = -1; // Discard CR
                 }
                 break;
+            } else if (pending == CR) {
+                pending = -1;
+                break;
             }
             buffer.write(pending);
         }
-        return buffer.toString(charset);
+        return read == 0 && buffer.size() == 0 ? null :
+               buffer.toString(charset);
     }
 
     @Override

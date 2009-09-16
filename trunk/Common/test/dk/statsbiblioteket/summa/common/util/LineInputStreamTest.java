@@ -25,11 +25,11 @@ import junit.framework.TestCase;
 import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.ByteArrayInputStream;
-import java.io.UnsupportedEncodingException;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
+        state = QAInfo.State.QA_NEEDED,
+        author = "te",
+        comment = "Needs testing of a mix of readLine and the read-methods")
 public class LineInputStreamTest extends TestCase {
     public LineInputStreamTest(String name) {
         super(name);
@@ -49,10 +49,22 @@ public class LineInputStreamTest extends TestCase {
         return new TestSuite(LineInputStreamTest.class);
     }
 
+    @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public void testBasics() throws Exception {
+        String LF = "" + (char)LineInputStream.LF;
+        String CR = "" + (char)LineInputStream.CR;
         // Source, expected
         String[][][] TESTS = new String[][][] {
-                {{"Foo\nBar"}, {"Foo", "Bar"}}
+                {{"FooLF\nBar"}, {"FooLF", "Bar"}},
+                {{"FooLFCR\n" + CR + "Bar"}, {"FooLFCR", "Bar"}},
+                {{"FooCR" + CR + "Bar"}, {"FooCR", "Bar"}},
+                {{"FooCRCR" + CR + CR + "Bar"}, {"FooCRCR", "", "Bar"}},
+                {{"FooCRCRLFCR" + CR + CR + LF + CR + "Bar"}, 
+                        {"FooCRCRLFCR", "", "", "Bar"}},
+                {{"FooLFLF\n\nBar"}, {"FooLFLF", "", "Bar"}},
+                {{"Foo\nBar"}, {"Foo", "Bar"}},
+                {{""}, {""}},
+                {{"Foo"}, {"Foo"}}
         };
         for (String[][] test: TESTS) {
             String source = test[0][0];
@@ -68,7 +80,7 @@ public class LineInputStreamTest extends TestCase {
         String line;
         int pos = 0;
         while ((line = lis.readLine()) != null) {
-            assertEquals(expected[pos++], line);
+            assertEquals("Testing '" + source + "'", expected[pos++], line);
         }
     }
 }
