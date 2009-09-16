@@ -132,6 +132,7 @@ public class TikaDocumentCreator extends DocumentCreatorBase {
      */
     @Override
     public boolean processPayload(Payload payload) throws PayloadException {
+        // TODO: Catch exceptions and continue
         //noinspection DuplicateStringLiteralInspection
         log.debug("processPayload(" + payload + ") called");
         long startTime = System.nanoTime();

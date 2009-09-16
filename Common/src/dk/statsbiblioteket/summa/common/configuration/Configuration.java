@@ -876,7 +876,9 @@ public class Configuration implements Serializable,
      * A static version of create. Use this when the configuration is expected
      * to be remote, in order to avoid a RMI-bases class-loading and
      * instantiation.
-     *
+     * </p><p>
+     * If no Configuration-taking constructor was found, an attempt is made to
+     * instantiate the class with the empty constructor.
      * @param configurable the {@code Configurable} class to instantiate.
      * @param conf the configuration to give toth econstructor.
      * @return an object instantiated from the given class.
@@ -887,10 +889,6 @@ public class Configuration implements Serializable,
      */
     public static <T> T create (Class<T> configurable, Configuration conf) {
         Security.checkSecurityManager();
-        if (!Configurable.class.isAssignableFrom(configurable)) {
-            throw new IllegalArgumentException("Class " + configurable
-                                               + " is not a Configurable");
-        }
 
         try {
             Constructor<T> con =
@@ -898,10 +896,29 @@ public class Configuration implements Serializable,
             return con.newInstance(conf);
 
         } catch (NoSuchMethodException e) {
-            throw new IllegalArgumentException(
-                    "The class " + configurable.getSimpleName()
-                    + " does not have a constructor taking a Configuration"
-                    + " as its sole argument", e);
+            log.debug(String.format(
+                    "No constructor taking Configuration in %s."
+                    + " Creating object with empty constructor instead",
+                    configurable.getSimpleName()));
+            return createNonConfigurable(configurable);
+        } catch (IllegalAccessException e) {
+            throw new Configurable.ConfigurationException(e.getMessage(), e);
+        } catch (InvocationTargetException e) {
+            throw new Configurable.ConfigurationException(e.getMessage(), e);
+        } catch (InstantiationException e) {
+            throw new Configurable.ConfigurationException(e.getMessage(), e);
+        }
+    }
+
+    private static <T> T createNonConfigurable (Class<T> configurable) {
+        Security.checkSecurityManager();
+
+        try {
+            return configurable.getConstructor().newInstance();
+        } catch (NoSuchMethodException e) {
+            throw new IllegalArgumentException(String.format(
+                    "No empty constructor in  %s",
+                    configurable.getSimpleName()), e);
         } catch (IllegalAccessException e) {
             throw new Configurable.ConfigurationException(e.getMessage(), e);
         } catch (InvocationTargetException e) {

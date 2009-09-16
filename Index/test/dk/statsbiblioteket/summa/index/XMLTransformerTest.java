@@ -31,6 +31,7 @@ import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.xml.XHTMLEntityResolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.util.Streams;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -91,6 +92,27 @@ public class XMLTransformerTest extends TestCase {
         }
     }
 
+    public void testEntityResolver() throws Exception {
+        Configuration conf = Configuration.newMemoryBased();
+        conf.set(XMLTransformer.CONF_XSLT, "data/identity.xslt");
+        conf.set(
+                XMLTransformer.CONF_ENTITY_RESOLVER, XHTMLEntityResolver.class);
+        XMLTransformer transformer = new XMLTransformer(conf);
+
+        String content =
+                Streams.getUTF8Resource("data/webpage_xhtml-1.0-strict.xml");
+        Record record = new Record("validwebpage", "xhtml",
+                                   content.getBytes("utf-8"));
+        Payload payload = new Payload(record);
+        transformer.processPayload(payload);
+        String transformed = payload.getRecord().getContentAsUTF8();
+        String expected = "Rødgrød med fløde → mæthed";
+        assertTrue("The transformed content '" + transformed
+                   + "' should contain '" + expected + "'",
+                   transformed.contains(expected));
+//        System.out.println(transformed);
+    }
+
     public static final String GURLI = "data/fagref/gurli.margrethe.xml";
     public void testTransformation() throws Exception {
         String content = Streams.getUTF8Resource(GURLI);
@@ -113,6 +135,3 @@ public class XMLTransformerTest extends TestCase {
     }
 
 }
-
-
-

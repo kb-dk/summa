@@ -98,19 +98,19 @@ public class SummaEntityResolver implements EntityResolver2 {
 
     public InputSource getExternalSubset(String name, String baseURI)
                                               throws SAXException, IOException {
-        System.out.println("*** " + name + ", " + baseURI);
+        //System.out.println("*** " + name + ", " + baseURI);
         if (log.isTraceEnabled()) {
             //noinspection DuplicateStringLiteralInspection
             log.trace("getExternalSubset(name=" + name + ", baseURI="
                       + baseURI + ")");
         }
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return null; // Just let the caller handle it
     }
 
     public InputSource resolveEntity(String name, String publicId,
                                      String baseURI, String systemId)
                                               throws SAXException, IOException {
-        System.out.println("***1 " + name + ", " + publicId + ", " + baseURI + ", " + systemId);
+        //System.out.println("***1 " + name + ", " + publicId + ", " + baseURI + ", " + systemId);
         if (log.isTraceEnabled()) {
             //noinspection DuplicateStringLiteralInspection
             log.trace(
@@ -131,13 +131,13 @@ public class SummaEntityResolver implements EntityResolver2 {
 
     public InputSource resolveEntity(String publicId, String systemId)
                                               throws SAXException, IOException {
-        System.out.println("***2");
+//        System.out.println("***2");
         if (log.isTraceEnabled()) {
             //noinspection DuplicateStringLiteralInspection
             log.trace(
                     "resolveEntity(publicId=" + publicId
                     + ", systemId=" + systemId + ")");
         }
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+        return resolveEntity(null, publicId, null, systemId);
     }
 }
