@@ -156,7 +156,52 @@ public class SearchWS {
             retXML = "<error>Error performing getSuggestions</error>";
         }
 
-        log.trace("getSuggestion('" + prefix + "', " + maxSuggestions
+        log.debug("getSuggestion('" + prefix + "', " + maxSuggestions
+                  + ") finished in " + (System.currentTimeMillis() - startTime)
+                  + "ms");
+        return retXML;
+    }
+
+    /**
+     * Returns any suggestions added or updated within the last
+     * {@code ageSeconds} returning a maximum of {@code maxSuggestions}
+     * results.
+     * @param ageSeconds number of seconds to look back
+     * @param maxSuggestions The maximum number of queries to be returned.
+     * @return An XML string containing the result or an error description.
+     */
+    public String getRecentSuggestions(int ageSeconds, int maxSuggestions) {
+        log.trace("getRecentSuggestions(" + ageSeconds + "s, "
+                  + maxSuggestions + ")");
+        long startTime = System.currentTimeMillis();
+        String retXML;
+
+        ResponseCollection res;
+
+        Request req = new Request();
+        req.put(SuggestKeys.SEARCH_RECENT, ageSeconds);
+        req.put(SuggestKeys.SEARCH_MAX_RESULTS, maxSuggestions);
+
+        try {
+            res = getSuggestClient().search(req);
+            Document dom = DOM.stringToDOM(res.toXML());
+            Node subDom = DOM.selectNode(dom,
+                    "/responsecollection/response[@name='SuggestResponse']/QueryResponse/suggestions");
+            retXML = DOM.domToString(subDom);
+        } catch (IOException e) {
+            log.warn("Error executing getRecentSuggestions: "
+                     + ageSeconds + "s, " + maxSuggestions + ". Error was: ", e);
+            // TODO: return a nicer error xml block
+            retXML = "<error>Error performing getRecentSuggestions</error>";
+        } catch (TransformerException e) {
+            log.warn("Error executing getRecentSuggestions: "
+                     + ageSeconds + "s, " + maxSuggestions
+                     + ". Error was: ", e);
+            // TODO: return a nicer error xml block
+            retXML = "<error>Error performing getRecentSuggestions</error>";
+        }
+
+        log.debug("getRecentSuggestions(" + ageSeconds + "s, " + maxSuggestions
                   + ") finished in " + (System.currentTimeMillis() - startTime)
                   + "ms");
         return retXML;
