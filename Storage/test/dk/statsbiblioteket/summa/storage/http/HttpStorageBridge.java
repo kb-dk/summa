@@ -2,6 +2,7 @@ package dk.statsbiblioteket.summa.storage.http;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.Streams;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Record;
@@ -9,10 +10,7 @@ import dk.statsbiblioteket.summa.common.util.RecordUtil;
 
 import dk.statsbiblioteket.summa.storage.api.*;
 
-import java.io.PrintWriter;
-import java.io.Writer;
-import java.io.IOException;
-import java.io.StringWriter;
+import java.io.*;
 import java.util.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -37,12 +35,17 @@ public class HttpStorageBridge implements Configurable {
 
     public static final String CONF_STORAGE = "summa.storage.http.backend";
 
-    public static final String CONF_PUBLISHED_METHODS =
-            "summa.storage.http.publishedmethods";
-    public static final String DEFAULT_PUBLISHED_METHODS = "";
+    public static final String CONF_GET_METHODS =
+            "summa.storage.http.getmethods";
+    public static final String DEFAULT_GET_METHODS = "";
+
+    public static final String CONF_POST_METHODS =
+            "summa.storage.http.postmethods";
+    public static final String DEFAULT_POST_METHODS = "";
 
     private Storage storage;
-    private Set<Method> publishedMethods;
+    private Set<Method> getMethods;
+    private Set<Method> postMethods;
     private DateFormat dateFormat;
 
     public enum Method {
@@ -52,22 +55,33 @@ public class HttpStorageBridge implements Configurable {
         RECORD,  // 200 or 404
         MTIME,   // 200 OK
         CHANGES, // 200 OK
-        FLUSH,   // 201 Created?
         CLOSE,   // 204 No Content or 200 OK?
         CLEAR    // 204 No Content or 200 OK?
+    }
+
+    public enum HttpMethod {
+        GET,
+        POST
     }
 
     public HttpStorageBridge(Configuration conf) throws IOException {
         storage = StorageFactory.createStorage(conf, CONF_STORAGE);
 
-        publishedMethods = new HashSet<Method>();
+        getMethods = new HashSet<Method>();
+        postMethods = new HashSet<Method>();
         for (String method : conf.getStrings(
-                CONF_PUBLISHED_METHODS, new String[0])) {
-            publishedMethods.add(Method.valueOf(method.toUpperCase()));
+                CONF_GET_METHODS, new String[0])) {
+            getMethods.add(Method.valueOf(method.toUpperCase()));
         }
+        for (String method : conf.getStrings(
+                CONF_POST_METHODS, new String[0])) {
+            postMethods.add(Method.valueOf(method.toUpperCase()));
+        }
+
         dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.S");
 
-        log.info("Published methods: " + Strings.join(publishedMethods, ", "));
+        log.info("Published GET methods: " + Strings.join(getMethods, ", "));
+        log.info("Published POST methods: " + Strings.join(postMethods, ", "));
     }
 
     /**
@@ -78,8 +92,8 @@ public class HttpStorageBridge implements Configurable {
      * @param path the full tokenized path from the requested URL
      * @param query tokenized query part of the requested URL
      */
-    public int doGet(Writer out, String[] path, QueryTokenizer query) {
-        Method method = parseMethod(path);
+    public int doGet(OutputStream out, String[] path, QueryTokenizer query) {
+        Method method = parseMethod(path, HttpMethod.GET);
         log.info("GET:\n\tMethod:" + method + "\n\tPath:"+ Strings.join(path, "|") + "\n\tQuery:" + query.toString());
         switch (method) {
             case FORBIDDEN:
@@ -89,10 +103,9 @@ public class HttpStorageBridge implements Configurable {
             case MTIME:
                 return dispatchMtime(out, path, query);
             case RECORD:
-                return dispatchRecord(out, path, query);
+                return dispatchGetRecord(out, path, query);
             case CHANGES:
                 return 500;//dispatchChanges(out, path, query);
-            case FLUSH:
             case CLEAR:
             case CLOSE:
                 return 500;//dispatchPleasePost(out, path, query); // 405 Method Not Allowed
@@ -103,21 +116,21 @@ public class HttpStorageBridge implements Configurable {
         }
     }
 
-    public int doPost(Writer out, String[] path, QueryTokenizer query) {
-        Method method = parseMethod(path);
+    public int doPost(InputStream in, OutputStream out,
+                      String[] path, QueryTokenizer query) {
+        Method method = parseMethod(path, HttpMethod.POST);
 
         switch (method) {
             case FORBIDDEN:
                 return dispatchForbidden(out, path, query);
             case BAD:
                 return dispatchBad(out, path, query);
-            case FLUSH:
-                return 500; //dispatchFlush(out, path, query);
             case CLEAR:
                 return 500; //dispatchClear(out, path, query);
             case CLOSE:
                 return 500; //dispatchClose(out, path, query);
             case RECORD:
+                return dispatchPostRecord(in, out, path, query);
             case MTIME:
             case CHANGES:
                 return 500; //dispatchPleaseGet(out, path, query); // 405 Method Not Allowed
@@ -128,22 +141,39 @@ public class HttpStorageBridge implements Configurable {
         }
     }
 
-    public Method parseMethod(String[] path) {
+    public Method parseMethod(String[] path, HttpMethod httpMethod) {
         if (path.length >= 1) {
-            return parseMethod(path[0]);
+            return parseMethod(path[0], httpMethod);
         } else {
             log.debug("No method defined");
             return Method.BAD;
         }
     }
 
-    public Method parseMethod(String root) {
+    public Method parseMethod(String root, HttpMethod httpMethod) {
         try {
             Method method = Method.valueOf(root.toUpperCase());
-            if (!publishedMethods.contains(method)) {
-                method = Method.FORBIDDEN;
+            Set allowedMethods;
+            switch (httpMethod) {
+                case GET:
+                    allowedMethods = getMethods;
+                    break;
+                case POST:
+                    allowedMethods = postMethods;
+                    break;
+                default:
+                    log.error("Unexpected http method '" + httpMethod + "'");
+                    return Method.ERROR;
             }
-            return method;
+
+            if (!allowedMethods.contains(method)) {
+                log.info("Attempt to access forbidden method '" + method
+                         + "' via HTTP " + httpMethod);
+                return Method.FORBIDDEN;
+            } else {
+                return method;
+            }
+
         } catch (IllegalArgumentException e) {
             // No such enum value
             log.debug("No such method '" + root + "'");
@@ -156,11 +186,13 @@ public class HttpStorageBridge implements Configurable {
         return new QueryOptions();
     }
 
-    private PrintWriter prepareResponse(
-            Writer out, String[] path, QueryTokenizer query,
-            Method type, long reponseTime, String message) {
-        PrintWriter w = new PrintWriter(out);
-        w.println("<reponse type=\"" + type + "\">");
+    private PrintStream prepareResponse(
+            OutputStream out, String[] path, QueryTokenizer query,
+            Method type, long responseTime, String message) {
+
+        PrintStream w = new PrintStream(out, true);
+        w.println("<reponse type=\""
+                  + type + "\" time=\"" + responseTime/1000000D + "\">");
 
         // Print URL path
         w.println("  <path>" + Strings.join(path, "/")+ "</path>");
@@ -184,46 +216,48 @@ public class HttpStorageBridge implements Configurable {
         return w;
     }
 
-    private int closeReponse(PrintWriter w, int returnValue) {
+    private int closeReponse(PrintStream w, int returnValue) {
         w.println("</response>");
+        w.flush();
         return returnValue;
     }
 
     // Return 403 Forbidden
     private int dispatchForbidden(
-                              Writer out, String[] path, QueryTokenizer query) {
-        PrintWriter w = prepareResponse(
+                        OutputStream out, String[] path, QueryTokenizer query) {
+        PrintStream w = prepareResponse(
                 out, path, query, Method.FORBIDDEN, 0,
                 "Forbidden Request - The requested method is not public");
         return closeReponse(w, 403);
     }
 
     // Return 400 Bad Request
-    private int dispatchBad(Writer out, String[] path, QueryTokenizer query) {
+    private int dispatchBad(
+                        OutputStream out, String[] path, QueryTokenizer query) {
         return dispatchBad(out, path, query,
                            "The server was unable to parse the request");
     }
 
 
     // Return 400 Bad Request
-    private int dispatchBad(
-            Writer out, String[] path, QueryTokenizer query, String message) {
-        PrintWriter w = prepareResponse(
+    private int dispatchBad(OutputStream out, String[] path,
+                            QueryTokenizer query, String message) {
+        PrintStream w = prepareResponse(
                 out, path, query, Method.BAD, 0, "Bad Request - " + message);
         return closeReponse(w, 400);
     }
 
     // Return 500 Internal Error
-    private int dispatchError(
-            Writer out, String[] path, QueryTokenizer query, Method method, Throwable t) {
+    private int dispatchError(OutputStream out, String[] path,
+                              QueryTokenizer query, Method method, Throwable t) {
         // Write a log statement
-        StringWriter toLog = new StringWriter();
-        PrintWriter w = prepareResponse(
+        ByteArrayOutputStream toLog = new ByteArrayOutputStream();
+        PrintStream w = prepareResponse(
                 toLog, path, query, method, 0,
                 "Internal Error - Please consult the server logs for details");
         closeReponse(w, 500);
         log.error("Internal error:\n"
-                  + toLog.toString() + "\n"
+                  + new String(toLog.toByteArray()) + "\n"
                   + "Error was: " + t.getMessage(), t);
 
         // Prepare response to client
@@ -233,7 +267,8 @@ public class HttpStorageBridge implements Configurable {
         return closeReponse(w, 500);
     }
 
-    private int dispatchMtime(Writer out, String[] path, QueryTokenizer query) {
+    private int dispatchMtime(
+                        OutputStream out, String[] path, QueryTokenizer query) {
         try {
             long responseTime = System.nanoTime();
             String base = null;
@@ -243,7 +278,7 @@ public class HttpStorageBridge implements Configurable {
             long mtime = storage.getModificationTime(base);
             responseTime = System.nanoTime() - responseTime;
 
-            PrintWriter w = prepareResponse(
+            PrintStream w = prepareResponse(
                     out, path, query, Method.MTIME, responseTime, null);
             w.println("  <mtime base=\"" + (base != null ? base : "*") + "\">");
             w.println("    <epoch>" + mtime + "</epoch>");
@@ -255,34 +290,61 @@ public class HttpStorageBridge implements Configurable {
         }
     }
 
-    private int dispatchRecord(Writer out, String[] path, QueryTokenizer query) {
+    private int dispatchGetRecord(
+                        OutputStream out, String[] path, QueryTokenizer query) {
         try {
             long responseTime = System.nanoTime();
             if (path.length < 2) {
                 return dispatchBad(out, path, query,
                                    "No record id specified in URL");
             }
-            String[] ids = path[1].split(";");
+            String id = path[1];
             QueryOptions opts = parseQuery(query);
-            List<Record> recs = storage.getRecords(Arrays.asList(ids), opts);
+            Record rec = storage.getRecord(id, opts);
             responseTime = System.nanoTime() - responseTime;
 
-            PrintWriter w = prepareResponse(
-                    out, path, query, Method.RECORD, responseTime, null);
-
-            if (recs.isEmpty()) {
-                w.println("  <records/>");
-                return closeReponse(w, 404);
-            } else {
-                w.println("  <records>");
-                for (Record rec : recs) {
-                    w.println(RecordUtil.toXML(rec));
-                }
-                w.println("  </records>");
+            PrintStream w = prepareResponse(
+                    out, path, query, Method.RECORD, responseTime,
+                    rec != null ? null : "No such record");
+            System.out.println("11111111111111111111");
+            if (rec != null) {
+                w.println(RecordUtil.toXML(rec));
                 return closeReponse(w, 200);
+            } else {
+                return closeReponse(w, 404);
             }
         } catch (Exception e) {
             return dispatchError(out, path, query, Method.MTIME, e);
+        }
+    }
+
+    // Return 201 Created on success
+    private int dispatchPostRecord(InputStream in, OutputStream out,
+                                   String[] path, QueryTokenizer query) {
+        try {
+            long responseTime = System.nanoTime();
+            if (path.length < 2) {
+                return dispatchBad(out, path, query,
+                                   "No record id specified in URL");
+            }
+            String id = path[1];
+            QueryOptions opts = parseQuery(query);
+            Record rec = RecordUtil.fromXML(new InputStreamReader(in));
+
+            if (!id.equals(rec.getId())) {
+                return dispatchBad(out, path, query,
+                                   "Record id in URL does not match the id" +
+                                   " in the posted body");
+            }
+
+            storage.flush(rec);
+            responseTime = System.nanoTime() - responseTime;
+            PrintStream w = prepareResponse(
+                    out, path, query, Method.RECORD, responseTime,
+                    "Record '" + id + "' updated");
+            return closeReponse(w, 201);
+        } catch (Exception e) {
+            return dispatchError(out, path, query, Method.RECORD, e);
         }
     }
 }

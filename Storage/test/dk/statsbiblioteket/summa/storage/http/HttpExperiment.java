@@ -36,17 +36,27 @@ public class HttpExperiment {
             URI uri = t.getRequestURI();
 
 
-            StringWriter out = new StringWriter();
+            //StringWriter out = new StringWriter();
             String[] path = uri.getPath().substring(1).split("/");
-            int result = bridge.doGet(out, path,
+            ByteArrayOutputStream resp = new ByteArrayOutputStream();
+
+            int result;
+            if ("GET".equals(t.getRequestMethod())) {
+                result = bridge.doGet(resp, path,
                                       new QueryTokenizer(uri.getQuery()));
-            t.sendResponseHeaders(result, out.getBuffer().length());
-
-            // FIXME: Argh, horribly inefficient but this is a hack, so wth
-            OutputStream resp = t.getResponseBody();
-            resp.write(out.toString().getBytes());
-            resp.close();
-
+            } else if ("POST".equals(t.getRequestMethod())) {
+                result = bridge.doPost(
+                        t.getRequestBody(), resp, path,
+                        new QueryTokenizer(uri.getQuery()));
+            } else {
+                System.err.println("Unsupported HTTP method: "
+                                   + t.getRequestMethod());
+                result = 500;
+            }
+            t.sendResponseHeaders(result, resp.size());
+            resp.writeTo(t.getResponseBody());
+            t.getResponseBody().close();
+            
         }
     }
 
@@ -56,7 +66,8 @@ public class HttpExperiment {
         HttpStorageBridge bridge = new HttpStorageBridge(
                 Configuration.newMemoryBased(
                         HttpStorageBridge.CONF_STORAGE, H2Storage.class,
-                        HttpStorageBridge.CONF_PUBLISHED_METHODS, "record,mtime"
+                        HttpStorageBridge.CONF_GET_METHODS, "record,mtime",
+                        HttpStorageBridge.CONF_POST_METHODS, "record"
                 )
         );
 
