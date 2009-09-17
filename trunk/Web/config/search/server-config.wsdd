@@ -41,7 +41,7 @@
         <documentation>Search web service for the Summa system</documentation>
         <parameter name="className" value="dk.statsbiblioteket.summa.web.services.SearchWS"/>
 
-        <parameter name="allowedMethods" value="simpleSearch simpleSearchSorted simpleFacet advancedFacet getMoreLikeThis indexLookup getField getSuggestions commitQuery"/>
+        <parameter name="allowedMethods" value="simpleSearch simpleSearchSorted simpleFacet advancedFacet getMoreLikeThis indexLookup getField getSuggestions getRecentSuggestions commitQuery"/>
         <namespace>http://statsbiblioteket.dk/summa/search</namespace>
 
         <operation name="getSuggestions">
@@ -50,6 +50,18 @@
              </documentation>
             <parameter name="prefix" type="tns:string">
                 <documentation>The prefix that the returned queries must start with.</documentation>
+            </parameter>
+            <parameter name="maxSuggestions" type="tns:int">
+                <documentation>The maximum number of queries to be returned.</documentation>
+            </parameter>
+        </operation>
+
+        <operation name="getRecentSuggestions">
+            <documentation>
+                Get the most recently added or updated suggestions within a given timeframe
+             </documentation>
+            <parameter name="ageSeconds" type="tns:int">
+                <documentation>Number of seconds to look back in time.</documentation>
             </parameter>
             <parameter name="maxSuggestions" type="tns:int">
                 <documentation>The maximum number of queries to be returned.</documentation>
