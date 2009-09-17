@@ -32,7 +32,7 @@ import java.io.ByteArrayOutputStream;
  * and LF+CR line breaks.
  * </p><p>
  * Note that the underlying InputStream might be positioned 1 character further
- * than the LineInputStream due to the need for look-ahead for the LF+CR
+ * than the LineInputStream due to the need for look-ahead for the CR+LF
  * combination.
  * </p><p>
  * This implementation is not thread-safe.
@@ -49,7 +49,7 @@ public class LineInputStream extends InputStream {
 
     private InputStream source;
     /* If -1, no characters are pending. If >= 0, the corresponding character is
-       waiting to be delivered. pending will never be CR.
+       waiting to be delivered. pending will never be LF.
      */
     private int pending = -1;
     /* If a byte was pending while mark was called, it is remembered for later
@@ -77,17 +77,17 @@ public class LineInputStream extends InputStream {
     private ByteArrayOutputStream buffer = new ByteArrayOutputStream(100);
     /**
      * Read the next line from the source stream. Lines are defined as bytes
-     * delimited by LF, CR or LF+CR.
+     * delimited by LF, CR or CR+LF.
      * @return the next line or null if EOF is reached.
      * @throws IOException if the source stream threw an I/O-exception.
      */
     public String readLine() throws IOException {
         buffer.reset();
         if (pending != -1) {
-            if (pending == LF) { // Pending was empty line, check for CR
+            if (pending == CR) { // Pending was empty line, check for LF
                 pending = source.read();
-                if (pending == CR) {
-                    pending = -1; // Discard CR
+                if (pending == LF) {
+                    pending = -1; // Discard LF
                 }
                 return "";
             }
@@ -97,13 +97,13 @@ public class LineInputStream extends InputStream {
         int read = 0;
         while ((pending = source.read()) != -1) {
             read++;
-            if (pending == LF) { // Reached EOL, check for CR
+            if (pending == CR) { // Reached EOL, check for LF
                 pending = source.read();
-                if (pending == CR) {
-                    pending = -1; // Discard CR
+                if (pending == LF) {
+                    pending = -1; // Discard LF
                 }
                 break;
-            } else if (pending == CR) {
+            } else if (pending == LF) { // Reached EOL
                 pending = -1;
                 break;
             }

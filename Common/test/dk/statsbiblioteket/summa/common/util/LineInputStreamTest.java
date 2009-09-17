@@ -56,11 +56,12 @@ public class LineInputStreamTest extends TestCase {
         // Source, expected
         String[][][] TESTS = new String[][][] {
                 {{"FooLF\nBar"}, {"FooLF", "Bar"}},
-                {{"FooLFCR\n" + CR + "Bar"}, {"FooLFCR", "Bar"}},
+                {{"FooCRLF" + CR + LF + "Bar"}, {"FooCRLF", "Bar"}},
+                {{"FooLFCR" + LF + CR + "Bar"}, {"FooLFCR", "", "Bar"}},
                 {{"FooCR" + CR + "Bar"}, {"FooCR", "Bar"}},
                 {{"FooCRCR" + CR + CR + "Bar"}, {"FooCRCR", "", "Bar"}},
-                {{"FooCRCRLFCR" + CR + CR + LF + CR + "Bar"}, 
-                        {"FooCRCRLFCR", "", "", "Bar"}},
+                {{"FooLFLFCRLF" + LF + LF + CR + LF + "Bar"},
+                        {"FooLFLFCRLF", "", "", "Bar"}},
                 {{"FooLFLF\n\nBar"}, {"FooLFLF", "", "Bar"}},
                 {{"Foo\nBar"}, {"Foo", "Bar"}},
                 {{""}, {""}},
