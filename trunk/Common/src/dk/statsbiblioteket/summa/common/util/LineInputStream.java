@@ -47,6 +47,7 @@ public class LineInputStream extends InputStream {
     public static final int LF = 0x0A; // 10 dec
     public static final int CR = 0x0D; // 13 dec
 
+    private boolean eofReached = false; // EOF for source. pending possible
     private InputStream source;
     /* If -1, no characters are pending. If >= 0, the corresponding character is
        waiting to be delivered. pending will never be LF.
@@ -85,7 +86,12 @@ public class LineInputStream extends InputStream {
         buffer.reset();
         if (pending != -1) {
             if (pending == CR) { // Pending was empty line, check for LF
+                if (eofReached) {
+                    pending = -1;
+                    return "";
+                }
                 pending = source.read();
+                eofReached = pending == -1;
                 if (pending == LF) {
                     pending = -1; // Discard LF
                 }
@@ -109,15 +115,20 @@ public class LineInputStream extends InputStream {
             }
             buffer.write(pending);
         }
+        eofReached = pending == -1;
         return read == 0 && buffer.size() == 0 ? null :
                buffer.toString(charset);
     }
 
     @Override
     public int read() throws IOException {
-        if (pending == -1) {
-            return source.read();
+        if (eofReached && pending == -1) {
+            return -1;
         }
+        if (pending == -1) {
+            pending = source.read();
+        }
+        eofReached = pending == -1;
         int toDeliver = pending;
         pending = -1;
         return toDeliver;
@@ -139,7 +150,17 @@ public class LineInputStream extends InputStream {
             pending = -1;
             len--;
             off++;
-            return source.read(b, off, len) + 1;
+            if (eofReached) {
+                return -1;
+            }
+            int read = source.read(b, off, len) + 1;
+            if (read == -1) {
+                eofReached = true;
+            }
+            return read;
+        }
+        if (eofReached) {
+            return -1;
         }
         return source.read(b, off, len);
     }
