@@ -23,8 +23,10 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
@@ -47,6 +49,31 @@ public class LineInputStreamTest extends TestCase {
 
     public static Test suite() {
         return new TestSuite(LineInputStreamTest.class);
+    }
+
+    @SuppressWarnings({"DuplicateStringLiteralInspection"})
+    public void testRealFile() throws Exception {
+        FileInputStream is = new FileInputStream(Resolver.getFile(
+                "data/white.xml"));
+        LineInputStream lis = new LineInputStream(is);
+        String line;
+        int lc = 0;
+        int empty = 0;
+        while ((line = lis.readLine()) != null) {
+            lc++;
+            if ("".equals(line)) {
+                empty++;
+                if (empty == 1) {
+                    assertEquals(
+                            "The first empty line should be the expected one",
+                            11, lc);
+                }
+            }
+        }
+        assertNull("EOF should be reached", lis.readLine());
+        lis.close();
+        System.out.println(String.format(
+                "Got %d lines out of which %d was empty", lc, empty));
     }
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
