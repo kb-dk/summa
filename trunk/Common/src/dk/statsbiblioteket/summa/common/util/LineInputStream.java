@@ -84,53 +84,38 @@ public class LineInputStream extends InputStream {
      */
     public String readLine() throws IOException {
         buffer.reset();
-        if (pending != -1) {
-            if (pending == CR) { // Pending was empty line, check for LF
-                if (eofReached) {
-                    pending = -1;
-                    return "";
-                }
-                pending = source.read();
-                eofReached = pending == -1;
-                if (pending == LF) {
-                    pending = -1; // Discard LF
-                }
-                return "";
-            }
-            // Pending was something, so we add it and continue reading
-            buffer.write(pending);
-        }
         int read = 0;
-        while ((pending = source.read()) != -1) {
+        int b;
+        while ((b = read()) != -1) {
             read++;
-            if (pending == CR) { // Reached EOL, check for LF
-                pending = source.read();
-                if (pending == LF) {
-                    pending = -1; // Discard LF
+            if (b == CR) { // Reached EOL, check for LF
+                if ((b = read()) == -1) { // EOF
+                    break;
+                } else if (b != LF) {
+                    pending = b; // The next is neither EOF or LF so remember it
                 }
                 break;
-            } else if (pending == LF) { // Reached EOL
-                pending = -1;
+            } else if (b == LF) { // Reached EOL. Discard the LF
                 break;
             }
-            buffer.write(pending);
+            buffer.write(b);
         }
-        eofReached = pending == -1;
-        return read == 0 && buffer.size() == 0 ? null :
-               buffer.toString(charset);
+        return read == 0 ? null : buffer.toString(charset);
     }
 
     @Override
     public int read() throws IOException {
-        if (eofReached && pending == -1) {
+        if (pending != -1) { // pending
+            int toDeliver = pending;
+            pending = -1;
+            return toDeliver;
+        }
+        if (eofReached) { // EOF
             return -1;
         }
-        if (pending == -1) {
-            pending = source.read();
-        }
-        eofReached = pending == -1;
-        int toDeliver = pending;
-        pending = -1;
+        // read new
+        int toDeliver = source.read();
+        eofReached = toDeliver == -1;
         return toDeliver;
     }
 
@@ -154,7 +139,7 @@ public class LineInputStream extends InputStream {
                 return -1;
             }
             int read = source.read(b, off, len) + 1;
-            if (read == -1) {
+            if (read == 0) {
                 eofReached = true;
             }
             return read;
@@ -162,7 +147,11 @@ public class LineInputStream extends InputStream {
         if (eofReached) {
             return -1;
         }
-        return source.read(b, off, len);
+        int read = source.read(b, off, len);
+        if (read == 0) {
+            eofReached = true;
+        }
+        return read;
     }
 
     @Override
@@ -184,8 +173,10 @@ public class LineInputStream extends InputStream {
 
     @Override
     public void close() throws IOException {
+        log.trace("Close called");
         source.close();
         pending = -1;
+        eofReached = true;
     }
 
     @Override
