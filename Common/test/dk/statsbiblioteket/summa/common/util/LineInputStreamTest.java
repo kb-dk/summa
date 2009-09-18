@@ -23,10 +23,12 @@ import junit.framework.Test;
 import junit.framework.TestSuite;
 import junit.framework.TestCase;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
+import java.io.StringWriter;
 
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
@@ -59,6 +61,7 @@ public class LineInputStreamTest extends TestCase {
         String line;
         int lc = 0;
         int empty = 0;
+        String rest = null;
         while ((line = lis.readLine()) != null) {
             lc++;
             if ("".equals(line)) {
@@ -67,13 +70,16 @@ public class LineInputStreamTest extends TestCase {
                     assertEquals(
                             "The first empty line should be the expected one",
                             11, lc);
+                    rest = Strings.flush(lis);
+                    break;
                 }
             }
         }
         assertNull("EOF should be reached", lis.readLine());
         lis.close();
         System.out.println(String.format(
-                "Got %d lines out of which %d was empty", lc, empty));
+                "Got %d lines before the first empty line", lc));
+        System.out.println("The rest of the file was\n" + rest);
     }
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
