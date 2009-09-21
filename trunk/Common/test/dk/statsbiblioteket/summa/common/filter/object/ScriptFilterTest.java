@@ -8,6 +8,7 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.storage.FileStorage;
 import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.util.xml.DOM;
 
 /**
  * Test cases for {@link ScriptFilter}
@@ -122,6 +123,26 @@ public class ScriptFilterTest extends TestCase {
 
         assertEquals(1, buf.size());
         assertEquals("inlineJavascript", buf.get(0).getRecord().getId());
+    }
+
+    public void testJavaCallbacksExternal() throws Exception {
+        ObjectFilter filter = new ScriptFilter(
+              Configuration.newMemoryBased(
+                      ScriptFilter.CONF_SCRIPT_URL, "java-callbacks.js"
+              ));
+        PayloadBufferFilter buf = prepareFilterChain(
+                       filter,
+                       new Record("id1", "base1",
+                                  ("<root>\n" +
+                                   "  <child1>Foo</child1>\n" +
+                                   "  <child2>Bar</child2>\n" +
+                                   "</root>\n").getBytes()));
+        // Flush the filter chain
+        while (buf.pump()){;}
+
+        assertEquals(1, buf.size());
+        assertEquals("Bar", buf.get(0).getRecord().getContentAsUTF8());
+
     }
 
 }
