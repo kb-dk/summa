@@ -26,10 +26,11 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.api;
 
-import java.util.HashMap;
+import java.util.*;
 import java.io.StringWriter;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.search.api.Response;
 
 /**
  * This facet structure representation is suitable for serializing and other
@@ -54,6 +55,7 @@ public class FacetResultExternal extends FacetResultImpl<String> {
     }
 
     public String getName() {
+        //noinspection DuplicateStringLiteralInspection
         return "FacetResult";
     }
 
@@ -86,7 +88,42 @@ public class FacetResultExternal extends FacetResultImpl<String> {
 
         return sw.toString();
     }
+
+    HashMap<String, String[]> getFields() {
+        return fields;
+    }
+
+
+    @Override
+    public void merge(Response otherResponse) throws ClassCastException {
+        super.merge(otherResponse);
+        if (!(otherResponse instanceof FacetResultExternal)) {
+            return;
+        }
+        for (Map.Entry<String, String[]> otherField:
+                ((FacetResultExternal)otherResponse).getFields().entrySet()) {
+            if (!fields.containsKey(otherField.getKey())) {
+                fields.put(otherField.getKey(), otherField.getValue());
+            } else {
+                fields.put(otherField.getKey(),
+                           mergeArrays(fields.get(otherField.getKey()),
+                                       otherField.getValue()));
+            }
+        }
+    }
+
+    private String[] mergeArrays(String[] one, String[] two) {
+        if (Arrays.equals(one, two)) {
+            return one;
+        }
+        List<String> merged = Arrays.asList(one);
+        for (String t: two) {
+            if (!merged.contains(t)) {
+                merged.add(t);
+            }
+        }
+        String[] result = new String[merged.size()];
+        merged.toArray(result);
+        return result;
+    }
 }
-
-
-

@@ -76,6 +76,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
             LogFactory.getLog(FacetResultImpl.class);
 
     private int DEFAULTFACETCAPACITY = 20;
+    private static final int DEFAULT_MAXTAGS = 100;
 
     /**
      * Pseudo-code: Map<FacetName, FlexiblePair<Tag, TagCount>>.
@@ -120,6 +121,9 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
                 int tagCount = 0;
 
                 Integer maxTags = this.maxTags.get(facet.getKey());
+                if (maxTags == null) {
+                    maxTags = DEFAULT_MAXTAGS;
+                }
 //                        structure.getFacets().get(facet.getKey()).getMaxTags();
                 for (FlexiblePair<T, Integer> tag: facet.getValue()) {
                     if (tagCount++ < maxTags) {
@@ -161,7 +165,10 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
                         List<FlexiblePair<T, Integer>>>(map.size());
         for (Map.Entry<String, List<FlexiblePair<T, Integer>>> entry:
                 map.entrySet()) {
-            int maxTags = this.maxTags.get(entry.getKey());
+            Integer maxTags = this.maxTags.get(entry.getKey());
+            if (maxTags == null) {
+                maxTags = DEFAULT_MAXTAGS;
+            }
 //                    structure.getFacets().get(entry.getKey()).getMaxTags();
             if (entry.getValue().size() <= maxTags) {
                 newMap.put(entry.getKey(), entry.getValue());
@@ -207,6 +214,8 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
         }
 
         // other is source and this is destination
+        //noinspection unchecked
+        mergeMaxTags((FacetResultImpl<T>)other);
         for (Map.Entry<String, List<FlexiblePair<T, Integer>>> sEntry:
                 otherMap.entrySet()) {
             List<FlexiblePair<T, Integer>> dList = map.get(sEntry.getKey());
@@ -227,6 +236,15 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
                         dList.add(sPair);
                     }
                 }
+            }
+        }
+    }
+
+    private void mergeMaxTags(FacetResultImpl<T> otherResult) {
+        log.trace("Merging maxTags");
+        for (Map.Entry<String, Integer> maxTag: otherResult.maxTags.entrySet()){
+            if (!maxTags.containsKey(maxTag.getKey())) {
+                maxTags.put(maxTag.getKey(), maxTag.getValue());
             }
         }
     }
@@ -287,6 +305,7 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
                                         List<FlexiblePair<T, Integer>>> o1,
                                    Pair<String,
                                         List<FlexiblePair<T, Integer>>> o2) {
+               // TODO: This way of sorting does not work for different sources
                     Integer score1 = facetIDs.get(o1.getKey());
 //                            s2.getFacet(o1.getKey()).getFacetID();
                     Integer score2 = facetIDs.get(o2.getKey());
@@ -458,6 +477,3 @@ public abstract class FacetResultImpl<T extends Comparable<T>>
         return cleanTag.replace("\"", "\\\"");
     }
 }
-
-
-
