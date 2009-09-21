@@ -180,7 +180,9 @@ public class TikaDocumentCreator extends DocumentCreatorBase {
         return true;
     }
 
+    private Payload innerPayload = null;
     private void processInner(Payload payload) throws PayloadException {
+        innerPayload = payload;
         Metadata meta = new Metadata();
 
         // Give the filename to the parser to help it sniff the content type
@@ -272,8 +274,10 @@ public class TikaDocumentCreator extends DocumentCreatorBase {
                     try {
                         // Overwrite old title if it exists
                         document.removeField(FIELD_TITLE);
+                        log.debug("Extracted title '" + content);
                         addFieldToDocument(descriptor, document, FIELD_TITLE,
                                            content, 1.0F);
+                        innerPayload.getData().put(FIELD_TITLE, content);
                     } catch (IndexServiceException e) {
                         throw new SAXException(String.format(
                                 "Unable to add content to document for field "
