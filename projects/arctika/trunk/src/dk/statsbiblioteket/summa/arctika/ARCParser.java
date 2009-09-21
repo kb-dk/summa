@@ -25,6 +25,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.util.FutureInputStream;
+import dk.statsbiblioteket.summa.common.util.LineInputStream;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 import org.archive.io.arc.ARCReaderFactory;
@@ -131,13 +132,18 @@ public class ARCParser extends ThreadedStreamParser {
             log.trace("Extracting record " + ++internalCount);
             ArchiveRecord ar = archiveRecords.next();
             ArchiveRecordHeader header = ar.getHeader();
-            FutureInputStream arStream = new FutureInputStream(ar);
+            LineInputStream lis = new LineInputStream(ar);
+            FutureInputStream arStream = new FutureInputStream(lis);
             Payload payload = new Payload(arStream);
             fillPayloadFromHeader(payload, header, archiveReader.getFileName());
 /*            for (Object field: ar.getHeader().getHeaderFields().entrySet().toArray()) {
                 System.out.println(field);
             }*/
-            handleHTTPHeaders(payload);
+            
+            if (!handleHTTPHeaders(payload, lis)) {
+                log.debug("Reached EOF, indicating empty HTTP-content, for "
+                          + payload);
+            }
             addToQueue(payload);
 
             arStream.waitForClose();
@@ -154,6 +160,9 @@ public class ARCParser extends ThreadedStreamParser {
                 break;
             }
         }
+        log.debug("Closing streams from " + sourcePayload);
+        archiveReader.close();
+        sourcePayload.close();
         if (!running) {
             //noinspection DuplicateStringLiteralInspection
             Logging.logProcess(
@@ -165,11 +174,13 @@ public class ARCParser extends ThreadedStreamParser {
                   + " extracted records. running=" + running);
     }
 
-    // Leaved the stream at the beginning of the real content
-    private void handleHTTPHeaders(Payload payload) throws IOException {
+    // Leaves the stream at the beginning of the real content
+    // return true if parsing should continue (EOF not reached)
+    private boolean handleHTTPHeaders(Payload payload, LineInputStream is)
+                                                            throws IOException {
         if (!removeHTTPHeaders) {
             log.trace("RemoveHTTPHeaders not enabled");
-            return;
+            return true;
         }
         String url = payload.getData("arc.url").toString();
         if (url.length() < 4 || !url.startsWith("http")) {
@@ -178,23 +189,16 @@ public class ARCParser extends ThreadedStreamParser {
                         "Skipped handleHTTPHeaders for %s as content did not"
                         + " start with http", payload));
             }
-            return;
+            return true;
         }
         if (log.isTraceEnabled()) {
             log.trace("Extracting HTTP headers from " + payload);
         }
-        BufferedReader in;
-        try {
-            // Buffer needs to be 1 as the BufferedReader is only used for header
-            in = new BufferedReader(new InputStreamReader(
-                    payload.getStream(), "utf-8"), 1);
-        } catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException("utf-8 not supported", e);
-        }
         String line;
         int counter = 0;
-        while (!"".equals(line = in.readLine())) {
-            //System.out.println("*** " + line);
+//        System.out.println("Dumping HTTP-lines from " + payload);
+        while (!"".equals(line = is.readLine())) {
+//            System.out.println("*** " + line);
             String[] tokens = line.split(": ", 2);
             if (tokens.length == 2 && !"".equals(tokens[0])) {
                 payload.getData().put(HTTP_PREFIX + tokens[0], tokens[1]);
@@ -204,9 +208,8 @@ public class ARCParser extends ThreadedStreamParser {
                 counter++;
             }
         }
-//        System.out.println("*Extra* " + in.readLine());
-//        System.out.println("*Extra* " + in.readLine());
         log.trace("Extracted " + counter + " HTTP headers");
+        return line != null;
     }
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})

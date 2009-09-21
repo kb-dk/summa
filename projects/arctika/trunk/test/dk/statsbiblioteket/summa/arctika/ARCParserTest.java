@@ -101,15 +101,17 @@ public class ARCParserTest extends TestCase {
         StreamController ap = new StreamController(arcConf);
         ap.setSource(feeder);
 
-        String WHITE = "http://www.whitehouse.gov/";
+        String WHITE = "arc_http://www.whitehouse.gov/";
         String expected = Files.loadString(Resolver.getFile(
                 "data/arc/whitehouse.gov.dat"));
+        List<String> ids = new ArrayList<String>(200);
         while (ap.hasNext()) {
             Payload next = ap.next();
             log.trace("Got " + next);
+            ids.add(next.getId());
             if (WHITE.equals(next.getId())) {
                 log.debug("Located whitehouse.gov with site "
-                          + next.getData("arc.site"));
+                          + next.getData("arc.site") + " in " + next);
                 String actual = Strings.flush(next.getStream());
                 log.debug("Flushed content of whitehouse.gov");
                 assertEquals("whitehouse.gov should be as expected",
@@ -119,6 +121,11 @@ public class ARCParserTest extends TestCase {
             next.close();
         }
         ap.close(true);
+        System.err.println(
+                "The wanted ID was not found. Dumping encountered IDs");
+        for (String id: ids) {
+            System.out.println(id);
+        }
         fail(WHITE + " not found");
     }
 
