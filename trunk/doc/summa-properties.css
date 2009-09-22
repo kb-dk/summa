@@ -4,7 +4,7 @@
  * Used for formatting the output of summa-doc-tool's HTML formatter
  */
 
-table.property {
+p.property {
     width: 90%;
     border:none;
     padding:10;
