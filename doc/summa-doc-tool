@@ -309,6 +309,9 @@ class JavaMetaRepo :
 				result.append(meta_class)
 		
 		return result
+	
+	def __len__ (self):
+		return len(self._classes)
 		
 
 
@@ -667,6 +670,9 @@ class HtmlFormatter (Formatter) :
 				"desc"    : prop.get_doc()
 			}
 			result += HTML_PROP_TEMPLATE % prop_dict
+		
+		if meta_class.num_props() == 0:
+			result += '\n<p class="property"/>'
 		
 		#if format_children:
 		#	children = meta_class.get_all_children()
