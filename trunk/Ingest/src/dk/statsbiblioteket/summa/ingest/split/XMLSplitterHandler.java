@@ -35,6 +35,7 @@ import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.summa.common.util.UniqueTimestampGenerator;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
@@ -116,11 +117,32 @@ public class XMLSplitterHandler extends DefaultHandler2 {
         }
 //        System.out.println("Prefix: " + prefix + ", uri " + uri);
         if (inRecord) {
-            insideRecordPrefixStack.add(expanded);
+            overwriteOrAdd(insideRecordPrefixStack, expanded);
         } else {
-            outsideRecordPrefixStack.add(expanded);
+            overwriteOrAdd(outsideRecordPrefixStack, expanded);
         }
     }
+
+    private void overwriteOrAdd(Collection<String> existing, String n) {
+        try {
+            String newPrefix = n.split("=", 2)[0];
+            for (String e: existing) {
+                if (e.split("=", 2)[0].equals(newPrefix)) {
+                    if (log.isTraceEnabled()) {
+                        log.trace(String.format(
+                                "Overwriting namespace %s with %s", e, n));
+                    }
+                    existing.remove(e);
+                    break;
+                }
+            }
+            existing.add(n);
+        } catch (Exception e) {
+            log.warn(String.format("Exception in overwriteOrAdd(%s, %s)",
+                                   Strings.join(existing, ", "), n), e);
+        }
+    }
+
 
     @Override
     public void endPrefixMapping (String prefix) throws SAXException {
@@ -161,13 +183,10 @@ public class XMLSplitterHandler extends DefaultHandler2 {
 
         // We're inside a Record
         sw.append("<").append(target.preserveNamespaces ? qName : local);
-        List<String> addedNamespacePrefixes =
-                new ArrayList<String>(prefixes.size());
         if (target.preserveNamespaces) {
             for (String prefix: prefixes) {
                 sw.append(" ").append(prefix);
                 // xmlns, xmlns:foo etc.
-                addedNamespacePrefixes.add(prefix.split("=", 2)[0]);
             }
         }
         insideRecordElementStack.add(qName);
@@ -198,14 +217,6 @@ public class XMLSplitterHandler extends DefaultHandler2 {
         for (int i = 0 ; i < atts.getLength() ; i++) {
             if (atts.getLocalName(i).startsWith(XMLNS)) {
                 // We skip already added name spaces
-                if (addedNamespacePrefixes.contains(atts.getLocalName(i))) {
-                    if (log.isTraceEnabled()) {
-                        log.trace(String.format(
-                                "Skipping already added namespace %s=\"%s\"",
-                                atts.getLocalName(i), atts.getValue(i)));
-                    }
-                    continue;
-                }
             }
             sw.append(" ").append(target.preserveNamespaces ?
                                   atts.getQName(i) :
