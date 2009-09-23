@@ -2,9 +2,12 @@ package dk.statsbiblioteket.summa.ingest.split;
 
 import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.Record;
 
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamReader;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.IOException;
@@ -52,6 +55,7 @@ public class ThreadedStreamParserTest extends TestCase {
             super(queueSize, Integer.MAX_VALUE, 1000);
         }
 
+        @Override
         public void protectedRun() {
             InputStream in = sourcePayload.getStream();
 
@@ -89,4 +93,14 @@ public class ThreadedStreamParserTest extends TestCase {
         assertEquals("Exactly 20 payloads expected", 20, count);
     }
 
+    public void testDoubleDefaultNamespace() throws Exception {
+        XMLInputFactory inputFactory = XMLInputFactory.newInstance();
+        inputFactory.setProperty(XMLInputFactory.IS_COALESCING, Boolean.TRUE);
+        XMLStreamReader reader = inputFactory.createXMLStreamReader(
+                Resolver.getURL("data/double_default_oai.xml").openStream(),
+                "utf-8");
+        while (reader.hasNext()) {
+            reader.next();
+        }
+    }
 }
