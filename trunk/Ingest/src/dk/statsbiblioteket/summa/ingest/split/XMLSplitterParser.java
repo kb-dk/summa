@@ -44,8 +44,12 @@ import org.xml.sax.SAXNotSupportedException;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class XMLSplitterParser extends ThreadedStreamParser {
+public class XMLSplitterParser extends ThreadedStreamParser implements
+                                                           XMLSplitterReceiver {
     private static Log log = LogFactory.getLog(XMLSplitterParser.class);
+
+    public static final String LEXICAL_HANDLER =
+            "http://xml.org/sax/properties/lexical-handler";
 
     // TODO: Purge double declarations
 
@@ -65,8 +69,6 @@ public class XMLSplitterParser extends ThreadedStreamParser {
 
     @Override
     protected void protectedRun() throws Exception {
-        String LEXICAL_HANDLER =
-                "http://xml.org/sax/properties/lexical-handler";
         SAXParser parser;
         try {
             // TODO: Can we reuse a SAXParser? Reset?
@@ -96,12 +98,8 @@ public class XMLSplitterParser extends ThreadedStreamParser {
         log.debug("Finished parsing " + sourcePayload);
     }
 
-    private static final SAXException stopped =
-            new SAXException("Parser stop requested");
-    void checkRunning() throws SAXException {
-        if (!running) {
-            throw stopped;
-        }
+    public boolean isTerminated() {
+        return !running;
     }
 
     @Override
@@ -114,7 +112,7 @@ public class XMLSplitterParser extends ThreadedStreamParser {
      * full.
      * @param record the Record to insert.
      */
-    void queueRecord(Record record) {
+    public void queueRecord(Record record) {
 //        try {
             if (log.isTraceEnabled()) {
                 //noinspection DuplicateStringLiteralInspection
