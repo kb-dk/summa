@@ -52,19 +52,23 @@ public class XMLSplitterHandler extends DefaultHandler2 {
     // TODO: Extract this from the stream instead of hardcoding
     private static final String HEADER =
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-    private XMLSplitterParser parser;
+    private static final String XMLNS = "xmlns";
+
+    private XMLSplitterReceiver receiver;
     private XMLSplitterParserTarget target;
 
     @SuppressWarnings({"UnusedDeclaration"})
     public XMLSplitterHandler(Configuration conf,
-                              XMLSplitterParser parser,
+                              XMLSplitterReceiver receiver,
                               XMLSplitterParserTarget target) {
-        this.parser = parser;
+        this.receiver = receiver;
         this.target = target;
     }
 
     private void checkRunning() throws SAXException {
-        parser.checkRunning();
+        if (receiver.isTerminated()) {
+            throw new SAXException("Parser stop requested");
+        }
     }
 
     /* DefaultHandler overrides */
@@ -105,7 +109,7 @@ public class XMLSplitterHandler extends DefaultHandler2 {
     public void startPrefixMapping (String prefix, String uri) throws
                                                                SAXException {
         checkRunning();
-        String expanded = ("".equals(prefix) ? "xmlns" : "xmlns:" + prefix)
+        String expanded = ("".equals(prefix) ? XMLNS : XMLNS + ":" + prefix)
                           + "=\"" + uri + "\"";
         if (log.isTraceEnabled()) {
             log.trace("Prefix: " + expanded);
@@ -157,9 +161,13 @@ public class XMLSplitterHandler extends DefaultHandler2 {
 
         // We're inside a Record
         sw.append("<").append(target.preserveNamespaces ? qName : local);
+        List<String> addedNamespacePrefixes =
+                new ArrayList<String>(prefixes.size());
         if (target.preserveNamespaces) {
             for (String prefix: prefixes) {
                 sw.append(" ").append(prefix);
+                // xmlns, xmlns:foo etc.
+                addedNamespacePrefixes.add(prefix.split("=", 2)[0]);
             }
         }
         insideRecordElementStack.add(qName);
@@ -186,7 +194,19 @@ public class XMLSplitterHandler extends DefaultHandler2 {
             }
         }
 
+        // Append namespaces and attributes for the current element
         for (int i = 0 ; i < atts.getLength() ; i++) {
+            if (atts.getLocalName(i).startsWith(XMLNS)) {
+                // We skip already added name spaces
+                if (addedNamespacePrefixes.contains(atts.getLocalName(i))) {
+                    if (log.isTraceEnabled()) {
+                        log.trace(String.format(
+                                "Skipping already added namespace %s=\"%s\"",
+                                atts.getLocalName(i), atts.getValue(i)));
+                    }
+                    continue;
+                }
+            }
             sw.append(" ").append(target.preserveNamespaces ?
                                   atts.getQName(i) :
                                   atts.getLocalName(i)).append("=\"");
@@ -254,8 +274,9 @@ public class XMLSplitterHandler extends DefaultHandler2 {
                         id.toString(), // ID-modification is handled by parser
                         target.base,
                         (HEADER + sw.toString()).getBytes("utf-8"));
+                //noinspection DuplicateStringLiteralInspection
                 log.debug("Produced " + record);
-                parser.queueRecord(record);
+                receiver.queueRecord(record);
                 prepareScanForNextRecord();
             } catch (UnsupportedEncodingException e) {
                 throw new RuntimeException("Unable to convert string to utf-8 "
@@ -331,6 +352,7 @@ public class XMLSplitterHandler extends DefaultHandler2 {
      */
     @Override
     public InputSource resolveEntity(String publicId, String systemId) {
+        //noinspection DuplicateStringLiteralInspection
         log.trace("Ignoring request to resolve entity '" + publicId + "'");
         return new InputSource(new StringReader(""));
     }
@@ -341,6 +363,7 @@ public class XMLSplitterHandler extends DefaultHandler2 {
     @Override
     public InputSource resolveEntity(String name, String publicId,
                                      String baseURI, String systemId) {
+        //noinspection DuplicateStringLiteralInspection
         log.trace("Ignoring request to resolve entity '" + publicId + "'");
         return new InputSource(new StringReader(""));
     }
