@@ -624,4 +624,11 @@ public abstract class MARCParser extends ThreadedStreamParser {
     protected String expandID(String id) {
         return id_prefix + id + id_postfix;
     }
+
+    @Override
+    public String toString() {
+        return "MARCParser(base='" + base + "', idPrefix='" + id_prefix
+               + "', idPostfix='" + id_postfix
+               + "' (" + super.toString() + "))";
+    }
 }
