@@ -255,8 +255,7 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
                 queue.put(p);
                 return;
             } catch (InterruptedException e) {
-                log.warn("Interrupted while queueing payload "
-                         + p + ". Retrying");
+                log.warn("Interrupted while queueing payload. Retrying");
             }
         }
     }
@@ -295,9 +294,10 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
             protectedRun();
         } catch (Exception e) {
             log.warn(String.format(
-                    "Exception caught from protectedRun of %s with origin '%s'."
-                    + " Stopping processing", 
-                    sourcePayload, sourcePayload.getData(Payload.ORIGIN)), e);
+                    "Exception caught from protectedRun of %s with origin '%s'"
+                    + " in '%s'. Stopping processing", 
+                    sourcePayload, sourcePayload.getData(Payload.ORIGIN), this),
+                     e);
 
             // We don't close in a 'finally' clause because we shouldn't
             // clean up if the JVM raises an Error type throwable
@@ -327,4 +327,9 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
      * @see {@link #addToQueue(dk.statsbiblioteket.summa.common.filter.Payload)}.
      */
     protected abstract void protectedRun() throws Exception;
+
+    @Override
+    public String toString() {
+        return "ThreadedStreamParser(" + queue.size() + " payloads queued)";
+    }
 }

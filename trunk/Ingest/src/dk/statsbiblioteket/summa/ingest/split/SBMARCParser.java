@@ -391,4 +391,9 @@ public class SBMARCParser extends MARCParser {
                 + "for record '%s' in %s. Ignoring subfield",
                 subFieldCode, dataFieldTag, id, sourcePayload));
     }
+
+    @Override
+    public String toString() {
+        return "SBMARCParser(" + super.toString() + ")";
+    }
 }
