@@ -10,8 +10,18 @@ import static org.testng.Assert.*;
 public class TemplateTest {
 
     public static class Foo {
+        boolean wasInitCalled = false;
+
         @Property(value="27", name="integer", type = Integer.class)
-        public int i;
+        public int i = -1;
+
+        @Init
+        private void doInit() {
+            wasInitCalled = true;
+
+            // Assert that the 'integer' property has been set
+            assert i != -1;
+        }
     }
 
     public static class Bar {
@@ -50,6 +60,8 @@ public class TemplateTest {
         Foo f = t.create();
         assertNotNull(f);
         assertEquals(f.i, 1);
+        assertTrue(f.wasInitCalled, "The @Init methods should have been called");
+
     }
 
     @Test(expectedExceptions = {IllegalArgumentException.class})

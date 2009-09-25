@@ -6,6 +6,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
 import static java.util.AbstractMap.SimpleImmutableEntry;
 
+import static net.sf.summa.core.Init.*;
 import static net.sf.summa.core.Property.*;
 
 /**
@@ -114,6 +115,35 @@ public class Template<E> implements Map<String,Object> {
                 f.setAccessible(false);
             }
 
+        }
+
+        // Call any @Init annotated methods
+        for (Method init : templateClass.getDeclaredMethods()) {
+            boolean initAccesible = init.isAccessible();
+
+            if (!initAccesible) {
+                init.setAccessible(true);
+            }
+
+            try {
+                if (init.getParameterTypes().length != 0) {
+                    throw new TemplateInstantiationError(
+                            "@Init method " + templateClass.getName() + "#"
+                            + init.getName() + " must be a no-args method");
+                }
+                init.invoke(inst);
+            } catch (InvocationTargetException e) {
+                // The 'cause' is the actual exception raised by the method
+                throw new TemplateInitException(e.getCause());
+            } catch (IllegalAccessException e) {
+                throw new TemplateInstantiationError(
+                        "Failed to invoke @Init function "
+                        + templateClass.getName() + "#" + init.getName(), e);
+            }
+
+            if (!initAccesible) {
+                init.setAccessible(false);
+            }
         }
 
         return inst;        

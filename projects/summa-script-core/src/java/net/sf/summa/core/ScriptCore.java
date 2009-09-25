@@ -1,8 +1,6 @@
 package net.sf.summa.core;
 
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptEngine;
-import javax.script.ScriptException;
+import javax.script.*;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Map;
@@ -56,11 +54,9 @@ public class ScriptCore implements Runnable {
     }
 
     private void prepareBindings(ScriptEngine engine) {
-       for (String s : ServiceTemplate.getServiceNicks()) {
-           Map<String,ServiceTemplate> templates =
-                                         ServiceTemplate.getServiceTemplates(s);
-           // FIXME setup up bindings for engine
-       }
+        engine.put("Jumpr", ServiceTemplate.getServices());
+        engine.put("foo", 23);
+
     }
 
     public synchronized int getExitCode() {

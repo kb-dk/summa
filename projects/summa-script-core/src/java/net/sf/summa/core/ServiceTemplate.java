@@ -74,6 +74,12 @@ public abstract class ServiceTemplate<E> extends Template<E> implements Provider
         }
     }
 
+    public static Map<String,Map<String,ServiceTemplate>> getServices() {
+        synchronized (serviceNicks) {
+            return Collections.unmodifiableMap(serviceNicks);
+        }
+    }
+
     /**
      * Returns an unmodifiable map of instance nicks to ServiceTemplates or
      * {@code null} if there is no service registered with nickname
