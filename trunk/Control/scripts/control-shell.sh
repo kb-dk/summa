@@ -1,6 +1,10 @@
 #!/bin/bash
 
-DEPLOY=`dirname $0`/..
+# exit on errors
+set -e
+
+cd $(dirname $(readlink -f $0) )/..
+DEPLOY=.
 
 #
 # TEMPLATE FOR RUNNING JARS FROM BASH SCRIPTS
@@ -59,9 +63,6 @@ SECURITY_POLICY="$DEPLOY/config/server.policy"
 #
 # DON'T EDIT BEYOND THIS POINT
 #
-
-DEPLOY=`dirname $0`/..
-pushd $DEPLOY > /dev/null
 
 # Helper function to set properties in a properties file
 # $1 : property name
@@ -147,5 +148,3 @@ if [ ! -z $PRINT_CONFIG ]; then
 fi
 
 $COMMAND
-
-popd > /dev/null
