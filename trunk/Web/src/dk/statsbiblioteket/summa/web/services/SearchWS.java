@@ -398,14 +398,47 @@ public class SearchWS {
                     + "startIndex=%d, sortKey='%s', reverse=%b) entered",
                     query, numberOfRecords, startIndex, sortKey, reverse));
         }
+        return filterSearchSorted(null, query, numberOfRecords, startIndex, sortKey, reverse);
+    }
+
+    /**
+     * A simple way to query the index wile being able to specify which field to sort by and whether the sorting
+     * should be reversed.
+     * </p><p>
+     * Processing-options can be specified at the start of the query prepended
+     * by '<:' and appended by ':>', divided by spaces. As of now, the only
+     * possible option is 'explain', which turns on explanation of the result.
+     * This increases processing time, so do not turn it on as default.
+     * example: "<:explain:>foo" will explain why the documents matching foo
+     * was selected.
+     * @param filter the filter to use before querying.
+     * @param query The query to perform.
+     * @param numberOfRecords The maximum number of records to return.
+     * @param startIndex Where to start returning records from (used to implement paging).
+     * @param sortKey The field to sort by.
+     * @param reverse Whether or not the sort should be reversed.
+     * @return An XML string containing the result or an error description.
+     */
+    public String filterSearchSorted(
+            String filter, String query, int numberOfRecords, int startIndex,
+            String sortKey, boolean reverse) {
+        final String PARAMS = "filter='%s', query='%s', numberOfRecords=%d, "
+                              + "startIndex=%d, sortKey='%s', reverse=%b";
+        if (log.isDebugEnabled()) {
+            //noinspection DuplicateStringLiteralInspection
+            log.debug(String.format("filterSearchSorted(" + PARAMS + ") called",
+                                    filter, query, numberOfRecords, startIndex,
+                                    sortKey, reverse));
+        }
         long startTime = System.currentTimeMillis();
 
         String retXML;
         ResponseCollection res;
         Request req = new Request();
         // Handle processing options
-        String[] options = extractOptions(query);
+        log.trace("Extracting options (aka explain)");
         try {
+            String[] options = extractOptions(query);
             if (options != null) {
                 log.debug("simpleSearchSorted received "
                           + options.length + " options");
@@ -430,38 +463,50 @@ public class SearchWS {
                     + "'%s'. Options are skipped and the query left unchanged",
                     query));
         }
+        log.trace("Cleaning query");
         query = cleanQuery(query);
 
-        req.put(DocumentKeys.SEARCH_QUERY, query);
+        if (filter != null) {
+            log.trace("Assigning filter '" + filter + "'");
+            req.put(DocumentKeys.SEARCH_FILTER , filter);
+        }
+        if (query != null) {
+            log.trace("Assigning query '" + query + "'");
+            req.put(DocumentKeys.SEARCH_QUERY, query);
+        }
         req.put(DocumentKeys.SEARCH_MAX_RECORDS, numberOfRecords);
         req.put(DocumentKeys.SEARCH_START_INDEX, startIndex);
-        req.put(DocumentKeys.SEARCH_SORTKEY, sortKey);
+        if (sortKey != null) {
+            req.put(DocumentKeys.SEARCH_SORTKEY, sortKey);
+        }
         req.put(DocumentKeys.SEARCH_REVERSE, reverse);
-        req.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);        
-
+        req.put(DocumentKeys.SEARCH_COLLECT_DOCIDS, false);
+        log.trace("Produced search request, calling search");
         try {
             res = getSearchClient().search(req);
+            log.trace("Got result, converting to XML");
             retXML = res.toXML();
         } catch (IOException e) {
-            log.warn("Error executing query: '" + query + "', " +
-                    numberOfRecords + ", " +
-                    startIndex + ", " +
-                    sortKey + ", " +
-                    reverse +
-                    ". Error was: ", e);
+            log.warn(String.format(
+                    "Error executing query '" + PARAMS + "'. Error was: %s",
+                    filter, query, numberOfRecords, startIndex,
+                    sortKey, reverse, e.getMessage()), e);
             // TODO: return a nicer error xml block
-            retXML = "<error>Error performing query</error>";
+            retXML = String.format("<error>Error performing query: %s</error>", 
+                                   e.getMessage());
         }
 
         log.debug(String.format(
-                "simpleSearchSorted(query='%s', numberOfRecords=%d, "
-                + "startIndex=%d, sortKey='%s', reverse=%b) finished in %s ms",
-                query, numberOfRecords, startIndex, sortKey, reverse,
+                "simpleSearchSorted(" + PARAMS + ") finished in %s ms",
+                filter, query, numberOfRecords, startIndex, sortKey, reverse,
                 System.currentTimeMillis() - startTime));
         return retXML;
     }
 
     private String cleanQuery(String queryString) {
+        if (queryString == null) {
+            return null;
+        }
         Matcher optionsMatcher = PROCESSING_OPTIONS.matcher(queryString);
         if (optionsMatcher.matches()) {
             return optionsMatcher.group(2);
@@ -470,6 +515,9 @@ public class SearchWS {
     }
 
     private String[] extractOptions(String query) {
+        if (query == null) {
+            return null;
+        }
         Matcher optionsMatcher = PROCESSING_OPTIONS.matcher(query);
         if (optionsMatcher.matches()) {
             return optionsMatcher.group(1).split(" +");

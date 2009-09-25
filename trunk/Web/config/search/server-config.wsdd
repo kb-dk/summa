@@ -41,7 +41,7 @@
         <documentation>Search web service for the Summa system</documentation>
         <parameter name="className" value="dk.statsbiblioteket.summa.web.services.SearchWS"/>
 
-        <parameter name="allowedMethods" value="simpleSearch simpleSearchSorted simpleFacet advancedFacet getMoreLikeThis indexLookup getField getSuggestions getRecentSuggestions commitQuery"/>
+        <parameter name="allowedMethods" value="simpleSearch simpleSearchSorted filterSearchSorted simpleFacet advancedFacet getMoreLikeThis indexLookup getField getSuggestions getRecentSuggestions commitQuery"/>
         <namespace>http://statsbiblioteket.dk/summa/search</namespace>
 
         <operation name="getSuggestions">
@@ -140,6 +140,30 @@
             <documentation>
                 This method executes the given query and returns a search result ranked by the given sort key.
             </documentation>
+            <parameter name="query" type="tns:string">
+                <documentation>The query string.</documentation>
+            </parameter>
+            <parameter name="numberOfRecords" type="tns:int">
+                <documentation>The maximum number of records returned in the search result.</documentation>
+            </parameter>
+            <parameter name="startIndex" type="tns:int">
+                <documentation>The number of the first record to return.</documentation>
+            </parameter>
+            <parameter name="sortKey" type="tns:string">
+                <documentation>The key to sort by.</documentation>
+            </parameter>
+            <parameter name="reverse" type="tns:boolean">
+                <documentation>A boolean indication whether or not to sort in reverse.</documentation>
+            </parameter>
+        </operation>
+
+        <operation name="filterSearchSorted">
+            <documentation>
+                This method executes the given query on the documents defined by the filter and returns a search result ranked by the given sort key.
+            </documentation>
+            <parameter name="filter" type="tns:string">
+                <documentation>The filter string (standard query syntax).</documentation>
+            </parameter>
             <parameter name="query" type="tns:string">
                 <documentation>The query string.</documentation>
             </parameter>
