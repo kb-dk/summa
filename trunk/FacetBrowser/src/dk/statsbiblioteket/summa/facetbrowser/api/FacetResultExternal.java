@@ -89,7 +89,7 @@ public class FacetResultExternal extends FacetResultImpl<String> {
         return sw.toString();
     }
 
-    HashMap<String, String[]> getFields() {
+    private HashMap<String, String[]> getFields() {
         return fields;
     }
 
