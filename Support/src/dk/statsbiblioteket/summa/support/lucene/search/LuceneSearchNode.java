@@ -542,7 +542,8 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                     "ParseException during fullSearch for query '%s'", query),
                                      location, e);
         }
-        if (luceneQuery == null) {
+        if (luceneQuery == null && luceneFilter == null) {
+            log.debug("Both query and filter is null, returning empty result");
             return new DocumentResponse(
                     filter, query, startIndex, maxRecords, sortKey,
                     reverseSort, fallbacks, 0, 0);

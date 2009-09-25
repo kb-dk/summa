@@ -103,6 +103,17 @@ public class LuceneSearchNodeTest extends TestCase {
         searcher.close();
     }
 
+    public void testFilterSearcher() throws Exception {
+        makeIndex();
+        Configuration conf = Configuration.load(basicSetup().getAbsolutePath());
+        SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
+        Request request = new Request();
+        request.put(DocumentKeys.SEARCH_FILTER, "hans");
+        log.debug("Search for 'hans' gave\n"
+                  + searcher.search(request).toXML());
+        searcher.close();
+    }
+
     public void testDocIDCollector() throws Exception {
         makeIndex();
         Configuration conf = Configuration.load(basicSetup().getAbsolutePath());
