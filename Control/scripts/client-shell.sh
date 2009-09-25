@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # exit on errors
-
 set -e
+
 cd $(dirname $(readlink -f $0) )/..
 DEPLOY=.
 
