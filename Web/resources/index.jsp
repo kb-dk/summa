@@ -15,12 +15,24 @@
 
     String search_html = "";
     String facet_html = "";
+    String form_filter = "";
     String form_query = "";
 
     String query = request.getParameter("query");
-    if (query != null && !query.equals("")) {
+    if ("".equals(query)) {
+        query = null;
+    }
+    String filter = request.getParameter("filter");
+    if ("".equals(filter)) {
+        filter = null;
+    }
+    if (query != null) {
         form_query = query.replaceAll("\"", "&quot;");
-
+    }
+    if (filter != null) {
+        form_filter = filter.replaceAll("\"", "&quot;");
+    }
+    if (query != null || filter != null) {
         int per_page = 10;
         int startIndex = 0;
         int current_page;
@@ -34,7 +46,9 @@
             current_page = 0;
         }
 
-        String xml_search_result = (String) services.execute("summasimplesearch", query, per_page, current_page * per_page);
+        String xml_search_result = (String)services.execute(
+                "summafiltersearchsorted", filter, query,
+                per_page, current_page * per_page, null, false);
 
         if (xml_search_result == null) {
             search_html = "Error executing query";
@@ -56,30 +70,54 @@
             }
 
 
-            URL search_xslt = new File(basepath + "xslt/short_records.xsl").toURI().toURL();
+            URL search_xslt = new File(
+                    basepath + "xslt/short_records.xsl").toURI().toURL();
 
             Properties search_prop = new Properties();
-            search_prop.put("query", query);
+            if (filter != null) {
+                search_prop.put("filter", filter);
+            }
+            if (query != null) {
+                search_prop.put("query", query);
+            }
             search_prop.put("per_page", per_page);
             search_prop.put("current_page", current_page);
 
             try {
-                search_html = XSLT.transform(search_xslt, xml_search_result, search_prop, true);
+                search_html = XSLT.transform(
+                        search_xslt, xml_search_result, search_prop, true);
             } catch (TransformerException e) {
                 search_html = "Transformer exception: " + e.getMessage();
             }
         }
 
-        String xml_facet_result = (String) services.execute("summasimplefacet", query);
+        // TODO: maybe we should use explicit filter/query for faceting too?
+        String merged = "";
+        if (filter != null) {
+            merged += "(" + filter + ")";
+        }
+        if (query != null) {
+            if (!"".equals(merged)) {
+                merged += " AND ";
+            }
+            merged += "(" + query + ")";
+        }
+        String xml_facet_result = (String)services.execute(
+                "summasimplefacet", merged);
 
         if (xml_facet_result == null) {
             facet_html = "Error faceting query";
         } else {
-            URL facet_xslt = new File(basepath + "xslt/facet_overview.xsl")
-                                                               .toURI().toURL();
+            URL facet_xslt = new File(
+                    basepath + "xslt/facet_overview.xsl").toURI().toURL();
 
             Properties facet_prop = new Properties();
-            facet_prop.put("query", query);
+            if (filter != null) {
+                facet_prop.put("filter", filter);
+            }
+            if (query != null) {
+                facet_prop.put("query", query);
+            }
 
             try {
                 facet_html = XSLT.transform(facet_xslt, xml_facet_result, facet_prop);
@@ -101,6 +139,8 @@
     <script type="text/javascript">
         function init() {
             $('#q').autocomplete({ serviceUrl:'service/autocomplete.jsp' });
+            $('#f2').autocomplete({ serviceUrl:'service/autocomplete.jsp' });
+            $('#q2').autocomplete({ serviceUrl:'service/autocomplete.jsp' });
             <%-- $('#i').autocomplete({ serviceUrl:'service/indexlookup.jsp' }); --%>
         }
     </script>
@@ -126,6 +166,13 @@
             <input type="hidden" name="usersearchI" value="true" />
         </form>
         --%>
+        <form action="index.jsp" class="searchBoxTweak" id="fpFilterSearch">
+            Filter search
+            <input type="text" name="filter" size="65" id="f2" value="<%= form_filter %>" />
+            <input type="text" name="query" size="65" id="q2" value="<%= form_query %>" />
+            <input type="submit" value="Search" />
+            <input type="hidden" name="userfiltersearch" value="true" />
+        </form>
     </div>
 </div>
 
