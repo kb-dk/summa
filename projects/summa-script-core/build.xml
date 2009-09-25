@@ -116,7 +116,13 @@
                 <include name="META-INF/**/*"/>
             </fileset>
         </copy>
-        <jar basedir="${build.dir}" compress="true" jarfile="${release}.jar"/>
+        <jar basedir="${build.dir}" compress="true" jarfile="${release}.jar">
+            <manifest>
+                <attribute name="Build-By" value="mke@statsbiblioteket.dk"/>
+                <attribute name="Main-Class"
+                           value="net.sf.summa.core.Main"/>
+            </manifest>
+        </jar>
         <deltree dir="${build.dir}/META-INF"/>
     </target>
 
