@@ -119,6 +119,8 @@ public class Template<E> implements Map<String,Object> {
 
         // Call any @Init annotated methods
         for (Method init : templateClass.getDeclaredMethods()) {
+            if (init.getAnnotation(Init.class) == null) continue;
+
             boolean initAccesible = init.isAccessible();
 
             if (!initAccesible) {

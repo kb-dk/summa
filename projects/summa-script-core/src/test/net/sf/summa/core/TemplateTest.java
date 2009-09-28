@@ -11,6 +11,7 @@ public class TemplateTest {
 
     public static class Foo {
         boolean wasInitCalled = false;
+        boolean mustBeFalse = false;
 
         @Property(value="27", name="integer", type = Integer.class)
         public int i = -1;
@@ -21,6 +22,10 @@ public class TemplateTest {
 
             // Assert that the 'integer' property has been set
             assert i != -1;
+        }
+
+        private void neverCallMe() {
+            mustBeFalse = true;
         }
     }
 
@@ -61,6 +66,7 @@ public class TemplateTest {
         assertNotNull(f);
         assertEquals(f.i, 1);
         assertTrue(f.wasInitCalled, "The @Init methods should have been called");
+        assertFalse(f.mustBeFalse, "Non @Init methods should not be called");
 
     }
 

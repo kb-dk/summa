@@ -1,11 +1,17 @@
 package net.sf.summa.core;
 
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+
 /**
  * FIXME: Missing class docs for net.sf.summa.core.Init
  *
  * @author mke
  * @since Sep 25, 2009
  */
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
 public @interface Init {
     
     /**
