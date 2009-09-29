@@ -3,6 +3,7 @@
                 xmlns:xs="http://www.w3.org/2001/XMLSchema">
     <xsl:output method="html" encoding="UTF-8"/>
 
+    <xsl:param name="filter"/>
     <xsl:param name="query"/>
 
     <xsl:template match="facetmodel">
@@ -27,12 +28,12 @@
     </xsl:template>
 
     <xsl:template match="tag">
-        <xsl:variable name="search_query">
+        <xsl:variable name="facet_query">
             <xsl:value-of select="query" />
         </xsl:variable>
         <div id="tag_{position()}" class="clusterOverviewItem">
             <!-- <a href="?query=%28{$query}%29%20{util:urlEncode($search_query)}"> -->
-            <a href="?query=%28{$query}%29%20{$search_query}">
+            <a href="?filter={$filter}{$facet_query}&amp;query={$query}">
                 <xsl:value-of select="@name" />
             </a>
             (<xsl:value-of select="@addedobjects" />)
