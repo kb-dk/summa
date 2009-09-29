@@ -112,12 +112,8 @@
                     basepath + "xslt/facet_overview.xsl").toURI().toURL();
 
             Properties facet_prop = new Properties();
-            if (filter != null) {
-                facet_prop.put("filter", filter);
-            }
-            if (query != null) {
-                facet_prop.put("query", query);
-            }
+            facet_prop.put("filter", filter == null ? "" : "(" + filter + ") ");
+            facet_prop.put("query", query == null ? "" : query);
 
             try {
                 facet_html = XSLT.transform(facet_xslt, xml_facet_result, facet_prop);
@@ -167,9 +163,9 @@
         </form>
         --%>
         <form action="index.jsp" class="searchBoxTweak" id="fpFilterSearch">
-            Filter search
-            <input type="text" name="filter" size="65" id="f2" value="<%= form_filter %>" />
-            <input type="text" name="query" size="65" id="q2" value="<%= form_query %>" />
+            Filter search<br />
+            Filter: <input type="text" name="filter" size="55" id="f2" value="<%= form_filter %>" /><br />
+            Query: <input type="text" name="query" size="55" id="q2" value="<%= form_query %>" />
             <input type="submit" value="Search" />
             <input type="hidden" name="userfiltersearch" value="true" />
         </form>
