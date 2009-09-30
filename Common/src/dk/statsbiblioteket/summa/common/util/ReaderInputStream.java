@@ -104,4 +104,9 @@ public class ReaderInputStream extends InputStream {
         }
         bufferPos = 0;
     }
+
+    @Override
+    public void close() throws IOException {
+        reader.close();
+    }
 }
