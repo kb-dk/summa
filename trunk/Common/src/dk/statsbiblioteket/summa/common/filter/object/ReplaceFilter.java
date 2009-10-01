@@ -110,6 +110,9 @@ public class ReplaceFilter extends ObjectFilterImpl {
      * If possible, use {@link #CONF_RULES} instead as it is faster and less
      * memory-intensive than regexp replacements.
      * </p><p>
+     * The .-character matches any character, except newline. If newline should
+     * be matched by the .-character, prefix the regexp with {@code (?s)}.
+     * </p><p>
      * Optional. Default is null (no regexp replacement).
      */
     public static final String CONF_PATTERN_REGEXP =
@@ -119,6 +122,8 @@ public class ReplaceFilter extends ObjectFilterImpl {
      * Used as the replacement for matches on {@link #CONF_PATTERN_REGEXP}.
      * This uses the same rules as {@link Matcher#replaceAll(String)}.
      * </p><p>
+     * Example: input "hello12world", regexp "o(.+)w", destination "$1"
+     *          result "hell12orld"
      * If {@link #CONF_PATTERN_REGEXP} is defined, CONF_PATTERN_REPLACEMENT must
      * also be defined.
      */
