@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.io.*;
 
 import org.apache.commons.logging.Log;
@@ -56,6 +57,21 @@ public class ReplaceFilterTest extends TestCase {
                 ReplaceFilter.CONF_PATTERN_REPLACEMENT, "$1-$2"
         );
         assertReplace("Group replacement", "zX-Yz", "zaaXbYz", conf);
+    }
+
+    public void testSingleline() throws Exception {
+        // Dry run
+        Pattern pattern = Pattern.compile("a(.*)b");
+        String replaced = pattern.matcher("fooafooostbost").replaceAll("$1");
+        assertEquals("Replacement over singleline should work",
+                     "foofooostost", replaced);
+    }
+
+    public void testMultiline() throws Exception {
+        Pattern pattern = Pattern.compile("(?s)a(.*)b");
+        String replaced = pattern.matcher("fooafoo\nostbost").replaceAll("$1");
+        assertEquals("Replacement over multi-line should work",
+                     "foofoo\nostost", replaced);
     }
 
     public void testPlainReplace() throws Exception {
