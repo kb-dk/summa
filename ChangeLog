@@ -1,8 +1,221 @@
-2009-09-14 15:00  mkamstrup
+2009-09-24 05:35  mkamstrup
 
-	* [r1803] build.properties, ChangeLog:
+	* [r1832] Control/scripts/client-shell.sh:
+	  
+	  Bugfix: Patch from Jens Henrik Jensen (SB) to
+	  - set the script mode to always exit on errors
+	  - to be runnable disregarding the working dir
+	  - To not call popd as last function in the script,
+	  overriding the exit value of command
 
-	  Release Summa 1.4.10
+2009-09-23 13:38  toke-sb
+
+	* [r1831]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/XMLSplitterHandler.java:
+	  
+	  Bug #59: The XMLSplitterHandler did not handle multiple default
+	  name spaces properly
+
+2009-09-23 13:04  toke-sb
+
+	* [r1830]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/XMLSplitterHandler.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/XMLSplitterParser.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/XMLSplitterReceiver.java,
+	  Ingest/test/dk/statsbiblioteket/summa/ingest/split/XMLSplitterHandlerTest.java:
+	  
+	  Refactoring: Extracted an interface for Record receiving from
+	  XMLSplitterParser
+	  Test: Added test for handling of multiple default namespaces
+
+2009-09-23 11:36  toke-sb
+
+	* [r1829] Ingest/test/data/double_default.xml,
+	  Ingest/test/data/double_default_oai.xml,
+	  Ingest/test/dk/statsbiblioteket/summa/ingest/split/ThreadedStreamParserTest.java:
+	  
+	  Testing: Simple test for parsing of XML with multiple default
+	  name spaces
+
+2009-09-23 11:36  toke-sb
+
+	* [r1828]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/MARCParser.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/SBMARCParser.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/ThreadedStreamParser.java:
+	  
+	  Logging: Better toString for the
+	  SBMARC/MARC/ThreadedStream-Parsers
+
+2009-09-22 09:31  mkamstrup
+
+	* [r1826] doc/summa-doc-tool, doc/summa-properties.css:
+	  
+	  Make classes without any properties dsiplay correctly in
+	  summa-doc-tool's html formatter
+
+2009-09-21 11:11  toke-sb
+
+	* [r1824]
+	  Support/src/dk/statsbiblioteket/summa/support/TikaDocumentCreator.java:
+	  
+	  Tweak: The Tika document creator now also adds the title af meta
+	  data
+
+2009-09-21 10:53  toke-sb
+
+	* [r1823]
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/api/FacetResultExternal.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/api/FacetResultImpl.java:
+	  
+	  Bugfix: The merging of Facet results from different searcher
+	  setups failed when the facets weren't the same
+	  Note: This breaks Search API binary compatibility
+
+2009-09-21 08:59  mkamstrup
+
+	* [r1822]
+	  Common/test/dk/statsbiblioteket/summa/common/filter/object/ScriptFilterTest.java,
+	  Common/test/java-callbacks.js:
+	  
+	  Add test/example calling into static Java methods from a
+	  JavaScripted ScriptFilter loaded from the file java-callbacks.js
+
+2009-09-18 10:47  toke-sb
+
+	* [r1821]
+	  Common/src/dk/statsbiblioteket/summa/common/util/LineInputStream.java,
+	  Common/test/data/white2.xml[CPY],
+	  Common/test/dk/statsbiblioteket/summa/common/util/LineInputStreamTest.java:
+	  
+	  Bugfix:The LineInputStream now properly ensures that no reads are
+	  performed on underlying InputStreams when EOF has been reached
+
+2009-09-18 06:34  toke-sb
+
+	* [r1820]
+	  Common/src/dk/statsbiblioteket/summa/common/util/LineInputStream.java,
+	  Common/test/data/white.xml,
+	  Common/test/dk/statsbiblioteket/summa/common/util/LineInputStreamTest.java:
+	  
+	  Feature:The LineInputStream now ensures that no reads are
+	  performed on underlying InputStreams when EOF has been reached
+
+2009-09-17 12:52  mkamstrup
+
+	* [r1819] Storage/test/data, Storage/test/data/test_record_1.xml,
+	  Storage/test/data/test_record_2.xml:
+	  
+	  Include some very light test records in raw xml files
+
+2009-09-17 12:48  mkamstrup
+
+	* [r1818]
+	  Storage/test/dk/statsbiblioteket/summa/storage/http/HttpExperiment.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/http/HttpStorageBridge.java:
+	  
+	  Experiment: Play around with REST API for Storage
+
+2009-09-17 11:00  toke-sb
+
+	* [r1817]
+	  Common/src/dk/statsbiblioteket/summa/common/util/LineInputStream.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/LineInputStreamTest.java:
+	  
+	  Bugfix: The LineInputStream did not handle DOS-linebreaked lines
+	  properly (CR+LF, not LF+CR as originally programmed)
+
+2009-09-17 08:53  mkamstrup
+
+	* [r1816] Web/config/search/server-config.wsdd,
+	  Web/src/dk/statsbiblioteket/summa/web/services/SearchWS.java:
+	  
+	  Web: Add getRecentSuggestions method to SearchWS webservice
+
+2009-09-16 14:52  toke-sb
+
+	* [r1815]
+	  Support/test/dk/statsbiblioteket/summa/support/TikaDocumentCreatorTest.java:
+	  
+	  Cosmetics: Removed unused imports from TikaDocumentCreatorTest
+
+2009-09-16 14:43  toke-sb
+
+	* [r1814]
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/LuceneManipulator.java:
+	  
+	  Logging: Logged on FATAL if an IOException was encountered during
+	  addition of Lucene document to index
+
+2009-09-16 12:07  toke-sb
+
+	* [r1813]
+	  Support/src/dk/statsbiblioteket/summa/support/TikaDocumentCreator.java:
+	  
+	  Feature: Enhanced TikadocumentCreator to optionally keep Payloads
+	  that failed Tika-analysis
+
+2009-09-16 11:49  toke-sb
+
+	* [r1812]
+	  Common/src/dk/statsbiblioteket/summa/common/configuration/Configuration.java,
+	  Common/src/dk/statsbiblioteket/summa/common/xml/EntityResolver.java[DEL],
+	  Common/src/dk/statsbiblioteket/summa/common/xml/SummaEntityResolver.java,
+	  Common/test/dk/statsbiblioteket/summa/common/xml/XHTMLEntityResolverTest.java,
+	  Index/src/dk/statsbiblioteket/summa/index/XMLTransformer.java,
+	  Index/src/dk/statsbiblioteket/summa/index/lucene/LuceneManipulator.java,
+	  Index/test/data/identity.xslt[CPY],
+	  Index/test/data/webpage_xhtml-1.0-strict.xml[CPY],
+	  Index/test/dk/statsbiblioteket/summa/index/XMLTransformerTest.java,
+	  Support/src/dk/statsbiblioteket/summa/support/TikaDocumentCreator.java:
+	  
+	  Feature: Enhanced XMLtransformer to optionally use a custom
+	  EntityResolver (SummaEntityResolver is an easy to configure basic
+	  entity resolver)
+
+2009-09-16 08:51  toke-sb
+
+	* [r1811]
+	  Common/src/dk/statsbiblioteket/summa/common/util/LineInputStream.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/LineInputStreamTest.java:
+	  
+	  Bugfix: LineInputStream now works, including unit-tests
+
+2009-09-15 10:58  toke-sb
+
+	* [r1810]
+	  Common/src/dk/statsbiblioteket/summa/common/xml/SummaEntityResolver.java[CPY],
+	  Common/src/dk/statsbiblioteket/summa/common/xml/XHTMLEntityResolver.java:
+	  
+	  Refactoring: Renamed EntityResolver to SummaEntityResolver
+
+2009-09-15 07:54  toke-sb
+
+	* [r1809]
+	  Web/src/dk/statsbiblioteket/summa/web/services/SearchWS.java:
+	  
+	  Logging: Minor cleanup og log statements in SearchWS
+
+2009-09-15 07:53  toke-sb
+
+	* [r1808]
+	  Common/src/dk/statsbiblioteket/summa/common/rpc/ConnectionConsumer.java:
+	  
+	  Logging: Better trace for getConnection in ConnectionConsumer
+
+2009-09-14 20:24  toke-sb
+
+	* [r1807]
+	  Common/src/dk/statsbiblioteket/summa/common/util/LineInputStream.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/LineInputStreamTest.java:
+	  
+	  Added LineInputStream first version (still needs testing)
+
+2009-09-14 14:32  mkamstrup
+
+	* [r1805] ChangeLog, build.properties:
+	  
+	  Update ChangeLog and NEWS in prep for 1.4.10
 
 2009-09-14 14:22  toke-sb
 
