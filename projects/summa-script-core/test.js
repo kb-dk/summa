@@ -9,3 +9,4 @@ for (s in Jumpr) {
     print ("\n");
 }
 
+print ("\nTest: " + Jumpr.Pingable.Foobar + "\n");

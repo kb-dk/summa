@@ -16,7 +16,7 @@ public class FoobarPingable implements Pingable {
 
     public static class Template extends ServiceTemplate<FoobarPingable> {
         public Template() {
-            super(FoobarPingable.class, "pingable", "foobar");
+            super(FoobarPingable.class, "Pingable", "Foobar");
         }
     }
 
