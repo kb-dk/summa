@@ -597,13 +597,13 @@
     </library>
     <library name="sbutil">
       <CLASSES>
-        <root url="jar://$PROJECT_DIR$/lib/sbutil-0.4.6.jar!/" />
+        <root url="jar://$PROJECT_DIR$/lib/sbutil-0.4.7.jar!/" />
       </CLASSES>
       <JAVADOC>
-        <root url="jar://$PROJECT_DIR$/lib/apidocs/sbutil-0.4.6-apidocs.zip!/" />
+        <root url="jar://$PROJECT_DIR$/lib/apidocs/sbutil-0.4.7-apidocs.zip!/" />
       </JAVADOC>
       <SOURCES>
-        <root url="jar://$PROJECT_DIR$/lib/src/sbutil-0.4.6-src.zip!/sbutil-0.4.6/src" />
+        <root url="jar://$PROJECT_DIR$/lib/src/sbutil-0.4.7-src.zip!/sbutil-0.4.7/src" />
       </SOURCES>
     </library>
     <library name="lucene-core">
