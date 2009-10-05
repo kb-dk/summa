@@ -19,24 +19,24 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
-import dk.statsbiblioteket.summa.common.Record;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-import javax.xml.stream.events.XMLEvent;
 import javax.xml.stream.*;
+import javax.xml.stream.events.XMLEvent;
 import java.io.*;
-import java.util.*;
-import java.text.SimpleDateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * Helpers for processing Records.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
-        state = QAInfo.State.IN_DEVELOPMENT,
+        state = QAInfo.State.QA_NEEDED,
         author = "te")
 public class RecordUtil {
     private static Log log = LogFactory.getLog(RecordUtil.class);
@@ -147,7 +147,7 @@ public class RecordUtil {
         StringWriter sw = new StringWriter(5000);
         XMLStreamWriter xmlOut = xmlOutputFactory.createXMLStreamWriter(sw);
         xmlOut.setDefaultNamespace(RECORD_NAMESPACE);
-        toXML(xmlOut, 0, record, escapeContent);
+        toXML(xmlOut, 0, new HashSet<Record>(10), record, escapeContent);
         log.debug("Created an XML representation of '" + record.getId() + "'");
         return sw.toString();
     }
@@ -157,10 +157,18 @@ public class RecordUtil {
     private static SimpleDateFormat schemaTimestampFormatter =
             new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.S");
     // synchronized due to schemaTimestampFormatter
+    @QAInfo(level = QAInfo.Level.FINE,
+            state = QAInfo.State.QA_NEEDED,
+            author = "We traverse the tree and ignore already dumped records, "
+                     + "but the order is just pulled from thin air")
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     private synchronized static void toXML(
-            XMLStreamWriter out, int level,
+            XMLStreamWriter out, int level, Set<Record> processed,
             Record record, boolean escapeContent) throws XMLStreamException {
+        if (processed.contains(record)) {
+            return;
+        }
+        processed.add(record);
         log.trace("Constructing inner XML for Record '" + record.getId() + "'");
         String indent = "";
         while (indent.length() < level * 2) {
@@ -197,7 +205,7 @@ public class RecordUtil {
             out.writeCharacters("\n");
             out.writeStartElement(PARENTS);
             for (Record parent: record.getParents()) {
-                toXML(out, level+1, parent, escapeContent);
+                toXML(out, level+1, processed, parent, escapeContent);
             }
             out.writeCharacters("\n");
             out.writeEndElement();
@@ -210,7 +218,7 @@ public class RecordUtil {
                 if (log.isTraceEnabled()) {
                     log.trace("Calling toXML on " + child);
                 }
-                toXML(out, level+1, child, escapeContent);
+                toXML(out, level+1, processed, child, escapeContent);
             }
             out.writeCharacters("\n");
             out.writeEndElement();
