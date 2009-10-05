@@ -114,6 +114,7 @@
         <copy todir="${build.dir}">
             <fileset dir="${src.dir}">
                 <include name="META-INF/**/*"/>
+                <include name="**/*.js"/>
             </fileset>
         </copy>
         <jar basedir="${build.dir}" compress="true" jarfile="${release}.jar">

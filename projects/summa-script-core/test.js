@@ -1,4 +1,4 @@
-print("Hello from js!\n");
+/*print("Hello from js!\n");
 
 print ("Jumpr:\n");
 for (s in Jumpr) {
@@ -9,4 +9,15 @@ for (s in Jumpr) {
     print ("\n");
 }
 
-print ("\nTest: " + Jumpr.Pingable.Foobar + "\n");
+print ("\nTest: " + Jumpr.Pingable.Foobar + "\n");*/
+
+/* Imports */
+Pingable = Jumpr.Pingable;
+
+conf = {
+    __class__ : Pingable.Foobar,
+    ping : "JSPing"
+};
+
+p = create(conf);
+print ("Got pong: " + p.ping("hello?") + "\n");

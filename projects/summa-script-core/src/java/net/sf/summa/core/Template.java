@@ -167,9 +167,12 @@ public class Template<E> implements Map<String,Object> {
             cls = Class.forName(_cls.toString());
         }
 
-        // FIXME: We need to mask the classKey key out of templ, ,and then use
+        // We need to mask the classKey key out of templ, and then use
         // the masked map to create the Template instance
-        throw new UnsupportedOperationException();
+        Map<String,Object> newTempl = new HashMap<String,Object>();
+        newTempl.putAll(templ);
+        newTempl.remove(classKey);
+        return create(cls, newTempl);
     }
 
     /**
@@ -241,10 +244,28 @@ public class Template<E> implements Map<String,Object> {
         }
     }
 
-    public boolean admits(String key, Object value) {
+    public boolean checkAdmits(String key, Object value) {
         Prop p = props.get(key);
-        return p != null && p.type.isInstance(value);
 
+        if (p == null) {
+            throw new IllegalArgumentException(
+                    "Assignment '" + key + "' = " + value + " ("
+                    + value.getClass().getName()
+                    + "), not valid within template for "
+                    + templateClass.getName() + ". No such key '"
+                    + key + "'");
+        }
+
+        if (!p.type.isInstance(value)) {
+            throw new IllegalArgumentException(
+                    "Assignment '" + key + "' = " + value + " ("
+                    + value.getClass().getName()
+                    + "), not valid within template for "
+                    + templateClass.getName() + ". Expected value type "
+                    + p.type.getName());
+        }
+
+        return true;
     }
 
     public int size() {
@@ -280,11 +301,7 @@ public class Template<E> implements Map<String,Object> {
     }
 
     public Object put(String key, Object value) {
-        if (!admits(key,value)) {
-            throw new IllegalArgumentException("Assignment '" + key + "' = "
-                                               + value
-                                               + ", not valid within template");
-        }
+        checkAdmits(key,value);
 
         // Store the value and returns the previous value
         // as per the Map interface contract
