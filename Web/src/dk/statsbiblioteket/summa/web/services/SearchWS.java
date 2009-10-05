@@ -255,8 +255,14 @@ public class SearchWS {
             res = getSearchClient().search(req);
             Document dom = DOM.stringToDOM(res.toXML());
             Node subDom = DOM.selectNode(dom,
-                    "/responsecollection/response/documentresult/record/field[@name='" + fieldName + "']");
+                    "/responsecollection/response/documentresult/record/"
+                    + "field[@name='" + fieldName + "']");
             retXML = DOM.domToString(subDom);
+            if (retXML == null || "".equals(retXML) && log.isDebugEnabled()) {
+                log.debug("getField(" + id + ", " + fieldName + ") did not give"
+                          + " any return-XML. The reply from the core search "
+                          + "was\n" + res.toXML());
+            }
         } catch (IOException e) {
             log.warn("Error querying for id: '" + id + "'." +
                     "Error was: ", e);
