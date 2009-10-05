@@ -22,17 +22,17 @@ public class Main {
             System.exit(2);
         }
 
-        net.sf.summa.core.Template<ScriptCore> t =
-                        net.sf.summa.core.Template.forClass(ScriptCore.class);
+        net.sf.summa.core.Template<ScriptRunner> t =
+                        net.sf.summa.core.Template.forClass(ScriptRunner.class);
 
         for (Script s : scripts) {
             System.err.println("Running script: " + s);
             t.put("script", s);
-            ScriptCore core = t.create();
-            core.run();
-            if (core.getExitCode() != 0) {
+            ScriptRunner runner = t.create();
+            runner.run();
+            if (runner.getExitCode() != 0) {
                 System.err.println("Error running script: " + s);
-                System.exit(core.getExitCode());
+                System.exit(runner.getExitCode());
             }
         }
     }
