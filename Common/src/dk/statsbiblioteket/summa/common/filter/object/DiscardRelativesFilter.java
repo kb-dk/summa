@@ -19,13 +19,13 @@
  */
 package dk.statsbiblioteket.summa.common.filter.object;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.common.Logging;
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.common.Logging;
-import org.apache.commons.logging.LogFactory;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.util.List;
 
@@ -76,7 +76,8 @@ public class DiscardRelativesFilter extends AbstractDiscardFilter {
     protected boolean checkDiscard(Payload payload) {
         if (log.isTraceEnabled()) {
             //noinspection DuplicateStringLiteralInspection
-            log.trace("checkDiscard(" + payload + ") called");
+            log.trace("checkDiscard(" + payload + ") called with "
+                      + payload.getRecord());
         }
         if (payload.getRecord() == null) {
             return false;
