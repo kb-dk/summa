@@ -22,17 +22,17 @@
  */
 package dk.statsbiblioteket.summa.common;
 
-import java.io.Serializable;
-import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
-import java.util.*;
-
 import dk.statsbiblioteket.summa.common.util.StringMap;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.Zips;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.Serializable;
+import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
+import java.util.*;
 
 /**
  * A Record is the atom data unit in Summa. Is is used for ingesting to the
@@ -718,8 +718,12 @@ public class Record implements Serializable, Comparable{
         return "Record [id(" + getId() + "), base(" + getBase()
                + "), deleted(" + isDeleted() + "), indexable(" + isIndexable()
                + "), data-length(" + getLength()
-               + "), num-children(" + (childIds == null ? 0 : childIds.size())
-               + "), num-parents(" + (parentIds == null ? 0 : parentIds.size())
+               + "), num-childrenIDs(" + (childIds == null ? 0 : childIds.size())
+               + "), num-parentsIDs(" + (parentIds == null ? 0 : parentIds.size())
+               + "), num-childRecords("
+               + (children == null ? 0 : children.size())
+               + "), num-parentRecords(" 
+               + (parents == null ? 0 : parents.size())
                + ")" + (verbose ?
                         ", creationTime(" + timeToString(getCreationTime())
                         + "), modificationTime("
