@@ -38,9 +38,9 @@ import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.summa.search.document.DocumentSearcherImpl;
 import dk.statsbiblioteket.summa.support.api.LuceneKeys;
-import dk.statsbiblioteket.summa.support.lucene.search.sort.SortPool;
-import dk.statsbiblioteket.summa.support.lucene.TermProviderImpl;
 import dk.statsbiblioteket.summa.support.lucene.SummaIndexReader;
+import dk.statsbiblioteket.summa.support.lucene.TermProviderImpl;
+import dk.statsbiblioteket.summa.support.lucene.search.sort.SortPool;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.logging.Log;
@@ -554,14 +554,15 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                           fields, fallbacks, doLog);
     }
 
+    private Query MATCH_ALL = new MatchAllDocsQuery();
+
     // Can return null on MoreLikeThis parsing
     private Query parseQuery(Request request, String query) throws
-                                                            RemoteException,
-                                                            ParseException {
+                                               RemoteException, ParseException {
         if (!isMoreLikeThisRequest(request)) {
             log.debug("parseQuery(...): Returning plain query instead of "
                       + "MoreLikeThis");
-            return query == null ? null : getParser().parse(query);
+            return matchAllParse(query);
         }
         if (moreLikeThis == null) {
             throw new RemoteException(
@@ -579,8 +580,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                         "Got null when requesting String for key '%s'. This "
                         + "fails sanity-checking. Switching to plain query",
                         LuceneKeys.SEARCH_MORELIKETHIS_RECORDID));
-                return query == null ? null : getParser().parse(query);
-
+                return matchAllParse(query);
             }
         } catch (final Exception e) {
             throw new ParseException(
@@ -628,14 +628,20 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
         return moreLikeThisQuery;
     }
 
+    private Query matchAllParse(String query) throws ParseException {
+        return query == null || "".equals(query) || "*".equals(query)
+               || "(*)".equals(query)
+               ? MATCH_ALL : getParser().parse(query);
+    }
+
     private boolean isMoreLikeThisRequest(Request request) {
         return mlt_enabled &&
                request.containsKey(LuceneKeys.SEARCH_MORELIKETHIS_RECORDID);
     }
 
     private Filter parseFilter(String filter) throws ParseException {
-        return filter == null || "".equals(filter) ? null :
-               new QueryWrapperFilter(getParser().parse(filter));
+        return filter == null || "".equals(filter) || "*".equals(filter)
+               ? null : new QueryWrapperFilter(getParser().parse(filter));
     }
 
     private DocumentResponse fullSearch(Request request,
@@ -647,6 +653,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
         boolean mlt_request = isMoreLikeThisRequest(request);
         try {
             // MoreLikeThis needs an extra in max to compensate for self-match
+
             TopFieldDocs topDocs = searcher.search(
                     luceneQuery, luceneFilter,
                     (int)(startIndex + maxRecords + (mlt_request ? 1 : 0)),
