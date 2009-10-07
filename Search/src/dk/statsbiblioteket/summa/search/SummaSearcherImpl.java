@@ -145,7 +145,10 @@ public class SummaSearcherImpl implements SummaSearcherMBean, SummaSearcher,
     }
 
     public ResponseCollection search(Request request) throws RemoteException {
-        log.trace("Search called");
+        if (log.isTraceEnabled()) {
+            log.trace("Search called with parameters\n"
+                      + request.toString(true));
+        }
         long fullStartTime = System.nanoTime();
         if (searchQueue.availablePermits() == 0) {
             throw new RemoteException(
