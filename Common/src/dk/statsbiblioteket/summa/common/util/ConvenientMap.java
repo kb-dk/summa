@@ -174,6 +174,7 @@ public class ConvenientMap extends HashMap<String, Serializable> {
         String[] unescaped = getString(key).split(" *, *");
         ArrayList<String> result = new ArrayList<String>(unescaped.length);
         for (String s: unescaped) {
+            //noinspection DuplicateStringLiteralInspection
             result.add(s.replaceAll("&comma;", ",").
                          replaceAll("&amp;", "&"));
         }
@@ -187,8 +188,8 @@ public class ConvenientMap extends HashMap<String, Serializable> {
             return defaultValues;
         } catch (IllegalArgumentException e) {
             log.warn(String.format(
-                    "The property %s was expected to be a list of Strings, but "
-                    + "it was not. Using default %s instead",
+                    "The property %s was expected to be a list of Strings, "
+                    + "but it was not. Using default %s instead",
                     key, defaultValues));
             return defaultValues;
         }
@@ -281,10 +282,10 @@ public class ConvenientMap extends HashMap<String, Serializable> {
         sw.append("ConvenientMap(");
         boolean later = false;
         for (Map.Entry<String, Serializable> entries: entrySet()) {
-            if (!later) {
+            if (later) {
                 sw.append(", ");
-                later = true;
             }
+            later = true;
             sw.append(entries.getKey()).append("=");
             sw.append(entries.getValue().toString());
         }
