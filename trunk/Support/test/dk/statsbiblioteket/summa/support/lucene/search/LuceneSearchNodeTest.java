@@ -24,6 +24,8 @@ import org.apache.lucene.search.*;
 import java.io.File;
 import java.rmi.RemoteException;
 import java.util.BitSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class LuceneSearchNodeTest extends TestCase {
@@ -98,9 +100,32 @@ public class LuceneSearchNodeTest extends TestCase {
         SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
         Request request = new Request();
         request.put(DocumentKeys.SEARCH_QUERY, "hans");
-        log.debug("Search for 'hans' gave\n"
-                  + searcher.search(request).toXML());
+        String result = searcher.search(request).toXML();
+        log.debug("Search with query for 'hans' gave\n" + result);
+        assertEquals("We should get the right number of hits",
+                     1, getHitCount(result));
         searcher.close();
+    }
+
+    public void testMatchAll() throws Exception {
+        makeIndex();
+        Configuration conf = Configuration.load(basicSetup().getAbsolutePath());
+        SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
+        Request request = new Request();
+        request.put(DocumentKeys.SEARCH_QUERY, "*");
+        String result = searcher.search(request).toXML();
+        log.debug("Search with query for '*' gave\n" + result);
+        assertEquals("We should get the right number of hits",
+                     3, getHitCount(result));
+        searcher.close();
+    }
+
+    Pattern HITS = Pattern.compile(".*hitCount.\"([0-9]+)\".*", Pattern.DOTALL);
+    private int getHitCount(String result) {
+        Matcher matcher = HITS.matcher(result);
+        assertTrue("We should be able to find hitCount in\n" + result,
+                   matcher.matches());
+        return Integer.parseInt(matcher.group(1));
     }
 
     public void testFilterSearcher() throws Exception {
@@ -109,8 +134,10 @@ public class LuceneSearchNodeTest extends TestCase {
         SummaSearcherImpl searcher = new SummaSearcherImpl(conf);
         Request request = new Request();
         request.put(DocumentKeys.SEARCH_FILTER, "hans");
-        log.debug("Search for 'hans' gave\n"
-                  + searcher.search(request).toXML());
+        String result = searcher.search(request).toXML();
+        log.debug("Search with filter for 'hans' gave\n" + result);
+        assertEquals("We should get the right number of hits",
+                     1, getHitCount(result));
         searcher.close();
     }
 

@@ -1,10 +1,11 @@
-<%@ page import="java.io.File" %>
 <%@ page import="dk.statsbiblioteket.gwsc.WebServices" %>
+<%@ page import="dk.statsbiblioteket.util.xml.DOM" %>
+<%@ page import="dk.statsbiblioteket.util.xml.XSLT" %>
 <%@ page import="org.w3c.dom.Document" %>
-<%@ page import="dk.statsbiblioteket.util.xml.*" %>
-<%@ page import="java.util.Properties" %>
-<%@ page import="java.net.URL" %>
 <%@ page import="javax.xml.transform.TransformerException" %>
+<%@ page import="java.io.File" %>
+<%@ page import="java.net.URL" %>
+<%@ page import="java.util.Properties" %>
 <%@ page pageEncoding="UTF-8" %>
 <%
     response.setContentType("text/html; charset=UTF-8");
@@ -96,11 +97,14 @@
         if (filter != null) {
             merged += "(" + filter + ")";
         }
-        if (query != null) {
+        if (query != null && !"*".equals(query) ) {
             if (!"".equals(merged)) {
                 merged += " AND ";
             }
             merged += "(" + query + ")";
+        }
+        if ("".equals(merged)) {
+            merged = "*";
         }
         String xml_facet_result = (String)services.execute(
                 "summasimplefacet", merged);
