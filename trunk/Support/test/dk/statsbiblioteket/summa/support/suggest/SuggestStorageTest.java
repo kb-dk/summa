@@ -4,8 +4,12 @@ import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.support.api.SuggestResponse;
 import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.xml.DOM;
 
 import java.io.File;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
 
 /**
  * 
@@ -72,6 +76,44 @@ public class SuggestStorageTest extends TestCase {
         xml = eat(xml, "new-2");
         xml = eat(xml, "new-1");
     }
+
+    /* Test that suggestions that yeild the same normalized key
+     * still have their own hit counts */
+    public void testHitCountsOnSameKey() throws Exception {
+        storage.addSuggestion("foo", 10, 1);
+        storage.addSuggestion("\"foo\"", 2, 2);
+
+        SuggestResponse resp = storage.getSuggestion("f", 10);
+        String xml = resp.toXML();
+        System.out.println(xml);
+
+
+        Document dom = DOM.stringToDOM(xml);
+        NodeList nodes = DOM.selectNodeList(dom, "//suggestion");
+        assertEquals(2, nodes.getLength());
+
+        int fooHits, fooQuotedHits;
+        if ("foo".equals(nodes.item(0).getTextContent())) {
+            fooHits = Integer.parseInt(
+                    nodes.item(0).getAttributes().getNamedItem("hits")
+                            .getTextContent());
+            fooQuotedHits = Integer.parseInt(
+                    nodes.item(1).getAttributes().getNamedItem("hits")
+                            .getTextContent());
+        } else {
+            fooHits = Integer.parseInt(
+                    nodes.item(1).getAttributes().getNamedItem("hits")
+                            .getTextContent());
+            fooQuotedHits = Integer.parseInt(
+                    nodes.item(0).getAttributes().getNamedItem("hits")
+                            .getTextContent());
+        }
+
+        assertEquals("The 'foo' suggestion should have 10 hits", 10, fooHits);
+        assertEquals(
+                "The '\"foo\"' suggestion should have 2 hits", 2, fooQuotedHits);
+    }
+
 
     /**
      * Eats everything out of food, up until, and including, bite.
