@@ -22,18 +22,18 @@
  */
 package dk.statsbiblioteket.summa.search;
 
-import java.io.File;
-import java.io.IOException;
-
-import dk.statsbiblioteket.util.watch.Observable;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.index.IndexCommon;
+import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.watch.Observable;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.File;
+import java.io.IOException;
 
 /**
  * Watches for changes to a Summa index, triggering an update to listeners.
@@ -135,7 +135,7 @@ public class IndexWatcher extends Observable<IndexListener> implements
         }
         checkHasBeenPerformed = false;
         updateAndReturnCurrentState();
-        Thread thisThread = new Thread(this);
+        Thread thisThread = new Thread(this, "IndexWatcher");
         thisThread.start();
     }
 

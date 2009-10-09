@@ -1,19 +1,18 @@
 package dk.statsbiblioteket.summa.storage;
 
-import dk.statsbiblioteket.summa.storage.api.*;
 import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
-import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
+import dk.statsbiblioteket.summa.storage.api.*;
 import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.qa.QAInfo;
-
-import java.util.*;
-import java.io.IOException;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
+import java.util.*;
 
 /**
  * A {@link Storage} proxying requests onto a collection of sub-storages. The
@@ -284,7 +283,7 @@ public class AggregatingStorage extends StorageBase {
             log = LogFactory.getLog (IteratorContextReaper.class);
             this.iterators = iterators;
             mayRun = true;
-            thread = new Thread(this);
+            thread = new Thread(this, "AggregatingStorage daemon");
             thread.setDaemon(true); // Allow JVM to exit when running
         }
 

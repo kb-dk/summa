@@ -26,16 +26,16 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.browse;
 
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.TimeUnit;
-
-import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
-import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMap;
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult;
+import dk.statsbiblioteket.summa.facetbrowser.core.map.CoreMap;
+import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
 import dk.statsbiblioteket.summa.search.document.DocIDCollector;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
+
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Performs the primary work of mapping document IDs to tags.
@@ -83,7 +83,8 @@ public class BrowserThread implements Runnable {
             this.startPos = startPos;
             this.endPos = endPos;
             this.request = request;
-            thread = new Thread(this);
+            thread = new Thread(
+                    this, "BrowserThread_" + System.currentTimeMillis());
             thread.run();
         } finally {
             lock.unlock();

@@ -26,21 +26,21 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.browse;
 
+import dk.statsbiblioteket.summa.common.util.FlexiblePair;
 import dk.statsbiblioteket.summa.common.util.PriorityQueue;
 import dk.statsbiblioteket.summa.common.util.PriorityQueueLong;
-import dk.statsbiblioteket.summa.common.util.FlexiblePair;
-import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
+import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.api.FacetResult;
 import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
 
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
-import java.io.StringWriter;
 
 /**
  * A tag-counter optimized for medium to large search-results. The performance
@@ -453,7 +453,7 @@ public class TagCounterArray implements TagCounter, Runnable {
 
     public synchronized void reset() {
         lock.lock();
-        new Thread(this).run();
+        new Thread(this, "TagCounterArray-reset").run();
     }
 
     public void run() {
