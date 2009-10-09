@@ -147,7 +147,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
                 throw new IOException("Unable to create schema", e);
             }
         } else {
-            log.debug("Calling analyze, just to make sure");
+            log.debug("Calling normalize, just to make sure");
             try {
                 optimizeTables();
             } catch (Exception e) {
@@ -202,16 +202,18 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
 
     private void createSchema() throws SQLException {
         Statement s = connection.createStatement();
-        s.execute(String.format("CREATE TABLE suggest_index("
-                                      + "query VARCHAR(%1$d) PRIMARY KEY, "
+        s.execute(String.format("CREATE TABLE IF NOT EXISTS suggest_index("
+                               + "query_id INTEGER AUTO_INCREMENT PRIMARY KEY, "
+                               + "normalized_query VARCHAR(%1$d) NOT NULL)",
+                                MAX_QUERY_LENGTH));
+
+        s.execute(String.format("CREATE TABLE IF NOT EXISTS suggest_data("
+                                      + "query_id INTEGER NOT NULL, "
+                                      + "user_query VARCHAR(%1$d) UNIQUE, "
                                       + "query_count INTEGER, "
                                       + "hit_count INTEGER, "
-                                      + "mtime BIGINT)", MAX_QUERY_LENGTH));
-
-        s.execute(String.format("CREATE TABLE suggest_map("
-                                      + "query VARCHAR(%1$d), "
-                                      + "user_query VARCHAR(%1$d), "
-                                      + "PRIMARY KEY (query,user_query))",
+                                      + "mtime BIGINT, "
+                                      + "PRIMARY KEY (query_id,user_query))",
                                 MAX_QUERY_LENGTH));
         s.close();
         createIndexes();
@@ -222,18 +224,18 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         log.info("Preparing table indices");
         Statement s = connection.createStatement();
 
-        // We don't need to create an index on suggest.query since it
-        // is already the pimary key (which requires an index)
+        //
+        s.execute("CREATE INDEX IF NOT EXISTS suggest_normalized_query "
+                + "ON suggest_index(normalized_query)");
 
-        // This index is used for prefix searches sorted on query_count
+        // This index is used for prefix searches sorted on query_count,
+        // as well as fast lookups of query_id given a user_query
         s.execute("CREATE INDEX IF NOT EXISTS suggest_query_count "
-                + "ON suggest_index(query, query_count desc)");
+                + "ON suggest_data(user_query, query_count desc)");
 
-        // This index is not currently used, but can provide some
-        // nifty stats in the future. Eg. most recent queries sorted
-        // by query_count
+        // This index is used for most recent queries sorted by query_count
         s.execute("CREATE UNIQUE INDEX IF NOT EXISTS suggest_mtime "
-                + "ON suggest_index(mtime desc, query_count desc)");
+                + "ON suggest_data(mtime desc, query_count desc)");
 
         s.close();
         log.info("Table indices prepared in "
@@ -242,6 +244,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
 
     private void dropIndexes() throws SQLException {
         Statement s = connection.createStatement();
+        s.execute("DROP INDEX suggest_normalized_query");
         s.execute("DROP INDEX suggest_query_count");
         s.execute("DROP INDEX suggest_mtime");
         s.close();
@@ -276,13 +279,13 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             PreparedStatement psExists = connection.prepareStatement(
                  // FIXME: Sorting on query_count is slow
                  "SELECT user_query AS query, query_count, hit_count " +
-                 "FROM suggest_index " +
-                 "INNER JOIN suggest_map " +
-                 "ON suggest_index.query = suggest_map.query " +
-                 "WHERE suggest_index.query LIKE ? " +
+                 "FROM suggest_data " +
+                 "INNER JOIN suggest_index " +
+                 "ON suggest_index.query_id = suggest_data.query_id " +
+                 "WHERE suggest_index.normalized_query LIKE ? " +
                  "ORDER BY query_count DESC " +
                  "LIMIT ?");
-            psExists.setString(1, analyze(prefix) + "%");
+            psExists.setString(1, normalize(prefix) + "%");
             psExists.setInt(2, maxResults);
             psExists.setFetchDirection(ResultSet.FETCH_FORWARD);
             psExists.setFetchSize(maxResults);
@@ -334,10 +337,10 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             PreparedStatement psExists = connection.prepareStatement(
                  // FIXME: ORDER BY query_count is slow
                  "SELECT user_query AS query, query_count, hit_count " +
-                 "FROM suggest_index " +
-                 "INNER JOIN suggest_map " +
-                 "ON suggest_index.query = suggest_map.query " +
-                 "WHERE suggest_index.mtime > ? " +
+                 "FROM suggest_data " +
+                 "INNER JOIN suggest_index " +
+                 "ON suggest_index.query_id = suggest_data.query_id " +
+                 "WHERE suggest_data.mtime > ? " +
                  "ORDER BY mtime DESC " +
                  "LIMIT ?");
             psExists.setLong(1, mtime);
@@ -396,9 +399,13 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
 
         try {
             insertSuggestion(query, hits, queryCount == -1 ? 1 : queryCount);
+            log.debug("Created new suggestion '"
+                      + query + "' with " + hits + " hits");
         } catch (SQLException e) {
             if (isIntegrityConstraintViolation(e)) {
                 updateSuggestion(query, hits, queryCount);
+                log.debug("Updated suggestion '"
+                      + query + "' with " + hits + " hits");
             } else {
                 throw new IOException(String.format(
                         "Unable to complete addSuggestion(%s, %d, %d)",
@@ -410,41 +417,69 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
     private void insertSuggestion(String query, int hits, int queryCount)
             throws SQLException {
 
-        String analyzedQuery = analyze(query);
+        String normalizedQuery = normalize(query);
 
-        if (!checkString(analyzedQuery)) return;
+        if (!checkString(normalizedQuery)) return;
 
         if (normalizeQueries) {
-            query = analyzedQuery;
+            query = normalizedQuery;
         }
 
-        PreparedStatement psInsert = connection.prepareStatement(
-                "INSERT INTO suggest_index " +
-                "VALUES (?, ?, ?, ?)");
-        psInsert.setString(1, analyzedQuery);
-        psInsert.setInt(2, queryCount);
-        psInsert.setInt(3, hits);
-        psInsert.setLong(4, timestamps.next());
-        psInsert.executeUpdate();
-        psInsert.close();
+        // We need to control the transaction in order to roll back the
+        // suggest_index insertion if 'query' is already in
+        // suggest_data.user_query
+        connection.setAutoCommit(false);
 
-        psInsert = connection.prepareStatement(
-                "INSERT INTO suggest_map " +
-                "VALUES (?, ?)");
-        psInsert.setString(1, analyzedQuery);
-        psInsert.setString(2, query);
-        psInsert.executeUpdate();
+        PreparedStatement psInsert;
+        try {
+            // Can not raise an integrity constriant violation because PK
+            // is AUTO_INCREMENT
+            psInsert = connection.prepareStatement(
+                    "INSERT INTO suggest_index (normalized_query)" +
+                    "VALUES (?)");
+            psInsert.setString(1, normalizedQuery);
+            psInsert.executeUpdate();
+            psInsert.close();
+
+            // Raises integrity constraint violation if 'query' is already
+            // listed in suggest_data.user_query
+            psInsert = connection.prepareStatement(
+                    "INSERT INTO suggest_data " +
+                    "VALUES (identity(), ?, ?, ?, ?)");
+            psInsert.setString(1, query);
+            psInsert.setInt(2, queryCount);
+            psInsert.setInt(3, hits);
+            psInsert.setLong(4, timestamps.next());
+            psInsert.executeUpdate();
+            psInsert.close();
+
+        } catch (SQLException e) {
+            // Undo addition to suggest_index
+            connection.rollback();
+
+            // Integrity constraint violations are OK,
+            // we must do an update instead - see comments above
+            if (isIntegrityConstraintViolation(e)) {
+                throw e; // Ok to ditch stack trace
+            } else {
+                throw new SQLException(
+                        "Unexpected error inserting normalized query '"
+                        + normalizedQuery + "' in index", e);
+            }
+        } finally {
+            connection.setAutoCommit(true);
+        }
 
         updateCount++;
         analyzeIfNeeded();
     }
 
-    private boolean checkString (String analyzedQuery) {
-        if (analyzedQuery.length() > MAX_QUERY_LENGTH) {
+    private boolean checkString (String normalizedQuery) {
+        if (normalizedQuery.length() > MAX_QUERY_LENGTH) {
             log.info("addSuggestion: The analyzed query must be "
                      + MAX_QUERY_LENGTH + " chars or less. Got "
-                     + analyzedQuery.length()
-                      + " chars from '" + analyzedQuery + "'");
+                     + normalizedQuery.length()
+                      + " chars from '" + normalizedQuery + "'");
             return false;
         }
         return true;
@@ -454,25 +489,49 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
     private void deleteSuggestion(String query) throws SQLException {
         log.debug("Removing suggestion '" + query + "'");
 
+        String normalizedQuery = normalize(query);
+        int queryId = getQueryId(normalizedQuery);
+
         // Delete from suggest_index table
-        String analyzedQuery = analyze(query);
         PreparedStatement psUpdate = connection.prepareStatement(
                 "DELETE FROM suggest_index " +
-                "WHERE query=?"
+                "WHERE normalized_query=?"
         );
-        psUpdate.setString(1, analyzedQuery);
+        psUpdate.setString(1, normalizedQuery);
         psUpdate.executeUpdate();
 
-        // Delete from suggest_map table
-        psUpdate = connection.prepareStatement(
-                "DELETE FROM suggest_map " +
-                "WHERE query=?"
-        );
-        psUpdate.setString(1, analyzedQuery);
-        psUpdate.executeUpdate();
+        // Delete from suggest_data table
+        if (queryId != -1) {
+            psUpdate = connection.prepareStatement(
+                    "DELETE FROM suggest_data " +
+                    "WHERE query_id=?"
+            );
+            psUpdate.setInt(1, queryId);
+            psUpdate.executeUpdate();
+        } else {
+            log.warn("No suggest data for normalized query '"
+                     + normalizedQuery + "'");
+        }
 
         updateCount++;
         analyzeIfNeeded();
+    }
+
+    private int getQueryId (String normalizedQuery) throws SQLException {
+        PreparedStatement psGetId = connection.prepareStatement(
+                "SELECT query_id FROM suggest_index WHERE normalized_query=?"
+        );
+        psGetId.setString(1, normalizedQuery);
+        ResultSet results = psGetId.executeQuery();
+        try {
+            if (results.next()) {
+                return results.getInt(1);
+            } else {
+                return -1;
+            }
+        } finally {
+            results.close();
+        }
     }
 
     /**
@@ -484,44 +543,43 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
      */
     private void updateSuggestion(String query, int hits, int queryCount) {
         try {
-            String analyzedQuery = analyze(query);
+            String normalizedQuery = normalize(query);
 
-            if (!checkString(analyzedQuery)) return;
+            if (!checkString(normalizedQuery)) return;
 
             if (normalizeQueries) {
-                query = analyzedQuery;
+                query = normalizedQuery;
             }
 
             PreparedStatement psUpdate;
             if (queryCount == -1){
                 queryCount = 1;
                 psUpdate = connection.prepareStatement(
-                        "UPDATE suggest_index " +
+                        "UPDATE suggest_data " +
                         "SET query_count=query_count+?, " +
                         "    hit_count=?, " +
                         "    mtime=? " +
-                        "WHERE query=?");
+                        "WHERE user_query=?");
             } else {
                 psUpdate = connection.prepareStatement(
-                        "UPDATE suggest_index " +
+                        "UPDATE suggest_data " +
                         "SET query_count=?, " +
                         "    hit_count=?, " +
                         "    mtime=? " +
-                        "WHERE query=?");
+                        "WHERE user_query=?");
             }
 
             psUpdate.setInt(1, queryCount);
             psUpdate.setLong(2, hits);
             psUpdate.setLong(3, timestamps.next());
-            psUpdate.setString(4, analyzedQuery);
+            psUpdate.setString(4, query);
             psUpdate.executeUpdate();
 
             try {
                 psUpdate = connection.prepareStatement(
-                        "INSERT INTO suggest_map " +
-                        "VALUES (?, ?)");
-                psUpdate.setString(1, analyzedQuery);
-                psUpdate.setString(2, query);
+                        "INSERT INTO suggest_index (normalized_query)" +
+                        "VALUES (?)");
+                psUpdate.setString(1, normalizedQuery);
                 psUpdate.executeUpdate();
             } catch (SQLException e) {
                 if (!isIntegrityConstraintViolation(e)) {
@@ -551,13 +609,11 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         max = Math.min(max, MAX_SUGGESTIONS);
         try {
             PreparedStatement psAll = connection.prepareStatement(
-                    "SELECT suggest_map.user_query AS query, " +
+                    "SELECT user_query AS query, " +
                     "       query_count," +
                     "       hit_count," +
                     "       mtime " +
-                    "FROM suggest_index " +
-                    "INNER JOIN suggest_map " +
-                    "ON suggest_index.query = suggest_map.query " +
+                    "FROM suggest_data " +
                     "LIMIT ? " +
                     "OFFSET ?");
             psAll.setInt(1, max);
@@ -674,7 +730,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
         try {
             Statement s = connection.createStatement();
             s.execute("DROP TABLE suggest_index;");
-            s.execute("DROP TABLE suggest_map;");
+            s.execute("DROP TABLE suggest_data;");
             createSchema();
         } catch (SQLException e) {
             throw new IOException(
@@ -762,7 +818,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
                 (e.getErrorCode() >= 23000 && e.getErrorCode() < 24000));
     }
 
-    private String analyze(String s) {
+    private String normalize(String s) {
         try {
             TokenStream tokens = analyzer.reusableTokenStream(
                     "query", new CharSequenceReader(s));
