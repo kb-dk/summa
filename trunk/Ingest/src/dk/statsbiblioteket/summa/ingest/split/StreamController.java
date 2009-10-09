@@ -22,17 +22,17 @@
  */
 package dk.statsbiblioteket.summa.ingest.split;
 
-import java.util.NoSuchElementException;
-import java.io.IOException;
-
+import dk.statsbiblioteket.summa.common.Logging;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.filter.Filter;
+import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
-import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.filter.Filter;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.Logging;
+
+import java.io.IOException;
+import java.util.NoSuchElementException;
 
 /**
  * Retrieves payloads from a given source and processes the streams from the
@@ -154,6 +154,11 @@ public class StreamController implements ObjectFilter {
                 log.warn("NPE while dumping content of " + newPayload, e);
             }
         }
+        //  We cannot calls stop yet, as newPayload hasn't been finished
+        /*if (payload == null) {
+            log.debug("hasNext() is false, calling stop on parser");
+            parser.stop();
+        } */
         return newPayload;
     }
 
@@ -180,7 +185,7 @@ public class StreamController implements ObjectFilter {
                     "close(%b): Cannot close as no source is specified",
                     success));
         } else {
-//            parser.stop(); // It should finish by itself
+            parser.stop();
             source.close(success);
         }
     }
