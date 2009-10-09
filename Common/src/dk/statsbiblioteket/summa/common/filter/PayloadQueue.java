@@ -20,13 +20,13 @@
 package dk.statsbiblioteket.summa.common.filter;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
+import java.util.Collection;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.Collection;
 
 /**
  * A queue tailored for Payloads, where the maximum queue size can be defined
@@ -48,7 +48,7 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
     private AtomicLong totalSize = new AtomicLong(0);
     private long maxSize;
     /**
-     * The flag is notified when elements are removed from the queue.
+     * The flag is notified when elements are added or removed from the queue.
      */
     private final Object flag = new Object();
 
@@ -71,7 +71,10 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
         }
         if (super.offer(payload)) {
             totalSize.addAndGet(payloadSize);
-            return true;
+            synchronized (flag) {
+                flag.notifyAll();
+                return true;
+             }
         }
         return false;
     }
@@ -100,6 +103,9 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
         long payloadSize = waitForRoom(payload);
         super.put(payload);
         totalSize.addAndGet(payloadSize);
+        synchronized (flag) {
+             flag.notifyAll();
+         }
     }
 
     // TODO: Change implementation of waitforRoom to support timeouts
@@ -109,14 +115,17 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
         long payloadSize = waitForRoom(payload);
         if (super.offer(payload, timeout, unit)) {
             totalSize.addAndGet(payloadSize);
-            return true;
+            synchronized (flag) {
+                 flag.notifyAll();
+                return true;
+             }
         }
         return false;
     }
 
     @Override
     public boolean add(Payload payload) {
-        // Add is a wrapper for offer, so don't update totalSize
+        // Add is a wrapper for offer, so don't update totalSize or flag
         return super.add(payload);
     }
 
@@ -125,7 +134,9 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
         Payload result = super.poll();
         if (result != null) {
             totalSize.addAndGet(-1 * calculateSize(result));
-            flag.notifyAll();
+            synchronized (flag) {
+                 flag.notifyAll();
+             }
         }
         return result;
     }
@@ -135,9 +146,9 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
         Payload result = super.take();
         totalSize.addAndGet(-1 * calculateSize(result));
         synchronized (flag) {
-             flag.notifyAll();
-         }
-        return result;
+            flag.notifyAll();
+            return result;
+        }
     }
 
     /**
@@ -147,7 +158,11 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
     public Payload uninterruptibleTake() {
         while (true) {
             try {
-                return take();
+                Payload result = take();
+                synchronized (flag) {
+                     flag.notifyAll();
+                    return result;
+                 }
             } catch (InterruptedException e) {
                 log.warn("Got InterruptedException while taking in "
                          + "uninterruptibleTake. Retrying", e);
@@ -194,9 +209,9 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
         int count = super.drainTo(c);
         totalSize.set(0);
         synchronized (flag) {
-             flag.notifyAll();
+            flag.notifyAll();
+            return count;
          }
-        return count;
     }
 
     @Override
@@ -231,6 +246,34 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
         return size;
     }
 
+    /**
+     * Waits until theres is at least one entry or an interrupt is called.
+     * @throws InterruptedException if an interrupt is called.
+     */
+    public void waitForEntry() throws InterruptedException {
+        synchronized(flag) {
+            while (size() == 0) {
+                flag.wait();
+            }
+        }
+    }
+
+    /**
+     * Waits until there is at least one entry.
+     */
+    public void uninterruptibleWaitForEntry() {
+        synchronized(flag) {
+            while (size() == 0) {
+                try {
+                    flag.wait();
+                } catch (InterruptedException e) {
+                    log.trace("uninterruptibleWaitForEntry caught interrupt. "
+                              + "Continuing");
+                }
+            }
+        }
+    }
+
     // TODO: Make proper estimations, not just loose guesses
     private long calculateSize(Payload payload) {
         long BASE = 50;
@@ -241,4 +284,3 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
                + (!payload.getRecord().hasMeta() ? 0 : 1000));
     }
 }
-

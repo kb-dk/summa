@@ -22,17 +22,17 @@
  */
 package dk.statsbiblioteket.summa.ingest.split;
 
-import java.util.concurrent.TimeUnit;
-import java.util.NoSuchElementException;
-import java.io.InputStream;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.PayloadQueue;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import java.io.InputStream;
+import java.util.NoSuchElementException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Helper implementation of StreamParser that handles the bookkeeping of
@@ -77,7 +77,7 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
             "summa.ingest.stream.threadedstreamparser.queue.timeout";
     public static final int DEFAULT_QUEUE_TIMEOUT = Integer.MAX_VALUE;
 
-    private static final long HASNEXT_SLEEP = 50; // Sleep-ms between polls
+    //private static final long HASNEXT_SLEEP = 50; // Sleep-ms between polls
     private static final Payload interruptor =
             new Payload(new Record("dummyID", "dummyStreamBase", new byte[0]));
 
@@ -102,7 +102,8 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
         log.debug("open(" + streamPayload + ") called");
         if (running) {
             throw new IllegalStateException(String.format(
-                    "Already parsing %s", sourcePayload));
+                    "Already parsing %s when open(%s) was called",
+                    sourcePayload, streamPayload));
         }
         queue.clear(); // Clean-up from previous runs
         if (streamPayload.getStream() == null) {
@@ -115,7 +116,9 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
         log.trace("Starting Thread for " + streamPayload);
         running = true;
         finished = false;
-        new Thread(this).start();
+        //noinspection DuplicateStringLiteralInspection
+        new Thread(this, "ThreadedStreamParser("
+                         + this.getClass().getSimpleName() + ")").start();
     }
 
     @SuppressWarnings({"ObjectEquality"})
@@ -155,18 +158,18 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
                 return payload != interruptor;
             }
 
-            try {
+//            try {
                 // Sleeping in a high throughput filter chain is very bad;
                 // we log this as a warning.
-                log.debug("No Buffer underrun, consider increasing "
-                         + CONF_QUEUE_SIZE + " of " + getClass()
-                         + " in the configuration");
-                Thread.sleep(HASNEXT_SLEEP); // Ugly
-            } catch (InterruptedException e) {
-                log.warn("Interrupted while waiting for Record in hasNext(). "
-                          + "Returning false", e);
-                return false;
-            }
+                log.trace("hasNext(): Waiting for further Payloads");
+                queue.uninterruptibleWaitForEntry();
+                log.trace("hasNext(): Finished waiting");
+//                Thread.sleep(HASNEXT_SLEEP); // Ugly
+//            } catch (InterruptedException e) {
+//                log.warn("Interrupted while waiting for Record in hasNext(). "
+//                          + "Returning false", e);
+//                return false;
+//            }
         }
         log.warn(String.format("hasNext waited more than %d ms for status and"
                                + " got none. Returning false", queueTimeout));
@@ -282,7 +285,7 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
     }
 
     public void stop() {
-        log.debug("stop() called");
+        log.debug("stop() called on " + this);
         running = false;
         queue.clear();
         queue.add(interruptor);
@@ -292,6 +295,7 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
         log.debug("run() entered");
         try {
             protectedRun();
+            sourcePayload.close();
         } catch (Exception e) {
             log.warn(String.format(
                     "Exception caught from protectedRun of %s with origin '%s'"
@@ -308,7 +312,8 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
         }
         running = false;
         finished = true; // Too final?
-        log.debug("run() finished");
+        queue.add(interruptor);
+        log.debug("run() finished for " + this);
     }
 
     /**
@@ -330,6 +335,7 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
 
     @Override
     public String toString() {
+        //noinspection DuplicateStringLiteralInspection
         return "ThreadedStreamParser(" + queue.size() + " payloads queued)";
     }
 }

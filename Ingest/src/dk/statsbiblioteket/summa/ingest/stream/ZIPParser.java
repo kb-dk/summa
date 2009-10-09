@@ -19,9 +19,9 @@
  */
 package dk.statsbiblioteket.summa.ingest.stream;
 
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.ingest.split.StreamController;
 import dk.statsbiblioteket.summa.ingest.split.ThreadedStreamParser;
 import dk.statsbiblioteket.util.qa.QAInfo;
@@ -98,7 +98,8 @@ public class ZIPParser extends ThreadedStreamParser {
             log.trace("Entry " + entry.getName() + " matched. Adding to queue "
                       + "and waiting for close");
             matching++;
-            ZipEntryInputStream zipStream = new ZipEntryInputStream(zip);
+            ZipEntryInputStream zipStream = new ZipEntryInputStream(
+                    zip, sourcePayload.toString() + "/" + entry.getName());
             Payload payload = new Payload(zipStream);
             payload.getData().put(
                     Payload.ORIGIN,
@@ -107,9 +108,11 @@ public class ZIPParser extends ThreadedStreamParser {
             addToQueue(payload);
             long startTime = System.currentTimeMillis();
             try {
+                log.trace("Waiting for close on " +zipStream);
                 synchronized (zipStream.waiter) {
                     zipStream.waiter.wait(processingTimeout);
                 }
+                log.trace(zipStream + " closed");
             } catch (InterruptedException e) {
                 log.warn(String.format(
                         "Interrupted while waiting for entry %s from %s",
@@ -127,6 +130,8 @@ public class ZIPParser extends ThreadedStreamParser {
                 zipStream.close();
             }
         }
+        log.debug("Ending processing of " + sourcePayload + " with running="
+                  + running);
         zip.close();
         // TODO: Check if Payload should be closed here
         log.debug(String.format("Processed %d ZIP entries from %s",
@@ -142,21 +147,26 @@ public class ZIPParser extends ThreadedStreamParser {
         private ZipInputStream zip;
         public final Object waiter = new Object();
         private boolean closed = false;
+        private String designation;
 
-        private ZipEntryInputStream(ZipInputStream zip) {
+        private ZipEntryInputStream(ZipInputStream zip, String designation) {
             this.zip = zip;
-            log.trace("Wrapping ZipInputStream");
+            this.designation = designation;
+            log.trace("Wrapping ZipInputStream " + designation);
         }
 
         @Override
         public void close() throws IOException {
-            if (!closed) {
-                entryLog.trace("Closing ZipInputStream");
-                zip.closeEntry();
+            try {
+                if (!closed) {
+                    entryLog.trace("Closing ZipInputStream " + designation);
+                    zip.closeEntry();
+                }
+            } finally {
                 closed = true;
-            }
-            synchronized (waiter) {
-                waiter.notifyAll();
+                synchronized (waiter) {
+                    waiter.notifyAll();
+                }
             }
         }
 
@@ -237,6 +247,11 @@ public class ZIPParser extends ThreadedStreamParser {
         public long skip(long n) throws IOException {
             checkClose();
             return zip.skip(n);
+        }
+
+        @Override
+        public String toString() {
+            return "ZipEntryInputStream " + designation;
         }
     }
 }
