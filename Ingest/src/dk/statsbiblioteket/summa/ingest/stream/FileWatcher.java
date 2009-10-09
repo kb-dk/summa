@@ -22,10 +22,10 @@
  */
 package dk.statsbiblioteket.summa.ingest.stream;
 
+import dk.statsbiblioteket.summa.common.Logging;
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -72,7 +72,8 @@ public class FileWatcher extends FileReader implements Runnable {
         log.trace("FileWatcher created with pollInterval " + pollInterval);
         if (fileWatcherThread == null) {
             log.debug("Starting fileWatcherThread");
-            fileWatcherThread = new Thread(this);
+            fileWatcherThread = new Thread(
+                    this, "FileWatcher(" + pollInterval + " seconds)");
             fileWatcherThread.start();
         }
     }
