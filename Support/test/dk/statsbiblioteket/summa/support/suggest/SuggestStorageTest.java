@@ -35,6 +35,7 @@ public class SuggestStorageTest extends TestCase {
     }
 
     public void tearDown() throws Exception {
+        storage.close();
         Files.delete(dbLocation);
     }
 
@@ -80,8 +81,9 @@ public class SuggestStorageTest extends TestCase {
     /* Test that suggestions that yeild the same normalized key
      * still have their own hit counts */
     public void testHitCountsOnSameKey() throws Exception {
+        storage.addSuggestion("\"foo\"", 4, 2);
         storage.addSuggestion("foo", 10, 1);
-        storage.addSuggestion("\"foo\"", 2, 2);
+        storage.addSuggestion("\"foo\"", 2, 2); // Also test updates
 
         SuggestResponse resp = storage.getSuggestion("f", 10);
         String xml = resp.toXML();
@@ -114,6 +116,62 @@ public class SuggestStorageTest extends TestCase {
                 "The '\"foo\"' suggestion should have 2 hits", 2, fooQuotedHits);
     }
 
+    public void testTwoAdds() throws Exception {
+        storage.addSuggestion("food", 4, 2);
+        storage.addSuggestion("foo", 10, 1);
+
+        SuggestResponse resp = storage.getSuggestion("f", 10);
+        String xml = resp.toXML();
+        System.out.println(xml);
+
+        Document dom = DOM.stringToDOM(xml);
+        NodeList nodes = DOM.selectNodeList(dom, "//suggestion");
+        assertEquals(2, nodes.getLength());
+
+        int fooIndex, foodIndex;
+        int fooHits, foodHits, fooQueries, foodQueries;
+        if ("foo".equals(nodes.item(0).getTextContent())) {
+            fooIndex = 0;
+            foodIndex = 1;
+        } else {
+            fooIndex = 1;
+            foodIndex = 0;
+        }
+
+        fooHits = Integer.parseInt(
+                nodes.item(fooIndex).getAttributes().getNamedItem("hits")
+                        .getTextContent());
+        fooQueries= Integer.parseInt(
+                nodes.item(fooIndex).getAttributes().getNamedItem("queryCount")
+                        .getTextContent());
+        foodHits = Integer.parseInt(
+                nodes.item(foodIndex).getAttributes().getNamedItem("hits")
+                        .getTextContent());
+        foodQueries = Integer.parseInt(
+                nodes.item(foodIndex).getAttributes().getNamedItem("queryCount")
+                        .getTextContent());
+
+
+        assertEquals("The 'foo' suggestion should have 10 hits", 10, fooHits);
+        assertEquals("The 'foo' suggestion should have 1 query", 1, fooQueries);
+        assertEquals(
+                "The 'food' suggestion should have 4 hits", 4, foodHits);
+        assertEquals(
+                "The 'food' suggestion should have 2 queries", 2, foodQueries);
+    }
+
+    public void testDeletes() throws Exception {
+        testTwoAdds();
+        storage.addSuggestion("foo", 0);
+        String xml = storage.getSuggestion("f", 100).toXML();
+
+        Document dom = DOM.stringToDOM(xml);
+        NodeList nodes = DOM.selectNodeList(dom, "//suggestion");
+        assertEquals(1, nodes.getLength());
+
+        assertEquals("The 'foo' suggestion should have been removed",
+                     "food", nodes.item(0).getTextContent());
+    }
 
     /**
      * Eats everything out of food, up until, and including, bite.
