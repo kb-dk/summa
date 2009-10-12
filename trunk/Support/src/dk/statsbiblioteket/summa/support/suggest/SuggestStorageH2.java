@@ -31,6 +31,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Token;
+import org.apache.lucene.analysis.WhitespaceAnalyzer;
 import org.h2.jdbcx.JdbcDataSource;
 
 import java.io.File;
@@ -46,14 +47,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
     private static Log log = LogFactory.getLog(SuggestStorageH2.class);
 
     public static final String DB_FILE = "suggest_h2storage";
-    private static final String SELECT_QUERY =
-            "SELECT query FROM suggest WHERE query=? LIMIT ?";
-//    private static final String SELECT_LOWERCASE_QUERY =
-//            "SELECT query FROM suggest WHERE querylower=? LIMIT ?";
-    private static final String DELETE_LOWERCASE_QUERY =
-            "SELECT query FROM suggest WHERE querylower=?";
-    private static final String INSERT_STATEMENT =
-            "INSERT INTO suggest VALUES (?, ?, ?, ?)";
+
     public static final int MAX_QUERY_LENGTH = 250;
 
     /**
@@ -66,7 +60,7 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
     private File location = null;
     private Connection connection;
     private boolean closed = true;
-    private Analyzer analyzer;
+    private Analyzer normalizer, sanitizer;
     private boolean normalizeQueries;
     private int updateCount = 0;
     private boolean useL2cache;
@@ -82,15 +76,54 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
     public static final boolean DEFAULT_L2CACHE = true;
 
     /**
-     * The {@link Analyzer} implementation to use for generating
-     * query collation keys. Default is
+     * The {@link Analyzer} implementation to use for generating normalized
+     * query collation keys. When suggestion lookup is done the query-string
+     * is normalized and compared against the normalized suggestions in the
+     * database. The normalizer only affects how suggestions are looked up
+     * in the database, to affect how they are presented to the user see
+     * {@link #CONF_SANITIZER}.
+     * <p/>
+     * Default is
      * {@link dk.statsbiblioteket.summa.common.lucene.analysis.SummaKeywordAnalyzer}.
      * <p/>
      * The specified class <i>must</i> have a no-arguments constructor.
      */
-    public static final String CONF_ANALYZER = "summa.support.suggest.analyzer";
-    public static final Class<? extends Analyzer> DEFAULT_ANALYZER =
+    public static final String CONF_NORMALIZER = "summa.support.suggest.normalizer";
+    public static final Class<? extends Analyzer> DEFAULT_NORMALIZER =
                                                      SummaKeywordAnalyzer.class;
+
+    /**
+     * The {@link Analyzer} implementation to use for for sanitizing queries
+     * before storing them in the database. The typical use case for sanitizing
+     * suggestions is to not differentiate between queries with leading- or
+     * trailing whitespace at the user level. The sanitizer only affects how
+     * suggestions are presented to the user, not how they are matched in the
+     * database. To affect the actual matching see {@link #CONF_NORMALIZER}.
+     * <p/>
+     * Default is
+     * {@link WhitespaceAnalyzer}.
+     * <p/>
+     * The specified class <i>must</i> have a no-arguments constructor.
+     */
+    public static final String CONF_SANITIZER = "summa.support.suggest.sanitizer";
+    public static final Class<? extends Analyzer> DEFAULT_SANITIZER =
+                                                     WhitespaceAnalyzer.class;
+
+    private ThreadLocal<StringBuilder> threadLocalBuilder =
+                                              new ThreadLocal<StringBuilder>() {
+        @Override
+        protected StringBuilder initialValue() {
+            return new StringBuilder();
+        }
+
+        @Override
+        public StringBuilder get() {
+            StringBuilder b = super.get();
+            b.setLength(0); // clear/reset the buffer
+            return b;
+        }
+
+    };
 
     @SuppressWarnings({"UnusedDeclaration"})
     public SuggestStorageH2(Configuration conf) {
@@ -100,14 +133,26 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
                 SuggestSearchNode.CONF_NORMALIZE_QUERIES,
                 SuggestSearchNode.DEFAULT_NORMALIZE_QUERIES);
 
+        /* Initialize query normalizer */
         Class<? extends Analyzer> analyzerClass = Configuration.getClass(
-                          CONF_ANALYZER,Analyzer.class, DEFAULT_ANALYZER, conf);
+                CONF_NORMALIZER,Analyzer.class, DEFAULT_NORMALIZER, conf);
         try {
-            analyzer = analyzerClass.newInstance();
+            normalizer = analyzerClass.newInstance();
         } catch (Exception e) {
             throw new ConfigurationException(
-                    "Unable to instantiate query analyzer", e);
+                    "Unable to instantiate query normalizer", e);
         }
+
+        /* Initialize query sanitizer */
+        analyzerClass = Configuration.getClass(
+                CONF_SANITIZER, Analyzer.class, DEFAULT_SANITIZER, conf);
+        try {
+            sanitizer = analyzerClass.newInstance();
+        } catch (Exception e) {
+            throw new ConfigurationException(
+                    "Unable to instantiate query sanitizer", e);
+        }
+
         useL2cache = conf.getBoolean(CONF_L2CACHE, DEFAULT_L2CACHE);
         timestamps = new UniqueTimestampGenerator();
     }
@@ -383,6 +428,12 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
     // -1 means add 1 to suggest_index.query_count
     public synchronized void addSuggestion(
                     String query, int hits, int queryCount) throws IOException {
+
+        // Doing checkString() here makes sure we don't allocate huge amounts
+        // of memory in our thread local StringBuilders used in join()
+        if (!checkString(query)) return;
+        query = sanitize(query);
+
         if (hits == 0) {
             log.trace("No hits for '" + query + "'. Deleting query...");
             try {
@@ -394,8 +445,6 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
             }
             return;
         }
-
-        if (!checkString(query)) return;
 
         try {
             insertSuggestion(query, hits, queryCount == -1 ? 1 : queryCount);
@@ -820,15 +869,46 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
 
     private String normalize(String s) {
         try {
-            TokenStream tokens = analyzer.reusableTokenStream(
+            TokenStream tokens = normalizer.reusableTokenStream(
                     "query", new CharSequenceReader(s));
-            Token tok = new Token();
-            tokens.next(tok);
-            return tok.term();
+            return join(tokens, " ");
         } catch (IOException e) {
             log.error(String.format(
                     "Error analyzing query '%s': %s", s, e.getMessage()), e);
             return "ERROR";
         }
     }
+
+    private String sanitize(String s) {
+        try {
+            TokenStream tokens = sanitizer.reusableTokenStream(
+                    "query", new CharSequenceReader(s));
+            return join(tokens, " ");
+        } catch (IOException e) {
+            log.error(String.format(
+                    "Error analyzing query '%s': %s", s, e.toString()), e);
+            return "ERROR";
+        }
+    }
+
+    private String join(TokenStream toks, String delimiter) {
+        StringBuilder buf = threadLocalBuilder.get();
+        try {
+            Token tok = new Token();
+            while (toks.next(tok) != null) {
+                if (buf.length() != 0) {
+                    buf.append(" ");
+                }
+                buf.append(tok.termBuffer(), 0, tok.termLength());
+            }
+            return buf.toString();
+        } catch (IOException e) {
+            // This should *never* happen because we read from a local String,
+            // not really doing IO
+            log.error(String.format(
+                    "Error analyzing query: %s", e.toString()), e);
+            return "ERROR";
+        }
+    }
+
 }

@@ -173,6 +173,23 @@ public class SuggestStorageTest extends TestCase {
                      "food", nodes.item(0).getTextContent());
     }
 
+    /* Suggestions should not include leading/trailing whitespace */
+    public void testLeadingAndTrailingWhitespaceDeletes() throws Exception {
+        // These additions should all result in the same suggestion
+        storage.addSuggestion(" foo bar", 4, 2);
+        storage.addSuggestion("foo bar", 10, 1);
+        storage.addSuggestion("foo bar ", 27, 68);
+
+        SuggestResponse resp = storage.getSuggestion("f", 10);
+        String xml = resp.toXML();
+        System.out.println(xml);
+
+        Document dom = DOM.stringToDOM(xml);
+        NodeList nodes = DOM.selectNodeList(dom, "//suggestion");
+        assertEquals(1, nodes.getLength());
+        assertEquals("foo bar", nodes.item(0).getTextContent());
+    }
+
     /**
      * Eats everything out of food, up until, and including, bite.
      * Returns the remainer of food.
