@@ -330,7 +330,7 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
         }
         running = false;
         finished = true; // Too final?
-        queue.add(interruptor);
+        addToQueue(interruptor);
         log.debug("run() finished for " + this);
     }
 
