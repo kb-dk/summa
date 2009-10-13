@@ -50,9 +50,17 @@ public class ThreadedStreamParserTest extends TestCase {
     /**
      * Creates one payload per byte in the source stream
      */
-    static class PayloadFiller extends BaseParser {
+    public static class PayloadFiller extends BaseParser {
 
-        PayloadFiller (int queueSize) {
+        public PayloadFiller () {
+            this(1000);
+        }
+
+        public PayloadFiller (Configuration conf) {
+            this(conf.getInt("queuesize", 1000));
+        }
+
+        public PayloadFiller (int queueSize) {
             super(queueSize, Integer.MAX_VALUE, 1000);
         }
 
@@ -113,7 +121,7 @@ public class ThreadedStreamParserTest extends TestCase {
         }
     }
 
-    private static String formatStackTrace(Throwable t) {
+    static String formatStackTrace(Throwable t) {
         if (t == null) {
             return "<All good>";
         } else {
