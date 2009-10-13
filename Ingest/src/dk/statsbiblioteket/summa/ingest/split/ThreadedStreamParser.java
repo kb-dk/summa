@@ -86,6 +86,7 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
     protected Payload sourcePayload;
     protected boolean running = false;
     private boolean finished = false; // Totally finished
+    private Throwable lastError;
 
     public ThreadedStreamParser(Configuration conf) {
         queue = new PayloadQueue(
@@ -116,9 +117,26 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
         log.trace("Starting Thread for " + streamPayload);
         running = true;
         finished = false;
-        //noinspection DuplicateStringLiteralInspection
-        new Thread(this, "ThreadedStreamParser("
-                         + this.getClass().getSimpleName() + ")").start();
+
+        /* Set up a thread reporting errors back to us */
+        Thread t = new Thread(this, "ThreadedStreamParser("
+                         + this.getClass().getSimpleName() + ")");
+        final ThreadedStreamParser dummyThis = this;
+        t.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            ThreadedStreamParser owner = dummyThis;
+            public void uncaughtException(Thread t, Throwable e) {
+                owner.setError(e);
+            }
+        });
+        t.start();
+    }
+
+    private void setError(Throwable e) {
+        lastError = e;
+    }
+
+    public Throwable getLastError() {
+        return lastError;
     }
 
     @SuppressWarnings({"ObjectEquality"})

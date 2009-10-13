@@ -5,6 +5,7 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.util.Strings;
 
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamReader;
@@ -88,8 +89,16 @@ public class ThreadedStreamParserTest extends TestCase {
                 // otherwise end in an endless loop
                 fail("Receieved more than 20 payloads, bailing out");
             }
+
+            assertNull("No errors should occur but after "
+                       + count + " payloads got:"
+                       + formatStackTrace(filler.getLastError()),
+                       filler.getLastError());
         }
 
+        assertNull("No errors should occur but at end of run got:\n"
+                   + formatStackTrace(filler.getLastError()),
+                   filler.getLastError());
         assertEquals("Exactly 20 payloads expected", 20, count);
     }
 
@@ -101,6 +110,14 @@ public class ThreadedStreamParserTest extends TestCase {
                 "utf-8");
         while (reader.hasNext()) {
             reader.next();
+        }
+    }
+
+    private static String formatStackTrace(Throwable t) {
+        if (t == null) {
+            return "<All good>";
+        } else {
+            return Strings.getStackTrace(t);
         }
     }
 }
