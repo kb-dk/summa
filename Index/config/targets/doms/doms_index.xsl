@@ -382,16 +382,18 @@
                                     <xsl:value-of select="." />
                                 </Index:field>
                             </xsl:for-each>
+
                             <!--
                             Henvisning til firstpage, hvor referencen til png filen findes.
                             Dette er IKKE summa men for at hive URL'en ud et eller andet sted indtil
                             den endelige metode findes.
-                            -->
+
                             <xsl:for-each select="foxml:digitalObject/foxml:datastream/foxml:datastreamVersion/foxml:xmlContent/rdf:RDF/rdf:Description[@rdf:about=concat('info:fedora/',$paperId)]/doms:firstPage/@rdf:resource">
                                 <Index:field Index:name="henvisning-til-firstpage-hvor-png-fil-referencen ligger">
                                     <xsl:value-of select="."/>
                                 </Index:field>
                             </xsl:for-each>
+                            -->
 
 
                         </xsl:for-each>
