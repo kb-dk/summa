@@ -306,7 +306,7 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
         log.debug("stop() called on " + this);
         running = false;
         queue.clear();
-        queue.add(interruptor);
+        queue.uninterruptablePut(interruptor);
     }
 
     public void run() {
