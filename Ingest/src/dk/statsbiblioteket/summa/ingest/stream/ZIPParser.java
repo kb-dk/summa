@@ -107,7 +107,7 @@ public class ZIPParser extends ThreadedStreamParser {
                     + entry.getName());
             addToQueue(payload);
 
-            //FXIME: RACE CONDITION - zipStream.waiter might notify before
+            //FIXME: RACE CONDITION - zipStream.waiter might notify before
             //                        we wait() on it!
 
             long startTime = System.currentTimeMillis();
