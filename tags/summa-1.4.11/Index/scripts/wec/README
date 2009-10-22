@@ -1,0 +1,12 @@
+WEC SCRIPTS:
+
+wec.sh : Used to start worker, employer and/or consumer
+
+slaves.sh : Used to control the slaves. It can initialize new slaves,
+            update existing slaves with new jar files and configs,
+            and finally start the slaves.
+
+wec.config.sh : Contains all relevant variables
+
+setup_slave.in : Used to autogenerate the setup_slave.sh script
+                 used by the slaves.

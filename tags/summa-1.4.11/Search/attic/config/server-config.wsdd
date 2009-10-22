@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<deployment xmlns="http://xml.apache.org/axis/wsdd/" xmlns:java="http://xml.apache.org/axis/wsdd/providers/java">
+    <globalConfiguration>
+        <parameter name="adminPassword" value="admin"/>
+        <parameter name="sendXsiTypes" value="true"/>
+        <parameter name="sendMultiRefs" value="true"/>
+        <parameter name="sendXMLDeclaration" value="true"/>
+        <parameter name="axis.sendMinimizedElements" value="true"/>
+        <requestFlow>
+            <handler type="java:org.apache.axis.handlers.JWSHandler">
+                <parameter name="scope" value="session"/>
+            </handler>
+            <handler type="java:org.apache.axis.handlers.JWSHandler">
+                <parameter name="scope" value="request"/>
+                <parameter name="extension" value=".jwr"/>
+            </handler>
+        </requestFlow>
+        <parameter name="axis.development.system" value="true" />
+    </globalConfiguration>
+    <handler name="LocalResponder" type="java:org.apache.axis.transport.local.LocalResponder"/>
+    <handler name="URLMapper" type="java:org.apache.axis.handlers.http.URLMapper"/>
+    <handler name="Authenticate" type="java:org.apache.axis.handlers.SimpleAuthenticationHandler"/>
+
+    <service name="SummaSearch" provider="java:RPC" style="wrapped" use="literal">
+        <documentation>Search</documentation>
+        <parameter name="className" value="dk.statsbiblioteket.summa.search.SearchEngineWebService"/>
+        <parameter name="allowedMethods" value="getRecord, getShortRecord, simpleSearch, simpleSearchSorted, filteredSearch, filteredSearchSorted, getSearchDescriptor, getSimilarDocuments, getQueryLang, getOpenUrl, getItemCount, getItemCounts"/>
+
+        <operation name="getRecord">
+            <documentation></documentation>
+            <parameter name="recordID" type="tns:string"/>
+        </operation>
+
+        <operation name="getShortRecord">
+            <documentation></documentation>
+            <parameter name="recordID" type="tns:string"/>
+        </operation>
+
+        <operation name="simpleSearch">
+            <documentation></documentation>
+            <parameter name="query" type="tns:string"/>
+            <parameter name="numberOfRecords" type="tns:int"/>
+            <parameter name="startIndex" type="tns:int"/>
+        </operation>
+
+        <operation name="simpleSearchSorted">
+            <documentation></documentation>
+            <parameter name="query" type="tns:string"/>
+            <parameter name="numberOfRecords" type="tns:int"/>
+            <parameter name="startIndex" type="tns:int"/>
+            <parameter name="sortKey" type="tns:string"/>
+            <parameter name="reverse" type="tns:boolean"/>
+        </operation>
+
+        <operation name="filteredSearch">
+            <documentation></documentation>
+            <parameter name="query" type="tns:string"/>
+            <parameter name="numberOfRecords" type="tns:int"/>
+            <parameter name="startIndex" type="tns:int"/>
+            <parameter name="filterQuery" type="tns:string"/>
+        </operation>
+
+        <operation name="filteredSearchSorted">
+            <documentation></documentation>
+            <parameter name="query" type="tns:string"/>
+            <parameter name="numberOfRecords" type="tns:int"/>
+            <parameter name="startIndex" type="tns:int"/>
+            <parameter name="filterQuery" type="tns:string"/>
+            <parameter name="sortKey" type="tns:string"/>
+            <parameter name="reverse" type="tns:boolean"/>
+        </operation>
+
+        <operation name="getSearchDescriptor">
+            <documentation></documentation>
+        </operation>
+
+        <operation name="getSimilarDocuments">
+            <documentation></documentation>
+            <parameter name="recordID" type="tns:string"/>
+            <parameter name="numberOfRecords" type="tns:int"/>
+            <parameter name="startIndex" type="tns:int"/>
+        </operation>
+
+        <operation name="getQueryLang">
+            <documentation></documentation>
+        </operation>
+
+        <operation name="getOpenUrl">
+            <documentation></documentation>
+            <parameter name="recordID" type="tns:string"/>
+        </operation>
+
+        <namespace>http://statsbiblioteket.dk/services/summa/</namespace>
+    </service>
+
+    <service name="SummaClusterSearch" provider="java:RPC" style="wrapped" use="literal">
+        <documentation>ClusterSearch</documentation>
+        <parameter name="className" value="dk.statsbiblioteket.summa.cluster.retrieval.ClusterEngineServer"/>
+        <parameter name="allowedMethods" value="getClustersSimple, getClustersLevels, getClustersComplex"/>
+
+        <operation name="getClustersSimple">
+            <documentation>Returns a clustered search result for the given query</documentation>
+            <parameter name="queryString" type="tns:string"/>
+        </operation>
+
+        <operation name="getClustersLevels">
+            <documentation>Returns a clustered search result for the given query.
+                completeness the detail level for the clustering.
+                                     0: Use the default level (normally 3)
+                                     1: Only type (fast)
+                                     2: Only stored Fields (fast)
+                                     3: Stored + TermVectors (slow)
+            </documentation>
+            <parameter name="queryString" type="tns:string"/>
+            <parameter name="completeness" type="tns:int"/>
+        </operation>
+
+        <operation name="getClustersComplex">
+            <documentation>Returns a clustered search result for the given query.
+
+                maxResults   the maximum number of search-results to process.
+                                     -1 means no limit
+                maxMS        the maximum number of milliseconds to use.
+                                     -1 means no limit
+                completeness the detail level for the clustering.
+                                     0: Use the default level (normally 3)
+                                     1: Only type (fast)
+                                     2: Only stored Fields (fast)
+                                     3: Stored + TermVectors (slow)
+                maxFacets    the maximum number of Facets
+                maxTags      the maximum number of Tags
+                maxObjects   the maximum number of objects
+
+            </documentation>
+            <parameter name="queryString" type="tns:string" />
+            <parameter name="maxResults" type="tns:int"/>
+            <parameter name="maxMS" type="tns:int"/>
+            <parameter name="completeness" type="tns:int"/>
+            <parameter name="maxFacets" type="tns:int"/>
+            <parameter name="maxTags" type="tns:int"/>
+            <parameter name="maxObjects" type="tns:int"/>
+        </operation>
+
+        <namespace>http://statsbiblioteket.dk/services/summa/cluster/</namespace>
+    </service>
+
+    <service name="SummaCompleteClusterSearch" provider="java:RPC" style="wrapped" use="literal">
+        <documentation>ClusterSearch</documentation>
+        <parameter name="className" value="dk.statsbiblioteket.summa.cluster.retrieval.CompleteClusterEngineWrapper"/>
+        <parameter name="allowedMethods" value="getClustersSimple, getClusters, getClustersComplex, getClustersCustom"/>
+
+        <operation name="getClustersSimple">
+            <documentation>Returns a clustered search result for the given query</documentation>
+            <parameter name="queryString" type="tns:string"/>
+        </operation>
+
+        <!--
+        <operation name="getClusters">
+            <parameter name="queryString" type="tns:string"/>
+            <parameter name="searchLimit" type="tns:int"/>
+            <parameter name="maxFacets" type="tns:int"/>
+            <parameter name="maxTags" type="tns:int"/>
+            <parameter name="maxObjects" type="tns:int"/>
+        </operation>
+        -->
+
+        <operation name="getClustersComplex">
+            <documentation>Returns a clustered search result for the given query.
+
+                maxResults   the maximum number of search-results to process.
+                                     -1 means no limit
+                maxMS        the maximum number of milliseconds to use.
+                                     -1 means no limit
+                completeness the detail level for the clustering.
+                                     0: Use the default level (normally 3)
+                                     1: Only type (fast)
+                                     2: Only stored Fields (fast)
+                                     3: Stored + TermVectors (slow)
+                maxFacets    the maximum number of Facets
+                maxTags      the maximum number of Tags
+                maxObjects   the maximum number of objects
+
+            </documentation>
+            <parameter name="queryString" type="tns:string" />
+            <parameter name="maxResults" type="tns:int"/>
+            <parameter name="maxMS" type="tns:int"/>
+            <parameter name="completeness" type="tns:int"/>
+            <parameter name="maxFacets" type="tns:int"/>
+            <parameter name="maxTags" type="tns:int"/>
+            <parameter name="maxObjects" type="tns:int"/>
+        </operation>
+
+        <namespace>http://statsbiblioteket.dk/services/summa/completecluster/</namespace>
+    </service>
+
+    <transport name="http">
+        <requestFlow>
+            <handler type="URLMapper"/>
+            <handler type="java:org.apache.axis.handlers.http.HTTPAuthHandler"/>
+        </requestFlow>
+    </transport>
+    <transport name="local">
+        <responseFlow>
+            <handler type="LocalResponder"/>
+        </responseFlow>
+    </transport>
+</deployment>
