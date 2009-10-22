@@ -28,8 +28,13 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.io.BufferedInputStream;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -86,7 +91,8 @@ public class ZIPParser extends ThreadedStreamParser {
     @Override
     protected void protectedRun() throws Exception {
         log.debug("Opening ZIP-Stream from " + sourcePayload);
-        ZipInputStream zip = new ZipInputStream(sourcePayload.getStream());
+        ZipInputStream zip = new ZipInputStream(
+                new BufferedInputStream(sourcePayload.getStream()));
         ZipEntry entry;
         int matching = 0;
         while ((entry = zip.getNextEntry()) != null && running) {
@@ -97,42 +103,29 @@ public class ZIPParser extends ThreadedStreamParser {
             }
             log.trace("Entry " + entry.getName() + " matched. Adding to queue "
                       + "and waiting for close");
+
+            /* Prepare a stream that we'll fill asynchronously while the
+             * payload consumer reads from it */
             matching++;
-            ZipEntryInputStream zipStream = new ZipEntryInputStream(
-                    zip, sourcePayload.toString() + "/" + entry.getName());
-            Payload payload = new Payload(zipStream);
+            QueuedInputStream payloadStream = new QueuedInputStream();
+            Payload payload = new Payload(payloadStream);
             payload.getData().put(
                     Payload.ORIGIN,
                     sourcePayload.getData(Payload.ORIGIN) + "!"
                     + entry.getName());
             addToQueue(payload);
 
-            //FIXME: RACE CONDITION - zipStream.waiter might notify before
-            //                        we wait() on it!
-
-            long startTime = System.currentTimeMillis();
-            try {
-                log.trace("Waiting for close on " +zipStream);
-                synchronized (zipStream.waiter) {
-                    zipStream.waiter.wait(processingTimeout);
+            /* Fill the stream we gave to the payload. There is no race here
+             * because all reads on the payloadStream are blocking until
+             * we start filling the queue */
+            byte[] buf = new byte[2048];
+            int numRead;
+            while ((numRead = zip.read(buf)) != -1) {
+                for (int i = 0; i < numRead; i++) {
+                    payloadStream.enqueue(buf[i]);
                 }
-                log.trace(zipStream + " closed");
-            } catch (InterruptedException e) {
-                log.warn(String.format(
-                        "Interrupted while waiting for entry %s from %s",
-                        entry.getName(), sourcePayload));
             }
-            if (System.currentTimeMillis() - startTime >=
-                processingTimeout) {
-                Logging.logProcess("ZIPParser", String.format(
-                        "Timeout occured while waiting for the processing "
-                        + "of %s. The entry will be skipped",
-                        entry.getName()),
-                                   Logging.LogLevel.DEBUG, sourcePayload);
-            }
-            if (!zipStream.isClosed()) {
-                zipStream.close();
-            }
+            payloadStream.enqueueEOF();
         }
         log.debug("Ending processing of " + sourcePayload + " with running="
                   + running);
@@ -142,120 +135,157 @@ public class ZIPParser extends ThreadedStreamParser {
                                 matching, sourcePayload));
     }
 
-    private static Log entryLog = LogFactory.getLog(ZipEntryInputStream.class);
     /**
-     * An encapsulation of a ZipInputStream that notifies the attribute waiter
-     * upon close and changes close-behaviour to closeEntry.
+     * And input stream that reads data from an underlying blocking queue.
+     * This facilitates decoupling of IO operations from producer
+     * and consumer threads.
+     *
+     * FIXME: This implementation uses byte autoboxing madness.
+     *        An approach based on a structure similar to SBUtil's
+     *        CircularCharBuffer, but for bytes instead of chars, would
+     *        likely perform a lot better...
      */
-    private class ZipEntryInputStream extends InputStream {
-        private ZipInputStream zip;
-        public final Object waiter = new Object();
-        private boolean closed = false;
-        private String designation;
+    private static class QueuedInputStream extends InputStream {
 
-        private ZipEntryInputStream(ZipInputStream zip, String designation) {
-            this.zip = zip;
-            this.designation = designation;
-            log.trace("Wrapping ZipInputStream " + designation);
+        BlockingQueue<Object> readQueue;
+        private boolean eof;
+        private boolean closed;
+        private Object eofMarker;
+
+        public QueuedInputStream() {
+            readQueue = new ArrayBlockingQueue<Object>(2048);
+            eof = false;
+            closed = false;
+            eofMarker = new Object();
         }
 
-        @Override
-        public void close() throws IOException {
-            try {
-                if (!closed) {
-                    entryLog.trace("Closing ZipInputStream " + designation);
-                    zip.closeEntry();
-                }
-            } finally {
-                closed = true;
-                synchronized (waiter) {
-                    waiter.notifyAll();
-                }
-            }
-        }
-
-        /**
-         * Checks is this ZIP-Stream entry has already been closed.
-         * @throws IOException if the ZIP-stream entry is closed.
-         */
-        private void checkClose() throws IOException {
-            if (closed) {
-                throw new IOException(
-                        "The entry is closed. No further action is possible");
-            }
-        }
-
-        public boolean isClosed() {
-            return closed;
-        }
-
-        /* Delegation */
-
-        @Override
         public int read() throws IOException {
-            checkClose();
-            return zip.read();
-        }
-
-        @Override
-        public boolean markSupported() {
-            return zip.markSupported();
-        }
-
-        @Override
-        public void mark(int readlimit) {
-            if (closed) {
-                log.warn("Mark attempted on closed ZIP-Stream entry");
+            if (eof) {
+                return -1;
             }
-            zip.mark(readlimit);
-        }
+            checkClosed();
 
-        @Override
-        public void reset() throws IOException {
-            checkClose();
-            zip.reset();
+            while (true) {
+                try {
+                    Object b = readQueue.take();
+                    if (b == eofMarker) {
+                        eof = true;
+                        return -1;
+                    }
+                    return (Byte)b;
+                } catch (InterruptedException e) {
+                    // Ignored, we retry
+                }
+            }
         }
 
         @Override
         public int read(byte[] b) throws IOException {
-            checkClose();
-            return zip.read(b);
+            return read(b, 0, b.length);
         }
 
-        public ZipEntry getNextEntry() throws IOException {
-            checkClose();
-            return zip.getNextEntry();
-        }
-
-        public void closeEntry() throws IOException {
-            if (closed) {
-                log.debug("Close called on already closed ZIP-Stream entry");
-                return;
+        @Override
+        public int read(byte[] buf, int off, int len) throws IOException {
+            if (eof) {
+                return -1;
             }
-            zip.closeEntry();
-        }
+            checkClosed();
 
-        @Override
-        public int available() throws IOException {
-            checkClose();
-            return zip.available();
-        }
+            int count = 0;
+            while (count < len) {
+                int b = read();
+                if (b == -1) {
+                    return count;
+                }
 
-        @Override
-        public int read(byte[] b, int off, int len) throws IOException {
-            checkClose();
-            return zip.read(b, off, len);
+                buf[off + count] = (byte)b;
+                count++;
+            }
+
+            return count;
         }
 
         @Override
         public long skip(long n) throws IOException {
-            checkClose();
-            return zip.skip(n);
+            checkClosed();
+            int count = 0;
+            while (count < n) {
+                read();
+                count++;
+            }
+            return count;
         }
 
         @Override
-        public String toString() {
-            return "ZipEntryInputStream " + designation;
+        public int available() throws IOException {
+            checkClosed();
+            return readQueue.size();
+        }
+
+        @Override
+        public void close() throws IOException {
+            closed = true;
+            readQueue = null;
+        }
+
+        @Override
+        public void mark(int readlimit) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void reset() throws IOException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean markSupported() {
+            return false;
+        }
+
+        public void enqueue(byte b) {
+            if (closed) return;
+            while (true) {
+                try {
+                    readQueue.put(b);
+                    return;
+                } catch (InterruptedException e) {
+                    // Ignore; we really want to put this byte
+                }
+            }
+        }
+
+        public void enqueue(byte[] buf) {
+            if (closed) return;
+            for (byte b : buf) {
+                enqueue(b);
+            }
+        }
+
+        public void enqueue(Iterable<Byte> bytes) {
+            if (closed) return;
+            for (byte b : bytes) {
+                enqueue(b);
+            }
+        }
+
+        public void enqueueEOF() {
+            if (closed) return;
+            while (true) {
+                try {
+                    readQueue.put(eofMarker);
+                    return;
+                } catch (InterruptedException e) {
+                    // Ignore; we really want to put the eofMarker on the queue
+                }
+            }
+        }
+
+        private void checkClosed() throws IOException {
+            if (closed) {
+                throw new IOException("Stream closed");
+            }
         }
     }
+
 }
