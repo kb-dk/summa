@@ -1,4 +1,66 @@
 ========================
+2009-10-22: Summa 1.4.11
+========================
+ 
+ * WARNING: Another DB schema change for the suggest service
+ 
+ * WARNING: ABI break for FacetResultExternal. This will require you to run
+            the same version of Summa on your web services as your Summa
+            search engine
+
+ * New API for the suggest web service; getRecentSuggestions. Used to
+   retrieve the last N suggestions updated within the last X seconds.
+   
+ * New API for the search web service; filterSearchSorted. Used to pass
+   in an extra filter-query that will not affect the ranking of the "real"
+   query. This is useful
+ 
+ * The default Suggest engine backend (SuggestStorageH2) now features a 
+   "query sanitizer" (which is a configurable class of Lucene Analyzer
+   controlled by the property summa.support.suggest.sanitizer) that will be
+   run over user queries to be added to the DB. The default is a 
+   Lucene WhitespaceAnalyzer which will result in the fix for the bug
+   mentioned below (bug #61)
+ 
+ * A new RollingFileAppender for Log4J that rolls the logs each time the
+   application starts. Set the class attribute of the appender element
+   in your log4j.xml to
+   dk.statsbiblioteket.summa.common.util.CleanSlateRollingFileAppender
+ 
+ * Bump SBUtil to 0.4.7. This should improve performance on some XSLT operations
+ 
+ * Bugfix: The merging of Facet results from different searcher
+           setups failed when the facets weren't the same
+   
+ * Bugfix: Fix #59: The XMLSplitterHandler did not handle multiple default
+           name spaces properly
+ 
+ * Bugfix: Patch from Jens Henrik Jensen (SB) to fix some issues
+           with the client-shell.sh, control-shell, and control.sh scripts:
+            - Set the script mode to always exit on errors
+            - Be runnable disregarding the working dir
+            - To not call popd as last function in the script,
+              overriding the exit value of command
+
+ * Bugfix: ReaderInputstream did not close th encapsulated
+           Inputstream upon close
+ 
+ * Bugfix: The toXML-method in RecordUtil performen an endless
+           recursion when parent-child-relations were double-linked
+
+ * Bugfix: Fix bug #63: "Suggestions with same normalized key show
+           same hitcount"
+ 
+ * Bugfix: Fix bug #61: "Whitespace garbage in suggest strings"
+ 
+ * Bugfix: Fix bug #65: "ZipException: invalid bit length repeat; during
+           ingest". The trick is to ensure that all operations on the
+           ZipInputStream happen in the same thread. This is achieved by
+           implementing a QueuedInputStream that holds an internal blocking
+           queue all data is pushed over. There's a lot of room for
+           optimization here, see the fixme in the header for QueuedInputStream
+ 
+========================
 2009-09-14: Summa 1.4.10
 ========================
 
