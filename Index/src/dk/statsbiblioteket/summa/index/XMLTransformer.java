@@ -29,24 +29,24 @@ import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
 import dk.statsbiblioteket.summa.common.xml.SummaEntityResolver;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.xml.XSLT;
 import dk.statsbiblioteket.util.xml.DOM;
+import dk.statsbiblioteket.util.xml.XSLT;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.xml.sax.EntityResolver;
-import org.xml.sax.XMLReader;
-import org.xml.sax.SAXException;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
 
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.Transformer;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
-import java.io.ByteArrayOutputStream;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 
@@ -198,6 +198,7 @@ public class XMLTransformer extends ObjectFilterImpl {
                     xsltLocation), payload);
         }
         transform(payload, content);
+        log.trace("Finished processPayload(" + payload + ") for " + this);
         return true;
     }
 
@@ -285,6 +286,9 @@ public class XMLTransformer extends ObjectFilterImpl {
                     "Unable to transform content", e, payload);
         }
         payload.getRecord().setRawContent(out.toByteArray());
+        if (log.isTraceEnabled()) {
+            log.trace("Finished transforming using entity resolver " + payload);
+        }
     }
 
     @Override
