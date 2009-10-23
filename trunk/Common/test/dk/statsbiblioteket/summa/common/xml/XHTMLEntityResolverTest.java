@@ -19,21 +19,20 @@
  */
 package dk.statsbiblioteket.summa.common.xml;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
-
-import javax.xml.transform.*;
-import javax.xml.transform.sax.SAXSource;
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.transform.stream.StreamResult;
-import java.io.FileInputStream;
-import java.io.ByteArrayOutputStream;
-
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
+
+import javax.xml.transform.*;
+import javax.xml.transform.sax.SAXSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
+import java.io.ByteArrayOutputStream;
+import java.io.FileInputStream;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class XHTMLEntityResolverTest extends TestCase {
@@ -59,7 +58,8 @@ public class XHTMLEntityResolverTest extends TestCase {
         Result result = new StreamResult(out);
         try {
             transformer.transform(new StreamSource(new FileInputStream(
-                    Resolver.getFile("data/webpage_xhtml-1.0-strict.xml"))), result);
+                    Resolver.getFile("data/webpage_xhtml-1.0-strict.xml"))),
+                                  result);
             fail("Transformation of XHTML 1.0 content without DTD-resolving"
                  + " should fail");
         } catch (TransformerException e) {
@@ -70,6 +70,10 @@ public class XHTMLEntityResolverTest extends TestCase {
 
     public void testEscapingTransformation() throws Exception {
         testEscapingTransformation("data/webpage_xhtml-1.0-strict.xml");
+    }
+
+    public void testEscapingTransformation2() throws Exception {
+        testEscapingTransformation("data/tour_test.xml");
     }
 
     public void testEscapingTransformationNondeclared() throws Exception {
