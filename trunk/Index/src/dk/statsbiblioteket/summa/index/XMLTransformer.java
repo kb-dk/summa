@@ -29,7 +29,6 @@ import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
 import dk.statsbiblioteket.summa.common.xml.SummaEntityResolver;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.xml.DOM;
 import dk.statsbiblioteket.util.xml.XSLT;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -47,7 +46,6 @@ import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
 
 /**
@@ -251,7 +249,7 @@ public class XMLTransformer extends ObjectFilterImpl {
 
         if (stripXMLNamespaces) {
             log.trace("Stripping name spaces");
-            try {
+/*            try {
                 content = DOM.domToString(DOM.streamToDOM(
                         new ByteArrayInputStream(content))).getBytes("utf-8");
             } catch (TransformerException e) {
@@ -261,9 +259,10 @@ public class XMLTransformer extends ObjectFilterImpl {
                 throw new PayloadException(
                         "Unable to convert name space stripped content to "
                         + "UTF-8", e);
-            }
+            }*/
         }
 
+        log.trace("Creating reader for " + getName());
         XMLReader reader;
         try {
             reader = XMLReaderFactory.createXMLReader();
@@ -279,9 +278,14 @@ public class XMLTransformer extends ObjectFilterImpl {
         InputSource is = new InputSource(new ByteArrayInputStream(content));
         Source source = new SAXSource(reader, is);
 
+        if (log.isTraceEnabled()) {
+            log.trace(
+                    "Calling transformer for " + getName() + " for " + payload);
+        }
         try {
             transformer.transform(source, result);
         } catch (TransformerException e) {
+            log.debug("Transformation failed for " + payload, e);
             throw new PayloadException(
                     "Unable to transform content", e, payload);
         }

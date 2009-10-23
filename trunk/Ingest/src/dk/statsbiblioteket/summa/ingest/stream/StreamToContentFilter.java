@@ -86,7 +86,9 @@ public class StreamToContentFilter extends ObjectFilterImpl {
             throw new PayloadException("Unable to copy Stream to content",
                                        e, payload);
         }
-        Record record = new Record(constructID(payload), base, out.toByteArray());
+        byte[] result = out.toByteArray();
+        log.trace("Produced content of length " + result.length);
+        Record record = new Record(constructID(payload), base, result);
         payload.setRecord(record);
         payload.setStream(null);
 
