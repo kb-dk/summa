@@ -145,6 +145,10 @@
         </javac>
         <copy file="${basedir}/data/LegacyToSummaDocumentXML.xslt" tofile="${build.dir}/LegacyToSummaDocumentXML.xslt"/>
         <copy file="${basedir}/data/LegacyMultiVolumeConverter.xslt" tofile="${build.dir}/LegacyMultiVolumeConverter.xslt"/>
+        <copy todir="${build.dir}/dk/statsbiblioteket/summa/common/xml">
+            <fileset dir="${basedir}/src/dk/statsbiblioteket/summa/common/xml" includes="*.dtd"/>
+            <fileset dir="${basedir}/src/dk/statsbiblioteket/summa/common/xml" includes="*.ent"/>
+        </copy>
 
         <delete dir="${tmp.dir}"/>
     </target>
