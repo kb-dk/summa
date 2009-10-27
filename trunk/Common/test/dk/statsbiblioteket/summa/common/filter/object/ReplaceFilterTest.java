@@ -1,25 +1,24 @@
 package dk.statsbiblioteket.summa.common.filter.object;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.common.util.ReaderInputStream;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
+import dk.statsbiblioteket.summa.common.util.ReaderInputStream;
 import dk.statsbiblioteket.util.Streams;
 import dk.statsbiblioteket.util.reader.ReplaceFactory;
-
-import java.util.List;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Pattern;
-import java.io.*;
-
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 @SuppressWarnings({"DuplicateStringLiteralInspection"})
 public class ReplaceFilterTest extends TestCase {
@@ -116,6 +115,10 @@ public class ReplaceFilterTest extends TestCase {
 
     public void testLongTarget() throws Exception {
         testRemoval("abcdefghijklmnopqrstuvwxyz");
+    }
+
+    public void testAndTarget() throws Exception {
+        testRemoval("&aelig;");
     }
 
     public void testJavascriptRemoval() throws Exception {
