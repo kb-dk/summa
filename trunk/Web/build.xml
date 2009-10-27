@@ -26,6 +26,7 @@
     <property name="release.search.war" value="${dist.dir}/${project.name}-search.war"/>
     <property name="release.storage.war" value="${dist.dir}/${project.name}-storage.war"/>
     <property name="release.website.war" value="${dist.dir}/${project.name}-website.war"/>
+    <property name="release.status.war" value="${dist.dir}/${project.name}-status.war"/>
 
     <!-- Compilation properties -->
     <property name="compiler" value="${summa.compiler}"/>
@@ -58,6 +59,7 @@
         <pathelement location="../Storage/${summa.classes.dir}"/>
         <pathelement location="../Search/${summa.classes.dir}"/>
         <pathelement location="../FacetBrowser/${summa.classes.dir}"/>
+        <pathelement location="../Support/${summa.classes.dir}"/>
     </path>
 
     <!-- lib.files : set by the .checkDepends target -->
@@ -212,6 +214,7 @@
         <delete file="${release.search.war}"/>
         <delete file="${release.storage.war}"/>
         <delete file="${release.website.war}"/>
+        <delete file="${release.status.war}"/>
     </target>
 
     <target name="distclean" depends="clean">
@@ -344,12 +347,41 @@
         </war>
     </target>
 
-    <target name=".jar" depends=".search.war, .storage.war, .website.war">
+    <target name=".status.war" depends=".release.depends, clean, compile">
+        <mkdir dir="${dist.dir}"/>
+        <war destfile="${release.status.war}"
+             webxml="config/status/web.xml">
+            <lib dir="${lib.dir}">
+                <include name="*.jar"/>
+                <exclude name="servlet-api-${summa.servlet.version}.jar" />
+            </lib>
+            <lib dir="${lib.dir}">
+                <include name="${lib.files}"/>
+                <exclude name="servlet-api-${summa.servlet.version}.jar" />
+            </lib>
+            <webinf dir="${basedir}/config/status">
+                <include name="server-config.wsdd"/>
+            </webinf>
+            <metainf dir="${basedir}/..">
+                <!-- Add build.properties to get versioning info in the .war -->
+                <include name="build.properties"/>
+            </metainf>
+            <classes dir="${basedir}/config/status">
+                <include name="log4j.xml"/>
+                <include name="configuration.xml"/>
+            </classes>
+            <classes dir="${build.dir}">
+                <include name="**/StatusWS*"/>
+            </classes>
+        </war>
+    </target>
+
+    <target name=".jar" depends=".search.war, .storage.war, .website.war, .status.war">
 
     </target>
 
 
-    <target name=".release.search" depends=".release.depends, .search.war, .storage.war, .website.war, doc">
+    <target name=".release.search" depends=".release.depends, .search.war, .storage.war, .website.war, .status.war, doc">
 
         <mkdir dir="${dist.dir}"/>
 
