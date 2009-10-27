@@ -22,23 +22,23 @@
  */
 package dk.statsbiblioteket.summa.common.filter.object;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import dk.statsbiblioteket.util.reader.ReplaceFactory;
-import dk.statsbiblioteket.util.reader.ReplaceReader;
-import dk.statsbiblioteket.util.reader.CircularCharBuffer;
-import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.util.ReaderInputStream;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.reader.CircularCharBuffer;
+import dk.statsbiblioteket.util.reader.ReplaceFactory;
+import dk.statsbiblioteket.util.reader.ReplaceReader;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
+import java.io.*;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.LinkedHashMap;
-import java.io.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Replaces characters in streams or content. If possible, streams are
@@ -76,7 +76,7 @@ public class ReplaceFilter extends ObjectFilterImpl {
     /**
      * If true, streams in Payloads are processed.
      * </p><p>
-     * Optional. Defa   ult is true.
+     * Optional. Default is true.
      */
     public static final String CONF_PROCESS_STREAM =
             "common.replacefilter.process.stream";
