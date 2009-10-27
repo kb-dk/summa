@@ -1,24 +1,23 @@
 package dk.statsbiblioteket.summa.common.filter.object;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
 import dk.statsbiblioteket.util.Files;
-
-import java.io.File;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.FilenameFilter;
-import java.util.List;
-import java.util.Arrays;
-import java.util.Calendar;
-
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.List;
 
 /**
  * DumpFilter Tester.
@@ -63,11 +62,13 @@ public class DumpFilterTest extends TestCase {
     public void testDumper() throws Exception {
         Configuration conf = Configuration.newMemoryBased(
                 DumpFilter.CONF_OUTPUTFOLDER, OUT.getAbsolutePath(),
-                DumpFilter.CONF_DUMP_STREAMS, true);
+                DumpFilter.CONF_DUMP_STREAMS, true,
+                DumpFilter.CONF_DUMP_XML, true);
         List<Payload> payloads = Arrays.asList(
                 new Payload(new ByteArrayInputStream(new byte[10])),
-                new Payload(new Record("¤%&&:id-flam87:", "mybase",
-                                       "My content".getBytes("utf-8")))
+                new Payload(new Record(
+                        "¤%&&:id-flam87:", "mybase",
+                        "<myxml>My content</myxml>".getBytes("utf-8")))
         );
         ObjectFilter feeder = new PayloadFeederHelper(payloads);
         ObjectFilter dumpFilter = new DumpFilter(conf);
@@ -80,13 +81,17 @@ public class DumpFilterTest extends TestCase {
         }
         assertEquals("The number of processed Payloads should match", 2, count);
         assertEquals("The number of created files should match",
-                     4, OUT.listFiles().length);
+                     5, OUT.listFiles().length);
         File ec = new File(OUT, "_____id-flam87_.content");
         File em = new File(OUT, "_____id-flam87_.meta");
+        File ex = new File(OUT, "_____id-flam87_.xml");
         assertTrue("The expected content-file '" + ec + "' should be present",
                    ec.exists());
         assertTrue("The expected meta-file '" + em + "' should be present",
                    em.exists());
+        assertTrue("The expected XML-file '" + ex + "' should be present",
+                   ex.exists());
+        log.debug("Content of XML-dump:\n" + Files.loadString(ex));
 
         Calendar calendar = Calendar.getInstance();
         final String noIDPrefix = String.format("%1$tF_", calendar);

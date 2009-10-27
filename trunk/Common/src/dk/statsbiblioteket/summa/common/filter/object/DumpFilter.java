@@ -4,18 +4,20 @@
  */
 package dk.statsbiblioteket.summa.common.filter.object;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.util.CopyingInputStream;
+import dk.statsbiblioteket.summa.common.util.RecordUtil;
+import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import javax.xml.stream.XMLStreamException;
 import java.io.*;
-import java.util.regex.Pattern;
 import java.util.Calendar;
+import java.util.regex.Pattern;
 
 /**
  * Dumps received Payloads in a designated folder. Useful for debugging.
@@ -64,6 +66,16 @@ public class DumpFilter extends ObjectFilterImpl {
     public static final boolean DEFAULT_DUMP_NONRECORDS = true;
 
     /**
+     * If true, Payloads with Records are processed with
+     * RecordUtil.toXML(false) and the result dumped.
+     * </p><p>
+     * Optional. Default is false.
+     */
+    public static final String CONF_DUMP_XML =
+            "summa.dumpfilter.dumpxml";
+    public static final boolean DEFAULT_DUMP_XML = false;
+
+    /**
      * If true, the content of streams in Payloads are dumped. The dumping
      * normally takes place when the stream is read. However, if close is called
      * before the input stream is emptied, the rest of the bytes from the
@@ -103,6 +115,7 @@ public class DumpFilter extends ObjectFilterImpl {
     private Pattern idPattern;
     private boolean dumpNonRecords = DEFAULT_DUMP_NONRECORDS;
     private boolean dumpStreams = DEFAULT_DUMP_STREAMS;
+    private boolean dumpXML = DEFAULT_DUMP_XML;
     private int maxDumps = DEFAULT_MAXDUMPS;
     private int resetReceivedDumpsMS = DEFAULT_RESET_MAXDUMPS_MS;
     // TODO: Implement this
@@ -130,6 +143,7 @@ public class DumpFilter extends ObjectFilterImpl {
         idPattern = Pattern.compile(conf.getString(CONF_IDEXP, DEFAULT_IDEXP));
         dumpNonRecords = conf.getBoolean(CONF_DUMP_NONRECORDS, dumpNonRecords);
         dumpStreams = conf.getBoolean(CONF_DUMP_STREAMS, dumpStreams);
+        dumpXML = conf.getBoolean(CONF_DUMP_XML, dumpXML);
         maxDumps = conf.getInt(CONF_MAXDUMPS, maxDumps);
         resetReceivedDumpsMS =
                 conf.getInt(CONF_RESET_MAXDUMPS_MS, resetReceivedDumpsMS);
@@ -183,11 +197,18 @@ public class DumpFilter extends ObjectFilterImpl {
                 meta.append("\n").append(payload.getRecord().toString(true));
                 Files.saveString(payload.getRecord().getContentAsUTF8(),
                                  new File(output, fileName + ".content"));
+                Files.saveString(RecordUtil.toXML(payload.getRecord(), false),
+                                 new File(output, fileName + ".xml"));
             }
-            Files.saveString(meta.toString(), new File(output, fileName + ".meta"));
+            Files.saveString(meta.toString(),
+                             new File(output, fileName + ".meta"));
         } catch (IOException e) {
             throw new PayloadException(
                     "Unable to dump content", e, payload);
+        } catch (XMLStreamException e) {
+            throw new PayloadException(
+                    "Unable to dump XML-content due to XML-stream exception",
+                    e, payload);
         }
         if (!dumpStreams || payload.getStream() == null) {
             return;
