@@ -129,7 +129,7 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
     public void open(Payload streamPayload) {
         //noinspection DuplicateStringLiteralInspection
         log.debug("open(" + streamPayload + ") called");
-        if (running) {
+        if (!empty) {
             throw new IllegalStateException(String.format(
                     "Already parsing %s when open(%s) was called",
                     sourcePayload, streamPayload));
@@ -162,6 +162,8 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
     }
 
     private void setError(Throwable e) {
+        log.error(String.format(
+                "Encountered error during processing of %s", sourcePayload), e);
         lastError = e;
     }
 
@@ -174,40 +176,52 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
         //noinspection DuplicateStringLiteralInspection
         log.trace("hasNext() called");
 
-        if (empty) { // We're finished
-            return false;
-        }
-        if (toDeliver != null) { // Something's waiting
+        while (true) {
+            if (empty) { // We're finished
+                return false;
+            }
+            if (toDeliver != null) { // Something's waiting
+                return true;
+            }
+            long endTime = System.currentTimeMillis() + queueTimeout;
+            while (System.currentTimeMillis() < endTime && toDeliver == null) {
+                try {
+                    toDeliver = queue.poll(queueTimeout, TimeUnit.MILLISECONDS);
+                } catch (InterruptedException e) {
+                    log.warn("Interrupted while waiting for Payload. Retrying");
+                }
+            }
+            if (toDeliver == null) {
+                log.warn(String.format(
+                        "Timed out while waiting for Payload. This is bad as "
+                        + "a thread is probably still processing %s. The queue "
+                        + "is marked as empty in order to accept new Payloads, "
+                        + "but this might lead to missed Payloads",
+                        sourcePayload));
+                empty = true;
+                return false;
+            }
+
+            if (toDeliver == INTERRUPTOR) {
+                if (log.isTraceEnabled()) {
+                    log.trace(
+                            "Encountered INTERRUPTOR. This signals that proces"
+                            + "sing has been finished for " + sourcePayload);
+                }
+                toDeliver = null;
+                empty = true;
+                return false;
+            }
+            // got something
+            try {
+                postProcess(toDeliver);
+            } catch (Exception e) {
+                log.warn("Got exception in postProcess, skipping " + toDeliver
+                         + " from " + sourcePayload);
+                continue;
+            }
             return true;
         }
-        long endTime = System.currentTimeMillis() + queueTimeout;
-        while (System.currentTimeMillis() < endTime && toDeliver == null) {
-            try {
-                toDeliver = queue.poll(queueTimeout, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException e) {
-                log.warn("Interrupted while waiting for Payload. Retrying");
-            }
-        }
-        if (toDeliver == null) {
-            log.warn(String.format(
-                    "Timed out while waiting for Payload. This is bad as a "
-                    + "thread is probably still processing %s. The queue is "
-                    + "marked as empty in order to accept new Payloads, but "
-                    + "this might lead to missed Payloads", sourcePayload));
-            empty = true;
-            return false;
-        }
-
-        if (toDeliver == INTERRUPTOR) {
-            if (log.isTraceEnabled()) {
-                log.trace("Encountered INTERRUPTOR. This signals that proces"
-                          + "sing has been finished for " + sourcePayload);
-            }
-            toDeliver = null;
-            empty = true;
-            return false;
-        }
-        return true;
     }
 
     public synchronized Payload next() {
@@ -226,7 +240,6 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
         }
         Payload result = toDeliver;
         toDeliver = null;
-        postProcess(toDeliver);
         return result;
     }
 
@@ -331,7 +344,8 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
         running = false;
         addToQueue(INTERRUPTOR);
         log.debug("run() finished with " + queue.size() + " remaining queued "
-                  + "Payloads for " + this);
+                  + "Payloads (the last queued Payload is the "
+                  + "interruptor-token-Payload) for " + this);
     }
 
     /**

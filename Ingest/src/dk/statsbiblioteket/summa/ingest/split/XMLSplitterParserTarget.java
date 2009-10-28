@@ -22,12 +22,12 @@
  */
 package dk.statsbiblioteket.summa.ingest.split;
 
+import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.configuration.Configurable;
-import dk.statsbiblioteket.summa.common.filter.Payload;
 
 import java.io.File;
 
@@ -126,6 +126,16 @@ public class XMLSplitterParserTarget {
      */
     public void adjustID(Payload payload) {
         String id = payload.getId();
+        if (id == null) {
+            if (payload.getRecord() != null) {
+                id = payload.getRecord().getId();
+            }
+            if (id == null) {
+                log.warn("Encountered Payload with no ID. Skipping adjustID " 
+                         + "for " + payload);
+                return;
+            }
+        }
         String origin_tail = "";
         try {
             origin_tail = payload.getData(Payload.ORIGIN) == null ? "" :
