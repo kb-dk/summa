@@ -19,18 +19,18 @@
  */
 package dk.statsbiblioteket.summa.common.legacy;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.xml.XSLT;
-import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
-import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
-import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.Logging;
+import dk.statsbiblioteket.summa.common.MarcAnnotations;
+import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
-import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.common.MarcAnnotations;
-import dk.statsbiblioteket.summa.common.Logging;
-import org.apache.commons.logging.LogFactory;
+import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
+import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.xml.XSLT;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import javax.xml.transform.TransformerException;
 import java.io.*;
@@ -211,7 +211,7 @@ public class MarcMultiVolumeMerger extends ObjectFilterImpl {
             throw new IllegalArgumentException(message);
         }
         if (level == 0) {
-            output.append(content.subSequence(0, endPos-3));
+            output.append(content.subSequence(0, endPos-2));
         } else {
             byte[] transformed = XSLT.transform(
             xsltLocation, record.getContent(), null, stripXMLNamespaces).

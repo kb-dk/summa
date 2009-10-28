@@ -19,27 +19,27 @@
  */
 package dk.statsbiblioteket.summa.common.legacy;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
-import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
+import dk.statsbiblioteket.summa.common.MarcAnnotations;
+import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.common.MarcAnnotations;
-import dk.statsbiblioteket.summa.common.configuration.Resolver;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilter;
+import dk.statsbiblioteket.util.xml.DOM;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Arrays;
-
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
+import java.util.List;
 
 public class MarcMultiVolumeMergerTest extends TestCase implements
-                                                        ObjectFilter {
+                                                                  ObjectFilter {
     private static Log log = LogFactory.getLog(MarcMultiVolumeMergerTest.class);
 
     private List<Record> records;
@@ -51,6 +51,10 @@ public class MarcMultiVolumeMergerTest extends TestCase implements
     @Override
     public void setUp() throws Exception {
         super.setUp();
+        makeSampleHorizon();
+    }
+
+    private void makeSampleHorizon() throws IOException {
         Record parent = createRecord("parent_book1.xml");
         List<Record> children = new ArrayList<Record>(4);
         Record child1 = createRecord("child_book1.xml");
@@ -66,10 +70,28 @@ public class MarcMultiVolumeMergerTest extends TestCase implements
                             MarcAnnotations.MultiVolumeType.SEKTION.toString());
         Record subChild1 = createRecord("subchild_book1.xml");
         subChild1.getMeta().put(MarcAnnotations.META_MULTI_VOLUME_TYPE,
-                                MarcAnnotations.MultiVolumeType.BIND.toString());
+                               MarcAnnotations.MultiVolumeType.BIND.toString());
         child4.setChildren(Arrays.asList(subChild1));
         children.add(child4);
         parent.setChildren(children);
+
+        records = new ArrayList<Record>(1);
+        records.add(parent);
+    }
+
+    private void makeSampleAleph() throws IOException {
+        Record parent = createAlephRecord("aleph_parent.xml");
+
+        Record middle = createAlephRecord("aleph_middle.xml");
+        middle.getMeta().put(MarcAnnotations.META_MULTI_VOLUME_TYPE,
+                             MarcAnnotations.MultiVolumeType.BIND.toString());
+
+        Record child = createAlephRecord("aleph_child.xml");
+        child.getMeta().put(MarcAnnotations.META_MULTI_VOLUME_TYPE,
+                            MarcAnnotations.MultiVolumeType.BIND.toString());
+
+        middle.setChildren(Arrays.asList(child));
+        parent.setChildren(Arrays.asList(middle));
 
         records = new ArrayList<Record>(1);
         records.add(parent);
@@ -79,6 +101,12 @@ public class MarcMultiVolumeMergerTest extends TestCase implements
         //noinspection DuplicateStringLiteralInspection
         return new Record(filename, "Dummy", Resolver.getUTF8Content(
                 "data/horizon/" + filename).getBytes("utf-8"));
+    }
+
+    private Record createAlephRecord(String filename) throws IOException {
+        //noinspection DuplicateStringLiteralInspection
+        return new Record(filename, "Dummy", Resolver.getUTF8Content(
+                "data/aleph/" + filename).getBytes("utf-8"));
     }
 
     @Override
@@ -109,6 +137,18 @@ public class MarcMultiVolumeMergerTest extends TestCase implements
               + "    <subfield code=\"a\">Kaoskyllingen</subfield>");
         assertContains(processed, // Correct close tag
               "</record>");
+    }
+
+    public void testMergeAleph() throws Exception {
+        makeSampleAleph();
+        MarcMultiVolumeMerger merger = new MarcMultiVolumeMerger(
+                Configuration.newMemoryBased());
+        merger.setSource(this);
+        String processed = merger.next().getRecord().getContentAsUTF8();
+        assertNotNull("DOM-parsing should succeed for\n" + countTestCases(),
+                      DOM.stringToDOM(processed));
+        log.info("Processed:\n" + processed);
+        // TODO: Check here
     }
 
     private void assertContains(String main, String sub) {
