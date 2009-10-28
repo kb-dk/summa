@@ -23,15 +23,14 @@
 package dk.statsbiblioteket.summa.web.services;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
+import dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.SearchClient;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
 import dk.statsbiblioteket.summa.support.api.LuceneKeys;
 import dk.statsbiblioteket.summa.support.api.SuggestKeys;
-import dk.statsbiblioteket.summa.facetbrowser.browse.IndexRequest;
-import dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys;
-import dk.statsbiblioteket.summa.facetbrowser.api.FacetKeys;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.DOM;
 import org.apache.commons.logging.Log;
@@ -45,8 +44,8 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
-import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * A class containing methods meant to be exposed as a web service
@@ -322,7 +321,8 @@ public class SearchWS {
         } catch (IOException e) {
             log.warn("Error executing " + call + ": ", e);
             // TODO: return a nicer error xml block
-            retXML = "<error>Error performing " + call + "</error>";
+            retXML = "<error>Error performing " + call + ": " + e.getMessage()
+                     + "</error>";
         }
         //noinspection DuplicateStringLiteralInspection
         log.trace(call + " finished in "
