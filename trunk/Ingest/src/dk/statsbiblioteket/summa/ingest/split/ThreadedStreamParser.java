@@ -41,7 +41,8 @@ import java.util.concurrent.TimeUnit;
  * Reading from the queue is done from outside the Thread.
  * </p><p>
  * Implementators of this abstract class only needs to override the
- * {@link #protectedRun()} method.
+ * {@link #protectedRun()} method. They should check {@link #running}
+ * frequently and stop processing if it is false.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -76,17 +77,44 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
     public static final String CONF_QUEUE_TIMEOUT =
             "summa.ingest.stream.threadedstreamparser.queue.timeout";
     public static final int DEFAULT_QUEUE_TIMEOUT = Integer.MAX_VALUE;
+    private int queueTimeout = DEFAULT_QUEUE_TIMEOUT;
 
     //private static final long HASNEXT_SLEEP = 50; // Sleep-ms between polls
-    private static final Payload interruptor =
+    private static final Payload INTERRUPTOR =
             new Payload(new Record("dummyID", "dummyStreamBase", new byte[0]));
 
-    private int queueTimeout = DEFAULT_QUEUE_TIMEOUT;
+    /*
+     * Holds the produced Payloads. Generated Payloads will always be followed
+     * by {@link #INTERRUPTOR}.
+     */
     private PayloadQueue queue;
+    /*
+     * The next Payload to deliver. This is assigned by {@link #hasNext} and
+     * used by {@link #next}. toDeliver will never be {@link INTERRUPTOR}.
+     */
+    private Payload toDeliver = null;
+
+    /**
+     * The source Payload that is to be processed.
+     */
     protected Payload sourcePayload;
+
+    /**
+     * If true, processing should proceed normally. If false, processing should
+     * be terminated when it can be done without affecting stability.
+     */
     protected boolean running = false;
-    private boolean finished = false; // Totally finished
-    private Throwable lastError;
+
+    /**
+     * empty == true iff no Payload has been assigned yet or
+     * (the processing thread is not running and the
+     * interruptor-Payload has been encountered in the queue).
+     * </p><p>
+     * {@link #open} must only be called when empty == true.
+     */
+    private boolean empty = true; // Starting condition
+
+    private Throwable lastError = null;
 
     public ThreadedStreamParser(Configuration conf) {
         queue = new PayloadQueue(
@@ -110,15 +138,16 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
         if (streamPayload.getStream() == null) {
             log.warn("No stream in received " + streamPayload
                      + ". No Records will be generated");
-            finished = true;
+            empty = true;
             return;
         }
         sourcePayload = streamPayload;
         log.trace("Starting Thread for " + streamPayload);
         running = true;
-        finished = false;
+        empty = false;
 
         /* Set up a thread reporting errors back to us */
+        //noinspection DuplicateStringLiteralInspection
         Thread t = new Thread(this, "ThreadedStreamParser("
                          + this.getClass().getSimpleName() + ")");
         final ThreadedStreamParser dummyThis = this;
@@ -126,6 +155,7 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
             ThreadedStreamParser owner = dummyThis;
             public void uncaughtException(Thread t, Throwable e) {
                 owner.setError(e);
+                running = false;
             }
         });
         t.start();
@@ -143,55 +173,41 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
     public synchronized boolean hasNext() {
         //noinspection DuplicateStringLiteralInspection
         log.trace("hasNext() called");
-        // TODO: If this check solid enough?
-        if (queue == null || sourcePayload == null) {
+
+        if (empty) { // We're finished
             return false;
         }
-        long endTime = System.currentTimeMillis() + queueTimeout;
-        while (System.currentTimeMillis() < endTime) {
-            if (finished) {
-                if (log.isTraceEnabled()) {
-                    log.trace("hasNext reached state finished=true, returning "
-                    + (queue.size() > 0 && queue.peek() != interruptor));
-                }
-                return queue.size() > 0 && queue.peek() != interruptor;
-            }
-
-            if (queue.size() > 0) {
-                //noinspection ObjectEquality
-                log.trace("hasNext queue > 0, returning "
-                          + (queue.peek() != interruptor));
-                //noinspection ObjectEquality
-                return queue.peek() != interruptor;
-            }
-
-            log.trace("hasNext(): Calling peek on queue of size 0 and running " 
-                      + running);
-            Payload payload = queue.peek();
-            log.trace("hasNext(): Peek finished with  " + payload);
-            if (payload != null) {
-                log.trace("hasNext(): queue.size() > 0, returning " 
-                          + (payload != interruptor));
-                //noinspection ObjectEquality
-                return payload != interruptor;
-            }
-
-//            try {
-                // Sleeping in a high throughput filter chain is very bad;
-                // we log this as a warning.
-                log.trace("hasNext(): Waiting for further Payloads");
-                queue.uninterruptibleWaitForEntry();
-                log.trace("hasNext(): Finished waiting");
-//                Thread.sleep(HASNEXT_SLEEP); // Ugly
-//            } catch (InterruptedException e) {
-//                log.warn("Interrupted while waiting for Record in hasNext(). "
-//                          + "Returning false", e);
-//                return false;
-//            }
+        if (toDeliver != null) { // Something's waiting
+            return true;
         }
-        log.warn(String.format("hasNext waited more than %d ms for status and"
-                               + " got none. Returning false", queueTimeout));
-        return false;
+        long endTime = System.currentTimeMillis() + queueTimeout;
+        while (System.currentTimeMillis() < endTime && toDeliver == null) {
+            try {
+                toDeliver = queue.poll(queueTimeout, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                log.warn("Interrupted while waiting for Payload. Retrying");
+            }
+        }
+        if (toDeliver == null) {
+            log.warn(String.format(
+                    "Timed out while waiting for Payload. This is bad as a "
+                    + "thread is probably still processing %s. The queue is "
+                    + "marked as empty in order to accept new Payloads, but "
+                    + "this might lead to missed Payloads", sourcePayload));
+            empty = true;
+            return false;
+        }
+
+        if (toDeliver == INTERRUPTOR) {
+            if (log.isTraceEnabled()) {
+                log.trace("Encountered INTERRUPTOR. This signals that proces"
+                          + "sing has been finished for " + sourcePayload);
+            }
+            toDeliver = null;
+            empty = true;
+            return false;
+        }
+        return true;
     }
 
     public synchronized Payload next() {
@@ -202,30 +218,16 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
                     "No more Records for the current stream from "
                     + sourcePayload);
         }
-        while (!(finished && queue.size() == 0)) {
-            try {
-                log.trace("next: Polling for Record with timeout of "
-                          + queueTimeout + " ms");
-                Payload payload = queue.poll(
-                        queueTimeout, TimeUnit.MILLISECONDS);
-                if (payload == null) {
-                    throw new NoSuchElementException(String.format(
-                            "Waited more than %d ms for Record and got none",
-                            queueTimeout));
-                }
-                //noinspection ObjectEquality
-                if (payload == interruptor) { // Hack
-                    throw new NoSuchElementException(
-                            "Parsing interrupted, no more elements");
-                }
-                log.trace("Got record. Constructing and returning Payload");
-                postProcess(payload);
-                return payload;
-            } catch (InterruptedException e) {
-                log.warn("Interrupted while waiting for Record. Retrying");
-            }
+        if (toDeliver == null) {
+            throw new NoSuchElementException(
+                    "Failed sanity-check: toDeliver was null, but hasNext() == "
+                    + "true means that it should be something. The offending "
+                    + "source was" + sourcePayload);
         }
-        throw new NoSuchElementException("Expected more Records, but got none");
+        Payload result = toDeliver;
+        toDeliver = null;
+        postProcess(toDeliver);
+        return result;
     }
 
     /**
@@ -298,15 +300,13 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
         //noinspection DuplicateStringLiteralInspection
         log.debug("close() called");
         // TODO: Check whether this discards any currently processed Payloads
-        finished = true;
+        empty = true;
         stop();
     }
 
     public void stop() {
         log.debug("stop() called on " + this);
         running = false;
-        queue.clear();
-        queue.uninterruptablePut(interruptor);
     }
 
     public void run() {
@@ -329,9 +329,9 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
             log.debug("run: Finished processing " + sourcePayload);
         }
         running = false;
-        finished = true; // Too final?
-        addToQueue(interruptor);
-        log.debug("run() finished for " + this);
+        addToQueue(INTERRUPTOR);
+        log.debug("run() finished with " + queue.size() + " remaining queued "
+                  + "Payloads for " + this);
     }
 
     /**
