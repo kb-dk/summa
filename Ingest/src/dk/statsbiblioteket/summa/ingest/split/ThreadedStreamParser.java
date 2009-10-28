@@ -153,7 +153,30 @@ public abstract class ThreadedStreamParser implements StreamParser {
         //noinspection DuplicateStringLiteralInspection
         Thread t = new Thread(new Runnable() {
             public void run() {
-                protectRunWrapper();
+                log.debug("run() entered");
+                try {
+                    protectedRun();
+                    sourcePayload.close();
+                } catch (Exception e) {
+                    log.warn(String.format(
+                            "Exception caught from protectedRun of %s with "
+                          + "origin '%s' in '%s'. Stopping processing",
+                            sourcePayload,
+                            sourcePayload.getData(Payload.ORIGIN), this),
+                            e);
+
+                    // We don't close in a 'finally' clause because we shouldn't
+                    // clean up if the JVM raises an Error type throwable
+                    sourcePayload.close();
+                }
+                if (log.isDebugEnabled()) {
+                    log.debug("run: Finished processing " + sourcePayload);
+                }
+                running = false;
+                addToQueue(INTERRUPTOR);
+                log.debug("run() finished with " + queue.size()
+                        + " remaining queued Payloads (the last queued Payload"
+                        + " is the interruptor-token-Payload) for " + this);
             }
         }, "ThreadedStreamParser(" + this.getClass().getSimpleName() + ")");
 
@@ -328,32 +351,6 @@ public abstract class ThreadedStreamParser implements StreamParser {
     public void stop() {
         log.debug("stop() called on " + this);
         running = false;
-    }
-
-    private void protectRunWrapper() {
-        log.debug("run() entered");
-        try {
-            protectedRun();
-            sourcePayload.close();
-        } catch (Exception e) {
-            log.warn(String.format(
-                    "Exception caught from protectedRun of %s with origin '%s'"
-                    + " in '%s'. Stopping processing", 
-                    sourcePayload, sourcePayload.getData(Payload.ORIGIN), this),
-                     e);
-
-            // We don't close in a 'finally' clause because we shouldn't
-            // clean up if the JVM raises an Error type throwable
-            sourcePayload.close();
-        }
-        if (log.isDebugEnabled()) {
-            log.debug("run: Finished processing " + sourcePayload);
-        }
-        running = false;
-        addToQueue(INTERRUPTOR);
-        log.debug("run() finished with " + queue.size() + " remaining queued "
-                  + "Payloads (the last queued Payload is the "
-                  + "interruptor-token-Payload) for " + this);
     }
 
     /**
