@@ -257,10 +257,16 @@ public class StatusWS {
         }
     }
 
-    private static class Status {
+    private class Status {
 
         Map<String, Map<String,String>> groups =
                                      new HashMap<String, Map<String,String>>();
+
+        Date date;
+
+        public Status() {
+            date = new Date(System.currentTimeMillis());
+        }
 
         public void put(String group, String name, String value) {
             if (!groups.containsKey(group)) {
@@ -271,9 +277,11 @@ public class StatusWS {
 
         public String toXML() {
             StringBuilder buf = new StringBuilder();
-            buf.append(DOM.XML_HEADER);
-            buf.append("\n");
-            buf.append("<status>\n");
+            buf.append(DOM.XML_HEADER)
+               .append("\n")
+               .append("<status datetime=\"")
+               .append(dateFormat.format(date))
+               .append("\">\n");
             SortedSet<String> groupNames = new TreeSet<String>(groups.keySet());
             for (String groupName : groupNames) {
                 Map<String,String> group = groups.get(groupName);
