@@ -47,7 +47,7 @@ import java.util.concurrent.TimeUnit;
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public abstract class ThreadedStreamParser implements StreamParser, Runnable {
+public abstract class ThreadedStreamParser implements StreamParser {
     private static Log log = LogFactory.getLog(ThreadedStreamParser.class);
 
     /**
@@ -142,14 +142,21 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
             return;
         }
         sourcePayload = streamPayload;
-        log.trace("Starting Thread for " + streamPayload);
+        startThread();
+    }
+
+    private void startThread() {
+        log.trace("Starting Thread for " + sourcePayload);
         running = true;
         empty = false;
-
         /* Set up a thread reporting errors back to us */
         //noinspection DuplicateStringLiteralInspection
-        Thread t = new Thread(this, "ThreadedStreamParser("
-                         + this.getClass().getSimpleName() + ")");
+        Thread t = new Thread(new Runnable() {
+            public void run() {
+                protectRunWrapper();
+            }
+        }, "ThreadedStreamParser(" + this.getClass().getSimpleName() + ")");
+
         final ThreadedStreamParser dummyThis = this;
         t.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
             ThreadedStreamParser owner = dummyThis;
@@ -159,6 +166,7 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
             }
         });
         t.start();
+        log.trace("Thread started");
     }
 
     private void setError(Throwable e) {
@@ -322,7 +330,7 @@ public abstract class ThreadedStreamParser implements StreamParser, Runnable {
         running = false;
     }
 
-    public void run() {
+    private void protectRunWrapper() {
         log.debug("run() entered");
         try {
             protectedRun();

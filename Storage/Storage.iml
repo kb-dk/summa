@@ -21,6 +21,7 @@
     <orderEntry type="library" name="postgres" level="project" />
     <orderEntry type="library" name="h2" level="project" />
     <orderEntry type="library" name="servlet" level="project" />
+    <orderEntryProperties />
   </component>
   <component name="org.mevenide.idea.module.ModuleSettings">
     <favoriteGoals>
