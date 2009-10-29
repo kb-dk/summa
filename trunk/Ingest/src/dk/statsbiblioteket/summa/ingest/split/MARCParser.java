@@ -19,20 +19,20 @@
  */
 package dk.statsbiblioteket.summa.ingest.split;
 
-import javax.xml.stream.XMLStreamReader;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.events.XMLEvent;
-import java.text.ParseException;
-import java.io.StringWriter;
-import java.util.regex.Pattern;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.xml.XMLUtil;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.xml.XMLUtil;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.events.XMLEvent;
+import java.io.StringWriter;
+import java.text.ParseException;
+import java.util.regex.Pattern;
 
 /**
  * A generic MARC21 slim parser that steps through MARC records and sends
@@ -177,6 +177,7 @@ public abstract class MARCParser extends ThreadedStreamParser {
         initializeNewParse();
         StringWriter content = new StringWriter(2000); // Full MARC content
 
+        boolean encounteredUnexpectedStart = false;
         // TODO: Add XML-declaration and namespace
         content.append(XML_HEADER + "\n");
         content.append(beginTagToString(reader, true));
@@ -191,10 +192,20 @@ public abstract class MARCParser extends ThreadedStreamParser {
                     } else if (MARC_TAG_LEADER.equals(reader.getLocalName())) {
                         processLeader(reader, content);
                     } else {
-                        log.warn(String.format(
-                                "Unexpected start-tag '%s' while parsing MARC "
-                                + "for %s",
-                                reader.getLocalName(), sourcePayload));
+                        if (!encounteredUnexpectedStart) {
+                            encounteredUnexpectedStart = true;
+                            log.warn(String.format(
+                                    "Unexpected start-tag '%s' while parsing "
+                                    + "MARC for %s. This is the first time this"
+                                    + " has been encountered. Further "
+                                    + "encounters will be logged on debug",
+                                    reader.getLocalName(), sourcePayload));
+                        } else {
+                            log.debug("Unexpected start-tag '"
+                                      + reader.getLocalName()
+                                      + "' while parsing MARC for "
+                                      + sourcePayload);
+                        }
                     }
                     break;
                 case XMLEvent.END_ELEMENT :
@@ -430,10 +441,10 @@ public abstract class MARCParser extends ThreadedStreamParser {
                 case XMLEvent.END_ELEMENT :
                     content.append(endTagToString(reader));
                     if (MARC_TAG_SUBFIELD.equals(reader.getLocalName())) {
-                        if ("".equals(subfieldcontent)) {
-                            log.debug("No subfield content for "
-                                    + sourcePayload + " in datafield " + tag
-                                    + ", subfield " + code);
+                        if ("".equals(subfieldcontent) && log.isTraceEnabled()){
+                            log.trace("No subfield content for "
+                                      + sourcePayload + " in datafield " + tag
+                                      + ", subfield " + code);
                         }
                         setSubField(tag, ind1, ind2, code, subfieldcontent);
                         return;
