@@ -19,7 +19,6 @@
  */
 package dk.statsbiblioteket.summa.ingest.stream;
 
-import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.ingest.split.StreamController;
@@ -29,10 +28,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.BufferedInputStream;
-import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collection;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.regex.Pattern;
@@ -68,11 +65,11 @@ public class ZIPParser extends ThreadedStreamParser {
      * ZIP-stream entry. If the processing-time exceeds this amount, the parser
      * will perform a close on the current entry and skip to the next.
      * </p><p>
-     * Optional. Default is 1 hour.
+     * Optional. Default is Integer.MAX_VALUE.
      */
     public static final String CONF_PROCESSING_TIMEOUT =
             "summa.ingest.unzipfilter.processingtimeout";
-    public static final int DEFAULT_PROCESSING_TIMEOUT = 60 * 60 * 1000; // 1h
+    public static final int DEFAULT_PROCESSING_TIMEOUT = Integer.MAX_VALUE;
 
     private Pattern filePattern;
     private int processingTimeout = DEFAULT_PROCESSING_TIMEOUT;
@@ -159,6 +156,7 @@ public class ZIPParser extends ThreadedStreamParser {
             eofMarker = new Object();
         }
 
+        @Override
         public int read() throws IOException {
             if (eof) {
                 return -1;
@@ -210,6 +208,7 @@ public class ZIPParser extends ThreadedStreamParser {
             checkClosed();
             int count = 0;
             while (count < n) {
+                //noinspection ResultOfMethodCallIgnored
                 read();
                 count++;
             }
