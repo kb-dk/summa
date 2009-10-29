@@ -19,6 +19,7 @@
  */
 package dk.statsbiblioteket.summa.common.filter;
 
+import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -274,13 +275,8 @@ public class PayloadQueue extends ArrayBlockingQueue<Payload> {
         }
     }
 
-    // TODO: Make proper estimations, not just loose guesses
     private long calculateSize(Payload payload) {
-        long BASE = 50;
-        return BASE +
-               (!payload.hasData() ? 0 : 1000) +
-               (payload.getRecord() == null ? 0 :
-                payload.getRecord().getContent(false).length
-               + (!payload.getRecord().hasMeta() ? 0 : 1000));
+        return payload.getRecord() == null ? 200
+               : RecordUtil.calculateRecordSize(payload.getRecord(), true);
     }
 }
