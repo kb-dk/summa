@@ -903,9 +903,9 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
             Request request, String query, String filter) throws IOException {
         long startTime = System.currentTimeMillis();
 
-        Query q;
+        Filter q;
         try {
-            q = parseQuery(request, query);
+            q = parseFilter(query);
         } catch (ParseException e) {
             throw new IOException(String.format(
                     "Exception parsing query '%s'", query), e);
@@ -927,12 +927,11 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
         if (q == null) {
             amalgam = f;
         } else if (f == null) {
-            amalgam = new QueryWrapperFilter(q);
+            amalgam = q;
         } else {
             BooleanFilter b = new BooleanFilter();
+            b.add(new FilterClause(q, BooleanClause.Occur.MUST));
             b.add(new FilterClause(f, BooleanClause.Occur.MUST));
-            b.add(new FilterClause(
-                    new QueryWrapperFilter(q), BooleanClause.Occur.MUST));
             amalgam = b;
         }
         log.trace("getHitcount(): Created filter, performing hit count");
