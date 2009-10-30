@@ -27,6 +27,7 @@ import dk.statsbiblioteket.summa.search.SearchNodeImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.document.DocumentKeys;
+import dk.statsbiblioteket.summa.search.api.document.DocumentResponse;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -178,53 +179,85 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements
         if (!isRequestUsable(request)) {
             return;
         }
+        long startTime = System.currentTimeMillis();
+
         String query = request.getString(DocumentKeys.SEARCH_QUERY, null);
         String filter = request.getString(DocumentKeys.SEARCH_FILTER, null);
         //noinspection OverlyBroadCatchBlock
-        try {
-            long startIndex = request.getLong(DocumentKeys.SEARCH_START_INDEX,
-                                              this.startIndex);
-            long records = request.getLong(DocumentKeys.SEARCH_MAX_RECORDS,
-                                              this.records);
-            if (records > maxRecords) {
-                log.debug("requested records was " + records
-                          + ", while fixed maxrecords was " + maxRecords +
-                          ". Adjusting records to max");
-                records = maxRecords;
-            }
-            String sortKey = request.getString(
-                    DocumentKeys.SEARCH_SORTKEY, this.sortKey);
-            Boolean reverse = request.getBoolean(
-                    DocumentKeys.SEARCH_REVERSE, false);
-            String[] resultFields = request.getStrings(
-                    DocumentKeys.SEARCH_RESULT_FIELDS, this.resultFields);
-            String[] fallbackValues = request.getStrings(
-                    DocumentKeys.SEARCH_FALLBACK_VALUES, this.fallbackValues);
-
-            if (fallbackValues != null &&
-                resultFields.length != fallbackValues.length) {
-                log.debug(String.format(
-                          "Incoming request uses mistmatching result fields and"
-                          + "fallback values %s(%s) and %s(%s)",
-                          DocumentKeys.SEARCH_RESULT_FIELDS,
-                          resultFields.length,
-                          DocumentKeys.SEARCH_FALLBACK_VALUES,
-                          fallbackValues.length));
-            }
-            fallbackValues = fixFallbackValues(resultFields, fallbackValues);
-
-            responses.add(fullSearch(
-                    request, filter, query, startIndex, records, sortKey,
-                    reverse, resultFields, fallbackValues));
-        } catch (Exception e) {
-            throw new RemoteException(String.format(
-                    "Unable to perform search for query '%s' with filter '%s'",
-                    query, filter), e);
+        long startIndex = request.getLong(DocumentKeys.SEARCH_START_INDEX,
+                                          this.startIndex);
+        long records = request.getLong(DocumentKeys.SEARCH_MAX_RECORDS,
+                                       this.records);
+        if (records > maxRecords) {
+            log.debug("requested records was " + records
+                      + ", while fixed maxrecords was " + maxRecords +
+                      ". Adjusting records to max");
+            records = maxRecords;
         }
-        if (request.getBoolean(SEARCH_COLLECT_DOCIDS, collectDocIDs)) {
+        String sortKey = request.getString(
+                DocumentKeys.SEARCH_SORTKEY, this.sortKey);
+        Boolean reverse = request.getBoolean(
+                DocumentKeys.SEARCH_REVERSE, false);
+        String[] resultFields = request.getStrings(
+                DocumentKeys.SEARCH_RESULT_FIELDS, this.resultFields);
+        String[] fallbackValues = request.getStrings(
+                DocumentKeys.SEARCH_FALLBACK_VALUES, this.fallbackValues);
+
+        boolean doCollectDocIDs =
+                request.getBoolean(SEARCH_COLLECT_DOCIDS, collectDocIDs);
+
+        if (records == 0 && !doCollectDocIDs) {  // Only hit count
+            log.trace("Requested 0 records in search and no faceting. "
+                      + "Performing fast hit counting");
             try {
-                responses.getTransient().put(
-                        DOCIDS, collectDocIDs(request, query, filter));
+                responses.add(new DocumentResponse(
+                        filter, query, startIndex, records, sortKey,
+                        reverse, resultFields,
+                        System.currentTimeMillis() - startTime,
+                        getHitCount(request, query, filter)));
+            } catch (Exception e) {
+                throw new RemoteException(String.format(
+                        "Unable to perform fast hit counting for query "
+                        + "'%s' with filter '%s'",
+                        query, filter), e);
+            }
+        } else if (records > 0) { // Standard search
+            log.trace("Performing standard search");
+            try {
+                if (fallbackValues != null &&
+                    resultFields.length != fallbackValues.length) {
+                    log.debug(String.format(
+                            "Incoming request uses mistmatching result fields "
+                            + "and fallback values %s(%s) and %s(%s)",
+                            DocumentKeys.SEARCH_RESULT_FIELDS,
+                            resultFields.length,
+                            DocumentKeys.SEARCH_FALLBACK_VALUES,
+                            fallbackValues.length));
+                }
+                fallbackValues =
+                        fixFallbackValues(resultFields, fallbackValues);
+
+                responses.add(fullSearch(
+                        request, filter, query, startIndex, records, sortKey,
+                        reverse, resultFields, fallbackValues));
+            } catch (Exception e) {
+                throw new RemoteException(String.format(
+                        "Unable to perform search for query '%s' with filter "
+                        + "'%s'", query, filter), e);
+            }
+        }
+        if (doCollectDocIDs) { // Collect docIDs for faceting et al
+            try {
+                DocIDCollector collector = collectDocIDs(
+                        request, query, filter);
+                responses.getTransient().put(DOCIDS, collector);
+                if (records == 0) {
+                    responses.add(new DocumentResponse(
+                            filter, query, startIndex, records, sortKey,
+                            reverse, resultFields,
+                            System.currentTimeMillis() - startTime,
+                            collector.getBits().cardinality()));
+                }
             } catch (IOException e) {
                 throw new RemoteException(String.format(
                         "Unable to collect doc ids for query '%s', filter '%s'",
@@ -232,6 +265,19 @@ public abstract class DocumentSearcherImpl extends SearchNodeImpl implements
             }
         }
     }
+
+    /**
+     * Calculate the total number of hits for the given query and filter.
+     * @param request the original request.
+     * @param query   the search query.
+     * @param filter  the search filter.
+     * @return the total number of hits for a search with the given parameters.
+     * @throws java.io.IOException if the search failed due to I/O errors.
+     */
+    protected abstract long getHitCount(
+            Request request, String query, String filter) throws IOException;
+
+
 
     /**
      * Makes a quick test of the given request to see if a proper result should

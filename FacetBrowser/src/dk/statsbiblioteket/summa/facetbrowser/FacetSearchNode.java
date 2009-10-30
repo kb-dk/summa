@@ -310,7 +310,8 @@ public class FacetSearchNode extends SearchNodeImpl implements Browser {
                 // TODO: Make this threaded
                 log.trace("Activating BrowserThread");
                 browserThread.startRequest(
-                        docIDs, 0, docIDs.getBits().length(), facetRequest);
+                        docIDs, 0, (int)docIDs.getBits().capacity(), 
+                        facetRequest);
                 log.trace("Waiting for browserThread");
                 browserThread.waitForResult(BROWSER_THREAD_MARK_TIMEOUT);
                 log.trace("Finished waiting for BrowserThread, "

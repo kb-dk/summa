@@ -22,14 +22,14 @@
  */
 package dk.statsbiblioteket.summa.search.document;
 
-import java.util.BitSet;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.io.StringWriter;
-
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.search.HitCollector;
-import dk.statsbiblioteket.util.qa.QAInfo;
+import org.apache.lucene.util.OpenBitSet;
+
+import java.io.StringWriter;
+import java.util.concurrent.ArrayBlockingQueue;
 
 /**
  * A reusable BitCollector for Lucene searches. After use, {@link #close} /must/
@@ -44,7 +44,11 @@ public class DocIDCollector extends HitCollector {
     private static Log log = LogFactory.getLog(DocIDCollector.class);
 
     private ArrayBlockingQueue<DocIDCollector> queue = null;
-    private BitSet bits = new BitSet(100000);
+    /*
+     * The Lucene OpenBitSet should be significantly faster than Java's BitSet:
+* http://lucene.apache.org/java/2_4_0/api/org/apache/lucene/util/OpenBitSet.html
+     */
+    private OpenBitSet bits = new OpenBitSet(100000);
     private int docCount = 0;
 
     /**
@@ -71,6 +75,7 @@ public class DocIDCollector extends HitCollector {
     public DocIDCollector() {
     }
 
+    @Override
     public void collect(int doc, float score) {
         bits.set(doc);
         docCount++;
@@ -81,7 +86,7 @@ public class DocIDCollector extends HitCollector {
      * Important: This must be called after use.
      */
     public void close() {
-        bits.clear();
+        bits.clear(0, Integer.MAX_VALUE);
         docCount = 0;
         if (queue == null) {
             log.debug("No queue present, so the collector is not put back");
@@ -102,7 +107,7 @@ public class DocIDCollector extends HitCollector {
      * @return the inner BitSet for the collector.
      *         This should only be queried outside of the DicIDCollector-class.
      */
-    public BitSet getBits() {
+    public OpenBitSet getBits() {
         return bits;
     }
 
@@ -113,6 +118,7 @@ public class DocIDCollector extends HitCollector {
         return docCount;
     }
 
+    @Override
     public String toString() {
         int MAX_BITS = 10;
         StringWriter sw = new StringWriter(300);
