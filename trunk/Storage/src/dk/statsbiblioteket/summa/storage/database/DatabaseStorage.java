@@ -1878,6 +1878,7 @@ getco     */
 
             stmt.setFetchSize(FETCH_SIZE);
         } catch (SQLException e) {
+            closeStatement(stmt);
             throw new IOException("Error preparing connection for "
                                   + "clearing base '" + base + "': "
                                   + e.getMessage(), e);
@@ -1892,12 +1893,14 @@ getco     */
             while (cursor.next()) {
                 cursor.updateInt(DELETED_COLUMN, 1);
                 cursor.updateLong(MTIME_COLUMN, timestampGenerator.next());
-                cursor.updateRow();
                 log.debug("Deleted " + cursor.getString(ID_COLUMN));
+                cursor.updateRow();
             }
             stmt.getConnection().commit();
 
             updateModificationTime(base);
+        } catch (SQLException e) {
+            stmt.getConnection().rollback();
         } finally {
             closeStatement(stmt);
         }
