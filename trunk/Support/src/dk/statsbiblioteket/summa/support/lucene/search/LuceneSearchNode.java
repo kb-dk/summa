@@ -56,6 +56,8 @@ import org.apache.lucene.queryParser.ParseException;
 import org.apache.lucene.search.*;
 import org.apache.lucene.search.similar.MoreLikeThis;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.DocIdBitSet;
+import org.apache.lucene.util.OpenBitSetDISI;
 
 import java.io.IOException;
 import java.net.URL;
@@ -737,9 +739,10 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
             }
             result.setSearchTime(System.currentTimeMillis()-startTime);
             if (doLog) {
-                log.debug("fullSearch(..., '" + query + "', ...) returning "
-                          + result.size() + "/" + topDocs.totalHits
-                          + " hits found in "
+                //noinspection DuplicateStringLiteralInspection
+                log.debug("fullSearch(..., query '" + query + "', filter '"
+                          + filter + ") returning " + result.size() + "/" 
+                          + topDocs.totalHits + " hits found in "
                           + (System.currentTimeMillis()-startTime) + " ms");
             }
             return result;
@@ -847,10 +850,11 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                                                                    IOException {
         log.trace("collectDocIDs() called");
         long startTime = System.currentTimeMillis();
+
         DocIDCollector collector;
         try {
-            collector = collectors.poll(COLLECTOR_REQUEST_TIMEOUT,
-                                        TimeUnit.MILLISECONDS);
+            collector = collectors.poll(
+                    COLLECTOR_REQUEST_TIMEOUT, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             throw new RemoteException("Interrupted while requesting a "
                                       + "DocIDCollector from the queue");
@@ -871,7 +875,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                       + (System.currentTimeMillis() - startTime)
                       + " ms with " + collector.getDocCount()
                       + " documents collected and the highest bit being "
-                      + (collector.getBits().length() - 1));
+                      + (collector.getBits().capacity() - 1));
         }
         return collector;
     }
@@ -892,5 +896,66 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                     + "the IndexDescriptor has not been resolved");
         }
         return parser;
+    }
+
+    @Override
+    protected long getHitCount(
+            Request request, String query, String filter) throws IOException {
+        long startTime = System.currentTimeMillis();
+
+        Query q;
+        try {
+            q = parseQuery(request, query);
+        } catch (ParseException e) {
+            throw new IOException(String.format(
+                    "Exception parsing query '%s'", query), e);
+        }
+        Filter f;
+        try {
+            f = parseFilter(filter);
+        } catch (ParseException e) {
+            throw new IOException(String.format(
+                    "Exception parsing filter '%s'", query), e);
+        }
+        if (q == null && f == null) {
+            throw new IOException(String.format(
+                    "Could not parse either query '%s' nor filter '%s'",
+                    query, filter));
+        }
+
+        Filter amalgam;
+        if (q == null) {
+            amalgam = f;
+        } else if (f == null) {
+            amalgam = new QueryWrapperFilter(q);
+        } else {
+            BooleanFilter b = new BooleanFilter();
+            b.add(new FilterClause(f, BooleanClause.Occur.MUST));
+            b.add(new FilterClause(
+                    new QueryWrapperFilter(q), BooleanClause.Occur.MUST));
+            amalgam = b;
+        }
+        log.trace("getHitcount(): Created filter, performing hit count");
+        DocIdSet bits = amalgam.getDocIdSet(searcher.getIndexReader());
+
+        long count = 0;
+        if (bits instanceof DocIdBitSet) { // Optimization
+            count = ((DocIdBitSet)bits).getBitSet().cardinality();
+        } else if (bits instanceof OpenBitSetDISI) {
+            count = ((OpenBitSetDISI)bits).cardinality();
+        } else {
+            log.debug("getHitCount: Got bits of unknown Class "
+                      + bits.getClass() + ", iterating and counting (slow)");
+            // We'll have to count
+            DocIdSetIterator bitIt =  bits.iterator();
+            while (bitIt.next()) {
+                count++;
+            }
+        }
+        //noinspection DuplicateStringLiteralInspection
+        log.debug("getHitCount(..., query '" + query + "', filter '"
+                  + filter + "') " + "got hit count " + count + " in "
+                  + (System.currentTimeMillis() - startTime) + " ms");
+        return count;
     }
 }

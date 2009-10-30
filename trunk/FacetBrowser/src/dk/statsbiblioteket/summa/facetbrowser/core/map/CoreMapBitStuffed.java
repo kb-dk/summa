@@ -37,14 +37,14 @@ import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.browse.TagCounter;
 import dk.statsbiblioteket.summa.search.document.DocIDCollector;
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.XProperties;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.log4j.Logger;
+import org.apache.lucene.util.OpenBitSet;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.BitSet;
 
 /**
  * The BitStuffed CoreMap packs pointers from document-id's to facet/tags in an
@@ -393,7 +393,7 @@ public class CoreMapBitStuffed extends CoreMap32 {
                       + " => " + endPos + " from " + docIDs);
         }
 //        System.out.println("*** " + docIDs);
-        BitSet ids = docIDs.getBits();
+        OpenBitSet ids = docIDs.getBits();
         int hitID = startPos;
         int to;
         boolean outOfBoundsHandled = false;
