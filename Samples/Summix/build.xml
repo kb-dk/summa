@@ -49,6 +49,7 @@
             <zipfileset dir="${basedir}/../../Web/dist" includes="summa-web-search.war" prefix="${root}/web"/>
             <zipfileset dir="${basedir}/../../Web/dist" includes="summa-web-storage.war" prefix="${root}/web"/>
             <zipfileset dir="${basedir}/../../Web/dist" includes="summa-web-website.war" prefix="${root}/web"/>
+            <zipfileset dir="${basedir}/../../Web/dist" includes="summa-web-status.war" prefix="${root}/web"/>
 
             <!-- 3rd party libs -->
             <zipfileset dir="${basedir}/../../lib" includes="*.jar" prefix="${root}/lib"/>
