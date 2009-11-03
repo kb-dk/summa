@@ -1,4 +1,106 @@
 ========================
+2009-11-03: Summa 1.4.12
+========================
+
+ * Critical bugfix: When clearing a base via ClearBaseFilter or any other means,
+                    the H2Storage module (the default) had a race condition
+                    causing a risk of the database indexes would be corrupted.
+
+ * New web service StatusWS. Can collect a very simple status report from
+   the storage-, searcher-, and suggest services. We plan to expand this
+   functionality in the future. Especially more detailed status from each
+   service and the ability to get the status as an RSS feed
+
+ * Optimized the special case of a standard search where the number of wanted
+   records is 0. The use case here is asking for a hit count on a given query,
+   without needing the records
+
+ * Less verbose logging from MARCParser
+
+ * Changed the default timeout for ZIP to Integer.MAX_VALUE, as ZIP-files
+   containing very large files can take a lot of time to process
+
+ * Major cleanup of ThreadedStreamParser, reducing formerly complex logic to
+   clearly defined and consistent workflow
+
+ * Added the inverse equivalent to ContentToStreamFilter, namely a
+   StreamToContentFilter - creating a Record payload from a stream payload
+   with the record content set to the contents of the stream
+
+ * Bugfix: The clearBase() method on DerbyStorage didn't work
+
+ * Bugfix: The PayloadQueue did not add the size of parents and
+           children to the size for a Record
+
+ * Bugfix: The MarcMultiVolumeMerger had a one-off error that was
+           triggered by XML without linebreaks between tags
+
+ * Bugfix: Changed build to include dtd and ent for XHTML entity
+           resolver
+
+========================
+2009-10-22: Summa 1.4.11
+========================
+ 
+ * WARNING: Another DB schema change for the suggest service
+ 
+ * WARNING: ABI break for FacetResultExternal. This will require you to run
+            the same version of Summa on your web services as your Summa
+            search engine
+
+ * New API for the suggest web service; getRecentSuggestions. Used to
+   retrieve the last N suggestions updated within the last X seconds.
+   
+ * New API for the search web service; filterSearchSorted. Used to pass
+   in an extra filter-query that will not affect the ranking of the "real"
+   query. This is useful
+ 
+ * The default Suggest engine backend (SuggestStorageH2) now features a 
+   "query sanitizer" (which is a configurable class of Lucene Analyzer
+   controlled by the property summa.support.suggest.sanitizer) that will be
+   run over user queries to be added to the DB. The default is a 
+   Lucene WhitespaceAnalyzer which will result in the fix for the bug
+   mentioned below (bug #61)
+ 
+ * A new RollingFileAppender for Log4J that rolls the logs each time the
+   application starts. Set the class attribute of the appender element
+   in your log4j.xml to
+   dk.statsbiblioteket.summa.common.util.CleanSlateRollingFileAppender
+ 
+ * Bump SBUtil to 0.4.7. This should improve performance on some XSLT operations
+ 
+ * Bugfix: The merging of Facet results from different searcher
+           setups failed when the facets weren't the same
+   
+ * Bugfix: Fix #59: The XMLSplitterHandler did not handle multiple default
+           name spaces properly
+ 
+ * Bugfix: Patch from Jens Henrik Jensen (SB) to fix some issues
+           with the client-shell.sh, control-shell, and control.sh scripts:
+            - Set the script mode to always exit on errors
+            - Be runnable disregarding the working dir
+            - To not call popd as last function in the script,
+              overriding the exit value of command
+
+ * Bugfix: ReaderInputstream did not close th encapsulated
+           Inputstream upon close
+ 
+ * Bugfix: The toXML-method in RecordUtil performen an endless
+           recursion when parent-child-relations were double-linked
+
+ * Bugfix: Fix bug #63: "Suggestions with same normalized key show
+           same hitcount"
+ 
+ * Bugfix: Fix bug #61: "Whitespace garbage in suggest strings"
+ 
+ * Bugfix: Fix bug #65: "ZipException: invalid bit length repeat; during
+           ingest". The trick is to ensure that all operations on the
+           ZipInputStream happen in the same thread. This is achieved by
+           implementing a QueuedInputStream that holds an internal blocking
+           queue all data is pushed over. There's a lot of room for
+           optimization here, see the fixme in the header for QueuedInputStream
+ 
+========================
 2009-09-14: Summa 1.4.10
 ========================
 
