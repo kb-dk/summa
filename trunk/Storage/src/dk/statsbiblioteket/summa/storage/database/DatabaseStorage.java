@@ -1822,8 +1822,12 @@ getco     */
         }
     }
 
+    // The synchronized modifier on clearBase() is paramount to have the
+    // TRANSACTION_READ_UNCOMMITTED transaction isolation level work properly,
+    // in a nutshell this is the only isolation level that gives us the
+    // throughput we want
     @Override
-    public void clearBase (String base) throws IOException {
+    public synchronized void clearBase (String base) throws IOException {
         log.debug(String.format("clearBase(%s) called", base));
         Connection conn = null;
 
@@ -1853,6 +1857,7 @@ getco     */
         //        need to take the 'usePagaingModel' flag into account
         //
 
+        long start = System.currentTimeMillis();
         log.info ("Clearing base '" + base + "'");
 
         // Convert time to the internal binary format used by DatabaseStorage
@@ -1884,23 +1889,37 @@ getco     */
                                   + e.getMessage(), e);
         }
 
+        String id = null;
+        long count = 0;
         try {
             stmt.setString(1, base);
             stmt.setLong(2, mtimeTimestamp);
             stmt.execute();
             ResultSet cursor = stmt.getResultSet();
-
             while (cursor.next()) {
+                // We read the id before we start updating the row, not all
+                // JDBC backends like if we update the row before we read it
+                id = cursor.getString(ID_COLUMN);
+
                 cursor.updateInt(DELETED_COLUMN, 1);
                 cursor.updateLong(MTIME_COLUMN, timestampGenerator.next());
-                log.debug("Deleted " + cursor.getString(ID_COLUMN));
+                log.debug("Deleted " + id);
                 cursor.updateRow();
+                count++;
             }
             stmt.getConnection().commit();
 
             updateModificationTime(base);
+            log.info("Cleared base '" + base + "' in "
+                    + (System.currentTimeMillis() - start)
+                    + "ms. Marked " + count + " records as deleted");
         } catch (SQLException e) {
+            String msg ="Error clearing base '" + base + "' after " + count
+                    + " records, last record id was '" + id + "': "
+                    + e.getMessage();
+            log.error(msg, e);
             stmt.getConnection().rollback();
+            throw new IOException(msg, e);
         } finally {
             closeStatement(stmt);
         }
