@@ -1,0 +1,1126 @@
+========================
+2009-11-03: Summa 1.4.12
+========================
+
+ * Critical bugfix: When clearing a base via ClearBaseFilter or any other means,
+                    the H2Storage module (the default) had a race condition
+                    causing a risk of the database indexes would be corrupted.
+
+ * New web service StatusWS. Can collect a very simple status report from
+   the storage-, searcher-, and suggest services. We plan to expand this
+   functionality in the future. Especially more detailed status from each
+   service and the ability to get the status as an RSS feed
+
+ * Optimized the special case of a standard search where the number of wanted
+   records is 0. The use case here is asking for a hit count on a given query,
+   without needing the records
+
+ * Less verbose logging from MARCParser
+
+ * Changed the default timeout for ZIP to Integer.MAX_VALUE, as ZIP-files
+   containing very large files can take a lot of time to process
+
+ * Major cleanup of ThreadedStreamParser, reducing formerly complex logic to
+   clearly defined and consistent workflow
+
+ * Added the inverse equivalent to ContentToStreamFilter, namely a
+   StreamToContentFilter - creating a Record payload from a stream payload
+   with the record content set to the contents of the stream
+
+ * Bugfix: The clearBase() method on DerbyStorage didn't work
+
+ * Bugfix: The PayloadQueue did not add the size of parents and
+           children to the size for a Record
+
+ * Bugfix: The MarcMultiVolumeMerger had a one-off error that was
+           triggered by XML without linebreaks between tags
+
+ * Bugfix: Changed build to include dtd and ent for XHTML entity
+           resolver
+
+========================
+2009-10-22: Summa 1.4.11
+========================
+ 
+ * WARNING: Another DB schema change for the suggest service
+ 
+ * WARNING: ABI break for FacetResultExternal. This will require you to run
+            the same version of Summa on your web services as your Summa
+            search engine
+
+ * New API for the suggest web service; getRecentSuggestions. Used to
+   retrieve the last N suggestions updated within the last X seconds.
+   
+ * New API for the search web service; filterSearchSorted. Used to pass
+   in an extra filter-query that will not affect the ranking of the "real"
+   query. This is useful
+ 
+ * The default Suggest engine backend (SuggestStorageH2) now features a 
+   "query sanitizer" (which is a configurable class of Lucene Analyzer
+   controlled by the property summa.support.suggest.sanitizer) that will be
+   run over user queries to be added to the DB. The default is a 
+   Lucene WhitespaceAnalyzer which will result in the fix for the bug
+   mentioned below (bug #61)
+ 
+ * A new RollingFileAppender for Log4J that rolls the logs each time the
+   application starts. Set the class attribute of the appender element
+   in your log4j.xml to
+   dk.statsbiblioteket.summa.common.util.CleanSlateRollingFileAppender
+ 
+ * Bump SBUtil to 0.4.7. This should improve performance on some XSLT operations
+ 
+ * Bugfix: The merging of Facet results from different searcher
+           setups failed when the facets weren't the same
+   
+ * Bugfix: Fix #59: The XMLSplitterHandler did not handle multiple default
+           name spaces properly
+ 
+ * Bugfix: Patch from Jens Henrik Jensen (SB) to fix some issues
+           with the client-shell.sh, control-shell, and control.sh scripts:
+            - Set the script mode to always exit on errors
+            - Be runnable disregarding the working dir
+            - To not call popd as last function in the script,
+              overriding the exit value of command
+
+ * Bugfix: ReaderInputstream did not close th encapsulated
+           Inputstream upon close
+ 
+ * Bugfix: The toXML-method in RecordUtil performen an endless
+           recursion when parent-child-relations were double-linked
+
+ * Bugfix: Fix bug #63: "Suggestions with same normalized key show
+           same hitcount"
+ 
+ * Bugfix: Fix bug #61: "Whitespace garbage in suggest strings"
+ 
+ * Bugfix: Fix bug #65: "ZipException: invalid bit length repeat; during
+           ingest". The trick is to ensure that all operations on the
+           ZipInputStream happen in the same thread. This is achieved by
+           implementing a QueuedInputStream that holds an internal blocking
+           queue all data is pushed over. There's a lot of room for
+           optimization here, see the fixme in the header for QueuedInputStream
+ 
+========================
+2009-09-14: Summa 1.4.10
+========================
+
+ * The RecordWriter filter, responsible for inserting Records into Storage,
+   now has a memory cap for its internal queue that can be set via the
+   summa.storage.recordwriter.batchmaxmemory property. Huge Records could cause
+   freak OOMs on the Storage
+
+ * New deployment mechanism LocalDeployer that can be used to bypass the need
+   for an SSH session when deploying+starting a client on a local machine.
+   Pass '-t local' to the 'deploy' command when deploying a client from
+   the control-shell
+
+ * A lot of work on the Suggest service - particularly some serious
+   performance issues should have been ironed out
+
+    - Compare strings by normalizing them with a Lucene analyzer,
+      using SummaKeywordAnalyzer by default
+
+    - The property summa.support.suggest.lowercasequeries has been renamed to
+	  summa.support.suggest.normalizequeries since we can do more advanced
+	  transformations now (see point above)
+
+    - Introduces max rows setting to h2 backend for suggest, ensuring
+      lower response times for parts of a large result set (for example single
+      character prefixes)
+
+    - Make import for suggest drop and re-create indexes,
+	  greatly improving import performance
+
+	- Add a new search key to fetch the most recently updated sugegstions.
+	  Pass in summa.support.suggest.recent to test this out. It is also
+	  supported in suggest-tool.sh shipped in Summix
+
+ * WARNING: The afore mentioned work on the Suggest service has broken the
+   database layout of the default backend SuggestStorageH2. You will need to
+   export your old data and import it in a new empty suggest instance
+
+ * search-tool.sh will now echo the search response time in ms (also applies
+   to suggest-tool.sh)
+
+ * Created ContentToStreamFilter to wrap content from Record into a
+    Stream on Payload
+
+ * Made the XMLSplitter optionally namespace-aware with regard to
+   record specification
+
+ * Bugfix: The RecordWriter needed to run with debug logging enabled
+           in order to run at oeak performance
+
+ * Bugfix: The StreamingDocumentCreator filter that is responsible for creating
+           Lucene documents could raise StackOverflowErrors on huge
+           SummaDocuments. This was caused by a misuse of recursion inside the
+           XMLStreamReader shipped with Java, see:
+	       http://sbdevel.wordpress.com/2009/09/04/an-excursion-in-java-recursion/
+
+ * Bugfix: ScriptFilter did not resolve the script engine correctly when
+           sniffing only on the script extension.
+
+=======================
+2009-09-01: Summa 1.4.9
+=======================
+
+ * The ClearBaseFilter can now select to clear the configured base only
+   if the incoming payload matches a criteria in the same that a RegexFilter
+   matches Payloads+Records (SB)
+
+ * Make the default Storage backend (H2Storage) perform an analyze
+   every 100000 records on flushAll, and skip the corresponding analysis
+   on startup. This should improve boot times on big databases considerably (SB) 
+
+ * Added clear/import/export commands to the Suggest service. Also supported
+   by the command line tool 'suggest-tool.sh' (SB)
+
+ * Enable the H2 second level LRU page cache by default. This should speed up
+   large bases, but might be a small hit for smaller bases. This feature
+   can be controlled via the summa.storage.database.l2cache boolean property
+
+ * when specifying a static root for SummasearcherImpl, it will now be
+   expanded with Resolver.getPersistentFile instead of being used directly
+
+ * Bugfix: Make sure that the database indexes are used in the H2 Suggest
+           backend (SB)
+
+ * Bugfix: Log uncaught exceptions in the RecordBatcher thread in
+           the RecordWriter filter (SB)
+
+ * Bugfix: In DatabaseStorage explicitly rollback connections with
+           any errors detected (the rollbacks where implicit from closing
+           the connection before - this is not good JDBC behaviour) (SB)
+
+ * Bugfix: Bundle Tool should escape property refs inside <jvmArg>
+           tags (SB)
+
+ * Bugfix: Fix db connection leak in flushAll() when we fail to set
+         the connection in write-mode. This is categorized as a
+         corner-case bug, but a bug nonetheless (SB)
+
+ * Bugfix: Added check for endless recursion in H2Storage.touchParent
+
+=======================
+2009-08-18: Summa 1.4.8
+=======================
+
+ * Added setting for filters in FilterSequence to control whether the filter
+   is enabled or not. Set the property "filter.enabled" to true or false to
+   control this
+
+ * New new filter called TikaDocumentCreator that creates Lucene documents
+   directly from Tika XHTML events. This bypasses the needs for XSLT processing
+   and can provide big performance gains where raw Tika processing is applicable
+
+ * New filters RecordShaperFilter and DocumentShaperFilter for restructuring and'
+   handling record metadata and Lucene document fields (respectively) in the
+   filter pipeline
+
+ * XMLSplitterFilter supports splitting streams into Records without
+   extracting IDs. This is useful in conjunction with the new RecordShaperFilter
+
+ * Bump SBUtil dependency to 0.4.6
+
+ * Introduce experimental API to do super fast alphabetical index listings via the
+   facet browser. See dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys for
+   a starting point
+
+ * Bugfix: Automagically free all RMI services registered via the
+           RemoteHelper when the JVM exits (this means pertty much all RMI
+           services). This should fix some bugs where the services refused
+           to come back up when started from a ClientShell, but killed with
+           'kill <pid>' from a Unix shell. The problem was that Java doesn't
+           do this clean up by default - go figure
+
+ * Bugfix: Don't resolve DTDs in the XMLSplitter{Parser,Handler,Filter}
+
+ * Bugfix: Fix https://sourceforge.net/apps/trac/summa/ticket/41 - 
+           "Search-time boosts in the IndexDescriptor are not used"
+ 
+ * Bugfix: Fix https://sourceforge.net/apps/trac/summa/ticket/28 -
+          "DatabaseStorage.clearBase() doesn't update record mtimes"
+
+=======================
+2009-06-26: Summa 1.4.7
+=======================
+
+ * Critical bugfix: The ThreadedStreamParser class, which is the base class for
+                    many of the core filters, could drop payloads when the
+                    internal queue was overflowed
+
+=======================
+2009-06-23: Summa 1.4.6
+=======================
+
+ * New default: The storage web service will longer XML-escape the embedded
+   record contents. To control this behavior set the property
+   summa.common.recordutil.escapecontent to true or false (SB)
+
+ * Include a RegexFilter that can black- or white list Payloads based on
+   regex matching on their, id, base, and/or content (SB)
+
+ * Add a new backend for the ThreadedStreamParser filter, called ZIPParser.
+   This can be used as a filter for extracting Payloads from a zip stream (SB)
+
+ * Changed the threadedStreamParser to use PayloadQueue which allows for
+   limit on queue-size based on memory usage
+
+ * Enhanced Suggest to allow for switching between case-sensitive and
+   case-insensitive operation (SB)
+
+ * Added listSuggestions and addSuggestions to Suggest to prepare for
+   export and import of bulk lists of suggestions (SB)
+
+ * Experimental: Extraction and merging of Lucene index term statistics. This
+   is intended to be used in the upcoming "distributed ranking on a
+   sharded index" (SB)
+ 
+ * Bugfix: The threadedStreamParser did not close Payloads on
+           exceptions (Refind)
+
+ * Bugfix: The PayloadQueue failed when queueing Payloads without Records
+           with a fixed ceiling on memory usage (SB)
+
+ * Bugfix: The H2 suggest storage did not store queryCount for
+           new suggestions (SB)
+
+ * Bugfix: Don't hardcode port 27000 and remote console in the DeployCommand
+           on ControlShell
+
+=======================
+2009-06-04: Summa 1.4.5
+=======================
+
+ * Bump SBUtil dependency to 0.4.5 (SB)
+
+ * Bump internal Derby dep. to the new 10.5.1.1 hotness. This brings in
+   client side paging via LIMIT/FETCH clauses which has been much awaited (SB)
+
+ * Add a TikaFilter that extracts metadata from crawled files and converts them
+   to an intermediate XHTML structure. This can be used as the base for a
+   hard disk indexer (SB)
+
+ * A new filter, ReplaceFilter, that can replace substrings in Records or
+   streams (Refind)
+
+ * New filter, StdOutFilter, that drops Records (or optionally only their
+   content) to stdout (Refind)
+
+ * Added optional forceConsolidateOnClose to the IndexController (SB)
+
+ * Include a ScriptService service class that launches an inlined or external
+   script (anything supported by Java's ScriptEngine API) wrapped behind
+   a Service interface (SB)
+
+ * Inject a 'log' variable into ScriptFilter that can be used to access the
+   common-logging logger of the filter (SB)
+
+ * Make clearTagsOnConsolidate default to true as it speeds up facet building
+   tremendously for larger indexes (SB)
+
+ * Bugfix: It was not possible to dertermine the payload ids of failed payloads
+           from ObjectFilterImpls (which means most filters) when the process
+           threw a non-Exception throwable. These cases are now logged very
+           verbosely because they often hide very nasty bugs (OOM etc) (SB)
+
+ * Bugfix: The maxTags in the FacetScructure configuration was used
+           as wantedTags when doing faceting, resulting in 200 tags/facet
+           for the default setup (SB)
+
+ * Bugix: Exceptions from FilterControl, SummaSearcherRunner, and
+          StorageRunner's main() methods could be dropped. Install
+          uncaught exception handlers that logs any top level exceptions (SB)
+
+ * Bugfix: RecordUtil.toXML() did not close <element> tags in the
+           <meta> section (Refind)
+
+ * Bugfix: The {Memory,Disk}Pools did not accept adds with position
+           above their size (SB)
+
+ * Bugfix: DerbyStorage works again now (and is probably a lot faster than
+           before, but this is yet to be tested) (SB)
+
+=======================
+2009-05-19: Summa 1.4.4
+=======================
+
+ * Critical Bugfix: The web services leaked connections to search, suggest
+                    and storage
+
+ * Ported a Lucene sorter that uses cached collator and
+   index-based sorting from Stable Summa to head. This should
+   provide a speed-increase for sorted searches along with less
+   memory consumption (thill not ideal though. For that we need to
+   hack the faceting system)
+
+ * The Javascript configuration backend, JStorage, is now marked as stable,
+   although it has not seen extensive real-world tests
+
+ * Lots of polish to the client/control shells:
+
+    - Don't print debug messages by default in the shell
+
+    - Print the correct Summa version number when starting a
+	  shell instead of some outdated CVS-mumbo-jumbo
+
+	- Make the shell Core exit when the input stream is closed.
+	  This way one can pipe commands into the shell with standard unix
+	  pipes as well as exit the shell with Ctrl-d
+
+	- Allow fetching status of deployed services from the
+	  Control shell. Just pass clientId/serviceId to the status command
+
+	- Add command to list services deployed on a client directly from
+	  the Control shell, optionally printing the status of each service
+
+	- Add a -f/--format switch to 'services' and 'status' commands on client-
+	  and control shells. With this switch enabled they print out in a canonical
+	  machine parseable format
+
+	- Add -w and --wait to the 'start' command in the Client
+	  shell and implement a 'wait' command as well
+
+	- Add a -b and --bundle switch to the 'services' command
+	  in client- and control shells
+
+ * Make it configurable whether the Client keeps old services in the
+   artifacts/ dir after it has removed a service. The relevant
+   property is summa.control.client.storeartifacts
+
+ * Make it possible to install clients under another base path than
+   ~/summa-control. The easiest way to achieve this is by setting
+   the summa.control.client.basepath property on the control server.
+   This is useful if one wants to completely separate the client and
+   service data from the control/repo/bundle data.
+
+ * Bugfix: Made MoreLikeThis case sensitive for results but kept it
+           case-insensitive for query. This closes bug #1659
+
+ * Bugfix: Under certaing circumstances an empty Tag could be added in the
+           facetting system
+
+ * Bugfix: In FilterService fix possible NPE in stop() if the
+           internal FilterControl fails to instantiate
+
+ * Bugfix: The FacetBrowser did not sort Tags correctly for facets
+           with one field or with less tags than the requested maximum
+
+ * Buildfix: Enable compilation of the Web module in the global .jar target
+
+ * Bugfix: The LuceneSearchNode returned one hit more than requested
+
+ * Bugfix: Don't set the state to 'running' when the StorageService
+           has completed statup, but use the 'idle' state (as everything
+           else also does) instead
+
+=======================
+2009-05-11: Summa 1.4.3
+=======================
+
+ * Introduced a DescriptorManipulator that ensures that a copy of the
+   IndexDescriptor-XML is stored in the index-folder (SB)
+
+ * Make the search nodes (notably LuceneSearchNode and FacetSearchNode)
+   capable of fetching IndexDescriptor from the index-folder. This is used
+   in conjuction with the indexer copying the index descriptor over to the
+   index folder on commit and consolidates.
+   With this in place the searcher should be able to react on changing index
+   descriptors without restarting the searcher (SB)
+
+ * Sort commands alphabetically when listing commands inside a shell (SB)
+
+ * Add a 'stop' command to the control-shell which can be used to stop
+   a client instance (SB)
+
+ * Factor out a ClientConnectionFactory that can be used to instantiate
+   ClientConnections via a ControlConnection (SB)
+
+ * Bring back field based sorting of search results. This is just a prelimary
+   of what will come. Correct collator based sorting is not supported yet, but
+   is slated for Summa 1.4.4. On the very long run we are designing a highly
+   optimized sorting mechanism based on the facetting framework (SB)
+
+ * You can now prepend queries with a boost() parameter to control query time
+   boosting. The format i boost(<<field|group>^<float>> [...]). Fx boosting
+   all hits in the 'ti' group by 0.1 and all hits in the 'au' field by 10:
+   boost(ti^0.1 au^10) (SB)
+
+ * You can now prefix queries with '<:explain:>' and the response from the
+   search engine will contain the details of the ranking calculation. This
+   is very handy for tweaking the ranking algorith by adjusting boosts in the
+   IndexDescriptor or in-query (Refind)
+
+ * Strip boosts from the documents in the legacy XSLT, they where not applied
+   correctly (SB)
+
+ * Bugfix: The wrong initializer for SummaQueryParser was used, so
+	       it was not possible to specify query time boosts (SB)
+
+ * Bugfix: Properly unexport remote interfaces when we kill a Client
+	       with the 'kill' command from the client-shell. Not doing this
+	       caused some wierd RMI hangs and "connection refused" messages (SB)
+
+ * Bugfix: Properly shut doen client and any services when Client
+           receives a stop() command (SB)
+
+ * Bugfix: Properly detect if someone wipes the bundle repo under a
+           running ControlCore (SB)
+
+ * Bugfix: Throw a NoRouteToHostException if the StorageWrietClient can not
+	       connect to the storage (SB)
+
+ * Bugfix: Better error handling on malformed port definitions in
+           SSHDeployer (SB)
+
+ * Experimental: The JStorage configuration backend is still experimental,
+                 but has received some love and is well on its way for
+                 production readyness (SB)
+
+=======================
+2009-05-05: Summa 1.4.2
+=======================
+
+ * Move all facet configuration inside the index descriptor. This massively
+   simplifies the configuration of the actual searcher and indexer services (SB)
+
+ * Autostart the suggest service with the all.sh script in Summix (SB)
+
+ * The SummaSearcher and the IndexController accept index-descriptor
+   setup in the configuration root, copying the setup to search nodes
+   and index manipulators (SB)
+
+ * Use JLine to enable inline editing in the shells (client and control). This
+   also bring history navigation and editing (SB)
+
+ * Implement a fire-once filter; ClearBaseFilter, that clears a given set of
+   bases the first time it receives a payload (SB)
+
+ * Rework the starting/stopping/monitoring code in the client and control
+   shells which should give mucg more usable feedback now, as well as not
+   swallowing the terminal's prompt after some commands complete (SB)
+
+ * Add Windows variant of the suggest-tool in Summix (Refind)
+
+ * Add an --upgrade switch to the deploy command in the client-shell (SB)
+
+ * Bugfix: Don't allw starting of clients that are already running (fixed both
+           control-shell and in the ControlCore itself) (SB)
+
+ * Bugfix: Client could get stuck in an infinite loop when removing
+           a service with the same instanceid for the second time (SB)
+
+ * Bugfix: Don't crash the ControlCore if it fails to parse client configs
+           at startup (SB)
+
+ * Bugfix: Whereever URL.getFile() was used, the code did not work
+           when using paths with non-trivial characters, such as
+           space and # (SB)
+
+ * Experimental: Add a JStorage backend to the configuration system, reading
+                 the config data from a Javascript file (SB)
+
+=======================
+2009-04-28: Summa 1.4.1
+=======================
+
+ * Make FilterService exit the JVM when underlying FilterControl stops.
+   This behaviour can be tweaked via the property
+   summa.control.service.exitwithfilter (SB)
+ 
+ * Alphabetic sorting of bundles in the commands in control-shell and
+   client-shell (SB)
+ 
+ * Bugfix: Make StorageService and SearchService able to restart cleanly (SB)
+ 
+ * Bugfix: Clean up messages from StatusMonitor reporting connectionIds
+           of null (SB)
+
+ * Bugfix: The WebServices did not work when the WAR-file contained
+           a '#' (used to make URLs with slashes in tomcat) (SB)
+
+ * Bugfix: Allow overriding configuration path in the Summix suggest-tool (SB)
+ 
+ * Bugfix: Fix process.log in Summix (Refind)
+
+
+=======================
+2009-04-24: Summa 1.4.0
+=======================
+
+ * Implement a Suggestion engine. For an example on how to use it see the
+   Summix README. You will also find a suggest-tool.sh in Summix (SB)
+
+ * Implement a MoreLikeThis service. It runs by default when using a
+   LuceneSearchNode (SB)
+
+ * Add a summa-support-api.jar file to the distribution (SB)
+
+ * Much improved Windows scripts in Summix (SB)
+
+ * Removed all usages of of the olde XmlOperations class from the Web module
+   and use SBUtils xml handling throughout (SB)
+
+ * In the Control module rename the concept of "client meta files"
+   to "client control files". Control files are found in the client dir
+   as control.xml. This means that there no longer is a
+   ~/summa-control/meta directory (SB)
+
+ * Add a command, 'control', on the control shell to inspect the
+   deployment metadata of a deployed client (SB)
+
+ * Added -Djava.rmi.server.hostname=localhost to the Summix JVM invocation
+   to avoid problems with firewalls and routing outside of the local computer
+   (Refind)
+
+ * Add a 'restart' command to the client shell (SB)
+
+ * SummaSearcherImpl now supports using a static, non-monitored, index-root (SB)
+
+ * Bugfix: The Facet building failed due to missing implementation
+           of adjustPositions in the CoreMapBuilder (SB)
+
+ * Bugfix: Allow surrounding whitespace in ints, longs, and booleans
+           in configuration files (SB)
+
+ * Bugfix: Make search-tool.sh detect its configuration properly (SB)
+
+ * Bugfix: Spurious reporting of connections called 'null' in client- and
+           control shells (SB)
+
+
+=======================
+2009-04-20: Summa 1.3.3
+=======================
+
+ * Fix infinite loop on empty tags introduced by a recent change in
+   LuceneFacetBuilder (SB)
+
+=======================
+2009-04-20: Summa 1.3.2
+=======================
+
+ * Some tweaks to the commands in control-shell (SB):
+
+   - 'repo' no longer requires a -l to work, -l is the default
+
+   - 'deploy' defaults to to target host 'localhost' and now displays a better
+     help message
+
+   - Prettify some status codes in the 'clients -s' and 'status' comamnds
+
+ * Don't default to setting summa.configuration=configuration.xml in the
+   'start' command of the client shell. Just allow
+   Configuration.getSystemConfiguration() in the service Launcher class
+   to autodetect the config if the system property summa.configuration is unset.
+   This allows for setting summa.configuration in places like
+   bundles specs (service.xml and client.xml) and other useful stuff (SB)
+
+ * The LuceneFacetBuilder did not discard empty Tags, which it does now (Refind)
+
+ * The Windows commands search-tool.bat and storage-tool.bar in Samples/Summix
+   now supports an arbitrary number of arguments (Refind)
+
+ * The storage-tool.sh and search-tool.sh scripts from the Control module
+   are now runnable from everywhere (SB)
+
+ * When clicking a record in the demo website you now get the raw record
+   contents dumped. This way the website can display all kinds of records even
+   though no presentation XSLTs are provided (SB)
+
+ * Include .war files from the Web module in Summix (SB)
+
+ * Bugfix: When non-existing nested folders were stated in the
+	       DumpFilter, it did not create the folders (SB)
+
+ * Bugfix: Some folder structures triggered skipping of valid files
+           in the FileReader (SB)
+
+
+=======================
+2009-04-16: Summa 1.3.1
+=======================
+
+ NOTE: Since Summa has now attracted third party contributors we will, starting
+       from Summa 1.3.1, postfix each news entry with an attribution to the
+       responsible party/parties enclosed in braces.
+
+ * Add a MoreLikeThis capability to the LuceneSearchNode and a web service
+   interface for this on the search web service (SB)
+
+ * Allow web services in the Web module to fetch their configurations from
+   outside the .war file, by using some JNDI-fu (SB)
+
+ * Add a ScriptFilter that runs a Payload through any script engine supported
+   by the JVM (such as Javascript). The script can be fetched externally or
+   inlined in the configuration (SB)
+
+ * Added DumpFilter which dumps Payloads into a designated folder. Used
+   primarily for debugging (Refind)
+
+ * The usual round of logging clarifications (SB, Refind)
+
+ * Include a Samples module which as a start contains a very simple Summa
+   setup called Summix. Summix does not depend on the Control framework used
+   by Summa (think, bundles and services) and is mostly designed as a stand
+   alone search engine for people without huge scalability needs. Summix
+   also runs on Windows. (Refind)
+
+ * Bump SBUtil from 0.4.3 to 0.4.4. This brings in new features in
+   ReplaceFactory we need in order to optimize query analysis (SB)
+
+ * Consolidation of the Lucene analyzers in the Common module. This means
+   dropping TokenReplaceFilter, TransliteratingReader, StringReplaceReader,
+   and TransliterionFilter from the source tree. All the replacement is now done
+   entirely inside the ReplaceReaders from SBUtil. This brings a hefty
+   optimization to query parser performance (at least a factor of 20) (SB)
+
+ * Configurations can now escpae system properties inside integer, long, and
+   boolean values. It only did strings before (SB)
+
+ * Bugfix: Explicitly remove log4j.xml from the summa-common.jar
+
+ * Bugfix: Add a 'process' appender to the log4j configuration in the
+           sample bundles. Output goes to log/process.log (SB)
+
+ * Bugfix: The AbstractDiscardFilter has its logic reversed so that
+	       only Payloads that were judged discardable was preserved and vise
+	       versa (Refind)
+
+=======================
+2009-03-27: Summa 1.3.0
+=======================
+
+ * IMPORTANT: The DerbyStorage and PostgresStorage backends are not functional
+   in Summa 1.3.0. It is planned to fix them in later micro versions of the
+   Summa 1.3 series
+
+ * Make H2Storage the default storage backend
+
+ * The 'data' column in H2Storage has been changed from type BLOB to type BYTEA.
+   We know it is bad style to break the DB schemas but with type BLOB H2
+   dumps _lots_ of small files with the content data. With BYTEA the data is
+   inlined in the db resulting in a static number of 5 files for the db
+
+ * Make DatabaseStorage use SQL transactions. While fixing some race conditions
+   this also gives a huge performance boost on flush() and flushAll().
+   This affects both H2Storage, DerbyStorage, and PostgresStorage
+
+ * In the config for H2Storahe you now only specify the root folder of the db,
+   not the root folder+fileprefix. The file prefix is always summa_h2storage
+
+ * Bump H2 library to 1.1.109. This fixes a gradual performance degradation on
+   H2Storage when inserting millions of records
+
+ * Bump SBUtil dep. to 0.4.3
+
+ * Rewrite of the core analyzers to use SBUtil 0.4.3. This brings a considerable
+   performance booost to indexing speed
+
+ * Use XSLT handling from SBUtil 0.4.3. This also means that XML transformations
+   can now optionally ignore namespaces
+
+ * Add runnable classes for launching the core Summa components without needing
+   the entire Control framework. The following classes now has main methods
+   detecting their config via the system prop. summa.configuration:
+   FilterControl, SummaSearcherRunner, and StorageRunner
+
+ * Optimize building of the facet structure by introducing an internal cache,
+   and by avoiding some memory allocations inside loops
+
+ * Change sorting strategy for disk based facets to use merge-sort
+   instead of heap-sort. This results in a lot less disk IO and coupled
+   with a cache for persistent values, this speeds up the sort after dirty
+   adds tremendously
+
+ * Changed FileReader to resolve files lazily. Before this change it build
+   a full list of all files before starting. This took a considerable amount of
+   time if the data dir contained hundred of thousands of files
+
+ * Changed the default queue-size and sleep-time for ThreadedStreamParser as
+   the old defaults resulted in poor performance
+
+ * Tweak the default sizes of the PayloadQueues in MUXFilterFeeder
+   to 100 Payloads instead of 1 (the memory-limit default is 1MByte). This may
+   give a performance boost on some setups depending on MUXFilters
+
+ * Introduce two new field types; 'verbatim' and 'storedVerbatim' which will
+   index the field contents as one unaltered token (with casing and diacritics),
+   but keep it searchable. In contrast the field types 'keyword' and
+   'storedKeyword' are case insensitive and removes non-alphanumeric symbols,
+   but also indexing the content as a single token
+
+ * Better handling of failures in the ingest- and index chains by introducing
+   a PayloadException and return codes from ObjectFilterImpl.processPayload()
+
+ * Add an explicit log to follow record/payload lifetimes
+
+ * Bugfix: The ServiceObj (responsible for handling SOAP-requests) failed
+           randomly on multi-threading
+
+ * Bugfix: Merging of DocumentResponses did not update the total
+	       number of hits
+
+ * Bugfix: The TagHandler didn't perform dirty adds when asked to do so
+
+ * Bugfix: The FacetSearchNode did not open the TagHandlers in read-only mode
+
+ * Bugfix: Fix handling of quoted arguments to search-tool. This makes it
+           possible to do phrase searches with the search-tool
+
+ * Bugfix: The AbstractDiscardFilter (and its subclasses) wasn't
+	       actually ObjectFilters, they just had all the methods
+
+ * Bugfix: Made the FileReader auto-close delivered Streams when they reach
+           EOF. This guards against file handle starvation
+
+ * Bugfix: The IndexDescriptor class checked for changed descriptors
+           all the time when the check-interval was 0. The correct behaviour
+           is not to check when the interval is 0
+
+ * Bugfix: Fix compliance to ReadableStorage contract in StorageReaderClient -
+           to throw a NoSuchElementException when the iter is depleted in
+           next(iterKey) and next(iterKey, maxRecords)
+
+ * Bugfix: AggregatingStorage did not support base=null in
+           getModificationTime() and getRecordsModifiedAfter()
+
+ * Bugfix: The FileReader had a race-condition for closing and
+           renaming files that was triggered by the FileWatchers
+           multi-threaded usage of FileReader
+
+ * Bugfix: FilterService, FilterControl, and FilterPump will now properly
+           shut down and wait for all payloads to be processed before
+           shutting down when invoking close()/stop() on them
+
+ * Bugfix: The MarcMultiVolumeMerger is now more forgiving if the records does
+           not declare their type correctly
+
+ * Bugfix: Fix deadlock when closing down a RecordReader with a StorageWatcher
+
+ * Bugfix: Bugfix: queue.offer was used by FacetSearchNode and DocIDCollector
+           without check for success. This has been changed to put with a
+           retry in case of interruptions
+
+=======================
+2009-02-18: Summa 1.2.1
+=======================
+
+ * Add options to RecordReader for deciding whether or not to request
+   parent/child expansion when receiving records
+
+ * You can now specify the port used by the SSHDeployer. This means that you can
+   now do stuff like 'deploy foo-client-1 c1 localhost:220' in the control-shell
+   if your sshd run on port 220 instead opf 22
+
+ * Add a new class RecordUtil in the Common module that can serialize
+   Record objects to and from XML efficiently. There's also an XML schema for
+   this XML format. Record contents will be XML escaped and any parent/child
+   records will be embedded in the XML
+
+ * Add a DelayFilter to facilitate throttling of filter chains (fx. if the
+   index process eats up to much cpu)
+
+ * Added a DiscardUpdatesFilter that discards records with ids that has
+   already passed it. That is it prevents any updates being done on an index
+   or storage consuming the filter chain
+
+ * Added a DiscardRelativesFilter that discards records based on their
+   relatives. This can fx. be used to discard all records that has any parents
+   from the filter chain
+
+ * Added a reverse-sort option to FileReader, making it possible to iterate over
+   found files in reverse unicode order
+   
+ * Bugfix: Assigning the same source multiple times to MUXFilter resulted in
+   the last Payloads of a stream of Payloads being skipped under certain
+   race-conditions
+
+ * Bugfix: The round-robin used by the MUXFilter always selected the first
+   available filter
+
+ * Bugfix: Record did not clear the list of parents when setParentID was set
+
+ * Way too many test cases and bug fixes to list here. Seriously.
+
+=======================
+2009-02-09: Summa 1.2.0
+=======================
+ 
+ * Add a new mode to the FacetManipulator doing blazingly fast batch updates.
+   This strategy will be used by default when doing consolidates
+ 
+ * Add an optional skipupdates property to the facet builder, making it
+   possible to postpone facet building until commit or consolidate
+ 
+ * Implement a SummaSearcherAggregator facilitating distributed searches
+ 
+ * More intuitive and fail safe configuration of filters by using lists of
+   subconfigurations rather than using named subconfigurations and refering to
+   them by their names
+ 
+ * Massive speed update(s) in the indexer
+   
+   - Implement a streaming Lucene document creator instead of
+     the old DOM based one
+   
+   - Use thread local caches in our Analyzers to minimize garbage collection of
+     object instantiations
+   
+   - Fix big bottle neck where we parsed the transliteration rules one time
+     for each field in each document!
+   
+   - Also use thread local caches in our XSLT plugins and make sure we do a
+     minimum of string replacements
+ 
+ * Records use lazy gzip compression/decompression of contents to minimize
+   network overhead
+ 
+ * Make MARC multi volume handling work both on the storage level and on the
+   ingest level
+ 
+ * Improve update rules for the RecordReader filter
+ 
+ * Improve time granularity in the RecordReader to milliseconds (was seconds)
+
+ * Fix bug where we leaked abandoned iterators in the DatabaseStorage
+
+ * Major overhaul of the Storage API:
+   
+   - Remove getRecordsFrom()
+          
+   - Remove getRecordsFromBase()
+          
+   - Add a QueryOptions parameter to all ReadableStorage methods. This
+     new parameter is used to control parent/child expansion as well
+     as whether to retrieve deleted/indexable records
+   
+   - Always sort result sets by mtime
+ 
+ * New backends for the database storage as Derby seems to have some problematic
+   performance issues:
+   
+    - PostgresQL
+    
+    - H2 (the new default)
+ 
+ * Other updates on the database Storage implementations
+ 
+   - Proper connection- and statement pooling on all database Storage backends
+   
+   - All mtime timestamps are now globally uniqye withing the storage.
+     To go finer than the millisecond granularity provided by the Java system
+     timestamps (System.nanoSeconds() is not applicable here) we use a salted
+     timestamp packed in a long
+   
+   - Two "modes" for the backend implementations of DatabaseStorage are
+     supported (the new H2Storage applies both these modes)
+     
+       o Paging - meaning that only small result sets are queried at a time
+       
+       o Lazy relation lookups, not doing JOINs on the DB, but looking relations
+         up when needed
+    
+   - Added query timings to storage-tool and added a 'dump' command as well
+     to do a raw dump of the entire storage or a single base
+ 
+ * Bump internal version of libraries:
+ 
+   - Lucene 2.3.0 -> 2.4.0
+   
+   - Derby 10.3.1.4 -> 10.4.2.0
+
+ * Add support for the URLRepository class to list repository contents via
+   a bundles.list file on the server
+
+ * Create a generic Record generator for use in test scenarios. It can can
+   create records with random content based on a configurable criteria
+
+ * Configuration files can now escape system properties enclosed in
+   Ant style brackets. Eg. "${user.home}/summa-database"
+
+ * Bundle specs can now contain zero to many <jvmArg> tags that will be added
+   verbatim to the command line for the bundle when it is launched
+
+ * Added a bunch of tests cases covering all the metadata formats employed at
+   the State and University Library
+
+ * Introduce summa-bundletool, a command line helper tool used to create and
+   validate bundles
+
+ * Optimize the commiting of records to the storage
+
+ * XML Schema for the Summa Document format used by the indexer
+
+ * XML Schema for the Summa index descriptor format
+
+ * Implement a Workflow module that can execute a generic "workflow" based
+   on an XML file. This can be used to implement daemons that reset bases,
+   downloads data dumps, starts indexing processes and what not.
+
+ * Fix some tricky namespacing bugs in XMLSplitter
+
+ * Remove hard RMI dependency from shell tools, they now use a generic RPC
+   mechanism to talk to the servers
+
+ * The control-shell and client-shell command line tools are now fully
+   scriptable. Supplying exatr commands when launching them will also make
+   them run the commands and exit. For more info try the 'help exec' command
+   added to these tools
+
+ * Lots of work on making the debugging messages in the log files more helpful
+
+ * Make unit tests independent of hardcoded paths such as /tmp
+
+ * Write a tool (doc/summa-doc-tool) that extracts property definitions and
+   their documentation from the Java source files. Result can be seen on the
+   wiki at: http://wiki.statsbiblioteket.dk/summa/Properties
+
+ * Implement a FilterSequence, a filter that runs through a series of
+   child filters
+
+ * Implement a MUXFilter that can mux payloads/records between different
+   child-filters based on the record base of the payload
+
+ * Log profiling/statistics information in Filter framework
+ 
+ * Proper retraction of MBeans and remote interfaces when closing a service
+
+ * Solved bug that made the IndexController commit for each Record
+ 
+ * Tonnes of bug fixes
+
+
+=======================
+2008-10-31: Summa 1.1.0
+=======================
+
+The Summa team is proud to announce the immediate availability of Summa 1.1.
+
+A ton of work has gone into this new release and we are very are confident that
+it will pave the way for an interesting time for library search egnines.
+
+With this release Summa has reached a point where it is on feature parity
+(but a lot more powerful) than the old Summa we run in production on out
+main site statsbiblioteket.dk.
+
+If you are interested in the future development of Summa take a look at
+http://wiki.statsbiblioteket.dk/summa/Community/RoadMap which already contains
+the roadmap for 1.2 and beyond.
+
+The release code be downloaded in binary or source form from
+
+  http://wiki.statsbiblioteket.dk/summa/Community/Download
+
+It can also be check out from a dedicated SVN tag:
+
+  svn co https://gforge.statsbiblioteket.dk/svn/summa/tags/summa-1.1.0
+
+Here follows a summary of development that has gone into Summa 1.1:
+
+New Features:
+
+ * The whole workflow from ingest, indexation, to facet computation is now
+   fully incremental
+
+ * MARC and Aleph handling code has been updated to work with the new
+   filter-based ingest model
+
+ * Autostart of Clients and Services. This is currently only enabled in the
+   test-client-1 and test-storage-1 bundles
+
+ * Add a method for removing deployed services from a client
+
+ * Introduce a new Workflow module that can execute workflows specified
+   in an XML format. At SB we will use this handle special cases where some
+   data sources needs to be reset each time updates arrive
+
+ * Add StorageWatcher class that can monitor a storage instance for changes
+   to certain bases
+
+ * The Storage API has seen a major overhaul. The old one leake implementation
+   details and where not properly extensible by third parties without accessing
+   some Summa internals. The new API is void of implementation details can be
+   properly extended
+
+ * Implement an AggregatingStorage that aggregates multiple sub-storage
+   instances (in a distributed environment) an exposes them as a single
+   storage instance
+
+ * Record data is now passes compressed over the wire an uncompressed lazily
+
+ * The DatabaseStorage class now implements parent-child relationsships for
+   records (which means that the default storage, DerbyStorage, will too).
+   This is used for multi-volume handling and in the future FRBR
+
+
+Misc:
+
+ * Web service .war files now contain build information (Summa version number)
+
+ * Removed deprecated and outdated code and config files. You can find the old
+   code in the attic/ subdirectory in each module
+
+ * storage-tool.sh now supports an 'xslt' switch that can apply an xslt to a
+   given record
+
+ * Add 'spec' command to client shell that can display the bundle spec for the
+   client or a given service
+
+ * Add 'remove' command to client shell that can remove a deployed service from
+   the client
+
+Bugs Fixed:
+
+ * Time stamp granularity in Storage was 1s. The new granularity is 1ms
+
+ * Fixes to 'distclean' targets in a few modules (to do proper build cleanup)
+
+ * Updated base modification time in WriatbleStorage.clearBase()
+
+ * The Client only listed the services deployed during its current JVM session,
+   it now lists all services deployed
+
+ * Certain cases where a missing secutiry manager would mess up RMI
+
+ * Lots and lots of lower profile bugs
+
+
+=======================
+2008-09-15: Summa 1.0.0
+=======================
+
+ * Minor bug fixes
+
+ * Tweaks to configurations of example bundles
+
+ * Test website displays a message when no facets are found
+
+=======================
+2008-09-12: Summa 0.9
+=======================
+
+ * Add webservices for Search and Storage
+
+ * Add a small test website
+
+ * Enable facet generation by default
+
+ * Tons of bug fixes
+
+ * Major rename of all configuration properties to used a consistent naming scheme
+
+=======================
+2008-09-02: Summa 0.8
+=======================
+
+This marks the first milestone towards the stable open source release of Summa.
+
+It is important to note that this is not a stable, or anywhere near production,
+release. It is a development snapshot made when we reached a collection of
+internally set goals.
+
+The feature set of this release is not much more than what you will find on the
+tutorial page at :
+
+      http://wiki.statsbiblioteket.dk/summa/Tutorials/MinimalDeployment0.8.0
