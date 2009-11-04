@@ -115,6 +115,7 @@ public abstract class ThreadedStreamParser implements StreamParser {
     private boolean empty = true; // Starting condition
 
     private Throwable lastError = null;
+    private Thread runningThread = null;
 
     public ThreadedStreamParser(Configuration conf) {
         queue = new PayloadQueue(
@@ -151,7 +152,7 @@ public abstract class ThreadedStreamParser implements StreamParser {
         empty = false;
         /* Set up a thread reporting errors back to us */
         //noinspection DuplicateStringLiteralInspection
-        Thread t = new Thread(new Runnable() {
+        runningThread = new Thread(new Runnable() {
             public void run() {
                 log.debug("run() entered");
                 try {
@@ -182,14 +183,15 @@ public abstract class ThreadedStreamParser implements StreamParser {
         }, "ThreadedStreamParser(" + this.getClass().getSimpleName() + ")");
 
         final ThreadedStreamParser dummyThis = this;
-        t.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-            ThreadedStreamParser owner = dummyThis;
-            public void uncaughtException(Thread t, Throwable e) {
-                owner.setError(e);
-                running = false;
-            }
-        });
-        t.start();
+        runningThread.setUncaughtExceptionHandler(
+                new Thread.UncaughtExceptionHandler() {
+                    ThreadedStreamParser owner = dummyThis;
+                    public void uncaughtException(Thread t, Throwable e) {
+                        owner.setError(e);
+                        running = false;
+                    }
+                });
+        runningThread.start();
         log.trace("Thread started");
     }
 
@@ -352,6 +354,8 @@ public abstract class ThreadedStreamParser implements StreamParser {
     public void stop() {
         log.debug("stop() called on " + this);
         running = false;
+        log.debug("stop() sending interrupt to Thread");
+        runningThread.interrupt();
     }
 
     /**

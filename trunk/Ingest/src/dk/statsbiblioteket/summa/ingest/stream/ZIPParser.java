@@ -99,7 +99,7 @@ public class ZIPParser extends ThreadedStreamParser {
                 continue;
             }
             log.trace("Entry " + entry.getName() + " matched. Adding to queue "
-                      + "and waiting for close");
+                      + "and waiting for close or depleted ZIP entry");
 
             /* Prepare a stream that we'll fill asynchronously while the
              * payload consumer reads from it */
@@ -115,14 +115,43 @@ public class ZIPParser extends ThreadedStreamParser {
             /* Fill the stream we gave to the payload. There is no race here
              * because all reads on the payloadStream are blocking until
              * we start filling the queue */
-            byte[] buf = new byte[2048];
-            int numRead;
-            while ((numRead = zip.read(buf)) != -1) {
-                for (int i = 0; i < numRead; i++) {
-                    payloadStream.enqueue(buf[i]);
+            try {
+                byte[] buf = new byte[2048];
+                int numRead;
+                while ((numRead = zip.read(buf)) != -1 && running &&
+                       !payloadStream.closed) {
+                    for (int i = 0; i < numRead; i++) {
+                        while (running && !payloadStream.closed) {
+                            try {
+                                payloadStream.enqueue(buf[i]);
+                                break;
+                            } catch (InterruptedException e) {
+                                //noinspection DuplicateStringLiteralInspection
+                                log.trace("Interrupted while sending bytes. "
+                                          + "Retrying");
+                                // Continue as we do have checks for running
+                            }
+                        }
+                        if (!running) {
+                            log.warn(String.format(
+                                    "running == false while processing %s into "
+                                    + "%s. The content of the entry was not "
+                                    + "completely uncompressed",
+                                    sourcePayload, payload));
+                        }
+                    }
+                }
+            } finally {
+                while (true) {
+                    try {
+                        payloadStream.enqueueEOF();
+                        break;
+                    } catch (InterruptedException e) {
+                        log.trace("Interrupted while sending EOF. Retrying");
+                        // Just go on - we really need this signal
+                    }
                 }
             }
-            payloadStream.enqueueEOF();
         }
         log.debug("Ending processing of " + sourcePayload + " with running="
                   + running);
@@ -224,7 +253,7 @@ public class ZIPParser extends ThreadedStreamParser {
         @Override
         public void close() throws IOException {
             closed = true;
-            readQueue = null;
+//            readQueue = null;
         }
 
         @Override
@@ -242,42 +271,28 @@ public class ZIPParser extends ThreadedStreamParser {
             return false;
         }
 
-        public void enqueue(byte b) {
-            if (closed) return;
-            while (true) {
-                try {
-                    readQueue.put(b);
-                    return;
-                } catch (InterruptedException e) {
-                    // Ignore; we really want to put this byte
-                }
+        public void enqueue(byte b) throws InterruptedException {
+            if (!closed) {
+                readQueue.put(b);
             }
         }
 
-        public void enqueue(byte[] buf) {
+        public void enqueue(byte[] buf) throws InterruptedException {
             if (closed) return;
             for (byte b : buf) {
                 enqueue(b);
             }
         }
 
-        public void enqueue(Iterable<Byte> bytes) {
+        public void enqueue(Iterable<Byte> bytes) throws InterruptedException {
             if (closed) return;
             for (byte b : bytes) {
                 enqueue(b);
             }
         }
 
-        public void enqueueEOF() {
-            if (closed) return;
-            while (true) {
-                try {
-                    readQueue.put(eofMarker);
-                    return;
-                } catch (InterruptedException e) {
-                    // Ignore; we really want to put the eofMarker on the queue
-                }
-            }
+        public void enqueueEOF() throws InterruptedException {
+            readQueue.put(eofMarker);
         }
 
         private void checkClosed() throws IOException {
@@ -286,5 +301,4 @@ public class ZIPParser extends ThreadedStreamParser {
             }
         }
     }
-
 }
