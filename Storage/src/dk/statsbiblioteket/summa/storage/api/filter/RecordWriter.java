@@ -22,24 +22,24 @@
  */
 package dk.statsbiblioteket.summa.storage.api.filter;
 
-import java.io.IOException;
-import java.util.List;
-import java.util.ArrayList;
-
 import dk.statsbiblioteket.summa.common.Record;
-import dk.statsbiblioteket.summa.common.util.LoggingExceptionHandler;
-import dk.statsbiblioteket.summa.common.util.RecordUtil;
-import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
 import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
+import dk.statsbiblioteket.summa.common.rpc.ConnectionConsumer;
+import dk.statsbiblioteket.summa.common.util.LoggingExceptionHandler;
+import dk.statsbiblioteket.summa.common.util.RecordUtil;
 import dk.statsbiblioteket.summa.storage.api.StorageWriterClient;
 import dk.statsbiblioteket.summa.storage.api.WritableStorage;
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Profiler;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Connects to a Storage and ingests received Records into the storage.
@@ -342,11 +342,15 @@ public class RecordWriter extends ObjectFilterImpl {
 
     @Override
     public void close(boolean success) {
-        super.close(success);
-        log.info("Waiting for batch jobs to be committed");
-        batcher.stop();
-        log.info("Closed down RecordWriter. " + getProcessStats()
-                 + ". Total time: " + profiler.getSpendTime());
+        try {
+            log.debug(String.format("close(%s): Closing super", success));
+            super.close(success);
+        } finally {
+            log.info("Waiting for batch jobs to be committed");
+            batcher.stop();
+            log.info("Closed down RecordWriter. " + getProcessStats()
+                     + ". Total time: " + profiler.getSpendTime());
+        }
     }
 
     
