@@ -168,15 +168,16 @@ public abstract class ThreadedStreamParser implements StreamParser {
                     // We don't close in a 'finally' clause because we shouldn't
                     // clean up if the JVM raises an Error type throwable
                     sourcePayload.close();
+                } finally {
+                    running = false;
+                    addToQueue(INTERRUPTOR);
                 }
                 if (log.isDebugEnabled()) {
-                    log.debug("run: Finished processing " + sourcePayload);
+                    log.debug("run() finished with " + queue.size()
+                              + " remaining queued Payloads (the last queued "
+                              + "Payload is the interruptor-token-Payload) for "
+                              + this + " with source " + sourcePayload);
                 }
-                running = false;
-                addToQueue(INTERRUPTOR);
-                log.debug("run() finished with " + queue.size()
-                        + " remaining queued Payloads (the last queued Payload"
-                        + " is the interruptor-token-Payload) for " + this);
             }
         }, "ThreadedStreamParser(" + this.getClass().getSimpleName() + ")");
 
