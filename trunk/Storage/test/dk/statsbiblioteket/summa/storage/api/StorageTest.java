@@ -3,6 +3,7 @@ package dk.statsbiblioteket.summa.storage.api;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.storage.database.DatabaseStorage;
+import dk.statsbiblioteket.summa.storage.database.derby.DerbyStorage;
 import dk.statsbiblioteket.summa.storage.database.h2.H2Storage;
 import dk.statsbiblioteket.summa.storage.StorageMonkeyHelper;
 import dk.statsbiblioteket.util.Files;
@@ -201,6 +202,36 @@ public class StorageTest extends TestCase {
         testAddOne();
         storage.clearBase(testBase1);
         assertBaseEmpty(testBase1);
+    }
+
+    public void testClearAndUpdate() throws Exception {
+        int NUM_RUNS = 30;
+        int NUM_RECS = 1000;
+
+        for (int i = 0; i < NUM_RUNS; i++) {
+            // Put NUM_RECS records in storage in testBase1
+            for (int j = 0; j < NUM_RECS; j++) {
+                storage.flush(new Record("test" + j, testBase1, testContent1));
+            }
+
+            // Test getting records by mtime
+            Iterator<Record> iter = new StorageIterator(
+                  storage, storage.getRecordsModifiedAfter(0, testBase1, null));
+            for (int j = 0; j < NUM_RECS; j++) {
+                assertTrue("Base " + testBase1 + " must hold at least "
+                           + NUM_RECS + " records. Found " + j, iter.hasNext());
+                Record rec = iter.next();
+                assertEquals("test" + j, rec.getId());
+                assertEquals(testBase1, rec.getBase());
+                assertEquals(new String(testContent1), rec.getContentAsUTF8());
+            }
+            assertFalse("Base " + testBase1 +" must contain at max "
+                        + NUM_RECS + " records", iter.hasNext());
+
+            // Clear the test base. Rinse, repeat
+            storage.clearBase(testBase1);
+            assertBaseEmpty(testBase1);
+        }
     }
 
     public void testAddOneWithOneChildId() throws Exception {
