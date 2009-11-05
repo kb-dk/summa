@@ -204,6 +204,7 @@ public class StorageTest extends TestCase {
         assertBaseEmpty(testBase1);
     }
 
+    // Flush single records repeatedly with flush()
     public void testClearAndUpdate() throws Exception {
         int NUM_RUNS = 30;
         int NUM_RECS = 1000;
@@ -213,6 +214,39 @@ public class StorageTest extends TestCase {
             for (int j = 0; j < NUM_RECS; j++) {
                 storage.flush(new Record("test" + j, testBase1, testContent1));
             }
+
+            // Test getting records by mtime
+            Iterator<Record> iter = new StorageIterator(
+                  storage, storage.getRecordsModifiedAfter(0, testBase1, null));
+            for (int j = 0; j < NUM_RECS; j++) {
+                assertTrue("Base " + testBase1 + " must hold at least "
+                           + NUM_RECS + " records. Found " + j, iter.hasNext());
+                Record rec = iter.next();
+                assertEquals("test" + j, rec.getId());
+                assertEquals(testBase1, rec.getBase());
+                assertEquals(new String(testContent1), rec.getContentAsUTF8());
+            }
+            assertFalse("Base " + testBase1 +" must contain at max "
+                        + NUM_RECS + " records", iter.hasNext());
+
+            // Clear the test base. Rinse, repeat
+            storage.clearBase(testBase1);
+            assertBaseEmpty(testBase1);
+        }
+    }
+
+    // Flush batches of records repeatedly with flushAll()
+    public void testClearAndUpdateBatch() throws Exception {
+        int NUM_RUNS = 30;
+        int NUM_RECS = 1000;
+
+        for (int i = 0; i < NUM_RUNS; i++) {
+            // Put NUM_RECS records in storage in testBase1
+            List<Record> recs = new ArrayList<Record>(NUM_RECS);
+            for (int j = 0; j < NUM_RECS; j++) {
+                recs.add(new Record("test" + j, testBase1, testContent1));
+            }
+            storage.flushAll(recs);
 
             // Test getting records by mtime
             Iterator<Record> iter = new StorageIterator(
