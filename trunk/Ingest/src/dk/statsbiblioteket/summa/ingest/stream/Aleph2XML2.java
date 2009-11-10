@@ -22,18 +22,17 @@
  */
 package dk.statsbiblioteket.summa.ingest.stream;
 
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
+import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
+import dk.statsbiblioteket.summa.common.util.ParseUtil;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.*;
 import java.util.ArrayList;
-
-import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
-import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
-import dk.statsbiblioteket.summa.common.filter.Payload;
-import dk.statsbiblioteket.summa.common.util.ParseUtil;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * This filter converts dumps from XLibris Aleph library system to MARC-XML.
@@ -202,8 +201,8 @@ public class Aleph2XML2 extends ObjectFilterImpl {
             throw new PayloadException("No stream in " + payload);
         }
         log.debug("Wrapping the Stream in " + payload
-                  + " in a Aleph2XML2OutputStream");
-        payload.setStream(new Aleph2XML2OutputStream(payload.getStream(),
+                  + " in a Aleph2XMLInputStream");
+        payload.setStream(new Aleph2XMLInputStream(payload.getStream(),
                                                      payload.toString()));
         return true;
     }
@@ -211,7 +210,7 @@ public class Aleph2XML2 extends ObjectFilterImpl {
     /**
      * On-the-fly creation of MARC-XML from Aleph-input.
      */
-    public class Aleph2XML2OutputStream extends InputStream {
+    class Aleph2XMLInputStream extends InputStream {
 /*        private static final String HEADER =
                 ParseUtil.XML_HEADER
                 + "\n<collection xmlns=\"http://www.loc.gov/MARC21/slim\">"
@@ -247,7 +246,7 @@ public class Aleph2XML2 extends ObjectFilterImpl {
         private boolean notReadYet = true; // Nothing has been read from source
         private boolean eofReached = false;
 
-        public Aleph2XML2OutputStream(InputStream source, String debugID) {
+        public Aleph2XMLInputStream(InputStream source, String debugID) {
             this.source = new BufferedReader(new InputStreamReader(source));
             this.debugID = debugID;
         }
