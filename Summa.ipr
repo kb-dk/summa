@@ -140,6 +140,7 @@
       <entry name="?*.ent" />
       <entry name="?*.html" />
       <entry name="?*.dtd" />
+      <entry name="?*.data" />
     </wildcardResourcePatterns>
   </component>
   <component name="CopyrightManager" default="">
@@ -740,6 +741,7 @@
     <library name="marc4j">
       <CLASSES>
         <root url="jar://$PROJECT_DIR$/lib/marc4j-2.4.jar!/" />
+        <root url="jar://$PROJECT_DIR$/lib/marc4j-2.4-normalizer.jar!/" />
       </CLASSES>
       <JAVADOC>
         <root url="jar://$PROJECT_DIR$/lib/apidocs/marc4j-2.4-apidoc.zip!/" />

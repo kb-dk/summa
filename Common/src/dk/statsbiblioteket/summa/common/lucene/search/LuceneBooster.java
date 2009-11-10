@@ -22,28 +22,21 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.search;
 
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Iterator;
-
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
-import dk.statsbiblioteket.summa.common.index.IndexGroup;
 import dk.statsbiblioteket.summa.common.index.IndexField;
+import dk.statsbiblioteket.summa.common.index.IndexGroup;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexDescriptor;
 import dk.statsbiblioteket.summa.common.lucene.LuceneIndexField;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.BooleanClause;
-import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.DisjunctionMaxQuery;
-import org.apache.lucene.search.ConstantScoreQuery;
-import org.apache.lucene.search.ConstantScoreRangeQuery;
-import org.apache.lucene.search.RangeQuery;
+import org.apache.lucene.search.*;
+
+import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Handles query-time field-level boosts for Lucene. This means that it is
@@ -85,7 +78,8 @@ public class LuceneBooster {
             //noinspection FloatingPointEquality
             if (field.getQueryBoost() != IndexField.DEFAULT_BOOST) {
                 log.debug(String.format(
-                        "Extracted query time boost %s for field '%s'",
+                        "Extracted query time boost %s for field '%s' from "
+                        + "index descriptor",
                         field.getQueryBoost(), field.getName()));
                 descriptorBoosts.put(field.getName(), field.getQueryBoost()); 
             }
@@ -193,7 +187,10 @@ public class LuceneBooster {
      * @return true if at least one boost was applied.
      */
     private boolean applyBoost(Query query, Map<String, Float> boosts) {
-        log.trace("applyBoost(Query, Map) entered");
+        if (log.isTraceEnabled()) {
+            //noinspection DuplicateStringLiteralInspection
+            log.trace("applyBoost(Query, " + listBoosts(boosts) + ") entered");
+        }
         expandBoosts(boosts);
         boolean applied = false;
         if (query instanceof BooleanQuery) {
@@ -202,12 +199,16 @@ public class LuceneBooster {
                 applied = applied | applyBoost(clause.getQuery(), boosts);
             }
         } else if (query instanceof TermQuery) {
-            log.trace("applyBoost: termQuery found");
             TermQuery termQuery = (TermQuery)query;
+            if (log.isTraceEnabled()) {
+                log.trace("applyBoost: termQuery '"
+                          + termQuery.getTerm().field() + ":"
+                          + termQuery.getTerm().text() + "' found");
+            }
             if (boosts.containsKey(termQuery.getTerm().field())) {
                 Float boost = boosts.get(termQuery.getTerm().field());
                 if (log.isTraceEnabled()) {
-                    log.trace("applyBoost: Assigning boost " + boost
+                    log.trace("applyBoost: Multiplying boost " + boost
                               + " to TermQuery " + termQuery.getTerm());
                 }
                 termQuery.setBoost(termQuery.getBoost() * boost);
@@ -231,6 +232,23 @@ public class LuceneBooster {
         }
         log.trace("applyBoost(Query, Map) exited");
         return applied;
+    }
+
+    private String listBoosts(Map<String, Float> boosts) {
+        StringWriter sw = new StringWriter(100);
+        sw.append("Boosts(");
+        boolean first = true;
+        for (Map.Entry<String, Float> boost: boosts.entrySet()) {
+            if (first) {
+                first = false;
+            } else {
+                sw.append(", ");
+            }
+            sw.append(boost.getKey()).append("=");
+            sw.append(Float.toString(boost.getValue()));
+        }
+        sw.append(")");
+        return sw.toString();
     }
 
     /**
@@ -288,6 +306,3 @@ public class LuceneBooster {
         }
     }
 }
-
-
-

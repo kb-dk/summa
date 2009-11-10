@@ -94,6 +94,7 @@
                 <available file="${summa.lib.sbutil}"/>
                 <available file="${summa.lib.lucene}"/>
                 <available file="${summa.lib.marc4j}}"/>
+                <available file="${summa.lib.marc4j.normalizer}}"/>
             </and>
         </condition>
         <antcall target="${newTask}"/>
@@ -153,7 +154,7 @@
         <copy file="${basedir}/../${summa.lib.junit}" tofile="${summa.lib.junit}"/>
         <copy file="${basedir}/../${summa.lib.sbutil}" tofile="${summa.lib.sbutil}"/>
         <copy file="${basedir}/../${summa.lib.lucene}" tofile="${summa.lib.lucene}"/>
-        <copy file="${basedir}/../${summa.lib.marc4j}" tofile="${summa.lib.marc4j}"/>
+        <copy file="${basedir}/../${summa.lib.marc4j.normalizer}" tofile="${summa.lib.marc4j.normalizer}"/>
     </target>
 
 
