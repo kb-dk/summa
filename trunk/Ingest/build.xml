@@ -154,6 +154,7 @@
         <copy file="${basedir}/../${summa.lib.junit}" tofile="${summa.lib.junit}"/>
         <copy file="${basedir}/../${summa.lib.sbutil}" tofile="${summa.lib.sbutil}"/>
         <copy file="${basedir}/../${summa.lib.lucene}" tofile="${summa.lib.lucene}"/>
+        <copy file="${basedir}/../${summa.lib.marc4j}" tofile="${summa.lib.marc4j}"/>
         <copy file="${basedir}/../${summa.lib.marc4j.normalizer}" tofile="${summa.lib.marc4j.normalizer}"/>
     </target>
 
