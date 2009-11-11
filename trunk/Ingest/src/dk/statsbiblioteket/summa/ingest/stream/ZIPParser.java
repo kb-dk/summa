@@ -250,9 +250,15 @@ public class ZIPParser extends ThreadedStreamParser {
             return readQueue.size();
         }
 
+        /**
+         * In order to guard against locks upon premature close, the queue is
+         * drained when this method is called.
+         * @throws IOException
+         */
         @Override
         public void close() throws IOException {
             closed = true;
+            readQueue.clear();
 //            readQueue = null;
         }
 
