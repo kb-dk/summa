@@ -19,10 +19,12 @@
  */
 package dk.statsbiblioteket.summa.ingest.stream;
 
+import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.Resolver;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
+import dk.statsbiblioteket.util.Streams;
 import dk.statsbiblioteket.util.Strings;
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -74,44 +76,66 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
     }
 
     public void testBasicMarc4j() throws Exception {
-//        File SAMPLE = Resolver.getFile("data/iso2709/t2.data");
-        File SAMPLE = Resolver.getFile("data/iso2709/summerland.data");
+//        File SAMPLE = Resolver.getFile("data/iso2709/summerland.data");
+        File SAMPLE = Resolver.getFile("data/iso2709/t2.data");
 //        File SAMPLE = Resolver.getFile("data/iso2709/dpu20091109_sample.data");
         FileInputStream sampleIn = new FileInputStream(SAMPLE);
-        MarcStreamReader reader = new MarcStreamReader(sampleIn);
+//        MarcStreamReader reader = new MarcStreamReader(sampleIn, "MARC-8");
+//        MarcStreamReader reader = new MarcStreamReader(sampleIn, "MARC-8");
+//        MarcStreamReader reader = new MarcStreamReader(sampleIn);
+        MarcPermissiveStreamReader reader = new MarcPermissiveStreamReader(
+                sampleIn, false, false, "Unimarc");
+
         int counter = 0;
         while (reader.hasNext()) {
             Record record = reader.next();
             System.out.println("Got MARC Record " + ++counter + ":\n" + record);
             dumpRecord(record);
+//            dumpRecordXML(record);
+            System.out.println("\nDump finished");
         }
         sampleIn.close();
     }
 
     private void dumpRecord(Record record) {
         System.out.println("Dumping lineformat for " + record.getId());
+//        MarcWriter lineWriter = new MarcStreamWriter(System.out, "UTF-8");
         MarcWriter lineWriter = new MarcStreamWriter(System.out);
         lineWriter.write(record);
+        System.out.println("\nDump finished");
+        //lineWriter.close();
+    }
 
+    private void dumpRecordXML(Record record) {
         System.out.println("\n\nDumping XML for " + record.getId());
         MarcWriter writer = new MarcXmlWriter(System.out, true);
-        
+
         writer.write(record);
         writer.close();
         System.out.println("Finished dumping XML for " + record.getId());
     }
 
+    public void testDirectDump() throws Exception {
+        File SAMPLE = Resolver.getFile("data/iso2709/dpu20091109_sample.data");
+        FileInputStream sampleIn = new FileInputStream(SAMPLE);
+        ByteOutputStream out = new ByteOutputStream((int)SAMPLE.length());
+        Streams.pipe(sampleIn, out);
+        System.out.println("Content of " + SAMPLE + "in ISO-8859-1 is:\n"
+                           + new String(out.getBytes(), "cp850"));
+    }
+
     public void testTransform() throws Exception {
-//        File SAMPLE = Resolver.getFile("data/iso2709/t2.data");
+        File SAMPLE = Resolver.getFile("data/iso2709/t2.data");
 //        File SAMPLE = Resolver.getFile("data/iso2709/dpu20091109_sample.data");
-        File SAMPLE = Resolver.getFile("data/iso2709/summerland.data");
+//        File SAMPLE = Resolver.getFile("data/iso2709/summerland.data");
         assertTrue("The sample file " + SAMPLE + " should exist",
                    SAMPLE.exists());
         FileInputStream sampleIn = new FileInputStream(SAMPLE);
         PayloadFeederHelper feeder = new PayloadFeederHelper(Arrays.asList(
                 new Payload(sampleIn)));
         ISO2709ToMARCXMLFilter isoFilter = new ISO2709ToMARCXMLFilter(
-                Configuration.newMemoryBased());
+                Configuration.newMemoryBased(
+                        ISO2709ToMARCXMLFilter.CONF_INPUT_CHARSET, "cp850"));
         isoFilter.setSource(feeder);
         ArrayList<Payload> processed = new ArrayList<Payload>(3);
 

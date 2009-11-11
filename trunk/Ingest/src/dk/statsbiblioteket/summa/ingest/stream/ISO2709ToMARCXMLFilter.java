@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2009  The State and University Library
@@ -28,7 +28,6 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.marc4j.MarcReader;
-import org.marc4j.MarcStreamReader;
 import org.marc4j.MarcWriter;
 import org.marc4j.MarcXmlWriter;
 import org.marc4j.marc.Record;
@@ -48,7 +47,8 @@ public class ISO2709ToMARCXMLFilter extends ObjectFilterImpl {
     private static Log log = LogFactory.getLog(ISO2709ToMARCXMLFilter.class);
 
     /**
-     * The charset to use when reading the InputStream.
+     * The charset to use when reading the InputStream. Supported values are
+     * {@code utf-8}}}, {{{iso-8859-1}}} and {{{marc-8}}}.
      * </p><p>
      * Optional. If not defined, the charset is inferred by marc4j.
      */
@@ -60,6 +60,12 @@ public class ISO2709ToMARCXMLFilter extends ObjectFilterImpl {
     public ISO2709ToMARCXMLFilter(Configuration conf) {
         super(conf);
         inputcharset = conf.getString(CONF_INPUT_CHARSET, null);
+        /* We go out of our way to parse the given charset as marc4j
+           does not conform to the rules in Java Charset.
+         */
+        if ("".equals(inputcharset)) {
+            inputcharset = null;
+        }
         log.debug("Constructed ISO 2709 filter with charset "
                   + (inputcharset == null ? "inferred from the InputStream"
                      : "'" + inputcharset + "'"));
@@ -98,8 +104,8 @@ public class ISO2709ToMARCXMLFilter extends ObjectFilterImpl {
          */
         ISO2MARCInputStream(InputStream stream) {
             source = inputcharset == null
-                     ? new MarcStreamReader(stream)
-                     : new MarcStreamReader(stream, inputcharset);
+                     ? new FlexibleMarcStreamReader(stream)
+                     : new FlexibleMarcStreamReader(stream, inputcharset);
             log.trace("Constructed reader");
             sourceStream = stream;
         }
@@ -125,8 +131,7 @@ public class ISO2709ToMARCXMLFilter extends ObjectFilterImpl {
             }
         }
 
-
-        private MarcWriter out = new MarcXmlWriter(outStream, true);
+        private MarcWriter out = new MarcXmlWriter(outStream, "UTF-8", true);
         // Assumes that the buffer has been depleted
         private void fillBuffer() throws IOException {
             pos = 0;
@@ -174,7 +179,7 @@ public class ISO2709ToMARCXMLFilter extends ObjectFilterImpl {
 
         @Override
         public void close() throws IOException {
-            log.debug("Closing Stream explicitely (this might result in loss of"
+            log.debug("Closing Stream explicitly (this might result in loss of"
                       + " data)");
             sourceStream.close();
             closed = true;
