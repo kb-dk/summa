@@ -44,7 +44,7 @@ public class FreeTextAnalyzer extends SummaAnalyzer {
      * @see SummaAnalyzer#SummaAnalyzer(String, boolean, String, boolean, boolean)
      */
     public FreeTextAnalyzer(){
-        super("", true, "", true, true);
+        super(Rules.RELAXED_REPLACE_RULES, true, "", true, true);
     }
 
 }
