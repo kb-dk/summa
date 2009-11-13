@@ -12,6 +12,13 @@ public class Rules {
             + " 'c* algebra' > 'cstaralgebra';"
             + " 'c*-algebra' > 'cstaralgebra';"
             + " '.net' > 'dotnet';";
+
+    public static final String RELAXED_REPLACE_RULES =
+            "'og' > '&';"
+            + "'and' > '&';"
+            + "'und' > '&';";
+            // Spansk: + "'y' > '&';"
+
     /**
      * Transliteration rules for converting common non-ascii characters found
      * in bibliographic records to ascii.
