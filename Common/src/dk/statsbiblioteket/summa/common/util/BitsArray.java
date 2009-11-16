@@ -75,11 +75,11 @@ public class BitsArray extends AbstractList<Integer> {
      * @param maxValue the expected maximum value for an element.
      */
     public BitsArray(int length, int maxValue) {
+        int bits = (int)Math.ceil(Math.log(maxValue+1)/Math.log(2));
         log.trace("Creating BitsArray of length " + length
-                  + " with element size " + elementBits);
-        setAttributes((int)Math.ceil(Math.log(maxValue)/Math.log(2)),
-                      0,
-                      new long[length * elementBits / 64 + 1]);
+                  + " with element bit size " + bits + " for max value "
+                  + maxValue);
+        setAttributes(bits, 0, new long[length * elementBits / 64 + 1]);
     }
 
     private void setAttributes(int elementBits, int size, long[] elements) {
@@ -92,7 +92,7 @@ public class BitsArray extends AbstractList<Integer> {
     private void updateCached() {
         elementMask = ~0 >>> (64 - elementBits);
         maxValue = (int)Math.pow(elementBits, 2);
-        maxPos = elements.length *64 / elementBits;
+        maxPos = elements.length * 64 / elementBits;
     }
 
     /**
@@ -107,17 +107,67 @@ public class BitsArray extends AbstractList<Integer> {
         }
         long bitPos = index * elementBits;
 
+        // Samples: 3 bits/value (A, B and C) stored in bytes
+        // Case A: ???ABC??
+        // Case B: ???????A BC??????
+
         int bytePos = (int)(bitPos / 64);    // Position in bytes
         int subPosLeft = (int)(bitPos % 64); // Position in the bits at bytePos
+        // Case A: subPosLeft == 3, Case B: subPosLeft == 7
+
         // The number of remaining bits at bytePos+1
         int subRemainingBits = elementBits - (64 - subPosLeft);
+        // Case A: -2, Case B: 2
+
         if (subRemainingBits > 0) {
-            return (int)(elements[bytePos] << subRemainingBits
+            // Case B: ???????A BC??????
+            return (int)((elements[bytePos] << subRemainingBits
                        | elements[bytePos+1] >>> elementBits - subRemainingBits)
-                   & elementMask;
+                   & elementMask);
         }
-        return (int)((elements[bytePos] >>> (64 - elementBits - subPosLeft))
-                     & elementMask);
+        // Case A: ???ABC??, subPosLeft == 3, subRemainingBits == -2
+        return (int)((elements[bytePos] >>> -subRemainingBits) & elementMask);
+    }
+
+    /* No checks for capacity or maxValue */
+    private void unsafeSet(int index, int value) {
+        // TODO: Implement this
+        long bitPos = index * elementBits;
+
+        // Samples: 3 bits/value (A, B and C) stored in bytes
+        // Case A: ???ABC??
+        // Case B: ???????A BC??????
+
+        int bytePos = (int)(bitPos / 64);    // Position in bytes
+        int subPosLeft = (int)(bitPos % 64); // Position in the bits at bytePos
+        // Case A: subPosLeft == 3, Case B: subPosLeft == 7
+
+        // The number of remaining bits at bytePos+1
+        int subRemainingBits = elementBits - (64 - subPosLeft);
+        // Case A: -2, Case B: 2
+
+        if (subRemainingBits > 0) {
+            // Case B: ???????A BC??????
+            elements[bytePos] =
+                    ((elements[bytePos] & (~0L << (elementBits - subPosLeft))))
+                    | ((long)value >>> subRemainingBits);
+            elements[bytePos+1] =
+                    ((elements[bytePos] & (~0L >>> subRemainingBits)))
+                    | ((long)value << (elementBits - subRemainingBits));
+        } else {
+            // Case A: ???ABC??, subPosLeft == 3, subRemainingBits == -2
+            elements[bytePos] =
+                    (elements[bytePos]
+                     & ((subPosLeft == 0 ? 0 : ~0L << (64 - subPosLeft))
+                        | (~0L >>> (elementBits - -subRemainingBits))))
+                    | ((long)value << (64 - subPosLeft - elementBits));
+            if (log.isTraceEnabled()) {
+                log.trace(String.format(
+                        "unsafeSet(index=%d, value=%d) -> elements[%d] bits %s",
+                index, value, bytePos, Long.toBinaryString(elements[bytePos])));
+            }
+        }
+        size = Math.max(size, index+1);
     }
 
     /**
@@ -129,28 +179,6 @@ public class BitsArray extends AbstractList<Integer> {
     public void set(int position, int value) {
         ensureSpace(position, value);
         unsafeSet(position, value);
-    }
-
-    /* No checks for capacity or maxValue */
-    private void unsafeSet(int index, int value) {
-        // TODO: Implement this
-        long bitPos = index * elementBits;
-
-        int bytePos = (int)(bitPos / 64);    // Position in bytes
-        int subPosLeft = (int)(bitPos % 64); // Position in the bits at bytePos
-        // The number of remaining bits at bytePos+1
-        int subRemainingBits = elementBits - (64 - subPosLeft);
-        throw new UnsupportedOperationException("Not implemented yet");
-/*        if (subRemainingBits > 0) {
-            elements[bytePos] = // Clear bits
-                    (elements[bytePos] & ~0L << (elementBits - subPosLeft)) | (value >>> subPosLeft);
-                                >> << subRemainingBits
-                       | elements[bytePos+1] >>> elementBits - subRemainingBits)
-                   & elementMask;
-        }
-        return (int)((elements[bytePos] >>> (64 - elementBits - subPosLeft))
-                     & elementMask);*/
-//        size = Math.max(index + 1, size);
     }
 
     /* Make sure we have room for value at position */
