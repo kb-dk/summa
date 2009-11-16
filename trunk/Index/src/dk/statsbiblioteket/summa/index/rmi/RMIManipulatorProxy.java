@@ -1,20 +1,19 @@
 package dk.statsbiblioteket.summa.index.rmi;
 
-import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.storage.XStorage;
+import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
-import dk.statsbiblioteket.summa.index.IndexManipulator;
 import dk.statsbiblioteket.summa.index.IndexControllerImpl;
+import dk.statsbiblioteket.summa.index.IndexManipulator;
 import dk.statsbiblioteket.summa.index.ManipulatorFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * Helper class that exposes a {@link IndexManipulator} as an RMI interface.
@@ -153,62 +152,65 @@ public class RMIManipulatorProxy extends UnicastRemoteObject
     }
 
     @Override
-    public void open (File indexRoot) throws RemoteException {
+    public void open(File indexRoot) throws RemoteException {
         try {
             backend.open(indexRoot);
-        } catch (IOException e) {
-            throw new RemoteException("Failed to open index: " + e.getMessage(),
-                                      e);
+        } catch (Throwable t) {
+            RemoteHelper.exitOnThrowable(log, String.format(
+                    "open(%s) for %d:%s",
+                    indexRoot, registryPort, serviceName), t);
         }
     }
 
     @Override
-    public void clear () throws RemoteException {
+    public void clear() throws RemoteException {
         try {
             backend.clear();
-        } catch (IOException e) {
-            throw new RemoteException("Failed to clear index: "
-                                      + e.getMessage(), e);
+        } catch (Throwable t) {
+            RemoteHelper.exitOnThrowable(log, String.format(
+                    "clear() for %d:%s", registryPort, serviceName), t);
         }
     }
 
     @Override
-    public boolean update (Payload payload) throws RemoteException {
+    public boolean update(Payload payload) throws RemoteException {
         try {
             return backend.update(payload);
-        } catch (IOException e) {
-            throw new RemoteException("Failed to update payload "
-                                      + payload + ": " + e.getMessage(), e);
+        } catch (Throwable t) {
+            RemoteHelper.exitOnThrowable(log, String.format(
+                    "update(%s) for %d:%s",
+                    payload, registryPort, serviceName), t);
+            return false; // exitOnThrowable always throws
         }
     }
 
     @Override
-    public void commit () throws RemoteException {
+    public void commit() throws RemoteException {
         try {
             backend.commit();
-        } catch (IOException e) {
-            throw new RemoteException("Failed to commit index: "
-                                      + e.getMessage(), e);
+        } catch (Throwable t) {
+            RemoteHelper.exitOnThrowable(log, String.format(
+                    "commit() for %d:%s", registryPort, serviceName), t);
         }
     }
 
     @Override
-    public void consolidate () throws RemoteException {
+    public void consolidate() throws RemoteException {
         try {
             backend.consolidate();
-        } catch (IOException e) {
-            throw new RemoteException("Failed to consolidate index: "
-                                      + e.getMessage(), e);
+        } catch (Throwable t) {
+            RemoteHelper.exitOnThrowable(log, String.format(
+                    "consolidate() for %d:%s", registryPort, serviceName), t);
         }
     }
 
     @Override
-    public void close () throws RemoteException {
+    public void close() throws RemoteException {
         try {
             backend.close();
-        } catch (IOException e) {
-            throw new RemoteException("Failed to close index: "
-                                      + e.getMessage(), e);
+        } catch (Throwable t) {
+            RemoteHelper.exitOnThrowable(log, String.format(
+                    "close() for %d:%s", registryPort, serviceName), t);
         }
     }
 }

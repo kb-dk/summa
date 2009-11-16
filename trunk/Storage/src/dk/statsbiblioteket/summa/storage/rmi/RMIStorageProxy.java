@@ -4,7 +4,6 @@ import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.storage.XStorage;
 import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
-import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
 import dk.statsbiblioteket.summa.storage.api.QueryOptions;
 import dk.statsbiblioteket.summa.storage.api.Storage;
 import dk.statsbiblioteket.summa.storage.api.StorageFactory;
@@ -74,11 +73,6 @@ public class RMIStorageProxy extends UnicastRemoteObject
     public static final String DEFAULT_SERVICE_NAME = "summa-storage";
 
     private static final Log log = LogFactory.getLog(RMIStorageProxy.class);
-
-    // Pre-text for errors and exceptions
-    private static final String IO_E = "IOException during ";
-    private static final String GENERAL_EX = "Unexpected Exception during ";
-    private static final String GENERAL_ERROR = "Error during ";
 
     private Storage backend;
     private String serviceName;
@@ -159,9 +153,10 @@ public class RMIStorageProxy extends UnicastRemoteObject
         try {
             return backend.getRecordsModifiedAfter(time, base, options);
         } catch (Throwable t) {
-            handleThrowable(String.format(
-                    "getRecordsModifiedAfter(time=%d, base='%s', options=%s)",
-                    time, base, options), t);
+            RemoteHelper.exitOnThrowable(log, String.format(
+                    "getRecordsModifiedAfter(time=%d, base='%s', options=%s) "
+                    + "for %d:%s",
+                    time, base, options, registryPort, serviceName), t);
             return -1;
         }
     }
@@ -171,8 +166,9 @@ public class RMIStorageProxy extends UnicastRemoteObject
         try {
             return backend.getModificationTime (base);
         } catch (Throwable t) {
-            handleThrowable(String.format(
-                    "getModificationTime(base='%s')", base), t);
+            RemoteHelper.exitOnThrowable(log, String.format(
+                    "getModificationTime(base='%s') for %d:%s",
+                    base, registryPort, serviceName), t);
             return -1;
         }
     }
@@ -183,9 +179,10 @@ public class RMIStorageProxy extends UnicastRemoteObject
         try {
             return backend.getRecords(ids, options);
         } catch (Throwable t) {
-            handleThrowable(String.format(
-                    "getRecord(ids=%s, queryOptions=%s)",
-                    Logs.expand(ids, 5), options), t);
+            RemoteHelper.exitOnThrowable(log, String.format(
+                    "getRecord(ids=%s, queryOptions=%s) for %d:%s",
+                    Logs.expand(ids, 5), options,
+                    registryPort, serviceName), t);
             return null;
         }
     }
@@ -196,8 +193,9 @@ public class RMIStorageProxy extends UnicastRemoteObject
         try {
             return backend.getRecord(id, options);
         } catch (Throwable t) {
-            handleThrowable(String.format(
-                    "getRecord(id='%s', queryOptions=%s)", id, options), t);
+            RemoteHelper.exitOnThrowable(log, String.format(
+                    "getRecord(id='%s', queryOptions=%s) for %d:%s",
+                    id, options, registryPort, serviceName), t);
             return null;
         }
     }
@@ -207,8 +205,9 @@ public class RMIStorageProxy extends UnicastRemoteObject
         try {
             return backend.next(iteratorKey);
         } catch (Throwable t) {
-            handleThrowable(String.format(
-                    "next(iteratorKey=%d)", iteratorKey), t);
+            RemoteHelper.exitOnThrowable(log, String.format(
+                    "next(iteratorKey=%d) for %d:%s",
+                    iteratorKey, registryPort, serviceName), t);
             return null;
         }
     }
@@ -219,9 +218,9 @@ public class RMIStorageProxy extends UnicastRemoteObject
         try {
             return backend.next(iteratorKey, maxRecords);
         } catch (Throwable t) {
-            handleThrowable(String.format(
-                    "next(iteratorKey=%d, maxRecords=%d)",
-                    iteratorKey, maxRecords), t);
+            RemoteHelper.exitOnThrowable(log, String.format(
+                    "next(iteratorKey=%d, maxRecords=%d) for %d:%s",
+                    iteratorKey, maxRecords, registryPort, serviceName), t);
             return null;
         }
     }
@@ -231,17 +230,19 @@ public class RMIStorageProxy extends UnicastRemoteObject
         try {
             backend.flush(record);
         } catch (Throwable t) {
-            handleThrowable(String.format("flush(%s)", record), t);
+            RemoteHelper.exitOnThrowable(log, String.format(
+                    "flush(%s) for %d:%s",
+                    record, registryPort, serviceName), t);
         }
     }
-
     @Override
     public void flushAll(List<Record> records) throws RemoteException {
         try {
             backend.flushAll(records);
         } catch (Throwable t) {
-            handleThrowable(String.format(
-                    "flushAll(%s)", Logs.expand(records, 5)), t);
+            RemoteHelper.exitOnThrowable(log, String.format(
+                    "flushAll(%s) for %d:%s",
+                    Logs.expand(records, 5), registryPort, serviceName), t);
         }
     }
 
@@ -250,7 +251,7 @@ public class RMIStorageProxy extends UnicastRemoteObject
         try {
             RemoteHelper.unExportRemoteInterface (serviceName, registryPort);
         } catch (Throwable t) {
-            handleThrowable(String.format(
+            RemoteHelper.exitOnThrowable(log, String.format(
                     "close().unExportRemoteInterface(serviceName='%s', "
                     + "registryPort=%d)", serviceName, registryPort), t);
         } finally {
@@ -259,71 +260,30 @@ public class RMIStorageProxy extends UnicastRemoteObject
             try {
                 backend.close();
             } catch (Throwable t) {
-                handleThrowable("close()", t);
+                RemoteHelper.exitOnThrowable(log, String.format(
+                        "close() for %d:%s", registryPort, serviceName), t);
             }
 
             try {
                 RemoteHelper.unExportMBean(this);
             } catch (Throwable t) {
-                handleThrowable("close().unExportMBean()", t);
+                RemoteHelper.exitOnThrowable(log, String.format(
+                        "close().unExportMBean() for %d:%s",
+                        registryPort, serviceName), t);
             }
         }
     }
 
     @Override
     public void clearBase(String base) throws RemoteException {
-        final String CALL = String.format("clearBase(%s)", base);
+        final String CALL = String.format("clearBase(%s) for %d:%s",
+                                          base, registryPort, serviceName);
         //noinspection DuplicateStringLiteralInspection
         log.debug(CALL + " called");
         try {
             backend.clearBase(base);
         } catch (Throwable t) {
-            handleThrowable(CALL, t);
+            RemoteHelper.exitOnThrowable(log, CALL, t);
         }
-    }
-
-    /**
-     * Helper method for general processing of Throwables. This gives slightly
-     * worse stack traces, as the method handleThrowable is inserted, but
-     * improves code readability tremendously.
-     * </p><p>
-     * This method always throws a RemoteException.
-     * @param call the method, including parameters, that caused the Throwable.
-     * @param t the Throwable from the execution of the method.
-     * @throws RemoteException thrown back with expanded info.
-     */
-    private void handleThrowable(String call, Throwable t)
-                                                        throws RemoteException {
-        if (t instanceof IOException) {
-            String message = IO_E + call;
-            log.warn(message, t);
-            throw new RemoteException(message, t);
-        } else if (t instanceof Exception) {
-            String message = GENERAL_EX + call;
-            log.warn(message, t);
-            throw new RemoteException(message, t);
-        } else {
-            fatality(GENERAL_ERROR + call, t);
-        }
-    }
-
-    /**
-     * The code style for Summa dictates that we respect Errors. This means
-     * alerting the world that the JVM is in unstable state and shutting down.
-     * @param message human-readable description of what occured when the Error
-     *                was encountered.
-     * @param e       the Error.
-     * @throws RemoteException wrapper for the Error to alert remote callers.
-     */
-    private void fatality(String message, Throwable e) throws RemoteException {
-        message += ". The Storage will be shut down in 5 seconds. This error "
-                   + "needs to be resolved (a good guess is that is was due "
-                   + "to Out Of Memory of some kind). Note that the shut down "
-                   + "might leave a file-based lock on the database";
-        log.fatal(message, e);
-        System.err.println(message);
-        e.printStackTrace(System.err);
-        new DeferredSystemExit(1);
-        throw new RemoteException(message, e);
     }
 }
