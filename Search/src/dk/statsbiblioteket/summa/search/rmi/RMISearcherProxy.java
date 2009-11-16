@@ -1,19 +1,20 @@
 package dk.statsbiblioteket.summa.search.rmi;
 
-import dk.statsbiblioteket.summa.search.SummaSearcherFactory;
-import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
-import dk.statsbiblioteket.summa.search.api.*;
-import dk.statsbiblioteket.summa.search.api.rmi.RemoteSearcher;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.configuration.storage.XStorage;
 import dk.statsbiblioteket.summa.common.rpc.RemoteHelper;
-
-import java.rmi.server.UnicastRemoteObject;
-import java.rmi.RemoteException;
-import java.io.IOException;
-
+import dk.statsbiblioteket.summa.search.SummaSearcherFactory;
+import dk.statsbiblioteket.summa.search.SummaSearcherImpl;
+import dk.statsbiblioteket.summa.search.api.Request;
+import dk.statsbiblioteket.summa.search.api.ResponseCollection;
+import dk.statsbiblioteket.summa.search.api.SummaSearcher;
+import dk.statsbiblioteket.summa.search.api.rmi.RemoteSearcher;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.IOException;
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 
 /**
  * A {@link SummaSearcher} implementation exposing an RMI interface,
@@ -69,8 +70,8 @@ public class RMISearcherProxy extends UnicastRemoteObject
      * {@code dk.statsbiblioteket.summa.control.rmi.RMISearcherProxy} then this
      * class will avoid infinite recursion by forcing this property into
      * a {@link SummaSearcherImpl}.
-     * @param conf
-     * @throws RemoteException
+     * @param conf the configuration for the proxy.
+     * @throws RemoteException if the proxy could not be created.
      */
     public RMISearcherProxy (Configuration conf) throws IOException {
         super (getServicePort(conf));
@@ -142,11 +143,12 @@ public class RMISearcherProxy extends UnicastRemoteObject
     @Override
     public ResponseCollection search(Request request) throws RemoteException {
         try {
-            ResponseCollection resp = backend.search (request); 
-            return resp;
-        } catch (IOException e) {
-            throw new RemoteException ("Search request failed: "
-                                       + e.getMessage (), e);
+            return backend.search (request);
+        } catch (Throwable t) {
+            RemoteHelper.exitOnThrowable(log, String.format(
+                    "search(%s) for %d:%s",
+                    request, registryPort, serviceName), t);
+            return null;
         }
     }
 
@@ -154,27 +156,27 @@ public class RMISearcherProxy extends UnicastRemoteObject
     public void close() throws RemoteException {
         try {
             RemoteHelper.unExportRemoteInterface (serviceName, registryPort);
-        } catch (IOException e) {
-            throw new RemoteException ("Failed to unexport RMI interface: "
-                                       + e.getMessage (), e);
-        }
+        } catch (Throwable t) {
+            RemoteHelper.exitOnThrowable(log, String.format(
+                    "close().unExportRemoteInterface(serviceName='%s', "
+                    + "registryPort=%d)", serviceName, registryPort), t);
+        } finally {
+            // If an exception was throws above, it was also logged, so we
+            // accept that it might be eaten by an exception from the backend
+            try {
+                backend.close();
+            } catch (Throwable t) {
+                RemoteHelper.exitOnThrowable(log, String.format(
+                        "close() for %d:%s", registryPort, serviceName), t);
+            }
 
-        try {
-            RemoteHelper.unExportMBean (this);
-        } catch (IOException e) {
-            // Don't bail out because of this...
-            log.warn ("Failed to unexport MBean: " + e.getMessage (), e);
-        }
-
-        try {
-            backend.close ();
-        } catch (IOException e) {
-            throw new RemoteException ("Close request failed: "
-                                       + e.getMessage (), e);
+            try {
+                RemoteHelper.unExportMBean(this);
+            } catch (Throwable t) {
+                RemoteHelper.exitOnThrowable(log, String.format(
+                        "close().unExportMBean() for %d:%s",
+                        registryPort, serviceName), t);
+            }
         }
     }
-    
 }
-
-
-

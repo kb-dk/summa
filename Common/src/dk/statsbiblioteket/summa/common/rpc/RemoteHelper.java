@@ -1,34 +1,32 @@
 package dk.statsbiblioteket.summa.common.rpc;
 
-import org.apache.commons.logging.LogFactory;
+import dk.statsbiblioteket.summa.common.util.DeferredSystemExit;
+import dk.statsbiblioteket.summa.common.util.Security;
+import dk.statsbiblioteket.util.Files;
+import dk.statsbiblioteket.util.Zips;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
-import java.rmi.RemoteException;
-import java.rmi.NotBoundException;
-import java.rmi.server.UnicastRemoteObject;
-import java.rmi.registry.Registry;
-import java.rmi.registry.LocateRegistry;
-import java.lang.management.ManagementFactory;
-import java.io.IOException;
 import java.io.File;
-import java.net.UnknownHostException;
-import java.net.URL;
+import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.net.MalformedURLException;
-import java.util.List;
-import java.util.Map;
+import java.net.URL;
+import java.net.UnknownHostException;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ConcurrentHashMap;
-
-import dk.statsbiblioteket.util.Files;
-import dk.statsbiblioteket.util.Zips;
-import dk.statsbiblioteket.summa.common.util.Security;
+import java.util.List;
+import java.util.Map;
 
 /**
- * Utility class to help export remote interfaces
+ * Utility class foor remote invocation.
  */
 public class RemoteHelper {
 
@@ -58,27 +56,28 @@ public class RemoteHelper {
                                               int registryPort,
                                               String serviceName)
                                                             throws IOException {
-        log.trace ("Preparing to export remote interfaces of " + obj
-                   + "as '" + serviceName + "' with registry on port "
-                   + registryPort);
+        log.trace("Preparing to export remote interfaces of " + obj
+                  + "as '" + serviceName + "' with registry on port "
+                  + registryPort);
 
         Security.checkSecurityManager();
 
         UnicastRemoteObject remote = (UnicastRemoteObject) obj;
-        Registry reg = null;
+        Registry reg;
 
         try {
             reg = LocateRegistry.createRegistry(registryPort);
             log.debug("Created registry on port " + registryPort);
         } catch (RemoteException e) {
             reg = LocateRegistry.getRegistry("localhost", registryPort);
-            log.debug ("Found registry localhost:" + registryPort);
+            log.debug("Found registry localhost:" + registryPort);
         }
 
 
         if (reg == null) {
-            throw new RemoteException ("Failed to locate or create registry on "
-                                        + "localhost:" + registryPort);
+            throw new RemoteException(
+                    "Failed to locate or create registry on localhost:"
+                    + registryPort);
         }
 
         try {
@@ -95,12 +94,11 @@ public class RemoteHelper {
                  + serviceName);
     }
 
-    public synchronized static void unExportRemoteInterface (String serviceName,
-                                                             int registryPort)
-                                                            throws IOException {
+    public synchronized static void unExportRemoteInterface (
+                      String serviceName, int registryPort) throws IOException {
         log.trace ("Preparing to unexport '" + serviceName + "' with registry on"
                    + " port " + registryPort);
-        Registry reg = null;
+        Registry reg;
 
         /* We should not try and create the registry when we want to
          * unregister a service. */
@@ -120,8 +118,9 @@ public class RemoteHelper {
             log.info("Unexported service '" + serviceName + "' on port "
                       + registryPort);
         } catch (NotBoundException e) {
-            log.error ("Service '" + serviceName + "' not bound in registry on "
-                       + "port " + registryPort);
+            log.error(String.format(
+                    "Service '%s' not bound in registry on port %d",
+                    serviceName, registryPort));
         }
     }
 
@@ -162,7 +161,7 @@ public class RemoteHelper {
      */
     public synchronized static void unExportMBean (Object obj)
                                                             throws IOException {
-        ObjectName name = null;
+        ObjectName name;
 
         try {
             log.debug ("Unregistering " + obj.getClass().getName()
@@ -200,18 +199,23 @@ public class RemoteHelper {
         }
     }
 
+    
+
+
     /**
      * Throws a {@link InvalidCodeBaseException} if one or more of the
      * URIs listed in {@code uris} does not point at a valid {@code .jar}
      * file.
      * @param uris an array of uris to test for jar file contents
+     * @throws dk.statsbiblioteket.summa.common.rpc.RemoteHelper.InvalidCodeBaseException
+     *         if the uris could not be resolved to proper codebases.
      */
     public static void testCodeBase(String[] uris)
                                                throws InvalidCodeBaseException {
         log.trace ("testCodeBase() called");
 
-        File tmpDir = new File (System.getProperty("java.io.tmpdir"),
-                                "summa-RH-resolutions");
+        File tmpDir = new File(
+                System.getProperty("java.io.tmpdir"), "summa-RH-resolutions");
 
         try {
             /* Just try and create the dir to make sure we have something
@@ -231,8 +235,8 @@ public class RemoteHelper {
 
             /* Check that it is a .jar file */
             if (!uri.endsWith(".jar")) {
-                throw new InvalidCodeBaseException("Non .jar-file in codepath: "
-                                                   + uri);
+                throw new InvalidCodeBaseException(
+                        "Non .jar-file in codepath: " + uri);
             }
 
             /* Check that it is a valid url */
@@ -241,9 +245,9 @@ public class RemoteHelper {
                 url = new URL (uri);
             } catch (MalformedURLException e) {
                 log.warn("Malformed URL in codepath", e);
-                throw new InvalidCodeBaseException("Malformed url: " + uri
-                                                    + ", error was: "
-                                                    + e.getMessage());
+                throw new InvalidCodeBaseException(String.format(
+                        "Malformed url: %s, error was: %s",
+                        uri, e.getMessage()));
             }
 
             /* Try to download the url */
@@ -252,27 +256,27 @@ public class RemoteHelper {
                 jar = Files.download(url, tmpDir, true);
             } catch (IOException e) {
                 log.warn ("Unable to retrieve url", e);
-                throw new InvalidCodeBaseException("Unable to retrieve url "
-                                                   + url + ": "
-                                                   + e.getMessage());
+                throw new InvalidCodeBaseException(String.format(
+                        "Unable to retrieve url %s: %s",
+                        url, e.getMessage()));
             }
 
             /* validate that the contens looks like a .jar */
             try {
-                Zips.unzip(jar.getAbsolutePath(), tmpDir.getAbsolutePath(),
-                           true);
+                Zips.unzip(
+                        jar.getAbsolutePath(), tmpDir.getAbsolutePath(), true);
 
                 File metaInf = new File (tmpDir, "META-INF");
                 if (!metaInf.exists()) {
-                    throw new InvalidCodeBaseException("The .jar-file "+ url
-                                                       + " does not contain "
-                                                       + "a META-INF directory");
+                    throw new InvalidCodeBaseException(String.format(
+                            "The .jar-file %s does not contain a META-INF "
+                            + "directory", url));
                 }
 
             } catch (IOException e) {
-                throw new InvalidCodeBaseException("Failed to extract "
-                                                     + url + ". The .jar file "
-                                                     + "is possibly corrupt");
+                throw new InvalidCodeBaseException(String.format(
+                        "Failed to extract %s. The .jar file is possibly "
+                        + "corrupt", url));
             }
 
             /* OK, it looks like a real .jar file there. Go on */
@@ -287,6 +291,53 @@ public class RemoteHelper {
             }
         }
 
+    }
+
+    /**
+     * The code style for Summa dictates that we respect Errors. This means
+     * alerting the world that the JVM is in unstable state and shutting down
+     * when they are encountered.
+     * @param log     the log to report FATAL to.
+     * @param message human-readable description of what occured when the Error
+     *                was encountered.
+     * @param e       the Error.
+     * @throws java.rmi.RemoteException wrapper for the Error to alert remote callers.
+     */
+    private static void fatality(Log log, String message, Throwable e)
+                                                        throws RemoteException {
+        message +=
+                ". The JVM will be shut down in 5 seconds. This "
+                + "error needs to be resolved (a good guess is that is was due "
+                + "to OutOfMemory of some kind). Note that the shut down "
+                + "might leave file-based locks on database and similar";
+        log.fatal(message, e);
+        System.err.println(message);
+        e.printStackTrace(System.err);
+        new DeferredSystemExit(1);
+        throw new RemoteException(message, e);
+    }
+
+    /**
+     * Helper method for general processing of Throwables. This gives slightly
+     * worse stack traces, as the method handleThrowable is inserted, but
+     * improves code readability tremendously.
+     * </p><p>
+     * This method always throws a RemoteException and shuts down the JVM in
+     * case of Throwables.
+     * @param log  the log to use.
+     * @param call the method, including parameters, that caused the Throwable.
+     * @param t the Throwable from the execution of the method.
+     * @throws java.rmi.RemoteException thrown back with expanded info.
+     */
+    public static void exitOnThrowable(Log log, String call, Throwable t)
+                                                        throws RemoteException {
+        if (t instanceof Exception) {
+            String message = "Exception during " + call;
+            log.warn(message, t);
+            throw new RemoteException(message, t);
+        } else {
+            fatality(log, "Throwable thrown during " + call, t);
+        }
     }
 
     /**
@@ -348,14 +399,12 @@ public class RemoteHelper {
                     try {
                         unExportRemoteInterface(serviceName,registryPort);
                     } catch (IOException e) {
-                        log.error("Failed to unexport remote interface '"
-                                  + serviceName + "' on port " + registryPort);
+                        log.error(String.format(
+                                "Failed to unexport remote interface '%s' on "
+                                + "port %d", serviceName, registryPort));
                     }
                 }
             }
         }
     }
 }
-
-
-
