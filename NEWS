@@ -1,4 +1,24 @@
 ========================
+2009-11-18: Summa 1.4.13
+========================
+
+ * Optimization: Storage.clearBase() would at times require big memory
+                 allocations. This has been partly remedied. The execution
+                 speed of this function should also have improved somewhat.
+
+ * Error handling: Major reworking of RMI wrapper classes to handle
+	               Errors by sending alerts and shutting down. Note that we
+	               are talking Errors and not normal Exceptions
+
+ * Bugfix: Calling close() on ZIPParser before EOF left the
+           ZIP-thread hanging
+
+ * Bugfix: Fixed racing deadlock problem in ZIPParser
+
+ * Bugfix: There was a chance that the ThreadedStreamParser did not
+           terminate properly when close on sourcePayload failed
+
+========================
 2009-11-03: Summa 1.4.12
 ========================
 

@@ -1,3 +1,206 @@
+2009-11-17 09:16  mkamstrup
+
+	* [r1926]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/StorageTest.java:
+	  
+	  Make Storage.clearBase() use a paging approach in DatabaseStorage
+	  if the backend has the usePagingModel flag set. This should
+	  hopefully decrease the memory consumption and increase speed on
+	  our default backend (H2Storage). Probably the same effect on
+	  Derby Storage...
+
+2009-11-17 09:09  mkamstrup
+
+	* [r1925]
+	  Common/src/dk/statsbiblioteket/summa/common/util/UniqueTimestampGenerator.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/UniqueTimestampGeneratorTest.java:
+	  
+	  Add methods to UniqueTimestampGenerator for formatting and
+	  parsing of string timestamps
+
+2009-11-17 07:24  mkamstrup
+
+	* [r1924]
+	  Common/src/dk/statsbiblioteket/summa/common/rpc/RemoteHelper.java:
+	  
+	  Improve error messages
+
+2009-11-16 13:56  toke-sb
+
+	* [r1923]
+	  Common/src/dk/statsbiblioteket/summa/common/rpc/RemoteHelper.java,
+	  Index/src/dk/statsbiblioteket/summa/index/rmi/RMIManipulatorProxy.java,
+	  Search/src/dk/statsbiblioteket/summa/search/rmi/RMISearcherProxy.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/rmi/RMIStorageProxy.java:
+	  
+	  Error handling: Major reworking of RMISearcherProxy and
+	  RMIManipulatorProxy to mimick RMIStorageProxy's handling of
+	  Errors
+	  Refactoring: Moved general Error handling from RMI to
+	  RemoteHelper, primarily to avoid breaking the RMI interface to
+	  the RMI proxies
+	  Code style: Reformatted code in the modified classes to adhere
+	  more closely to the line-break rules in the Summa code style
+	  guidelines
+
+2009-11-16 10:52  toke-sb
+
+	* [r1922]
+	  Storage/src/dk/statsbiblioteket/summa/storage/rmi/RMIStorageProxy.java:
+	  
+	  Error handling: Major reworking of RMIStorageProxy to handle
+	  Errors by sending alerts and shutting down
+
+2009-11-16 01:20  toke-sb
+
+	* [r1921]
+	  Common/src/dk/statsbiblioteket/summa/common/util/BitsArray.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/BitsArrayTest.java[ADD],
+	  Common/test/log4j.xml:
+	  
+	  Testing: Added some unit-tests for BitsArray
+	  Bugfix: Partly for of incorrect storage in BitsArray. Some
+	  unit-tests still fail
+
+2009-11-13 16:13  toke-sb
+
+	* [r1920]
+	  Common/src/dk/statsbiblioteket/summa/common/util/BitsArray.java:
+	  
+	  Work in progress:Compact BitsArray
+
+2009-11-13 10:27  toke-sb
+
+	* [r1919]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/FreeTextAnalyzer.java,
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/analysis/Rules.java:
+	  
+	  Enhancement: Added relaxed og/and/und => & parsing to FREETEXT
+
+2009-11-11 13:30  toke-sb
+
+	* [r1918]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/FlexibleMarcStreamReader.java[ADD],
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/ISO2709ToMARCXMLFilter.java,
+	  Ingest/test/dk/statsbiblioteket/summa/ingest/stream/ISO2709ToMARCXMLFilterTest.java:
+	  
+	  Feature: Introduced FlexibleMarcStreamReader with support for all
+	  Java-supported charsets
+
+2009-11-11 09:37  toke-sb
+
+	* [r1917] Ingest/build.xml:
+	  
+	  Bugfix: The ant build file did not copy the marc4j jar
+
+2009-11-11 09:36  toke-sb
+
+	* [r1916]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/ZIPParser.java:
+	  
+	  Bugfix: Calling close() on ZIPParser before EOF left the
+	  ZIP-thread hanging
+
+2009-11-10 15:18  toke-sb
+
+	* [r1915]
+	  Common/src/dk/statsbiblioteket/summa/common/lucene/search/LuceneBooster.java,
+	  Ingest/Ingest.iml, Ingest/build.xml,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/ISO2709ToMARCXMLFilter.java[ADD],
+	  Ingest/test/data/iso2709[ADD],
+	  Ingest/test/data/iso2709/dpu20091109_sample.data[ADD],
+	  Ingest/test/data/iso2709/summerland.data[ADD],
+	  Ingest/test/data/iso2709/summerland.readme[ADD],
+	  Ingest/test/dk/statsbiblioteket/summa/ingest/stream/ISO2709ToMARCXMLFilterTest.java[ADD],
+	  Summa.ipr, build.properties:
+	  
+	  Bugfix: Made ISO 2709 parsing work
+
+2009-11-10 14:29  toke-sb
+
+	* [r1914] lib/marc4j-2.4-normalizer.jar[CPY],
+	  lib/marc4j-normalizer.jar[DEL]:
+	  
+	  Renaming normalizer for marc4j
+
+2009-11-10 14:29  toke-sb
+
+	* [r1913] lib/marc4j-normalizer.jar[ADD]:
+	  
+	  Adding normalizer for marc4j
+
+2009-11-10 12:32  toke-sb
+
+	* [r1912] Ingest/build.xml, Summa.ipr, build.properties:
+	  
+	  Feature: Added marc4j to handle ISO 2709 (half-binary format)
+	  MARC representations
+
+2009-11-10 10:30  toke-sb
+
+	* [r1911]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/Aleph2XML2.java:
+	  
+	  Cleanup: Made an inner class for Aleph2XML2 package private
+
+2009-11-10 09:14  toke-sb
+
+	* [r1910] lib/apidocs/marc4j-2.4-apidoc.zip[ADD],
+	  lib/license/LICENSE.marc4j[ADD],
+	  lib/license/LICENSE.normalizer[ADD], lib/marc4j-2.4.jar[ADD],
+	  lib/src/marc4j-2.4-src.zip[ADD]:
+	  
+	  Adding marc4j 1.4
+
+2009-11-05 14:28  mkamstrup
+
+	* [r1909]
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/StorageTest.java:
+	  
+	  Testing: Add a vairant of the testClearAndUpdate unit test for
+	  the Storage service, testClearBaseAndUpdateBatch that does the
+	  same, but using flushAll() instead of flush()
+
+2009-11-05 08:18  mkamstrup
+
+	* [r1908]
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/StorageTest.java:
+	  
+	  Add a unit test to StorageTest that repeatedly clears and updates
+	  the database. Passes just fine.
+
+2009-11-04 13:16  toke-sb
+
+	* [r1907]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/ThreadedStreamParser.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/ZIPParser.java:
+	  
+	  Bugfix: Fixed racing deadlock problem in ZIPParser
+	  Feature: Added interruption to ThreadedStreamParser
+
+2009-11-04 13:14  toke-sb
+
+	* [r1906]
+	  Storage/src/dk/statsbiblioteket/summa/storage/api/filter/RecordWriter.java:
+	  
+	  Logging: Verbose logging on close
+
+2009-11-04 12:10  toke-sb
+
+	* [r1905]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/ThreadedStreamParser.java:
+	  
+	  Bugfix: There was a chance that the ThreadedStreamParser did not
+	  terminate properly when close on sourcePayload failed
+
+2009-11-03 14:24  mkamstrup
+
+	* [r1903] ChangeLog, NEWS:
+	  
+	  Include updated NEWS and ChangeLog for Summa 1.4.12
+
 2009-11-03 14:19  mkamstrup
 
 	* [r1902] build.properties:
