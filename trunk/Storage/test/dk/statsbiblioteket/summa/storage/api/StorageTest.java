@@ -127,7 +127,7 @@ public class StorageTest extends TestCase {
     }
 
     public void assertBaseEmpty (String base) throws Exception {
-        assertBaseCount(base, -1);
+        assertBaseEmpty(base, -1);
     }
 
     public void assertBaseEmpty (String base, long count) throws Exception {
