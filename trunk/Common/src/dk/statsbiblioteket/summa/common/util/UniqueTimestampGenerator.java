@@ -1,5 +1,8 @@
 package dk.statsbiblioteket.summa.common.util;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
@@ -39,6 +42,7 @@ public class UniqueTimestampGenerator {
 
     private long salt;
     private long last;
+    private DateFormat dateFormat;
 
     /**
      * Create a new UniqueTimestampGenerator.
@@ -53,6 +57,8 @@ public class UniqueTimestampGenerator {
                                      + ". UniqueTimestampGenerator can not" +
                                      " function past " + new Date(MAX_TIME));
         }
+
+        dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
     }
 
     /**
@@ -174,5 +180,46 @@ public class UniqueTimestampGenerator {
      */
     public long baseTimestamp (long systemTime) {
         return systemTime << SALT_BITS;
+    }
+
+    /**
+     * Return a string representation of the salted timestamp {@code timestamp}.
+     * The string is formatted as {@code "yyyy-MM-dd'T'HH:mm:ss.SSS"}, eg.
+     * {@code 2001-07-04T12:08:56.235}.
+     *
+     * @param timestamp the salted timestamp to format
+     * @return string formatted timestamp as described above
+     */
+    public String formatTimestamp(long timestamp){
+        return formatSystemTime(systemTime(timestamp));
+    }
+
+    /**
+     * Return a string representation of the (unsalted) system time
+     * {@code systemTime} (as obtained from {@code System.currentTimeMillis()}).
+     * The string is formatted as {@code "yyyy-MM-dd'T'HH:mm:ss.SSS"}, eg.
+     * {@code 2001-07-04T12:08:56.235}.
+     *
+     * @param systemTime the system time, as obtained from
+     *                   {@code System.currentTimeMillis()}
+     * @return string formatted timestamp as described above
+     */
+    public String formatSystemTime(long systemTime) {
+        return dateFormat.format(new Date(systemTime));
+    }
+
+    /**
+     * Return a (unsalted) system time in milliseconds parsed from the string
+     * {@code systemTime} based on the pattern
+     * {@code "yyyy-MM-dd'T'HH:mm:ss.SSS"}.
+     * <p/>
+     * Use the method {@link #baseTimestamp(long)} to convert the result
+     * into a salted timestamp. But beware that a timestamp generated this
+     * way may not be unique.
+     * @param systemTime string formatted system time as described above
+     * @return number of milliseconds since the Unix Epoch 
+     */
+    public long parseSystemTime(String systemTime) throws ParseException {
+        return dateFormat.parse(systemTime).getTime();
     }
 }
