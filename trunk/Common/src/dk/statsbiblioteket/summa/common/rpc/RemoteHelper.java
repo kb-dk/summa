@@ -294,9 +294,13 @@ public class RemoteHelper {
     }
 
     /**
+     * Send fatal error messages to the log and <code>stderr</code>, schedule
+     * a system exit in 5s, and throw a <code>RemoteException</code>.
+     * <p/>
      * The code style for Summa dictates that we respect Errors. This means
      * alerting the world that the JVM is in unstable state and shutting down
      * when they are encountered.
+     *
      * @param log     the log to report FATAL to.
      * @param message human-readable description of what occured when the Error
      *                was encountered.
@@ -306,10 +310,11 @@ public class RemoteHelper {
     private static void fatality(Log log, String message, Throwable e)
                                                         throws RemoteException {
         message +=
-                ". The JVM will be shut down in 5 seconds. This "
-                + "error needs to be resolved (a good guess is that is was due "
-                + "to OutOfMemory of some kind). Note that the shut down "
-                + "might leave file-based locks on database and similar";
+                ". The JVM will be shut down in 5 seconds. Likely error causes"
+                + " include OutOfMemory, StackOverflows, or other critical "
+                + "problems in the JVM. Please note that this is an unclean "
+                + "shutdown and that file-based locks on databases and similar"
+                + " might persist in the environment and need manual cleanup";
         log.fatal(message, e);
         System.err.println(message);
         e.printStackTrace(System.err);
@@ -318,12 +323,17 @@ public class RemoteHelper {
     }
 
     /**
-     * Helper method for general processing of Throwables. This gives slightly
-     * worse stack traces, as the method handleThrowable is inserted, but
-     * improves code readability tremendously.
+     * If <code>t</code> is an <code>Error</code> send fatal error messages to
+     * the log and <code>stderr</code>, schedule a system exit in 5s, and
+     * throw a <code>RemoteException</code>.
+     * <p/>
+     * This method is intended as a Helper for general processing of Throwables.
+     * This gives slightly worse stack traces, as the method handleThrowable
+     * is inserted, but improves code readability tremendously.
      * </p><p>
      * This method always throws a RemoteException and shuts down the JVM in
      * case of Throwables.
+     *
      * @param log  the log to use.
      * @param call the method, including parameters, that caused the Throwable.
      * @param t the Throwable from the execution of the method.
@@ -336,7 +346,7 @@ public class RemoteHelper {
             log.warn(message, t);
             throw new RemoteException(message, t);
         } else {
-            fatality(log, "Throwable thrown during " + call, t);
+            fatality(log, "Unhandled error during " + call, t);
         }
     }
 
