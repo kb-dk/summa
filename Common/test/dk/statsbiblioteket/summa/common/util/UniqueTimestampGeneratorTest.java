@@ -91,6 +91,16 @@ public class UniqueTimestampGeneratorTest extends TestCase {
                    Arrays.equals(stamps, stampsSorted));
     }
 
+    public void testStringFormats() throws Exception {
+        long testTime = 1258448660520L;
+        String testTimeString = "2009-11-17T10:04:20.520";
+
+        assertEquals(testTimeString, gen.formatSystemTime(testTime));
+        assertEquals(testTime, gen.parseSystemTime(testTimeString));
+        assertEquals(testTimeString,
+                     gen.formatTimestamp(gen.baseTimestamp(testTime)));
+    }
+
     static double log2(double d) {
         return Math.log10(d)/ Math.log10(2);
     }
