@@ -1860,28 +1860,36 @@ getco     */
         long start = System.currentTimeMillis();
         log.info ("Clearing base '" + base + "'");
 
-        // Convert time to the internal binary format used by DatabaseStorage
-        long mtimeTimestamp = timestampGenerator.baseTimestamp(0);
+        String sql = "SELECT * "
+                   + " FROM " + RECORDS
+                   + " WHERE " + BASE_COLUMN + "=?"
+                   + " AND " + MTIME_COLUMN + ">?"
+                   + " AND " + MTIME_COLUMN + "<?";
+
+        if (usePagingModel) {
+            sql = getPagingStatement(sql);
+        }
 
         PreparedStatement stmt = conn.prepareStatement(
-                "SELECT * "
-                + " FROM " + RECORDS
-                + " WHERE " + BASE_COLUMN + "=?"
-                + " AND " + MTIME_COLUMN + ">?",
-                ResultSet.TYPE_FORWARD_ONLY,
-                ResultSet.CONCUR_UPDATABLE);
+                                                 sql,
+                                                 ResultSet.TYPE_FORWARD_ONLY,
+                                                 ResultSet.CONCUR_UPDATABLE);
 
         // Set the statement up for fetching of large result sets, see fx.
         // http://jdbc.postgresql.org/documentation/83/query.html#query-with-cursor
         // This prevents an OOM for backends like Postgres
         try {
-            stmt.getConnection().setAutoCommit(false);
-            stmt.getConnection().setTransactionIsolation(
+            conn.setAutoCommit(false);
+            conn.setTransactionIsolation(
                                        Connection.TRANSACTION_READ_UNCOMMITTED);
-            stmt.getConnection().setReadOnly(false);
+            conn.setReadOnly(false);
             stmt.setFetchDirection(ResultSet.FETCH_FORWARD);
 
-            stmt.setFetchSize(FETCH_SIZE);
+            if (usePagingModel) {
+                stmt.setFetchSize(pageSize);
+            } else {
+                stmt.setFetchSize(FETCH_SIZE);
+            }
         } catch (SQLException e) {
             closeStatement(stmt);
             throw new IOException("Error preparing connection for "
@@ -1889,32 +1897,53 @@ getco     */
                                   + e.getMessage(), e);
         }
 
+        // Convert time to the internal binary format used by DatabaseStorage
+        long lastMtimeTimestamp = timestampGenerator.baseTimestamp(0);
+        long startTimestamp = timestampGenerator.next();
         String id = null;
-        long count = 0;
+        long totalCount = 0;
+        long pageCount = pageSize;
         try {
-            stmt.setString(1, base);
-            stmt.setLong(2, mtimeTimestamp);
-            stmt.execute();
-            ResultSet cursor = stmt.getResultSet();
-            while (cursor.next()) {
-                // We read the id before we start updating the row, not all
-                // JDBC backends like if we update the row before we read it
-                id = cursor.getString(ID_COLUMN);
+            // Page through all records in base and mark them as deleted
+            // in one transaction
+            while (pageCount >= pageSize) {
+                log.debug(String.format(
+                        "Preparing page for deletion on base '%s' for records "
+                        + "in the range %s to %s",
+                        base,
+                        timestampGenerator.formatTimestamp(lastMtimeTimestamp),
+                        timestampGenerator.formatTimestamp(startTimestamp)));
+                pageCount = 0;
+                stmt.setString(1, base);
+                stmt.setLong(2, lastMtimeTimestamp);
+                stmt.setLong(3, startTimestamp);
+                stmt.execute();
+                ResultSet cursor = stmt.getResultSet();
+                while (cursor.next()) {
+                    // We read the data before we start updating the row, not all
+                    // JDBC backends like if we update the row before we read it
+                    id = cursor.getString(ID_COLUMN);
+                    lastMtimeTimestamp = cursor.getLong(MTIME_COLUMN);
 
-                cursor.updateInt(DELETED_COLUMN, 1);
-                cursor.updateLong(MTIME_COLUMN, timestampGenerator.next());
-                log.debug("Deleted " + id);
-                cursor.updateRow();
-                count++;
+                    cursor.updateInt(DELETED_COLUMN, 1);
+                    cursor.updateLong(MTIME_COLUMN, timestampGenerator.next());
+                    log.debug("Deleted " + id);
+                    cursor.updateRow();
+                    totalCount++;
+                    pageCount++;
+                }
             }
+
+            // Commit the full transaction
+            // FIXME: It would probably save memory to do incremental commits
             stmt.getConnection().commit();
 
             updateModificationTime(base);
             log.info("Cleared base '" + base + "' in "
                     + (System.currentTimeMillis() - start)
-                    + "ms. Marked " + count + " records as deleted");
+                    + "ms. Marked " + totalCount + " records as deleted");
         } catch (SQLException e) {
-            String msg ="Error clearing base '" + base + "' after " + count
+            String msg ="Error clearing base '" + base + "' after " + totalCount
                     + " records, last record id was '" + id + "': "
                     + e.getMessage();
             log.error(msg, e);

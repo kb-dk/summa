@@ -127,19 +127,32 @@ public class StorageTest extends TestCase {
     }
 
     public void assertBaseEmpty (String base) throws Exception {
+        assertBaseCount(base, -1);
+    }
+
+    public void assertBaseEmpty (String base, long count) throws Exception {
         long iterKey = storage.getRecordsModifiedAfter(0, base, null);
         Iterator<Record> iter = new StorageIterator(storage, iterKey);
-        long counter = 0;
+        long nonDeletedCount = 0;
+        long fullCount = 0;
         while (iter.hasNext()) {
             Record r = iter.next();
+            fullCount++;
             if (!r.isDeleted()) {
-                counter++;
+                nonDeletedCount++;
             }
         }
 
-        if (counter != 0) {
-            fail ("Base '" + base + "' should be empty, but found " + counter
+        if (nonDeletedCount != 0) {
+            fail ("Base '" + base + "' should be empty, but found " + nonDeletedCount
                   + " records");
+        }
+
+        if (count != -1) {
+            if (count != fullCount) {
+                fail("Expected " + count
+                      + " records in base, found " + fullCount);
+            }
         }
     }
 
@@ -201,13 +214,13 @@ public class StorageTest extends TestCase {
     public void testClearOne() throws Exception {
         testAddOne();
         storage.clearBase(testBase1);
-        assertBaseEmpty(testBase1);
+        assertBaseEmpty(testBase1, 1);
     }
 
     // Flush single records repeatedly with flush()
     public void testClearAndUpdate() throws Exception {
         int NUM_RUNS = 30;
-        int NUM_RECS = 1000;
+        int NUM_RECS = 1027;
 
         for (int i = 0; i < NUM_RUNS; i++) {
             // Put NUM_RECS records in storage in testBase1
@@ -225,13 +238,14 @@ public class StorageTest extends TestCase {
                 assertEquals("test" + j, rec.getId());
                 assertEquals(testBase1, rec.getBase());
                 assertEquals(new String(testContent1), rec.getContentAsUTF8());
+                assertFalse(rec.isDeleted());
             }
             assertFalse("Base " + testBase1 +" must contain at max "
                         + NUM_RECS + " records", iter.hasNext());
 
             // Clear the test base. Rinse, repeat
             storage.clearBase(testBase1);
-            assertBaseEmpty(testBase1);
+            assertBaseEmpty(testBase1, NUM_RECS);
         }
     }
 
@@ -258,13 +272,14 @@ public class StorageTest extends TestCase {
                 assertEquals("test" + j, rec.getId());
                 assertEquals(testBase1, rec.getBase());
                 assertEquals(new String(testContent1), rec.getContentAsUTF8());
+                assertFalse(rec.isDeleted());
             }
             assertFalse("Base " + testBase1 +" must contain at max "
                         + NUM_RECS + " records", iter.hasNext());
 
             // Clear the test base. Rinse, repeat
             storage.clearBase(testBase1);
-            assertBaseEmpty(testBase1);
+            assertBaseEmpty(testBase1, NUM_RECS);
         }
     }
 
@@ -710,7 +725,7 @@ public class StorageTest extends TestCase {
         assertBaseCount(testBase2, 1);
     }
 
-    public void testRawSpeed() throws Exception {
+    /*public void testRawSpeed() throws Exception {
         int RUNS = 1000;
         int JOB_SIZE = 100;
         Profiler profiler = new Profiler(RUNS * JOB_SIZE, JOB_SIZE * 3);
@@ -852,23 +867,23 @@ public class StorageTest extends TestCase {
         storage.close();
     }
 
-    public void testMediumMonkey() throws Exception {
+    /*public void testMediumMonkey() throws Exception {
         Configuration storageConf = getStorageConfiguration();
         Storage storage = StorageFactory.createStorage(storageConf);
         StorageMonkeyHelper monkey = new StorageMonkeyHelper(
                 0, 1000000, 0.01, 0.02, null, null, 0, 5, 0, 50);
         monkey.monkey(1000, 200, 100, 1000, 5, 1, 100);
         storage.close();
-    }
+    }*/
 
-    public void testUpdateMonkey() throws Exception {
+    /*public void testUpdateMonkey() throws Exception {
         Configuration storageConf = getStorageConfiguration();
         Storage storage = StorageFactory.createStorage(storageConf);
         StorageMonkeyHelper monkey = new StorageMonkeyHelper(
                 0, 1000000, 0.01, 0.02, null, null, 0, 5, 0, 50);
         monkey.monkey(1000, 2000, 100, 1000, 5, 1, 100);
         storage.close();
-    }
+    }*/
 
     public void disabledtestLargeMonkey() throws Exception {
         Configuration storageConf = getStorageConfiguration();
@@ -916,7 +931,7 @@ DEBUG [main] [2009-08-28 14:35:47,928] [dk.statsbiblioteket.summa.storage.api.St
 DEBUG [main] [2009-08-28 14:35:58,681] [dk.statsbiblioteket.summa.storage.api.StorageTest] Did job 12/100 of size 10000 for run 1/5 at 748 records/second. ETA for current job: 2009-08-28 14:55:33
 
      */
-    public void testMassiveTinyFloodNoReopen() throws Exception {
+    /*public void testMassiveTinyFloodNoReopen() throws Exception {
         testMassiveTinyFlood(false, 0);
     }
 
@@ -959,9 +974,9 @@ DEBUG [main] [2009-08-28 14:35:58,681] [dk.statsbiblioteket.summa.storage.api.St
 
         storage.close();
         storage = StorageFactory.createStorage(storageConf);
-/*        if (reopen) {
-            storage.close();
-        }*/
+        //if (reopen) {
+        //    storage.close();
+        //}
 
         StorageMonkeyHelper monkey = new StorageMonkeyHelper(
                 MIN_CONTENT_SIZE, MAX_CONTENT_SIZE, PARENT_CHANCE, CHILD_CHANCE,
@@ -1007,5 +1022,5 @@ DEBUG [main] [2009-08-28 14:35:58,681] [dk.statsbiblioteket.summa.storage.api.St
             }
         }
         storage.close();
-    }
+    }*/
 }
