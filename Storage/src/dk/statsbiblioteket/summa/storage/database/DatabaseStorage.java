@@ -1860,7 +1860,8 @@ getco     */
         long start = System.currentTimeMillis();
         log.info ("Clearing base '" + base + "'");
 
-        String sql = "SELECT * "
+        int _ID = 1, _MTIME = 2, _DELETED = 3;
+        String sql = "SELECT id, mtime, deleted "
                    + " FROM " + RECORDS
                    + " WHERE " + BASE_COLUMN + "=?"
                    + " AND " + MTIME_COLUMN + ">?"
@@ -1922,11 +1923,11 @@ getco     */
                 while (cursor.next()) {
                     // We read the data before we start updating the row, not all
                     // JDBC backends like if we update the row before we read it
-                    id = cursor.getString(ID_COLUMN);
-                    lastMtimeTimestamp = cursor.getLong(MTIME_COLUMN);
+                    id = cursor.getString(_ID);
+                    lastMtimeTimestamp = cursor.getLong(_MTIME);
 
-                    cursor.updateInt(DELETED_COLUMN, 1);
-                    cursor.updateLong(MTIME_COLUMN, timestampGenerator.next());
+                    cursor.updateInt(_DELETED, 1);
+                    cursor.updateLong(_MTIME, timestampGenerator.next());
                     log.debug("Deleted " + id);
                     cursor.updateRow();
                     totalCount++;
