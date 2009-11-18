@@ -101,6 +101,18 @@
                                 </entry>
                             </xproperties>
 
+                            <!-- Log some stats about the JVM -->
+                            <xproperties>
+                                <entry>
+                                    <key>filter.name</key>
+                                    <value class="string">JvmStats</value>
+                                </entry>
+                                <entry>
+                                    <key>summa.filter.sequence.filterclass</key>
+                                    <value class="string">dk.statsbiblioteket.summa.common.filter.MachineStatsFilter</value>
+                                </entry>
+                            </xproperties>
+
                             <xproperties>
                                 <entry>
                                     <key>filter.name</key>
