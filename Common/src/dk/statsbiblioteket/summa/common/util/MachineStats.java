@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2009  The State and University Library
@@ -109,6 +109,8 @@ public class MachineStats implements Runnable {
         if (logIntervalPings == 0 && logIntervalMS == 0) {
             log.info("Both logIntervalPings and logIntervalMS are 0. No "
                      + "logging will be performed");
+            watcher = null;
+            return;
         }
         profiler = new Profiler(500);
         watcher = new Thread(this);
