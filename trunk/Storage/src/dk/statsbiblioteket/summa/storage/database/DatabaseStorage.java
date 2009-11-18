@@ -1850,13 +1850,6 @@ getco     */
 
     private void clearBaseWithConnection (String base, Connection conn)
                                               throws IOException, SQLException {
-        //
-        // FIXME: This uses one big SELECT with a full result set, which might
-        //        might lead to a huge memory consumption on bases like H2
-        //        which always buffer the result set in memory. Basically we
-        //        need to take the 'usePagaingModel' flag into account
-        //
-
         long start = System.currentTimeMillis();
         log.info ("Clearing base '" + base + "'");
 
@@ -1933,6 +1926,7 @@ getco     */
                     totalCount++;
                     pageCount++;
                 }
+                cursor.close();
             }
 
             // Commit the full transaction
