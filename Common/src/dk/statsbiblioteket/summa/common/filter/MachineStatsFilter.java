@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2009  The State and University Library
@@ -74,7 +74,7 @@ public class MachineStatsFilter extends ObjectFilterImpl implements Runnable {
      * Optional. Default is true;
      */
     public static final String CONF_GC_BEFORE_LOG =
-            "summa.machinestats.gc.before-log";
+            "summa.machinestats.gc.beforelog";
     public static final boolean DEFAULT_GC_BEFORE_LOG = true;
 
     /**
@@ -85,7 +85,7 @@ public class MachineStatsFilter extends ObjectFilterImpl implements Runnable {
      * Optional. Default is 5 ms.
      */
     public static final String CONF_GC_SLEEP_MS =
-            "summa.machinestats.gc.sleep-ms";
+            "summa.machinestats.gc.sleepms";
     public static final int DEFAULT_GC_SLEEP_MS = 5;
 
     private int logIntervalPayloads = DEFAULT_LOG_INTERVAL_PAYLOADS;
