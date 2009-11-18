@@ -31,7 +31,7 @@
 
     <!-- A time/date based rolling appender -->
 
-    <appender name="FILE" class="org.apache.log4j.RollingFileAppender">
+    <appender name="FILE" class="dk.statsbiblioteket.summa.common.util.CleanSlateRollingFileAppender">
         <param name="Threshold" value="TRACE"/><!-- or DEBUG or INFO -->
         <param name="File" value="log/logfile.log"/>
         <param name="Append" value="true"/>
@@ -42,7 +42,7 @@
         </layout>
     </appender>
 
-    <appender name="PROCESS" class="org.apache.log4j.RollingFileAppender">
+    <appender name="PROCESS" class="dk.statsbiblioteket.summa.common.util.CleanSlateRollingFileAppender">
         <param name="Threshold" value="DEBUG"/><!-- or DEBUG or INFO -->
         <param name="File" value="log/process.log"/>
         <param name="Append" value="true"/>
@@ -53,8 +53,19 @@
         </layout>
     </appender>
 
+    <appender name="STATS" class="dk.statsbiblioteket.summa.common.util.CleanSlateRollingFileAppender">
+        <param name="Threshold" value="DEBUG"/><!-- or DEBUG or INFO -->
+        <param name="File" value="log/stats.log"/>
+        <param name="Append" value="true"/>
+        <param name="MaxFileSize" value="500MB"/>
+        <param name="MaxBackupIndex" value="5"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] %m%n"/>
+        </layout>
+    </appender>
+
     <!-- The full log appender uses a extremely slow pattern, on production systems use only this appender with a threshold of fatal -->
-    <appender name="FULL_LOG" class="org.apache.log4j.RollingFileAppender">
+    <appender name="FULL_LOG" class="dk.statsbiblioteket.summa.common.util.CleanSlateRollingFileAppender">
         <param name="Threshold" value="FATAL"/>
         <param name="File" value="log/fatal.log"/>
         <param name="Append" value="true"/>
@@ -74,6 +85,11 @@
     <logger name="dk.statsbiblioteket.summa">
         <level value="debug" />
         <appender-ref ref="FILE" />
+    </logger>
+
+    <logger name="dk.statsbiblioteket.summa.common.filter.MachineStatsFilter">
+        <level value="debug" />
+        <appender-ref ref="STATS" />
     </logger>
 
     <!-- Records dropped from the index workflow go here -->
