@@ -22,6 +22,7 @@ package dk.statsbiblioteket.summa.common.filter;
 import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.unittest.PayloadFeederHelper;
+import dk.statsbiblioteket.summa.common.util.MachineStats;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -51,8 +52,10 @@ public class MachineStatsFilterTest extends TestCase {
     public void testPayloadCountLogging() throws Exception {
         MachineStatsFilter stats =
                 new MachineStatsFilter(Configuration.newMemoryBased(
-                        MachineStatsFilter.CONF_GC_SLEEP_MS, 0,
-                        MachineStatsFilter.CONF_LOG_INTERVAL_PAYLOADS, 5
+                        MachineStats.CONF_GC_BEFORE_LOG, true,
+                        MachineStats.CONF_GC_SLEEP_MS, 0,
+                        MachineStats.CONF_LOG_INTERVAL_PINGS, 5,
+                        MachineStats.CONF_LOG_INTERVAL_MS, 10000
                 ));
         stats.setSource(getFeeder(100, 5));
         while (stats.hasNext()) {
