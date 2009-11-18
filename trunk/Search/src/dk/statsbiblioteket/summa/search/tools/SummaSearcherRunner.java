@@ -1,17 +1,20 @@
 package dk.statsbiblioteket.summa.search.tools;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.LoggingExceptionHandler;
-import dk.statsbiblioteket.summa.search.api.SummaSearcher;
+import dk.statsbiblioteket.summa.common.util.MachineStats;
 import dk.statsbiblioteket.summa.search.SummaSearcherFactory;
+import dk.statsbiblioteket.summa.search.api.SummaSearcher;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Helper class to launch a search engine from the command line.
  */
 public class SummaSearcherRunner {
 
+    private static MachineStats stats;
+    
     /**
      * Create a new SummaSearcher instance as defined by the configuration
      * obtained via {@link Configuration#getSystemConfiguration(boolean true)}.
@@ -34,6 +37,13 @@ public class SummaSearcherRunner {
 
 
             log.info("Search engine is running");
+
+            try {
+                stats = new MachineStats(conf);
+            } catch (Exception e) {
+                log.warn("Failed to create machine stats. Not critical, but "
+                         + "memory stats will not be logged", e);
+            }
 
             // Block indefinitely (non-busy)
             while(true) {
