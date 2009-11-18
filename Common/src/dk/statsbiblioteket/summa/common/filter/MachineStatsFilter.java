@@ -199,6 +199,7 @@ public class MachineStatsFilter extends ObjectFilterImpl implements Runnable {
 
     @Override
     public void close(boolean success) {
+        doStat();
         log.debug("Closing down");
         running = false;
         super.close(success);
