@@ -39,7 +39,7 @@ public class SummaSearcherRunner {
             log.info("Search engine is running");
 
             try {
-                stats = new MachineStats(conf);
+                stats = new MachineStats(conf, "Searcher");
             } catch (Exception e) {
                 log.warn("Failed to create machine stats. Not critical, but "
                          + "memory stats will not be logged", e);

@@ -43,7 +43,7 @@ public class StorageRunner {
             log.info("Storage is running");
 
             try {
-                stats = new MachineStats(conf);
+                stats = new MachineStats(conf, "Storage");
             } catch (Exception e) {
                 log.warn("Failed to create machine stats. Not critical, but "
                          + "memory stats will not be logged", e);
