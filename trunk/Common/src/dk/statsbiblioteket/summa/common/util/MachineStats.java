@@ -84,10 +84,21 @@ public class MachineStats implements Runnable {
             "summa.machinestats.gc.sleep-ms";
     public static final int DEFAULT_GC_SLEEP_MS = 5;
 
+    /**
+     * A name describing the runtime, such as "Searcher", "Storage" or
+     * "CSA ingest". This will be part of the logs.
+     * </p><p>
+     * Optional. Default is "Anonymous".
+     */
+    public static final String CONF_DESIGNATION =
+            "summa.machinestats.designation";
+    public static final String DEFAULT_DESIGNATION = "Anonymous";
+
     private int logIntervalPings = DEFAULT_LOG_INTERVAL_PINGS;
-    private int logIntervalMS =       DEFAULT_LOG_INTERVAL_MS;
-    private boolean gcBeforeLog =     DEFAULT_GC_BEFORE_LOG;
-    private int gcSleepMS =           DEFAULT_GC_SLEEP_MS;
+    private int logIntervalMS =    DEFAULT_LOG_INTERVAL_MS;
+    private boolean gcBeforeLog =  DEFAULT_GC_BEFORE_LOG;
+    private int gcSleepMS =        DEFAULT_GC_SLEEP_MS;
+    private String designation;
 
     private final Thread watcher;
     private long receivedPings = 0;
@@ -97,18 +108,25 @@ public class MachineStats implements Runnable {
     private dk.statsbiblioteket.util.Profiler profiler;
 
     public MachineStats(Configuration conf) {
+        this(conf, conf.getString(CONF_DESIGNATION, DEFAULT_DESIGNATION));
+    }
+
+    public MachineStats(Configuration conf, String designation) {
         logIntervalPings = conf.getInt(
                 CONF_LOG_INTERVAL_PINGS, logIntervalPings);
         logIntervalMS = conf.getInt(CONF_LOG_INTERVAL_MS, logIntervalMS);
         gcBeforeLog = conf.getBoolean(CONF_GC_BEFORE_LOG, gcBeforeLog);
         gcSleepMS = conf.getInt(CONF_GC_SLEEP_MS, gcSleepMS);
+        this.designation = designation;
         log.debug(String.format(
                 "Constructed MachineStatsFilter(logIntervalPings=%d, "
-                + "logIntervalMS=%d, gcBeforeLog=%b, gcSleepMS=%d)",
-                logIntervalPings, logIntervalMS, gcBeforeLog, gcSleepMS));
+                + "logIntervalMS=%d, gcBeforeLog=%b, gcSleepMS=%d, "
+                + "designation='%s')",
+                logIntervalPings, logIntervalMS, gcBeforeLog, gcSleepMS,
+                designation));
         if (logIntervalPings == 0 && logIntervalMS == 0) {
-            log.info("Both logIntervalPings and logIntervalMS are 0. No "
-                     + "logging will be performed");
+            log.info("Both logIntervalPings and logIntervalMS are 0. "
+                     + "No logging will be performed");
             watcher = null;
             return;
         }
@@ -177,10 +195,11 @@ public class MachineStats implements Runnable {
         }
         Runtime r = Runtime.getRuntime();
         log.debug(String.format(locale,
-            "Pings: %d, Runtime: %s, Average Pings/second: %.2f"
+            "%s: Pings: %d, Runtime: %s, Average Pings/second: %.2f"
             + ", Free memory: %s, Max memory: %s, Total memory: %s, "
             + "Heap memory used: %s, Threads: %d, Load average: %s",
-            receivedPings, profiler.getSpendTime(), profiler.getBps(true),
+            designation, receivedPings, profiler.getSpendTime(),
+            profiler.getBps(true),
             reduce(r.freeMemory()), reduce(r.maxMemory()),
             reduce(r.totalMemory()),
             reduce(ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().
