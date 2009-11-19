@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+
+<project default="release" name="Summix" basedir=".">
+
+    <property file="${basedir}/../../build.properties"/>
+    
+    <property name="dist.dir" value="${basedir}/dist"/>
+    <property name="lib.dir" value="${basedir}/lib"/>
+    
+    <tstamp>
+        <format property="build.time" pattern="MM/dd/yyyy HH:mm"/>
+    </tstamp>
+
+    <!-- 
+         Invoke global depends target and copy all jar files and libs
+         to lib.dir
+    -->
+    <target name="depends">
+        <ant dir="../.." inheritall="false" target=".jar"/>
+    </target>
+
+    <!-- Delete all files not under VC -->
+    <target name="clean">
+        <echo message="Cleaning"/>
+        <delete dir="${dist.dir}"/>        
+    </target>
+
+    <!-- Delete all files not under VC -->
+    <target name="distclean" depends="clean">
+        <echo message="Dist-cleaning modules"/>
+        <!-- Nothing atm. This target exists to conform to the build spec -->
+    </target>
+    
+    <!-- Wrap up a zipball ready for distribution -->
+    <target name="release" depends="depends, distclean">
+        <mkdir dir="${dist.dir}"/>
+        <property name="root" value="summix-${summa.version}"/>
+        <zip destfile="${dist.dir}/summix-${summa.version}.zip">
+            <!-- Summa libs -->
+            <zipfileset dir="${basedir}/../../Common" includes="summa-*-${summa.version}.jar" prefix="${root}/lib"/>
+            <zipfileset dir="${basedir}/../../Storage" includes="summa-*-${summa.version}.jar" prefix="${root}/lib"/>
+            <zipfileset dir="${basedir}/../../Ingest" includes="summa-*-${summa.version}.jar" prefix="${root}/lib"/>
+            <zipfileset dir="${basedir}/../../Index" includes="summa-*-${summa.version}.jar" prefix="${root}/lib"/>
+            <zipfileset dir="${basedir}/../../Search" includes="summa-*-${summa.version}.jar" prefix="${root}/lib"/>
+            <zipfileset dir="${basedir}/../../Support" includes="summa-*-${summa.version}.jar" prefix="${root}/lib"/>
+            <zipfileset dir="${basedir}/../../FacetBrowser" includes="summa-*-${summa.version}.jar" prefix="${root}/lib"/>
+            <zipfileset dir="${basedir}/../../Control" includes="summa-*-${summa.version}.jar" prefix="${root}/lib"/>
+            <zipfileset dir="${basedir}/../../Workflow" includes="summa-*-${summa.version}.jar" prefix="${root}/lib"/>
+            <zipfileset dir="${basedir}/../../Web/dist" includes="summa-web-search.war" prefix="${root}/web"/>
+            <zipfileset dir="${basedir}/../../Web/dist" includes="summa-web-storage.war" prefix="${root}/web"/>
+            <zipfileset dir="${basedir}/../../Web/dist" includes="summa-web-website.war" prefix="${root}/web"/>
+            <zipfileset dir="${basedir}/../../Web/dist" includes="summa-web-status.war" prefix="${root}/web"/>
+
+            <!-- 3rd party libs -->
+            <zipfileset dir="${basedir}/../../lib" includes="*.jar" prefix="${root}/lib"/>
+            
+            <!-- Scripts -->
+            <zipfileset dir="${basedir}/bin" includes="*.sh" prefix="${root}/bin" filemode="755"/>
+            <zipfileset dir="${basedir}/bin" includes="*.bat" prefix="${root}/bin" filemode="755"/>
+            
+            <!-- Config -->
+            <zipfileset dir="${basedir}/config" includes="*.xml" prefix="${root}/config"/>
+            <zipfileset dir="${basedir}/config" includes="policy" prefix="${root}/config"/>
+            
+            <!-- Sample setup -->
+            <zipfileset dir="${basedir}/../../Control/test/data" includes="oai/**/*" prefix="${root}/data"/>
+            
+            <!-- Documentation -->
+            <zipfileset dir="${basedir}" includes="README" prefix="${root}"/>
+        </zip>
+    </target>
+
+</project>

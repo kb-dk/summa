@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<outer xmlns="http://www.example.com/mynamespace/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:foo="http://example.com/somename">
+<sometag>Hello World</sometag>
+<innerrecords>
+<record id="recordA">
+<mycontent atag="tagvalueA">contentA</mycontent>
+<morecontent><subcontent>subA</subcontent></morecontent>
+</record>
+<record id="recordB">
+<mycontent atag="tagvalueB">contentB</mycontent>
+<morecontent><subcontent>subB</subcontent></morecontent>
+</record>
+<record id="recordC">
+<mycontent atag="tagvalueC">contentC</mycontent>
+<morecontent><subcontent>subC</subcontent></morecontent>
+</record>
+</innerrecords>
+</outer>
+
+
