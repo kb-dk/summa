@@ -6,6 +6,15 @@
                  allocations. This has been partly remedied. The execution
                  speed of this function should also have improved somewhat.
 
+ * Add a new filter MachineStatsFilter logging stats about the JVM. This is
+   enabled by default in the Summix indexer and ingester
+
+ * Log JVM stats from StorageRunner and SummaSearcherRunner. This means that
+   Storage and Searcher services in Summix will log stats by default
+
+ * Enable the log4j CleanSlateRollingFileAppender appender in the Summix
+   log4j config.
+
  * Error handling: Major reworking of RMI wrapper classes to handle
 	               Errors by sending alerts and shutting down. Note that we
 	               are talking Errors and not normal Exceptions

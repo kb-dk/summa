@@ -1,3 +1,126 @@
+2009-11-19 09:30  mkamstrup
+
+	* [r1941] build.properties, ChangeLog, NEWS
+
+	  Release Summa 1.4.13
+
+2009-11-19 09:22  mkamstrup
+
+	* [r1940]
+	  Control/src/dk/statsbiblioteket/summa/control/service/Launcher.java:
+	  
+	  Enable MachineStats logging from the Launcher class. This means
+	  that anything started via the bundle/service system will have
+	  stats logging enabled by default
+
+2009-11-19 08:58  toke-sb
+
+	* [r1939]
+	  Common/src/dk/statsbiblioteket/summa/common/util/MachineStats.java,
+	  Search/src/dk/statsbiblioteket/summa/search/tools/SummaSearcherRunner.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/tools/StorageRunner.java:
+	  
+	  Logging: Added designation to machine stats
+
+2009-11-18 13:48  mkamstrup
+
+	* [r1938]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java:
+	  
+	  Tweak: More aggresively close the SQL ResultSets to help the
+	  garbage collector
+
+2009-11-18 13:47  toke-sb
+
+	* [r1937]
+	  Common/src/dk/statsbiblioteket/summa/common/util/MachineStats.java,
+	  Search/src/dk/statsbiblioteket/summa/search/tools/SummaSearcherRunner.java,
+	  Storage/src/dk/statsbiblioteket/summa/storage/tools/StorageRunner.java:
+	  
+	  Feature: Added Machinestats to StorageRunner and
+	  SummaSearcherRunner with conservative defaults (one log/minute at
+	  debug level)
+
+2009-11-18 13:39  toke-sb
+
+	* [r1936]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/MachineStatsFilter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/MachineStats.java[ADD],
+	  Common/test/dk/statsbiblioteket/summa/common/filter/MachineStatsFilterTest.java:
+	  
+	  Refactor: Extracted Machinestats to a class suitable for general
+	  use
+
+2009-11-18 13:32  mkamstrup
+
+	* [r1935] Samples/Summix/config/indexer.xml:
+	  
+	  Add a JVM stats logging filter to the default Summix indexer
+
+2009-11-18 13:31  mkamstrup
+
+	* [r1934] Samples/Summix/config/ingest.xml:
+	  
+	  Add a JVM logging filter to the default Summix ingester
+
+2009-11-18 12:15  mkamstrup
+
+	* [r1933]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/MachineStatsFilter.java:
+	  
+	  Log stats when closing the MachineStatsFilter
+
+2009-11-18 12:12  mkamstrup
+
+	* [r1932] Samples/Summix/config/log4j.xml:
+	  
+	  Make Summix use a CleanSlateRollingFileAppender for all log4j
+	  logging. Also add a stats.log file with the output of the
+	  MachineStatsFilter.
+
+2009-11-18 09:53  mkamstrup
+
+	* [r1931]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/MachineStatsFilter.java:
+	  
+	  Fix property naming (we don't use hyphens or underscores)
+
+2009-11-17 13:06  mkamstrup
+
+	* [r1930]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/DatabaseStorage.java,
+	  Storage/test/dk/statsbiblioteket/summa/storage/api/StorageTest.java,
+	  Storage/test/log4j.xml:
+	  
+	  Optimize the selected data in clearBase() to only select the
+	  columns we need to look at. This way we avoid reading in the
+	  content row from the DB. This should save us some memory.
+
+2009-11-17 10:53  toke-sb
+
+	* [r1929]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/MachineStatsFilter.java[ADD],
+	  Common/test/dk/statsbiblioteket/summa/common/filter/MachineStatsFilterTest.java[ADD],
+	  Common/test/log4j.xml:
+	  
+	  Testing: Added JVM statistics filter for debugging of running
+	  workflows
+
+2009-11-17 10:28  toke-sb
+
+	* [r1928]
+	  Common/src/dk/statsbiblioteket/summa/common/unittest/PayloadFeederHelper.java:
+	  
+	  Testing: Added an optional delay for the PayloadFeederHelper to
+	  simulate processing time
+
+2009-11-17 09:50  mkamstrup
+
+	* [r1927] ChangeLog, NEWS:
+	  
+	  Update NEWS and ChangeLog in prepration for 1.4.13 (not released
+	  yet)
+
 2009-11-17 09:16  mkamstrup
 
 	* [r1926]
