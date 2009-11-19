@@ -19,20 +19,20 @@
  */
 package dk.statsbiblioteket.summa.common.filter.object;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Profiler;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configurable;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.PayloadQueue;
-import dk.statsbiblioteket.summa.common.Logging;
-import org.apache.commons.logging.LogFactory;
+import dk.statsbiblioteket.util.Profiler;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-import java.util.List;
-import java.util.ArrayList;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The MUXFilter divides incoming Payloads among one or more ObjectFilters
@@ -286,8 +286,30 @@ public class MUXFilter implements ObjectFilter, Runnable {
         }
         this.source = (ObjectFilter)source;
         log.debug("Source " + source + " specified. Starting mux-thread");
-        new Thread(this, "MUXFilter-" + this.hashCode()).start();
+        Thread t = new Thread(this, "MUXFilter-" + this.hashCode());
+//        t.setUncaughtExceptionHandler(this);
+        t.start();
     }
+
+    // TODO: Consider signalling to encloding FilterChain or similar
+    // TODO: Consider shutting down the JVM
+/*    public void uncaughtException(Thread t, Throwable e) {
+        log.fatal(String.format(
+                "Uncaught Exception in %s. Terminating processing by "
+                + "sending close(false) to source, sending EOF to "
+                + "feeders and emptying the source. Some Payloads will "
+                + "probably be discarded as part of this process",
+                t.getName()), e);
+        close(false);
+        sendEOFToFeeders();
+        try {
+            //noinspection StatementWithEmptyBody
+            while (source.pump());
+        } catch (Exception e2) {
+            log.error("Exception while emptying source with pump(). pump() will" 
+                      + " no longer be called", e);
+        }
+    }*/
 
     public boolean pump() throws IOException {
         if (!hasNext()) {
@@ -302,7 +324,7 @@ public class MUXFilter implements ObjectFilter, Runnable {
     }
 
     public void close(boolean success) {
-        // No closing for feeders as they are push-oriented and EOF is sinalled
+        // No closing for feeders as they are push-oriented and EOF is signalled
         // when an EOF is received from the source.
         source.close(success);
     }
@@ -378,4 +400,5 @@ public class MUXFilter implements ObjectFilter, Runnable {
         //noinspection DuplicateStringLiteralInspection
         throw new UnsupportedOperationException("Remove not supported");
     }
+
 }

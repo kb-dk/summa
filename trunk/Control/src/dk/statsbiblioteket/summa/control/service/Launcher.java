@@ -24,14 +24,15 @@ import org.apache.commons.logging.LogFactory;
         author = "mke",
         comment="Unfinished")
 public class Launcher {
-    public static final String CONF_SERVICE_CLASS = "control.launcher.service.class";
+    public static final String CONF_SERVICE_CLASS =
+            "control.launcher.service.class";
 
     private static MachineStats stats;
 
     public static void main(String[] args) {
         Log log = LogFactory.getLog(Launcher.class);
-        Thread.setDefaultUncaughtExceptionHandler(
-                                              new LoggingExceptionHandler(log));
+        Thread.setDefaultUncaughtExceptionHandler(new LoggingExceptionHandler(
+                log));
 
         log.debug ("Getting system configuration ");
 
@@ -44,19 +45,17 @@ public class Launcher {
 
             Class<? extends Service> serviceClass = null;
             try {
-                serviceClass = Configuration.getClass(CONF_SERVICE_CLASS,
-                                                      Service.class,
-                                                      conf);
+                serviceClass = Configuration.getClass(
+                        CONF_SERVICE_CLASS, Service.class, conf);
             } catch (NullPointerException e) {
-                log.fatal ("Property '" + CONF_SERVICE_CLASS + "' not defined " +
-                           "in configuration. Config was:\n\n"
-                           + conf.dumpString());
-
-                System.exit (2);
+                log.fatal (String.format(
+                        "Property '%s' not defined in configuration. Config "
+                        + "was:\n\n%s", CONF_SERVICE_CLASS, conf.dumpString()));
+                System.exit(2);
             }
 
             try {
-                stats = new MachineStats(conf);
+                stats = new MachineStats(conf, "Launcher");
             } catch (Exception e) {
                 log.warn("Failed to create machine stats. Not critical, but "
                          + "memory stats will not be logged", e);
@@ -65,12 +64,13 @@ public class Launcher {
             log.debug ("Using service class " + CONF_SERVICE_CLASS
                        + " = " + serviceClass);
 
-            Service service = Configuration.create(serviceClass, conf);
+            Configuration.create(serviceClass, conf);
             log.debug("Created service. The launch has completed.");
         } catch (Throwable t) {
-            log.fatal("Caught toplevel exception, bailing out.", t);
-            System.err.println ("Service launcher caught toplevel exception. "
-                                + "Bailing out: " + t.getMessage());
+            String message = "Service launcher caught toplevel exception. "
+                               + "Bailing out: " + t.getMessage();
+            log.fatal(message, t);
+            System.err.println(message);
             System.exit (1);
         }
 
