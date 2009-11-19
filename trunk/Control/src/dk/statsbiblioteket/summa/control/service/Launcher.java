@@ -2,6 +2,7 @@ package dk.statsbiblioteket.summa.control.service;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.util.LoggingExceptionHandler;
+import dk.statsbiblioteket.summa.common.util.MachineStats;
 import dk.statsbiblioteket.summa.control.api.Service;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -24,6 +25,8 @@ import org.apache.commons.logging.LogFactory;
         comment="Unfinished")
 public class Launcher {
     public static final String CONF_SERVICE_CLASS = "control.launcher.service.class";
+
+    private static MachineStats stats;
 
     public static void main(String[] args) {
         Log log = LogFactory.getLog(Launcher.class);
@@ -51,7 +54,14 @@ public class Launcher {
 
                 System.exit (2);
             }
-            
+
+            try {
+                stats = new MachineStats(conf);
+            } catch (Exception e) {
+                log.warn("Failed to create machine stats. Not critical, but "
+                         + "memory stats will not be logged", e);
+            }
+
             log.debug ("Using service class " + CONF_SERVICE_CLASS
                        + " = " + serviceClass);
 
