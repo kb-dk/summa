@@ -19,17 +19,17 @@
  */
 package dk.statsbiblioteket.summa.common.filter.object;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Filter;
 import dk.statsbiblioteket.summa.common.filter.Payload;
-import org.apache.commons.logging.LogFactory;
+import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-import java.util.List;
-import java.util.ArrayList;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Wraps a sequence of ObjectFilters - in the Composite Pattern this would be a
@@ -85,20 +85,21 @@ public class FilterSequence implements ObjectFilter {
         try {
             filterConfigurations = conf.getSubConfigurations(CONF_FILTERS);
         } catch (IOException e) {
+            List<String> filterNames;
             try {
-                List<String> filterNames = conf.getStrings(CONF_FILTERS);
-                throw new ConfigurationException(String.format(
-                        "A list of Strings was specified in the property %s. A "
-                        + "list of xproperties with filter-setups was expected."
-                        + " Maybe an old configuration-file hasn't been updated"
-                        + " to the list-of-xproperties style? Encountered "
-                        + "Strings was %s",
-                        CONF_FILTERS, Logs.expand(filterNames, 10)), e);
+                filterNames = conf.getStrings(CONF_FILTERS);
             } catch (Exception e2) {
                 throw new ConfigurationException(String.format(
                         "No Filters specified in property %s for "
                         + "FilterSequence", CONF_FILTERS), e);
             }
+            throw new ConfigurationException(String.format(
+                    "A list of Strings was specified in the property %s. A "
+                    + "list of xproperties with filter-setups was expected."
+                    + " Maybe an old configuration-file hasn't been updated"
+                    + " to the list-of-xproperties style? Encountered "
+                    + "Strings was %s",
+                    CONF_FILTERS, Logs.expand(filterNames, 10)), e);
         }
         buildChain(filterConfigurations);
         if (lastFilter == null) {
