@@ -195,15 +195,17 @@ public class MachineStats implements Runnable {
         }
         Runtime r = Runtime.getRuntime();
         log.debug(String.format(locale,
-            "%s: Pings: %d, Runtime: %s, Average Pings/second: %.2f"
-            + ", Free memory: %s, Max memory: %s, Total memory: %s, "
-            + "Heap memory used: %s, Threads: %d, Load average: %s",
-            designation, receivedPings, profiler.getSpendTime(),
-            profiler.getBps(true),
-            reduce(r.freeMemory()), reduce(r.maxMemory()),
+            "%s: Pings: %d, Runtime: %s, Average Pings/second: %.2f, "
+            + "Allocated memory: %s, Allocated unused memory: %s, "
+            + "Heap memory used: %s, Max memory: %s, "
+            + "Threads: %d, Load average: %s",
+            designation,
+            receivedPings, profiler.getSpendTime(), profiler.getBps(true),
             reduce(r.totalMemory()),
+            reduce(r.freeMemory()),
             reduce(ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().
                     getUsed()),
+            reduce(r.maxMemory()),
             ManagementFactory.getThreadMXBean().getThreadCount(),
             ManagementFactory.getOperatingSystemMXBean().getSystemLoadAverage()
             ));
