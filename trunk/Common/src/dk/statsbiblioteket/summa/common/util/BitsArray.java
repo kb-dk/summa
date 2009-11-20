@@ -278,4 +278,10 @@ public class BitsArray extends AbstractList<Integer> {
         throw new IllegalArgumentException("Not implemented yet");
     }*/
 
+    /**
+     * @return the number of bytes used for the internal array.
+     */
+    public int getMemSize() {
+        return elements.length * 8;
+    }
 }

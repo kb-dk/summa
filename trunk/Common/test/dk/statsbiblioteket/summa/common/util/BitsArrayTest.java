@@ -204,8 +204,8 @@ public class BitsArrayTest extends TestCase {
                      Strings.join(expected, ", "), Strings.join(ba, ", "));
     }
 
-    public void testPerformance() {
-        int MAX = 10000;
+    public void testWritePerformance() {
+        int MAX = 100000;
         int INITIAL_MAX_VALUE = MAX;
         int INITIAL_MAX_LENGTH = MAX;
         int WARMUP = 2;
@@ -221,32 +221,44 @@ public class BitsArrayTest extends TestCase {
             System.out.println(String.format(
                     "Write %d: BA=%dms, int[]=%dms", MAX, baTime, plainTime));
         }
+    }
 
-        // Switching to read
+    public void testReadPerformance() {
+        int MAX = 100000;
+        int READS = 1000000;
+        int INITIAL_MAX_VALUE = MAX;
+        int INITIAL_MAX_LENGTH = MAX;
+        int WARMUP = 2;
+        int RUNS = 3;
+
         BitsArray ba = makeBA(MAX, INITIAL_MAX_LENGTH, INITIAL_MAX_VALUE);
         int[] a = makePlain(MAX);
+        System.out.println(String.format(
+                "Memory usage: BA~=%dKB, int[]~=%dKB",
+                ba.getMemSize() / 1024, a.length*4 / 1024));
+
         for (int i = 0 ; i < WARMUP ; i++) {
-            testReadBA(ba, MAX);
-            testReadPlain(a, MAX);
+            testReadBA(ba, READS);
+            testReadPlain(a, READS);
         }
         for (int i = 0 ; i < RUNS ; i++) {
-            testReadBA(ba, MAX);
-            testReadPlain(a, MAX);
-            long baTime = testReadBA(ba, MAX);
-            long plainTime = testReadPlain(a, MAX);
+            long baTime = testReadBA(ba, READS);
+            long plainTime = testReadPlain(a, READS);
             System.out.println(String.format(
-                    "read %d: BA=%dms, int[]=%dms", MAX, baTime, plainTime));
+                    "read %d (of %d max): BA=%dms, int[]=%dms",
+                    READS, MAX, baTime, plainTime));
         }
 
     }
 
     private long testReadPlain(int[] a, int reads) {
         System.gc();
+        int MAX = a.length;
         long startTime = System.currentTimeMillis();
         Random random = new Random(88);
         int dummy = 0;
         for (int i = 0 ; i < reads ; i++) {
-            dummy = a[random.nextInt(reads)];
+            dummy = a[random.nextInt(MAX)];
         }
         if (dummy == -1) {
             log.warn("Supposedly undrechable dummy log");
@@ -256,10 +268,11 @@ public class BitsArrayTest extends TestCase {
 
     private long testReadBA(BitsArray ba, int reads) {
         System.gc();
+        int MAX = ba.size();
         long startTime = System.currentTimeMillis();
         Random random = new Random(88);
         for (int i = 0 ; i < reads ; i++) {
-            ba.get(random.nextInt(reads));
+            ba.get(random.nextInt(MAX));
         }
         return System.currentTimeMillis() - startTime;
     }
