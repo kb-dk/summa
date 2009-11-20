@@ -23,6 +23,7 @@
       </library>
     </orderEntry>
     <orderEntry type="library" name="heritrix" level="project" />
+    <orderEntryProperties />
   </component>
   <component name="org.mevenide.idea.module.ModuleSettings">
     <favoriteGoals>
