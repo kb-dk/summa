@@ -158,7 +158,7 @@ public class H2Storage extends DatabaseStorage implements Configurable {
 
         dataSource = new JdbcDataSource();
 
-        // Sppedup for large dbs, but slowdown for smaller ones
+        // Speedup for large dbs, but slowdown for smaller ones
         String l2cache = "";
         if (useL2cache) {
             log.debug("Enabling H2 L2 cache");
