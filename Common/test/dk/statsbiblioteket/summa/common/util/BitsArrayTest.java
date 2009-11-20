@@ -10,6 +10,7 @@ import org.apache.commons.logging.LogFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 public class BitsArrayTest extends TestCase {
     private static Log log = LogFactory.getLog(BitsArrayTest.class);
@@ -201,5 +202,99 @@ public class BitsArrayTest extends TestCase {
                      expected.size(), ba.size());
         assertEquals(message + ". The BitsArray content should be as expected",
                      Strings.join(expected, ", "), Strings.join(ba, ", "));
+    }
+
+    public void testPerformance() {
+        int MAX = 10000;
+        int INITIAL_MAX_VALUE = MAX;
+        int INITIAL_MAX_LENGTH = MAX;
+        int WARMUP = 2;
+        int RUNS = 3;
+        for (int i = 0 ; i < WARMUP ; i++) {
+            testPerformanceBA(MAX, INITIAL_MAX_LENGTH, INITIAL_MAX_VALUE);
+            testPerformancePlain(MAX);
+        }
+        for (int i = 0 ; i < RUNS ; i++) {
+            long baTime = testPerformanceBA(
+                    MAX, INITIAL_MAX_LENGTH, INITIAL_MAX_VALUE);
+            long plainTime = testPerformancePlain(MAX);
+            System.out.println(String.format(
+                    "Write %d: BA=%dms, int[]=%dms", MAX, baTime, plainTime));
+        }
+
+        // Switching to read
+        BitsArray ba = makeBA(MAX, INITIAL_MAX_LENGTH, INITIAL_MAX_VALUE);
+        int[] a = makePlain(MAX);
+        for (int i = 0 ; i < WARMUP ; i++) {
+            testReadBA(ba, MAX);
+            testReadPlain(a, MAX);
+        }
+        for (int i = 0 ; i < RUNS ; i++) {
+            testReadBA(ba, MAX);
+            testReadPlain(a, MAX);
+            long baTime = testReadBA(ba, MAX);
+            long plainTime = testReadPlain(a, MAX);
+            System.out.println(String.format(
+                    "read %d: BA=%dms, int[]=%dms", MAX, baTime, plainTime));
+        }
+
+    }
+
+    private long testReadPlain(int[] a, int reads) {
+        System.gc();
+        long startTime = System.currentTimeMillis();
+        Random random = new Random(88);
+        int dummy = 0;
+        for (int i = 0 ; i < reads ; i++) {
+            dummy = a[random.nextInt(reads)];
+        }
+        if (dummy == -1) {
+            log.warn("Supposedly undrechable dummy log");
+        }
+        return System.currentTimeMillis() - startTime;
+    }
+
+    private long testReadBA(BitsArray ba, int reads) {
+        System.gc();
+        long startTime = System.currentTimeMillis();
+        Random random = new Random(88);
+        for (int i = 0 ; i < reads ; i++) {
+            ba.get(random.nextInt(reads));
+        }
+        return System.currentTimeMillis() - startTime;
+    }
+
+    public long testPerformanceBA(
+            int max, int initialMaxLength, int initialMaxValue) {
+        System.gc();
+        long startTime = System.currentTimeMillis();
+        makeBA(max, initialMaxLength, initialMaxValue);
+        return System.currentTimeMillis() - startTime;
+    }
+
+    private BitsArray makeBA(
+            int elements, int initialMaxLength, int initialMaxValue) {
+        Random random = new Random(87);
+        BitsArray ba = new BitsArray(initialMaxLength, initialMaxValue);
+        for (int i = 0 ; i < elements ; i++) {
+            ba.set(random.nextInt(elements), i);
+        }
+        return ba;
+    }
+
+    public long testPerformancePlain(int max) {
+        System.gc();
+        long startTime = System.currentTimeMillis();
+        makePlain(max);
+        return System.currentTimeMillis() - startTime;
+    }
+
+    private int[] makePlain(int max) {
+        Random random = new Random(87);
+        int[] a = new int[max];
+        for (int i = 0 ; i < max ; i++) {
+            a[random.nextInt(max)] = i;
+        }
+        return a;
     }
 }
