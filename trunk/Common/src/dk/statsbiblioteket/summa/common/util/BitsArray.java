@@ -79,7 +79,8 @@ public class BitsArray extends AbstractList<Integer> {
         log.trace("Creating BitsArray of length " + length
                   + " with element bit size " + bits + " for max value "
                   + maxValue);
-        setAttributes(bits, 0, new long[length * elementBits / 64 + 1]);
+        setAttributes(
+                bits, 0, new long[length * bits / 64 + 1]);
     }
 
     private void setAttributes(int elementBits, int size, long[] elements) {
@@ -91,8 +92,8 @@ public class BitsArray extends AbstractList<Integer> {
 
     private void updateCached() {
         elementMask = ~0 >>> (64 - elementBits);
-        maxValue = (int)Math.pow(elementBits, 2);
-        maxPos = elements.length * 64 / elementBits;
+        maxValue = (int)Math.pow(2, elementBits)-1;
+        maxPos = (elements.length * 64 / elementBits) - 1;
     }
 
     /**
@@ -122,7 +123,7 @@ public class BitsArray extends AbstractList<Integer> {
         if (subRemainingBits > 0) {
             // Case B: ???????A BC??????
             return (int)((elements[bytePos] << subRemainingBits
-                       | elements[bytePos+1] >>> elementBits - subRemainingBits)
+                       | elements[bytePos+1] >>> 64 - subRemainingBits)
                    & elementMask);
         }
         // Case A: ???ABC??, subPosLeft == 3, subRemainingBits == -2
@@ -152,8 +153,8 @@ public class BitsArray extends AbstractList<Integer> {
                     ((elements[bytePos] & (~0L << (elementBits - subPosLeft))))
                     | ((long)value >>> subRemainingBits);
             elements[bytePos+1] =
-                    ((elements[bytePos] & (~0L >>> subRemainingBits)))
-                    | ((long)value << (elementBits - subRemainingBits));
+                    ((elements[bytePos+1] & (~0L >>> subRemainingBits)))
+                    | ((long)value << (64 - subRemainingBits));
         } else {
             // Case A: ???ABC??, subPosLeft == 3, subRemainingBits == -2
             elements[bytePos] =
@@ -178,14 +179,28 @@ public class BitsArray extends AbstractList<Integer> {
      */
     public void set(int position, int value) {
         ensureSpace(position, value);
-        unsafeSet(position, value);
+        try {
+            unsafeSet(position, value);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            String message = String.format(
+                    "Internal array inconsistency for %s, setting %d at "
+                    + "position %d", this, value, position);
+            throw new IllegalStateException(message, e);
+        }
     }
 
     /* Make sure we have room for value at position */
     private void ensureSpace(int position, int value) {
         if (position > maxPos || value > maxValue) {
-            BitsArray array = new BitsArray(
-                    (int)(position * LENGTH_GROWTH_FACTOR), value);
+            //noinspection MismatchedQueryAndUpdateOfCollection
+            BitsArray array;
+            if (position > maxPos) {
+                array = new BitsArray(
+                        (int)((position + 1) * LENGTH_GROWTH_FACTOR),
+                        Math.max(maxValue, value));
+            } else {
+                array = new BitsArray(maxPos, Math.max(maxValue, value));
+            }
             array.assign(this);
             setAttributes(array.elementBits, array.size, array.elements);
         }
@@ -198,7 +213,7 @@ public class BitsArray extends AbstractList<Integer> {
      */
     public void assign(BitsArray other) {
         clear();
-        ensureSpace(other.maxPos, maxValue); // Safe recursive check
+        ensureSpace(other.maxPos, other.maxValue); // Safe recursive check
         for (int pos = 0 ; pos < other.size ; pos++) {
             set(pos, other.getAtomic(pos));
         }
@@ -207,7 +222,8 @@ public class BitsArray extends AbstractList<Integer> {
     @Override
     public String toString() {
         return "BitsArray(elementBits=" + elementBits + ", size="
-               + size + ", maxPos=" + maxPos + ")";
+               + size + ", maxPos=" + maxPos
+               + ", elments.length=" + elements.length + ")";
     }
 
     /**
