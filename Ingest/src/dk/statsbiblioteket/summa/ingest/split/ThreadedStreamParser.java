@@ -354,8 +354,14 @@ public abstract class ThreadedStreamParser implements StreamParser {
     public void stop() {
         log.debug("stop() called on " + this);
         running = false;
-        log.debug("stop() sending interrupt to Thread");
-        runningThread.interrupt();
+
+        /* The runningThread is only set if we have opened a payload */
+        if (runningThread != null) {
+            log.debug("stop() sending interrupt to Thread");
+            runningThread.interrupt();
+        } else {
+            log.debug("stop() never received any payloads");
+        }
     }
 
     /**
