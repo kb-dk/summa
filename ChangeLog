@@ -1,7 +1,123 @@
-2009-11-19 09:30  mkamstrup
+2009-11-23 14:10  mkamstrup
 
-	* [r1941] build.properties, ChangeLog, NEWS
+	* [r1954] : build.properties, ChangeLog, NEWS
 
+	  Release Summa 1.4.14
+
+2009-11-23 13:41  mkamstrup
+
+	* [r1953] Common/Common.iml, Control/Control.iml,
+	  FacetBrowser/FacetBrowser.iml, Index/Index.iml,
+	  Ingest/Ingest.iml, Search/Search.iml, Storage/Storage.iml,
+	  Summa.iml, Summa.ipr, Support/Support.iml, Web/Web.iml,
+	  Workflow/Workflow.iml, build.properties, lib/h2-1.2.123.jar[DEL],
+	  lib/h2-1.2.124.jar[ADD]:
+	  
+	  Bump H2 dep. to newest. That would be 1.2.124
+
+2009-11-23 10:54  toke-sb
+
+	* [r1952]
+	  Common/src/dk/statsbiblioteket/summa/common/util/BitsArray.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/BitsArrayTest.java:
+	  
+	  Experimenting: Changed BitsArray to use ints internally
+
+2009-11-20 15:56  toke-sb
+
+	* [r1951] Common/Common.iml, Control/Control.iml,
+	  FacetBrowser/FacetBrowser.iml, Index/Index.iml,
+	  Ingest/Ingest.iml, Search/Search.iml, Storage/Storage.iml,
+	  Summa.iml, Summa.ipr, Support/Support.iml, Web/Web.iml,
+	  Workflow/Workflow.iml:
+	  
+	  SVN-fix: Minor re-arrangement of XML property files by Idea
+
+2009-11-20 15:49  toke-sb
+
+	* [r1950]
+	  Common/src/dk/statsbiblioteket/summa/common/util/BitsArray.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/PipedStream.java[ADD],
+	  Common/test/dk/statsbiblioteket/summa/common/util/BitsArrayTest.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/MARC21SlimTweaker.java[ADD]:
+	  
+	  Testing: Enhanced performance test for BitsArray
+
+2009-11-20 15:37  toke-sb
+
+	* [r1949]
+	  Common/test/dk/statsbiblioteket/summa/common/util/BitsArrayTest.java:
+	  
+	  Testing: Added performance test for BitsArray
+
+2009-11-20 15:09  toke-sb
+
+	* [r1948]
+	  Common/src/dk/statsbiblioteket/summa/common/util/BitsArray.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/BitsArrayTest.java:
+	  
+	  Bugfix: The BitsArray now passes a medium amount of testing. Not
+	  recommended for citical usage yet as more unit-tests should be
+	  added
+
+2009-11-20 14:00  mkamstrup
+
+	* [r1947] Common/Common.iml, Control/Control.iml,
+	  FacetBrowser/FacetBrowser.iml, Index/Index.iml,
+	  Ingest/Ingest.iml, Search/Search.iml, Storage/Storage.iml,
+	  Summa.iml, Summa.ipr, Support/Support.iml, Web/Web.iml,
+	  Workflow/Workflow.iml, lib/h2-1.1.118.jar[DEL],
+	  lib/h2-1.2.123.jar[ADD]:
+	  
+	  Upgrade H2 from 1.1.118 to 1.2.123. The new H2 engine uses a new
+	  an optimized on-disk format. To use the new format you need to
+	  rebuild the storage from scratch (ie. delete you old storage
+	  files).
+	  
+	  The new H2 is backwards compatible and will run with a storage in
+	  the old format. If you choose to upgrade to the new format you
+	  can not go back though.
+
+2009-11-20 13:57  mkamstrup
+
+	* [r1946]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/h2/H2Storage.java:
+	  
+	  Fix type in comment
+
+2009-11-20 13:30  mkamstrup
+
+	* [r1945]
+	  Common/src/dk/statsbiblioteket/summa/common/util/MachineStats.java:
+	  
+	  More easily understood log messages from MachineStats while
+	  retaining machine parsability
+
+2009-11-20 08:57  mkamstrup
+
+	* [r1944]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/ThreadedStreamParser.java:
+	  
+	  Bugfix: Fix NPE in ThreadedStreamParser. When the parser was
+	  closed with close() and it never had opened any payloads we'd try
+	  to stop a thread we never started
+
+2009-11-19 11:07  toke-sb
+
+	* [r1943]
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/FilterSequence.java,
+	  Common/src/dk/statsbiblioteket/summa/common/filter/object/MUXFilter.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/LoggingExceptionHandler.java,
+	  Control/src/dk/statsbiblioteket/summa/control/service/Launcher.java:
+	  
+	  Workflow: Elevated the actions of the default exception handler
+	  (for Threads without exception handlers) to output the error to
+	  stderr and shut down the JVM
+
+2009-11-19 09:35  mkamstrup
+
+	* [r1941] ChangeLog, NEWS, build.properties:
+	  
 	  Release Summa 1.4.13
 
 2009-11-19 09:22  mkamstrup
