@@ -53,11 +53,12 @@ public class BitsArray extends AbstractList<Integer> {
     /* The number of elements. */
     private int size;
     /* The bits */
-    private long[] elements;
+    private int[] elements;
+    static final int BLOCK_SIZE = 32;
 
     // Cached calculations
     private int maxValue;    // Math.pow(alementBits, 2)
-    private int maxPos;      // elements.length * 64 / elementBits
+    private int maxPos;      // elements.length * BLOCK_SIZE / elementBits
     private int elementMask; // The mask for the bits for an element
 
     /**
@@ -65,7 +66,7 @@ public class BitsArray extends AbstractList<Integer> {
      * values, it is recommended to use {@link #BitsArray(int, int)} instead.
      */
     public BitsArray() {
-        this(64, 1);
+        this(1, 1);
     }
 
     /**
@@ -80,10 +81,10 @@ public class BitsArray extends AbstractList<Integer> {
                   + " with element bit size " + bits + " for max value "
                   + maxValue);
         setAttributes(
-                bits, 0, new long[length * bits / 64 + 1]);
+                bits, 0, new int[length * bits / BLOCK_SIZE + 1]);
     }
 
-    private void setAttributes(int elementBits, int size, long[] elements) {
+    private void setAttributes(int elementBits, int size, int[] elements) {
         this.elementBits = elementBits;
         this.size = size;
         this.elements = elements;
@@ -91,9 +92,9 @@ public class BitsArray extends AbstractList<Integer> {
     }
 
     private void updateCached() {
-        elementMask = ~0 >>> (64 - elementBits);
+        elementMask = ~0 >>> (BLOCK_SIZE - elementBits);
         maxValue = (int)Math.pow(2, elementBits)-1;
-        maxPos = (elements.length * 64 / elementBits) - 1;
+        maxPos = (elements.length * BLOCK_SIZE / elementBits) - 1;
     }
 
     /**
@@ -112,18 +113,18 @@ public class BitsArray extends AbstractList<Integer> {
         // Case A: ???ABC??
         // Case B: ???????A BC??????
 
-        int bytePos = (int)(bitPos / 64);    // Position in bytes
-        int subPosLeft = (int)(bitPos % 64); // Position in the bits at bytePos
+        int bytePos = (int)(bitPos / BLOCK_SIZE);    // Position in bytes
+        int subPosLeft = (int)(bitPos % BLOCK_SIZE); // Position in the bits at bytePos
         // Case A: subPosLeft == 3, Case B: subPosLeft == 7
 
         // The number of remaining bits at bytePos+1
-        int subRemainingBits = elementBits - (64 - subPosLeft);
+        int subRemainingBits = elementBits - (BLOCK_SIZE - subPosLeft);
         // Case A: -2, Case B: 2
 
         if (subRemainingBits > 0) {
             // Case B: ???????A BC??????
             return (int)((elements[bytePos] << subRemainingBits
-                       | elements[bytePos+1] >>> 64 - subRemainingBits)
+                       | elements[bytePos+1] >>> BLOCK_SIZE - subRemainingBits)
                    & elementMask);
         }
         // Case A: ???ABC??, subPosLeft == 3, subRemainingBits == -2
@@ -139,29 +140,29 @@ public class BitsArray extends AbstractList<Integer> {
         // Case A: ???ABC??
         // Case B: ???????A BC??????
 
-        int bytePos = (int)(bitPos / 64);    // Position in bytes
-        int subPosLeft = (int)(bitPos % 64); // Position in the bits at bytePos
+        int bytePos = (int)(bitPos / BLOCK_SIZE);    // Position in bytes
+        int subPosLeft = (int)(bitPos % BLOCK_SIZE); // Position in the bits at bytePos
         // Case A: subPosLeft == 3, Case B: subPosLeft == 7
 
         // The number of remaining bits at bytePos+1
-        int subRemainingBits = elementBits - (64 - subPosLeft);
+        int subRemainingBits = elementBits - (BLOCK_SIZE - subPosLeft);
         // Case A: -2, Case B: 2
 
         if (subRemainingBits > 0) {
             // Case B: ???????A BC??????
             elements[bytePos] =
-                    ((elements[bytePos] & (~0L << (elementBits - subPosLeft))))
-                    | ((long)value >>> subRemainingBits);
+                    ((elements[bytePos] & (~0 << (elementBits - subPosLeft))))
+                    | (value >>> subRemainingBits);
             elements[bytePos+1] =
-                    ((elements[bytePos+1] & (~0L >>> subRemainingBits)))
-                    | ((long)value << (64 - subRemainingBits));
+                    ((elements[bytePos+1] & (~0 >>> subRemainingBits)))
+                    | (value << (BLOCK_SIZE - subRemainingBits));
         } else {
             // Case A: ???ABC??, subPosLeft == 3, subRemainingBits == -2
             elements[bytePos] =
                     (elements[bytePos]
-                     & ((subPosLeft == 0 ? 0 : ~0L << (64 - subPosLeft))
-                        | (~0L >>> (elementBits - -subRemainingBits))))
-                    | ((long)value << (64 - subPosLeft - elementBits));
+                     & ((subPosLeft == 0 ? 0 : ~0 << (BLOCK_SIZE - subPosLeft))
+                        | (~0 >>> (elementBits - -subRemainingBits))))
+                    | (value << (BLOCK_SIZE - subPosLeft - elementBits));
             if (log.isTraceEnabled()) {
                 log.trace(String.format(
                         "unsafeSet(index=%d, value=%d) -> elements[%d] bits %s",
@@ -282,6 +283,6 @@ public class BitsArray extends AbstractList<Integer> {
      * @return the number of bytes used for the internal array.
      */
     public int getMemSize() {
-        return elements.length * 8;
+        return elements.length * BLOCK_SIZE / 8;
     }
 }

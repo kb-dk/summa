@@ -47,62 +47,62 @@ public class BitsArrayTest extends TestCase {
     public void testBitSetMath() {
         int elementBits = 3;
         int index = 0;
-        long[] elements = new long[2];
+        int[] elements = new int[2];
 
         // Trivial
         int value = 7; // 111
-        long[] expected = new long[2];
-        expected[0] = ((long)value) << (64-3);
+        int[] expected = new int[2];
+        expected[0] = (value) << (BitsArray.BLOCK_SIZE-3);
 
         testBitSetMath(elementBits, index, elements, value, expected);
 
-        elements = new long[2];
+        elements = new int[2];
         value = 7; // 111
         index = 20;
-        expected = new long[2];
-        expected[0] = ((long)value) << (1);
+        expected = new int[2];
+        expected[0] = ((int)value) << (1);
         testBitSetMath(elementBits, index, elements, value, expected);
 
-        elements = new long[2];
+        elements = new int[2];
         value = 7; // 111
         index = 20;
-        expected = new long[2];
-        expected[0] = ((long)value) << (1);
+        expected = new int[2];
+        expected[0] = ((int)value) << (1);
         testBitSetMath(elementBits, index, elements, value, expected);
 
-        elements = new long[2];
+        elements = new int[2];
         value = 7; // 111
         index = 21;
-        expected = new long[2];
-        expected[0] = ((long)value) >>> (2);
-        expected[1] = ((long)value) << (62);
+        expected = new int[2];
+        expected[0] = ((int)value) >>> (2);
+        expected[1] = ((int)value) << (BitsArray.BLOCK_SIZE - 2);
         testBitSetMath(elementBits, index, elements, value, expected);
 
-        elements = new long[2];
+        elements = new int[2];
         elements[0] = 1730000;
-        elements[1] = 878787;
+        elements[1] = 8787;
         value = 7; // 111
         index = 21;
-        expected = new long[2];
-        expected[0] = ((long)value) >>> (2) | elements[0];
-        expected[1] = ((long)value) << (62) | elements[1];
+        expected = new int[2];
+        expected[0] = ((int)value) >>> (2) | elements[0];
+        expected[1] = ((int)value) << (BitsArray.BLOCK_SIZE - 2) | elements[1];
         testBitSetMath(elementBits, index, elements, value, expected);
     }
 
-    public void testBitSetMath(int elementBits, int index, long[] elements,
-                               int value, long[] expected) {
-        long bitPos = index * elementBits;
+    public void testBitSetMath(int elementBits, int index, int[] elements,
+                               int value, int[] expected) {
+        int bitPos = index * elementBits;
 
         // Samples: 3 bits/value (A, B and C) stored in bytes
         // Case A: ???ABC??
         // Case B: ???????A BC??????
 
-        int bytePos = (int)(bitPos / 64);    // Position in bytes
-        int subPosLeft = (int)(bitPos % 64); // Position in the bits at bytePos
+        int bytePos = (int)(bitPos / BitsArray.BLOCK_SIZE);    // Position in bytes
+        int subPosLeft = (int)(bitPos % BitsArray.BLOCK_SIZE); // Position in the bits at bytePos
         // Case A: subPosLeft == 3, Case B: subPosLeft == 7
 
         // The number of remaining bits at bytePos+1
-        int subRemainingBits = elementBits - (64 - subPosLeft);
+        int subRemainingBits = elementBits - (BitsArray.BLOCK_SIZE - subPosLeft);
         // Case A: -2, Case B: 2
         log.debug("subRemainingBits=" + subRemainingBits);
         if (subRemainingBits > 0) {
@@ -111,20 +111,22 @@ public class BitsArrayTest extends TestCase {
                       + toBinary(elements[bytePos+1]));
             // Case B: ???????A BC??????
             elements[bytePos] =
-                    ((elements[bytePos] & (~0L << (elementBits - subPosLeft))))
-                    | ((long)value >>> subRemainingBits);
+                    ((elements[bytePos] & (~0 << (elementBits - subPosLeft))))
+                    | ((int)value >>> subRemainingBits);
             elements[bytePos+1] =
-                    ((elements[bytePos+1] & (~0L >>> subRemainingBits)))
-                    | ((long)value << (64 - subRemainingBits));
+                    ((elements[bytePos+1] & (~0 >>> subRemainingBits)))
+                    | ((int)value << (BitsArray.BLOCK_SIZE - subRemainingBits));
         } else {
             // Case A: ???ABC??, subPosLeft == 3, subRemainingBits == -2
             log.debug("Modifying elements[" + bytePos + "]="
                       + toBinary(elements[bytePos]));
             elements[bytePos] =
                     (elements[bytePos]
-                     & ((subPosLeft == 0 ? 0 : ~0L << (64 - subPosLeft))
-                        | (~0L >>> (elementBits - -subRemainingBits))))
-                    | ((long)value << (64 - subPosLeft - elementBits));
+                     & ((subPosLeft == 0 ? 0
+                         : ~0 << (BitsArray.BLOCK_SIZE - subPosLeft))
+                        | (~0 >>> (elementBits - -subRemainingBits))))
+                    | ((int)value <<
+                       (BitsArray.BLOCK_SIZE - subPosLeft - elementBits));
         }
 
         String message = String.format(
@@ -136,17 +138,17 @@ public class BitsArrayTest extends TestCase {
     }
 
     @SuppressWarnings({"unchecked"})
-    public List<Object> toList(long[] elements) {
+    public List<Object> toList(int[] elements) {
         List result = new ArrayList(elements.length);
-        for (long element: elements) {
+        for (int element: elements) {
             result.add(toBinary(element));
         }
         return result;
     }
 
-    public String toBinary(long l) {
+    public String toBinary(int l) {
         String s = Long.toBinaryString(l);
-        while (s.length() < 64) {
+        while (s.length() < BitsArray.BLOCK_SIZE) {
             s = "0" + s;
         }
         return s;
@@ -165,14 +167,14 @@ public class BitsArrayTest extends TestCase {
         ba.set(0, 256);
         ba.set(7, 287);
         ba.set(8, 288);
-        assertContains("Spanning longs",
+        assertContains("Spanning ints",
                        ba, Arrays.asList(256, 0, 0, 0, 0, 0, 0, 287, 288));
     }
 
     public void testSpanningGetSetSingle() throws Exception {
         BitsArray ba = new BitsArray();
         ba.set(7, 287);
-        assertContains("Spanning long",
+        assertContains("Spanning int",
                        ba, Arrays.asList(0, 0, 0, 0, 0, 0, 0, 287));
     }
 
@@ -224,18 +226,19 @@ public class BitsArrayTest extends TestCase {
     }
 
     public void testReadPerformance() {
-        int MAX = 100000;
-        int READS = 1000000;
-        int INITIAL_MAX_VALUE = MAX;
+        int MAX = 1000000;
+        int READS = MAX * 10;
         int INITIAL_MAX_LENGTH = MAX;
+        int INITIAL_MAX_VALUE = 64000;
         int WARMUP = 2;
         int RUNS = 3;
 
         BitsArray ba = makeBA(MAX, INITIAL_MAX_LENGTH, INITIAL_MAX_VALUE);
-        int[] a = makePlain(MAX);
+        log.debug("Created " + ba);
+        int[] a = makePlain(MAX, INITIAL_MAX_VALUE);
         System.out.println(String.format(
-                "Memory usage: BA~=%dKB, int[]~=%dKB",
-                ba.getMemSize() / 1024, a.length*4 / 1024));
+                "Memory usage: BA~=%dKB, int[]~=%dKB -> %s",
+                ba.getMemSize() / 1024, a.length*4 / 1024, ba));
 
         for (int i = 0 ; i < WARMUP ; i++) {
             testReadBA(ba, READS);
@@ -244,9 +247,10 @@ public class BitsArrayTest extends TestCase {
         for (int i = 0 ; i < RUNS ; i++) {
             long baTime = testReadBA(ba, READS);
             long plainTime = testReadPlain(a, READS);
+            long baseTime = testReadCalibrate(a, READS);
             System.out.println(String.format(
-                    "read %d (of %d max): BA=%dms, int[]=%dms",
-                    READS, MAX, baTime, plainTime));
+                    "read %d (of %d max): BA=%dms, int[]=%dms, null=%dms",
+                    READS, MAX, baTime, plainTime, baseTime));
         }
 
     }
@@ -262,6 +266,18 @@ public class BitsArrayTest extends TestCase {
         }
         if (dummy == -1) {
             log.warn("Supposedly undrechable dummy log");
+        }
+        return System.currentTimeMillis() - startTime;
+    }
+
+    private long testReadCalibrate(int[] a, int reads) {
+        System.gc();
+        int MAX = a.length;
+        long startTime = System.currentTimeMillis();
+        Random random = new Random(88);
+        int dummy = 0;
+        for (int i = 0 ; i < reads ; i++) {
+            random.nextInt(MAX);
         }
         return System.currentTimeMillis() - startTime;
     }
@@ -290,7 +306,7 @@ public class BitsArrayTest extends TestCase {
         Random random = new Random(87);
         BitsArray ba = new BitsArray(initialMaxLength, initialMaxValue);
         for (int i = 0 ; i < elements ; i++) {
-            ba.set(random.nextInt(elements), i);
+            ba.set(i, random.nextInt(initialMaxValue));
         }
         return ba;
     }
@@ -302,10 +318,13 @@ public class BitsArrayTest extends TestCase {
         return System.currentTimeMillis() - startTime;
     }
 
-    private int[] makePlain(int max) {
+    private int[] makePlain(int length) {
+        return makePlain(length, length);
+    }
+    private int[] makePlain(int length, int max) {
         Random random = new Random(87);
-        int[] a = new int[max];
-        for (int i = 0 ; i < max ; i++) {
+        int[] a = new int[length];
+        for (int i = 0 ; i < length ; i++) {
             a[random.nextInt(max)] = i;
         }
         return a;
