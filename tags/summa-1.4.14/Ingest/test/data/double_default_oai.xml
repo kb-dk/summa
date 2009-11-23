@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+  <ListRecords>
+    <record>
+      <header>
+        <identifier>aleph-publish:002703130</identifier>
+      </header>
+      <metadata>
+        <record xmlns="http://www.loc.gov/MARC21/slim" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.loc.gov/MARC21/slim http://www.loc.gov/standards/marcxml/schema/MARC21slim.xsd">
+          <leader>00000nrm a2200000 a 4500</leader>
+          <controlfield tag="FMT">BK</controlfield>
+          <controlfield tag="LDR">00000nrm a2200000 a 4500</controlfield>
+          <datafield tag="004" ind1="0" ind2="0">
+            <subfield code="r">n</subfield>
+            <subfield code="a">e</subfield>
+          </datafield>
+          <datafield tag="HO5" ind1="6" ind2="6">
+            <subfield code="~">SB</subfield>
+            <subfield code="a">Kun box 1-2 haves</subfield>
+          </datafield>
+          <datafield tag="HO5" ind1="9" ind2="0">
+            <subfield code="~">SB</subfield>
+            <subfield code="v">Pligtafl.</subfield>
+          </datafield>
+        </record>
+      </metadata>
+    </record>
+  </ListRecords>
+</OAI-PMH>
