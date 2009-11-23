@@ -1,4 +1,30 @@
 ========================
+2009-11-23: Summa 1.4.14
+========================
+
+ * IMPORTANT: Updated core storage database libs. H2 upgraded from 1.1.118
+   to 1.2.124. This brings along a new optimized db storage format that gives
+   better disk usage and faster queries.
+   In order to use the new storage format you need to completely rebuild your
+   storage - by deleting all the old storage files. Summa continues to work
+   with the old storage files, but you will not benefit from the newest
+   enhancements.
+
+ * New exception policy: When any service encounters an uncaught exception in
+   a thread it will be treated as a fatal error and the JVM will exit leaving
+   fatal errors in the log and on stderr.
+
+ * Bugfix: Fix a very elusive bug where the storage would corrupt its internal
+           indexes. The only symptom was that one could no longer retrieve
+           batches of records with the getRecordsModifiedAfter() method.
+           It would always return an empty iterator.
+           This bug was very hard to reproduce except on some specific hardware
+           and operating systems. Nonetheless it was there.
+
+ * Bugfix: Fix NullPointerException when running a filter chain that was closed
+           without ever having received any payloads.
+
+========================
 2009-11-18: Summa 1.4.13
 ========================
 
