@@ -178,8 +178,19 @@ import java.util.ArrayList;
 public class Aleph2XML2 extends ObjectFilterImpl {
     private static Log log = LogFactory.getLog(Aleph2XML2.class);
 
+    /**
+     * The delimiter used after ID-prefix.
+     * </p><p>
+     * Optional. Default is "-".
+     */
+    public static final String CONF_ID_DELIMITER =
+            "summa.aleph2xml.iddelimiter";
+    public static final String DEFAULT_ID_DELIMITER = "-";
+    private String idDelimiter = DEFAULT_ID_DELIMITER;
+
     public Aleph2XML2(Configuration conf){
         super(conf);
+        idDelimiter = conf.getString(CONF_ID_DELIMITER, idDelimiter);
     }
 
     /**
@@ -440,7 +451,8 @@ public class Aleph2XML2 extends ObjectFilterImpl {
                 recordBuffer.append(DATA_START).
                         append("994\" ind1=\"0\" ind2=\"0\">\n").
                         append(SUBFIELD_START).append("z\">").
-                        append(field994Prefix).append('-').append(lastAlephID).
+                        append(field994Prefix).append(idDelimiter).
+                        append(lastAlephID).
                         append(SUBFIELD_END).append("\n").
                         append(DATA_END);
                 recordBuffer.append(RECORD_END);
