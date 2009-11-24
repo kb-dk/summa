@@ -325,7 +325,7 @@
         <mkdir dir="${dist.dir}"/>
         <war destfile="${release.website.war}"
              webxml="config/website/web.xml">
-            <fileset dir="resources" />
+            <fileset dir="website_resources" />
             <lib dir="${lib.dir}">
                 <include name="*.jar"/>
             </lib>
@@ -351,6 +351,7 @@
         <mkdir dir="${dist.dir}"/>
         <war destfile="${release.status.war}"
              webxml="config/status/web.xml">
+            <fileset dir="status_resources" />
             <lib dir="${lib.dir}">
                 <include name="*.jar"/>
                 <exclude name="servlet-api-${summa.servlet.version}.jar" />
@@ -369,8 +370,10 @@
             <classes dir="${basedir}/config/status">
                 <include name="log4j.xml"/>
                 <include name="configuration.xml"/>
+                <include name="services.xml"/>
             </classes>
             <classes dir="${build.dir}">
+                <include  name="dk/statsbiblioteket/gwsc/**/*"/>
                 <include name="**/StatusWS*"/>
             </classes>
         </war>
