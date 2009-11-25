@@ -22,7 +22,8 @@ public class RSSChannelTest extends TestCase {
         rss.addItem(
                 "Item 1", "http://example.com/1", "Description 1");
         rss.addItem(
-                "Item 2", "http://example.com/2", "Description 2");        
+                "Item 2", "http://example.com/2", "Description 2",
+                "Body text, or so called 'content'");        
 
         System.out.println(rss);
     }

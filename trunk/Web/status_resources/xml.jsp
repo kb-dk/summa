@@ -13,9 +13,7 @@
 
     WebServices services = WebServices.getInstance();
 
-    String status_xml = (String)services.execute("fullStatus");
+    String status_xml = (String)services.execute("summafullstatus");
 
-
-%>
-
-<%= status_xml %>
+    out.clearBuffer();
+%><%= status_xml %>

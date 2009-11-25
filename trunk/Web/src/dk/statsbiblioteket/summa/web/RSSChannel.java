@@ -47,7 +47,12 @@ public class RSSChannel {
     }
 
     public Item addItem(String title, String link, String description) {
-        Item item = new Item(dateFormat, title, link, description);
+        return addItem(title, link, description, null);
+    }
+
+    public Item addItem(String title, String link,
+                        String description, String content) {
+        Item item = new Item(dateFormat, title, link, description, content);
         items.add(item);
         return item;
     }
@@ -136,7 +141,10 @@ public class RSSChannel {
         StringBuilder buf = new StringBuilder();
 
         buf.append(DOM.XML_HEADER).append('\n');
-        buf.append("<rss version=\"2.0\">").append('\n');
+        buf.append("<rss version=\"2.0\" ")
+           .append("xmlns:content=\"http://purl.org/rss/1.0/modules/content/\"")
+           .append(">\n");
+
         buf.append("  <channel>").append('\n');
 
         buf.append("    <title>").append(title).append("</title>").append('\n');
@@ -176,13 +184,15 @@ public class RSSChannel {
         private String description;
         private Date pubDate;
         private String guid;
+        private String content;
 
         private Item(DateFormat dateFormat, String title,
-                     String link, String description) {
+                     String link, String description, String content) {
             this.dateFormat = dateFormat;
             this.title = title;
             this.link = link;
             this.description = description;
+            this.content = content;
         }
 
         public String getTitle() {
@@ -225,12 +235,22 @@ public class RSSChannel {
             this.guid = guid;
         }
 
+        public void setContent(String content) {
+            this.content = content;
+        }
+
+        public String getContent() {
+            return content;
+        }
+
         public Appendable toString(Appendable buf) throws IOException {
             buf.append("    <item>").append('\n');;
 
             buf.append("      <title>").append(title).append("</title>").append('\n');
             buf.append("      <link>").append(link).append("</link>").append('\n');
-            buf.append("      <description>").append(description).append("</description>").append('\n');
+            buf.append("      <description><![CDATA[")
+               .append(description)
+               .append("]]></description>").append('\n');
 
             if (pubDate != null) {
                 buf.append("      <pubDate>")
@@ -241,6 +261,12 @@ public class RSSChannel {
 
             if (guid != null) {
                 buf.append("      <guid>").append(guid).append("</guid>").append('\n');
+            }
+
+            if (content != null) {
+                buf.append("      <content:encoded><![CDATA[")
+                   .append(content)
+                   .append("]]></content:encoded>").append('\n');
             }
 
             buf.append("    </item>").append('\n');;
