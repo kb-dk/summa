@@ -6,31 +6,36 @@
 <%@ page import="java.io.File" %>
 <%@ page import="java.net.URL" %>
 <%@ page import="java.util.Properties" %>
+<%@ page import="dk.statsbiblioteket.summa.web.services.StatusBuilder" %>
+<%@ page import="org.w3c.dom.Node" %>
 <%@ page pageEncoding="UTF-8" %>
 <%
     response.setContentType("text/html; charset=UTF-8");
     request.setCharacterEncoding("UTF-8");
 
-    String basepath = request.getSession().getServletContext().getRealPath("/");
-    String rsspath = basepath + "rss.jsp";
+    String rootUrl =  HttpUtils.getRequestURL(request).toString();
+    rootUrl = rootUrl.substring(0, rootUrl.lastIndexOf("/"));
+    String rssUrl = rootUrl + "/rss.jsp";
 
     WebServices services = WebServices.getInstance();
 
-    String status_html = "FIXME";
-    String status_xml = (String)services.execute("fullStatus");
+    String statusXml = (String)services.execute("summafullstatus");
+    Node dom = DOM.stringToDOM(statusXml);
+    StatusBuilder stats = new StatusBuilder(dom);
 
-
+    out.clearBuffer();
 %>
-
 <html>
 <head>
     <title>Summa Status Page</title>
-    <link rel="alternate" type="application/rss+xml" title="Summa Status Feed" href="<%= rsspath %>%>" />
+    <link rel="alternate" type="application/rss+xml" title="Summa Status Feed" href="<%= rssUrl %>%>" />
 </head>
 <body style="padding: 10px;">
 
 <img src="images/summa-logo_h40.png" alt="Summa logo"/>
 <h1>Summa Status Page</h1>
-<%= status_html %>
+Live updates: <a class="rsslink" href="<%= rssUrl %>">RSS Status Feed</a>
+<p/>
+<%= stats.toString() %>
 </body>
 </html>

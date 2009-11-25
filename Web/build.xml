@@ -374,7 +374,8 @@
             </classes>
             <classes dir="${build.dir}">
                 <include  name="dk/statsbiblioteket/gwsc/**/*"/>
-                <include name="**/StatusWS*"/>
+                <include  name="dk/statsbiblioteket/summa/web/RSSChannel*"/>
+                <include name="**/Status*"/>
             </classes>
         </war>
     </target>

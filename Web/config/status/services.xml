@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
 <properties>
-    <service name="summasimplesearch" type="soap">
+    <service name="summafullstatus" type="soap">
         <wsdl>http://localhost:8080/summa-web-status/services/StatusWS?wsdl</wsdl>
         <servicename>StatusWS</servicename>
         <operationname>fullStatus</operationname>
