@@ -19,13 +19,13 @@
  */
 package dk.statsbiblioteket.summa.support.lucene.search.sort;
 
+import dk.statsbiblioteket.summa.common.util.BitsArrayPacked;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.util.BitsArray;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-import java.util.List;
 import java.util.Comparator;
+import java.util.List;
 
 /**
  * Sorts a list of Objects indirectly by using a pre-generated array of
@@ -62,7 +62,7 @@ import java.util.Comparator;
 public class ReferenceSorter<T> {
     private static Log log = LogFactory.getLog(ReferenceSorter.class);
 
-    BitsArray positions;
+    BitsArrayPacked positions;
 
     /**
      * Initializes the reference sorter for the given elements. Note that the
@@ -75,7 +75,7 @@ public class ReferenceSorter<T> {
      * @param comparator used for comparing elements.
      */
     public ReferenceSorter(List<T> elements, Comparator<T> comparator) {
-        positions = new BitsArray(
+        positions = new BitsArrayPacked(
                 elements.size(),
                 // TODO: Test the elementLength calculation
                 (int)(Math.log(elements.size()) / Math.log(2)) + 1);
