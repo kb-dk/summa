@@ -114,7 +114,7 @@ public class BitsArrayPacked extends AbstractList<Integer> implements BitsArray{
     private int[] elements;
 
     // Cached calculations
-    private int maxValue;    // Math.pow(alementBits, 2)
+    private int maxValue;    // Math.pow(elementBits, 2)-1
     private int maxPos;      // elements.length * BLOCK_SIZE / elementBits - 1
     private int elementMask; // The mask for the bits for an element
 
@@ -367,5 +367,9 @@ public class BitsArrayPacked extends AbstractList<Integer> implements BitsArray{
      */
     public int getMemSize() {
         return elements.length * BLOCK_SIZE / 8;
+    }
+
+    public int getMaxValue() {
+        return maxValue;
     }
 }

@@ -96,4 +96,8 @@ public class BitsArrayInt extends AbstractList<Integer> implements BitsArray{
     public int getMemSize() {
         return values.length * 4;
     }
+
+    public int getMaxValue() {
+        return Integer.MAX_VALUE;
+    }
 }
