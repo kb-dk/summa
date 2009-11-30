@@ -19,7 +19,7 @@
  */
 package dk.statsbiblioteket.summa.support.lucene.search.sort;
 
-import dk.statsbiblioteket.summa.common.util.BitsArrayPacked;
+import dk.statsbiblioteket.summa.common.util.bits.BitsArrayPacked;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
