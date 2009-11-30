@@ -17,7 +17,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package dk.statsbiblioteket.summa.common.util;
+package dk.statsbiblioteket.summa.common.util.bits;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
@@ -28,19 +28,17 @@ import java.util.Arrays;
 
 /**
  * A map from positive int positions to positive int values. The internal
- * representation is {@code (max_position + 1) * ceil(log2(max_value))} bits
- * plus overhead.
+ * representation is akin to {@link BitsArrayAligned} with the notable
+ * difference that the amount of bits allocated for values are always 1, 2, 4,
+ * 8, 16 or 32 so that the values always fit inside a single integer.
  * </p><p>
- * Example: The array contains the values {@code [120, 7, 8, 8, 0, 122]}.
- *          ceil(log2(122)) == 7, so 6 * 7 == 42 bits are used for storage.
- * </p><p>
- * The map auto-expands to accomodate given values at given positions. 
+ * The map auto-expands to accommodate given values at given positions.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
-public class BitsArrayPacked extends AbstractList<Integer> implements BitsArray{
-    private static Log log = LogFactory.getLog(BitsArrayPacked.class);
+public class BitsArrayAligned extends AbstractList<Integer> implements BitsArray{
+    private static Log log = LogFactory.getLog(BitsArrayAligned.class);
 
     /**
      * The factor to multiply to the position when a {@link #set} triggers a
@@ -119,21 +117,13 @@ public class BitsArrayPacked extends AbstractList<Integer> implements BitsArray{
     private int elementMask; // The mask for the bits for an element
 
     /**
-     * Creates a BitsArray of minimal size. If there is knowledge of expected
-     * values, it is recommended to use {@link #BitsArrayPacked(int, int)} instead.
-     */
-    public BitsArrayPacked() {
-        this(1, 1);
-    }
-
-    /**
      * Creates a BitsArray with the internal structures optimized for the given
      * limits. This is the recommended constructor.
      * @param length   the number of expected elements.
      * @param maxValue the expected maximum value for an element.
      */
-    public BitsArrayPacked(int length, int maxValue) {
-        int bits = (int)Math.ceil(Math.log(maxValue+1)/Math.log(2));
+    public BitsArrayAligned(int length, int maxValue) {
+        int bits = BitsArrayFactory.bits(maxValue);
         log.trace("Creating BitsArrayPacked of length " + length
                   + " with element bit size " + bits + " for max value "
                   + maxValue);
@@ -188,7 +178,7 @@ public class BitsArrayPacked extends AbstractList<Integer> implements BitsArray{
                  (element0 >>> 5) |
                  (element1 >>> 1) | specificShifts[0])
                 & elementMask);
-        
+
         /**/
         final int base = elementBits * FAC_ELEBITS + bitPos * FAC_BITPOS;
 //        return bitPos;
@@ -271,13 +261,13 @@ public class BitsArrayPacked extends AbstractList<Integer> implements BitsArray{
     private void ensureSpace(int position, int value) {
         if (position > maxPos || value > maxValue) {
             //noinspection MismatchedQueryAndUpdateOfCollection
-            BitsArrayPacked array;
+            BitsArrayAligned array;
             if (position > maxPos) {
-                array = new BitsArrayPacked(
+                array = new BitsArrayAligned(
                         (int)((position + 1) * LENGTH_GROWTH_FACTOR),
                         Math.max(maxValue, value));
             } else {
-                array = new BitsArrayPacked(maxPos, Math.max(maxValue, value));
+                array = new BitsArrayAligned(maxPos, Math.max(maxValue, value));
             }
             array.assign(this);
             setAttributes(array.elementBits, array.size, array.elements);
@@ -290,12 +280,12 @@ public class BitsArrayPacked extends AbstractList<Integer> implements BitsArray{
      * @param other the source of new values.
      */
     public void assign(BitsArray other) {
-        if (!(other instanceof BitsArrayPacked)) {
+        if (!(other instanceof BitsArrayAligned)) {
             throw new UnsupportedOperationException(String.format(
                     "Unable to assign from other types of BitsArray. Got %s",
                     other.getClass()));
         }
-        BitsArrayPacked bap = (BitsArrayPacked)other;
+        BitsArrayAligned bap = (BitsArrayAligned)other;
         clear();
         ensureSpace(bap.maxPos, bap.maxValue); // Safe recursive check
         for (int pos = 0 ; pos < bap.size ; pos++) {
@@ -367,5 +357,9 @@ public class BitsArrayPacked extends AbstractList<Integer> implements BitsArray{
      */
     public int getMemSize() {
         return elements.length * BLOCK_SIZE / 8;
+    }
+
+    public int getMaxValue() {
+        return 0;  //To change body of implemented methods use File | Settings | File Templates.
     }
 }
