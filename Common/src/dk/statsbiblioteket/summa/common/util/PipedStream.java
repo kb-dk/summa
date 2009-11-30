@@ -32,10 +32,14 @@ import java.io.OutputStream;
  * read as an InputStream. The internal buffer automatically expands to
  * accommodate input. Reading from the InputStream is blocking.
  * </p><p>
- * Warning: As the internal buffer automatically expands,
+ * Warning: As the internal buffer automatically expands, external checks for
+ * memory overflow should be done.
  * </p><p>
- * Optionally the method {@link #addBytes(int)} can be implemented as a
- * call-back from the reader.
+ * Optionally the method {@link #addBytesRequest(int)} can be implemented.
+ * It is a call-back from the reader when bytes are requested.
+ * </p><p>
+ * Note: The feeder should call {@link #isClosed()} before writing to the
+ *       stream, as the stream can be closed from both ends.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -50,15 +54,16 @@ public class PipedStream extends InputStream {
     private int pos = 0;    // Read-position
     private int length = 0; // Last valid buffer-entry + 1
     private boolean sourceEOF = false; // Set to true after last source byte
-    private boolean closed = false;
+    // or if close() has been called
 
     /**
      * A request for wanted bytes to be added to the outputstream.
      * @param wanted the wanted number of bytes.
      * @return the number of added bytes or -1 if EOF is reached.
      */
-    protected int addBytes(int wanted) {
-        log.trace("Default addBytes(" + wanted + ") called. No action taken");
+    protected int addBytesRequest(int wanted) {
+        log.trace("Default addBytesRequest(" + wanted
+                  + ") called. No action taken");
         return 0;
     }
 
@@ -66,20 +71,35 @@ public class PipedStream extends InputStream {
      * @return an OutputStream where writes will be piped to PipedStream.
      */
     public OutputStream getOutputStream() {
-        return null;
+        return feeder;
     }
 
     @Override
     public int read() throws IOException {
-        synchronized (feeder) {
-            while (true) {
+        while (true) {
+            synchronized (feeder) {
                 if (length - pos > 0) { // Buffer has content
                     return buffer[pos++];
                 }
                 if (sourceEOF) {
                     return -1;
                 }
-                return -1;
+            }
+            addBytesRequest(1);
+            synchronized (feeder) {
+                if (length - pos > 0) { // Buffer has content
+                    return buffer[pos++];
+                }
+                if (sourceEOF) {
+                    return -1;
+                }
+            }
+            synchronized (feeder) {
+                try {
+                    feeder.wait();
+                } catch (InterruptedException e) {
+                    log.debug("Received interrupted while ");
+                }
 /*                if (closed || !source.hasNext()) { // No more content
                     return -1; // EOF
                 }
@@ -98,7 +118,14 @@ public class PipedStream extends InputStream {
 
     @Override
     public void close() throws IOException {
-        // TODO: Notify waiters
+        feeder.close();
+        synchronized (feeder) {
+            feeder.notifyAll();
+        }
+    }
+
+    public boolean isClosed() {
+        return sourceEOF;
     }
 
     // TODO: Performance-optimize with array-read
@@ -123,9 +150,9 @@ public class PipedStream extends InputStream {
                                 buffer, 0, newBuffer, 0, buffer.length);
                         buffer = newBuffer;
                     }
-                    buffer[length++] = (byte)(0xFF & b);
-                    // TODO: notify on feeder
                 }
+                buffer[length++] = (byte)(0xFF & b);
+                feeder.notifyAll();
             }
         }
 
