@@ -232,7 +232,7 @@ public class BitsArrayTest extends TestCase {
         int MAX = 1000000;
         int READS = MAX * 10;
         int INITIAL_MAX_LENGTH = MAX;
-        int INITIAL_MAX_VALUE = 64000;
+        int INITIAL_MAX_VALUE = 240;
         int WARMUP = 2;
         int RUNS = 5;
 

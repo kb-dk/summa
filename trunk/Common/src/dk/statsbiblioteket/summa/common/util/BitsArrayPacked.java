@@ -49,6 +49,7 @@ public class BitsArrayPacked extends AbstractList<Integer> implements BitsArray{
     public static final double LENGTH_GROWTH_FACTOR = 1.2;
 
     static final int BLOCK_SIZE = 32; // 32 = int, 64 = long
+    static final int BLOCK_BITS = 6; // The #bits representing BLOCK_SIZE
 
     static final int ENTRY_SIZE = BLOCK_SIZE + 1;
     static final int FAC_ELEBITS = ENTRY_SIZE * 4;
@@ -90,6 +91,16 @@ public class BitsArrayPacked extends AbstractList<Integer> implements BitsArray{
                     SHIFTS[elementBits* FAC_ELEBITS + bitPos * FAC_BITPOS + 2] =
                             BLOCK_SIZE -
                          SHIFTS[elementBits* FAC_ELEBITS + bitPos * FAC_BITPOS];
+                }
+                // To handle shifting into oblivion, shifts of BLOCK_SIZE are
+                // adjusted to shift further (see the getAtomic method).
+                for (int i = 0 ; i < 3 ; i++) {
+                    if (SHIFTS[elementBits* FAC_ELEBITS
+                               + bitPos * FAC_BITPOS + i] == BLOCK_SIZE) {
+                        SHIFTS[elementBits* FAC_ELEBITS
+                               + bitPos * FAC_BITPOS + i] =
+                                BLOCK_SIZE | (BLOCK_SIZE - 1);
+                    }
                 }
             }
         }
@@ -147,16 +158,19 @@ public class BitsArrayPacked extends AbstractList<Integer> implements BitsArray{
      * @param index the position of the value.
      * @return the value at the given position.
      */
-    public int getAtomic(int index) {
+    @QAInfo(level = QAInfo.Level.FINE,
+            state = QAInfo.State.IN_DEVELOPMENT,
+            author = "te")
+    public int getAtomic(final int index) {
         if (index >= size) {
             throw new ArrayIndexOutOfBoundsException(String.format(
                     "The index %d was requested in an array of size %s",
                     index, size()));
         }
-        long majorBitPos = index * elementBits;
+        final long majorBitPos = index * elementBits;
 
-        int elementPos = (int)(majorBitPos / BLOCK_SIZE);
-        int bitPos = (int)(majorBitPos - elementPos * BLOCK_SIZE);
+        final int elementPos = (int)(majorBitPos >>> (BLOCK_BITS-1)); // / BLOCK_SIZE
+        final int bitPos = (int)(majorBitPos - (elementPos << (BLOCK_BITS-1))); // * BLOCK_SIZE);
         //int bitPos =     (int)(majorBitPos % BLOCK_SIZE);
 
 /*        long element0 = ((long)(0x7FFFFFFF & elements[elementPos])) |
@@ -164,8 +178,8 @@ public class BitsArrayPacked extends AbstractList<Integer> implements BitsArray{
         long element1 = ((long)(0x7FFFFFFF & elements[elementPos+1])) |
                         (((long)(elements[elementPos+1] >>> 1)) << 1);
   */
-        long element0 = ((long)elements[elementPos])   & 0x00000000FFFFFFFFL;
-        long element1 = ((long)elements[elementPos+1]) & 0x00000000FFFFFFFFL;
+//        long element0 = ((long)elements[elementPos])   & 0x00000000FFFFFFFFL;
+//        long element1 = ((long)elements[elementPos+1]) & 0x00000000FFFFFFFFL;
 
 //        return (int)(element0 + element1);
 
@@ -176,15 +190,22 @@ public class BitsArrayPacked extends AbstractList<Integer> implements BitsArray{
                 & elementMask);
         
         /**/
-        int base = elementBits * FAC_ELEBITS + bitPos * FAC_BITPOS;
+        final int base = elementBits * FAC_ELEBITS + bitPos * FAC_BITPOS;
 //        return bitPos;
         //return base;
 
-        return (int)(
-                ((element0 <<  SHIFTS[base]) |
-                 (element0 >>> SHIFTS[base + 1]) |
-                 (element1 >>> SHIFTS[base + 2]))
-                & elementMask);
+        final int first = elements[elementPos];
+        return (((first
+                  << (SHIFTS[base] & (BLOCK_SIZE-1)))
+                 << (SHIFTS[base] >>> 5))
+                | ((first
+                    >>> (SHIFTS[base+1] & (BLOCK_SIZE-1)))
+                   >>> (SHIFTS[base+1] >>> 5))
+                | ((elements[elementPos+1]
+                    >>> (SHIFTS[base+2] & (BLOCK_SIZE-1)))
+                   >>> (SHIFTS[base+2] >>> 5)))
+               & elementMask;
+
     }
 
     /* No checks for capacity or maxValue */
