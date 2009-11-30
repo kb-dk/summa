@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2009  The State and University Library
@@ -30,7 +30,7 @@ import java.io.OutputStream;
 /**
  * Provides an OutputStream that writes to an internal buffer, which can be
  * read as an InputStream. The internal buffer automatically expands to
- * accommondate input. Reading from the InputStream is blocking.
+ * accommodate input. Reading from the InputStream is blocking.
  * </p><p>
  * Warning: As the internal buffer automatically expands,
  * </p><p>
