@@ -53,7 +53,7 @@
 <!--        <param name="File" value="/home/summa/logs/search_engine_fatal.log"/>
         <param name="Append" value="true"/>
         <param name="MaxFileSize" value="1MB"/>
-        <param name="MaxBackupIndex" value="1"/>-->
+        <param name="MaxBackupIndex" value="5"/>-->
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%-5p [%t] [%d] [%c] - %l [LINENUMBER: %L] [METHOD: %M] [%X]  %m%n"/>
         </layout>
