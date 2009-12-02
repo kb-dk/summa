@@ -22,21 +22,22 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.api;
 
+import dk.statsbiblioteket.summa.common.util.CollatorFactory;
 import dk.statsbiblioteket.summa.search.api.Response;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import javax.xml.stream.XMLStreamWriter;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamWriter;
 import java.io.Serializable;
 import java.io.StringWriter;
+import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Locale;
-import java.text.Collator;
 
 /**
  * The result of an index-lookup, suitable for later merging and sorting.
@@ -163,7 +164,7 @@ public class IndexResponse implements Response {
                          ? new SensitiveComparator()
                          : new InSensitiveComparator();
             } else {
-                Collator collator = Collator.getInstance(sortLocale);
+                Collator collator = CollatorFactory.createCollator(sortLocale);
                 sorter = caseSensitive
                          ? new SensitiveComparator(collator)
                          : new InSensitiveComparator(collator);

@@ -38,7 +38,7 @@ import java.io.InputStream;
 
 /**
  * Wrapper for marc4j that takes an InputStream with MARC in ISO 2709 and
- * converts it to MARC21/Slim Stream.
+ * converts it to a MARC21Slim Stream.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -148,11 +148,11 @@ public class ISO2709ToMARCXMLFilter extends ObjectFilterImpl {
                     continue;
                 }
                 out.write(marcRecord);
-                if (outStream.size() == 0) {
+/*                if (outStream.size() == 0) {
                     log.trace("fillBuffer(): No content in outStream after "
                               + "producing XML for MARC Record (probably due to"
                               + " caching). Processing next Record");
-                }
+                }*/
             }
             if (outStream.size() == 0) {
                 log.trace("Depleted InputStream with no extra content");
@@ -163,18 +163,18 @@ public class ISO2709ToMARCXMLFilter extends ObjectFilterImpl {
                 return;
             }
 
-            log.trace("fillBuffer produced " + outStream.size() + " bytes");
+//            log.trace("fillBuffer produced " + outStream.size() + " bytes");
             length = outStream.size();
             pos = 0;
             buffer = outStream.toByteArray();
             outStream.reset();
-            try {
+/*            try {
                 log.trace("fillBuffer(): Dumping the first 100 bytes:\n"
                           + new String(buffer, 0, Math.min(100, length),
                                        "utf8"));
             } catch (Exception e) {
                 log.debug("Exception performing trace", e);
-            }
+            }*/
         }
 
         @Override

@@ -127,6 +127,8 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
     public void testTransform() throws Exception {
         File SAMPLE = Resolver.getFile("data/iso2709/t2.data");
 //        File SAMPLE = Resolver.getFile("data/iso2709/dpu20091109_sample.data");
+//        File SAMPLE = Resolver.getFile(
+//                "/home/te/projects/data/dpb/dpb20091130.data");
 //        File SAMPLE = Resolver.getFile("data/iso2709/summerland.data");
         assertTrue("The sample file " + SAMPLE + " should exist",
                    SAMPLE.exists());
@@ -148,5 +150,39 @@ public class ISO2709ToMARCXMLFilterTest extends TestCase {
         String xml = Strings.flush(xmlPayload.getStream());
         System.out.println("Dumping Produced content:\n" + xml);
     }
-    
+
+    public void testXMLDump2() throws Exception {
+//        File SAMPLE = Resolver.getFile("data/iso2709/t2.data");
+//        File SAMPLE = Resolver.getFile("data/iso2709/dpu20091109_sample.data");
+        File SAMPLE = Resolver.getFile(
+//                "/home/te/projects/data/dpb/dpb20091109");
+        "/home/te/projects/data/dpb/dpb20091130.data");
+//        File SAMPLE = Resolver.getFile("data/iso2709/summerland.data");
+        assertNotNull("The sample file " + SAMPLE + " should exist",
+                   SAMPLE.exists());
+        FileInputStream sampleIn = new FileInputStream(SAMPLE);
+        PayloadFeederHelper feeder = new PayloadFeederHelper(Arrays.asList(
+                new Payload(sampleIn)));
+        ISO2709ToMARCXMLFilter isoFilter = new ISO2709ToMARCXMLFilter(
+                Configuration.newMemoryBased(
+                        ISO2709ToMARCXMLFilter.CONF_INPUT_CHARSET, "iso-8859-1"));
+        isoFilter.setSource(feeder);
+        ArrayList<Payload> processed = new ArrayList<Payload>(3);
+
+        while (isoFilter.hasNext()) {
+            processed.add(isoFilter.next());
+        }
+        assertEquals("The right amount of Payloads should be produced",
+                     1, processed.size());
+        Payload xmlPayload = processed.get(0);
+
+        byte[] head = new byte[4000];
+        assertTrue("Stream should contain something",
+                   xmlPayload.getStream().read(head) > 0);
+        System.out.println("First 4000 UTF8:\n" + new String(head, "utf8"));
+        /*
+        String xml = Strings.flush(xmlPayload.getStream());
+        System.out.println("Dumping Produced content:\n" + xml);*/
+    }
+
 }

@@ -22,21 +22,21 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.core.tags;
 
-import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
 import dk.statsbiblioteket.summa.common.pool.CollatorSortedPool;
 import dk.statsbiblioteket.summa.common.pool.DiskStringPool;
 import dk.statsbiblioteket.summa.common.pool.MemoryStringPool;
+import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
 import dk.statsbiblioteket.util.CachedCollator;
+import dk.statsbiblioteket.util.InvalidPropertiesException;
 import dk.statsbiblioteket.util.Strings;
 import dk.statsbiblioteket.util.XProperties;
-import dk.statsbiblioteket.util.InvalidPropertiesException;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.Collator;
 import java.util.*;
 
@@ -146,7 +146,11 @@ public class Facet implements CollatorSortedPool {
         if (collators.get(structure.getLocale()) == null) {
             collators.put(
                     structure.getLocale(),
-                    new CachedCollator(new Locale(structure.getLocale())));
+                    // TODO: Consider if it is safe to use summa_extracted here
+                    // Maybe check for locale == "da"?
+                    new CachedCollator(
+                            new Locale(structure.getLocale()),
+                            CachedCollator.COMMON_SUMMA_EXTRACTED, true));
         }
         return collators.get(structure.getLocale());
     }

@@ -24,10 +24,6 @@ package dk.statsbiblioteket.summa.common.pool;
 
 import dk.statsbiblioteket.util.CachedCollator;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.pool.MemoryStringPool;
-import dk.statsbiblioteket.summa.common.pool.CollatorSortedPool;
-import dk.statsbiblioteket.summa.common.pool.DiskStringPool;
-import dk.statsbiblioteket.summa.common.pool.SortedPool;
 import junit.framework.TestCase;
 
 import java.io.File;
@@ -51,7 +47,8 @@ public class CollatorSortedPoolTest extends TestCase {
         super.tearDown();
     }
 
-    Collator defaultCollator = new CachedCollator(new Locale("da"));
+    Collator defaultCollator = new CachedCollator(
+            new Locale("da"), CachedCollator.COMMON_SUMMA_EXTRACTED, true);
 
     private void testSorting(CollatorSortedPool pool) {
         pool.clear();

@@ -19,32 +19,33 @@
  */
 package dk.statsbiblioteket.summa.facetbrowser.browse;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
-import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
-import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandlerImpl;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.util.CollatorFactory;
 import dk.statsbiblioteket.summa.facetbrowser.BaseObjects;
 import dk.statsbiblioteket.summa.facetbrowser.FacetStructure;
 import dk.statsbiblioteket.summa.facetbrowser.Structure;
 import dk.statsbiblioteket.summa.facetbrowser.api.IndexKeys;
 import dk.statsbiblioteket.summa.facetbrowser.api.IndexResponse;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.facetbrowser.core.tags.Facet;
+import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandler;
+import dk.statsbiblioteket.summa.facetbrowser.core.tags.TagHandlerImpl;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
-import dk.statsbiblioteket.util.xml.DOM;
+import dk.statsbiblioteket.util.CachedCollator;
 import dk.statsbiblioteket.util.Strings;
-
-import java.io.IOException;
-import java.io.File;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.rmi.RemoteException;
-
+import dk.statsbiblioteket.util.xml.DOM;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
+import java.io.File;
+import java.io.IOException;
+import java.rmi.RemoteException;
+import java.text.Collator;
+import java.util.*;
 
 public class IndexLookupTest extends TestCase {
     public IndexLookupTest(String name) {
@@ -98,19 +99,89 @@ public class IndexLookupTest extends TestCase {
     }
 
     private TagHandler fillSimpleTagHandler() throws IOException {
-        TagHandler tagHandler = createEmptyTagHandler();
-        int authorID = tagHandler.getFacetID("test");
-        tagHandler.insertTag(authorID, "b");
-        tagHandler.insertTag(authorID, "å");
-        tagHandler.insertTag(authorID, "ø");
-        tagHandler.insertTag(authorID, "æ");
-        tagHandler.insertTag(authorID, "a");
-        tagHandler.insertTag(authorID, "d");
-        tagHandler.insertTag(authorID, "do");
+        TagHandler tagHandler = makeHandler(Arrays.asList(
+                "b", "å", "ø", "æ", "a", "d", "do"));
         // a b d do æ ø å
         assertTrue("There should be some tags for the facet test",
                    tagHandler.getTagCount("test") > 0);
         return tagHandler;
+    }
+
+    private TagHandler makeHandler(List<String> tags) throws IOException {
+        TagHandler tagHandler = createEmptyTagHandler();
+        int authorID = tagHandler.getFacetID("test");
+        for (String tag: tags) {
+            tagHandler.insertTag(authorID, tag);
+        }
+        return tagHandler;
+    }
+
+    public void testCollator() throws Exception {
+        List<String> EXPECTED = Arrays.asList("ko", "koste", "kost er bedst");
+        List<String> input = Arrays.asList("koste", "kost er bedst", "ko");
+
+        Collator daCollator = Collator.getInstance(new Locale("da"));
+        testCompare("Spaces is sorted after everything else by the standard "
+                    + "collator",
+                    daCollator, EXPECTED, input);
+
+    /*
+        Comparator<String> insensitive =
+                new IndexResponse.InSensitiveComparator(daCollator);
+        testCompare("Spaces hould be sorted before anything else by "
+                     + "insensitive comparator",
+                     insensitive, EXPECTED, input);*/
+    }
+
+    public void testCachedCollator() throws Exception {
+        List<String> EXPECTED = Arrays.asList("ko", "koste", "kost er bedst");
+        List<String> input = Arrays.asList("koste", "kost er bedst", "ko");
+
+        Collator cachedCollator = new CachedCollator(new Locale("da"), "");
+        testCompare("Spaces is sorted after everything else by cached "
+                    + "collator",
+                    cachedCollator, EXPECTED, input);
+    }
+
+    public void testModifiedCollator() throws Exception {
+        List<String> EXPECTED = Arrays.asList("ko", "kost er bedst", "koste");
+        List<String> input = Arrays.asList("koste", "kost er bedst", "ko");
+
+        Collator daCollator = CollatorFactory.createCollator(new Locale("da"));
+        testCompare("Spaces hould be sorted before anything else by custom "
+                    + "collator", daCollator, EXPECTED, input);
+    }
+
+    public void testCompare(String message, Comparator comparator,
+                            List<String> expected, List<String> actual)
+                                                              throws Exception {
+        List<String> sorted = new ArrayList<String>(actual);
+        //noinspection unchecked
+        Collections.sort(sorted, comparator);
+        assertEquals(message,
+                     Strings.join(expected, ", "), Strings.join(sorted, ", "));
+    }
+
+    public void testSpaceSort() throws Exception {
+        TagHandler tagHandler = makeHandler(Arrays.asList(
+                "koste", "kost er bedst", "ko"));
+        String EXPECTED = "ko, kost er bedst, koste";
+
+        Facet facet = tagHandler.getFacets().get(0);
+        assertEquals("The facet should contain the tags in sorted order",
+                     EXPECTED, Strings.join(facet, ", "));
+
+        assertEquals("", -1, 100, tagHandler, EXPECTED);
+    }
+
+    public void testSpaceSort2() throws Exception {
+        TagHandler tagHandler = makeHandler(Arrays.asList(
+                "ki", "kan", "kaos", "kost er bedst", "kost", "koste",
+                "ko so", "ko sø", "ko så"));
+
+        assertEquals("", -1, 100, tagHandler,
+                     "kan, kaos, ki, ko so, ko sø, ko så, kost, kost er bedst, "
+                     + "koste");
     }
 
     public void testDOM() throws Exception {
@@ -144,8 +215,8 @@ public class IndexLookupTest extends TestCase {
                 IndexRequest.CONF_INDEX_DELTA, delta,
                 IndexRequest.CONF_INDEX_LENGTH, length
         );
-        String actual =
-                Strings.join(getTerms(term, indexConf, tagHandler), ", ");
+        String actual = Strings.join(
+                getTerms(term, indexConf, tagHandler), ", ");
         if (!actual.equals(expected)) {
             IndexRequest requestFactory = new IndexRequest(indexConf);
             Request request = new Request();
@@ -156,7 +227,7 @@ public class IndexLookupTest extends TestCase {
                     tagHandler.getFacets().get(0).toArray()), ", ");
             fail(String.format(
                     "Expected [%s], got [%s] for term %s with delta %d and "
-                    + "length %d in [%s]",
+                    + "length %d in facet with tags [%s]",
                     expected, actual, term, indexRequest.getDelta(),
                     indexRequest.getLength(), tags));
         }

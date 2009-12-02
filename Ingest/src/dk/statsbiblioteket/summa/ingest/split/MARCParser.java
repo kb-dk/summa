@@ -35,7 +35,7 @@ import java.text.ParseException;
 import java.util.regex.Pattern;
 
 /**
- * A generic MARC21 slim parser that steps through MARC records and sends
+ * A modified MARC21Slim-like parser that steps through MARC records and sends
  * events when leader, datafield and subfields are encountered. The parser also
  * handles the logic of adding produced Records to the queue.
  * A streaming parser is used as performance is prioritized over clarity (the
@@ -58,12 +58,13 @@ import java.util.regex.Pattern;
 </collection>
 } where * indicates multiple and + at least one occurence of the element.
  * </p><p>
- * There are different variants of MARC, but the structure is always the same
- * (well, at least we think so - MARC is a fixed target).
+ * Important: This parser does not handle controlfields.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
-        author = "te")
+        author = "te",
+        comment = "The parser should be extended for proper handling of control" 
+                  + " fields")
 public abstract class MARCParser extends ThreadedStreamParser {
     private static Log log = LogFactory.getLog(MARCParser.class);
 

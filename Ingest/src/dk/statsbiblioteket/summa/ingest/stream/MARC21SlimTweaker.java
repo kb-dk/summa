@@ -19,6 +19,7 @@
  */
 package dk.statsbiblioteket.summa.ingest.stream;
 
+import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
@@ -115,8 +116,17 @@ public class MARC21SlimTweaker extends ObjectFilterImpl {
                 controlfields.pattern(), subfieldFix, subfieldSeparator));
     }
 
+    @Override
     protected boolean processPayload(Payload payload) throws PayloadException {
-        return false;  //To change body of implemented methods use File | Settings | File Templates.
+        if (payload.getStream() == null) {
+            Logging.logProcess("MARC21SlimTweaker", "No Stream",
+                               Logging.LogLevel.DEBUG, payload);
+            return true;
+        }
+        payload.setStream(new MARC21SlimTweakerStream(
+                payload.getStream(), controlfields, subfieldFix,
+                subfieldSeparator));
+        return true;
     }
 
     public static class MARC21SlimTweakerStream extends InputStream {
@@ -124,19 +134,24 @@ public class MARC21SlimTweaker extends ObjectFilterImpl {
 
         private Pattern controlfields;
         private boolean subfieldFix;
-        private String subfieldSeparato;
+        private String subfieldSeparator;
 
         public MARC21SlimTweakerStream(
                 InputStream source, Pattern controlfields,
-                boolean subfieldFix, String subfieldSeparato) {
+                boolean subfieldFix, String subfieldSeparator) {
             this.source = source;
             this.controlfields = controlfields;
             this.subfieldFix = subfieldFix;
-            this.subfieldSeparato = subfieldSeparato;
+            this.subfieldSeparator = subfieldSeparator;
         }
 
         public int read() throws IOException {
             return 0;  //To change body of implemented methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public void close() throws IOException {
+            source.close();
         }
     }
 }

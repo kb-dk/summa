@@ -22,24 +22,19 @@
  */
 package dk.statsbiblioteket.summa.common.pool;
 
-import java.io.StringWriter;
-import java.io.File;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Random;
-import java.util.Locale;
-import java.text.Collator;
-
-import junit.framework.TestCase;
+import dk.statsbiblioteket.util.CachedCollator;
 import dk.statsbiblioteket.util.Files;
 import dk.statsbiblioteket.util.Logs;
 import dk.statsbiblioteket.util.Profiler;
-import dk.statsbiblioteket.util.CachedCollator;
 import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.pool.SortedPool;
+import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.io.File;
+import java.io.StringWriter;
+import java.text.Collator;
+import java.util.*;
 
 /**
  * A super-class with tests for String Pools.
@@ -79,7 +74,8 @@ public abstract class StringPoolSuperTest extends TestCase {
         Files.delete(poolDir);
     }
 
-    protected Collator defaultCollator = new CachedCollator(new Locale("da"));
+    protected Collator defaultCollator = new CachedCollator(
+            new Locale("da"), CachedCollator.COMMON_SUMMA_EXTRACTED, true);
     protected static File poolDir = new File(
             System.getProperty("java.io.tmpdir"), "pooltest");
     private List<SortedPool<String>> pools =
