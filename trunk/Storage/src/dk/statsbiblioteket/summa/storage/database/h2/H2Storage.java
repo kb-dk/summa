@@ -56,10 +56,14 @@ public class H2Storage extends DatabaseStorage implements Configurable {
      * Boolean property determining whether the second level page cache should
      * be enabled in the H2 database. The L2 cache provides some performance
      * gains on larger bases, but might be a slow down on smaller bases.
-     * Default is {@code true}.
+     * <p/>
+     * Enable this feature with care since some memory leaks has been
+     * experienced when this feature is enabled.
+     * <p/>
+     * Default is {@code false}.
      */
     public static final String CONF_L2CACHE = "summa.storage.database.l2cache";
-    public static final boolean DEFAULT_L2CACHE = true;
+    public static final boolean DEFAULT_L2CACHE = false;
 
 
     public H2Storage(Configuration conf) throws IOException {
