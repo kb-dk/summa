@@ -2,6 +2,7 @@ package dk.statsbiblioteket.summa.web.services;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.DOM;
+import dk.statsbiblioteket.summa.common.util.Pair;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -9,7 +10,11 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.NumberFormat;
 import java.util.Date;
+import java.util.List;
+import java.util.LinkedList;
+import java.util.Collections;
 
 /**
  * FIXME: Missing class docs for dk.statsbiblioteket.summa.web.services.StatusPresentation
@@ -73,12 +78,14 @@ public class StatusBuilder {
     private Properties searcher;
     private Properties storage;
     private Properties suggest;
+    private List<Pair<String,String>> queryCount;
     private String searcherStatus;
     private String storageStatus;
     private String suggestStatus;
     private String lastUpdate;
     private String now;
     DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+    NumberFormat numberFormat = NumberFormat.getIntegerInstance();
 
     public StatusBuilder (Node statusDom) {
         this.statusDom = statusDom;
@@ -89,6 +96,8 @@ public class StatusBuilder {
                 DOM.selectNode(statusDom, "/status/group[@name='storage']"));
         suggest = new Properties(
                 DOM.selectNode(statusDom, "/status/group[@name='suggest']"));
+        queryCount = sortQueries(DOM.selectNodeList(
+                      statusDom, "/status/group[@name='queryCount']/property"));
 
         searcherStatus = searcher.getText("status");
         storageStatus = storage.getText("status");
@@ -98,6 +107,29 @@ public class StatusBuilder {
         // of index update instead
         lastUpdate = storage.getText("lastUpdate");
         now = dateFormat.format(new Date());
+
+        // Minimum 6 digits and don't group numbers with . or ,
+        numberFormat.setGroupingUsed(false);
+        numberFormat.setMinimumIntegerDigits(6);
+    }
+
+    /* Parse the queryCount group into a sorted list of Pairs (count, query) */
+    private List<Pair<String,String>> sortQueries(NodeList nodes) {
+        List<Pair<String,String>> l = new LinkedList<Pair<String,String>>();
+        for (int i = 0; i < nodes.getLength(); i++) {
+            Node node = nodes.item(i);
+            l.add(
+                new Pair<String,String>(
+                    node.getAttributes().getNamedItem("name").getTextContent(),
+                    node.getFirstChild().getTextContent().trim()
+                )
+            );
+        }
+
+        Collections.sort(l);
+        Collections.reverse(l);
+
+        return l;
     }
 
     public boolean allGood() {
@@ -167,6 +199,20 @@ public class StatusBuilder {
             .append(suggest.getText("responseTime"))
             .append("ms<br/>");
         buf.append("<p/>\n");
+
+        buf.append("<b>Popular queries the last 24 hours</b>");
+        buf.append("<i>(number of queries - query string)</i>:<br/>");
+        buf.append("<ul>");        
+        for (Pair<String,String> prop : queryCount) {
+            buf.append("<li>")
+               .append(Integer.toString(Integer.parseInt(prop.getKey())))
+               .append(" - ")
+               .append("<tt>")
+               .append(prop.getValue())
+               .append("</tt>")
+               .append("</li>");
+        }
+        buf.append("</ul>");
 
         return buf;
     }
