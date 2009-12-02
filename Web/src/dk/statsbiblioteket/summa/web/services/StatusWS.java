@@ -19,6 +19,7 @@
 package dk.statsbiblioteket.summa.web.services;
 
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.util.Pair;
 import dk.statsbiblioteket.summa.search.api.Request;
 import dk.statsbiblioteket.summa.search.api.ResponseCollection;
 import dk.statsbiblioteket.summa.search.api.SearchClient;
@@ -48,10 +49,7 @@ import java.sql.Date;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
@@ -251,6 +249,7 @@ public class StatusWS {
                 status.put("queryCount",
                            numberFormat.format(Long.valueOf(queryCount)),
                            XMLUtil.encode(sugName));
+                log.debug("");
             }
         } catch (IOException e) {
             status.put("suggest", "status", "ERROR: " + e.getMessage());
@@ -258,9 +257,8 @@ public class StatusWS {
     }
 
     private class Status {
-
-        Map<String, Map<String,String>> groups =
-                                     new HashMap<String, Map<String,String>>();
+        Map<String, List<Pair<String,String>>> groups =
+                               new HashMap<String, List<Pair<String,String>>>();
 
         Date date;
 
@@ -270,9 +268,9 @@ public class StatusWS {
 
         public void put(String group, String name, String value) {
             if (!groups.containsKey(group)) {
-                groups.put(group, new HashMap<String,String>());
+                groups.put(group, new LinkedList<Pair<String,String>>());
             }
-            groups.get(group).put(name, value);
+            groups.get(group).add(new Pair<String,String>(name, value));
         }
 
         public String toXML() {
@@ -284,18 +282,17 @@ public class StatusWS {
                .append("\">\n");
             SortedSet<String> groupNames = new TreeSet<String>(groups.keySet());
             for (String groupName : groupNames) {
-                Map<String,String> group = groups.get(groupName);
+                List<Pair<String,String>> group = groups.get(groupName);
+                Collections.sort(group);
                 buf.append("  <group name=\"")
                    .append(groupName)
                    .append("\">\n");
-                SortedSet<String> groupProperties =
-                                    new TreeSet<String>(group.keySet());
-                for (String name : groupProperties) {
+                for (Pair<String,String> prop : group) {
                     buf.append("    <property name=\"")
-                       .append(name)
+                       .append(prop.getKey())
                        .append("\">\n")
                        .append("      ")
-                       .append(group.get(name))
+                       .append(prop.getValue())
                        .append("\n    </property>\n");
                 }
                 buf.append("  </group>\n");
