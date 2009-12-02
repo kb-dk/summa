@@ -1,7 +1,228 @@
+2009-12-02 14:00  mkamstrup
+
+	* [r1973] build.properties, ChangeLog, NEWS:
+
+	Release Summa 1.4.15
+
+2009-12-02 12:03  toke-sb
+
+	* [r1972] Common/Common.iml,
+	  Common/src/dk/statsbiblioteket/summa/common/util/CollatorFactory.java[ADD],
+	  Common/test/dk/statsbiblioteket/summa/common/pool/CollatorSortedPoolTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/pool/StringPoolSuperTest.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/CollatorFactoryTest.java[ADD],
+	  Common/test/dk/statsbiblioteket/summa/common/util/ListSorterTest.java,
+	  Control/Control.iml, FacetBrowser/FacetBrowser.iml,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/api/IndexResponse.java,
+	  FacetBrowser/src/dk/statsbiblioteket/summa/facetbrowser/core/tags/Facet.java,
+	  FacetBrowser/test/dk/statsbiblioteket/summa/facetbrowser/browse/IndexLookupTest.java,
+	  FacetBrowser/test/log4j.xml, Index/Index.iml, Ingest/Ingest.iml,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/split/MARCParser.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/ISO2709ToMARCXMLFilter.java,
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/MARC21SlimTweaker.java,
+	  Ingest/test/dk/statsbiblioteket/summa/ingest/stream/ISO2709ToMARCXMLFilterTest.java,
+	  Search/Search.iml, Storage/Storage.iml, Summa.iml, Summa.ipr,
+	  Support/Support.iml,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/LocalStaticSortComparator.java,
+	  Web/Web.iml, Workflow/Workflow.iml:
+	  
+	  Bugfix: Changed all usages of Collator to (optionally where
+	  appropriate) consider space a char that goes before any other
+	  chars
+
+2009-12-02 10:37  mkamstrup
+
+	* [r1971]
+	  Storage/src/dk/statsbiblioteket/summa/storage/database/h2/H2Storage.java:
+	  
+	  Bugfix: Disable the level 2 cache in the H2Storage by default.
+	  Some memory balloning has been experienced with the L2 cache
+	  enabled.
+
+2009-12-02 10:33  mkamstrup
+
+	* [r1970] Common/Common.iml, Control/Control.iml,
+	  FacetBrowser/FacetBrowser.iml, Index/Index.iml,
+	  Ingest/Ingest.iml, Search/Search.iml, Storage/Storage.iml,
+	  Summa.iml, Summa.ipr, Support/Support.iml, Web/Web.iml,
+	  build.properties, lib/apidocs/sbutil-0.4.7-apidocs.zip[DEL],
+	  lib/apidocs/sbutil-0.4.8-apidocs.zip[ADD],
+	  lib/sbutil-0.4.7.jar[DEL], lib/sbutil-0.4.8.jar[ADD],
+	  lib/src/sbutil-0.4.7-src.zip[DEL],
+	  lib/src/sbutil-0.4.8-src.zip[ADD]:
+	  
+	  Bump SB Util dependency to 0.4.8. This enables some fixes in our
+	  collator based sorts as well as some more aggresive fast pathing
+	  of XSLT processing when namespaces are ignored.
+
+2009-12-02 08:36  mkamstrup
+
+	* [r1969]
+	  Web/src/dk/statsbiblioteket/summa/web/services/StatusBuilder.java:
+	  
+	  Feature: Include "Most popular queries the last 24 hours" in the
+	  status page and rss feed
+
+2009-12-02 07:41  mkamstrup
+
+	* [r1968]
+	  Web/src/dk/statsbiblioteket/summa/web/services/StatusWS.java:
+	  
+	  Bugfix: The status webservice did not allow duplicate keys in a
+	  group. This made queryCount reporting throw away queries with the
+	  same count. Rant: Why is there no SortedList class in Java!?
+
+2009-12-01 11:39  toke-sb
+
+	* [r1967] Index/test/dk/statsbiblioteket/summa/plugins[ADD],
+	  Index/test/dk/statsbiblioteket/summa/plugins/YearRangeTest.java[ADD]:
+	  
+	  Testing: Added rudimentary unit-test for YearRange plugin
+
+2009-11-30 14:35  toke-sb
+
+	* [r1966]
+	  Common/src/dk/statsbiblioteket/summa/common/util/BitsArray.java[DEL],
+	  Common/src/dk/statsbiblioteket/summa/common/util/BitsArrayInt.java[DEL],
+	  Common/src/dk/statsbiblioteket/summa/common/util/BitsArrayPacked.java[DEL],
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArray.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArrayAligned.java[CPY],
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArrayFactory.java[ADD],
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArrayInt.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArrayPacked.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/BitsArrayTest.java[DEL]:
+	  
+	  Refactoring: Moved BitsArray related files to a dedicated package
+	  and started work on a factory class for selecting optimized
+	  BitsArrays
+
+2009-11-30 14:29  toke-sb
+
+	* [r1965]
+	  Common/src/dk/statsbiblioteket/summa/common/util/PipedStream.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/PipedStreamTest.java[ADD]:
+	  
+	  Util:Implemented PipedStream: A bridge from OutputStream to
+	  InputStream with buffering and callback
+
+2009-11-30 12:01  mkamstrup
+
+	* [r1964] ClusterExtractor/test/log4j.xml, Common/test/log4j.xml,
+	  Control/config/log4j.xml,
+	  Control/test/dk/statsbiblioteket/summa/performance/config/log4j.xml,
+	  Control/test/log4j.xml, FacetBrowser/config/log4j.xml,
+	  FacetBrowser/test/log4j.xml, Index/config/log4j.xml,
+	  Index/test/log4j.xml, Samples/Summix/config/log4j.xml,
+	  Search/test/log4j.xml, Storage/config/log4j.xml,
+	  Storage/test/log4j.xml, Support/test/log4j.xml,
+	  Web/config/search/log4j.xml, Web/config/status/log4j.xml,
+	  Web/config/storage/log4j.xml, Web/config/website/log4j.xml,
+	  Workflow/Workflow.iml, Workflow/test/log4j.xml:
+	  
+	  Make sure we always store the last 5 fatal.log files (we used to
+	  only store 2)
+
+2009-11-30 10:53  mkamstrup
+
+	* [r1963] Common/attic[DEL], FacetBrowser/attic[DEL],
+	  Index/attic[DEL], Ingest/attic[DEL], Search/attic[DEL],
+	  Storage/attic[DEL], Support/attic[DEL]:
+	  
+	  Remove all attic code as agreed with Toke. To dig out the attic
+	  code from svn it is probably easiest to do
+	  
+	  svn co
+	  https://summa.svn.sourceforge.net/svnroot/summa/tags/summa-1.4.14
+
+2009-11-30 10:31  toke-sb
+
+	* [r1962]
+	  Common/src/dk/statsbiblioteket/summa/common/util/PipedStream.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits[ADD],
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArray.java[CPY],
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArrayInt.java[CPY],
+	  Common/src/dk/statsbiblioteket/summa/common/util/bits/BitsArrayPacked.java[CPY],
+	  Common/test/dk/statsbiblioteket/summa/common/util/bits[ADD],
+	  Common/test/dk/statsbiblioteket/summa/common/util/bits/BitsArrayTest.java[CPY],
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/ReferenceSorter.java:
+	  
+	  Refactor: Moved the BitsArray-related files to a separate folder
+
+2009-11-30 10:21  toke-sb
+
+	* [r1961] Common/Common.iml,
+	  Common/src/dk/statsbiblioteket/summa/common/util/BitsArrayPacked.java,
+	  Common/test/dk/statsbiblioteket/summa/common/util/BitsArrayTest.java,
+	  Control/Control.iml, FacetBrowser/FacetBrowser.iml,
+	  Index/Index.iml, Ingest/Ingest.iml, Search/Search.iml,
+	  Storage/Storage.iml, Summa.iml, Summa.ipr, Support/Support.iml,
+	  Web/Web.iml, Workflow/Workflow.iml:
+	  
+	  Performance: Optimized BitsArrayPacked yet again. It should now
+	  be withing the usable range for get. set needs more optimizing
+
+2009-11-27 15:35  toke-sb
+
+	* [r1960]
+	  Common/src/dk/statsbiblioteket/summa/common/util/BitsArray.java,
+	  Common/src/dk/statsbiblioteket/summa/common/util/BitsArrayInt.java[ADD],
+	  Common/src/dk/statsbiblioteket/summa/common/util/BitsArrayPacked.java[CPY],
+	  Common/test/dk/statsbiblioteket/summa/common/util/BitsArrayTest.java,
+	  Support/src/dk/statsbiblioteket/summa/support/lucene/search/sort/ReferenceSorter.java:
+	  
+	  Performance: Optimized BitsArrayPacked
+
+2009-11-25 14:31  mkamstrup
+
+	* [r1959] Web/build.xml, Web/config/status/services.xml,
+	  Web/src/dk/statsbiblioteket/summa/web/RSSChannel.java,
+	  Web/src/dk/statsbiblioteket/summa/web/services/StatusBuilder.java[ADD],
+	  Web/status_resources/index.jsp, Web/status_resources/rss.jsp,
+	  Web/status_resources/xml.jsp,
+	  Web/test/dk/statsbiblioteket/summa/web/RSSChannelTest.java:
+	  
+	  The status web service now exposes a xml.jsp, index.jsp, and
+	  rss.jsp. All fully working (however with minimal content for
+	  now).
+	  
+	  The RSS feed will be marked as updated if any one of the
+	  following conditions hold:
+	  * There is an error anywhere
+	  * The storage/index has been been updated since last check
+
+2009-11-25 10:25  mkamstrup
+
+	* [r1958]
+	  Web/src/dk/statsbiblioteket/summa/web/RSSChannel.java[ADD],
+	  Web/test/dk/statsbiblioteket/summa/web/RSSChannelTest.java[ADD]:
+	  
+	  New helper classes in Web module to help build RSS feeds
+
+2009-11-24 15:06  toke-sb
+
+	* [r1957]
+	  Ingest/src/dk/statsbiblioteket/summa/ingest/stream/Aleph2XML2.java:
+	  
+	  Feature: made the ID-delimiter configurable in Aleph2XML
+
+2009-11-24 14:07  mkamstrup
+
+	* [r1956] Web/build.xml, Web/config/status/services.xml[ADD],
+	  Web/resources[DEL], Web/status_resources[ADD],
+	  Web/status_resources/images[ADD],
+	  Web/status_resources/images/summa-logo_h40.png[CPY],
+	  Web/status_resources/index.jsp[ADD],
+	  Web/status_resources/rss.jsp[ADD],
+	  Web/status_resources/xml.jsp[ADD], Web/website_resources[CPY]:
+	  
+	  Initial work to support some human friendly status pages in the
+	  status web service. Also include stubs for RSS and raw XML
+	  output.
+
 2009-11-23 14:10  mkamstrup
 
-	* [r1954] : build.properties, ChangeLog, NEWS
-
+	* [r1954] ChangeLog, NEWS, build.properties:
+	  
 	  Release Summa 1.4.14
 
 2009-11-23 13:41  mkamstrup

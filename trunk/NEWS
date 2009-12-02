@@ -1,4 +1,47 @@
 ========================
+2009-12-02: Summa 1.4.15
+========================
+
+ * Bump SB Util dependency to 0.4.8. This enables some fixes in our collator
+   based sorts as well as some more aggresive fast pathing of XSLT processing
+   when namespaces are ignored (SB)
+
+ * Include "Most popular queries the last 24 hours" in the status page and
+   rss feed (SB)
+
+ * Implemented PipedStream: A bridge from OutputStream to InputStream
+   with buffering and callback
+
+ * Bugfix/logging: Make sure we always store the last 5 fatal.log (or error.log)
+                  files (we used to only store 2)
+
+ * Remove all attic code as agreed with Toke. To dig out the attic code from
+   svn it is probably easiest to do:
+
+     svn co https://summa.svn.sourceforge.net/svnroot/summa/tags/summa-1.4.14
+
+ * The status web service now exposes a xml.jsp, index.jsp, and rss.jsp. All
+   fully working (however with minimal content for now).
+   The RSS feed will be marked as updated if any one of the following
+   conditions hold:
+	  - There is an error anywhere
+	  - The storage/index has been been updated since last check
+
+ * New helper classes in Web module to help build RSS feeds
+
+ * Made the ID-delimiter configurable in Aleph2XML
+
+ * Bugfix: Changed all usages of Collator to (optionally where appropriate)
+           consider space a char that goes before any other chars (SB)
+
+ * Bugfix: Disable the level 2 cache in the H2Storage by default. Some memory
+           balloning has been experienced with the L2 cache enabled (SB)
+
+ * Bugfix: The status webservice did not allow duplicate keys in a group.
+           This made queryCount reporting throw away queries with the same
+           count. Rant: Why is there no SortedList class in Java!? (SB)
+
+========================
 2009-11-23: Summa 1.4.14
 ========================
 
