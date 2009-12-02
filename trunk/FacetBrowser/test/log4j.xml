@@ -35,7 +35,7 @@
 
     <appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
         <param name="Target" value="System.out"/>
-        <param name="Threshold" value="debug"/>
+        <param name="Threshold" value="trace"/>
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="%d{ABSOLUTE} %-5p [%c{1}] %m%n"/>
         </layout>
@@ -60,8 +60,8 @@
         <appender-ref ref="CONSOLE"/>
     </logger>
 
-    <logger name="dk.statsbiblioteket.summa.facetbrowser.lucene.LuceneFacetBuilderTest">
-        <level value="debug"/>
+    <logger name="dk.statsbiblioteket.summa.facetbrowser.api.IndexResponse">
+        <level value="trace"/>
         <appender-ref ref="CONSOLE"/>
     </logger>
 

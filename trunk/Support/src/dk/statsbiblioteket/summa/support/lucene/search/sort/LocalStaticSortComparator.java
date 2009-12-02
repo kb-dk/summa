@@ -22,31 +22,23 @@
  */
 package dk.statsbiblioteket.summa.support.lucene.search.sort;
 
-import java.text.Collator;
-import java.util.Locale;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
-import java.io.ByteArrayOutputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URL;
-
+import dk.statsbiblioteket.util.CachedCollator;
+import dk.statsbiblioteket.util.Profiler;
+import dk.statsbiblioteket.util.Streams;
 import org.apache.log4j.Logger;
-import org.apache.lucene.search.ScoreDocComparator;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.SortField;
-import org.apache.lucene.search.SortComparator;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermDocs;
 import org.apache.lucene.index.TermEnum;
-import org.apache.lucene.index.Term;
-import dk.statsbiblioteket.util.Profiler;
-import dk.statsbiblioteket.util.CachedCollator;
-import dk.statsbiblioteket.util.Streams;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.ScoreDocComparator;
+import org.apache.lucene.search.SortComparator;
+import org.apache.lucene.search.SortField;
+
+import java.io.*;
+import java.net.URL;
+import java.text.Collator;
+import java.util.*;
 
 /**
  * A localizable comparator for doing sorted searches in Lucene. The
@@ -128,7 +120,7 @@ public class LocalStaticSortComparator extends SortComparator {
                     //noinspection DuplicateStringLiteralInspection
                     log.debug("Could not locate " + second + ". Defaulting to "
                               + "hardcoded Summa char statistics");
-                    return new CachedCollator(locale, summaChars);
+                    return new CachedCollator(locale, summaChars, true);
                 }
             }
             InputStream is = url.openStream();
@@ -137,22 +129,22 @@ public class LocalStaticSortComparator extends SortComparator {
             ByteArrayOutputStream out = new ByteArrayOutputStream(1000);
             Streams.pipe(is, out);
             Collator collator =
-                    new CachedCollator(locale, out.toString("utf-8"));
+                    new CachedCollator(locale, out.toString("utf-8"), true);
             log.debug("Created CachedCollator based on stored char statistics "
                       + "from '" + url + "'");
             return collator;
         } catch(UnsupportedEncodingException e) {
             log.error("Exception converting to UTF-8, defaulting to hardcoded "
                       + "defaults", e);
-            return new CachedCollator(locale, summaChars);
+            return new CachedCollator(locale, summaChars, true);
         } catch(IOException e) {
             log.error("IOException getting statistics for collator, defaulting "
                       + "to hardcoded defaults", e);
-            return new CachedCollator(locale, summaChars);
+            return new CachedCollator(locale, summaChars, true);
         } catch(Exception e) {
             log.error("Exception getting statistics for collator, defaulting to"
                       + " hardcoded defaults", e);
-            return new CachedCollator(locale, summaChars);
+            return new CachedCollator(locale, summaChars, true);
         }
     }
 
