@@ -70,7 +70,7 @@ public class StorageReaderClient extends ConnectionConsumer<ReadableStorage>
             return storage.getModificationTime (base);
         } catch (Throwable t) {
             connectionError(t);
-            throw new IOException("getModificationTIme("+base+") failed: "
+            throw new IOException("getModificationTime("+base+") failed: "
                                   + t.getMessage(), t);
         } finally {
             releaseConnection();
