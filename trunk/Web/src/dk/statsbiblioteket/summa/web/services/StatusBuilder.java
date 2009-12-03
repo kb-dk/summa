@@ -176,7 +176,7 @@ public class StatusBuilder {
         buf.append("Report generated: ").append(now).append("<br/>");
         buf.append("<p/>\n");
 
-        buf.append("<b>Searcher: ").append(searcherStatus).append("</b><br/>");
+        buf.append("<b>Searcher:</b> <i>").append(searcherStatus).append("</i><br/>");
         buf.append("Number of documents: ")
             .append(searcher.getText("numDocs"))
             .append("<br/>");
@@ -188,13 +188,13 @@ public class StatusBuilder {
             .append("ms<br/>");
         buf.append("<p/>\n");
 
-        buf.append("<b>Storage: ").append(storageStatus).append("</b><br/>");
+        buf.append("<b>Storage:</b> <i>").append(storageStatus).append("</i><br/>");
         buf.append("Response time: ")
             .append(storage.getText("responseTime"))
             .append("ms<br/>");
         buf.append("<p/>\n");
 
-        buf.append("<b>Suggest: ").append(suggestStatus).append("</b><br/>");
+        buf.append("<b>Suggest:</b> <i>").append(suggestStatus).append("</i><br/>");
         buf.append("Response time: ")
             .append(suggest.getText("responseTime"))
             .append("ms<br/>");
