@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2009  The State and University Library
@@ -64,7 +64,9 @@ import java.util.regex.Pattern;
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
-        author = "te")
+        author = "te",
+        comment= "Scheduled for deprecation as ISO2709ToMARCXMLFilter does"
+                 + "the job itself")
 public class MARC21SlimTweaker extends ObjectFilterImpl {
     private static Log log = LogFactory.getLog(MARC21SlimTweaker.class);
 

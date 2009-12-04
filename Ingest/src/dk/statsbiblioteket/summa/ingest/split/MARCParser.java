@@ -50,20 +50,23 @@ import java.util.regex.Pattern;
  * {@code
 <collection xmlns="http://www.loc.gov/MARC21/slim">
 <record>
-  <leader>...</leader>
-  <datafield tag="..." ind1="..." ind2="...">
-    <subfield code="...">...</subfield>+
-  </datafield>*
+<leader>...</leader>
+<datafield tag="..." ind1="..." ind2="...">
+<subfield code="...">...</subfield>+
+</datafield>*
 </record>*
 </collection>
 } where * indicates multiple and + at least one occurence of the element.
  * </p><p>
- * Important: This parser does not handle controlfields.
+ * Important: This parser does not handle controlfields natively.
+ * Controlfields are passed along unprocessed. If any action should be taken
+ * upon encountering a controlfield, the method {@link #setControlField} should
+ * be implemented.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.QA_NEEDED,
         author = "te",
-        comment = "The parser should be extended for proper handling of control" 
+        comment = "The parser should be extended for proper handling of control"
                   + " fields")
 public abstract class MARCParser extends ThreadedStreamParser {
     private static Log log = LogFactory.getLog(MARCParser.class);
@@ -100,13 +103,18 @@ public abstract class MARCParser extends ThreadedStreamParser {
 
     @SuppressWarnings({"DuplicateStringLiteralInspection"})
     public static final String MARC_TAG_RECORD = "record";
+
     public static final String MARC_TAG_LEADER = "leader";
+
     public static final String MARC_TAG_DATAFIELD = "datafield";
     public static final String MARC_TAG_DATAFIELD_ATTRIBUTE_TAG = "tag";
     public static final String MARC_TAG_DATAFIELD_ATTRIBUTE_IND1 = "ind1";
     public static final String MARC_TAG_DATAFIELD_ATTRIBUTE_IND2 = "ind2";
     public static final String MARC_TAG_SUBFIELD = "subfield";
     public static final String MARC_TAG_SUBFIELD_ATTRIBUTE_CODE = "code";
+
+    public static final String MARC_TAG_CONTROLFIELD = "controlfield";
+    public static final String MARC_TAG_CONTROLFIELD_ATTRIBUTE_TAG = "tag";
 
     private XMLInputFactory inputFactory;
 
@@ -187,12 +195,17 @@ public abstract class MARCParser extends ThreadedStreamParser {
 
             switch(eventType) {
                 case XMLEvent.START_ELEMENT :
-                    content.append(beginTagToString(reader));
                     if (MARC_TAG_DATAFIELD.equals(reader.getLocalName())) {
+                        content.append(beginTagToString(reader));
                         processDataField(reader, content);
+                    } else if (MARC_TAG_CONTROLFIELD.equals(
+                            reader.getLocalName())) {
+                        processControlField(reader, content);
                     } else if (MARC_TAG_LEADER.equals(reader.getLocalName())) {
+                        content.append(beginTagToString(reader));
                         processLeader(reader, content);
                     } else {
+                        content.append(beginTagToString(reader));
                         if (!encounteredUnexpectedStart) {
                             encounteredUnexpectedStart = true;
                             log.warn(String.format(
@@ -241,8 +254,8 @@ public abstract class MARCParser extends ThreadedStreamParser {
                 default:
                     log.warn(String.format(
                             "Unexpended event %s while processing %s",
-                             XMLUtil.eventID2String(eventType),
-                             sourcePayload));
+                            XMLUtil.eventID2String(eventType),
+                            sourcePayload));
             }
         }
         if (!running) {
@@ -312,8 +325,8 @@ public abstract class MARCParser extends ThreadedStreamParser {
                     log.warn(String.format(
                             "processLeader: Unexpended event %s while "
                             + "processing %s",
-                             XMLUtil.eventID2String(eventType),
-                             sourcePayload));
+                            XMLUtil.eventID2String(eventType),
+                            sourcePayload));
             }
         }
     }
@@ -321,17 +334,17 @@ public abstract class MARCParser extends ThreadedStreamParser {
     /**
      * Process datafield-elements in a MARC record, such as {@code
     <datafield tag="..." ind1="..." ind2="...">
-      <subfield code="...">...</subfield>+
+    <subfield code="...">...</subfield>+
     </datafield>
-     }.
+    }.
      * @param reader  the reader, positioned at the start-tag for a datafield.
      * @param content the XML content up till this point, including
      *                {@code <datafield ...>}.
      * @throws XMLStreamException   if a parse error occured.
      */
-    protected void processDataField(XMLStreamReader reader,
-                                      StringWriter content)
-                                                     throws XMLStreamException {
+    protected void processDataField(
+            XMLStreamReader reader, StringWriter content)
+            throws XMLStreamException {
         log.trace("Reached datafield start-tag");
         String tag = null;
         String ind1 = null;
@@ -369,7 +382,7 @@ public abstract class MARCParser extends ThreadedStreamParser {
                         content.append(beginTagToString(reader));
                         log.warn(String.format(
                                 "processDataField: Reached unexpected start-tag"
-                                        + " <%s> for %s. Expected %s",
+                                + " <%s> for %s. Expected %s",
                                 reader.getLocalName(), sourcePayload,
                                 MARC_TAG_SUBFIELD));
                     }
@@ -400,15 +413,15 @@ public abstract class MARCParser extends ThreadedStreamParser {
                     log.warn(String.format(
                             "processDataField: Unexpended event %s while "
                             + "processing %s",
-                             XMLUtil.eventID2String(eventType),
-                             sourcePayload));
+                            XMLUtil.eventID2String(eventType),
+                            sourcePayload));
             }
         }
     }
 
     protected void processSubField(XMLStreamReader reader, StringWriter content,
                                    String tag, String ind1, String ind2) throws
-                                                            XMLStreamException {
+                                                                         XMLStreamException {
         log.trace("Reached subfield start-tag");
 
         String code = null;
@@ -419,7 +432,7 @@ public abstract class MARCParser extends ThreadedStreamParser {
             } else {
                 log.warn(String.format(
                         "processSubfield: Unexpected attribute %s with value '"
-                                + "%s' for tag %s",
+                        + "%s' for tag %s",
                         reader.getAttributeLocalName(i),
                         reader.getAttributeValue(i), MARC_TAG_SUBFIELD));
             }
@@ -466,11 +479,49 @@ public abstract class MARCParser extends ThreadedStreamParser {
                     log.warn(String.format(
                             "processSubField: Unexpended event %s while "
                             + "processing %s",
-                             XMLUtil.eventID2String(eventType),
-                             sourcePayload));
+                            XMLUtil.eventID2String(eventType),
+                            sourcePayload));
             }
         }
     }
+
+    /**
+     * Process controlfield-elements in a MARC record, such as {@code
+    <controlfield tag="...">...</controlfield>
+    }.
+     * @param reader  the reader positioned at the start-tag for a controlfield.
+     * @param content the XML content up till this point, not including
+     *                {@code <controlfield ...>}. Note that this is counter to
+     *                processDataField, where the leading tag is added before
+     *                the method call.
+     * @throws XMLStreamException if a parse error occured.
+     */
+    protected void processControlField(
+            XMLStreamReader reader, StringWriter content)
+            throws XMLStreamException {
+        String tag = null;
+        for (int i = 0 ; i < reader.getAttributeCount() ; i++) {
+            if (MARC_TAG_CONTROLFIELD_ATTRIBUTE_TAG.equals(
+                    reader.getAttributeLocalName(i))) {
+                tag = reader.getAttributeValue(i);
+            }
+        }
+        String fieldContent = reader.getElementText();
+
+        if (tag == null && !noControlTagEncountered) {
+            log.warn(String.format(
+                    "There is not attribute tag for the controlelement with "
+                    + "content '%s'. Futher errors of this kind will be "
+                    + "ignored", fieldContent));
+            noControlTagEncountered = true;
+        }
+
+        String dumpContent = setControlField(tag, fieldContent);
+        if (dumpContent != null) {
+            content.append(dumpContent);
+        }
+    }
+    private boolean noControlTagEncountered = true;
 
     /**
      * Initialize the MARC parser. This normally involves resetting all
@@ -494,8 +545,8 @@ public abstract class MARCParser extends ThreadedStreamParser {
      * @param ind1 the ind1-attribute for the datafield.
      * @param ind2 the ind2-attribute for the datafield.
      */
-    protected abstract void beginDataField(String tag,
-                                           String ind1, String ind2);
+    protected abstract void beginDataField(
+            String tag, String ind1, String ind2);
 
     /**
      * Set a subfield for a datafield. It is guaranteed that the subfields
@@ -512,6 +563,32 @@ public abstract class MARCParser extends ThreadedStreamParser {
                                         String dataFieldInd2,
                                         String subFieldCode,
                                         String subFieldContent);
+
+    /**
+     * Set a controlfield. Note that this method is optional. The default
+     * implementation is to log a warning the first time the method is called.
+     * @param tag     the tag for the controlfield.
+     * @param content the content of the controlfield.
+     * @return the output to write to the resulting XML stream. If null, the
+     *         output is ignored.
+     */
+    protected String setControlField(String tag, String content) {
+        if (!setControlFieldCalled) {
+            log.info(String.format(
+                    "setControlField(%s, '%s') called, although there is no "
+                    + "explicit handler for controlfields. The controlfield is "
+                    + "written back directly. Subsequent calls will not be "
+                    + "logged",
+                    tag, content));
+            setControlFieldCalled = true;
+        }
+
+        return String.format(
+                "<controlfield tag=\"%s\">%s</controlfield>\n",
+                tag, content);
+    }
+    private boolean setControlFieldCalled = false;
+
 
     /**
      * Marks the end a datafield-element.
@@ -565,8 +642,8 @@ public abstract class MARCParser extends ThreadedStreamParser {
             state = QAInfo.State.QA_NEEDED,
             author = "te",
             comment = "Test expansion of non-default namespaces")
-    protected String beginTagToString(XMLStreamReader reader,
-                                      boolean addNamespaceDeclarations) {
+    protected String beginTagToString(
+            XMLStreamReader reader, boolean addNamespaceDeclarations) {
         StringWriter tag = new StringWriter(50);
         tag.append("<").append(reader.getLocalName());
         if (addNamespaceDeclarations) {
@@ -588,8 +665,8 @@ public abstract class MARCParser extends ThreadedStreamParser {
      * @param reader where to get the namespace declarations.
      * @param writer the writer to append to.
      */
-    private void addNamespaceDeclarations(XMLStreamReader reader,
-                                          StringWriter writer) {
+    private void addNamespaceDeclarations(
+            XMLStreamReader reader, StringWriter writer) {
         if (reader.getNamespaceURI() != null) {
             writer.append(" xmlns=\"").append(reader.getNamespaceURI());
             writer.append("\"");
@@ -611,8 +688,8 @@ public abstract class MARCParser extends ThreadedStreamParser {
      * @param localName the SAX-derived attribute local name.
      * @param value the value of the attribute.
      */
-    protected void addAttribute(StringWriter writer,
-                                String localName, String value) {
+    protected void addAttribute(
+            StringWriter writer, String localName, String value) {
         writer.append(" ").append(localName).append("=\"").
                 append(XMLUtil.encode(value)).append("\"");
     }

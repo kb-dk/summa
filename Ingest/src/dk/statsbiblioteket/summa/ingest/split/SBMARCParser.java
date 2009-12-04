@@ -19,21 +19,21 @@
  */
 package dk.statsbiblioteket.summa.ingest.split;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Logs;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import dk.statsbiblioteket.summa.common.Record;
 import dk.statsbiblioteket.summa.common.MarcAnnotations;
+import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.util.Logs;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import javax.xml.stream.XMLStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.io.StringWriter;
-import java.util.List;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * A parser for the MARC-variant used at the State and University Library of
@@ -279,7 +279,6 @@ public class SBMARCParser extends MARCParser {
      * @return the XML for the begin subfield tag.
      */
     @Override
-    @SuppressWarnings({"UnusedDeclaration"})
     protected String beginSubFieldTagToString(XMLStreamReader reader,
                                               String tag, String ind1,
                                               String ind2, String code) {
@@ -396,4 +395,5 @@ public class SBMARCParser extends MARCParser {
     public String toString() {
         return "SBMARCParser(" + super.toString() + ")";
     }
+
 }
