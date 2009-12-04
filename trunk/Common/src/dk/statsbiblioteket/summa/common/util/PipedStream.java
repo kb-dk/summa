@@ -60,8 +60,9 @@ public class PipedStream extends InputStream {
      * A request for wanted bytes to be added to the outputstream.
      * @param wanted the wanted number of bytes.
      * @return the number of added bytes or -1 if EOF is reached.
+     * @throws java.io.IOException if bytes could not be retrieved or added.
      */
-    protected int addBytesRequest(int wanted) {
+    protected int addBytesRequest(int wanted) throws IOException {
         log.trace("Default addBytesRequest(" + wanted
                   + ") called. No action taken");
         return 0;
