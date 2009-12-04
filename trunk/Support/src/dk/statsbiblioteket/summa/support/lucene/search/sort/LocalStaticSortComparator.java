@@ -22,73 +22,35 @@
  */
 package dk.statsbiblioteket.summa.support.lucene.search.sort;
 
-import dk.statsbiblioteket.util.CachedCollator;
 import dk.statsbiblioteket.util.Profiler;
-import dk.statsbiblioteket.util.Streams;
 import org.apache.log4j.Logger;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.index.TermDocs;
-import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.ScoreDocComparator;
-import org.apache.lucene.search.SortComparator;
 import org.apache.lucene.search.SortField;
 
-import java.io.*;
-import java.net.URL;
-import java.text.Collator;
-import java.util.*;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * A localizable comparator for doing sorted searches in Lucene. The
- * comparator maintains a cache of sort-values. Changes to the Lucene
- * index are detected by using reader.getVersion + reader.maxDoc.
+ * This comparator maintains a cache of sort-positions.
  * </p><p>
- * The comparator looks for the files {@code charstats.<languagecode>.dat} and
- * {@code charstats.dat} in that order. If no char statistics are found,
- * it defaults to {@link #summaChars}. The languagecode is a two-letter language
- * code from ISO 639-2. The charset is UTF-8.
- * </p><p>
- * The charstats contains the characters that are safe for comparing
- * char-to-char. If the two Strings to compare only consists of those chars,
- * they can be compared with array-lookups instead of the more costly Collator
- * from Java.
- * </p><p>
- * Note: Contrary to the default Java Collator, spaces are considered
- * significant and sorted before any other characters.
- * </p><p>
- * In order to use the caching, an instance of the comparator should be kept
- * alive between searches.
- * </p><p>
- * Usage:
- * <pre>
- * LocalSortComparator myCompare = new LocalSortComparator("da");
- * SortField titleSort           = new SortField("title", myCompare);
- * SortField titleSortReverse    = new SortField("title", myCompare, true);
- * ...
- * Hits hits = searcher.search(query, Sort(titleSort));
- * </pre>
+ * The comparator has high memory-usage for the first sort for a given field,
+ * but after that only the relative positions of the documents are stored,
+ * taking up #documents * 4 bytes.
  */
-public class LocalStaticSortComparator extends SortComparator {
+public class LocalStaticSortComparator extends ReusableSortComparator {
     private static final Logger log =
             Logger.getLogger(LocalStaticSortComparator.class);
-    private String language;
-    private Collator collator;
 
-    // Field name, document position
+    /**
+     * The cache of orders for fields. The cache is cleared when the index
+     * changes.
+     */
     private Map<String, int[]> orders = new HashMap<String, int[]>(10);
-    // The index-version used for building the orders.
-    private String indexVersion = null;
-
-    private static final String summaChars =
-            "eaoi 0ntr1s24cl93857hd6pgum.bfv:xwykj_z/-qASPCXIUø"
-            + "NEGæ$>é#Väåö&ü^áāLó~–íãT*@ıç%čâèBM|š—FYêDúàūžñRð"
-            + "·Oć−ôë,łβα°±HşīîJõKZQēśδ†ṣōïěğăńýřûė→ì";
-// Unsafe:            "þ×µμγ§ßο∼"
-//            + "£ò▿ưκđσơλùειżτę­νπąρœ¤őηǩĸºφ≥ςĭωί³⋅≤иũňţθό∞ή™υź"
-//            + "еаέ…²ªW€≈ψ¢нт•↑ľ¾ύχ₂ώр‰űάÿ¹о½ẽ‐ųζů;л'‡ξĩ√⁰¼ﬁĝȩ←";
-
 
     /**
      * Create a comparator based on the sorting rules for the given language.
@@ -96,59 +58,7 @@ public class LocalStaticSortComparator extends SortComparator {
      *                http://www.loc.gov/standards/iso639-2/php/English_list.php
      */
     public LocalStaticSortComparator(String language) {
-        this.language = language;
-        Locale locale = new Locale(language);
-        collator = createCollator(locale);
-    }
-
-    /**
-     * Attempts to load char statistics and create a {@link CachedCollator} from
-     * that. If no statistics can be loaded, the CachedCollator uses the default
-     * statistics.
-     * @param locale the Locale to use for the Collator.
-     * @return a collator, preferably based on char statistics.
-     */
-    protected Collator createCollator(Locale locale) {
-        try {
-            ClassLoader loader = Thread.currentThread().getContextClassLoader();
-            String first = "charstats." + locale.getLanguage() + ".dat";
-            String second = "charstats.dat";
-
-            URL url = loader.getResource(first);
-            if (url == null) {
-                //noinspection DuplicateStringLiteralInspection
-                log.debug("Could not locate " + first + ", trying " + second);
-                url = loader.getResource(second);
-                if (url == null) {
-                    //noinspection DuplicateStringLiteralInspection
-                    log.debug("Could not locate " + second + ". Defaulting to "
-                              + "hardcoded Summa char statistics");
-                    return new CachedCollator(locale, summaChars, true);
-                }
-            }
-            InputStream is = url.openStream();
-            assert is != null : "The InputStream is should be defined, as we "
-                                + "know the URL '" + url + "'";
-            ByteArrayOutputStream out = new ByteArrayOutputStream(1000);
-            Streams.pipe(is, out);
-            Collator collator =
-                    new CachedCollator(locale, out.toString("utf-8"), true);
-            log.debug("Created CachedCollator based on stored char statistics "
-                      + "from '" + url + "'");
-            return collator;
-        } catch(UnsupportedEncodingException e) {
-            log.error("Exception converting to UTF-8, defaulting to hardcoded "
-                      + "defaults", e);
-            return new CachedCollator(locale, summaChars, true);
-        } catch(IOException e) {
-            log.error("IOException getting statistics for collator, defaulting "
-                      + "to hardcoded defaults", e);
-            return new CachedCollator(locale, summaChars, true);
-        } catch(Exception e) {
-            log.error("Exception getting statistics for collator, defaulting to"
-                      + " hardcoded defaults", e);
-            return new CachedCollator(locale, summaChars, true);
-        }
+        super(language);
     }
 
     // inherit javadocs
@@ -180,7 +90,7 @@ public class LocalStaticSortComparator extends SortComparator {
      * @param reader     the reader to use as basis for the order.
      * @param fieldname  the field name to use for ordering.
      * @return positions to the terms in the field in order.
-     * @throws IOException if the field in the reader could not be sorted.
+     * @throws java.io.IOException if the field in the reader could not be sorted.
      */
     protected synchronized int[] getOrder(
             final IndexReader reader, String fieldname) throws IOException {
@@ -190,18 +100,15 @@ public class LocalStaticSortComparator extends SortComparator {
         int maxDoc = reader.maxDoc();
         log.trace("Checking cache for '" + fieldname + "'");
         if (orders.containsKey(fieldname)) {
-            if (orders.get(fieldname).length == maxDoc) {
-                log.debug("The cache for '" + fieldname + "' is up to date");
-                return orders.get(fieldname);
-            } else {
-                orders.remove(fieldname);
-            }
+            return orders.get(fieldname);
         }
+
         log.debug("Building new cache for field '" + fieldname + "'");
         Profiler profiler = new Profiler();
         // Build a list of pairs
         Pair[] sorted = getPairs(reader, fieldname);
         // Sort the list
+
         log.trace("Sorting positions for '" + fieldname + "'");
         Arrays.sort(sorted, new Comparator<Pair>() {
             public int compare(Pair o1, Pair o2) {
@@ -244,108 +151,10 @@ public class LocalStaticSortComparator extends SortComparator {
         return positions;
     }
 
-    private synchronized void checkCacheConsistency(IndexReader reader) {
-        String indexVersion = "Reader version: " + reader.getVersion()
-                               + ", maxDoc: " + reader.maxDoc();
-        if (this.indexVersion != null
-            && this.indexVersion.equals(indexVersion)) {
-            return;
-        }
-        orders.clear();
-        this.indexVersion = indexVersion;
-    }
-
-    private void provideFeedback(Pair[] sorted) {
-        if (log.isTraceEnabled()) {
-            int SAMPLES = 10;
-            StringWriter top = new StringWriter(SAMPLES*100);
-            int counter = 0;
-            for (Pair p: sorted) {
-                if (p != null && p.term != null) {
-                    top.append(p.term).append(" ");
-                    if (counter++ == SAMPLES) {
-                        break;
-                    }
-                }
-            }
-            StringWriter bottom = new StringWriter(SAMPLES*100);
-            counter = 0;
-            for (int i = sorted.length-1 ; i >= 0 ; i--) {
-                Pair p = sorted[i];
-                if (p != null && p.term != null) {
-                    bottom.append(p.term).append(" ");
-                    if (counter++ == SAMPLES) {
-                        break;
-                    }
-                }
-            }
-            log.trace(String.format("The first %d/%d sorted terms: %s",
-                                    SAMPLES, sorted.length, top));
-            log.trace(String.format("The last %d/%d sorted terms: %s",
-                                    SAMPLES, sorted.length, bottom));
-        }
-    }
-
-    protected Pair[] getPairs(final IndexReader reader, String fieldname)
-                                                            throws IOException {
-        Pair[] pairs = new Pair[reader.maxDoc()];
-        TermDocs termDocs = reader.termDocs();
-        TermEnum termEnum = reader.terms(new Term(fieldname, ""));
-        int counter = 0;
-        try {
-            do {
-                Term term = termEnum.term();
-                //noinspection StringEquality
-                if (term==null || term.field() != fieldname) {
-                    break;
-                }
-                String termText = term.text();
-                termDocs.seek (termEnum);
-                while (termDocs.next()) {
-                    if (log.isTraceEnabled() && counter++ % 100000 == 0) {
-                        log.trace("Building term positions for term #" +
-                                  counter);
-                    }
-                    pairs[termDocs.doc()] =
-                            new Pair(termDocs.doc(), termText);
-                }
-            } while (termEnum.next());
-        } finally {
-            termDocs.close();
-            termEnum.close();
-        }
-        return pairs;
-    }
-
-    protected class Pair implements Comparable<Pair> {
-        int docID;
-        String term;
-
-        public Pair(int docID, String term) {
-            this.docID = docID;
-            this.term = term;
-        }
-
-        public int compareTo(Pair o) {
-            if (term == null) {
-                return o.term == null ? 0 : 1;
-            } else if (o.term == null) {
-                return -1;
-            }
-            return collator.compare(term, o.term);
-        }
-    }
-
     @Override
-    protected Comparable getComparable(String termtext) {
-        throw new UnsupportedOperationException(
-                "Not implemented as it should not be called");
-    }
-
-    /* Accessors */
-
-    public String getLanguage() {
-        return language;
+    protected void indexChanged() {
+        log.debug("Index has changed. Dropping caches");
+        orders.clear();
     }
 }
 
