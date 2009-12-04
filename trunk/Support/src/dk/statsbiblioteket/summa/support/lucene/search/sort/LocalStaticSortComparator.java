@@ -55,6 +55,9 @@ import java.util.*;
  * they can be compared with array-lookups instead of the more costly Collator
  * from Java.
  * </p><p>
+ * Note: Contrary to the default Java Collator, spaces are considered
+ * significant and sorted before any other characters.
+ * </p><p>
  * In order to use the caching, an instance of the comparator should be kept
  * alive between searches.
  * </p><p>
