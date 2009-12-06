@@ -88,6 +88,11 @@ public abstract class ResourceTrackerImpl<T> implements ResourceTracker<T> {
                 calculateBytes(element) + mem < memLimit);
     }
 
+    public boolean isOverflowing() {
+        return count > minCountLimit 
+               && (count > maxCountLimit || mem > memLimit);
+    }
+
     public long getSize() {
         return count;
     }

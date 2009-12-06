@@ -57,6 +57,7 @@ import dk.statsbiblioteket.util.qa.QAInfo;
 public class PriorityQueue<T extends Comparable<? super T>> {
     private T[] heap;
     private int size = 0;
+
     private int maxCapacity;
     private static final int DEFAULT_INITIAL_CAPACITY = 1000;
     private Comparator<T> comparator; // Optional
@@ -82,9 +83,8 @@ public class PriorityQueue<T extends Comparable<? super T>> {
                     "The max capacity (%d) must be larger than or equal to the "
                     + "initial capacity (%d)", maxCapacity, initialCapacity));
         }
-        new ArrayList<Integer>(10);
         //noinspection unchecked
-        heap = (T[])new Object[initialCapacity];
+        heap = (T[])new Comparable[initialCapacity];
         this.maxCapacity = maxCapacity;
         this.comparator = comparator;
     }
@@ -118,7 +118,7 @@ public class PriorityQueue<T extends Comparable<? super T>> {
             heap = values;
         } else {
             //noinspection unchecked
-            heap = (T[])new Object[Math.max(Math.min(
+            heap = (T[])new Comparable[Math.max(Math.min(
                     DEFAULT_INITIAL_CAPACITY, maxCapacity), size)];
             System.arraycopy(values, 0, heap, 0, size);
         }
@@ -149,7 +149,7 @@ public class PriorityQueue<T extends Comparable<? super T>> {
             if (heap.length == size+1) { // Expand heap
                 int newSize = Math.min(maxCapacity, heap.length*2);
                 //noinspection unchecked
-                T[] newQueue = (T[])new Object[newSize];
+                T[] newQueue = (T[])new Comparable[newSize];
                 System.arraycopy(heap, 0, newQueue, 0, size);
                 heap = newQueue;
             }
