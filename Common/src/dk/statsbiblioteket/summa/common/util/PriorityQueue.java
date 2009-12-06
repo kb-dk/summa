@@ -27,6 +27,7 @@
 package dk.statsbiblioteket.summa.common.util;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
 
@@ -34,7 +35,8 @@ import dk.statsbiblioteket.util.qa.QAInfo;
  * A generic Priority Queue. This Queue supports a max capacity.
  * If an element is inserted and the max capacity is exceeded, the least
  * significant value is discarded and returned.
- * This is optimized towards speed & space, at the cost of abstraction.
+ * The queue optionally takes a Comparator and uses the natural order from
+ * the Comparable objects if none is specified.
  * insert:    O(log(n))
  * removeMin: O(log(n))
  * getMin:    O(1)
@@ -43,34 +45,48 @@ import dk.statsbiblioteket.util.qa.QAInfo;
  *
  * see http://en.wikibooks.org/wiki/Wikiversity:Data_Structures#Heaps
  * and http://www.personal.kent.edu/~rmuhamma/Algorithms/MyAlgorithms/Sorting/heapSort.htm
+ * </p><p>
+ * Note: This class creates arrays of generics by using the same cast-hack as
+ *       {@link ArrayList}.
+ *       See http://forums.sun.com/thread.jspa?threadID=564355&forumID=316 for
+ *       a discussion on the subject.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class PriorityQueue<T extends Comparable<? super T>> {
-    private Object[] heap;
+    private T[] heap;
     private int size = 0;
     private int maxCapacity;
     private static final int DEFAULT_INITIAL_CAPACITY = 1000;
+    private Comparator<T> comparator; // Optional
 
     public PriorityQueue() {
         this(Integer.MAX_VALUE);
     }
     public PriorityQueue(int maxCapacity) {
-        this(Math.min(DEFAULT_INITIAL_CAPACITY, maxCapacity), maxCapacity);
+        this(null, Math.min(DEFAULT_INITIAL_CAPACITY, maxCapacity),
+             maxCapacity);
+    }
+    public PriorityQueue(Comparator<T> comparator, int maxCapacity) {
+        this(comparator, Math.min(DEFAULT_INITIAL_CAPACITY,
+                                  maxCapacity), maxCapacity);
     }
     public PriorityQueue(int initialCapacity, int maxCapacity) {
+        this(null, initialCapacity, maxCapacity);
+    }
+    public PriorityQueue(Comparator<T> comparator, int initialCapacity,
+                         int maxCapacity) {
         if (maxCapacity < initialCapacity) {
-            throw new IllegalArgumentException("The max capacity ("
-                                               + maxCapacity + ") must be "
-                                               + "larger than or equal to the "
-                                               + "initial capacity ("
-                                               + initialCapacity + ")");
+            throw new IllegalArgumentException(String.format(
+                    "The max capacity (%d) must be larger than or equal to the "
+                    + "initial capacity (%d)", maxCapacity, initialCapacity));
         }
         new ArrayList<Integer>(10);
         //noinspection unchecked
-        heap = new Object[initialCapacity];
+        heap = (T[])new Object[initialCapacity];
         this.maxCapacity = maxCapacity;
+        this.comparator = comparator;
     }
 
     /**
@@ -87,17 +103,14 @@ public class PriorityQueue<T extends Comparable<? super T>> {
     public void setValues(T[] values, int size, boolean reuseArray,
                           int maxCapacity) {
         if (size > values.length) {
-            throw new IllegalArgumentException("The size (" + size
-                                               + ") must be equal to or "
-                                               + "smaller than the length "
-                                               + "of values (" + values.length
-                                               + ")");
+            throw new IllegalArgumentException(String.format(
+                    "The size (%d) must be equal to or smaller than the length "
+                    + "of values (%d)", size, values.length));
         }
         if (maxCapacity < size) {
-            throw new IllegalArgumentException("The maxCapacity (" + maxCapacity
-                                               + ") must be equal to or "
-                                               + "greater than size ("
-                                               + size + ")");
+            throw new IllegalArgumentException(String.format(
+                    "The maxCapacity (%d) must be equal to or greater than "
+                    + "size (%d)", maxCapacity, size));
         }
         this.maxCapacity = maxCapacity;
         this.size = size;
@@ -105,8 +118,8 @@ public class PriorityQueue<T extends Comparable<? super T>> {
             heap = values;
         } else {
             //noinspection unchecked
-            heap = (T[])new Object[Math.max(Math.min(DEFAULT_INITIAL_CAPACITY,
-                                                     maxCapacity), size)];
+            heap = (T[])new Object[Math.max(Math.min(
+                    DEFAULT_INITIAL_CAPACITY, maxCapacity), size)];
             System.arraycopy(values, 0, heap, 0, size);
         }
 
@@ -125,8 +138,9 @@ public class PriorityQueue<T extends Comparable<? super T>> {
     public T insert(T value) {
         if (size == maxCapacity) { // Heap is full
             //noinspection unchecked
-            T heapZero = (T)heap[0];
-            if (heapZero.compareTo(value) > 0) {
+            T heapZero = heap[0];
+            if ((comparator != null ? comparator.compare(heapZero, value)
+                 : heapZero.compareTo(value)) > 0) {
                 heap[0] = value;
                 siftDown();
                 return heapZero;
@@ -134,7 +148,8 @@ public class PriorityQueue<T extends Comparable<? super T>> {
         } else { // Insert at the end and sift up
             if (heap.length == size+1) { // Expand heap
                 int newSize = Math.min(maxCapacity, heap.length*2);
-                Object[] newQueue = new Object[newSize];
+                //noinspection unchecked
+                T[] newQueue = (T[])new Object[newSize];
                 System.arraycopy(heap, 0, newQueue, 0, size);
                 heap = newQueue;
             }
@@ -166,7 +181,7 @@ public class PriorityQueue<T extends Comparable<? super T>> {
                     "No values left on the heap");
         }
         //noinspection unchecked
-        return (T)heap[0];
+        return heap[0];
     }
 
     /**
@@ -185,7 +200,10 @@ public class PriorityQueue<T extends Comparable<? super T>> {
         while (position > 0) {
             int parentPosition = parent(position);
             //noinspection unchecked
-            if (((T)heap[parentPosition]).compareTo((T)heap[position]) < 0) {
+            if ((comparator != null
+                 ? comparator.compare(heap[parentPosition],
+                                      heap[position])
+                 : (heap[parentPosition]).compareTo(heap[position])) < 0) {
                 swap(parentPosition, position);
             } else {
                 break;
@@ -206,11 +224,16 @@ public class PriorityQueue<T extends Comparable<? super T>> {
         while (firstChild(position) < size) {
             int kid = firstChild(position);
             //noinspection unchecked
-            if (kid < size-1 && ((T)heap[kid]).compareTo((T)heap[kid+1]) < 0) {
+            if (kid < size-1 &&
+                (comparator != null
+                 ? comparator.compare(heap[kid], heap[kid+1])
+                 : (heap[kid]).compareTo(heap[kid+1])) < 0) {
                 kid++;
             }
             //noinspection unchecked
-            if (((T)heap[position]).compareTo((T)heap[kid]) > 0) {
+            if ((comparator != null
+                 ? comparator.compare(heap[position], heap[kid])
+                 : (heap[position]).compareTo(heap[kid])) > 0) {
                 break;
             } else {
                 swap(kid, position);
@@ -237,12 +260,8 @@ public class PriorityQueue<T extends Comparable<? super T>> {
     }
 
     private void swap(int element1, int element2) {
-        Object temp = heap[element1];
+        T temp = heap[element1];
         heap[element1] = heap[element2];
         heap[element2] = temp;
     }
-
 }
-
-
-
