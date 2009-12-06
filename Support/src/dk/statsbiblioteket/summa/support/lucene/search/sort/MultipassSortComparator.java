@@ -81,8 +81,6 @@ import java.text.Collator;
 public class MultipassSortComparator extends ReusableSortComparator {
     private static Log log = LogFactory.getLog(MultipassSortComparator.class);
 
-    // stringSize = string.length() * 2 + SINGLE_ENTRY_OVERHEAD.
-    private static final int SINGLE_ENTRY_OVERHEAD = 50;
     // The number of bytes for the buffer
     private int sortBufferSize;
 
