@@ -50,6 +50,11 @@ public interface ResourceTracker<T> {
     boolean hasRoom(T element);
 
     /**
+     * @return true if the current content exceeds the given limits.
+     */
+    boolean isOverflowing();
+
+    /**
      * @return the number of elements.
      */
     long getSize();
