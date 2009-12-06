@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2009  The State and University Library
@@ -73,7 +73,7 @@ import java.util.Locale;
 public abstract class ReusableSortComparator extends SortComparator {
     private static Log log = LogFactory.getLog(ReusableSortComparator.class);
 
-    protected String language;
+    protected String language = "NotDefined";
     protected Collator collator;// Field name, document position
 
     // The last index-version used for building the structures.
@@ -94,9 +94,20 @@ public abstract class ReusableSortComparator extends SortComparator {
      *                http://www.loc.gov/standards/iso639-2/php/English_list.php
      */
     public ReusableSortComparator(String language) {
+        log.debug("Creating ReusableSortComparator(" + language + ")");
         this.language = language;
         Locale locale = new Locale(language);
         collator = createCollator(locale);
+    }
+
+    /**
+     * Create a comparator using the given Collator.
+     * @param collator the collator to use for sorting.
+     */
+    public ReusableSortComparator(Collator collator) {
+        log.debug("Creating ReusableSortComparator with custom Collator "
+                  + collator);
+        this.collator = collator;
     }
 
     /**
