@@ -1,13 +1,13 @@
 package dk.statsbiblioteket.summa.support.lucene.search.sort;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.framework.TestCase;
 import dk.statsbiblioteket.summa.common.util.StringTracker;
 import dk.statsbiblioteket.util.Strings;
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 public class WindowQueueTest extends TestCase {
     public WindowQueueTest(String name) {

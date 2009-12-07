@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2009  The State and University Library
@@ -20,8 +20,6 @@
 package dk.statsbiblioteket.summa.common.util.bits;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import java.util.Arrays;
 
@@ -33,7 +31,7 @@ import java.util.Arrays;
         state = QAInfo.State.IN_DEVELOPMENT,
         author = "te")
 public class BitsArrayFactory {
-    private static Log log = LogFactory.getLog(BitsArrayFactory.class);
+//    private static Log log = LogFactory.getLog(BitsArrayFactory.class);
 
     // BitArrays
     private static enum BAS {packed, aligned, direct}
@@ -53,9 +51,11 @@ public class BitsArrayFactory {
             int length, int maxValue, BitsArray.PRIORITY priority) {
         BAS bas = selectArray(maxValue, priority);
         switch (bas) {
-/*            case aligned: return new BitsArrayAligned(length, maxValue, bas);
-            case packed:  return new BitsArrayPacked(length, maxValue, bas);
-            case direct:  return new BitsArrayInt(length, bas);*/
+            // TODO: Make persistent priority
+//            case aligned: return new BitsArrayAligned(length, maxValue, bas);
+            case aligned: return new BitsArrayPacked(length, maxValue);
+            case packed:  return new BitsArrayPacked(length, maxValue);
+            case direct:  return new BitsArrayInt(length);
             default: {
                 throw new IllegalArgumentException(String.format(
                         "Unknown BitsArray enum '%s'", bas));

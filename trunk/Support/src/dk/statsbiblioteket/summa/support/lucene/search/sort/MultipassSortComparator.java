@@ -19,19 +19,26 @@
  */
 package dk.statsbiblioteket.summa.support.lucene.search.sort;
 
+import dk.statsbiblioteket.summa.common.util.CollatorFactory;
+import dk.statsbiblioteket.summa.common.util.ResourceTracker;
+import dk.statsbiblioteket.summa.common.util.StringTracker;
 import dk.statsbiblioteket.summa.common.util.bits.BitsArray;
+import dk.statsbiblioteket.summa.common.util.bits.BitsArrayFactory;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.index.TermDocs;
+import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.ScoreDocComparator;
 import org.apache.lucene.search.SortField;
 
 import java.io.IOException;
+import java.text.Collator;
 import java.util.HashMap;
 import java.util.Map;
-import java.text.Collator;
 
 /**
  * A SortComparator that utilized multipass-scans of the corpus in order to
@@ -45,7 +52,7 @@ import java.text.Collator;
  * This makes it a poor fit for realtime search.
  * </p><p>
  * The algorithm for the comparator is as follows:<br />
- * 1. Create a heap with Strings. The heap has a maximum size in bytes.<br />
+ * 1. Create a heap for Strings. The heap has a maximum size in bytes.<br />
  * 2. Set the empty String as base, set the logicalPos to 1.<br />
  * 3. Create a BitsArray positions of length maxDocs.<br />
  * 4. Iterate through all terms for the given field<br />
@@ -83,6 +90,11 @@ public class MultipassSortComparator extends ReusableSortComparator {
 
     // The number of bytes for the buffer
     private int sortBufferSize;
+
+    /**
+     * Determines whether documents without the given field are sorted last.
+     */
+    private boolean nullComesLast = true;
 
     private Map<String, BitsArray> orders = new HashMap<String, BitsArray>(10);
 
@@ -136,11 +148,97 @@ public class MultipassSortComparator extends ReusableSortComparator {
         };
     }
 
-    private BitsArray getOrder(IndexReader reader, String fieldname) {
+    private synchronized BitsArray getOrder(
+            IndexReader reader, String fieldname) throws IOException {
         fieldname = fieldname.intern();
         checkCacheConsistency(reader);
 
-        throw new UnsupportedOperationException("Not implemented yet");
-    }
+        if (orders.containsKey(fieldname)) {
+            return orders.get(fieldname);
+        }
 
+        final TermDocs termDocs = reader.termDocs();
+
+        // 1. Create a heap for Strings. The heap has a maximum size in bytes.
+        final ResourceTracker<String> tracker = new StringTracker(
+                1, Integer.MAX_VALUE, sortBufferSize);
+        String base = null;
+        WindowQueue<String> collector = new WindowQueue<String>(
+                CollatorFactory.wrapCollator(collator), base, null, tracker);
+
+        // 2. Set the empty String as base, set the logicalPos to 1.
+        int logicalPos = 1;
+        // 3. Create a BitsArray positions of length maxDocs.
+        BitsArray positions = BitsArrayFactory.createArray(
+                reader.maxDoc(), 1, BitsArray.PRIORITY.mix);
+
+        while (true) {
+            // 4. Iterate through all terms for the given field
+            final TermEnum termEnum = reader.terms(new Term(fieldname, ""));
+            try {
+                do {
+                    final Term term = termEnum.term();
+                    if (term==null || !term.field().equals(fieldname)) {
+                        break;
+                    }
+
+                    // 4.1 if the current term is ordered after the base, add
+                    //     it to the heap.
+                    collector.insert(term.text());
+                } while (termEnum.next());
+            } finally {
+                termEnum.close();
+            }
+
+            // 5. If the heap is empty, goto 9.<br />
+            if (collector.getSize() == 0) {
+                break;
+            }
+
+            base = collector.getMin();
+            logicalPos += collector.getSize(); // For later
+            int reverseLogicalPos = logicalPos;
+            // 6. For each terms on the heap (sorted order)
+            while (collector.getSize() > 0) {
+                final String term = collector.getMin();
+
+                // TODO: Can we optimize this for termEnum?
+                // Preferably without doing unneccesary requests in the previous
+                // loop
+                termDocs.seek(new Term(fieldname, term));
+                // 6.1 for each docID for the term
+                while (termDocs.next()) {
+                    // 6.1.1 assign with positions.set(docID, logicalPos)
+                    positions.set(termDocs.doc(), reverseLogicalPos);
+                }
+
+                // 6.2 increment logicalPos.
+                // As the collector delivers in reverse order, we reverse too
+                reverseLogicalPos--;
+            }
+
+            // 7. Set base to the last extracted term from the heap.
+            collector.setLowerBound(base);
+            // 8. Goto 4.
+        }
+
+        // 9. positions now contain relative positions for all documents in the
+        // index. A position of 0 means that there was no term for the given
+        // document.
+
+        // Depending on wanted behaviour, these can be left or set to
+        // logicalPos+1.
+        if (nullComesLast) {
+            logicalPos++;
+            for (int i = 0 ; i < positions.size() ; i++) {
+                if (positions.get(i) == 0) {
+                    positions.set(i, logicalPos);
+                }
+            }
+        }
+        termDocs.close();
+
+        orders.put(fieldname, positions);
+        return positions;
+    }
 }
