@@ -26,9 +26,9 @@
  */
 package dk.statsbiblioteket.summa.support.lucene.search.sort;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.util.PriorityQueue;
 import dk.statsbiblioteket.summa.common.util.ResourceTracker;
+import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.util.Comparator;
 
@@ -111,5 +111,29 @@ public class WindowQueue<T extends Comparable<? super T>>
             resourceTracker.remove(min);
         }
         return min;
+    }
+
+    public T getLowerBound() {
+        return lowerBound;
+    }
+
+    /**
+     * Note: Changing the lower bound only affects future inserts.
+     * @param lowerBound the lower bound for accepted valued.
+     */
+    public void setLowerBound(T lowerBound) {
+        this.lowerBound = lowerBound;
+    }
+
+    public T getUpperBound() {
+        return upperBound;
+    }
+
+    /**
+     * Note: Changing the upper bound only affects future inserts.
+     * @param upperBound the upper bound for accepted valued.
+     */
+    public void setUpperBound(T upperBound) {
+        this.upperBound = upperBound;
     }
 }

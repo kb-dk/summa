@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2009  The State and University Library
@@ -26,6 +26,7 @@ import org.apache.commons.logging.LogFactory;
 import java.text.Collator;
 import java.text.ParseException;
 import java.text.RuleBasedCollator;
+import java.util.Comparator;
 import java.util.Locale;
 
 /**
@@ -93,5 +94,18 @@ public class CollatorFactory {
     public static Collator createCollator(Locale locale) {
         Collator collator = Collator.getInstance(locale);
         return fixCollator(collator, false);
+    }
+
+    /**
+     * Wraps the given collator as a String-comparator.
+     * @param collator the collator to wrap.
+     * @return the collator as a comparator.
+     */
+    public static Comparator<String> wrapCollator(final Collator collator) {
+        return new Comparator<String>() {
+            public final int compare(final String o1, final String o2) {
+                return collator.compare(o1, o2);
+            }
+        };
     }
 }

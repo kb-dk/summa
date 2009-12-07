@@ -142,6 +142,8 @@ public class BitsArrayAligned extends AbstractList<Integer> implements BitsArray
         elementMask = MASKS[elementBits]; //~0 >>> (BLOCK_SIZE - elementBits);
         maxValue = (int)Math.pow(2, elementBits)-1;
         maxPos = (elements.length * BLOCK_SIZE / elementBits) - 2;
+        throw new UnsupportedOperationException(
+                "BitsArrayAligned is not implemented yet!");
     }
 
     /**
