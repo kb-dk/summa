@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -19,15 +19,15 @@
  */
 package dk.statsbiblioteket.summa.index;
 
+import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.index.FieldProvider;
 import dk.statsbiblioteket.summa.common.index.IndexDescriptor;
 import dk.statsbiblioteket.summa.common.index.IndexField;
-import dk.statsbiblioteket.summa.common.index.FieldProvider;
-import dk.statsbiblioteket.summa.common.configuration.Configuration;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.w3c.dom.Node;
 import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 
 import java.io.IOException;
 import java.text.ParseException;

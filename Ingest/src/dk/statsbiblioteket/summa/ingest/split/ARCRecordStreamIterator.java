@@ -1,6 +1,6 @@
 /**
  * Created: te 20-08-2009 00:08:37
- * CVS:     $Id:$
+ * CVS:     $Id$
  */
 package dk.statsbiblioteket.summa.ingest.split;
 

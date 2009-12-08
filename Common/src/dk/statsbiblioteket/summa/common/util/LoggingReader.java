@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -19,12 +19,12 @@
  */
 package dk.statsbiblioteket.summa.common.util;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 
-import java.io.Reader;
 import java.io.IOException;
+import java.io.Reader;
 import java.io.StringReader;
 import java.nio.CharBuffer;
 

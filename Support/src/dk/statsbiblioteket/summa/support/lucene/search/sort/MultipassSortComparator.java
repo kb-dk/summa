@@ -133,6 +133,7 @@ public class MultipassSortComparator extends ReusableSortComparator {
             throws IOException {
 
         final BitsArray order = getOrder(reader, fieldname);
+//        System.out.println("Multi: " + Logs.expand(order, 20));
         return new ScoreDocComparator() {
             public int compare (ScoreDoc i, ScoreDoc j) {
                 return order.getAtomic(i.doc) - order.getAtomic(j.doc);
@@ -174,8 +175,12 @@ public class MultipassSortComparator extends ReusableSortComparator {
 
         while (true) {
             // 4. Iterate through all terms for the given field
-            final TermEnum termEnum = reader.terms(new Term(fieldname, ""));
+            final TermEnum termEnum = reader.terms(
+                    new Term(fieldname, base == null ? "" : base));
             try {
+                if (base != null && termEnum.term() != null) { // Skip base
+                    termEnum.next();
+                }
                 do {
                     final Term term = termEnum.term();
                     if (term==null || !term.field().equals(fieldname)) {
@@ -197,10 +202,11 @@ public class MultipassSortComparator extends ReusableSortComparator {
 
             base = collector.getMin();
             logicalPos += collector.getSize(); // For later
-            int reverseLogicalPos = logicalPos;
+            int reverseLogicalPos = logicalPos-1;
             // 6. For each terms on the heap (sorted order)
             while (collector.getSize() > 0) {
-                final String term = collector.getMin();
+                final String term = collector.removeMin();
+//                System.out.println(" * " + term + " has position " + reverseLogicalPos);
 
                 // TODO: Can we optimize this for termEnum?
                 // Preferably without doing unneccesary requests in the previous

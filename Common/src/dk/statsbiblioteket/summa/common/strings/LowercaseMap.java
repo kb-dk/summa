@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -20,12 +20,12 @@
 package dk.statsbiblioteket.summa.common.strings;
 
 import dk.statsbiblioteket.util.qa.QAInfo;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-import java.util.Map;
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * Has a base map from char -> char which converts all chars from 0 to 65535 to

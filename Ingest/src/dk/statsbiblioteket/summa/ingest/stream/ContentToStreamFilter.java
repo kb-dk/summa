@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -19,17 +19,17 @@
  */
 package dk.statsbiblioteket.summa.ingest.stream;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
-import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
-import dk.statsbiblioteket.summa.common.filter.Payload;
 import dk.statsbiblioteket.summa.common.Logging;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
-import org.apache.commons.logging.LogFactory;
+import dk.statsbiblioteket.summa.common.filter.Payload;
+import dk.statsbiblioteket.summa.common.filter.object.ObjectFilterImpl;
+import dk.statsbiblioteket.summa.common.filter.object.PayloadException;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
-import java.io.IOException;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 
 /**
  * Wraps the content of incoming Records in Payloads in an InputStream, which
