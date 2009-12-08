@@ -9,6 +9,7 @@
       <antReference projectDefault="true" />
       <customJdkName value="" />
       <maximumHeapSize value="128" />
+      <maximumStackSize value="32" />
       <properties />
     </buildFile>
     <buildFile url="file://$PROJECT_DIR$/Ingest/build.xml">
@@ -16,13 +17,7 @@
       <antReference projectDefault="true" />
       <customJdkName value="" />
       <maximumHeapSize value="128" />
-      <properties />
-    </buildFile>
-    <buildFile url="file://$PROJECT_DIR$/Common/build.xml">
-      <additionalClassPath />
-      <antReference projectDefault="true" />
-      <customJdkName value="" />
-      <maximumHeapSize value="128" />
+      <maximumStackSize value="32" />
       <properties />
     </buildFile>
     <buildFile url="file://$PROJECT_DIR$/Search/build.xml">
@@ -30,6 +25,7 @@
       <antReference projectDefault="true" />
       <customJdkName value="" />
       <maximumHeapSize value="128" />
+      <maximumStackSize value="32" />
       <properties />
     </buildFile>
     <buildFile url="file://$PROJECT_DIR$/build.xml">
@@ -37,6 +33,7 @@
       <antReference projectDefault="true" />
       <customJdkName value="" />
       <maximumHeapSize value="128" />
+      <maximumStackSize value="32" />
       <properties />
     </buildFile>
     <buildFile url="file://$PROJECT_DIR$/FacetBrowser/build.xml">
@@ -46,6 +43,7 @@
       <antReference projectDefault="true" />
       <customJdkName value="" />
       <maximumHeapSize value="128" />
+      <maximumStackSize value="32" />
       <properties />
     </buildFile>
     <buildFile url="file://$PROJECT_DIR$/ClusterExtractor/build.xml">
@@ -53,6 +51,7 @@
       <antReference projectDefault="true" />
       <customJdkName value="" />
       <maximumHeapSize value="128" />
+      <maximumStackSize value="32" />
       <properties />
     </buildFile>
     <buildFile url="file://$PROJECT_DIR$/Control/build.xml">
@@ -60,6 +59,7 @@
       <antReference projectDefault="true" />
       <customJdkName value="" />
       <maximumHeapSize value="128" />
+      <maximumStackSize value="32" />
       <properties />
     </buildFile>
     <buildFile url="file://$PROJECT_DIR$/Storage/build.xml">
@@ -67,6 +67,7 @@
       <antReference projectDefault="true" />
       <customJdkName value="" />
       <maximumHeapSize value="128" />
+      <maximumStackSize value="32" />
       <properties />
     </buildFile>
     <buildFile url="file://$PROJECT_DIR$/Support/build.xml">
@@ -74,6 +75,7 @@
       <antReference projectDefault="true" />
       <customJdkName value="" />
       <maximumHeapSize value="128" />
+      <maximumStackSize value="32" />
       <properties />
     </buildFile>
     <buildFile url="file://$PROJECT_DIR$/Web/build.xml">
@@ -81,6 +83,7 @@
       <antReference projectDefault="true" />
       <customJdkName value="" />
       <maximumHeapSize value="128" />
+      <maximumStackSize value="32" />
       <properties />
     </buildFile>
     <buildFile url="file://$PROJECT_DIR$/Workflow/build.xml">
@@ -88,6 +91,7 @@
       <antReference projectDefault="true" />
       <customJdkName value="" />
       <maximumHeapSize value="128" />
+      <maximumStackSize value="32" />
       <properties />
     </buildFile>
     <buildFile url="file://$PROJECT_DIR$/Samples/build.xml">
@@ -95,6 +99,7 @@
       <antReference projectDefault="true" />
       <customJdkName value="" />
       <maximumHeapSize value="128" />
+      <maximumStackSize value="32" />
       <properties />
     </buildFile>
   </component>
@@ -118,15 +123,6 @@
           <option name="LABEL_INDENT_ABSOLUTE" value="false" />
         </ADDITIONAL_INDENT_OPTIONS>
         <ADDITIONAL_INDENT_OPTIONS fileType="java">
-          <option name="INDENT_SIZE" value="4" />
-          <option name="CONTINUATION_INDENT_SIZE" value="8" />
-          <option name="TAB_SIZE" value="4" />
-          <option name="USE_TAB_CHARACTER" value="false" />
-          <option name="SMART_TABS" value="false" />
-          <option name="LABEL_INDENT_SIZE" value="0" />
-          <option name="LABEL_INDENT_ABSOLUTE" value="false" />
-        </ADDITIONAL_INDENT_OPTIONS>
-        <ADDITIONAL_INDENT_OPTIONS fileType="js">
           <option name="INDENT_SIZE" value="4" />
           <option name="CONTINUATION_INDENT_SIZE" value="8" />
           <option name="TAB_SIZE" value="4" />
@@ -504,7 +500,7 @@
       <module fileurl="file://$PROJECT_DIR$/Workflow/Workflow.iml" filepath="$PROJECT_DIR$/Workflow/Workflow.iml" />
     </modules>
   </component>
-  <component name="ProjectRootManager" version="2" assert-keyword="true" jdk-15="true" project-jdk-name="1.6" project-jdk-type="JavaSDK">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_5" assert-keyword="true" jdk-15="true" project-jdk-name="1.6" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/classes" />
   </component>
   <component name="RMI Configuration">
@@ -603,6 +599,7 @@
       </map>
     </option>
     <option name="myVersion" value="123" />
+    <option name="mySupportsUserInfoFilter" value="true" />
   </component>
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="svn" />
@@ -732,7 +729,7 @@
     </library>
     <library name="h2">
       <CLASSES>
-        <root url="jar://$PROJECT_DIR$/lib/h2-1.2.124.jar!/" />
+        <root url="jar://$PROJECT_DIR$/lib/h2-1.2.125.jar!/" />
       </CLASSES>
       <JAVADOC>
         <root url="jar://$PROJECT_DIR$/lib/apidocs/h2-2008-09-26-apidocs.zip!/" />
