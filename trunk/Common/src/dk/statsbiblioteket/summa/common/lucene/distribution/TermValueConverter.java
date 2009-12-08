@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -19,8 +19,8 @@
  */
 package dk.statsbiblioteket.summa.common.lucene.distribution;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.pool.ValueConverter;
+import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.UnsupportedEncodingException;
 

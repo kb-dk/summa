@@ -53,9 +53,13 @@ public class BitsArrayFactory {
         switch (bas) {
             // TODO: Make persistent priority
 //            case aligned: return new BitsArrayAligned(length, maxValue, bas);
+            case aligned: return new BitsArrayInt(length);
+            case packed:  return new BitsArrayInt(length);
+            case direct:  return new BitsArrayInt(length);
+/*            case aligned: return new BitsArrayAligned(length, maxValue, bas);
             case aligned: return new BitsArrayPacked(length, maxValue);
             case packed:  return new BitsArrayPacked(length, maxValue);
-            case direct:  return new BitsArrayInt(length);
+            case direct:  return new BitsArrayInt(length);*/
             default: {
                 throw new IllegalArgumentException(String.format(
                         "Unknown BitsArray enum '%s'", bas));

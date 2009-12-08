@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -19,10 +19,8 @@
  */
 package dk.statsbiblioteket.summa.common.filter.object;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.filter.Payload;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
+import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  * Thrown in case of problems with a specific Payload.

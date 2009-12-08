@@ -68,6 +68,13 @@ public class LocalStaticSortComparator extends ReusableSortComparator {
             throws IOException {
 
         final int[] order = getOrder(reader, fieldname);
+/*        StringWriter sw = new StringWriter(100);
+        sw.append(order.length + "(");
+        for (int i = 0 ; i < Math.min(10, order.length) ; i++) {
+            sw.append(Integer.toString(order[i]));
+        }
+        sw.append(")");
+        System.out.println("Multi: " + sw);*/
         return new ScoreDocComparator() {
             public int compare (ScoreDoc i, ScoreDoc j) {
                 return order[i.doc] - order[j.doc];

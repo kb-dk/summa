@@ -44,6 +44,14 @@ public class BitsArrayTest extends TestCase {
         }
     }
 
+    public void testAssignPrevious() throws Exception {
+        BitsArray ba = new BitsArrayPacked(100, 10);
+        ba.set(1, 1);
+        ba.set(0, 1);
+        assertEquals("The value at position 1 should be unchanged when the " 
+                     + "value at position 0 is modified", 1, ba.getAtomic(1));
+    }
+
 /*    public void testBitSetMath() {
         int elementBits = 3;
         int index = 0;

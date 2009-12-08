@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2008  The State and University Library
@@ -19,11 +19,11 @@
  */
 package dk.statsbiblioteket.summa.common.unittest;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
-import dk.statsbiblioteket.util.Profiler;
-import dk.statsbiblioteket.summa.common.lucene.distribution.TermStat;
-import dk.statsbiblioteket.summa.common.lucene.distribution.TermEntry;
 import dk.statsbiblioteket.summa.common.configuration.Configuration;
+import dk.statsbiblioteket.summa.common.lucene.distribution.TermEntry;
+import dk.statsbiblioteket.summa.common.lucene.distribution.TermStat;
+import dk.statsbiblioteket.util.Profiler;
+import dk.statsbiblioteket.util.qa.QAInfo;
 
 import java.io.File;
 import java.util.Random;

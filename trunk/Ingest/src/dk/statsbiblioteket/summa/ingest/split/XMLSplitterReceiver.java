@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  *
  * The Summa project.
  * Copyright (C) 2005-2009  The State and University Library
@@ -19,8 +19,8 @@
  */
 package dk.statsbiblioteket.summa.ingest.split;
 
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.summa.common.Record;
+import dk.statsbiblioteket.util.qa.QAInfo;
 
 /**
  *
