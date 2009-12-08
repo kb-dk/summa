@@ -25,11 +25,15 @@ package dk.statsbiblioteket.summa.support.lucene.search.sort;
 import dk.statsbiblioteket.util.Profiler;
 import org.apache.log4j.Logger;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.TermDocs;
+import org.apache.lucene.index.TermEnum;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.ScoreDocComparator;
 import org.apache.lucene.search.SortField;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -163,5 +167,88 @@ public class LocalStaticSortComparator extends ReusableSortComparator {
         log.debug("Index has changed. Dropping caches");
         orders.clear();
     }
+
+    protected Pair[] getPairs(final IndexReader reader, String fieldname)
+                                                            throws IOException {
+        Pair[] pairs = new Pair[reader.maxDoc()];
+        TermDocs termDocs = reader.termDocs();
+
+        TermEnum termEnum = reader.terms(new Term(fieldname, ""));
+        int counter = 0;
+        try {
+            do {
+                Term term = termEnum.term();
+                //noinspection StringEquality
+                if (term==null || term.field() != fieldname) {
+                    break;
+                }
+                String termText = term.text();
+                termDocs.seek (termEnum);
+                while (termDocs.next()) {
+                    if (log.isTraceEnabled() && counter++ % 100000 == 0) {
+                        log.trace("Building term positions for term #" +
+                                  counter);
+                    }
+                    pairs[termDocs.doc()] =
+                            new Pair(termDocs.doc(), termText);
+                }
+            } while (termEnum.next());
+        } finally {
+            termDocs.close();
+            termEnum.close();
+        }
+        return pairs;
+    }
+
+    protected class Pair implements Comparable<Pair> {
+        int docID;
+        String term;
+
+        public Pair(int docID, String term) {
+            this.docID = docID;
+            this.term = term;
+        }
+
+        public int compareTo(Pair o) {
+            if (term == null) {
+                return o.term == null ? 0 : 1;
+            } else if (o.term == null) {
+                return -1;
+            }
+            return collator.compare(term, o.term);
+        }
+    }
+
+    protected void provideFeedback(Pair[] sorted) {
+        if (log.isTraceEnabled()) {
+            int SAMPLES = 10;
+            StringWriter top = new StringWriter(SAMPLES*100);
+            int counter = 0;
+            for (Pair p: sorted) {
+                if (p != null && p.term != null) {
+                    top.append(p.term).append(" ");
+                    if (counter++ == SAMPLES) {
+                        break;
+                    }
+                }
+            }
+            StringWriter bottom = new StringWriter(SAMPLES*100);
+            counter = 0;
+            for (int i = sorted.length-1 ; i >= 0 ; i--) {
+                Pair p = sorted[i];
+                if (p != null && p.term != null) {
+                    bottom.append(p.term).append(" ");
+                    if (counter++ == SAMPLES) {
+                        break;
+                    }
+                }
+            }
+            log.trace(String.format("The first %d/%d sorted terms: %s",
+                                    SAMPLES, sorted.length, top));
+            log.trace(String.format("The last %d/%d sorted terms: %s",
+                                    SAMPLES, sorted.length, bottom));
+        }
+    }
+
 }
 
