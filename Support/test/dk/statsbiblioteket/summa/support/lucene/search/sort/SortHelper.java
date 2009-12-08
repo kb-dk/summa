@@ -25,6 +25,7 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.queryParser.QueryParser;
+import org.apache.lucene.queryParser.ParseException;
 
 /**
  * Creates test-indexes usable for sort-testing.
@@ -108,7 +109,7 @@ public class SortHelper {
         IndexSearcher searcher = new IndexSearcher(root.toString());
         QueryParser qp = new QueryParser("all", new StandardAnalyzer());
         TopDocs result = searcher.search(
-                qp.parse("all:all"), null, 10000,
+                qp.parse(query), null, 10000,
                 sortFactory.getSort(searcher.getIndexReader()));
         List<String> sortfields =
                 new ArrayList<String>(result.scoreDocs.length);
@@ -144,5 +145,39 @@ public class SortHelper {
                 return -1;
             }
         });
+    }
+
+    /**
+     * Performs a search for the given query, sorting on {@link #SORT_FIELD}.
+     * Prior to execution, a gc() is called. The is done again immediately
+     * after the result has been generated, but before the opened IndexSearcher
+     * is closed. The amount of used heap after the second gc is returned.
+     * @param index       where the index root is located.
+     * @param query       the query to search for ("all:all" hits all).
+     * @param hits        the number of docIDs to resolve.
+     * @param sortFactory generates the sorter that is to be used.
+     * @return the amount of used heap after searching.
+     * @throws java.io.IOException if the search could not be performed.
+     * @throws org.apache.lucene.queryParser.ParseException if the query could
+     *         not be parsed.
+     */
+    public static long performSortedSearch(
+            File index, String query, int hits, SortFactory sortFactory)
+            throws IOException, ParseException {
+        System.gc();
+        IndexSearcher searcher = new IndexSearcher(index.getAbsolutePath());
+        QueryParser qp = new QueryParser("all", new StandardAnalyzer());
+        Sort sort = sortFactory.getSort(searcher.getIndexReader());
+        TopDocs result = searcher.search(qp.parse(query), null, hits, sort);
+        System.gc();
+        long mem = Runtime.getRuntime().totalMemory()
+                   - Runtime.getRuntime().freeMemory();
+        if (result == null) {
+            throw new NullPointerException(
+                    "This should never happen and is only here to guard "
+                    + "against JITting TopDocs away");
+        }
+        searcher.close();
+        return mem;
     }
 }

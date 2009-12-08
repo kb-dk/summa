@@ -25,6 +25,7 @@ import dk.statsbiblioteket.summa.common.util.StringTracker;
 import dk.statsbiblioteket.summa.common.util.bits.BitsArray;
 import dk.statsbiblioteket.summa.common.util.bits.BitsArrayFactory;
 import dk.statsbiblioteket.util.qa.QAInfo;
+import dk.statsbiblioteket.util.Profiler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.IndexReader;
@@ -122,7 +123,7 @@ public class MultipassSortComparator extends ReusableSortComparator {
 
     @Override
     protected void indexChanged() {
-        log.debug("Index changed. Clearing sort caches");
+        log.debug("Index changed. Clearing sort order caches");
         orders.clear();
     }
 
@@ -158,6 +159,12 @@ public class MultipassSortComparator extends ReusableSortComparator {
             return orders.get(fieldname);
         }
 
+        Profiler profiler = new Profiler();
+        profiler.setBpsSpan(10);
+        log.debug(String.format(
+                "Calculating order for all the terms in the field %s using "
+                + "language %s with Collator %s for %d documents",
+                fieldname, language, collator, reader.maxDoc()));
         final TermDocs termDocs = reader.termDocs();
 
         // 1. Create a heap for Strings. The heap has a maximum size in bytes.
@@ -173,20 +180,21 @@ public class MultipassSortComparator extends ReusableSortComparator {
         BitsArray positions = BitsArrayFactory.createArray(
                 reader.maxDoc(), 1, BitsArray.PRIORITY.mix);
 
+        int loopCount = 1;
+        long termCount = 0;
         while (true) {
+            log.trace("Starting sort-loop #" + loopCount++
+                      + " with lower bound '" + base + "'");
             // 4. Iterate through all terms for the given field
-            final TermEnum termEnum = reader.terms(
-                    new Term(fieldname, base == null ? "" : base));
+            termCount = 0;
+            final TermEnum termEnum = reader.terms(new Term(fieldname, ""));
             try {
-                if (base != null && termEnum.term() != null) { // Skip base
-                    termEnum.next();
-                }
                 do {
                     final Term term = termEnum.term();
                     if (term==null || !term.field().equals(fieldname)) {
                         break;
                     }
-
+                    termCount++;
                     // 4.1 if the current term is ordered after the base, add
                     //     it to the heap.
                     collector.insert(term.text());
@@ -200,6 +208,8 @@ public class MultipassSortComparator extends ReusableSortComparator {
                 break;
             }
 
+            log.trace("Extracting docIDs for " + collector.getSize()
+                      + " terms above base '" + base + "'");
             base = collector.getMin();
             logicalPos += collector.getSize(); // For later
             int reverseLogicalPos = logicalPos-1;
@@ -225,6 +235,7 @@ public class MultipassSortComparator extends ReusableSortComparator {
 
             // 7. Set base to the last extracted term from the heap.
             collector.setLowerBound(base);
+            profiler.beat();
             // 8. Goto 4.
         }
 
@@ -245,6 +256,12 @@ public class MultipassSortComparator extends ReusableSortComparator {
         termDocs.close();
 
         orders.put(fieldname, positions);
+        log.debug(String.format(
+                "Got %d unique positions in the order-array for %d terms in "
+                + "the field %s using language %s with Collator %s for %d "
+                + "documents in %s performing %d loops through the terms",
+                logicalPos-1, termCount, fieldname, language, collator,
+                reader.maxDoc(), profiler.getSpendTime(), loopCount-1));
         return positions;
     }
 }
