@@ -24,6 +24,7 @@ pushd "$(dirname $0)/.." > /dev/null
 #
 function await() {
     echo -n "[$(date)] Waiting for $1 ... "
+    $2
     if [ "$?" == "0" ]; then
         echo "OK"
     else
