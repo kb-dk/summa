@@ -173,7 +173,7 @@ public class MultipassSortComparatorTest extends TestCase {
 
     // Manual test activation with tweaked Xmx
     public void testCreateIndex() throws Exception {
-        int TERM_COUNT = 200000;
+        int TERM_COUNT = 2000;
         int TERM_MAX_LENGTH = 20;
         SortHelper.createIndex(makeTerms(TERM_COUNT, TERM_MAX_LENGTH));
     }

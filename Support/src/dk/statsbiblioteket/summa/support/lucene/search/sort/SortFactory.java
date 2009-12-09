@@ -26,6 +26,7 @@ import org.apache.log4j.Logger;
 
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Locale;
 
 /**
  * Lazy container with sorters for fields.
@@ -37,16 +38,70 @@ public class SortFactory {
             new HashMap<String, SortComparator>(10);
     protected static final Object comparatorSync = new Object();
 
+    /**
+     * The different back-ends for comparing Strings.<br />
+     * lucene: The build-in Comparator. Loads all terms for the given field into
+     *         RAM and creates Collator-keys for them.<br />
+     *         Pros: Fast startup-time, efficient on re-open.<br />
+     *         Cons: Consumes a lot of memory, so-so fast on actual sort.<br />
+     * localstatic: Uses an optimized Collator and creates an array with
+     *         sort-order for the terms in the given field.<br />
+     *         Pros: Fast startup, best actual sort-performance,<br />
+     *         Cons: Temporarily consumes a lot of memory at startup.<br />
+     * multipass: Uses an optimized collator and creates a structure with
+     *         sort-order for the terms in the given field.<br />
+     *         Pros: Customizable memory-usage at the cost of startup time,
+     *               faster than build-in sort in actual sort-performance.<br/ >
+     *         Cons: Long startup-time if low memory-usage is requested.
+     */
+    public static enum COMPARATOR {
+        lucene, localstatic, multipass;
+        public static COMPARATOR parse(String value) {
+            if (value == null) {
+                return DEFAULT_COMPARATOR;
+            }
+            if (value.toLowerCase().equals(lucene.toString())) {
+                return lucene;
+            }
+            if (value.toLowerCase().equals(localstatic.toString())) {
+                return localstatic;
+            }
+            if (value.toLowerCase().equals(multipass.toString())) {
+                return multipass;
+            }
+            return DEFAULT_COMPARATOR;
+        }
+    }
+
+    public static final COMPARATOR DEFAULT_COMPARATOR = COMPARATOR.localstatic;
+    public static final int DEFAULT_BUFFER = 100 * 1024 * 1024; // 100MB
+
     private String field;
     private String sortLanguage;
     private Sort normalSort;
     private Sort reverseSort;
+    private COMPARATOR comparator;
+    private int buffer;
 
-    public SortFactory(String field, String sortLanguage,
+    /**
+     * Create a SortFactory with the given parameters. Note that the absence of
+     * a sortLanguage will result in a lucene default sorter, capable of
+     * auto-detecting field type (String, integer, float...).
+     * @param comparator   the String-comparator implementation to use.
+     * @param buffer       comparator-specific buffer-size.
+     *                     Currently used by {@link MultipassSortComparator}.
+     * @param field        the field to perform sorting on.
+     * @param sortLanguage the language for sorting.
+     * @param comparators  a map of existing comparators for fields.
+     */
+    public SortFactory(COMPARATOR comparator, int buffer,
+                       String field, String sortLanguage,
                       Map<String, SortComparator> comparators) {
         this.field = field;
         this.sortLanguage = sortLanguage;
         this.comparators = comparators;
+        this.comparator = comparator;
+        this.buffer = buffer;
     }
 
     public synchronized Sort getSort(boolean reverse) {
@@ -66,10 +121,8 @@ public class SortFactory {
             log.debug(String.format(
                     "Creating sorters for field '%s' with language '%s'",
                     field, sortLanguage));
-            SortField nField = new SortField(field, getComparator());
-            normalSort = new Sort(nField);
-            SortField rField = new SortField(field, getComparator(), true);
-            reverseSort = new Sort(rField);
+            normalSort = new Sort(getSortField(false));
+            reverseSort = new Sort(getSortField(true));
         } catch (Exception e) {
             log.error("Could not create comparator for language code '"
                       + sortLanguage + "'. Defaulting to basic sort");
@@ -84,9 +137,13 @@ public class SortFactory {
         return reverse ? reverseSort : normalSort;
     }
 
-    /**
-     * @return a
-     */
+    private SortField getSortField(boolean reverse) {
+        if (comparator == COMPARATOR.lucene) {
+            return new SortField(field, new Locale(sortLanguage), reverse);
+        }
+        return new SortField(field, getComparator(), reverse);
+    }
+
     private SortComparator getComparator() {
         synchronized (comparatorSync) {
             if (!comparators.containsKey(sortLanguage)) {
@@ -94,8 +151,30 @@ public class SortFactory {
                 log.debug(String.format(
                         "Creating localized comparators for field '%s' with "
                         + "language '%s'", field, sortLanguage));
-                    comparators.put(sortLanguage,
-                                   new LocalStaticSortComparator(sortLanguage));
+                switch (comparator) {
+                    case lucene: {
+                        throw new IllegalStateException(
+                                "Lucene sorters should be constructed by "
+                                + "getSortField");
+                    }
+                    case localstatic: {
+                        comparators.put(
+                                sortLanguage,
+                                new LocalStaticSortComparator(sortLanguage));
+                        break;
+                    }
+                    case multipass: {
+                        comparators.put(
+                                sortLanguage,
+                                new MultipassSortComparator(
+                                        sortLanguage, buffer));
+                        break;
+                    }
+                    default: {
+                        throw new IllegalStateException(
+                                "Unknown compatator " + comparator);
+                    }
+                }
             }
             return comparators.get(sortLanguage);
         }
