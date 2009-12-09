@@ -14,6 +14,7 @@ MAINCLASS=dk.statsbiblioteket.summa.search.api.tools.SearchTool
 
 PRINT_CONFIG=true
 DEFAULT_CONFIGURATION=$DEPLOY/config/search-tool.configuration.xml
+LOG4J=tools.log4j.xml
 ###LIBDIRS=
 ###JAVA_HOME=
 JVM_OPTS="$JVM_OPTS -Xmx64m "

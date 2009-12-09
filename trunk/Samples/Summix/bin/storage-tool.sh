@@ -14,6 +14,7 @@ MAINCLASS=dk.statsbiblioteket.summa.storage.api.tools.StorageTool
 
 PRINT_CONFIG=true
 DEFAULT_CONFIGURATION=$DEPLOY/config/storage-tool.configuration.xml
+LOG4J=tools.log4j.xml
 ###LIBDIRS=
 ###JAVA_HOME=
 JVM_OPTS="$JVM_OPTS -Xmx64m "
