@@ -6,6 +6,8 @@
     <xsl:output method="html" encoding="UTF-8"/>
 
     <xsl:param name="query"/>
+    <xsl:param name="filter"/>
+    <xsl:param name="sort"/>
     <xsl:param name="per_page"/>
     <xsl:param name="current_page"/>
 
@@ -19,7 +21,7 @@
                 <div class="shortNavigation">
                     <xsl:choose>
                         <xsl:when test="$current_page &gt; 0">
-                            <a href="?query={$query}&amp;page={$current_page - 1}">Previous</a>
+                            <a href="?query={$query}&amp;filter={$filter}&amp;sort={$sort}&amp;page={$current_page - 1}">Previous</a>
                         </xsl:when>
                         <xsl:otherwise>
                             Previous
@@ -28,7 +30,7 @@
                     /
                     <xsl:choose>
                         <xsl:when test="$current_page &lt; (ceiling(@hitCount div $per_page) - 1)">
-                            <a href="?query={$query}&amp;page={$current_page + 1}">Next</a>
+                            <a href="?query={$query}&amp;filter={$filter}&amp;sort={$sort}&amp;page={$current_page + 1}">Next</a>
                         </xsl:when>
                         <xsl:otherwise>
                             Next
