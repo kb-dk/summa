@@ -41,6 +41,11 @@ DEPLOY=`dirname $0`/..
 #
 
 if [ "$CONFIGURATION" != "" ]; then
+    # If LOG4J is not set in the environment, deduct it from the config name
+    if [ -z "$LOG4J" ]; then
+        LOG4J="$(basename $CONFIGURATION .xml).log4j.xml"
+    fi
+    
     CONFIGURATION="-Dsumma.configuration=$CONFIGURATION"
 else
     CONFIGURATION="-Dsumma.configuration=$DEFAULT_CONFIGURATION"
@@ -125,6 +130,10 @@ if [ -f "$PROPERTIES_FILE" ]; then
     done < "$PROPERTIES_FILE"
 fi
 
+if [ ! -z "$LOG4J" ]; then
+    SYS_PROPS="$SYS_PROPS -Dlog4j.configuration=$LOG4J"
+fi
+
 # The fix below ensures that localhost is always used as RMI server address.
 # This is necessary to avoid problems with firewalls and routing outside
 # of the local computer.
@@ -141,6 +150,7 @@ if [ ! -z $PRINT_CONFIG ]; then
     echo -e "Working dir:\t`pwd`" 1>&2
     echo -e "JMX enabled:\t$ENABLE_JMX" 1>&2
     echo -e "Security:\t$SECURITY_POLICY" 1>&2
+    echo -e "Log4J\t\t$LOG4J" 1>&2
     echo -e "Properties:\t$SYS_PROPS\n" 1>&2
     echo -e "Command line:\n$COMMAND\n" 1>&2
 fi
