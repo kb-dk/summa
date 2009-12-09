@@ -1,5 +1,7 @@
 #! /bin/bash
 
+set -e
+
 #
 # Run all Summix scripts and set up a complete Summa
 #
@@ -22,11 +24,6 @@ pushd "$(dirname $0)/.." > /dev/null
 #
 function await() {
     echo -n "[$(date)] Waiting for $1 ... "
-    if [ "$(eval pgrep -f \"$2\")" != "" ]; then
-        echo "Already running, BAD"
-        exit 1
-    fi
-    $2
     if [ "$?" == "0" ]; then
         echo "OK"
     else
@@ -41,18 +38,18 @@ function await() {
 #
 function detach() {
     echo -n "[$(date)] Starting $1 ... "
-    if [ "$(eval pgrep -f \"$2\")" != "" ]; then
-        echo "Already up, OK"
-        return
-    fi
     $DETACH $2 &
-    sleep 3
-    if [ "$(eval pgrep -f \"$2\")" != "" ]; then
+    PID=$!
+    echo -n " (PID $PID) "
+
+    # Sleep a bit and see if PID is still running...
+    sleep 10
+    if [ -e /proc/$PID ]; then
         echo "OK"
     else
         echo "FAILED"
         exit 2
-    fi        
+    fi
 }
 
 function all_good() {
