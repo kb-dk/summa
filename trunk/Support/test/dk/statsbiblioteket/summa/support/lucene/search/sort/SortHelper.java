@@ -185,4 +185,40 @@ public class SortHelper {
         searcher.close();
         return mem;
     }
+
+    /**
+     * Performs the given number of searches and returns the time spend on the
+     * last search.
+     * @param index       where the index root is located.
+     * @param query       the query to search for ("all:all" hits all).
+     * @param hits        the number of docIDs to resolve.
+     * @param searches    the number of searches to perform.
+     * @param sortFactory generates the sorter that is to be used.
+     * @return the number of milliseconds that the last search tool.
+     * @throws java.io.IOException if the search could not be performed.
+     * @throws org.apache.lucene.queryParser.ParseException if the query could
+     *         not be parsed.
+     */
+    public static long timeSortedSearch(
+            File index, String query, int hits, SortFactory sortFactory,
+            int searches) throws IOException, ParseException {
+        IndexSearcher searcher = new IndexSearcher(index.getAbsolutePath());
+        QueryParser qp = new QueryParser("all", new StandardAnalyzer());
+        Sort sort = sortFactory.getSort(searcher.getIndexReader());
+
+        long searchTime = 0;
+        for (int i = 0 ; i < searches ; i++) {
+            long startTime = System.currentTimeMillis();
+            TopDocs result = searcher.search(qp.parse(query), null, hits, sort);
+            if (result == null) {
+                throw new NullPointerException(
+                        "This should never happen and is only here to guard "
+                        + "against JITting TopDocs away");
+            }
+            searchTime = System.currentTimeMillis() - startTime;
+            log.debug("Search #" + (i+1) + " took " + searchTime + "ms");
+        }
+        searcher.close();
+        return searchTime;
+    }
 }
