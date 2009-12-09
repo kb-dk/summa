@@ -269,7 +269,7 @@ public class MultipassSortComparator extends ReusableSortComparator {
                 + "the field %s using language %s with Collator %s for %d "
                 + "documents in %s performing %d loops through the terms",
                 logicalPos-1, termCount, fieldname, language, collator,
-                reader.maxDoc(), profiler.getSpendTime(), loopCount-1));
+                reader.maxDoc(), profiler.getSpendTime(), loopCount-2));
         return positions;
     }
 }
