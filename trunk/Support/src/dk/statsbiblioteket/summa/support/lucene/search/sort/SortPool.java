@@ -39,7 +39,7 @@ import java.util.Map;
  */
 public class SortPool {
     private static final Logger log = Logger.getLogger(SortPool.class);
-
+    
     /**
      * Maintains cached structures and makes is cheap to construct new sorters.
      */
@@ -54,15 +54,25 @@ public class SortPool {
             new HashMap<String, SortComparator>(10);
 
     private boolean naturalOrder = false;
+    private SortFactory.COMPARATOR comparatorImplementation;
+    private int bufferSize;
+
 
     /**
      * The constructor steps through all fields in the index descriptor and
      * stores the sort locale for each.
+     * @param comparator the comparator-implementation to use.
+     * @param buffer     buffer-size used by some comparators, notably
+     *                   {@link MultipassSortComparator}.
      * @param descriptor a description of the fields in the index.
      */
-    public SortPool(LuceneIndexDescriptor descriptor) {
-        log.debug("Creating lazy sort pool");
+    public SortPool(SortFactory.COMPARATOR comparator, int buffer,
+                    LuceneIndexDescriptor descriptor) {
+        log.debug("Creating lazy sort pool with comparator implementation "
+                  + comparator);
         long startTime = System.currentTimeMillis();
+        comparatorImplementation = comparator;
+        bufferSize = buffer;
         for (Map.Entry<String, LuceneIndexField> entry:
                 descriptor.getFields().entrySet()) {
                 updateField(entry.getValue());
@@ -80,6 +90,7 @@ public class SortPool {
             log.debug("Adding sort locale '" + field.getSortLocale()
                       + "' to Field '" + field.getName() + "'");
             sortFactories.put(field.getName(), new SortFactory(
+                    comparatorImplementation,  bufferSize,
                     field.getName(), field.getSortLocale(), comparators));
         } else {
             SortFactory oldFactory = sortFactories.get(field.getName());

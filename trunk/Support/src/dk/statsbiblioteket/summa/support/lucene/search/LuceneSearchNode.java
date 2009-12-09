@@ -41,6 +41,7 @@ import dk.statsbiblioteket.summa.support.api.LuceneKeys;
 import dk.statsbiblioteket.summa.support.lucene.SummaIndexReader;
 import dk.statsbiblioteket.summa.support.lucene.TermProviderImpl;
 import dk.statsbiblioteket.summa.support.lucene.search.sort.SortPool;
+import dk.statsbiblioteket.summa.support.lucene.search.sort.SortFactory;
 import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.xml.XMLUtil;
 import org.apache.commons.logging.Log;
@@ -218,6 +219,38 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
     public static final String CONF_TERMSTAT_CONFIGURATION =
             "summa.support.lucene.termstatconfiguration";
 
+    /**
+     * The comparator implementation to use for sorting. Possible values are
+     * lucene: The build-in Comparator. Loads all terms for the given field into
+     *         RAM and creates Collator-keys for them.<br />
+     *         Pros: Fast startup-time, efficient on re-open.<br />
+     *         Cons: Consumes a lot of memory, so-so fast on actual sort.<br />
+     * localstatic: Uses an optimized Collator and creates an array with
+     *         sort-order for the terms in the given field.<br />
+     *         Pros: Fast startup, best actual sort-performance,<br />
+     *         Cons: Temporarily consumes a lot of memory at startup.<br />
+     * multipass: Uses an optimized collator and creates a structure with
+     *         sort-order for the terms in the given field.<br />
+     *         Pros: Customizable memory-usage at the cost of startup time,
+     *               faster than build-in sort in actual sort-performance.<br/ >
+     *         Cons: Long startup-time if low memory-usage is requested.
+     * </p><p>
+     * Optional. Default is localstatic.
+     */
+    public static final String CONF_SORT_COMPARATOR =
+            "summa.support.lucene.sort.comparator";
+    public static final String DEFAULT_SORT_COMPARATOR =
+            SortFactory.DEFAULT_COMPARATOR.toString();
+
+    /**
+     * The buffer-size used by the multipass sort comparator implementation.
+     * </p><p>
+     * Optional. Default is 100MB.
+     */
+    public static final String CONF_SORT_BUFFER =
+            "summa.support.lucene.sort.buffer";
+    public static final int DEFAULT_SORT_BUFFER = SortFactory.DEFAULT_BUFFER;
+
     @SuppressWarnings({"FieldCanBeLocal"})
     private LuceneIndexDescriptor descriptor;
     private SortPool sortPool; // Toed to the descriptor
@@ -240,6 +273,9 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
     private Set<String> mlt_stopWords = null;
     private MoreLikeThis moreLikeThis = null;
     private TermProviderImpl termProvider = null;
+
+    private SortFactory.COMPARATOR sortComparator;
+    private int sortBuffer;
 
     /**
      * Constructs a Lucene search node from the given configuration. This
@@ -273,6 +309,10 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
                     IndexDescriptor.CONF_DESCRIPTOR));
             setDescriptor(LuceneIndexUtils.getDescriptor(conf));
         }
+
+        sortComparator = SortFactory.COMPARATOR.parse(conf.getString(
+                CONF_SORT_COMPARATOR, DEFAULT_SORT_COMPARATOR));
+        sortBuffer = conf.getInt(CONF_SORT_BUFFER, DEFAULT_SORT_BUFFER);
 
         // MoreLikeThis
         setupMoreLikeThis(conf);
@@ -378,7 +418,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
         if (loadDescriptorFromIndex) {
             openDescriptor(baseLocation);
         } else {
-            sortPool = new SortPool(descriptor);
+            sortPool = new SortPool(sortComparator, sortBuffer, descriptor);
         }
         try {
             searcher = new IndexSearcher(getIndexreader(urlLocation));
@@ -426,7 +466,7 @@ public class LuceneSearchNode extends DocumentSearcherImpl implements
 
     private void setDescriptor(LuceneIndexDescriptor descriptor) {
         this.descriptor = descriptor;
-        sortPool = new SortPool(descriptor);
+        sortPool = new SortPool(sortComparator, sortBuffer, descriptor);
         parser = new SummaQueryParser(conf, descriptor);
     }
 
