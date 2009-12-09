@@ -58,6 +58,7 @@ public class StorageRunner {
         } catch (Throwable t) {
             log.fatal("Caught toplevel exception: " + t.getMessage(), t);
             t.printStackTrace();
+            System.exit(1);
         }
     }
 
