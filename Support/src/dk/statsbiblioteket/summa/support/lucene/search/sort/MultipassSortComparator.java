@@ -24,8 +24,8 @@ import dk.statsbiblioteket.summa.common.util.ResourceTracker;
 import dk.statsbiblioteket.summa.common.util.StringTracker;
 import dk.statsbiblioteket.summa.common.util.bits.BitsArray;
 import dk.statsbiblioteket.summa.common.util.bits.BitsArrayFactory;
-import dk.statsbiblioteket.util.qa.QAInfo;
 import dk.statsbiblioteket.util.Profiler;
+import dk.statsbiblioteket.util.qa.QAInfo;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.index.IndexReader;
@@ -186,6 +186,7 @@ public class MultipassSortComparator extends ReusableSortComparator {
             log.trace("Starting sort-loop #" + loopCount++
                       + " with lower bound '" + base + "'");
             // 4. Iterate through all terms for the given field
+            long enumLoopStart = System.currentTimeMillis();
             termCount = 0;
             final TermEnum termEnum = reader.terms(new Term(fieldname, ""));
             try {
@@ -202,6 +203,9 @@ public class MultipassSortComparator extends ReusableSortComparator {
             } finally {
                 termEnum.close();
             }
+            log.trace("Finished term-sort in "
+                      + (System.currentTimeMillis() - enumLoopStart) / 1000
+                      + " seconds");
 
             // 5. If the heap is empty, goto 9.<br />
             if (collector.getSize() == 0) {
@@ -213,6 +217,7 @@ public class MultipassSortComparator extends ReusableSortComparator {
             base = collector.getMin();
             logicalPos += collector.getSize(); // For later
             int reverseLogicalPos = logicalPos-1;
+            long collectorStart = System.currentTimeMillis();
             // 6. For each terms on the heap (sorted order)
             while (collector.getSize() > 0) {
                 final String term = collector.removeMin();
@@ -232,6 +237,9 @@ public class MultipassSortComparator extends ReusableSortComparator {
                 // As the collector delivers in reverse order, we reverse too
                 reverseLogicalPos--;
             }
+            log.trace("DocID-extraction took " 
+                      + (System.currentTimeMillis() - collectorStart) / 1000
+                      + " seconds");
 
             // 7. Set base to the last extracted term from the heap.
             collector.setLowerBound(base);

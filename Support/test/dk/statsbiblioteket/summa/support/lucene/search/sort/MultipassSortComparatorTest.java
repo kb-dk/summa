@@ -174,7 +174,7 @@ public class MultipassSortComparatorTest extends TestCase {
 
     // Manual test activation with tweaked Xmx
     public void testCreateIndex() throws Exception {
-        int TERM_COUNT = 5000000;
+        int TERM_COUNT = 500000;
         int TERM_MAX_LENGTH = 20;
         Profiler profiler = new Profiler();
         SortHelper.createIndex(makeTerms(TERM_COUNT, TERM_MAX_LENGTH));
@@ -205,7 +205,45 @@ public class MultipassSortComparatorTest extends TestCase {
                 SortHelper.SORT_FIELD, 100 * 1024 * 1024));
         System.out.println(
                 "Multipass sort search performed, using " + lucene / 1024
-                + " KB in " + profiler);
+                + " KB in " + profiler.getSpendTime());
+    }
+
+    public void testSortLuceneRepeat() throws Exception {
+        int REPEATS = 5;
+
+        File index = new File(System.getProperty("java.io.tmpdir"));
+        long searchTime = SortHelper.timeSortedSearch(
+                index, "all:all", 10, getLuceneFactory(
+                SortHelper.SORT_FIELD), REPEATS);
+        System.out.println(
+                "Lucene sorted search #" + REPEATS + " took "
+                + searchTime + " ms");
+    }
+
+    public void testSortMultipassRepeat() throws Exception {
+        int REPEATS = 5;
+
+        File index = new File(System.getProperty("java.io.tmpdir"));
+        long searchTime = SortHelper.timeSortedSearch(
+                index, "all:all", 10, getMultipassFactory(
+                SortHelper.SORT_FIELD, 100 * 1024 * 1024), REPEATS);
+        System.out.println(
+                "Multipass sorted search #" + REPEATS + " took "
+                + searchTime + " ms");
+    }
+
+
+
+    // Manual test activation with tweaked Xmx
+    public void testSortstatic() throws Exception {
+        File index = new File(System.getProperty("java.io.tmpdir"));
+        System.out.println("Performing initial Staticlocal sorted search");
+        Profiler profiler = new Profiler();
+        long lucene = SortHelper.performSortedSearch(
+                index, "all:all", 10, getStaticFactory(SortHelper.SORT_FIELD));
+        System.out.println(
+                "Staticlocal sort search performed, using " + lucene / 1024
+                + " KB in " + profiler.getSpendTime());
     }
 
     private static SortHelper.SortFactory getLuceneFactory(
