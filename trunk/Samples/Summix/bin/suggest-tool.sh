@@ -57,5 +57,5 @@ else
     exit 1
 fi
 
-eval "bin/search-tool.sh $ARGS"
+eval "exec bin/search-tool.sh $ARGS"
 

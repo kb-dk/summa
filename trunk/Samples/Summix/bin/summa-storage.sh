@@ -9,11 +9,11 @@ DEPLOY=`dirname $0`/..
 #
 
 ###MAINJAR=
-MAINCLASS=dk.statsbiblioteket.summa.storage.tools.StorageRunner
-CODEBASE_BASEURL="file://$DEPLOY/lib"
+export MAINCLASS=dk.statsbiblioteket.summa.storage.tools.StorageRunner
+export CODEBASE_BASEURL="file://$DEPLOY/lib"
 
-PRINT_CONFIG=true
-DEFAULT_CONFIGURATION=$DEPLOY/config/storage.xml
+export PRINT_CONFIG=
+export DEFAULT_CONFIGURATION=$DEPLOY/config/storage.xml
 ###LIBDIRS=
 ###JAVA_HOME=
 #JVM_OPTS="$JVM_OPTS -Dsumma.configuration=$1"
@@ -27,11 +27,11 @@ DEFAULT_CONFIGURATION=$DEPLOY/config/storage.xml
 
 
 # Custom code
-CONFIGURATION=$1
+export CONFIGURATION=$1
 if [ ! -f "$1" ]; then
         echo "You must specify a configuration as first parameter" 1>&2
         exit 1
 fi
 
 # All is ready, execute!
-source $DEPLOY/bin/generic_start.sh
+exec $DEPLOY/bin/generic_start.sh
