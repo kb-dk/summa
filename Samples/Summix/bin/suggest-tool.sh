@@ -1,5 +1,6 @@
 #! /bin/bash
 
+set -e
 DEPLOY=`dirname $0`/..
 pushd $DEPLOY > /dev/null
 DEPLOY=`pwd`
