@@ -150,14 +150,14 @@ if [ ! -z $PRINT_CONFIG ]; then
     echo -e "Working dir:\t`pwd`" 1>&2
     echo -e "JMX enabled:\t$ENABLE_JMX" 1>&2
     echo -e "Security:\t$SECURITY_POLICY" 1>&2
-    echo -e "Log4J\t\t$LOG4J" 1>&2
+    echo -e "Log4J:\t\t$LOG4J" 1>&2
     echo -e "Properties:\t$SYS_PROPS\n" 1>&2
     echo -e "Command line:\n$COMMAND\n" 1>&2
 fi
 
 if [ ! -z "$SYS_PROPS" ]; then
     # We need 'eval' to get system property quoting right
-    eval "$JAVA_HOME/bin/java $LOCALRMI $SYS_PROPS $CONFIGURATION $JVM_OPTS $SECURITY_POLICY $JMX -cp $CLASSPATH $MAINCLASS $@"
+    eval "exec $JAVA_HOME/bin/java $LOCALRMI $SYS_PROPS $CONFIGURATION $JVM_OPTS $SECURITY_POLICY $JMX -cp $CLASSPATH $MAINCLASS $@"
 else
-    $COMMAND "$@"
+    exec $COMMAND "$@"
 fi
