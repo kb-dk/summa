@@ -18,21 +18,32 @@
     String facet_html = "";
     String form_filter = "";
     String form_query = "";
+    String form_sort = "";
 
     String query = request.getParameter("query");
     if ("".equals(query)) {
         query = null;
     }
+    if (query != null) {
+        form_query = query.replaceAll("\"", "&quot;");
+    }
+
     String filter = request.getParameter("filter");
     if ("".equals(filter)) {
         filter = null;
     }
-    if (query != null) {
-        form_query = query.replaceAll("\"", "&quot;");
-    }
     if (filter != null) {
         form_filter = filter.replaceAll("\"", "&quot;");
     }
+
+    String sort = request.getParameter("sort");
+    if ("".equals(sort)) {
+        sort = null;
+    }
+    if (sort != null) {
+        form_sort = sort.replaceAll("\"", "&quot;");
+    }
+
     if (query != null || filter != null) {
         int per_page = 10;
         int startIndex = 0;
@@ -49,7 +60,7 @@
 
         String xml_search_result = (String)services.execute(
                 "summafiltersearchsorted", filter, query,
-                per_page, current_page * per_page, null, false);
+                per_page, current_page * per_page, sort, false);
 
         if (xml_search_result == null) {
             search_html = "Error executing query";
@@ -75,11 +86,14 @@
                     basepath + "xslt/short_records.xsl").toURI().toURL();
 
             Properties search_prop = new Properties();
+            if (query != null) {
+                search_prop.put("query", query);
+            }
             if (filter != null) {
                 search_prop.put("filter", filter);
             }
-            if (query != null) {
-                search_prop.put("query", query);
+            if (sort != null) {
+                search_prop.put("sort", sort);
             }
             search_prop.put("per_page", per_page);
             search_prop.put("current_page", current_page);
@@ -141,6 +155,8 @@
             $('#q').autocomplete({ serviceUrl:'service/autocomplete.jsp' });
             $('#f2').autocomplete({ serviceUrl:'service/autocomplete.jsp' });
             $('#q2').autocomplete({ serviceUrl:'service/autocomplete.jsp' });
+            $('#q3').autocomplete({ serviceUrl:'service/autocomplete.jsp' });
+            $('#f3').autocomplete({ serviceUrl:'service/autocomplete.jsp' });
             <%-- $('#i').autocomplete({ serviceUrl:'service/indexlookup.jsp' }); --%>
         }
     </script>
@@ -165,13 +181,24 @@
             <input type="submit" value="Search" />
             <input type="hidden" name="usersearchI" value="true" />
         </form>
-        --%>
+	<hr />
         <form action="index.jsp" class="searchBoxTweak" id="fpFilterSearch">
             Filter search<br />
             Filter: <input type="text" name="filter" size="55" id="f2" value="<%= form_filter %>" /><br />
             Query: <input type="text" name="query" size="55" id="q2" value="<%= form_query %>" />
             <input type="submit" value="Search" />
             <input type="hidden" name="userfiltersearch" value="true" />
+        </form>
+        --%>
+	<hr />
+
+        <form action="index.jsp" class="searchBoxTweak" id="fpFilterSortSearch">
+            Filter sorted search<br />
+            Filter: <input type="text" name="filter" size="55" id="f3" value="<%= form_filter %>" /><br />
+            Query: <input type="text" name="query" size="55" id="q3" value="<%= form_query %>" /><br />
+            Sort field: <input type="text" name="sort" size="20" id="s3" value="<%= form_sort %>" />
+            <input type="submit" value="Search" />
+            <input type="hidden" name="userfiltersortsearch" value="true" />
         </form>
     </div>
 </div>
