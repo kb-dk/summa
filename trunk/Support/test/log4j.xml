@@ -66,8 +66,8 @@
         </layout>
     </appender>
 
-    <logger name="dk.statsbiblioteket.summa.support">
-        <level value="debug" />
+    <logger name="dk.statsbiblioteket.summa.support.lucene.search.sort.MultipassSortComparator">
+        <level value="trace" />
         <appender-ref ref="CONSOLE" />
     </logger>
 
@@ -98,5 +98,3 @@
     </root>
 
 </log4j:configuration>
-
-
