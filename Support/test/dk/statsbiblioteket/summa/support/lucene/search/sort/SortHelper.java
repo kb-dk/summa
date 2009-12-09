@@ -5,32 +5,33 @@
 package dk.statsbiblioteket.summa.support.lucene.search.sort;
 
 import dk.statsbiblioteket.util.Files;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-
-import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.IndexReader;
+import org.apache.log4j.Logger;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.search.Sort;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.TopDocs;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.queryParser.QueryParser;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.queryParser.ParseException;
+import org.apache.lucene.queryParser.QueryParser;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.FSDirectory;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * Creates test-indexes usable for sort-testing.
  */
 public class SortHelper {
+    private static final Logger log = Logger.getLogger(SortFactory.class);
 
     public static final String[] BASIC_TERMS = {
             "b", "a", "c", "d", "e"};
@@ -71,6 +72,7 @@ public class SortHelper {
                 dir, new StandardAnalyzer(), true,
                 new IndexWriter.MaxFieldLength(10000));
         int counter = 0;
+        int feedback = Math.min(100, terms.length / 100);
         for (String term: terms) {
             Document doc = new Document();
             doc.add(new Field("all", "all",
@@ -85,6 +87,9 @@ public class SortHelper {
             }
             writer.addDocument(doc);
             counter++;
+            if (counter % feedback == 0) {
+                log.debug("Created document " + counter + "/" + terms.length);
+            }
         }
         writer.close();
         indexes.add(root);
