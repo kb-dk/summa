@@ -70,10 +70,13 @@ public class SuggestStorageH2 extends SuggestStorageImpl {
     /**
      * Whether or not to enable the H2 level 2 page cache. This will be a
      * performance gain on most databases, but might decrease performance
-     * on small databases. The default value is {@code true}.
+     * on small databases. The default value is {@code false}.
+     * <p/>
+     * <i>Warning:</i>Memory leaks has been observed when running with the
+     * level 2 cache enabled.
      */
     public static final String CONF_L2CACHE = "summa.support.suggest.l2cache";
-    public static final boolean DEFAULT_L2CACHE = true;
+    public static final boolean DEFAULT_L2CACHE = false;
 
     /**
      * The {@link Analyzer} implementation to use for generating normalized
