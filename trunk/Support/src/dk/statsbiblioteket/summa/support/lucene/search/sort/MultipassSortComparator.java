@@ -150,6 +150,16 @@ public class MultipassSortComparator extends ReusableSortComparator {
         };
     }
 
+    /**
+     * Calculate the order of the documents in the reader, sorted by fieldname
+     * and the language or collator specified at construction time.
+     * This calculator is optimized towards low memory impact at the cost of
+     * (very) high processing time.
+     * @param reader    the reader with the terms.
+     * @param fieldname the fieldname to get the order for.
+     * @return the order for the documents handled by the reader.
+     * @throws IOException if the index could not be accessed.
+     */
     private synchronized BitsArray getOrder(
             IndexReader reader, String fieldname) throws IOException {
         fieldname = fieldname.intern();
@@ -237,7 +247,140 @@ public class MultipassSortComparator extends ReusableSortComparator {
                 // As the collector delivers in reverse order, we reverse too
                 reverseLogicalPos--;
             }
-            log.trace("DocID-extraction took " 
+            log.trace("DocID-extraction took "
+                      + (System.currentTimeMillis() - collectorStart) / 1000
+                      + " seconds");
+
+            // 7. Set base to the last extracted term from the heap.
+            collector.setLowerBound(base);
+            profiler.beat();
+            // 8. Goto 4.
+        }
+
+        // 9. positions now contain relative positions for all documents in the
+        // index. A position of 0 means that there was no term for the given
+        // document.
+
+        // Depending on wanted behaviour, these can be left or set to
+        // logicalPos+1.
+        if (nullComesLast) {
+            logicalPos++;
+            for (int i = 0 ; i < positions.size() ; i++) {
+                if (positions.get(i) == 0) {
+                    positions.set(i, logicalPos);
+                }
+            }
+        }
+        termDocs.close();
+
+        orders.put(fieldname, positions);
+        log.debug(String.format(
+                "Got %d unique positions in the order-array for %d terms in "
+                + "the field %s using language %s with Collator %s for %d "
+                + "documents in %s performing %d loops through the terms",
+                logicalPos-1, termCount, fieldname, language, collator,
+                reader.maxDoc(), profiler.getSpendTime(), loopCount-2));
+        return positions;
+    }
+
+    /**
+     * Calculate the order of the documents in the reader, sorted by fieldname
+     * and the language or collator specified at construction time.
+     * This calculator is optimized towards a mix of low memory impact an fast
+     * processing.
+     * @param reader    the reader with the terms.
+     * @param fieldname the fieldname to get the order for.
+     * @return the order for the documents handled by the reader.
+     * @throws IOException if the index could not be accessed.
+     */
+    private synchronized BitsArray getOrderFast(
+            IndexReader reader, String fieldname) throws IOException {
+        fieldname = fieldname.intern();
+        checkCacheConsistency(reader);
+
+        if (orders.containsKey(fieldname)) {
+            return orders.get(fieldname);
+        }
+
+        Profiler profiler = new Profiler();
+        profiler.setBpsSpan(10);
+        log.debug(String.format(
+                "Calculating order for all the terms in the field %s using "
+                + "language %s with Collator %s for %d documents",
+                fieldname, language, collator, reader.maxDoc()));
+        final TermDocs termDocs = reader.termDocs();
+
+        // 1. Create a heap for Strings. The heap has a maximum size in bytes.
+        final ResourceTracker<String> tracker = new StringTracker(
+                1, Integer.MAX_VALUE, sortBufferSize);
+        String base = null;
+        WindowQueue<String> collector = new WindowQueue<String>(
+                CollatorFactory.wrapCollator(collator), base, null, tracker);
+
+        // 2. Set the empty String as base, set the logicalPos to 1.
+        int logicalPos = 1;
+        // 3. Create a BitsArray positions of length maxDocs.
+        BitsArray positions = BitsArrayFactory.createArray(
+                reader.maxDoc(), 1, BitsArray.PRIORITY.mix);
+
+        int loopCount = 1;
+        long termCount = 0;
+        while (true) {
+            log.trace("Starting sort-loop #" + loopCount++
+                      + " with lower bound '" + base + "'");
+            // 4. Iterate through all terms for the given field
+            long enumLoopStart = System.currentTimeMillis();
+            termCount = 0;
+            final TermEnum termEnum = reader.terms(new Term(fieldname, ""));
+            try {
+                do {
+                    final Term term = termEnum.term();
+                    if (term==null || !term.field().equals(fieldname)) {
+                        break;
+                    }
+                    termCount++;
+                    // 4.1 if the current term is ordered after the base, add
+                    //     it to the heap.
+                    collector.insert(term.text());
+                } while (termEnum.next());
+            } finally {
+                termEnum.close();
+            }
+            log.trace("Finished term-sort in "
+                      + (System.currentTimeMillis() - enumLoopStart) / 1000
+                      + " seconds");
+
+            // 5. If the heap is empty, goto 9.<br />
+            if (collector.getSize() == 0) {
+                break;
+            }
+
+            log.trace("Extracting docIDs for " + collector.getSize()
+                      + " terms above base '" + base + "'");
+            base = collector.getMin();
+            logicalPos += collector.getSize(); // For later
+            int reverseLogicalPos = logicalPos-1;
+            long collectorStart = System.currentTimeMillis();
+            // 6. For each terms on the heap (sorted order)
+            while (collector.getSize() > 0) {
+                final String term = collector.removeMin();
+//                System.out.println(" * " + term + " has position " + reverseLogicalPos);
+
+                // TODO: Can we optimize this for termEnum?
+                // Preferably without doing unneccesary requests in the previous
+                // loop
+                termDocs.seek(new Term(fieldname, term));
+                // 6.1 for each docID for the term
+                while (termDocs.next()) {
+                    // 6.1.1 assign with positions.set(docID, logicalPos)
+                    positions.set(termDocs.doc(), reverseLogicalPos);
+                }
+
+                // 6.2 increment logicalPos.
+                // As the collector delivers in reverse order, we reverse too
+                reverseLogicalPos--;
+            }
+            log.trace("DocID-extraction took "
                       + (System.currentTimeMillis() - collectorStart) / 1000
                       + " seconds");
 
