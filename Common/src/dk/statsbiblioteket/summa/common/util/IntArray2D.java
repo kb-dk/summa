@@ -25,10 +25,14 @@ import org.apache.commons.logging.Log;
 
 /**
  * A space-efficient flexible-size 2-dimensional int array implementation.
- * int[][] works by having an array with pointers to int-arrays. The IntArray2D
- * works by having an int-array with pointers into another int-array with
- * values. The tradeoff is high insertion-time if the values are not added in
+ * Java's standard int[][] works by having an array with pointers to int-arrays.
+ * The IntArray2D works by having an int-array with offsets into another
+ * int-array with values. This eliminates the overhead of the second-dimenstion
+ * arrays. The tradeoff is high insertion-time if the values are not added in
  * sequential order.
+ * </p><p>
+ * Allocated memory for the internal structures is never freed, even when all
+ * values are set to 0.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -41,22 +45,23 @@ public class IntArray2D {
      * length.
      */
     public static final double DEFAULT_GROWTH_FACTOR = 1.2D;
+    private static final int MAX_INCREMENT = 1000000;
 
     private static final int OFFSET_MASK = 0x7FFFFFFF; // 011...111
     private static final int CLEAR_MASK =  0x80000000; // 100...000
 
     private double growthFactor = DEFAULT_GROWTH_FACTOR;
 
-    // Invariant: offsets[size] == offsets[size-1]
+    // Invariant: offsets[size] == last free entry in valueStore
     // As offsets cannot be negative, we use the first bit to indicate that the
-    // values are cleared
+    // valueStore are cleared
     private int[] offsets;
     private int size = 0;
-    private int[] values;
+    private int[] valueStore;
 
     public IntArray2D() {
         offsets = new int[1000];
-        values = new int[1000];
+        valueStore = new int[1000];
     }
 
     /**
@@ -65,7 +70,7 @@ public class IntArray2D {
      */
     public IntArray2D(int initialLength) {
         offsets = new int[initialLength];
-        values = new int[initialLength];
+        valueStore = new int[initialLength];
     }
 
     /**
@@ -76,17 +81,18 @@ public class IntArray2D {
      */
     public IntArray2D(int initialLength, double growthFactor) {
         offsets = new int[initialLength];
-        values = new int[initialLength];
+        valueStore = new int[initialLength];
         this.growthFactor = growthFactor;
     }
 
     private static final int[] EMPTY = new int[0];
-    public int[] getValues(int position) {
-        if (position >= size) {
-            throw new ArrayIndexOutOfBoundsException(String.format(
-                    "The primary array has size %d, while the requested "
-                    + "position was %d", size, position));
-        }
+
+    /**
+     * @param position where to get the values.
+     * @return the values at the given position.
+     */
+    public int[] get(int position) {
+        checkPos(position);
         if ((offsets[position] & CLEAR_MASK) != 0) {
             // Cleared
             return EMPTY;
@@ -95,26 +101,96 @@ public class IntArray2D {
         final int to =   offsets[position+1] & OFFSET_MASK;
         int[] result = new int[to - from];
         for (int offset = from ; offset < to  ; offset++) {
-            result[from - offset] = values[offset];
+            result[offset - from] = valueStore[offset];
         }
         return result;
     }
 
-    public void setValues(int position, int[] values) {
+    /**
+     * Set the values at the given position. This is fast if the position is
+     * >= size, but slow for low positions vs. high size.
+     * @param position where to store the values.
+     * @param values the values to store.
+     */
+    public void set(int position, int[] values) {
+        // Ensure offset-space
+        offsets = ArrayUtil.makeRoom(
+                offsets, position, growthFactor, MAX_INCREMENT, 2);
+        if (position < size) {
+            setValuesInside(position, values);
+            return;
+        }
+        // Ensure that there is room
+        valueStore = ArrayUtil.makeRoom(valueStore, offsets[size], growthFactor,
+                                        MAX_INCREMENT, values.length);
+        //noinspection ManualArrayCopy
+        for (int i = 0 ; i <= position - size ; i++) { // Fill with 0 values
+            offsets[size + i + 1] = offsets[size + i];
+        }
+        offsets[position + 1] = offsets[position + 1] + values.length;
+        System.arraycopy(
+                values,  0, valueStore, offsets[position], values.length);
+        size = position + 1;
+    }
 
+    private void setValuesInside(int position, int[] values) {
+        final int existingLength = offsets[position+1] - offsets[position];
+        int adjust = values.length - existingLength;
+        if (adjust > 0) { // Expand capacity
+            valueStore = ArrayUtil.makeRoom(
+                    valueStore, size, growthFactor, MAX_INCREMENT, adjust);
+        }
+        if (adjust != 0) {
+            // Move trailing values
+            System.arraycopy(valueStore, offsets[position+1],          // From
+                             valueStore, offsets[position+1] + adjust, // To
+                             offsets[size] - offsets[position+1]);     // Length
+            // Adjust trailing offsets
+            for (int i = position + 1 ; i <= size ; i++) {
+                offsets[i] += adjust;
+            }
+        }
+        // Insert values
+        System.arraycopy(
+                values, 0, valueStore, offsets[position], values.length);
     }
 
     /**
-     * Clear the values at the given position without freeing memory.
+     * Clear the values at the given position without moving values (no GC).
      * This operation is constant time with minimal overhead.
      * @param position the position to clear.
      */
     public void dirtyClear(int position) {
+        checkPos(position);
+        offsets[position] = offsets[position] | CLEAR_MASK;
+    }
+
+    /**
+     * Remove all values at the given position.
+     * Shorthand for calling {@link #set} with an empty array.
+     * Note: This adjusts internal values and might be expensive, depending og
+     * the existing structure. If reclaiming of freed space in the internal
+     * structure is not a priority, consider using {@link #dirtyClear}.
+     * @param position were to remove the values.
+     */
+    public void clear(int position) {
+        set(position, EMPTY);
+    }
+
+    /**
+     * @param position the position of an int-array.
+     * @return true if the values at the given position is marked as cleared.
+     */
+    public boolean isCleared(int position) {
+        checkPos(position);
+        return (offsets[position] & CLEAR_MASK) != 0;
+    }
+
+    private void checkPos(final int position) {
         if (position >= size) {
             throw new ArrayIndexOutOfBoundsException(String.format(
                     "The primary array has size %d, while the requested "
                     + "position was %d", size, position));
         }
-        offsets[position] = offsets[position] | CLEAR_MASK;
     }
 }
