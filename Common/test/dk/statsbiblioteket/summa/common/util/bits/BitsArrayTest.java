@@ -238,7 +238,7 @@ public class BitsArrayTest extends TestCase {
 
     public void testReadPerformance() {
         int MAX = 1000000;
-        int READS = MAX * 10;
+        int READS = MAX * 100;
         int INITIAL_MAX_LENGTH = MAX;
         int INITIAL_MAX_VALUE = 240;
         int WARMUP = 2;
