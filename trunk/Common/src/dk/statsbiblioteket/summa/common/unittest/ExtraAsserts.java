@@ -52,9 +52,18 @@ public class ExtraAsserts extends TestCase implements ErrorHandler {
      * @param expected the expected result.
      * @param actual   the actuak result.
      */
-    public static void assertEquals(String message, int[] expected,
-                                    int[] actual) {
+    public static void assertEquals(
+            String message, int[] expected, int[] actual) {
         Arrays.sort(expected);
+        if (!Arrays.equals(expected, actual)) {
+            //noinspection DuplicateStringLiteralInspection
+            fail(message + ". Expected " + dump(expected)
+                 + " got " + dump(actual));
+        }
+    }
+
+    public static void assertEqualsNoSort(
+            String message, int[] expected, int[] actual) {
         if (!Arrays.equals(expected, actual)) {
             //noinspection DuplicateStringLiteralInspection
             fail(message + ". Expected " + dump(expected)
@@ -72,8 +81,8 @@ public class ExtraAsserts extends TestCase implements ErrorHandler {
      * @param expected the expected result.
      * @param actual   the actual result.
      */
-    public static void assertEquals(String message, long[] expected,
-                                    long[] actual) {
+    public static void assertEquals(
+            String message, long[] expected, long[] actual) {
         if (!Arrays.equals(expected, actual)) {
             //noinspection DuplicateStringLiteralInspection
             fail(message + ". Expected " + dump(expected)
@@ -88,8 +97,8 @@ public class ExtraAsserts extends TestCase implements ErrorHandler {
      * @param expected the expected content.
      * @param actual   the actual content.
      */
-    public static void assertEquals(String message,
-                                    Collection expected, Collection actual) {
+    public static void assertEquals(
+            String message, Collection expected, Collection actual) {
         if (expected.size() != actual.size()) {
             fail(message + ". Expected size " + expected.size()
                  + " but got " + actual.size());
@@ -153,8 +162,8 @@ public class ExtraAsserts extends TestCase implements ErrorHandler {
             "http://java.sun.com/xml/jaxp/properties/schemaSource";
 
     // Expects W3C Schema
-    public synchronized static void assertValidates(String message, URL schema,
-                                                    String xml) {
+    public synchronized static void assertValidates(
+            String message, URL schema, String xml) {
         saxProblems.clear();
         assertNotNull(message + ". The schema-URL '" + schema
                       + " 'must be resolvable to a File",
