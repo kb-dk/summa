@@ -72,7 +72,7 @@ public class SortHelper {
                 dir, new StandardAnalyzer(), true,
                 new IndexWriter.MaxFieldLength(10000));
         int counter = 0;
-        int feedback = Math.min(100, terms.length / 100);
+        int feedback = Math.max(1, Math.min(100, terms.length / 100));
         for (String term: terms) {
             Document doc = new Document();
             doc.add(new Field("all", "all",

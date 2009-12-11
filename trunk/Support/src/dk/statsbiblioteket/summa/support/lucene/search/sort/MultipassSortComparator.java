@@ -19,9 +19,7 @@
  */
 package dk.statsbiblioteket.summa.support.lucene.search.sort;
 
-import dk.statsbiblioteket.summa.common.util.CollatorFactory;
-import dk.statsbiblioteket.summa.common.util.ResourceTracker;
-import dk.statsbiblioteket.summa.common.util.StringTracker;
+import dk.statsbiblioteket.summa.common.util.*;
 import dk.statsbiblioteket.summa.common.util.bits.BitsArray;
 import dk.statsbiblioteket.summa.common.util.bits.BitsArrayFactory;
 import dk.statsbiblioteket.util.Profiler;
@@ -40,6 +38,7 @@ import java.io.IOException;
 import java.text.Collator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Comparator;
 
 /**
  * A SortComparator that utilized multipass-scans of the corpus in order to
@@ -283,6 +282,30 @@ public class MultipassSortComparator extends ReusableSortComparator {
         return positions;
     }
 
+    /*
+     * Algorithm:
+     * IntArray2D t2d[termPos] == docIDs_with_the_term
+     * PriorityQueue<Pair<term, termPos>> slider.
+     * BitsArray positions == docID -> position.
+ * 1. Create a heap for Strings. The heap has a maximum size in bytes.<br />
+ * 2. Set the empty String as base, set the logicalPos to 1.<br />
+ * 3. Create a BitsArray positions of length maxDocs.<br />
+ * 4. Iterate through all terms for the given field<br />
+ * 4.1 if the current term is ordered after the base (typically order is
+ *     provided by a Collator), add it to the heap.
+ *     Note that the heap is limited in size and thus containg top-X after base.
+ *     X is determined by byte size and thus is not a fixed number.<br />
+ * 5. If the heap is empty, goto 9.<br />
+ * 6. For each terms on the heap (sorted order)<br />
+ * 6.1 for each docID for the term<br />
+ * 6.1.1 assign with {@code positions.set(docID, logicalPos)}<br />
+ * 6.2 increment logicalPos.<br />
+ * 7. Set base to the last extracted term from the heap.<br />
+ * 8. Goto 4.<br />
+ * 9. positions now contain relative positions for all documents in the index.
+ *    A position of 0 means that there was no term for the given document.
+ *    Depending on wanted behaviour, these can be left or set to logicalPos+1.
+     */
     /**
      * Calculate the order of the documents in the reader, sorted by fieldname
      * and the language or collator specified at construction time.
@@ -297,7 +320,6 @@ public class MultipassSortComparator extends ReusableSortComparator {
             IndexReader reader, String fieldname) throws IOException {
         fieldname = fieldname.intern();
         checkCacheConsistency(reader);
-
         if (orders.containsKey(fieldname)) {
             return orders.get(fieldname);
         }
@@ -311,11 +333,13 @@ public class MultipassSortComparator extends ReusableSortComparator {
         final TermDocs termDocs = reader.termDocs();
 
         // 1. Create a heap for Strings. The heap has a maximum size in bytes.
-        final ResourceTracker<String> tracker = new StringTracker(
-                1, Integer.MAX_VALUE, sortBufferSize);
-        String base = null;
-        WindowQueue<String> collector = new WindowQueue<String>(
-                CollatorFactory.wrapCollator(collator), base, null, tracker);
+        final ResourceTracker<OrderedString> tracker = null;
+        //new OrderedStringTracker(
+          //      Integer.MAX_VALUE, sortBufferSize);
+        OrderedString base = null;
+        WindowQueue<OrderedString> collector =
+                new WindowQueue<OrderedString>(
+                new OrderedStringComparator(collator), base, null, tracker);
 
         // 2. Set the empty String as base, set the logicalPos to 1.
         int logicalPos = 1;
@@ -341,7 +365,7 @@ public class MultipassSortComparator extends ReusableSortComparator {
                     termCount++;
                     // 4.1 if the current term is ordered after the base, add
                     //     it to the heap.
-                    collector.insert(term.text());
+                    collector.insert(new OrderedString(term.text(), 87));
                 } while (termEnum.next());
             } finally {
                 termEnum.close();
@@ -363,7 +387,7 @@ public class MultipassSortComparator extends ReusableSortComparator {
             long collectorStart = System.currentTimeMillis();
             // 6. For each terms on the heap (sorted order)
             while (collector.getSize() > 0) {
-                final String term = collector.removeMin();
+                final String term = collector.removeMin().getString();
 //                System.out.println(" * " + term + " has position " + reverseLogicalPos);
 
                 // TODO: Can we optimize this for termEnum?
@@ -415,4 +439,53 @@ public class MultipassSortComparator extends ReusableSortComparator {
                 reader.maxDoc(), profiler.getSpendTime(), loopCount-2));
         return positions;
     }
+
+    private static class OrderedString implements Comparable<OrderedString> {
+        private String s;
+        private int order;
+        public OrderedString(String s, int order) {
+            this.s = s;
+            this.order = order;
+        }
+
+        public int compareTo(OrderedString o) {
+            return s.compareTo(o.getString());
+        }
+
+        public String getString() {
+            return s;
+        }
+        public int getOrder() {
+            return order;
+        }
+    }
+    
+    private static class OrderedStringComparator implements
+                                                 Comparator<OrderedString> {
+        private Collator collator;
+
+        private OrderedStringComparator(Collator collator) {
+            this.collator = collator;
+        }
+
+        public int compare(OrderedString o1, OrderedString o2) {
+            return collator.compare(o1.getString(), o2.getString());
+        }
+    }
+
+/*    private static class OrderedStringTracker
+                                    extends ResourceTrackerImpl<OrderedString> {
+        // 38 == String, 8 == ref to String, 8 == Object, 4 == order(int)
+        private static final int SINGLE_ENTRY_OVERHEAD = 38 + 8 + 8 + 4; // 32 bit
+
+        public OrderedStringTracker(long maxCountLimit, long memLimit) {
+            super(1, maxCountLimit, memLimit);
+        }
+
+        public long calculateBytes(OrderedString element) {
+            return element == null ? 0
+                   : element.getString().length() * 2 + SINGLE_ENTRY_OVERHEAD;
+        }
+
+    }*/
 }
