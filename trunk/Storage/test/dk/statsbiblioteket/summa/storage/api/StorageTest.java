@@ -37,6 +37,7 @@ public class StorageTest extends TestCase {
     static String testId4 = "testId4";
     static int storageCounter = 0;
     static byte[] testContent1 = new byte[] {'s', 'u', 'm', 'm', 'a'};
+    static byte[] testContent2 = new byte[] {'b', '0', 'r', 'k'};
     long testStartTime;
 
     private static String lastStorageLocation = null;
@@ -209,6 +210,27 @@ public class StorageTest extends TestCase {
         storage.flushAll(Arrays.asList(plain, plain));
         storage.flushAll(Arrays.asList(plain, deleted, plain));
         storage.flushAll(Arrays.asList(plain, deleted, deleted, plain));
+    }
+
+    public void testUpdateContent() throws Exception {
+        Record orig = new Record(testId1, testBase1, testContent1);
+        Record upd = new Record(testId1, testBase1, testContent2);
+
+        assertNull("The test record should not exist",
+                   storage.getRecord(testId1, null));
+        storage.flush(orig);
+        Record _orig = storage.getRecord(testId1, null);
+        assertEquals(orig, _orig);
+
+        storage.flush(upd);
+        Record _upd = storage.getRecord(testId1, null);
+        assertEquals(upd, _upd);
+
+        // This is superfluous, but we are paranoid
+        assertTrue(upd.getContentAsUTF8().equals(_upd.getContentAsUTF8()));
+        assertFalse(_orig.getContentAsUTF8().equals(_upd.getContentAsUTF8()));
+        assertFalse(_upd.getContentAsUTF8().equals(testContent2));
+
     }
 
     public void testClearOne() throws Exception {
