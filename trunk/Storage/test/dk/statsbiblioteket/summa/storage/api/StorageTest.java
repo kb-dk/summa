@@ -212,7 +212,8 @@ public class StorageTest extends TestCase {
         storage.flushAll(Arrays.asList(plain, deleted, deleted, plain));
     }
 
-    public void testUpdateContent() throws Exception {
+    /* Test that record content is indeed updated when calling the flush() */
+    public void testContentUpdate() throws Exception {
         Record orig = new Record(testId1, testBase1, testContent1);
         Record upd = new Record(testId1, testBase1, testContent2);
 
@@ -230,7 +231,27 @@ public class StorageTest extends TestCase {
         assertTrue(upd.getContentAsUTF8().equals(_upd.getContentAsUTF8()));
         assertFalse(_orig.getContentAsUTF8().equals(_upd.getContentAsUTF8()));
         assertTrue(_upd.getContentAsUTF8().equals(new String(testContent2)));
+    }
 
+    /* Test that record content is indeed updated when calling the flushAll() */
+    public void testBatchedContentUpdate() throws Exception {
+        Record orig = new Record(testId1, testBase1, testContent1);
+        Record upd = new Record(testId1, testBase1, testContent2);
+
+        assertNull("The test record should not exist",
+                   storage.getRecord(testId1, null));
+        storage.flushAll(Arrays.asList(orig));
+        Record _orig = storage.getRecord(testId1, null);
+        assertEquals(orig, _orig);
+
+        storage.flushAll(Arrays.asList(upd));
+        Record _upd = storage.getRecord(testId1, null);
+        assertEquals(upd, _upd);
+
+        // This is superfluous, but we are paranoid
+        assertTrue(upd.getContentAsUTF8().equals(_upd.getContentAsUTF8()));
+        assertFalse(_orig.getContentAsUTF8().equals(_upd.getContentAsUTF8()));
+        assertTrue(_upd.getContentAsUTF8().equals(new String(testContent2)));
     }
 
     public void testClearOne() throws Exception {
