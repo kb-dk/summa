@@ -73,7 +73,7 @@ public abstract class ResourceTrackerImpl<T> implements ResourceTracker<T> {
      * @param element the element to calculate memory usage for.
      * @return approximate memory usage for the element.
      */
-    abstract long calculateBytes(T element);
+    public abstract long calculateBytes(T element);
 
     /**
      * @return the approximate number of bytes used by added objects.

@@ -53,7 +53,7 @@ public class StringTracker extends ResourceTrackerImpl<String> {
     }
 
     @Override
-    long calculateBytes(String element) {
+    public long calculateBytes(String element) {
         return element == null ? 0
                : element.length() * 2 + SINGLE_ENTRY_OVERHEAD;
     }

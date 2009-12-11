@@ -36,21 +36,21 @@ public class IntArray2DTest extends TestCase {
     public void testSetGetValues() throws Exception {
         IntArray2D ia = new IntArray2D();
         ia.set(0, new int[]{9});
-        ExtraAsserts.assertEquals("Array at pos 0 should match (A)",
-                                  new int[]{9}, ia.get(0));
+        ExtraAsserts.assertEqualsNoSort("Array at pos 0 should match (A)",
+                                        new int[]{9}, ia.get(0));
 
         ia.set(10, new int[]{10, 11});
-        ExtraAsserts.assertEquals("Array at pos 0 should match (B)",
-                                  new int[]{9}, ia.get(0));
-        ExtraAsserts.assertEquals("Array at pos 10 should match (A)",
-                                  new int[]{10, 11}, ia.get(10));
+        ExtraAsserts.assertEqualsNoSort("Array at pos 0 should match (B)",
+                                        new int[]{9}, ia.get(0));
+        ExtraAsserts.assertEqualsNoSort("Array at pos 10 should match (A)",
+                                        new int[]{10, 11}, ia.get(10));
         ia.set(9, new int[]{12});
-        ExtraAsserts.assertEquals("Array at pos 0 should match (C)",
-                                  new int[]{9}, ia.get(0));
-        ExtraAsserts.assertEquals("Array at pos 9 should match",
-                                  new int[]{12}, ia.get(9));
-        ExtraAsserts.assertEquals("Array at pos 10 should match (B)",
-                                  new int[]{10, 11}, ia.get(10));
+        ExtraAsserts.assertEqualsNoSort("Array at pos 0 should match (C)",
+                                        new int[]{9}, ia.get(0));
+        ExtraAsserts.assertEqualsNoSort("Array at pos 9 should match",
+                                        new int[]{12}, ia.get(9));
+        ExtraAsserts.assertEqualsNoSort("Array at pos 10 should match (B)",
+                                        new int[]{10, 11}, ia.get(10));
     }
 
     public void testMonkey() throws Exception {
@@ -122,5 +122,25 @@ public class IntArray2DTest extends TestCase {
         // Assign at end to avoid out of bounds
         base[POS_MAX] = new int[]{87};
         return base;
+    }
+
+    public void testAppend() throws Exception {
+        IntArray2D ia = new IntArray2D();
+        ia.set(10, new int[]{10, 11});
+        ia.set(11, new int[]{12});
+        ia.append(11, 13);
+        ia.append(10, 14);
+        ia.append(9, 15);
+        ia.append(20, 16);
+        ExtraAsserts.assertEqualsNoSort("Array at pos 9 should match",
+                                        new int[]{15}, ia.get(9));
+        ExtraAsserts.assertEqualsNoSort("Array at pos 10 should match",
+                                        new int[]{15}, ia.get(9));
+        ExtraAsserts.assertEqualsNoSort("Array at pos 11 should match",
+                                        new int[]{15}, ia.get(9));
+        ExtraAsserts.assertEqualsNoSort("Array at pos 20 should match",
+                                        new int[]{15}, ia.get(9));
+        ExtraAsserts.assertEqualsNoSort("Array at pos 9 should match",
+                                        new int[]{15}, ia.get(9));
     }
 }

@@ -133,6 +133,34 @@ public class IntArray2D {
         size = position + 1;
     }
 
+    /**
+     * Extend the array of values at the given position with the given value.
+     * This is fast if the position is >= size, but slow for low positions vs.
+     * high size.
+     * @param position where to append the value.
+     * @param value the values to append.
+     */
+    public void append(int position, int value) {
+        if (position < size-1) { // Append inside (slow)
+            int[] existing = get(position);
+            int[] replacement = new int[existing.length+1];
+            replacement[replacement.length-1] = value;
+            set(position, replacement);
+            return;
+        }
+        if (position > size-1) { // Plain new (somewhat slow)
+            SINGLE[0] = value;
+            set(position, SINGLE);
+            return;
+        }
+        // position == size-1: Fast
+        valueStore = ArrayUtil.makeRoom(
+                valueStore, offsets[size], growthFactor, MAX_INCREMENT, 1);
+        valueStore[offsets[position+1]] = value;
+        offsets[position+1]++;
+    }
+    private static final int[] SINGLE = new int[1];
+
     private void setValuesInside(int position, int[] values) {
         final int existingLength = offsets[position+1] - offsets[position];
         int adjust = values.length - existingLength;

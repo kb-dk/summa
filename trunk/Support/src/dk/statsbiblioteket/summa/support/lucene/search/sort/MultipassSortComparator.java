@@ -283,28 +283,9 @@ public class MultipassSortComparator extends ReusableSortComparator {
     }
 
     /*
-     * Algorithm:
-     * IntArray2D t2d[termPos] == docIDs_with_the_term
-     * PriorityQueue<Pair<term, termPos>> slider.
-     * BitsArray positions == docID -> position.
- * 1. Create a heap for Strings. The heap has a maximum size in bytes.<br />
- * 2. Set the empty String as base, set the logicalPos to 1.<br />
- * 3. Create a BitsArray positions of length maxDocs.<br />
- * 4. Iterate through all terms for the given field<br />
- * 4.1 if the current term is ordered after the base (typically order is
- *     provided by a Collator), add it to the heap.
- *     Note that the heap is limited in size and thus containg top-X after base.
- *     X is determined by byte size and thus is not a fixed number.<br />
- * 5. If the heap is empty, goto 9.<br />
- * 6. For each terms on the heap (sorted order)<br />
- * 6.1 for each docID for the term<br />
- * 6.1.1 assign with {@code positions.set(docID, logicalPos)}<br />
- * 6.2 increment logicalPos.<br />
- * 7. Set base to the last extracted term from the heap.<br />
- * 8. Goto 4.<br />
- * 9. positions now contain relative positions for all documents in the index.
- *    A position of 0 means that there was no term for the given document.
- *    Depending on wanted behaviour, these can be left or set to logicalPos+1.
+     * IntArray2D t2d: termPos -> docID[].
+     * PriorityQueue<orderedString(term, termpos)>> slider: .
+     * BitsArray positions: docID -> docpos.
      */
     /**
      * Calculate the order of the documents in the reader, sorted by fieldname
@@ -333,13 +314,13 @@ public class MultipassSortComparator extends ReusableSortComparator {
         final TermDocs termDocs = reader.termDocs();
 
         // 1. Create a heap for Strings. The heap has a maximum size in bytes.
-        final ResourceTracker<OrderedString> tracker = null;
-        //new OrderedStringTracker(
-          //      Integer.MAX_VALUE, sortBufferSize);
+        final ResourceTracker<OrderedString> tracker = new OrderedStringTracker(
+                Integer.MAX_VALUE, sortBufferSize);
         OrderedString base = null;
         WindowQueue<OrderedString> collector =
                 new WindowQueue<OrderedString>(
                 new OrderedStringComparator(collator), base, null, tracker);
+        IntArray2D t2d = new IntArray2D(reader.maxDoc(), 1.1D);
 
         // 2. Set the empty String as base, set the logicalPos to 1.
         int logicalPos = 1;
@@ -350,7 +331,7 @@ public class MultipassSortComparator extends ReusableSortComparator {
         int loopCount = 1;
         long termCount = 0;
         while (true) {
-            log.trace("Starting sort-loop #" + loopCount++
+            log.trace("Starting sort-loop #" + loopCount
                       + " with lower bound '" + base + "'");
             // 4. Iterate through all terms for the given field
             long enumLoopStart = System.currentTimeMillis();
@@ -361,6 +342,16 @@ public class MultipassSortComparator extends ReusableSortComparator {
                     final Term term = termEnum.term();
                     if (term==null || !term.field().equals(fieldname)) {
                         break;
+                    }
+                    if (loopCount == 1) { // Collect docIDs for terms
+                        termDocs.seek(termEnum);
+                        while (termDocs.next()) {
+
+
+                            // 6.1.1 assign with positions.set(docID, logicalPos)
+                            positions.set(termDocs.doc(), reverseLogicalPos);
+                        }
+
                     }
                     termCount++;
                     // 4.1 if the current term is ordered after the base, add
@@ -412,6 +403,7 @@ public class MultipassSortComparator extends ReusableSortComparator {
             collector.setLowerBound(base);
             profiler.beat();
             // 8. Goto 4.
+            loopCount++;
         }
 
         // 9. positions now contain relative positions for all documents in the
@@ -440,7 +432,7 @@ public class MultipassSortComparator extends ReusableSortComparator {
         return positions;
     }
 
-    private static class OrderedString implements Comparable<OrderedString> {
+    public static class OrderedString implements Comparable<OrderedString> {
         private String s;
         private int order;
         public OrderedString(String s, int order) {
@@ -473,8 +465,8 @@ public class MultipassSortComparator extends ReusableSortComparator {
         }
     }
 
-/*    private static class OrderedStringTracker
-                                    extends ResourceTrackerImpl<OrderedString> {
+    private class OrderedStringTracker extends
+                                            ResourceTrackerImpl<OrderedString> {
         // 38 == String, 8 == ref to String, 8 == Object, 4 == order(int)
         private static final int SINGLE_ENTRY_OVERHEAD = 38 + 8 + 8 + 4; // 32 bit
 
@@ -482,10 +474,11 @@ public class MultipassSortComparator extends ReusableSortComparator {
             super(1, maxCountLimit, memLimit);
         }
 
+        @Override
         public long calculateBytes(OrderedString element) {
             return element == null ? 0
                    : element.getString().length() * 2 + SINGLE_ENTRY_OVERHEAD;
         }
 
-    }*/
+    }
 }
