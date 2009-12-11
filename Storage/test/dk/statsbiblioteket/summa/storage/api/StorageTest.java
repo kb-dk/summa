@@ -229,7 +229,7 @@ public class StorageTest extends TestCase {
         // This is superfluous, but we are paranoid
         assertTrue(upd.getContentAsUTF8().equals(_upd.getContentAsUTF8()));
         assertFalse(_orig.getContentAsUTF8().equals(_upd.getContentAsUTF8()));
-        assertFalse(_upd.getContentAsUTF8().equals(testContent2));
+        assertTrue(_upd.getContentAsUTF8().equals(new String(testContent2)));
 
     }
 
