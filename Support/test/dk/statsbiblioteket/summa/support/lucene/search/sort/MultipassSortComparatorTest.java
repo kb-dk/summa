@@ -141,7 +141,7 @@ public class MultipassSortComparatorTest extends TestCase {
     }
 
     public void testMemoryConsumption() throws Exception {
-        int TERM_COUNT = 100000;
+        int TERM_COUNT = 10000;
         int TERM_MAX_LENGTH = 20;
         int RUNS = 3;
         final int SORT_BUFFER = 2 * 1024 * 1024;
@@ -191,7 +191,7 @@ public class MultipassSortComparatorTest extends TestCase {
                 index, "all:all", 10, getLuceneFactory(
                 SortHelper.SORT_FIELD));
         System.out.println(
-                "Lucene sort search performen, using " + lucene / 1024
+                "Lucene sort search performed, using " + lucene / 1024
                 + " KB in " + profiler.getSpendTime());
     }
 
@@ -202,7 +202,7 @@ public class MultipassSortComparatorTest extends TestCase {
         Profiler profiler = new Profiler();
         long lucene = SortHelper.performSortedSearch(
                 index, "all:all", 10, getMultipassFactory(
-                SortHelper.SORT_FIELD, 100 * 1024 * 1024));
+                SortHelper.SORT_FIELD, 20 * 1024 * 1024));
         System.out.println(
                 "Multipass sort search performed, using " + lucene / 1024
                 + " KB in " + profiler.getSpendTime());
