@@ -82,6 +82,9 @@ import java.util.Comparator;
  * number of loops through the term-list will be X1/Y1. As each loop takes
  * roughly the same amount of time, the trade-off between memory usage and
  * speed is simple to adjust.
+ * </p><p>
+ * Important: This is experimental and will not work with multi searchers, as
+ * no global sortValue can be derived from the internal order structure.
  */
 @QAInfo(level = QAInfo.Level.NORMAL,
         state = QAInfo.State.IN_DEVELOPMENT,
@@ -137,7 +140,17 @@ public class MultipassSortComparator extends ReusableSortComparator {
 //        System.out.println("Multi: " + Logs.expand(order, 20));
         return new ScoreDocComparator() {
             public int compare (ScoreDoc i, ScoreDoc j) {
-                return order.getAtomic(i.doc) - order.getAtomic(j.doc);
+                try {
+                    return order.getAtomic(i.doc) - order.getAtomic(j.doc);
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    log.error(String.format(
+                            "ScoreDocComparator got exception while comparing "
+                            + "orders for docID %d with %d. The number or "
+                            + "orders is %d. This should not happen as orders "
+                            + "should contain all docIDs",
+                            i.doc, j.doc, order.size()));
+                    return 0;
+                }
             }
 
             public Comparable sortValue (ScoreDoc i) {
@@ -346,10 +359,10 @@ public class MultipassSortComparator extends ReusableSortComparator {
         int logicalPos = 1;
         // 3. Create a BitsArray docOrders of length maxDocs.
         BitsArray docOrders = BitsArrayFactory.createArray(
-                reader.maxDoc(), 1, BitsArray.PRIORITY.mix);
+                reader.maxDoc()+1, 1, BitsArray.PRIORITY.mix);
 
         int loopCount = 1;
-        int termPos = 0;
+        int termPos;
         while (true) {
             log.trace("Starting sort-loop #" + loopCount
                       + " with lower bound '" + base + "'");
@@ -426,6 +439,11 @@ public class MultipassSortComparator extends ReusableSortComparator {
         // 9. docOrders now contain relative docOrders for all documents in the
         // index. A position of 0 means that there was no term for the given
         // document.
+
+        // The array should contain entries for _all_ docIDs
+        if (docOrders.size() < reader.maxDoc()) {
+            docOrders.set(reader.maxDoc()-1, 0);
+        }
 
         // Depending on wanted behaviour, these can be left or set to
         // logicalPos+1.
