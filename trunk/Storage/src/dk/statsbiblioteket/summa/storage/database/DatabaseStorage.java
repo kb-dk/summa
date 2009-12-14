@@ -2671,13 +2671,14 @@ getco     */
 
     // FIXME: In Summa 2.0 we might want to make this public API
     public List<BaseStats> getStats() throws IOException {
+        log.trace("getStats()");
 
         Connection conn = null;
         try {
             conn = getConnection();
             return getStatsWithConnection(conn);
         } catch (SQLException e) {
-            throw new IOException("Could not get datbase stats", e);
+            throw new IOException("Could not get database stats", e);
         } finally {
             try {
                 if (conn != null) {
@@ -2692,6 +2693,7 @@ getco     */
 
     private List<BaseStats> getStatsWithConnection(Connection conn)
                                                            throws SQLException {
+        long startTime = System.currentTimeMillis();
         List<BaseStats> stats = new LinkedList<BaseStats>();
         String query =
                 "SELECT base, deleted, indexable, count(base) "
@@ -2714,7 +2716,6 @@ getco     */
                 // Collect all stats for the current base and append it
                 // to the stats list
                 while (lastBase.equals(base)) {
-                    base = result.getString(1);
                     boolean deleted = intToBool(result.getInt(2));
                     boolean indexable = intToBool(result.getInt(3));
                     long count = result.getLong(4);
@@ -2732,6 +2733,11 @@ getco     */
                     }
 
                     result.next();
+                    if (!result.isAfterLast()) {
+                        base = result.getString(1);
+                    } else {
+                        break;
+                    }
                 }
                 stats.add(new BaseStats(
                         lastBase, deletedIndexables, nonDeletedIndexables,
@@ -2740,6 +2746,9 @@ getco     */
         } finally {
             result.close();
         }
+
+        log.debug(String.format("Extracted storage stats in %sms",
+                                (System.currentTimeMillis() - startTime)));
 
         return stats;
     }
