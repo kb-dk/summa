@@ -33,6 +33,7 @@ import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.ScoreDocComparator;
 import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.FieldCache;
 
 import java.io.IOException;
 import java.text.Collator;
@@ -282,6 +283,23 @@ public class MultipassSortComparator extends ReusableSortComparator {
         return positions;
     }
 
+    // Meant for testing
+    private FieldCache.StringIndex getStringIndex(
+            IndexReader reader, String field) {
+        log.info("Requesting StringIndex for field " + field);
+        Profiler profiler = new Profiler();
+        FieldCache.StringIndex stringIndex;
+        try {
+            stringIndex = FieldCache.DEFAULT.getStringIndex(reader, field);
+        } catch (IOException e) {
+            log.error("Could not retrieve StringIndex", e);
+            return null;
+        }
+        log.info("Got StringIndex of length " + stringIndex.order.length
+                 + " in " + profiler.getSpendTime());
+        return stringIndex;
+    }
+
     /*
      * IntArray2D t2d: termPos -> docID[].
      * PriorityQueue<orderedString(term, termpos)>> slider: .
@@ -304,6 +322,8 @@ public class MultipassSortComparator extends ReusableSortComparator {
         if (orders.containsKey(fieldname)) {
             return orders.get(fieldname);
         }
+
+        // getStringIndex(reader, fieldname); // Performance testing
 
         Profiler profiler = new Profiler();
         profiler.setBpsSpan(10);
