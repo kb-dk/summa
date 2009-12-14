@@ -370,27 +370,31 @@ public class MultipassSortComparator extends ReusableSortComparator {
             // 4. Iterate through all terms for the given field
             long enumLoopStart = System.currentTimeMillis();
             termPos = 0;
+            long clearedCount = 0;
             final TermEnum termEnum = reader.terms(new Term(fieldname, ""));
             OrderedString reusable = null;
             try {
                 do {
                     final Term term = termEnum.term();
-                    if (!fieldname.equals(term.field())) {
+                    if (term == null || !fieldname.equals(term.field())) {
                         break;
                     }
+                    final String termText = term.text();
+                    // TODO: Consider first-letter check optimization
                     if (loopCount == 1) { // Collect docIDs for terms
                         termDocs.seek(termEnum);
                         while (termDocs.next()) {
                             t2d.append(termPos, termDocs.doc());
                         }
-                        charCount += term.text().length();
+                        charCount += termText.length();
                     }
-                    // TODO: Consider first-letter check optimization
                     if (!t2d.isCleared(termPos)) { // Insert if unhandled
                         reusable = slider.insert(
                                 reusable == null ?
-                                new OrderedString(term.text(), termPos) :
-                                reusable.set(term.text(), termPos));
+                                new OrderedString(termText, termPos) :
+                                reusable.set(termText, termPos));
+                    } else {
+                        clearedCount++;
                     }
                     termPos++;
                 } while (termEnum.next());
@@ -402,7 +406,8 @@ public class MultipassSortComparator extends ReusableSortComparator {
                       + " in "
                       + (System.currentTimeMillis() - enumLoopStart) / 1000
                       + " seconds. Got " + slider.getSize() + "/" + termPos
-                      + " terms. Assigning docIDs...");
+                      + " terms (encountered " + clearedCount + " cleared). "
+                      + "Assigning docIDs...");
 
             // 5. If the heap is empty, goto 9.<br />
             if (slider.getSize() == 0) {
